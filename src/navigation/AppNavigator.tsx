@@ -1,6 +1,12 @@
+import { useCallback } from "react";
+import { Alert, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import type { ReactNode } from "react";
+
 import { categories, lessons, subcategories } from "../data/lessons";
-import { useLearningApp } from "../hooks/useLearningApp";
+import { useLearningApp, type AppScreen } from "../hooks/useLearningApp";
 import { useSavedLessons } from "../hooks/useSavedLessons";
+import BottomNavigation from "../components/BottomNavigation";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
 import SubcategoryScreen from "../screens/SubcategoryScreen";
@@ -31,15 +37,52 @@ export default function AppNavigator() {
     bookmarks.savedLessonIds.includes(lesson.id)
   );
 
-  // The MVP starts with bundled local content. Keep the guard to avoid
-  // rendering a blank detail screen if content IDs are accidentally removed.
+  const navigateTo = useCallback((destination: AppScreen) => {
+    if (destination === app.screen) return;
+
+    // Returning from the legacy standalone quiz to its article is an internal
+    // step; keep the current attempt instead of warning or resetting it.
+    if (app.screen === "quiz" && destination === "lesson") {
+      app.setScreen(destination);
+      return;
+    }
+
+    const isInUnfinishedLearningFlow =
+      app.screen === "lesson" || app.screen === "quiz";
+    const isLeavingLearningFlow =
+      destination !== "lesson" && destination !== "quiz";
+
+    if (isInUnfinishedLearningFlow && isLeavingLearningFlow) {
+      Alert.alert(
+        "Το μάθημα δεν έχει ολοκληρωθεί",
+        `Βρίσκεσαι στη μέση του «${activeLesson?.title ?? "μαθήματος"}». Αν φύγεις τώρα, οι απαντήσεις αυτής της προσπάθειας δεν αποθηκεύονται και θα χρειαστεί να ξεκινήσεις ξανά αν ανοίξεις το μάθημα αργότερα.`,
+        [
+          {
+            text: "Συνέχεια μαθήματος",
+            style: "cancel",
+          },
+          {
+            text: "Έξοδος από το μάθημα",
+            style: "destructive",
+            onPress: () => app.setScreen(destination),
+          },
+        ]
+      );
+      return;
+    }
+
+    app.setScreen(destination);
+  }, [app, activeLesson?.title]);
+
+  let screenContent: ReactNode = null;
+
   if (!activeCategory || !activeSubcategory || !activeLesson) {
     return null;
   }
 
   switch (app.screen) {
     case "home":
-      return (
+      screenContent = (
         <HomeScreen
           categories={categories}
           subcategories={subcategories}
@@ -52,53 +95,57 @@ export default function AppNavigator() {
           onOpenSearch={() => app.setScreen("search")}
         />
       );
+      break;
 
-        case "search":
-      return (
+    case "search":
+      screenContent = (
         <SearchScreen
           lessons={lessons}
           categories={categories}
           subcategories={subcategories}
-          onBack={() => app.setScreen("home")}
+          onBack={() => navigateTo("home")}
           onOpenLesson={app.openLesson}
         />
       );
+      break;
 
     case "saved":
-      return (
+      screenContent = (
         <SavedLessonsScreen
           lessons={savedLessons}
-          onBack={() => app.setScreen("home")}
+          onBack={() => navigateTo("home")}
           onOpenLesson={app.openLesson}
           onRemoveSavedLesson={bookmarks.toggleSavedLesson}
         />
       );
-
+      break;
 
     case "category":
-      return (
+      screenContent = (
         <CategoryScreen
           category={activeCategory}
           subcategories={categorySubcategories}
           lessons={lessons}
-          onBack={() => app.setScreen("home")}
+          onBack={() => navigateTo("home")}
           onOpenSubcategory={app.openSubcategory}
         />
       );
+      break;
 
     case "subcategory":
-      return (
+      screenContent = (
         <SubcategoryScreen
           category={activeCategory}
           subcategory={activeSubcategory}
           lessons={subcategoryLessons}
-          onBack={() => app.setScreen("category")}
+          onBack={() => navigateTo("category")}
           onOpenLesson={app.openLesson}
         />
       );
+      break;
 
     case "lesson":
-      return (
+      screenContent = (
         <LessonScreen
           category={activeCategory}
           subcategory={activeSubcategory}
@@ -106,35 +153,67 @@ export default function AppNavigator() {
           isSaved={bookmarks.savedLessonIds.includes(activeLesson.id)}
           bookmarksLoaded={bookmarks.isSavedLessonsLoaded}
           onToggleSaved={bookmarks.toggleSavedLesson}
-          onBack={() => app.setScreen("subcategory")}
-          onStartQuiz={app.startQuiz}
+          checkpointAnswers={app.checkpointAnswers}
+          onAnswerCheckpoint={app.answerCheckpoint}
+          onFinishLesson={app.finishInlineLesson}
+          onBack={() => navigateTo("subcategory")}
         />
       );
+      break;
 
     case "quiz":
-      return (
+      screenContent = (
         <QuizScreen
           lesson={activeLesson}
           questionIndex={app.questionIndex}
           selectedAnswer={app.selectedAnswer}
           score={app.score}
-          onBack={() => app.setScreen("lesson")}
+          onBack={() => navigateTo("lesson")}
           onChooseAnswer={app.chooseAnswer}
           onNextQuestion={app.nextQuestion}
         />
       );
+      break;
 
     case "results":
-      return (
+      screenContent = (
         <ResultsScreen
           lesson={activeLesson}
           score={app.score}
-          onHome={() => app.setScreen("home")}
-          onReadAgain={() => app.setScreen("lesson")}
+          onHome={() => navigateTo("home")}
+          onReadAgain={app.restartLesson}
         />
       );
+      break;
 
     default:
-      return null;
+      screenContent = null;
   }
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView
+        style={styles.screenViewport}
+        edges={["top", "left", "right"]}
+      >
+        {screenContent}
+      </SafeAreaView>
+      <BottomNavigation
+        currentScreen={app.screen}
+        onNavigate={(destination) => navigateTo(destination)}
+      />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0B0D15",
+  },
+  screenViewport: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: "#0B0D15",
+  },
+});

@@ -1,8 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
-import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
-import CategoryCard from "../components/CategoryCard";
+import FantasyMap from "../components/FantasyMap";
 import { colors } from "../theme";
 
 type Props = {
@@ -28,113 +27,249 @@ export default function HomeScreen({
   onOpenSaved,
   onOpenSearch,
 }: Props) {
+  const mapRegions = categories.map((category) => {
+    const count = subcategories.filter(
+      (subcategory) => subcategory.categoryId === category.id
+    ).length;
+
+    return {
+      id: category.id,
+      title: category.title,
+      emoji: category.emoji,
+      detail: count === 1 ? "1 περιοχή" : `${count} περιοχές`,
+    };
+  });
+
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       <AppHeader />
 
-      <View style={styles.welcome}>
-        <Text style={styles.eyebrow}>ΛΙΓΗ ΓΝΩΣΗ ΚΑΘΕ ΜΕΡΑ</Text>
-        <Text style={styles.title}>Ο κόσμος έχει{"\n"}πολλά να σου πει.</Text>
-        <Text style={styles.body}>
-          Ανακάλυψε κάτι καινούριο, διάβασε μια σύντομη ιστορία και δοκίμασε όσα έμαθες.
+      <View style={styles.headingRow}>
+        <View style={styles.headingText}>
+          <Text style={styles.eyebrow}>Ο ΑΤΛΑΣ ΤΗΣ ΓΝΩΣΗΣ</Text>
+          <Text style={styles.title}>Πού θα ταξιδέψεις;</Text>
+        </View>
+
+        <View style={styles.quickActions}>
+          <Pressable
+            style={styles.iconButton}
+            onPress={onOpenSearch}
+            accessibilityRole="button"
+            accessibilityLabel="Αναζήτηση μαθημάτων"
+          >
+            <Text style={styles.iconButtonText}>⌕</Text>
+          </Pressable>
+          <Pressable
+            style={styles.iconButton}
+            onPress={onOpenSaved}
+            accessibilityRole="button"
+            accessibilityLabel={`Αποθηκευμένα μαθήματα: ${savedCount}`}
+          >
+            <Text style={styles.iconButtonText}>♧</Text>
+            {savedCount > 0 ? (
+              <View style={styles.savedDot} />
+            ) : null}
+          </Pressable>
+        </View>
+      </View>
+
+      <Text style={styles.hint}>
+        Άγγιξε μια χώρα για να ανακαλύψεις τις θεματικές της περιοχές.
+      </Text>
+
+      <View style={styles.mapLabelRow}>
+        <Text style={styles.mapLabel}>ΟΙ ΓΝΩΣΤΟΙ ΚΟΣΜΟΙ</Text>
+        <Text style={styles.mapCount}>
+          {categories.length} ΧΩΡΕΣ · {subcategories.length} ΠΕΡΙΟΧΕΣ
+        </Text>
+      </View>
+
+      <FantasyMap
+        regions={mapRegions}
+        onSelectRegion={onOpenCategory}
+        emptyMessage="Οι πρώτοι κόσμοι γνώσης θα εμφανιστούν εδώ."
+      />
+
+      <View style={styles.progressLine}>
+        <View style={styles.progressDot} />
+        <Text style={styles.progressText}>
+          {completedCount} {completedCount === 1 ? "μάθημα" : "μαθήματα"} ολοκληρωμένα
+        </Text>
+        <View style={styles.progressDivider} />
+        <Text style={styles.progressText}>
+          {savedCount} αποθηκευμένα
         </Text>
       </View>
 
       <Pressable
-        style={styles.searchTrigger}
-        onPress={onOpenSearch}
+        style={styles.discoveryCard}
+        onPress={() => onOpenLesson(featuredLesson.id)}
         accessibilityRole="button"
-        accessibilityLabel="Αναζήτηση μαθημάτων και θεμάτων"
+        accessibilityLabel={`Σημερινή ανακάλυψη: ${featuredLesson.title}`}
       >
-        <Text style={styles.searchIcon}>⌕</Text>
-        <View style={styles.searchTextWrap}>
-          <Text style={styles.searchTitle}>Τι θέλεις να μάθεις;</Text>
-          <Text style={styles.searchHint}>Αναζήτησε ένα θέμα ή μια ιδέα</Text>
+        <View style={styles.discoveryIcon}>
+          <Text style={styles.discoveryGlyph}>✦</Text>
         </View>
-        <Text style={styles.searchArrow}>→</Text>
-      </Pressable>
-
-      <View style={styles.featuredCard}>
-        <View style={styles.featuredTopRow}>
-          <Text style={styles.featuredBadge}>ΠΡΟΤΕΙΝΟΜΕΝΟ</Text>
-          <Text style={styles.readingTime}>◷ {featuredLesson.readingMinutes} λεπτά</Text>
-        </View>
-        <Text style={styles.featuredTitle}>{featuredLesson.title}</Text>
-        <Text style={styles.featuredDescription}>{featuredLesson.summary}</Text>
-        <ActionButton label="Ξεκίνα την ανάγνωση →" onPress={() => onOpenLesson(featuredLesson.id)} />
-      </View>
-
-      <View style={styles.savedCard}>
-        <View style={styles.savedText}>
-          <Text style={styles.savedTitle}>Τα αποθηκευμένα σου</Text>
-          <Text style={styles.muted}>
-            {savedCount === 0
-              ? "Κράτησε άρθρα για να τα ξαναβρείς εύκολα."
-              : `${savedCount} ${savedCount === 1 ? "άρθρο" : "άρθρα"} στη λίστα σου`}
+        <View style={styles.discoveryContent}>
+          <Text style={styles.discoveryEyebrow}>ΜΙΑ ΜΙΚΡΗ ΑΝΑΚΑΛΥΨΗ</Text>
+          <Text style={styles.discoveryTitle} numberOfLines={2}>
+            {featuredLesson.title}
+          </Text>
+          <Text style={styles.discoveryMeta}>
+            {featuredLesson.readingMinutes} λεπτά ανάγνωσης · Δες το άρθρο →
           </Text>
         </View>
-        <ActionButton
-          label="🔖 Προβολή αποθηκευμένων"
-          onPress={onOpenSaved}
-          secondary
-        />
-      </View>
+      </Pressable>
 
-      <View style={styles.heading}>
-        <Text style={styles.sectionTitle}>Εξερεύνησε τον κόσμο</Text>
-        <Text style={styles.muted}>Διάλεξε αυτό που σου κινεί την περιέργεια.</Text>
-      </View>
-
-      <View style={styles.grid}>
-        {categories.map((category) => (
-          <CategoryCard
-            key={category.id}
-            category={category}
-            subcategoryCount={subcategories.filter((item) => item.categoryId === category.id).length}
-            onPress={() => onOpenCategory(category.id)}
-          />
-        ))}
-      </View>
-
-      <View style={styles.progressCard}>
-        <Text style={styles.progressTitle}>Η πρόοδός σου</Text>
-        <Text style={styles.body}>
-          Έχεις ολοκληρώσει {completedCount} {completedCount === 1 ? "μάθημα" : "μαθήματα"}.
-        </Text>
-        <Text style={styles.note}>
-          Η πρόοδός σου αποθηκεύεται τοπικά σε αυτή τη συσκευή. Δεν συγχρονίζεται ακόμη με άλλες συσκευές.
-        </Text>
-      </View>
+      <Text style={styles.footerNote}>
+        Κάθε χώρα κρύβει έναν διαφορετικό τρόπο να δεις τον κόσμο.
+      </Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
-  welcome: { marginBottom: 26 },
-  searchTrigger: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 17, paddingHorizontal: 15, paddingVertical: 14, marginBottom: 22, gap: 12 },
-  searchIcon: { color: colors.accent, fontSize: 29, lineHeight: 32 },
-  searchTextWrap: { flex: 1, gap: 3 },
-  searchTitle: { color: colors.text, fontSize: 14, fontWeight: "800" },
-  searchHint: { color: colors.textMuted, fontSize: 11 },
-  searchArrow: { color: colors.accentLight, fontSize: 19, fontWeight: "700" },
-  eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
-  title: { color: colors.text, fontSize: 35, fontWeight: "900", lineHeight: 42, letterSpacing: -0.8, marginBottom: 14 },
-  body: { color: "#A7ACC1", fontSize: 14, lineHeight: 23 },
-  featuredCard: { backgroundColor: colors.surfaceRaised, borderRadius: 24, borderWidth: 1, borderColor: colors.borderStrong, padding: 20, marginBottom: 18 },
-  featuredTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 22 },
-  featuredBadge: { color: "#BEB4FF", backgroundColor: "#302B4A", overflow: "hidden", borderRadius: 8, fontSize: 9, fontWeight: "900", letterSpacing: 1, paddingHorizontal: 10, paddingVertical: 7 },
-  readingTime: { color: colors.textMuted, fontSize: 12, fontWeight: "600" },
-  featuredTitle: { color: colors.text, fontSize: 25, fontWeight: "800", lineHeight: 32, marginBottom: 10 },
-  featuredDescription: { color: "#B1B5C8", fontSize: 14, lineHeight: 22, marginBottom: 6 },
-  savedCard: { backgroundColor: colors.surface, borderRadius: 19, padding: 18, marginBottom: 32, borderWidth: 1, borderColor: colors.border },
-  savedText: { gap: 6 },
-  savedTitle: { color: colors.text, fontSize: 17, fontWeight: "800" },
-  heading: { marginBottom: 18 },
-  sectionTitle: { color: "#F4F3FB", fontSize: 20, fontWeight: "800", marginBottom: 7 },
-  muted: { color: "#979CB3", fontSize: 12, lineHeight: 19 },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12 },
-  progressCard: { backgroundColor: colors.surface, borderRadius: 19, padding: 18, marginTop: 26, borderWidth: 1, borderColor: "#282D41" },
-  progressTitle: { color: "#F4F3FB", fontSize: 16, fontWeight: "800", marginBottom: 9 },
-  note: { color: "#737B95", fontSize: 11, lineHeight: 17, marginTop: 12 },
+  content: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 34,
+  },
+  headingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 8,
+  },
+  headingText: { flex: 1 },
+  eyebrow: {
+    color: colors.accent,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    marginBottom: 7,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 27,
+    fontWeight: "900",
+    lineHeight: 33,
+    letterSpacing: -0.6,
+  },
+  quickActions: { flexDirection: "row", gap: 8 },
+  iconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconButtonText: {
+    color: colors.accentLight,
+    fontSize: 25,
+    lineHeight: 29,
+    fontWeight: "600",
+  },
+  savedDot: {
+    position: "absolute",
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    right: 8,
+    top: 7,
+    backgroundColor: colors.success,
+  },
+  hint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  mapLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 1,
+  },
+  mapLabel: {
+    color: "#7F89A4",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  mapCount: {
+    color: "#7F89A4",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+  },
+  progressLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 9,
+    marginTop: -2,
+    marginBottom: 14,
+  },
+  progressDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+  },
+  progressText: { color: colors.textMuted, fontSize: 10 },
+  progressDivider: {
+    height: 12,
+    width: 1,
+    backgroundColor: colors.border,
+    marginHorizontal: 2,
+  },
+  discoveryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 13,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 19,
+    padding: 14,
+  },
+  discoveryIcon: {
+    width: 43,
+    height: 49,
+    borderRadius: 13,
+    backgroundColor: colors.accentSurface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  discoveryGlyph: { color: colors.accentLight, fontSize: 24 },
+  discoveryContent: { flex: 1, gap: 4 },
+  discoveryEyebrow: {
+    color: colors.accentLight,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+  },
+  discoveryTitle: {
+    color: colors.text,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+  },
+  discoveryMeta: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
+  footerNote: {
+    color: "#68728A",
+    fontSize: 10,
+    lineHeight: 16,
+    textAlign: "center",
+    marginTop: 18,
+  },
 });
