@@ -1,14 +1,17 @@
 import { categories, lessons, subcategories } from "../data/lessons";
 import { useLearningApp } from "../hooks/useLearningApp";
+import { useSavedLessons } from "../hooks/useSavedLessons";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
 import SubcategoryScreen from "../screens/SubcategoryScreen";
 import LessonScreen from "../screens/LessonScreen";
 import QuizScreen from "../screens/QuizScreen";
 import ResultsScreen from "../screens/ResultsScreen";
+import SavedLessonsScreen from "../screens/SavedLessonsScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
+  const bookmarks = useSavedLessons();
 
   const activeCategory =
     categories.find((item) => item.id === app.activeCategoryId) ?? categories[0];
@@ -23,9 +26,12 @@ export default function AppNavigator() {
   const subcategoryLessons = lessons.filter(
     (item) => item.subcategoryId === app.activeSubcategoryId
   );
+  const savedLessons = lessons.filter((lesson) =>
+    bookmarks.savedLessonIds.includes(lesson.id)
+  );
 
-  // The MVP starts with bundled local content, so these arrays should not be empty.
-  // Keep this guard in place to avoid a blank screen if lesson data is removed accidentally.
+  // The MVP starts with bundled local content. Keep the guard to avoid
+  // rendering a blank detail screen if content IDs are accidentally removed.
   if (!activeCategory || !activeSubcategory || !activeLesson) {
     return null;
   }
@@ -38,8 +44,20 @@ export default function AppNavigator() {
           subcategories={subcategories}
           featuredLesson={lessons.find((item) => item.id === "ancient-athens") ?? activeLesson}
           completedCount={app.completedLessonIds.length}
+          savedCount={bookmarks.savedLessonIds.length}
           onOpenCategory={app.openCategory}
           onOpenLesson={app.openLesson}
+          onOpenSaved={() => app.setScreen("saved")}
+        />
+      );
+
+    case "saved":
+      return (
+        <SavedLessonsScreen
+          lessons={savedLessons}
+          onBack={() => app.setScreen("home")}
+          onOpenLesson={app.openLesson}
+          onRemoveSavedLesson={bookmarks.toggleSavedLesson}
         />
       );
 
@@ -71,6 +89,9 @@ export default function AppNavigator() {
           category={activeCategory}
           subcategory={activeSubcategory}
           lesson={activeLesson}
+          isSaved={bookmarks.savedLessonIds.includes(activeLesson.id)}
+          bookmarksLoaded={bookmarks.isSavedLessonsLoaded}
+          onToggleSaved={bookmarks.toggleSavedLesson}
           onBack={() => app.setScreen("subcategory")}
           onStartQuiz={app.startQuiz}
         />
@@ -98,6 +119,7 @@ export default function AppNavigator() {
           onReadAgain={() => app.setScreen("lesson")}
         />
       );
+
     default:
       return null;
   }

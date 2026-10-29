@@ -5,9 +5,27 @@ import AppHeader from "../components/AppHeader";
 import SourceLink from "../components/SourceLink";
 import { colors } from "../theme";
 
-type Props = { category: Category; subcategory: Subcategory; lesson: Lesson; onBack: () => void; onStartQuiz: () => void };
+type Props = {
+  category: Category;
+  subcategory: Subcategory;
+  lesson: Lesson;
+  isSaved: boolean;
+  bookmarksLoaded: boolean;
+  onToggleSaved: (lessonId: string) => void;
+  onBack: () => void;
+  onStartQuiz: () => void;
+};
 
-export default function LessonScreen({ category, subcategory, lesson, onBack, onStartQuiz }: Props) {
+export default function LessonScreen({
+  category,
+  subcategory,
+  lesson,
+  isSaved,
+  bookmarksLoaded,
+  onToggleSaved,
+  onBack,
+  onStartQuiz,
+}: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onBack} />
@@ -18,6 +36,14 @@ export default function LessonScreen({ category, subcategory, lesson, onBack, on
         <Text style={styles.metaText}>◷ {lesson.readingMinutes} λεπτά ανάγνωσης</Text>
         <Text style={styles.metaText}>{lesson.questions.length} ερωτήσεις</Text>
       </View>
+
+      <ActionButton
+        label={isSaved ? "✓ Αποθηκευμένο — αφαίρεση" : "🔖 Αποθήκευση άρθρου"}
+        onPress={() => onToggleSaved(lesson.id)}
+        secondary={!isSaved}
+        disabled={!bookmarksLoaded}
+      />
+
       <Image source={{ uri: lesson.imageUrl }} style={styles.image} resizeMode="cover" />
       <Text style={styles.caption}>{lesson.imageCaption}</Text>
       <Pressable onPress={() => void Linking.openURL(lesson.imageCreditUrl).catch(() => {})}>
@@ -53,9 +79,9 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 32, fontWeight: "900", lineHeight: 39, letterSpacing: -0.6, marginBottom: 13 },
   intro: { color: "#C5C7D6", fontSize: 16, lineHeight: 26, marginBottom: 17 },
-  meta: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginBottom: 17 },
+  meta: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginBottom: 2 },
   metaText: { color: colors.textMuted, fontSize: 12, fontWeight: "600" },
-  image: { width: "100%", height: 225, borderRadius: 20, backgroundColor: "#20263A" },
+  image: { width: "100%", height: 225, borderRadius: 20, backgroundColor: "#20263A", marginTop: 22 },
   caption: { color: "#B2B6C9", fontSize: 12, lineHeight: 19, marginTop: 10 },
   credit: { color: colors.accentLight, fontSize: 11, marginTop: 5, marginBottom: 27 },
   section: { marginBottom: 26 },

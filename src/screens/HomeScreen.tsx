@@ -10,8 +10,10 @@ type Props = {
   subcategories: Subcategory[];
   featuredLesson: Lesson;
   completedCount: number;
+  savedCount: number;
   onOpenCategory: (categoryId: string) => void;
   onOpenLesson: (lessonId: string) => void;
+  onOpenSaved: () => void;
 };
 
 export default function HomeScreen({
@@ -19,12 +21,15 @@ export default function HomeScreen({
   subcategories,
   featuredLesson,
   completedCount,
+  savedCount,
   onOpenCategory,
   onOpenLesson,
+  onOpenSaved,
 }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader />
+
       <View style={styles.welcome}>
         <Text style={styles.eyebrow}>ΛΙΓΗ ΓΝΩΣΗ ΚΑΘΕ ΜΕΡΑ</Text>
         <Text style={styles.title}>Ο κόσμος έχει{"\n"}πολλά να σου πει.</Text>
@@ -41,6 +46,22 @@ export default function HomeScreen({
         <Text style={styles.featuredTitle}>{featuredLesson.title}</Text>
         <Text style={styles.featuredDescription}>{featuredLesson.summary}</Text>
         <ActionButton label="Ξεκίνα την ανάγνωση →" onPress={() => onOpenLesson(featuredLesson.id)} />
+      </View>
+
+      <View style={styles.savedCard}>
+        <View style={styles.savedText}>
+          <Text style={styles.savedTitle}>Τα αποθηκευμένα σου</Text>
+          <Text style={styles.muted}>
+            {savedCount === 0
+              ? "Κράτησε άρθρα για να τα ξαναβρείς εύκολα."
+              : `${savedCount} ${savedCount === 1 ? "άρθρο" : "άρθρα"} στη λίστα σου`}
+          </Text>
+        </View>
+        <ActionButton
+          label="🔖 Προβολή αποθηκευμένων"
+          onPress={onOpenSaved}
+          secondary
+        />
       </View>
 
       <View style={styles.heading}>
@@ -62,9 +83,11 @@ export default function HomeScreen({
       <View style={styles.progressCard}>
         <Text style={styles.progressTitle}>Η πρόοδός σου</Text>
         <Text style={styles.body}>
-          Έχεις ολοκληρώσει {completedCount} {completedCount === 1 ? "μάθημα" : "μαθήματα"} σε αυτή τη συνεδρία.
+          Έχεις ολοκληρώσει {completedCount} {completedCount === 1 ? "μάθημα" : "μαθήματα"}.
         </Text>
-        <Text style={styles.note}>Η πρόοδος δεν διατηρείται ακόμη μετά την επανεκκίνηση της εφαρμογής.</Text>
+        <Text style={styles.note}>
+          Η πρόοδός σου αποθηκεύεται τοπικά σε αυτή τη συσκευή. Δεν συγχρονίζεται ακόμη με άλλες συσκευές.
+        </Text>
       </View>
     </ScrollView>
   );
@@ -76,12 +99,15 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 35, fontWeight: "900", lineHeight: 42, letterSpacing: -0.8, marginBottom: 14 },
   body: { color: "#A7ACC1", fontSize: 14, lineHeight: 23 },
-  featuredCard: { backgroundColor: colors.surfaceRaised, borderRadius: 24, borderWidth: 1, borderColor: colors.borderStrong, padding: 20, marginBottom: 32 },
+  featuredCard: { backgroundColor: colors.surfaceRaised, borderRadius: 24, borderWidth: 1, borderColor: colors.borderStrong, padding: 20, marginBottom: 18 },
   featuredTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 22 },
   featuredBadge: { color: "#BEB4FF", backgroundColor: "#302B4A", overflow: "hidden", borderRadius: 8, fontSize: 9, fontWeight: "900", letterSpacing: 1, paddingHorizontal: 10, paddingVertical: 7 },
   readingTime: { color: colors.textMuted, fontSize: 12, fontWeight: "600" },
   featuredTitle: { color: colors.text, fontSize: 25, fontWeight: "800", lineHeight: 32, marginBottom: 10 },
   featuredDescription: { color: "#B1B5C8", fontSize: 14, lineHeight: 22, marginBottom: 6 },
+  savedCard: { backgroundColor: colors.surface, borderRadius: 19, padding: 18, marginBottom: 32, borderWidth: 1, borderColor: colors.border },
+  savedText: { gap: 6 },
+  savedTitle: { color: colors.text, fontSize: 17, fontWeight: "800" },
   heading: { marginBottom: 18 },
   sectionTitle: { color: "#F4F3FB", fontSize: 20, fontWeight: "800", marginBottom: 7 },
   muted: { color: "#979CB3", fontSize: 12, lineHeight: 19 },

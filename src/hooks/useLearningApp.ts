@@ -10,7 +10,8 @@ export type AppScreen =
   | "subcategory"
   | "lesson"
   | "quiz"
-  | "results";
+  | "results"
+    "saved";
 
 const PROGRESS_STORAGE_KEY = "@gnosi/completed-lesson-ids";
 
