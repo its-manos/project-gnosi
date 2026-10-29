@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 import { categories, lessons, subcategories } from "../data/lessons";
 import { useLearningApp, type AppScreen } from "../hooks/useLearningApp";
 import { useSavedLessons } from "../hooks/useSavedLessons";
+import { useDailyChallengePreferences } from "../hooks/useDailyChallengePreferences";
+import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import BottomNavigation from "../components/BottomNavigation";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
@@ -16,11 +18,32 @@ import ResultsScreen from "../screens/ResultsScreen";
 import SavedLessonsScreen from "../screens/SavedLessonsScreen";
 import SearchScreen from "../screens/SearchScreen";
 import DailyChallengeScreen from "../screens/DailyChallengeScreen";
+import DailyChallengePreferencesScreen from "../screens/DailyChallengePreferencesScreen";
+import ProgressScreen from "../screens/ProgressScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
   const bookmarks = useSavedLessons();
+  const dailyPreferences = useDailyChallengePreferences();
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
+  const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
+  const [preferencesOrigin, setPreferencesOrigin] = useState<"home" | "daily">("home");
+
+  const openDailyPreferences = useCallback((origin: "home" | "daily") => {
+    setPreferencesOrigin(origin);
+    setIsDailyPreferencesOpen(true);
+  }, []);
+
+  const closeDailyPreferences = useCallback(() => {
+    setIsDailyPreferencesOpen(false);
+    if (preferencesOrigin === "home") setIsDailyChallengeOpen(false);
+  }, [preferencesOrigin]);
+
+  const saveDailyPreferences = useCallback(async (preferences: DailyChallengePreferences) => {
+    const saved = await dailyPreferences.savePreferences(preferences);
+    if (saved) setIsDailyPreferencesOpen(false);
+    return saved;
+  }, [dailyPreferences.savePreferences]);
 
   const activeCategory =
     categories.find((item) => item.id === app.activeCategoryId) ?? categories[0];
@@ -40,6 +63,10 @@ export default function AppNavigator() {
   const savedLessons = useMemo(
     () => lessons.filter((lesson) => bookmarks.savedLessonIds.includes(lesson.id)),
     [bookmarks.savedLessonIds]
+  );
+  const completedLessons = useMemo(
+    () => lessons.filter((lesson) => app.completedLessonIds.includes(lesson.id)),
+    [app.completedLessonIds]
   );
   const inProgressLesson = lessons.find(
     (lesson) => lesson.id === app.inProgressLessonId
@@ -96,8 +123,24 @@ export default function AppNavigator() {
     return null;
   }
 
-  if (isDailyChallengeOpen) {
-    screenContent = <DailyChallengeScreen onHome={() => setIsDailyChallengeOpen(false)} />;
+  if (isDailyPreferencesOpen) {
+    screenContent = (
+      <DailyChallengePreferencesScreen
+        initialPreferences={dailyPreferences.preferences}
+        isLoading={dailyPreferences.isLoading}
+        onSave={saveDailyPreferences}
+        onCancel={closeDailyPreferences}
+      />
+    );
+  } else if (isDailyChallengeOpen) {
+    screenContent = (
+      <DailyChallengeScreen
+        onHome={() => setIsDailyChallengeOpen(false)}
+        onOpenPreferences={() => openDailyPreferences("daily")}
+        preferences={dailyPreferences.preferences}
+        preferencesLoaded={!dailyPreferences.isLoading}
+      />
+    );
   } else switch (app.screen) {
     case "home":
       screenContent = (
@@ -116,6 +159,24 @@ export default function AppNavigator() {
           onOpenSaved={() => app.setScreen("saved")}
           onOpenSearch={() => app.setScreen("search")}
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
+          onOpenDailyPreferences={() => openDailyPreferences("home")}
+        />
+      );
+      break;
+
+    case "progress":
+      screenContent = (
+        <ProgressScreen
+          onHome={() => navigateTo("home")}
+          completedLessons={completedLessons}
+          inProgressLesson={inProgressLesson}
+          inProgressAnsweredCount={app.inProgressAnsweredCount}
+          inProgressQuestionCount={app.inProgressQuestionCount}
+          inProgressLessonCount={app.inProgressLessonCount}
+          totalLessonCount={lessons.length}
+          lessonProgressLoaded={app.progressLoaded}
+          onOpenLesson={app.openLesson}
+          onResetLessonProgressForDevelopment={app.resetLessonProgressForDevelopment}
         />
       );
       break;
@@ -224,6 +285,7 @@ export default function AppNavigator() {
       <BottomNavigation
         currentScreen={isDailyChallengeOpen ? "home" : app.screen}
         onNavigate={(destination) => {
+          setIsDailyPreferencesOpen(false);
           setIsDailyChallengeOpen(false);
           navigateTo(destination);
         }}

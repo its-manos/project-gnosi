@@ -6,22 +6,66 @@ import {
   questions,
   type GeneralKnowledgeQuestion,
 } from "../data/questions";
+import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import {
+  DAILY_CHALLENGE_STORAGE_KEY,
   emptyDailyChallengeRecord,
   getAthensDateKey,
   parseDailyChallengeRecord,
   selectDailyQuestions,
   type DailyChallengeRecord,
 } from "../utils/dailyChallenge";
+import {
+  createCompletedHistoryEntry,
+  DAILY_CHALLENGE_HISTORY_STORAGE_KEY,
+  parseDailyChallengeHistory,
+  removeDailyChallengeHistoryDate,
+  upsertDailyChallengeHistory,
+} from "../utils/dailyChallengeHistory";
 
-const DAILY_CHALLENGE_STORAGE_KEY = "@gnosi/daily-challenge-v1";
 
-export function useDailyChallenge() {
+export function useDailyChallenge(preferences: DailyChallengePreferences, preferencesLoaded: boolean) {
   const [todayKey, setTodayKey] = useState(() => getAthensDateKey());
   const [record, setRecord] = useState<DailyChallengeRecord>(() => emptyDailyChallengeRecord(todayKey));
   const [isLoading, setIsLoading] = useState(true);
   const recordRef = useRef<DailyChallengeRecord>(record);
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const historyWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
+
+  const persistHistoryEntry = useCallback((completedRecord: DailyChallengeRecord) => {
+    const entry = createCompletedHistoryEntry(completedRecord);
+    if (!entry) return Promise.resolve();
+
+    historyWriteQueueRef.current = historyWriteQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        try {
+          const savedHistory = await AsyncStorage.getItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY);
+          const history = parseDailyChallengeHistory(savedHistory);
+          const nextHistory = upsertDailyChallengeHistory(history, entry);
+          await AsyncStorage.setItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY, JSON.stringify(nextHistory));
+        } catch (error) {
+          console.warn("Could not save daily challenge history:", error);
+        }
+      });
+    return historyWriteQueueRef.current;
+  }, []);
+
+  const removeHistoryDate = useCallback((dateKey: string) => {
+    historyWriteQueueRef.current = historyWriteQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        try {
+          const savedHistory = await AsyncStorage.getItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY);
+          const history = parseDailyChallengeHistory(savedHistory);
+          const nextHistory = removeDailyChallengeHistoryDate(history, dateKey);
+          await AsyncStorage.setItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY, JSON.stringify(nextHistory));
+        } catch (error) {
+          console.warn("Could not reset daily challenge history:", error);
+        }
+      });
+    return historyWriteQueueRef.current;
+  }, []);
 
   // Refresh the local challenge date when the app returns to the foreground,
   // and while it remains open across midnight in the Europe/Athens timezone.
@@ -63,6 +107,9 @@ export function useDailyChallenge() {
       try {
         const saved = await AsyncStorage.getItem(DAILY_CHALLENGE_STORAGE_KEY);
         nextRecord = parseDailyChallengeRecord(saved, todayKey) ?? nextRecord;
+        // Migrate today's already-completed quiz into the history store when
+        // upgrading from a build that stored only the current daily record.
+        if (nextRecord.completed) await persistHistoryEntry(nextRecord);
       } catch (error) {
         console.warn("Could not load today's challenge:", error);
       }
@@ -78,7 +125,7 @@ export function useDailyChallenge() {
     return () => {
       isMounted = false;
     };
-  }, [todayKey]);
+  }, [todayKey, persistHistoryEntry]);
 
   const challengeQuestions = record.dateKey === todayKey ? record.questionIds
     .map((id) => questions.find((question) => question.id === id))
@@ -96,8 +143,8 @@ export function useDailyChallenge() {
 
   const startChallenge = useCallback(async () => {
     const current = recordRef.current;
-    if (isLoading || current.dateKey !== todayKey || current.started || current.completed) return;
-    const selected = selectDailyQuestions(todayKey);
+    if (isLoading || !preferencesLoaded || current.dateKey !== todayKey || current.started || current.completed) return;
+    const selected = selectDailyQuestions(todayKey, questions, preferences);
     if (selected.length !== DAILY_CHALLENGE_SIZE) return;
 
     await commit({
@@ -108,7 +155,7 @@ export function useDailyChallenge() {
       started: true,
       completed: false,
     });
-  }, [commit, isLoading, todayKey]);
+  }, [commit, isLoading, preferences, preferencesLoaded, todayKey]);
 
   const answerQuestion = useCallback(async (answerIndex: number) => {
     const current = recordRef.current;
@@ -135,13 +182,26 @@ export function useDailyChallenge() {
     }
 
     if (Object.keys(current.answers).length < DAILY_CHALLENGE_SIZE) return;
-    await commit({ ...current, completed: true });
-  }, [commit, todayKey]);
+    const completedRecord = { ...current, completed: true };
+    await commit(completedRecord);
+    await persistHistoryEntry(completedRecord);
+  }, [commit, persistHistoryEntry, todayKey]);
+
+  // Development-only helper: reset today's challenge without clearing the
+  // player's saved preferences, lesson progress, or bookmarks. This allows
+  // the daily flow to be exercised repeatedly during local development.
+  const resetChallengeForDevelopment = useCallback(async () => {
+    if (!__DEV__) return;
+    await commit(emptyDailyChallengeRecord(todayKey));
+    // A development reset removes this date's completion from statistics too,
+    // allowing a clean replay without touching earlier dates or preferences.
+    await removeHistoryDate(todayKey);
+  }, [commit, removeHistoryDate, todayKey]);
 
   return {
     todayKey,
     record,
-    isLoading: isLoading || record.dateKey !== todayKey,
+    isLoading: isLoading || !preferencesLoaded || record.dateKey !== todayKey,
     challengeQuestions,
     currentQuestion,
     selectedAnswer,
@@ -149,5 +209,6 @@ export function useDailyChallenge() {
     startChallenge,
     answerQuestion,
     nextQuestion,
+    resetChallengeForDevelopment,
   };
 }

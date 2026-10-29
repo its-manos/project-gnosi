@@ -27,18 +27,37 @@ function loadTypeScript(relativePath, requireShim = () => {
   return module.exports;
 }
 
+const topicsModule = loadTypeScript('src/data/dailyChallengeTopics.ts');
 const questionData = loadTypeScript('src/data/questions.ts');
 const dailyUtils = loadTypeScript('src/utils/dailyChallenge.ts', (id) => {
   if (id === '../data/questions') return questionData;
+  if (id === '../data/dailyChallengeTopics') return topicsModule;
   throw new Error(`Unexpected import: ${id}`);
 });
 
 const { DAILY_CHALLENGE_SIZE, questions } = questionData;
+const {
+  DAILY_CHALLENGE_TOPICS,
+  DEFAULT_DAILY_CHALLENGE_PREFERENCES,
+  CHALLENGE_DIFFICULTIES,
+  normalizeDailyChallengePreferences,
+  parseDailyChallengePreferences,
+} = topicsModule;
 const { emptyDailyChallengeRecord, getAthensDateKey, parseDailyChallengeRecord, selectDailyQuestions } = dailyUtils;
 const dateKey = '2026-10-29';
 
 assert.ok(questions.length >= DAILY_CHALLENGE_SIZE, 'question bank needs at least seven questions');
+assert.equal(questions.filter(Boolean).length, questions.length, 'question bank must not contain empty array slots');
 assert.equal(new Set(questions.map((q) => q.id)).size, questions.length, 'question IDs must be unique');
+assert.equal(DAILY_CHALLENGE_TOPICS.length, 8, 'all eight MVP topics should be configurable');
+for (const topic of DAILY_CHALLENGE_TOPICS) {
+  assert.ok(questions.filter((q) => q.categoryId === topic.id).length >= 4, `${topic.id} should have enough starter questions`);
+}
+for (const difficulty of ['easy', 'medium', 'hard']) {
+  assert.ok(questions.filter((q) => q.difficulty === difficulty).length >= DAILY_CHALLENGE_SIZE,
+    `${difficulty} needs at least seven questions to preserve difficulty preference`);
+}
+
 for (const question of questions) {
   assert.ok(question.question.trim().length > 0, `${question.id} needs a prompt`);
   assert.equal(question.answers.length, 4, `${question.id} must have four answer options`);
@@ -50,10 +69,42 @@ for (const question of questions) {
 const selectedA = selectDailyQuestions(dateKey);
 const selectedB = selectDailyQuestions(dateKey);
 assert.equal(selectedA.length, DAILY_CHALLENGE_SIZE, 'daily selection must contain seven questions');
-assert.deepEqual(selectedA.map((q) => q.id), selectedB.map((q) => q.id), 'selection must be deterministic for a date');
+assert.deepEqual(selectedA.map((q) => q.id), selectedB.map((q) => q.id), 'selection must be deterministic for the same date and preferences');
 assert.notDeepEqual(selectedA.map((q) => q.id), selectDailyQuestions('2026-10-30').map((q) => q.id), 'the selected set should rotate between dates');
 assert.equal(new Set(selectedA.map((q) => q.id)).size, DAILY_CHALLENGE_SIZE, 'daily selection must not repeat a question');
 assert.deepEqual(selectDailyQuestions(dateKey, questions.slice(0, DAILY_CHALLENGE_SIZE - 1)), [], 'selection must not silently return a short quiz');
+
+const defaultPreferences = normalizeDailyChallengePreferences(DEFAULT_DAILY_CHALLENGE_PREFERENCES);
+assert.equal(defaultPreferences.topicIds.length, 5, 'defaults should include five topics');
+assert.equal(normalizeDailyChallengePreferences({ topicIds: ['history'], difficulty: 'hard' }).topicIds.length, 5,
+  'invalid preference counts should safely fall back to defaults');
+assert.equal(parseDailyChallengePreferences('{bad json').difficulty, 'medium', 'malformed preferences should fall back safely');
+assert.deepEqual(parseDailyChallengePreferences(JSON.stringify({ topicIds: ['sports', 'technology', 'everyday'], difficulty: 'hard' })),
+  { topicIds: ['sports', 'technology', 'everyday'], difficulty: 'hard' }, 'valid saved preferences should restore');
+
+for (const difficulty of CHALLENGE_DIFFICULTIES.map((item) => item.id)) {
+  const preferences = { topicIds: ['history', 'science', 'geography', 'nature', 'culture'], difficulty };
+  const chosen = selectDailyQuestions(dateKey, questions, preferences);
+  assert.equal(chosen.length, DAILY_CHALLENGE_SIZE, `${difficulty} preference should still produce seven questions`);
+  assert.ok(chosen.every((q) => q.difficulty === difficulty), `${difficulty} should be kept when the bank has enough questions`);
+  assert.deepEqual(chosen.map((q) => q.id), selectDailyQuestions(dateKey, questions, preferences).map((q) => q.id),
+    `${difficulty} selection should be stable across a resumed session`);
+}
+const nichePreferences = { topicIds: ['technology', 'sports', 'everyday'], difficulty: 'hard' };
+const nicheSelection = selectDailyQuestions(dateKey, questions, nichePreferences);
+assert.equal(nicheSelection.length, DAILY_CHALLENGE_SIZE, 'a narrow topic set must always produce a full challenge');
+assert.ok(nicheSelection.some((q) => nichePreferences.topicIds.includes(q.categoryId)), 'selection should include chosen topics where possible');
+const nicheExactQuestions = questions.filter((q) => nichePreferences.topicIds.includes(q.categoryId) && q.difficulty === nichePreferences.difficulty);
+for (const question of nicheExactQuestions) {
+  assert.ok(nicheSelection.some((selected) => selected.id === question.id),
+    `matching question ${question.id} should be prioritized before fallback questions`);
+}
+assert.ok(nicheSelection.every((q) => q.difficulty === 'hard'), 'the challenge should retain difficulty when the bank can fill it');
+assert.deepEqual(
+  selectDailyQuestions(dateKey, questions, nichePreferences).map((q) => q.id),
+  selectDailyQuestions(dateKey, questions, nichePreferences).map((q) => q.id),
+  'personalized selection should be deterministic',
+);
 
 assert.equal(getAthensDateKey(new Date('2026-10-29T20:30:00.000Z')), '2026-10-29', 'Athens date before local midnight');
 assert.equal(getAthensDateKey(new Date('2026-10-29T22:30:00.000Z')), '2026-10-30', 'Athens date after local midnight');
@@ -92,4 +143,4 @@ assert.equal(parseDailyChallengeRecord(JSON.stringify({ ...validStarted, questio
 assert.equal(parseDailyChallengeRecord(JSON.stringify({ ...validStarted, currentIndex: 3, answers: { '0': 0 } }), dateKey), null, 'impossible skipped-question state must be rejected');
 assert.equal(parseDailyChallengeRecord(JSON.stringify({ ...validCompleted, answers: { '0': 0 } }), dateKey), null, 'incomplete completed session must be rejected');
 
-console.log(`Daily challenge checks passed (${questions.length} questions; seven-question selection, Athens date handling, and saved-session validation).`);
+console.log(`Daily challenge checks passed (${questions.length} questions; topic/difficulty preferences, Athens date handling, stable seven-question selection, and saved-session validation).`);

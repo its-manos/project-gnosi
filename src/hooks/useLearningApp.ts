@@ -10,6 +10,7 @@ export type AppScreen =
   | "lesson"
   | "quiz"
   | "results"
+  | "progress"
   | "saved"
   | "search";
 
@@ -411,6 +412,33 @@ export function useLearningApp() {
     setScreen("lesson");
   }
 
+  async function resetLessonProgressForDevelopment(): Promise<void> {
+    if (!__DEV__) return;
+
+    // Wait for queued snapshots to finish first so an older write cannot
+    // recreate lesson progress after the development reset removes the keys.
+    await Promise.all([
+      attemptsWriteQueue.catch(() => undefined),
+      completedWriteQueue.catch(() => undefined),
+    ]);
+
+    try {
+      await Promise.all([
+        AsyncStorage.removeItem(COMPLETED_STORAGE_KEY),
+        AsyncStorage.removeItem(ATTEMPTS_STORAGE_KEY),
+      ]);
+      setCompletedLessonIds([]);
+      setLessonAttempts({});
+      setCheckpointAnswers({});
+      setQuestionIndex(0);
+      setSelectedAnswer(null);
+      setScore(0);
+    } catch (error) {
+      console.warn("Could not reset lesson progress for development:", error);
+      throw error;
+    }
+  }
+
   const latestAttemptEntry = Object.entries(lessonAttempts)
     .filter(([lessonId, attempt]) =>
       !completedLessonIds.includes(lessonId) || attempt.replayOfCompletedLesson
@@ -439,6 +467,9 @@ export function useLearningApp() {
     inProgressQuestionCount: inProgressLessonId
       ? countInlineQuestions(inProgressLessonId)
       : 0,
+    inProgressLessonCount: Object.entries(lessonAttempts).filter(([lessonId, attempt]) =>
+      !completedLessonIds.includes(lessonId) || attempt.replayOfCompletedLesson
+    ).length,
     openCategory,
     openSubcategory,
     openLesson,
@@ -448,5 +479,6 @@ export function useLearningApp() {
     answerCheckpoint,
     finishInlineLesson,
     restartLesson,
+    resetLessonProgressForDevelopment,
   };
 }

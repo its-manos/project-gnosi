@@ -1,16 +1,28 @@
-import { useState } from "react";
+import { useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
 import AnswerOption from "../components/AnswerOption";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
+import DailyMistakeReview from "../components/DailyMistakeReview";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
+import { DAILY_CHALLENGE_TOPICS, CHALLENGE_DIFFICULTIES, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
 import { colors } from "../theme";
 
-type Props = { onHome: () => void };
+type Props = {
+  onHome: () => void;
+  onOpenPreferences: () => void;
+  preferences: DailyChallengePreferences;
+  preferencesLoaded: boolean;
+};
 
-export default function DailyChallengeScreen({ onHome }: Props) {
+export default function DailyChallengeScreen({
+  onHome,
+  onOpenPreferences,
+  preferences,
+  preferencesLoaded,
+}: Props) {
   const {
     record,
     isLoading,
@@ -21,9 +33,20 @@ export default function DailyChallengeScreen({ onHome }: Props) {
     startChallenge,
     answerQuestion,
     nextQuestion,
-  } = useDailyChallenge();
+  } = useDailyChallenge(preferences, preferencesLoaded);
   const [sourceError, setSourceError] = useState(false);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [reviewDateKey, setReviewDateKey] = useState<string | null>(null);
+  const missedQuestions = challengeQuestions.filter(
+    (question, index) => record.answers[String(index)] !== question.correctIndex,
+  );
   const isCorrect = currentQuestion !== null && selectedAnswer === currentQuestion.correctIndex;
+  const selectedTopicNames = DAILY_CHALLENGE_TOPICS
+    .filter((topic) => preferences.topicIds.includes(topic.id))
+    .map((topic) => topic.title);
+  const selectedDifficultyName = CHALLENGE_DIFFICULTIES.find(
+    (item) => item.id === preferences.difficulty,
+  )?.title ?? "Μεσαίο";
 
   async function openSource(url: string) {
     try {
@@ -35,7 +58,7 @@ export default function DailyChallengeScreen({ onHome }: Props) {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" />
 
       {isLoading ? (
@@ -43,6 +66,13 @@ export default function DailyChallengeScreen({ onHome }: Props) {
           <ActivityIndicator color={colors.accentLight} size="large" />
           <Text style={styles.muted}>Φόρτωση της σημερινής πρόκλησης…</Text>
         </View>
+      ) : record.completed && reviewDateKey === record.dateKey ? (
+        <DailyMistakeReview
+          key={record.dateKey}
+          questions={missedQuestions}
+          onDone={() => { setReviewDateKey(null); scrollRef.current?.scrollTo({ y: 0, animated: false }); }}
+          onAdvance={() => scrollRef.current?.scrollTo({ y: 0, animated: false })}
+        />
       ) : record.completed ? (
         <View style={styles.resultContainer}>
           <Text style={styles.resultEmoji}>{correctCount === DAILY_CHALLENGE_SIZE ? "🏆" : "✨"}</Text>
@@ -62,6 +92,17 @@ export default function DailyChallengeScreen({ onHome }: Props) {
             <Text style={styles.scoreMeta}>{Math.round((correctCount / DAILY_CHALLENGE_SIZE) * 100)}% επιτυχία</Text>
           </View>
           <Text style={styles.tomorrowNote}>Η επόμενη πρόκληση θα είναι διαθέσιμη αύριο.</Text>
+          {missedQuestions.length > 0 ? (
+            <View style={styles.reviewInvitation}>
+              <Text style={styles.body}>Ξαναδοκίμασε τις ερωτήσεις που έχασες. Η εξάσκηση δεν αλλάζει το σημερινό σκορ ή το σερί σου.</Text>
+              <ActionButton
+                label={`Επανάληψη λαθών (${missedQuestions.length}) →`}
+                onPress={() => { setReviewDateKey(record.dateKey); scrollRef.current?.scrollTo({ y: 0, animated: false }); }}
+              />
+            </View>
+          ) : (
+            <Text style={styles.tomorrowNote}>Δεν έχεις λάθη για επανάληψη σήμερα!</Text>
+          )}
           <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} />
         </View>
       ) : !record.started ? (
@@ -76,7 +117,14 @@ export default function DailyChallengeScreen({ onHome }: Props) {
             <Text style={styles.feature}>• 7 ερωτήσεις πολλαπλής επιλογής</Text>
             <Text style={styles.feature}>• Άμεση εξήγηση μετά από κάθε απάντηση</Text>
             <Text style={styles.feature}>• Μπορείς να κλείσεις την εφαρμογή και να συνεχίσεις αργότερα</Text>
+            <View style={styles.preferencesSummary}>
+              <Text style={styles.preferencesSummaryLabel}>ΤΑ ΘΕΜΑΤΑ ΣΟΥ</Text>
+              <Text style={styles.preferencesSummaryValue}>{selectedTopicNames.join(" · ")}</Text>
+              <Text style={styles.preferencesSummaryLabel}>ΔΥΣΚΟΛΙΑ</Text>
+              <Text style={styles.preferencesSummaryValue}>{selectedDifficultyName}</Text>
+            </View>
           </View>
+          <ActionButton label="Προσαρμογή πρόκλησης" onPress={onOpenPreferences} secondary />
           {questions.length < DAILY_CHALLENGE_SIZE ? (
             <Text style={styles.errorText}>Δεν υπάρχουν ακόμη αρκετές ερωτήσεις για τη σημερινή πρόκληση.</Text>
           ) : null}
@@ -153,6 +201,9 @@ const styles = StyleSheet.create({
   body: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
   featureList: { marginTop: 22, gap: 12, backgroundColor: colors.surface, padding: 17, borderColor: colors.border, borderWidth: 1, borderRadius: 18 },
   feature: { color: colors.textBody, fontSize: 13, lineHeight: 19 },
+  preferencesSummary: { marginTop: 5, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border, gap: 4 },
+  preferencesSummaryLabel: { color: colors.accentLight, fontSize: 9, fontWeight: "900", letterSpacing: 1 },
+  preferencesSummaryValue: { color: colors.text, fontSize: 12, lineHeight: 18, marginBottom: 8 },
   progressRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10, marginBottom: 11 },
   muted: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   counter: { color: colors.accentLight, fontSize: 13, fontWeight: "800" },
@@ -168,6 +219,7 @@ const styles = StyleSheet.create({
   scoreNote: { color: colors.textMuted, fontSize: 12, marginTop: 12 },
   errorText: { color: colors.error, fontSize: 13, lineHeight: 20, textAlign: "center", marginTop: 20 },
   resultContainer: { alignItems: "center", paddingTop: 42 },
+  reviewInvitation: { width: "100%", padding: 18, marginTop: 18, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   resultEmoji: { fontSize: 62, marginBottom: 23 },
   resultTitle: { color: colors.text, fontSize: 28, fontWeight: "900", lineHeight: 36, textAlign: "center", marginBottom: 14 },
   scoreCard: { width: "100%", alignItems: "center", backgroundColor: colors.surfaceSoft, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 22, padding: 25, marginTop: 28, marginBottom: 18 },

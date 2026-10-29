@@ -3,6 +3,13 @@ import {
   questions,
   type GeneralKnowledgeQuestion,
 } from "../data/questions";
+import {
+  DEFAULT_DAILY_CHALLENGE_PREFERENCES,
+  normalizeDailyChallengePreferences,
+  type DailyChallengePreferences,
+} from "../data/dailyChallengeTopics";
+
+export const DAILY_CHALLENGE_STORAGE_KEY = "@gnosi/daily-challenge-v1";
 
 export type DailyChallengeRecord = {
   dateKey: string;
@@ -37,31 +44,65 @@ export function getAthensDateKey(date: Date = new Date()): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-/** A date-seeded shuffle makes the planned set stable for that date. */
+/**
+ * Pick seven questions while respecting interests and difficulty whenever the
+ * bank has enough eligible questions. Saved question IDs keep an active set
+ * unchanged, even when preferences are edited later.
+ */
 export function selectDailyQuestions(
   dateKey: string,
-  bank: GeneralKnowledgeQuestion[] = questions
+  bank: GeneralKnowledgeQuestion[] = questions,
+  rawPreferences: DailyChallengePreferences = DEFAULT_DAILY_CHALLENGE_PREFERENCES,
 ): GeneralKnowledgeQuestion[] {
   if (bank.length < DAILY_CHALLENGE_SIZE) return [];
 
+  const preferences = normalizeDailyChallengePreferences(rawPreferences);
+  const selectedTopics = new Set(preferences.topicIds);
+  const topicPool = bank.filter((question) => selectedTopics.has(question.categoryId));
+  const exactPool = topicPool.filter((question) => question.difficulty === preferences.difficulty);
+  const allAtDifficulty = bank.filter((question) => question.difficulty === preferences.difficulty);
+  const seedInput = `${dateKey}|${preferences.topicIds.slice().sort().join(",")}|${preferences.difficulty}`;
+
   let seed = 2166136261;
-  for (let index = 0; index < dateKey.length; index += 1) {
-    seed ^= dateKey.charCodeAt(index);
+  for (let index = 0; index < seedInput.length; index += 1) {
+    seed ^= seedInput.charCodeAt(index);
     seed = Math.imul(seed, 16777619) >>> 0;
   }
-
   const random = () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
+  const shuffled = <T,>(items: T[]): T[] => {
+    const result = [...items];
+    for (let index = result.length - 1; index > 0; index -= 1) {
+      const otherIndex = Math.floor(random() * (index + 1));
+      [result[index], result[otherIndex]] = [result[otherIndex], result[index]];
+    }
+    return result;
+  };
 
-  const shuffled = [...bank];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const otherIndex = Math.floor(random() * (index + 1));
-    [shuffled[index], shuffled[otherIndex]] = [shuffled[otherIndex], shuffled[index]];
+  let chosen: GeneralKnowledgeQuestion[] = [];
+  const addUnique = (pool: GeneralKnowledgeQuestion[]) => {
+    const chosenIds = new Set(chosen.map((question) => question.id));
+    const needed = DAILY_CHALLENGE_SIZE - chosen.length;
+    if (needed <= 0) return;
+    chosen = [...chosen, ...shuffled(pool.filter((question) => !chosenIds.has(question.id))).slice(0, needed)];
+  };
+
+  // First include questions matching both preferred topic and difficulty.
+  if (exactPool.length >= DAILY_CHALLENGE_SIZE) {
+    chosen = shuffled(exactPool).slice(0, DAILY_CHALLENGE_SIZE);
+  } else {
+    addUnique(exactPool);
+    // Then preserve difficulty, including other topics only if needed.
+    addUnique(allAtDifficulty);
+    // If a difficulty has too few questions in the whole bank, keep the topic
+    // choices first and widen to other levels, then finally the full bank.
+    addUnique(topicPool);
+    addUnique(bank);
   }
 
-  return shuffled.slice(0, DAILY_CHALLENGE_SIZE);
+  return chosen.length === DAILY_CHALLENGE_SIZE ? shuffled(chosen) : [];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
