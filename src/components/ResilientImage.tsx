@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -30,22 +30,20 @@ type PlaceholderProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** A consistent loading/error state for remote images, preserving the given layout. */
 export function ImageStatusPlaceholder({
   status,
   label,
   style,
 }: PlaceholderProps) {
   const isLoading = status === "loading";
+  const visibleLabel = label ?? (isLoading ? "Φόρτωση εικόνας…" : "Η εικόνα δεν είναι διαθέσιμη");
 
   return (
     <View
       style={[styles.placeholder, style]}
       accessible
       accessibilityRole="image"
-      accessibilityLabel={
-        label ?? (isLoading ? "Φόρτωση εικόνας" : "Η εικόνα δεν είναι διαθέσιμη")
-      }
+      accessibilityLabel={visibleLabel}
     >
       {isLoading ? (
         <ActivityIndicator color={colors.accent} size="small" />
@@ -55,12 +53,17 @@ export function ImageStatusPlaceholder({
         </Text>
       )}
       <Text style={styles.placeholderText} numberOfLines={2}>
-        {label ?? (isLoading ? "Φόρτωση εικόνας…" : "Η εικόνα δεν είναι διαθέσιμη")}
+        {visibleLabel}
       </Text>
     </View>
   );
 }
 
+/**
+ * Keeps the native Image in normal layout (rather than absolute-fill layout),
+ * matching the previously working Image component sizing. The wrapper provides
+ * the same fixed dimensions as callers already pass in `style`.
+ */
 export default function ResilientImage({
   uri,
   style,
@@ -70,34 +73,54 @@ export default function ResilientImage({
   loadingLabel = "Φόρτωση εικόνας…",
 }: Props) {
   const hasValidUri = typeof uri === "string" && uri.trim().length > 0;
-  const [status, setStatus] = useState<ImageStatus>(
-    hasValidUri ? "loading" : "error"
-  );
+  const normalizedUri = hasValidUri ? uri!.trim() : null;
+  const [lastLoad, setLastLoad] = useState<{
+    uri: string | null;
+    status: ImageStatus;
+  }>({ uri: normalizedUri, status: hasValidUri ? "loading" : "error" });
 
-  // Reset if a recycled card/component receives a different image URL.
-  useEffect(() => {
-    setStatus(hasValidUri ? "loading" : "error");
-  }, [uri, hasValidUri]);
+  // Derived state ensures a newly supplied URL immediately returns to loading
+  // without a useEffect resetting state after a fast image-load event.
+  const status: ImageStatus = lastLoad.uri === normalizedUri
+    ? lastLoad.status
+    : hasValidUri
+      ? "loading"
+      : "error";
 
   return (
     <View style={[styles.frame, style]}>
       {hasValidUri ? (
         <Image
-          key={uri}
-          source={{ uri: uri! }}
-          style={StyleSheet.absoluteFillObject}
+          key={normalizedUri!}
+          source={{ uri: normalizedUri! }}
+          style={styles.image}
           resizeMode={resizeMode}
-          accessible={status === "loaded" && Boolean(accessibilityLabel)}
+          accessible={Boolean(accessibilityLabel)}
           accessibilityLabel={accessibilityLabel}
-          onLoad={() => setStatus("loaded")}
-          onError={() => setStatus("error")}
+          onLoad={() => setLastLoad({ uri: normalizedUri, status: "loaded" })}
+          onError={(event) => {
+            const reason = event.nativeEvent?.error ?? "Unknown native image error";
+            console.warn(`[ΓΝΩΣΗ] Failed to load image: ${normalizedUri}`, reason);
+            setLastLoad({ uri: normalizedUri, status: "error" });
+          }}
         />
       ) : null}
 
-      {status !== "loaded" ? (
+      {status === "loading" && hasValidUri ? (
+        <View
+          pointerEvents="none"
+          style={styles.loadingBadge}
+          accessible
+          accessibilityLabel={loadingLabel}
+        >
+          <ActivityIndicator color={colors.accentLight} size="small" />
+        </View>
+      ) : null}
+
+      {status === "error" ? (
         <ImageStatusPlaceholder
-          status={status}
-          label={status === "loading" ? loadingLabel : fallbackLabel}
+          status="error"
+          label={fallbackLabel}
           style={StyleSheet.absoluteFillObject}
         />
       ) : null}
@@ -110,6 +133,26 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
     backgroundColor: colors.surfaceSoft,
+  },
+  // The image is a normal layout child. Every current caller provides a frame
+  // width and height, so percentages resolve against that measured frame.
+  image: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "transparent",
+  },
+  loadingBadge: {
+    position: "absolute",
+    top: 9,
+    right: 9,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(11, 13, 21, 0.78)",
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   placeholder: {
     flex: 1,

@@ -28,18 +28,26 @@ type Props = {
   onBack: () => void;
 };
 
-function getSectionIndexForParagraph(lesson: Lesson, paragraphNumber: number): number | null {
-  let firstParagraphNumber = 1;
+function getNextSectionIndexForResume(
+  lesson: Lesson,
+  resumeParagraph: number,
+  visibleParagraphLimit: number
+): number | null {
+  let paragraphOffset = 0;
 
   for (let sectionIndex = 0; sectionIndex < lesson.sections.length; sectionIndex += 1) {
     const section = lesson.sections[sectionIndex];
-    const lastParagraphNumber = firstParagraphNumber + section.paragraphs.length - 1;
+    const startParagraphNumber = paragraphOffset + 1;
+    paragraphOffset += section.paragraphs.length;
 
-    if (paragraphNumber >= firstParagraphNumber && paragraphNumber <= lastParagraphNumber) {
+    // Prefer the next section heading after the answered question, provided it
+    // is already unlocked. Otherwise LessonScreen falls back to the paragraph.
+    if (
+      startParagraphNumber >= resumeParagraph &&
+      startParagraphNumber <= visibleParagraphLimit
+    ) {
       return sectionIndex;
     }
-
-    firstParagraphNumber = lastParagraphNumber + 1;
   }
 
   return null;
@@ -62,42 +70,10 @@ export default function LessonScreen({
   const answeredCount = Array.from({ length: inlineQuestionCount }, (_, index) => index)
     .filter((index) => checkpointAnswers[index] !== undefined).length;
   const remainingCount = inlineQuestionCount - answeredCount;
-  const scrollViewRef = useRef<ScrollView>(null);
-  const sectionYPositions = useRef<Record<number, number>>({});
-  const didRestoreScroll = useRef(false);
-
-  // Capture the resume target once on mount. The target is the section heading
-  // that introduces the paragraph immediately before the next unanswered
-  // checkpoint. New answers in this session must not trigger another scroll.
-  const resumeParagraph = getResumeParagraphNumber(lesson, checkpointAnswers);
-  const resumeTargetSectionIndex = useRef(
-    resumeParagraph === null
-      ? null
-      : getSectionIndexForParagraph(lesson, resumeParagraph)
-  );
-
-  function restoreResumePositionIfReady() {
-    const targetSectionIndex = resumeTargetSectionIndex.current;
-    if (targetSectionIndex === null || didRestoreScroll.current) return;
-
-    const targetY = sectionYPositions.current[targetSectionIndex];
-    if (targetY === undefined) return;
-
-    didRestoreScroll.current = true;
-    requestAnimationFrame(() => {
-      scrollViewRef.current?.scrollTo({
-        // Show the section title, then let the reader continue down to the
-        // paragraph and checkpoint with their context visible.
-        y: Math.max(0, targetY - 8),
-        animated: false,
-      });
-    });
-  }
-
   const mediaByParagraphCount = inlineArticleMedia[lesson.id] ?? [];
 
-  // Reveal article content in pairs of paragraphs. Each unanswered
-  // checkpoint keeps the paragraphs after it hidden until the learner answers.
+  // Reveal article content in pairs of paragraphs. Each unanswered checkpoint
+  // keeps paragraphs after it hidden until the learner answers.
   const firstUnansweredQuestion = Array.from(
     { length: inlineQuestionCount },
     (_, index) => index
@@ -107,14 +83,54 @@ export default function LessonScreen({
     ? paragraphCount
     : (firstUnansweredQuestion + 1) * 2;
 
-  // Store each section's absolute paragraph position so question placement
-  // remains consistent across section boundaries.
+  // Store each section's absolute paragraph position so questions remain in
+  // the correct place even when a checkpoint crosses a section boundary.
   let paragraphOffset = 0;
   const sectionsWithPositions = lesson.sections.map((section) => {
     const startParagraphNumber = paragraphOffset + 1;
     paragraphOffset += section.paragraphs.length;
     return { ...section, startParagraphNumber };
   });
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const sectionYPositions = useRef<Record<number, number>>({});
+  const paragraphYPositions = useRef<Record<number, number>>({});
+  const didRestoreScroll = useRef(false);
+
+  // Capture the target once when the lesson mounts. New answers in this active
+  // visit won't cause scrolling; reopening an attempt restores its position.
+  const resumeParagraph = getResumeParagraphNumber(lesson, checkpointAnswers);
+  const resumeTargetParagraph = useRef(resumeParagraph);
+  const resumeTargetSectionIndex = useRef(
+    resumeParagraph === null
+      ? null
+      : getNextSectionIndexForResume(
+          lesson,
+          resumeParagraph,
+          visibleParagraphLimit
+        )
+  );
+
+  function restoreResumePositionIfReady() {
+    if (resumeTargetParagraph.current === null || didRestoreScroll.current) return;
+
+    const targetSectionIndex = resumeTargetSectionIndex.current;
+    const targetY = targetSectionIndex !== null
+      ? sectionYPositions.current[targetSectionIndex]
+      : paragraphYPositions.current[resumeTargetParagraph.current];
+
+    if (targetY === undefined) return;
+
+    didRestoreScroll.current = true;
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({
+        // Prefer the heading AFTER the last answered checkpoint. If there isn't
+        // one in the unlocked content, use the next paragraph itself.
+        y: Math.max(0, targetY - 8),
+        animated: false,
+      });
+    });
+  }
 
   return (
     <ScrollView
@@ -181,7 +197,17 @@ export default function LessonScreen({
                 : undefined;
 
               return (
-                <View key={`${section.title}-${paragraphNumber}`}>
+                <View
+                  key={`${section.title}-${paragraphNumber}`}
+                  onLayout={(event) => {
+                    const sectionY = sectionYPositions.current[sectionIndex];
+                    if (sectionY !== undefined) {
+                      paragraphYPositions.current[paragraphNumber] =
+                        sectionY + event.nativeEvent.layout.y;
+                    }
+                    restoreResumePositionIfReady();
+                  }}
+                >
                   <Text style={styles.paragraph}>{paragraph}</Text>
 
                   {figureList.map((figure) => (

@@ -17,37 +17,33 @@ export function getInlineQuestionCount(lesson: Lesson): number {
 }
 
 /**
- * When reopening an attempted lesson, restore to the section containing the
- * paragraph paired with the most recent answered checkpoint. That lets the
- * reader revisit the heading and context they were just learning, rather than
- * jumping forward to the next unanswered question.
+ * On resume, target the first paragraph made available after the last
+ * consecutively answered checkpoint. LessonScreen prefers that paragraph's
+ * section heading when one is available in the currently unlocked content.
  */
 export function getResumeParagraphNumber(
   lesson: Lesson,
   checkpointAnswers: Record<number, number>
 ): number | null {
   const inlineQuestionCount = getInlineQuestionCount(lesson);
-  if (inlineQuestionCount === 0) return null;
+  const paragraphCount = getParagraphCount(lesson);
 
-  const checkpointIndexes = Array.from(
-    { length: inlineQuestionCount },
-    (_, index) => index
-  );
-  const firstUnansweredQuestion = checkpointIndexes.find(
-    (index) => checkpointAnswers[index] === undefined
-  );
+  if (inlineQuestionCount === 0 || paragraphCount === 0) return null;
 
-  // The main article flow only unlocks checkpoints in order. Use the number of
-  // consecutive answered checkpoints so malformed/stale data cannot target a
-  // paragraph that is still locked.
-  const consecutiveAnsweredCount = firstUnansweredQuestion === undefined
-    ? inlineQuestionCount
-    : firstUnansweredQuestion;
+  // Checkpoints are answered in order. Count only the consecutive answers from
+  // the beginning so malformed/stale state cannot skip an unanswered question.
+  let consecutiveAnsweredCount = 0;
+  while (
+    consecutiveAnsweredCount < inlineQuestionCount &&
+    checkpointAnswers[consecutiveAnsweredCount] !== undefined
+  ) {
+    consecutiveAnsweredCount += 1;
+  }
 
   if (consecutiveAnsweredCount === 0) return null;
 
-  const paragraphCount = getParagraphCount(lesson);
-  const target = consecutiveAnsweredCount * 2;
-
-  return Math.max(1, Math.min(target, paragraphCount));
+  // Q1 follows paragraph 2, Q2 follows paragraph 4, etc. Resume on the next
+  // paragraph (3, 5, 7...) rather than the paragraph before that question.
+  const nextParagraph = consecutiveAnsweredCount * 2 + 1;
+  return Math.min(nextParagraph, paragraphCount);
 }
