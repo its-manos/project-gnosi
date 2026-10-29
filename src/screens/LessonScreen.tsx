@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { useRef } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
@@ -92,7 +93,7 @@ export default function LessonScreen({
     return { ...section, startParagraphNumber };
   });
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
   const sectionYPositions = useRef<Record<number, number>>({});
   const paragraphYPositions = useRef<Record<number, number>>({});
   const didRestoreScroll = useRef(false);

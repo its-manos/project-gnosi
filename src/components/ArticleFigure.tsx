@@ -52,7 +52,7 @@ export default function ArticleFigure({ figure }: Props) {
               <ImageStatusPlaceholder
                 status="error"
                 label="Το διάγραμμα δεν είναι διαθέσιμο"
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
               />
             ) : null}
           </View>

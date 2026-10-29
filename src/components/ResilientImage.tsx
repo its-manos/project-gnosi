@@ -121,7 +121,7 @@ export default function ResilientImage({
         <ImageStatusPlaceholder
           status="error"
           label={fallbackLabel}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
         />
       ) : null}
     </View>

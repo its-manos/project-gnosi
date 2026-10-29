@@ -8,10 +8,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <View style={styles.root}>
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor={colors.background}
-        />
+        <StatusBar barStyle="light-content" />
         <AppNavigator />
       </View>
     </SafeAreaProvider>
