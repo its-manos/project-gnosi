@@ -1,10 +1,11 @@
 import { useRef } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View, Image } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { inlineArticleMedia } from "../data/articleMedia";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import ArticleFigure from "../components/ArticleFigure";
+import ResilientImage from "../components/ResilientImage";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import SourceLink from "../components/SourceLink";
 import { colors } from "../theme";
@@ -138,7 +139,14 @@ export default function LessonScreen({
         disabled={!bookmarksLoaded}
       />
 
-      <Image source={{ uri: lesson.imageUrl }} style={styles.image} resizeMode="cover" />
+      <ResilientImage
+        uri={lesson.imageUrl}
+        style={styles.image}
+        resizeMode="cover"
+        accessibilityLabel={lesson.imageCaption}
+        fallbackLabel="Η φωτογραφία του άρθρου δεν είναι διαθέσιμη"
+        loadingLabel="Φόρτωση φωτογραφίας…"
+      />
       <Text style={styles.caption}>{lesson.imageCaption}</Text>
       <Pressable onPress={() => void Linking.openURL(lesson.imageCreditUrl).catch(() => {})}>
         <Text style={styles.credit}>Φωτογραφία: {lesson.imageCredit} ↗</Text>
