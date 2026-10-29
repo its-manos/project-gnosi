@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
@@ -27,35 +27,49 @@ export default function AppNavigator() {
   const activeLesson =
     lessons.find((item) => item.id === app.activeLessonId) ?? lessons[0];
 
-  const categorySubcategories = subcategories.filter(
-    (item) => item.categoryId === app.activeCategoryId
+  const categorySubcategories = useMemo(
+    () => subcategories.filter((item) => item.categoryId === app.activeCategoryId),
+    [app.activeCategoryId]
   );
-  const subcategoryLessons = lessons.filter(
-    (item) => item.subcategoryId === app.activeSubcategoryId
+  const subcategoryLessons = useMemo(
+    () => lessons.filter((item) => item.subcategoryId === app.activeSubcategoryId),
+    [app.activeSubcategoryId]
   );
-  const savedLessons = lessons.filter((lesson) =>
-    bookmarks.savedLessonIds.includes(lesson.id)
+  const savedLessons = useMemo(
+    () => lessons.filter((lesson) => bookmarks.savedLessonIds.includes(lesson.id)),
+    [bookmarks.savedLessonIds]
   );
+  const inProgressLesson = lessons.find(
+    (lesson) => lesson.id === app.inProgressLessonId
+  ) ?? null;
+
+  const currentScreen = app.screen;
+  const setAppScreen = app.setScreen;
+  const activeLessonTitle = activeLesson?.title ?? "μαθήματος";
 
   const navigateTo = useCallback((destination: AppScreen) => {
-    if (destination === app.screen) return;
+    if (destination === currentScreen) return;
 
     // Returning from the legacy standalone quiz to its article is an internal
     // step; keep the current attempt instead of warning or resetting it.
-    if (app.screen === "quiz" && destination === "lesson") {
-      app.setScreen(destination);
+    if (currentScreen === "quiz" && destination === "lesson") {
+      setAppScreen(destination);
       return;
     }
 
     const isInUnfinishedLearningFlow =
-      app.screen === "lesson" || app.screen === "quiz";
+      currentScreen === "lesson" || currentScreen === "quiz";
     const isLeavingLearningFlow =
       destination !== "lesson" && destination !== "quiz";
 
     if (isInUnfinishedLearningFlow && isLeavingLearningFlow) {
+      const message = currentScreen === "lesson"
+        ? `Βρίσκεσαι στη μέση του «${activeLessonTitle}». Οι απαντήσεις που έχεις ήδη δώσει αποθηκεύονται στη συσκευή σου. Μπορείς να επιστρέψεις από την αρχική με την επιλογή «Συνέχισε από εκεί που έμεινες».`
+        : `Βρίσκεσαι στη μέση του quiz «${activeLessonTitle}». Η τρέχουσα προσπάθεια του ξεχωριστού quiz δεν αποθηκεύεται ακόμη. Αν φύγεις, θα χρειαστεί να το ξεκινήσεις ξανά.`;
+
       Alert.alert(
         "Το μάθημα δεν έχει ολοκληρωθεί",
-        `Βρίσκεσαι στη μέση του «${activeLesson?.title ?? "μαθήματος"}». Αν φύγεις τώρα, οι απαντήσεις αυτής της προσπάθειας δεν αποθηκεύονται και θα χρειαστεί να ξεκινήσεις ξανά αν ανοίξεις το μάθημα αργότερα.`,
+        message,
         [
           {
             text: "Συνέχεια μαθήματος",
@@ -64,15 +78,15 @@ export default function AppNavigator() {
           {
             text: "Έξοδος από το μάθημα",
             style: "destructive",
-            onPress: () => app.setScreen(destination),
+            onPress: () => setAppScreen(destination),
           },
         ]
       );
       return;
     }
 
-    app.setScreen(destination);
-  }, [app, activeLesson?.title]);
+    setAppScreen(destination);
+  }, [currentScreen, setAppScreen, activeLessonTitle]);
 
   let screenContent: ReactNode = null;
 
@@ -89,6 +103,10 @@ export default function AppNavigator() {
           featuredLesson={lessons.find((item) => item.id === "ancient-athens") ?? activeLesson}
           completedCount={app.completedLessonIds.length}
           savedCount={bookmarks.savedLessonIds.length}
+          inProgressLesson={inProgressLesson}
+          inProgressAnsweredCount={app.inProgressAnsweredCount}
+          inProgressQuestionCount={app.inProgressQuestionCount}
+          onResumeLesson={app.openLesson}
           onOpenCategory={app.openCategory}
           onOpenLesson={app.openLesson}
           onOpenSaved={() => app.setScreen("saved")}

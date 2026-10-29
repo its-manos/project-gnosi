@@ -3,12 +3,16 @@ import type { Lesson } from "../data/lessons";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import { colors } from "../theme";
+import { getInlineQuestionCount } from "../utils/lessonProgress";
 
 type Props = { lesson: Lesson; score: number; onHome: () => void; onReadAgain: () => void };
 
 export default function ResultsScreen({ lesson, score, onHome, onReadAgain }: Props) {
-  const perfectScore = score === lesson.questions.length;
-  const percentage = Math.round((score / lesson.questions.length) * 100);
+  const totalQuestions = getInlineQuestionCount(lesson);
+  const perfectScore = totalQuestions > 0 && score === totalQuestions;
+  const percentage = totalQuestions > 0
+    ? Math.round((score / totalQuestions) * 100)
+    : 0;
 
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -22,7 +26,7 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain }: Pr
         <Text style={styles.body}>Ολοκλήρωσες το μάθημα «{lesson.title}».</Text>
         <View style={styles.scoreCard}>
           <Text style={styles.muted}>Η βαθμολογία σου</Text>
-          <Text style={styles.score}>{score} / {lesson.questions.length}</Text>
+          <Text style={styles.score}>{score} / {totalQuestions}</Text>
           <Text style={styles.meta}>{percentage}% σωστές απαντήσεις</Text>
         </View>
         <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} />

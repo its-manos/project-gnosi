@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from "react-native-svg";
 
 type MapRegion = {
@@ -44,8 +44,10 @@ const LAND_COLORS = [
 function columnCount(count: number) {
   if (count <= 1) return 1;
   if (count <= 4) return 2;
-  if (count <= 9) return 3;
-  if (count <= 16) return 4;
+  // Keep a roomy three-column map for the current catalogue (up to 24
+  // regions). More columns are only used for larger future catalogues.
+  if (count <= 24) return 3;
+  if (count <= 40) return 4;
   return 5;
 }
 
@@ -167,12 +169,15 @@ export default function FantasyMap({
   onSelectRegion,
   emptyMessage = "Νέες περιοχές θα εμφανιστούν εδώ.",
 }: Props) {
+  const [showList, setShowList] = useState(false);
   const positionedRegions = useMemo(() => makeLayout(regions), [regions]);
   const columns = columnCount(regions.length);
   const rows = Math.max(1, Math.ceil(regions.length / columns));
   const mapHeight = regions.length === 1 ? 168 : rows * ROW_GAP + 16;
-  const labelFontSize = columns >= 5 ? 7 : columns === 4 ? 8 : 9.2;
-  const maxLabelChars = columns >= 5 ? 9 : columns === 4 ? 11 : 14;
+  // Larger text is practical because the layout uses at most three columns for
+  // up to 24 regions. Large catalogues retain a list view for full labels.
+  const labelFontSize = columns >= 5 ? 9 : columns === 4 ? 9.6 : 10.2;
+  const maxLabelChars = columns >= 5 ? 9 : columns === 4 ? 11 : 12;
 
   if (regions.length === 0) {
     return (
@@ -195,7 +200,8 @@ export default function FantasyMap({
   });
 
   return (
-    <View style={styles.mapFrame}>
+    <View style={styles.container}>
+      <View style={styles.mapFrame}>
       <Svg
         width="100%"
         height={mapHeight}
@@ -330,7 +336,7 @@ export default function FantasyMap({
                 <SvgText
                   x={region.cx}
                   y={detailY}
-                  fontSize={columns >= 4 ? 5.9 : 6.8}
+                  fontSize={columns >= 5 ? 7.2 : columns === 4 ? 7.8 : 8.2}
                   fontWeight="500"
                   textAnchor="middle"
                   fill="#E6E3FF"
@@ -343,14 +349,119 @@ export default function FantasyMap({
           );
         })}
       </Svg>
+      </View>
+
+      <Pressable
+        style={styles.listToggle}
+        onPress={() => setShowList((visible) => !visible)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: showList }}
+        accessibilityLabel={showList ? "Προβολή χάρτη" : "Προβολή λίστας με όλες τις θεματικές"}
+      >
+        <Text style={styles.listToggleGlyph}>{showList ? "⌖" : "☷"}</Text>
+        <Text style={styles.listToggleText}>
+          {showList ? "Προβολή χάρτη" : "Προβολή ως λίστα"}
+        </Text>
+      </Pressable>
+
+      {showList ? (
+        <View style={styles.regionList}>
+          {positionedRegions.map((region) => (
+            <Pressable
+              key={`list-${region.id}`}
+              style={styles.regionListItem}
+              onPress={() => onSelectRegion(region.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`${region.title}${region.detail ? `, ${region.detail}` : ""}`}
+              accessibilityHint="Άνοιγμα αυτής της χώρας ή περιοχής γνώσης"
+            >
+              <View style={[styles.regionListIcon, { backgroundColor: region.fill }]}>
+                <Text style={styles.regionListEmoji}>{region.emoji ?? "✦"}</Text>
+              </View>
+              <View style={styles.regionListText}>
+                <Text style={styles.regionListTitle}>{region.title}</Text>
+                {region.detail ? (
+                  <Text style={styles.regionListDetail}>{region.detail}</Text>
+                ) : null}
+              </View>
+              <Text style={styles.regionListArrow}>›</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+  },
   mapFrame: {
     width: "100%",
     overflow: "hidden",
+  },
+  listToggle: {
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
+  listToggleGlyph: {
+    color: "#B1A5FF",
+    fontSize: 18,
+  },
+  listToggleText: {
+    color: "#B1A5FF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  regionList: {
+    gap: 8,
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  regionListItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    backgroundColor: "#151928",
+    borderWidth: 1,
+    borderColor: "#282D41",
+    borderRadius: 15,
+  },
+  regionListIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  regionListEmoji: {
+    fontSize: 18,
+  },
+  regionListText: {
+    flex: 1,
+  },
+  regionListTitle: {
+    color: "#F6F5FC",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  regionListDetail: {
+    color: "#9EA3BA",
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  regionListArrow: {
+    color: "#B1A5FF",
+    fontSize: 24,
+    paddingHorizontal: 3,
   },
   empty: {
     minHeight: 180,

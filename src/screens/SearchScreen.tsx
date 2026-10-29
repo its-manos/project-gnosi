@@ -42,10 +42,10 @@ export default function SearchScreen({
   const [query, setQuery] = useState("");
   const normalizedQuery = normalizeSearchText(query);
 
-  const results = useMemo(() => {
-    if (!normalizedQuery) return lessons;
-
-    return lessons.filter((lesson) => {
+  // Build the full-text index only when the content catalogue changes, not
+  // on every keystroke. This remains inexpensive now and scales better later.
+  const searchIndex = useMemo(
+    () => lessons.map((lesson) => {
       const category = categories.find(
         (item) => item.id === lesson.categoryId
       );
@@ -71,9 +71,21 @@ export default function SearchScreen({
         ]),
       ].join(" ");
 
-      return normalizeSearchText(searchableText).includes(normalizedQuery);
-    });
-  }, [lessons, categories, subcategories, normalizedQuery]);
+      return {
+        lesson,
+        normalizedText: normalizeSearchText(searchableText),
+      };
+    }),
+    [lessons, categories, subcategories]
+  );
+
+  const results = useMemo(() => {
+    if (!normalizedQuery) return searchIndex.map((entry) => entry.lesson);
+
+    return searchIndex
+      .filter((entry) => entry.normalizedText.includes(normalizedQuery))
+      .map((entry) => entry.lesson);
+  }, [searchIndex, normalizedQuery]);
 
   return (
     <ScrollView

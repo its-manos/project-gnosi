@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View, Image } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { inlineArticleMedia } from "../data/articleMedia";
@@ -7,6 +8,11 @@ import ArticleFigure from "../components/ArticleFigure";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import SourceLink from "../components/SourceLink";
 import { colors } from "../theme";
+import {
+  getInlineQuestionCount,
+  getParagraphCount,
+  getResumeParagraphNumber,
+} from "../utils/lessonProgress";
 
 type Props = {
   category: Category;
@@ -21,12 +27,21 @@ type Props = {
   onBack: () => void;
 };
 
-function getParagraphCount(lesson: Lesson): number {
-  return lesson.sections.reduce((sum, section) => sum + section.paragraphs.length, 0);
-}
+function getSectionIndexForParagraph(lesson: Lesson, paragraphNumber: number): number | null {
+  let firstParagraphNumber = 1;
 
-export function getInlineQuestionCount(lesson: Lesson): number {
-  return Math.min(lesson.questions.length, Math.floor(getParagraphCount(lesson) / 2));
+  for (let sectionIndex = 0; sectionIndex < lesson.sections.length; sectionIndex += 1) {
+    const section = lesson.sections[sectionIndex];
+    const lastParagraphNumber = firstParagraphNumber + section.paragraphs.length - 1;
+
+    if (paragraphNumber >= firstParagraphNumber && paragraphNumber <= lastParagraphNumber) {
+      return sectionIndex;
+    }
+
+    firstParagraphNumber = lastParagraphNumber + 1;
+  }
+
+  return null;
 }
 
 export default function LessonScreen({
@@ -46,6 +61,38 @@ export default function LessonScreen({
   const answeredCount = Array.from({ length: inlineQuestionCount }, (_, index) => index)
     .filter((index) => checkpointAnswers[index] !== undefined).length;
   const remainingCount = inlineQuestionCount - answeredCount;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const sectionYPositions = useRef<Record<number, number>>({});
+  const didRestoreScroll = useRef(false);
+
+  // Capture the resume target once on mount. The target is the section heading
+  // that introduces the paragraph immediately before the next unanswered
+  // checkpoint. New answers in this session must not trigger another scroll.
+  const resumeParagraph = getResumeParagraphNumber(lesson, checkpointAnswers);
+  const resumeTargetSectionIndex = useRef(
+    resumeParagraph === null
+      ? null
+      : getSectionIndexForParagraph(lesson, resumeParagraph)
+  );
+
+  function restoreResumePositionIfReady() {
+    const targetSectionIndex = resumeTargetSectionIndex.current;
+    if (targetSectionIndex === null || didRestoreScroll.current) return;
+
+    const targetY = sectionYPositions.current[targetSectionIndex];
+    if (targetY === undefined) return;
+
+    didRestoreScroll.current = true;
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({
+        // Show the section title, then let the reader continue down to the
+        // paragraph and checkpoint with their context visible.
+        y: Math.max(0, targetY - 8),
+        animated: false,
+      });
+    });
+  }
+
   const mediaByParagraphCount = inlineArticleMedia[lesson.id] ?? [];
 
   // Reveal article content in pairs of paragraphs. Each unanswered
@@ -69,7 +116,12 @@ export default function LessonScreen({
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      ref={scrollViewRef}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      onContentSizeChange={restoreResumePositionIfReady}
+    >
       <AppHeader onBack={onBack} />
       <Text style={styles.eyebrow}>{category.title.toUpperCase()} / {subcategory.title.toUpperCase()}</Text>
       <Text style={styles.title}>{lesson.title}</Text>
@@ -92,12 +144,19 @@ export default function LessonScreen({
         <Text style={styles.credit}>Φωτογραφία: {lesson.imageCredit} ↗</Text>
       </Pressable>
 
-      {sectionsWithPositions.map((section) => {
+      {sectionsWithPositions.map((section, sectionIndex) => {
         // Don't reveal a section heading until its first paragraph is unlocked.
         if (section.startParagraphNumber > visibleParagraphLimit) return null;
 
         return (
-          <View key={section.title} style={styles.section}>
+          <View
+            key={section.title}
+            style={styles.section}
+            onLayout={(event) => {
+              sectionYPositions.current[sectionIndex] = event.nativeEvent.layout.y;
+              restoreResumePositionIfReady();
+            }}
+          >
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.paragraphs.map((paragraph, index) => {
               const paragraphNumber = section.startParagraphNumber + index;

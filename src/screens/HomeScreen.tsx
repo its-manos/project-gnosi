@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import AppHeader from "../components/AppHeader";
@@ -10,6 +11,10 @@ type Props = {
   featuredLesson: Lesson;
   completedCount: number;
   savedCount: number;
+  inProgressLesson: Lesson | null;
+  inProgressAnsweredCount: number;
+  inProgressQuestionCount: number;
+  onResumeLesson: (lessonId: string) => void;
   onOpenCategory: (categoryId: string) => void;
   onOpenLesson: (lessonId: string) => void;
   onOpenSaved: () => void;
@@ -22,23 +27,30 @@ export default function HomeScreen({
   featuredLesson,
   completedCount,
   savedCount,
+  inProgressLesson,
+  inProgressAnsweredCount,
+  inProgressQuestionCount,
+  onResumeLesson,
   onOpenCategory,
   onOpenLesson,
   onOpenSaved,
   onOpenSearch,
 }: Props) {
-  const mapRegions = categories.map((category) => {
-    const count = subcategories.filter(
-      (subcategory) => subcategory.categoryId === category.id
-    ).length;
+  const mapRegions = useMemo(
+    () => categories.map((category) => {
+      const count = subcategories.filter(
+        (subcategory) => subcategory.categoryId === category.id
+      ).length;
 
-    return {
-      id: category.id,
-      title: category.title,
-      emoji: category.emoji,
-      detail: count === 1 ? "1 περιοχή" : `${count} περιοχές`,
-    };
-  });
+      return {
+        id: category.id,
+        title: category.title,
+        emoji: category.emoji,
+        detail: count === 1 ? "1 περιοχή" : `${count} περιοχές`,
+      };
+    }),
+    [categories, subcategories]
+  );
 
   return (
     <ScrollView
@@ -104,25 +116,59 @@ export default function HomeScreen({
         </Text>
       </View>
 
-      <Pressable
-        style={styles.discoveryCard}
-        onPress={() => onOpenLesson(featuredLesson.id)}
-        accessibilityRole="button"
-        accessibilityLabel={`Σημερινή ανακάλυψη: ${featuredLesson.title}`}
-      >
-        <View style={styles.discoveryIcon}>
-          <Text style={styles.discoveryGlyph}>✦</Text>
-        </View>
-        <View style={styles.discoveryContent}>
-          <Text style={styles.discoveryEyebrow}>ΜΙΑ ΜΙΚΡΗ ΑΝΑΚΑΛΥΨΗ</Text>
-          <Text style={styles.discoveryTitle} numberOfLines={2}>
-            {featuredLesson.title}
-          </Text>
-          <Text style={styles.discoveryMeta}>
-            {featuredLesson.readingMinutes} λεπτά ανάγνωσης · Δες το άρθρο →
-          </Text>
-        </View>
-      </Pressable>
+      {inProgressLesson ? (
+        <Pressable
+          style={styles.resumeCard}
+          onPress={() => onResumeLesson(inProgressLesson.id)}
+          accessibilityRole="button"
+          accessibilityLabel={`Συνέχισε το μάθημα ${inProgressLesson.title}`}
+        >
+          <View style={styles.resumeIcon}>
+            <Text style={styles.discoveryGlyph}>↗</Text>
+          </View>
+          <View style={styles.discoveryContent}>
+            <Text style={styles.resumeEyebrow}>ΣΥΝΕΧΙΣΕ ΑΠΟ ΕΚΕΙ ΠΟΥ ΕΜΕΙΝΕΣ</Text>
+            <Text style={styles.discoveryTitle} numberOfLines={2}>
+              {inProgressLesson.title}
+            </Text>
+            <Text style={styles.discoveryMeta}>
+              {inProgressAnsweredCount} από {inProgressQuestionCount} checkpoints · Συνέχεια →
+            </Text>
+            <View style={styles.resumeProgressTrack}>
+              <View
+                style={[
+                  styles.resumeProgressFill,
+                  {
+                    width: `${inProgressQuestionCount > 0 ? (inProgressAnsweredCount / inProgressQuestionCount) * 100 : 0}%`,
+                  },
+                ]}
+              />
+            </View>
+          </View>
+        </Pressable>
+      ) : null}
+
+      {(!inProgressLesson || inProgressLesson.id !== featuredLesson.id) ? (
+        <Pressable
+          style={styles.discoveryCard}
+          onPress={() => onOpenLesson(featuredLesson.id)}
+          accessibilityRole="button"
+          accessibilityLabel={`Σημερινή ανακάλυψη: ${featuredLesson.title}`}
+        >
+          <View style={styles.discoveryIcon}>
+            <Text style={styles.discoveryGlyph}>✦</Text>
+          </View>
+          <View style={styles.discoveryContent}>
+            <Text style={styles.discoveryEyebrow}>ΜΙΑ ΜΙΚΡΗ ΑΝΑΚΑΛΥΨΗ</Text>
+            <Text style={styles.discoveryTitle} numberOfLines={2}>
+              {featuredLesson.title}
+            </Text>
+            <Text style={styles.discoveryMeta}>
+              {featuredLesson.readingMinutes} λεπτά ανάγνωσης · Δες το άρθρο →
+            </Text>
+          </View>
+        </Pressable>
+      ) : null}
 
       <Text style={styles.footerNote}>
         Κάθε χώρα κρύβει έναν διαφορετικό τρόπο να δεις τον κόσμο.
@@ -265,6 +311,45 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   discoveryMeta: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
+  resumeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 13,
+    backgroundColor: "#1B1B31",
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 19,
+    padding: 14,
+    marginBottom: 12,
+  },
+  resumeIcon: {
+    width: 43,
+    height: 49,
+    borderRadius: 13,
+    backgroundColor: colors.accentSurface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resumeEyebrow: {
+    color: colors.accentLight,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    marginBottom: 3,
+  },
+  resumeProgressTrack: {
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginTop: 8,
+    width: "100%",
+  },
+  resumeProgressFill: {
+    height: "100%",
+    backgroundColor: colors.success,
+    borderRadius: 3,
+  },
   footerNote: {
     color: "#68728A",
     fontSize: 10,

@@ -62,7 +62,7 @@ export default function CategoryScreen({
           title: subcategory.title,
           emoji: ["✦", "✧", "✥", "✺", "✷", "✹"][index % 6],
           detail: count === 0
-            ? "Νέες ανακαλύψεις"
+            ? "Σύντομα"
             : count === 1
               ? "1 μάθημα"
               : `${count} μαθήματα`,

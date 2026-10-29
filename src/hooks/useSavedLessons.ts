@@ -4,6 +4,19 @@ import { lessons } from "../data/lessons";
 
 const SAVED_LESSONS_STORAGE_KEY = "@gnosi/saved-lesson-ids";
 const VALID_LESSON_IDS = new Set(lessons.map((lesson) => lesson.id));
+let savedLessonsWriteQueue: Promise<void> = Promise.resolve();
+
+function persistSavedLessonIds(lessonIds: string[]): Promise<void> {
+  const serialized = JSON.stringify(lessonIds);
+  savedLessonsWriteQueue = savedLessonsWriteQueue.then(async () => {
+    try {
+      await AsyncStorage.setItem(SAVED_LESSONS_STORAGE_KEY, serialized);
+    } catch (error) {
+      console.warn("Could not save bookmarked lessons:", error);
+    }
+  });
+  return savedLessonsWriteQueue;
+}
 
 function parseSavedLessonIds(raw: string | null): string[] {
   if (!raw) return [];
@@ -58,12 +71,7 @@ export function useSavedLessons() {
     // with the initial empty array during startup.
     if (!isLoaded) return;
 
-    AsyncStorage.setItem(
-      SAVED_LESSONS_STORAGE_KEY,
-      JSON.stringify(savedLessonIds)
-    ).catch((error) => {
-      console.warn("Could not save bookmarked lessons:", error);
-    });
+    void persistSavedLessonIds(savedLessonIds);
   }, [savedLessonIds, isLoaded]);
 
   function toggleSavedLesson(lessonId: string) {
