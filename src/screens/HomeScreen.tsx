@@ -19,6 +19,7 @@ type Props = {
   onOpenLesson: (lessonId: string) => void;
   onOpenSaved: () => void;
   onOpenSearch: () => void;
+  onStartDailyChallenge: () => void;
 };
 
 export default function HomeScreen({
@@ -35,6 +36,7 @@ export default function HomeScreen({
   onOpenLesson,
   onOpenSaved,
   onOpenSearch,
+  onStartDailyChallenge,
 }: Props) {
   const mapRegions = useMemo(
     () => categories.map((category) => {
@@ -91,6 +93,23 @@ export default function HomeScreen({
       <Text style={styles.hint}>
         Άγγιξε μια χώρα για να ανακαλύψεις τις θεματικές της περιοχές.
       </Text>
+
+      <Pressable
+        style={styles.dailyChallengeCard}
+        onPress={onStartDailyChallenge}
+        accessibilityRole="button"
+        accessibilityLabel="Ξεκίνα την καθημερινή πρόκληση με επτά ερωτήσεις"
+      >
+        <View style={styles.dailyChallengeIcon}>
+          <Text style={styles.dailyChallengeGlyph}>✦</Text>
+        </View>
+        <View style={styles.dailyChallengeCopy}>
+          <Text style={styles.dailyChallengeEyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
+          <Text style={styles.dailyChallengeTitle}>7 ερωτήσεις γνώσεων</Text>
+          <Text style={styles.dailyChallengeMeta}>Έως 700 πόντοι · Νέα πρόκληση κάθε μέρα</Text>
+        </View>
+        <Text style={styles.dailyChallengeArrow}>→</Text>
+      </Pressable>
 
       <View style={styles.mapLabelRow}>
         <Text style={styles.mapLabel}>ΟΙ ΓΝΩΣΤΟΙ ΚΟΣΜΟΙ</Text>
@@ -237,6 +256,31 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 16,
   },
+  dailyChallengeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#201D38",
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 18,
+    padding: 13,
+    marginBottom: 20,
+  },
+  dailyChallengeIcon: {
+    width: 44,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.accentSurface,
+  },
+  dailyChallengeGlyph: { color: colors.accentLight, fontSize: 25 },
+  dailyChallengeCopy: { flex: 1, gap: 4 },
+  dailyChallengeEyebrow: { color: colors.accentLight, fontSize: 8, fontWeight: "900", letterSpacing: 1.0 },
+  dailyChallengeTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "900" },
+  dailyChallengeMeta: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
+  dailyChallengeArrow: { color: colors.accentLight, fontSize: 23, fontWeight: "800", paddingLeft: 2 },
   mapLabelRow: {
     flexDirection: "row",
     justifyContent: "space-between",

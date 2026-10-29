@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
@@ -15,10 +15,12 @@ import QuizScreen from "../screens/QuizScreen";
 import ResultsScreen from "../screens/ResultsScreen";
 import SavedLessonsScreen from "../screens/SavedLessonsScreen";
 import SearchScreen from "../screens/SearchScreen";
+import DailyChallengeScreen from "../screens/DailyChallengeScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
   const bookmarks = useSavedLessons();
+  const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
 
   const activeCategory =
     categories.find((item) => item.id === app.activeCategoryId) ?? categories[0];
@@ -94,7 +96,9 @@ export default function AppNavigator() {
     return null;
   }
 
-  switch (app.screen) {
+  if (isDailyChallengeOpen) {
+    screenContent = <DailyChallengeScreen onHome={() => setIsDailyChallengeOpen(false)} />;
+  } else switch (app.screen) {
     case "home":
       screenContent = (
         <HomeScreen
@@ -111,6 +115,7 @@ export default function AppNavigator() {
           onOpenLesson={app.openLesson}
           onOpenSaved={() => app.setScreen("saved")}
           onOpenSearch={() => app.setScreen("search")}
+          onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
         />
       );
       break;
@@ -217,8 +222,11 @@ export default function AppNavigator() {
         {screenContent}
       </SafeAreaView>
       <BottomNavigation
-        currentScreen={app.screen}
-        onNavigate={(destination) => navigateTo(destination)}
+        currentScreen={isDailyChallengeOpen ? "home" : app.screen}
+        onNavigate={(destination) => {
+          setIsDailyChallengeOpen(false);
+          navigateTo(destination);
+        }}
       />
     </View>
   );
