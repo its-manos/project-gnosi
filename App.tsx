@@ -1,6 +1,9 @@
 
-import { StatusBar, View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "react-native";
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 
 import AppNavigator from "./src/navigation/AppNavigator";
 import { colors } from "./src/theme";
@@ -8,11 +11,12 @@ import { colors } from "./src/theme";
 export default function App() {
   return (
     <SafeAreaProvider>
-      <View
+      <SafeAreaView
         style={{
           flex: 1,
           backgroundColor: colors.background,
         }}
+        edges={["top", "right", "bottom", "left"]}
       >
         <StatusBar
           barStyle="light-content"
@@ -20,7 +24,7 @@ export default function App() {
         />
 
         <AppNavigator />
-      </View>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }

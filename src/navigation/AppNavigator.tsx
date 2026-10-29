@@ -8,6 +8,7 @@ import LessonScreen from "../screens/LessonScreen";
 import QuizScreen from "../screens/QuizScreen";
 import ResultsScreen from "../screens/ResultsScreen";
 import SavedLessonsScreen from "../screens/SavedLessonsScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
@@ -48,6 +49,18 @@ export default function AppNavigator() {
           onOpenCategory={app.openCategory}
           onOpenLesson={app.openLesson}
           onOpenSaved={() => app.setScreen("saved")}
+          onOpenSearch={() => app.setScreen("search")}
+        />
+      );
+
+        case "search":
+      return (
+        <SearchScreen
+          lessons={lessons}
+          categories={categories}
+          subcategories={subcategories}
+          onBack={() => app.setScreen("home")}
+          onOpenLesson={app.openLesson}
         />
       );
 
@@ -60,6 +73,7 @@ export default function AppNavigator() {
           onRemoveSavedLesson={bookmarks.toggleSavedLesson}
         />
       );
+
 
     case "category":
       return (

@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
@@ -14,6 +14,7 @@ type Props = {
   onOpenCategory: (categoryId: string) => void;
   onOpenLesson: (lessonId: string) => void;
   onOpenSaved: () => void;
+  onOpenSearch: () => void;
 };
 
 export default function HomeScreen({
@@ -25,6 +26,7 @@ export default function HomeScreen({
   onOpenCategory,
   onOpenLesson,
   onOpenSaved,
+  onOpenSearch,
 }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -37,6 +39,20 @@ export default function HomeScreen({
           Ανακάλυψε κάτι καινούριο, διάβασε μια σύντομη ιστορία και δοκίμασε όσα έμαθες.
         </Text>
       </View>
+
+      <Pressable
+        style={styles.searchTrigger}
+        onPress={onOpenSearch}
+        accessibilityRole="button"
+        accessibilityLabel="Αναζήτηση μαθημάτων και θεμάτων"
+      >
+        <Text style={styles.searchIcon}>⌕</Text>
+        <View style={styles.searchTextWrap}>
+          <Text style={styles.searchTitle}>Τι θέλεις να μάθεις;</Text>
+          <Text style={styles.searchHint}>Αναζήτησε ένα θέμα ή μια ιδέα</Text>
+        </View>
+        <Text style={styles.searchArrow}>→</Text>
+      </Pressable>
 
       <View style={styles.featuredCard}>
         <View style={styles.featuredTopRow}>
@@ -96,6 +112,12 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   welcome: { marginBottom: 26 },
+  searchTrigger: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 17, paddingHorizontal: 15, paddingVertical: 14, marginBottom: 22, gap: 12 },
+  searchIcon: { color: colors.accent, fontSize: 29, lineHeight: 32 },
+  searchTextWrap: { flex: 1, gap: 3 },
+  searchTitle: { color: colors.text, fontSize: 14, fontWeight: "800" },
+  searchHint: { color: colors.textMuted, fontSize: 11 },
+  searchArrow: { color: colors.accentLight, fontSize: 19, fontWeight: "700" },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 35, fontWeight: "900", lineHeight: 42, letterSpacing: -0.8, marginBottom: 14 },
   body: { color: "#A7ACC1", fontSize: 14, lineHeight: 23 },
