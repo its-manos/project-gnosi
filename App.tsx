@@ -17,10 +17,17 @@ import {
 
 import {
   categories,
+  subcategories,
   lessons,
 } from "./src/data/lessons";
 
-type Screen = "home" | "category" | "lesson" | "quiz" | "results";
+type Screen =
+  | "home"
+  | "category"
+  | "subcategory"
+  | "lesson"
+  | "quiz"
+  | "results";
 
 function Header({
   onBack,
@@ -44,6 +51,7 @@ function Header({
       )}
 
       <Text style={styles.logo}>ΓΝΩΣΗ</Text>
+
       <View style={[styles.headerSide, styles.headerRight]}>
         <Text style={styles.logoSparkle}>✦</Text>
       </View>
@@ -55,22 +63,18 @@ function ActionButton({
   label,
   onPress,
   secondary = false,
-  disabled = false,
 }: {
   label: string;
   onPress: () => void;
   secondary?: boolean;
-  disabled?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
       accessibilityRole="button"
       style={[
         styles.actionButton,
         secondary && styles.secondaryButton,
-        disabled && styles.disabledButton,
       ]}
     >
       <Text
@@ -87,34 +91,83 @@ function ActionButton({
 
 function AppContent() {
   const [screen, setScreen] = useState<Screen>("home");
-  const [activeCategoryId, setActiveCategoryId] = useState("history");
-  const [activeLessonId, setActiveLessonId] = useState(lessons[0].id);
+
+  const [activeCategoryId, setActiveCategoryId] =
+    useState("history");
+
+  const [activeSubcategoryId, setActiveSubcategoryId] =
+    useState("ancient-greece");
+
+  const [activeLessonId, setActiveLessonId] =
+    useState(lessons[0].id);
 
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswer, setSelectedAnswer] =
+    useState<number | null>(null);
+
   const [score, setScore] = useState(0);
-  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
+  const [completedLessonIds, setCompletedLessonIds] =
+    useState<string[]>([]);
 
   const activeCategory =
-    categories.find((category) => category.id === activeCategoryId) ??
-    categories[0];
+    categories.find(
+      (category) => category.id === activeCategoryId
+    ) ?? categories[0];
+
+  const activeSubcategory =
+    subcategories.find(
+      (subcategory) =>
+        subcategory.id === activeSubcategoryId
+    ) ?? subcategories[0];
 
   const activeLesson =
-    lessons.find((lesson) => lesson.id === activeLessonId) ?? lessons[0];
+    lessons.find(
+      (lesson) => lesson.id === activeLessonId
+    ) ?? lessons[0];
 
-  const categoryLessons = lessons.filter(
-    (lesson) => lesson.categoryId === activeCategoryId
+  const categorySubcategories = subcategories.filter(
+    (subcategory) =>
+      subcategory.categoryId === activeCategoryId
   );
 
-  const currentQuestion = activeLesson.questions[questionIndex];
+  const subcategoryLessons = lessons.filter(
+    (lesson) =>
+      lesson.subcategoryId === activeSubcategoryId
+  );
+
+  const currentQuestion =
+    activeLesson.questions[questionIndex];
+
+  const correctAnswerSelected =
+    selectedAnswer === currentQuestion.correctIndex;
 
   function openCategory(categoryId: string) {
     setActiveCategoryId(categoryId);
     setScreen("category");
   }
 
+  function openSubcategory(subcategoryId: string) {
+    const subcategory = subcategories.find(
+      (item) => item.id === subcategoryId
+    );
+
+    if (!subcategory) return;
+
+    setActiveSubcategoryId(subcategory.id);
+    setActiveCategoryId(subcategory.categoryId);
+    setScreen("subcategory");
+  }
+
   function openLesson(lessonId: string) {
-    setActiveLessonId(lessonId);
+    const lesson = lessons.find(
+      (item) => item.id === lessonId
+    );
+
+    if (!lesson) return;
+
+    setActiveLessonId(lesson.id);
+    setActiveCategoryId(lesson.categoryId);
+    setActiveSubcategoryId(lesson.subcategoryId);
     setScreen("lesson");
   }
 
@@ -130,7 +183,9 @@ function AppContent() {
 
     setSelectedAnswer(answerIndex);
 
-    if (answerIndex === currentQuestion.correctIndex) {
+    if (
+      answerIndex === currentQuestion.correctIndex
+    ) {
       setScore((previousScore) => previousScore + 1);
     }
   }
@@ -138,7 +193,9 @@ function AppContent() {
   function nextQuestion() {
     if (selectedAnswer === null) return;
 
-    if (questionIndex < activeLesson.questions.length - 1) {
+    if (
+      questionIndex < activeLesson.questions.length - 1
+    ) {
       setQuestionIndex((previousIndex) => previousIndex + 1);
       setSelectedAnswer(null);
       return;
@@ -154,14 +211,15 @@ function AppContent() {
   }
 
   const completedCount = completedLessonIds.length;
-  const correctAnswerSelected =
-    selectedAnswer === currentQuestion.correctIndex;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0B0D15" />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#0B0D15"
+      />
 
-      {/* HOME */}
+      {/* HOME SCREEN */}
       {screen === "home" && (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -170,63 +228,87 @@ function AppContent() {
           <Header />
 
           <View style={styles.welcome}>
-            <Text style={styles.eyebrow}>ΛΙΓΗ ΓΝΩΣΗ ΚΑΘΕ ΜΕΡΑ</Text>
-            <Text style={styles.homeTitle}>
-              Ο κόσμος έχει{"\n"}πολλά να σου πει.
+            <Text style={styles.eyebrow}>
+              ΛΙΓΗ ΓΝΩΣΗ ΚΑΘΕ ΜΕΡΑ
             </Text>
+
+            <Text style={styles.homeTitle}>
+              Ο κόσμος έχει{"\n"}
+              πολλά να σου πει.
+            </Text>
+
             <Text style={styles.bodyText}>
-              Ανακάλυψε κάτι καινούριο, διάβασε μια σύντομη ιστορία και
-              δοκίμασε όσα έμαθες.
+              Ανακάλυψε κάτι καινούριο, διάβασε μια
+              σύντομη ιστορία και δοκίμασε όσα έμαθες.
             </Text>
           </View>
 
           <View style={styles.featuredCard}>
             <View style={styles.featuredTopRow}>
-              <Text style={styles.featuredBadge}>ΠΡΟΤΕΙΝΟΜΕΝΟ</Text>
-              <Text style={styles.readingTime}>◷ 4 λεπτά</Text>
+              <Text style={styles.featuredBadge}>
+                ΠΡΟΤΕΙΝΟΜΕΝΟ
+              </Text>
+
+              <Text style={styles.readingTime}>
+                ◷ 4 λεπτά
+              </Text>
             </View>
 
             <Text style={styles.featuredTitle}>
               Μια μέρα στην αρχαία Αθήνα
             </Text>
+
             <Text style={styles.featuredDescription}>
-              Πίσω από τα μνημεία κρύβονται οι ιστορίες των καθημερινών
-              ανθρώπων.
+              Πίσω από τα μνημεία κρύβονται οι ιστορίες
+              των καθημερινών ανθρώπων.
             </Text>
 
             <ActionButton
-              label="Ξεκίνα την ανάγνωση  →"
-              onPress={() => openLesson("ancient-athens")}
+              label="Ξεκίνα την ανάγνωση →"
+              onPress={() =>
+                openLesson("ancient-athens")
+              }
             />
           </View>
 
           <View style={styles.sectionHeadingRow}>
-            <View>
-              <Text style={styles.sectionTitle}>Εξερεύνησε τον κόσμο</Text>
-              <Text style={styles.mutedText}>
-                Διάλεξε αυτό που σου κινεί την περιέργεια.
-              </Text>
-            </View>
+            <Text style={styles.sectionTitle}>
+              Εξερεύνησε τον κόσμο
+            </Text>
+
+            <Text style={styles.mutedText}>
+              Διάλεξε αυτό που σου κινεί την περιέργεια.
+            </Text>
           </View>
 
           <View style={styles.categoryGrid}>
             {categories.map((category) => {
-              const count = lessons.filter(
-                (lesson) => lesson.categoryId === category.id
+              const count = subcategories.filter(
+                (subcategory) =>
+                  subcategory.categoryId === category.id
               ).length;
 
               return (
                 <Pressable
                   key={category.id}
                   style={styles.categoryCard}
-                  onPress={() => openCategory(category.id)}
+                  onPress={() =>
+                    openCategory(category.id)
+                  }
                   accessibilityRole="button"
                 >
-                  <Text style={styles.categoryEmoji}>{category.emoji}</Text>
-                  <Text style={styles.categoryTitle}>{category.title}</Text>
+                  <Text style={styles.categoryEmoji}>
+                    {category.emoji}
+                  </Text>
+
+                  <Text style={styles.categoryTitle}>
+                    {category.title}
+                  </Text>
+
                   <Text style={styles.categoryDescription}>
                     {category.description}
                   </Text>
+
                   <Text
                     style={[
                       styles.categoryCount,
@@ -234,7 +316,7 @@ function AppContent() {
                     ]}
                   >
                     {count > 0
-                      ? `${count} μάθημα`
+                      ? `${count} θεματικές`
                       : "Σύντομα διαθέσιμο"}
                   </Text>
                 </Pressable>
@@ -243,21 +325,27 @@ function AppContent() {
           </View>
 
           <View style={styles.progressCard}>
-            <Text style={styles.progressCardTitle}>Η πρόοδός σου</Text>
+            <Text style={styles.progressCardTitle}>
+              Η πρόοδός σου
+            </Text>
+
             <Text style={styles.bodyText}>
               Έχεις ολοκληρώσει {completedCount}{" "}
-              {completedCount === 1 ? "μάθημα" : "μαθήματα"} σε αυτή τη
-              συνεδρία.
+              {completedCount === 1
+                ? "μάθημα"
+                : "μαθήματα"}{" "}
+              σε αυτή τη συνεδρία.
             </Text>
+
             <Text style={styles.smallNote}>
-              Προς το παρόν, η πρόοδος δεν αποθηκεύεται μετά την επανεκκίνηση
-              της εφαρμογής.
+              Η πρόοδος προς το παρόν δεν διατηρείται
+              μετά την επανεκκίνηση της εφαρμογής.
             </Text>
           </View>
         </ScrollView>
       )}
 
-      {/* CATEGORY */}
+      {/* CATEGORY SCREEN */}
       {screen === "category" && (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -265,16 +353,121 @@ function AppContent() {
         >
           <Header onBack={() => setScreen("home")} />
 
-          <Text style={styles.largeEmoji}>{activeCategory.emoji}</Text>
-          <Text style={styles.pageTitle}>{activeCategory.title}</Text>
-          <Text style={styles.bodyText}>{activeCategory.description}</Text>
-
-          <Text style={[styles.sectionTitle, styles.categoryListHeading]}>
-            Διαθέσιμα μαθήματα
+          <Text style={styles.largeEmoji}>
+            {activeCategory.emoji}
           </Text>
 
-          {categoryLessons.length > 0 ? (
-            categoryLessons.map((lesson) => (
+          <Text style={styles.pageTitle}>
+            {activeCategory.title}
+          </Text>
+
+          <Text style={styles.bodyText}>
+            {activeCategory.description}
+          </Text>
+
+          <Text
+            style={[
+              styles.sectionTitle,
+              styles.categoryListHeading,
+            ]}
+          >
+            Θεματικές ενότητες
+          </Text>
+
+          {categorySubcategories.length > 0 ? (
+            categorySubcategories.map((subcategory) => {
+              const lessonCount = lessons.filter(
+                (lesson) =>
+                  lesson.subcategoryId === subcategory.id
+              ).length;
+
+              return (
+                <Pressable
+                  key={subcategory.id}
+                  style={styles.subcategoryCard}
+                  onPress={() =>
+                    openSubcategory(subcategory.id)
+                  }
+                  accessibilityRole="button"
+                >
+                  <View style={styles.subcategoryContent}>
+                    <Text style={styles.subcategoryTitle}>
+                      {subcategory.title}
+                    </Text>
+
+                    <Text
+                      style={styles.subcategoryDescription}
+                    >
+                      {subcategory.description}
+                    </Text>
+
+                    <Text style={styles.categoryCount}>
+                      {lessonCount > 0
+                        ? `${lessonCount} ${
+                            lessonCount === 1
+                              ? "μάθημα"
+                              : "μαθήματα"
+                          }`
+                        : "Σύντομα διαθέσιμο"}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.subcategoryArrow}>
+                    ›
+                  </Text>
+                </Pressable>
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.largeEmoji}>📚</Text>
+
+              <Text style={styles.emptyTitle}>
+                Ετοιμάζουμε νέες θεματικές
+              </Text>
+
+              <Text style={styles.bodyText}>
+                Σύντομα θα προστεθούν νέες ενότητες
+                και μαθήματα.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
+
+      {/* SUBCATEGORY SCREEN */}
+      {screen === "subcategory" && (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Header
+            onBack={() => setScreen("category")}
+          />
+
+          <Text style={styles.eyebrow}>
+            {activeCategory.title.toUpperCase()}
+          </Text>
+
+          <Text style={styles.pageTitle}>
+            {activeSubcategory.title}
+          </Text>
+
+          <Text style={styles.bodyText}>
+            {activeSubcategory.description}
+          </Text>
+
+          <Text
+            style={[
+              styles.sectionTitle,
+              styles.categoryListHeading,
+            ]}
+          >
+            Μαθήματα
+          </Text>
+
+          {subcategoryLessons.length > 0 ? (
+            subcategoryLessons.map((lesson) => (
               <Pressable
                 key={lesson.id}
                 style={styles.lessonCard}
@@ -285,14 +478,22 @@ function AppContent() {
                   source={{ uri: lesson.imageUrl }}
                   style={styles.lessonThumbnail}
                 />
+
                 <View style={styles.lessonCardContent}>
-                  <Text style={styles.eyebrow}>{lesson.subcategory}</Text>
-                  <Text style={styles.lessonCardTitle}>{lesson.title}</Text>
+                  <Text style={styles.eyebrow}>
+                    {lesson.readingMinutes} ΛΕΠΤΑ ΑΝΑΓΝΩΣΗΣ
+                  </Text>
+
+                  <Text style={styles.lessonCardTitle}>
+                    {lesson.title}
+                  </Text>
+
                   <Text style={styles.lessonCardSummary}>
                     {lesson.summary}
                   </Text>
+
                   <Text style={styles.readingTime}>
-                    ◷ {lesson.readingMinutes} λεπτά ανάγνωσης
+                    {lesson.questions.length} ερωτήσεις
                   </Text>
                 </View>
               </Pressable>
@@ -300,48 +501,51 @@ function AppContent() {
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.largeEmoji}>📚</Text>
-              <Text style={styles.emptyTitle}>Ετοιμάζουμε νέα μαθήματα</Text>
-              <Text style={styles.bodyText}>
-                Αυτή η κατηγορία θα εμπλουτιστεί με άρθρα, εικόνες, αξιόπιστες
-                πηγές και quiz.
+
+              <Text style={styles.emptyTitle}>
+                Νέα μαθήματα έρχονται
               </Text>
-              <ActionButton
-                label="Επιστροφή στις κατηγορίες"
-                onPress={() => setScreen("home")}
-                secondary
-              />
+
+              <Text style={styles.bodyText}>
+                Θα προσθέσουμε άρθρα με εικόνες, πηγές
+                και quiz σε αυτή τη θεματική.
+              </Text>
             </View>
           )}
         </ScrollView>
       )}
 
-      {/* ARTICLE */}
+      {/* ARTICLE SCREEN */}
       {screen === "lesson" && (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <Header
-            onBack={() => {
-              setActiveCategoryId(activeLesson.categoryId);
-              setScreen("category");
-            }}
+            onBack={() => setScreen("subcategory")}
           />
 
           <Text style={styles.eyebrow}>
             {activeCategory.title.toUpperCase()} /{" "}
-            {activeLesson.subcategory.toUpperCase()}
+            {activeSubcategory.title.toUpperCase()}
           </Text>
 
-          <Text style={styles.articleTitle}>{activeLesson.title}</Text>
-          <Text style={styles.articleIntro}>{activeLesson.intro}</Text>
+          <Text style={styles.articleTitle}>
+            {activeLesson.title}
+          </Text>
+
+          <Text style={styles.articleIntro}>
+            {activeLesson.intro}
+          </Text>
 
           <View style={styles.articleMeta}>
             <Text style={styles.readingTime}>
-              ◷ {activeLesson.readingMinutes} λεπτά ανάγνωσης
+              ◷ {activeLesson.readingMinutes} λεπτά
+              ανάγνωσης
             </Text>
+
             <Text style={styles.readingTime}>
-              {activeLesson.questions.length} ερωτήσεις στο τέλος
+              {activeLesson.questions.length} ερωτήσεις
             </Text>
           </View>
 
@@ -357,9 +561,9 @@ function AppContent() {
 
           <Pressable
             onPress={() =>
-              void Linking.openURL(activeLesson.imageCreditUrl).catch(
-                () => {}
-              )
+              void Linking.openURL(
+                activeLesson.imageCreditUrl
+              ).catch(() => {})
             }
           >
             <Text style={styles.imageCredit}>
@@ -368,25 +572,35 @@ function AppContent() {
           </Pressable>
 
           {activeLesson.sections.map((section) => (
-            <View key={section.title} style={styles.articleSection}>
-              <Text style={styles.articleSectionTitle}>{section.title}</Text>
+            <View
+              key={section.title}
+              style={styles.articleSection}
+            >
+              <Text style={styles.articleSectionTitle}>
+                {section.title}
+              </Text>
 
-              {section.paragraphs.map((paragraph, index) => (
-                <Text
-                  key={`${section.title}-${index}`}
-                  style={styles.paragraph}
-                >
-                  {paragraph}
-                </Text>
-              ))}
+              {section.paragraphs.map(
+                (paragraph, index) => (
+                  <Text
+                    key={`${section.title}-${index}`}
+                    style={styles.paragraph}
+                  >
+                    {paragraph}
+                  </Text>
+                )
+              )}
             </View>
           ))}
 
           <View style={styles.sourcesCard}>
-            <Text style={styles.sourcesHeading}>Πηγές & περαιτέρω ανάγνωση</Text>
+            <Text style={styles.sourcesHeading}>
+              Πηγές & περαιτέρω ανάγνωση
+            </Text>
+
             <Text style={styles.sourcesIntro}>
-              Για να εξερευνήσεις το θέμα πιο βαθιά, δες τις πηγές που
-              χρησιμοποιήθηκαν για την προετοιμασία του μαθήματος.
+              Εξερεύνησε τις πηγές για να μάθεις
+              περισσότερα για το θέμα.
             </Text>
 
             {activeLesson.sources.map((source) => (
@@ -394,27 +608,37 @@ function AppContent() {
                 key={source.url}
                 style={styles.sourceLink}
                 onPress={() =>
-                  void Linking.openURL(source.url).catch(() => {})
+                  void Linking.openURL(source.url).catch(
+                    () => {}
+                  )
                 }
                 accessibilityRole="link"
               >
                 <View style={styles.sourceTextContainer}>
-                  <Text style={styles.sourceTitle}>{source.title}</Text>
+                  <Text style={styles.sourceTitle}>
+                    {source.title}
+                  </Text>
+
                   <Text style={styles.sourcePublisher}>
                     {source.publisher}
                   </Text>
                 </View>
+
                 <Text style={styles.sourceArrow}>↗</Text>
               </Pressable>
             ))}
           </View>
 
           <View style={styles.quizCallout}>
-            <Text style={styles.quizCalloutTitle}>Ώρα να δοκιμάσεις όσα έμαθες</Text>
-            <Text style={styles.bodyText}>
-              Απάντησε σε λίγες ερωτήσεις βασισμένες σε αυτό το άρθρο. Δεν
-              χρειάζεται να βιαστείς.
+            <Text style={styles.quizCalloutTitle}>
+              Ώρα να δοκιμάσεις όσα έμαθες
             </Text>
+
+            <Text style={styles.bodyText}>
+              Απάντησε σε λίγες ερωτήσεις βασισμένες
+              στο άρθρο.
+            </Text>
+
             <ActionButton
               label="Ολοκλήρωσα την ανάγνωση →"
               onPress={startQuiz}
@@ -423,21 +647,33 @@ function AppContent() {
         </ScrollView>
       )}
 
-      {/* QUIZ */}
+      {/* QUIZ SCREEN */}
       {screen === "quiz" && (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Header onBack={() => setScreen("lesson")} backLabel="ΑΡΘΡΟ" />
+          <Header
+            onBack={() => setScreen("lesson")}
+            backLabel="ΑΡΘΡΟ"
+          />
 
-          <Text style={styles.eyebrow}>ΕΛΕΓΧΟΣ ΓΝΩΣΕΩΝ</Text>
-          <Text style={styles.pageTitle}>{activeLesson.title}</Text>
+          <Text style={styles.eyebrow}>
+            ΕΛΕΓΧΟΣ ΓΝΩΣΕΩΝ
+          </Text>
+
+          <Text style={styles.pageTitle}>
+            {activeLesson.title}
+          </Text>
 
           <View style={styles.quizProgressRow}>
-            <Text style={styles.mutedText}>Πρόοδος quiz</Text>
+            <Text style={styles.mutedText}>
+              Πρόοδος quiz
+            </Text>
+
             <Text style={styles.quizCounter}>
-              {questionIndex + 1} / {activeLesson.questions.length}
+              {questionIndex + 1} /{" "}
+              {activeLesson.questions.length}
             </Text>
           </View>
 
@@ -447,7 +683,9 @@ function AppContent() {
                 styles.progressFill,
                 {
                   width: `${
-                    ((questionIndex + 1) / activeLesson.questions.length) * 100
+                    ((questionIndex + 1) /
+                      activeLesson.questions.length) *
+                    100
                   }%`,
                 },
               ]}
@@ -458,60 +696,78 @@ function AppContent() {
             <Text style={styles.questionNumber}>
               ΕΡΩΤΗΣΗ {questionIndex + 1}
             </Text>
+
             <Text style={styles.questionText}>
               {currentQuestion.question}
             </Text>
           </View>
 
           <View style={styles.answers}>
-            {currentQuestion.answers.map((answer, index) => {
-              const isCorrectAnswer =
-                selectedAnswer !== null &&
-                index === currentQuestion.correctIndex;
+            {currentQuestion.answers.map(
+              (answer, index) => {
+                const isCorrectAnswer =
+                  selectedAnswer !== null &&
+                  index === currentQuestion.correctIndex;
 
-              const isWrongSelection =
-                selectedAnswer === index &&
-                index !== currentQuestion.correctIndex;
+                const isWrongSelection =
+                  selectedAnswer === index &&
+                  index !== currentQuestion.correctIndex;
 
-              return (
-                <Pressable
-                  key={answer}
-                  style={[
-                    styles.answerButton,
-                    isCorrectAnswer && styles.answerCorrect,
-                    isWrongSelection && styles.answerWrong,
-                  ]}
-                  onPress={() => chooseAnswer(index)}
-                  disabled={selectedAnswer !== null}
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.answerLetter}>
-                    {String.fromCharCode(65 + index)}
-                  </Text>
-                  <Text style={styles.answerText}>{answer}</Text>
-                  {isCorrectAnswer && (
-                    <Text style={styles.answerIcon}>✓</Text>
-                  )}
-                  {isWrongSelection && (
-                    <Text style={styles.answerIcon}>✕</Text>
-                  )}
-                </Pressable>
-              );
-            })}
+                return (
+                  <Pressable
+                    key={answer}
+                    style={[
+                      styles.answerButton,
+                      isCorrectAnswer &&
+                        styles.answerCorrect,
+                      isWrongSelection &&
+                        styles.answerWrong,
+                    ]}
+                    onPress={() => chooseAnswer(index)}
+                    disabled={selectedAnswer !== null}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.answerLetter}>
+                      {String.fromCharCode(65 + index)}
+                    </Text>
+
+                    <Text style={styles.answerText}>
+                      {answer}
+                    </Text>
+
+                    {isCorrectAnswer && (
+                      <Text style={styles.answerIcon}>
+                        ✓
+                      </Text>
+                    )}
+
+                    {isWrongSelection && (
+                      <Text style={styles.answerIcon}>
+                        ✕
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              }
+            )}
           </View>
 
           {selectedAnswer !== null && (
             <View style={styles.feedbackCard}>
               <Text style={styles.feedbackTitle}>
-                {correctAnswerSelected ? "Σωστά! 🎉" : "Όχι ακριβώς!"}
+                {correctAnswerSelected
+                  ? "Σωστά! 🎉"
+                  : "Όχι ακριβώς!"}
               </Text>
+
               <Text style={styles.bodyText}>
                 {currentQuestion.explanation}
               </Text>
 
               <ActionButton
                 label={
-                  questionIndex === activeLesson.questions.length - 1
+                  questionIndex ===
+                  activeLesson.questions.length - 1
                     ? "Δες το αποτέλεσμα →"
                     : "Επόμενη ερώτηση →"
                 }
@@ -522,20 +778,28 @@ function AppContent() {
         </ScrollView>
       )}
 
-      {/* RESULTS */}
+      {/* RESULTS SCREEN */}
       {screen === "results" && (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Header onBack={() => setScreen("home")} backLabel="ΑΡΧΙΚΗ" />
+          <Header
+            onBack={() => setScreen("home")}
+            backLabel="ΑΡΧΙΚΗ"
+          />
 
           <View style={styles.resultsContainer}>
             <Text style={styles.resultsEmoji}>
-              {score === activeLesson.questions.length ? "🏆" : "✨"}
+              {score === activeLesson.questions.length
+                ? "🏆"
+                : "✨"}
             </Text>
 
-            <Text style={styles.eyebrow}>ΜΑΘΗΜΑ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
+            <Text style={styles.eyebrow}>
+              ΜΑΘΗΜΑ ΟΛΟΚΛΗΡΩΘΗΚΕ
+            </Text>
+
             <Text style={styles.resultsTitle}>
               {score === activeLesson.questions.length
                 ? "Εξαιρετικά!"
@@ -545,17 +809,23 @@ function AppContent() {
             </Text>
 
             <Text style={styles.bodyText}>
-              Ολοκλήρωσες το μάθημα «{activeLesson.title}».
+              Ολοκλήρωσες το μάθημα «
+              {activeLesson.title}».
             </Text>
 
             <View style={styles.scoreCard}>
-              <Text style={styles.mutedText}>Η βαθμολογία σου</Text>
+              <Text style={styles.mutedText}>
+                Η βαθμολογία σου
+              </Text>
+
               <Text style={styles.finalScore}>
                 {score} / {activeLesson.questions.length}
               </Text>
+
               <Text style={styles.readingTime}>
                 {Math.round(
-                  (score / activeLesson.questions.length) * 100
+                  (score / activeLesson.questions.length) *
+                    100
                 )}
                 % σωστές απαντήσεις
               </Text>
@@ -718,9 +988,6 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: "#E4E3F0",
   },
-  disabledButton: {
-    opacity: 0.45,
-  },
   sectionHeadingRow: {
     marginBottom: 18,
   },
@@ -810,6 +1077,36 @@ const styles = StyleSheet.create({
   categoryListHeading: {
     marginTop: 32,
     marginBottom: 17,
+  },
+  subcategoryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#171B2A",
+    borderWidth: 1,
+    borderColor: "#2B3044",
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 12,
+  },
+  subcategoryContent: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  subcategoryTitle: {
+    color: "#F6F5FC",
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  subcategoryDescription: {
+    color: "#A7ACC1",
+    fontSize: 12,
+    lineHeight: 19,
+  },
+  subcategoryArrow: {
+    color: "#B1A5FF",
+    fontSize: 28,
   },
   lessonCard: {
     backgroundColor: "#171B2A",
