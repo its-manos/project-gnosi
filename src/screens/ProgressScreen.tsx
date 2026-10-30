@@ -3,18 +3,12 @@ import SyncStatus from "../components/SyncStatus";
 import AccountPanel from "../components/AccountPanel";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDailySnapshot } from "../state/LearningSession";
+import { dailyHistory } from "../utils/dailySyncDocument";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import type { Lesson } from "../data/lessons";
-import {
-  createCompletedHistoryEntry,
-  DAILY_CHALLENGE_HISTORY_STORAGE_KEY,
-  parseDailyChallengeHistory,
-  upsertDailyChallengeHistory,
-  type DailyChallengeHistoryEntry,
-} from "../utils/dailyChallengeHistory";
-import { DAILY_CHALLENGE_STORAGE_KEY, getAthensDateKey, parseDailyChallengeRecord } from "../utils/dailyChallenge";
+import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
 
@@ -68,8 +62,9 @@ export default function ProgressScreen({
   onResetLessonProgressForDevelopment,
 }: Props) {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const [history, setHistory] = useState<DailyChallengeHistoryEntry[]>([]);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const daily = useDailySnapshot();
+  const history = useMemo(() => dailyHistory(daily.doc), [daily.doc]);
+  const historyLoaded = daily.ready;
   const [isResetting, setIsResetting] = useState(false);
   const [todayKey, setTodayKey] = useState(() => getAthensDateKey());
 
@@ -82,42 +77,6 @@ export default function ProgressScreen({
     return () => {
       subscription.remove();
       clearInterval(interval);
-    };
-  }, []);
-
-  // The progress tab is mounted when opened, so re-read local history on every
-  // visit instead of relying on a stale copy held by the navigation layer.
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadHistory() {
-      try {
-        const [historyValue, currentValue] = await AsyncStorage.multiGet([
-          DAILY_CHALLENGE_HISTORY_STORAGE_KEY,
-          DAILY_CHALLENGE_STORAGE_KEY,
-        ]).then((pairs) => [pairs[0]?.[1] ?? null, pairs[1]?.[1] ?? null]);
-
-        let nextHistory = parseDailyChallengeHistory(historyValue);
-        const todayKey = getAthensDateKey();
-        const currentRecord = parseDailyChallengeRecord(currentValue, todayKey);
-        const migratedEntry = currentRecord ? createCompletedHistoryEntry(currentRecord) : null;
-        if (migratedEntry) {
-          nextHistory = upsertDailyChallengeHistory(nextHistory, migratedEntry);
-          await AsyncStorage.setItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY, JSON.stringify(nextHistory));
-        }
-
-        if (isMounted) setHistory(nextHistory);
-      } catch (error) {
-        console.warn("Could not load daily challenge history:", error);
-        if (isMounted) setHistory([]);
-      } finally {
-        if (isMounted) setHistoryLoaded(true);
-      }
-    }
-
-    void loadHistory();
-    return () => {
-      isMounted = false;
     };
   }, []);
 

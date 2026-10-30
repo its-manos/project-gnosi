@@ -30,6 +30,8 @@ export default function DailyChallengeScreen({
     currentQuestion,
     selectedAnswer,
     correctCount,
+    accountScoped,
+    reviewAvailable,
     startChallenge,
     answerQuestion,
     nextQuestion,
@@ -60,15 +62,16 @@ export default function DailyChallengeScreen({
   return (
     <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" />
+      {accountScoped ? <Text style={styles.syncNote}>Η προσπάθεια και το αποτέλεσμα συγχρονίζονται με τις άλλες συσκευές σου. Αν συνεχίσεις αλλού, εδώ θα εμφανιστεί η κοινή πρόκληση.</Text> : null}
 
       {isLoading ? (
         <View style={styles.centerState}>
           <ActivityIndicator color={colors.accentLight} size="large" />
           <Text style={styles.muted}>Φόρτωση της σημερινής πρόκλησης…</Text>
         </View>
-      ) : record.completed && reviewDateKey === record.dateKey ? (
+      ) : record.completed && reviewAvailable && reviewDateKey === record.dateKey ? (
         <DailyMistakeReview
-          key={record.dateKey}
+          key={`${record.dateKey}-${record.questionIds.join("-")}-${JSON.stringify(record.answers)}`}
           questions={missedQuestions}
           onDone={() => { setReviewDateKey(null); scrollRef.current?.scrollTo({ y: 0, animated: false }); }}
           onAdvance={() => scrollRef.current?.scrollTo({ y: 0, animated: false })}
@@ -92,7 +95,7 @@ export default function DailyChallengeScreen({
             <Text style={styles.scoreMeta}>{Math.round((correctCount / DAILY_CHALLENGE_SIZE) * 100)}% επιτυχία</Text>
           </View>
           <Text style={styles.tomorrowNote}>Η επόμενη πρόκληση θα είναι διαθέσιμη αύριο.</Text>
-          {missedQuestions.length > 0 ? (
+          {!reviewAvailable ? <Text style={styles.tomorrowNote}>Η βαθμολογία έχει διατηρηθεί. Η επανάληψη δεν είναι διαθέσιμη για ερωτήσεις παλαιότερης έκδοσης.</Text> : missedQuestions.length > 0 ? (
             <View style={styles.reviewInvitation}>
               <Text style={styles.body}>Ξαναδοκίμασε τις ερωτήσεις που έχασες. Η εξάσκηση δεν αλλάζει το σημερινό σκορ ή το σερί σου.</Text>
               <ActionButton
@@ -191,6 +194,7 @@ export default function DailyChallengeScreen({
 }
 
 const styles = StyleSheet.create({
+  syncNote: { color: colors.textMuted, fontSize: 12, lineHeight: 20, marginBottom: 16 },
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   centerState: { alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 16 },
   introContainer: { alignItems: "stretch", paddingTop: 24 },

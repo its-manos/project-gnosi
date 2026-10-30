@@ -114,7 +114,7 @@ export default function AccountPanel({ backupControls }: { backupControls?: Back
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.card}>
       <Text style={styles.title}>Λογαριασμός</Text>
-      <Text style={styles.body}>Η σύνδεση είναι προαιρετική. Η πρόοδος άρθρων και οι σελιδοδείκτες συγχρονίζονται αυτόματα στον λογαριασμό σου. Η προηγούμενη πρόοδος επισκέπτη εισάγεται μόνο αν το επιλέξεις στην οθόνη προόδου.</Text>
+      <Text style={styles.body}>Η σύνδεση είναι προαιρετική. Η πρόοδος άρθρων, οι σελιδοδείκτες και οι ημερήσιες προκλήσεις συγχρονίζονται αυτόματα στον λογαριασμό σου. Η προηγούμενη πρόοδος επισκέπτη εισάγεται μόνο αν το επιλέξεις στην οθόνη προόδου.</Text>
       {!supabase ? <Text style={styles.error}>Δεν έχει ρυθμιστεί η σύνδεση Supabase. Έλεγξε τις EXPO_PUBLIC_SUPABASE_URL και EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY στο .env και επανεκκίνησε το Expo. Μπορείς να συνεχίσεις να μαθαίνεις χωρίς λογαριασμό.</Text>
         : loading ? <ActivityIndicator color={colors.accentLight} />
         : session ? <>

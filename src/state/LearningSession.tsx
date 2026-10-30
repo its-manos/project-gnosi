@@ -3,10 +3,12 @@ import type { ReactNode } from "react";
 import { ActivityIndicator, AppState, Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { getDailyStore } from "../lib/dailySync";
+import type { DailyStore } from "./DailyStore";
 import { getLearningStore } from "../lib/learningSync";
 import { colors } from "../theme";
 import type { LearningStore } from "./LearningStore";
-const Context = createContext<{ store: LearningStore; email: string | null } | null>(null);
+const Context = createContext<{ store: LearningStore; dailyStore: DailyStore; email: string | null } | null>(null);
 export function useLearningSession() {
   const value = useContext(Context);
   if (!value) throw new Error("LearningSession missing");
@@ -16,6 +18,10 @@ export function useLearningSnapshot() {
   const { store } = useLearningSession();
   return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
+export function useDailySnapshot() {
+  const { dailyStore } = useLearningSession();
+  return useSyncExternalStore(dailyStore.subscribe, dailyStore.getSnapshot, dailyStore.getSnapshot);
+}
 function Loading({ error, retry, guest }: { error?: string; retry?: () => void; guest?: () => void }) {
   return <SafeAreaView style={styles.loading}>
     {error ? <><Text style={styles.text}>{error}</Text><Pressable accessibilityRole="button" style={styles.retry} onPress={retry}><Text style={styles.text}>Δοκίμασε ξανά</Text></Pressable>{guest ? <Pressable accessibilityRole="button" style={styles.retry} onPress={guest}><Text style={styles.text}>Συνέχεια ως επισκέπτης</Text></Pressable> : null}</> : <><ActivityIndicator color={colors.accentLight} /><Text style={styles.text}>Φόρτωση προόδου…</Text></>}
@@ -24,14 +30,16 @@ function Loading({ error, retry, guest }: { error?: string; retry?: () => void; 
 function ScopedLearning({ userId, email, children }: { userId: string | null; email: string | null; children: ReactNode }) {
   const [store] = useState(() => getLearningStore(userId));
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const [dailyStore] = useState(() => getDailyStore(userId));
+  const daily = useSyncExternalStore(dailyStore.subscribe, dailyStore.getSnapshot, dailyStore.getSnapshot);
   useEffect(() => {
-    void store.start();
-    const subscription = AppState.addEventListener("change", state => { if (state === "active") void store.retry(); });
-    const interval = setInterval(() => { if (AppState.currentState === "active") void store.sync(); }, 30000);
-    return () => { subscription.remove(); clearInterval(interval); store.stop(); };
-  }, [store]);
-  if (!snapshot.ready) return <Loading error={snapshot.error} retry={() => void store.start()} />;
-  return <Context.Provider value={{ store, email }}>{children}</Context.Provider>;
+    void store.start(); void dailyStore.start();
+    const subscription = AppState.addEventListener("change", state => { if (state === "active") { void store.retry(); void dailyStore.retry(); } });
+    const interval = setInterval(() => { if (AppState.currentState === "active") { void store.sync(); void dailyStore.sync(); } }, 30000);
+    return () => { subscription.remove(); clearInterval(interval); store.stop(); dailyStore.stop(); };
+  }, [store, dailyStore]);
+  if (!snapshot.ready || !daily.ready) return <Loading error={!snapshot.ready ? snapshot.error : daily.error} retry={() => { void store.start(); void dailyStore.start(); }} />;
+  return <Context.Provider value={{ store, dailyStore, email }}>{children}</Context.Provider>;
 }
 /** A keyed boundary remounts all reading/navigation state on account changes. */
 export default function LearningSession({ children }: { children: ReactNode }) {

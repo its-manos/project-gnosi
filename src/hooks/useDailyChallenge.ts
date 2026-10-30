@@ -1,214 +1,39 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  DAILY_CHALLENGE_SIZE,
-  questions,
-  type GeneralKnowledgeQuestion,
-} from "../data/questions";
+import { questions, DAILY_CHALLENGE_SIZE, type GeneralKnowledgeQuestion } from "../data/questions";
 import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
-import {
-  DAILY_CHALLENGE_STORAGE_KEY,
-  emptyDailyChallengeRecord,
-  getAthensDateKey,
-  parseDailyChallengeRecord,
-  selectDailyQuestions,
-  type DailyChallengeRecord,
-} from "../utils/dailyChallenge";
-import {
-  createCompletedHistoryEntry,
-  DAILY_CHALLENGE_HISTORY_STORAGE_KEY,
-  parseDailyChallengeHistory,
-  removeDailyChallengeHistoryDate,
-  upsertDailyChallengeHistory,
-} from "../utils/dailyChallengeHistory";
-
-
+import { useAthensDate } from "./useAthensDate";
+import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
+import { emptyDailyChallengeRecord, getAthensDateKey, selectDailyQuestions } from "../utils/dailyChallenge";
 export function useDailyChallenge(preferences: DailyChallengePreferences, preferencesLoaded: boolean) {
-  const [todayKey, setTodayKey] = useState(() => getAthensDateKey());
-  const [record, setRecord] = useState<DailyChallengeRecord>(() => emptyDailyChallengeRecord(todayKey));
-  const [isLoading, setIsLoading] = useState(true);
-  const recordRef = useRef<DailyChallengeRecord>(record);
-  const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const historyWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
-
-  const persistHistoryEntry = useCallback((completedRecord: DailyChallengeRecord) => {
-    const entry = createCompletedHistoryEntry(completedRecord);
-    if (!entry) return Promise.resolve();
-
-    historyWriteQueueRef.current = historyWriteQueueRef.current
-      .catch(() => undefined)
-      .then(async () => {
-        try {
-          const savedHistory = await AsyncStorage.getItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY);
-          const history = parseDailyChallengeHistory(savedHistory);
-          const nextHistory = upsertDailyChallengeHistory(history, entry);
-          await AsyncStorage.setItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY, JSON.stringify(nextHistory));
-        } catch (error) {
-          console.warn("Could not save daily challenge history:", error);
-        }
-      });
-    return historyWriteQueueRef.current;
-  }, []);
-
-  const removeHistoryDate = useCallback((dateKey: string) => {
-    historyWriteQueueRef.current = historyWriteQueueRef.current
-      .catch(() => undefined)
-      .then(async () => {
-        try {
-          const savedHistory = await AsyncStorage.getItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY);
-          const history = parseDailyChallengeHistory(savedHistory);
-          const nextHistory = removeDailyChallengeHistoryDate(history, dateKey);
-          await AsyncStorage.setItem(DAILY_CHALLENGE_HISTORY_STORAGE_KEY, JSON.stringify(nextHistory));
-        } catch (error) {
-          console.warn("Could not reset daily challenge history:", error);
-        }
-      });
-    return historyWriteQueueRef.current;
-  }, []);
-
-  // Refresh the local challenge date when the app returns to the foreground,
-  // and while it remains open across midnight in the Europe/Athens timezone.
-  useEffect(() => {
-    const refreshDate = () => {
-      const currentDateKey = getAthensDateKey();
-      setTodayKey((previousDateKey) =>
-        previousDateKey === currentDateKey ? previousDateKey : currentDateKey
-      );
-    };
-
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") refreshDate();
-    });
-    const interval = setInterval(refreshDate, 60_000);
-
-    return () => {
-      subscription.remove();
-      clearInterval(interval);
-    };
-  }, []);
-
-  const commit = useCallback((nextRecord: DailyChallengeRecord) => {
-    recordRef.current = nextRecord;
-    setRecord(nextRecord);
-    const serialized = JSON.stringify(nextRecord);
-    writeQueueRef.current = writeQueueRef.current
-      .catch(() => undefined)
-      .then(() => AsyncStorage.setItem(DAILY_CHALLENGE_STORAGE_KEY, serialized));
-    return writeQueueRef.current;
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    setIsLoading(true);
-
-    async function load() {
-      let nextRecord = emptyDailyChallengeRecord(todayKey);
-      try {
-        const saved = await AsyncStorage.getItem(DAILY_CHALLENGE_STORAGE_KEY);
-        nextRecord = parseDailyChallengeRecord(saved, todayKey) ?? nextRecord;
-        // Migrate today's already-completed quiz into the history store when
-        // upgrading from a build that stored only the current daily record.
-        if (nextRecord.completed) await persistHistoryEntry(nextRecord);
-      } catch (error) {
-        console.warn("Could not load today's challenge:", error);
-      }
-
-      if (isMounted) {
-        recordRef.current = nextRecord;
-        setRecord(nextRecord);
-        setIsLoading(false);
-      }
-    }
-
-    void load();
-    return () => {
-      isMounted = false;
-    };
-  }, [todayKey, persistHistoryEntry]);
-
-  const challengeQuestions = record.dateKey === todayKey ? record.questionIds
-    .map((id) => questions.find((question) => question.id === id))
-    .filter((question): question is GeneralKnowledgeQuestion => Boolean(question)) : [];
-
-  const currentQuestion = record.dateKey === todayKey && record.started
-    ? challengeQuestions[record.currentIndex] ?? null
-    : null;
-  const selectedAnswer = record.dateKey === todayKey
-    ? record.answers[String(record.currentIndex)] ?? null
-    : null;
-  const correctCount = challengeQuestions.reduce((total, question, index) => {
-    return record.answers[String(index)] === question.correctIndex ? total + 1 : total;
-  }, 0);
-
-  const startChallenge = useCallback(async () => {
-    const current = recordRef.current;
-    if (isLoading || !preferencesLoaded || current.dateKey !== todayKey || current.started || current.completed) return;
+  const { dailyStore } = useLearningSession();
+  const snapshot = useDailySnapshot();
+  const todayKey = useAthensDate();
+  const day = snapshot.doc.days[todayKey];
+  const record = day?.record ?? emptyDailyChallengeRecord(todayKey);
+  const challengeQuestions = record.questionIds.map(id => questions.find(q => q.id === id)).filter((q): q is GeneralKnowledgeQuestion => Boolean(q));
+  const currentQuestion = record.started && !record.completed ? questions.find(q => q.id === record.questionIds[record.currentIndex]) ?? null : null;
+  const selectedAnswer = record.answers[String(record.currentIndex)] ?? null;
+  const correctCount = day?.history?.correctCount ?? record.questionIds.reduce((count, id, index) => count + Number(record.answers[String(index)] === questions.find(q => q.id === id)?.correctIndex), 0);
+  const currentDate = () => getAthensDateKey() === todayKey;
+  async function startChallenge() {
+    if (!snapshot.ready || !preferencesLoaded || !currentDate() || record.started || record.completed) return;
     const selected = selectDailyQuestions(todayKey, questions, preferences);
     if (selected.length !== DAILY_CHALLENGE_SIZE) return;
-
-    await commit({
-      dateKey: todayKey,
-      questionIds: selected.map((question) => question.id),
-      currentIndex: 0,
-      answers: {},
-      started: true,
-      completed: false,
-    });
-  }, [commit, isLoading, preferences, preferencesLoaded, todayKey]);
-
-  const answerQuestion = useCallback(async (answerIndex: number) => {
-    const current = recordRef.current;
-    if (!current.started || current.completed || current.dateKey !== todayKey) return;
-    if (current.answers[String(current.currentIndex)] !== undefined) return;
-
-    const question = questions.find((item) => item.id === current.questionIds[current.currentIndex]);
-    if (!question || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= question.answers.length) return;
-
-    await commit({
-      ...current,
-      answers: { ...current.answers, [String(current.currentIndex)]: answerIndex },
-    });
-  }, [commit, todayKey]);
-
-  const nextQuestion = useCallback(async () => {
-    const current = recordRef.current;
-    if (!current.started || current.completed || current.dateKey !== todayKey) return;
-    if (current.answers[String(current.currentIndex)] === undefined) return;
-
-    if (current.currentIndex < DAILY_CHALLENGE_SIZE - 1) {
-      await commit({ ...current, currentIndex: current.currentIndex + 1 });
-      return;
-    }
-
-    if (Object.keys(current.answers).length < DAILY_CHALLENGE_SIZE) return;
-    const completedRecord = { ...current, completed: true };
-    await commit(completedRecord);
-    await persistHistoryEntry(completedRecord);
-  }, [commit, persistHistoryEntry, todayKey]);
-
-  // Development-only helper: reset today's challenge without clearing the
-  // player's saved preferences, lesson progress, or bookmarks. This allows
-  // the daily flow to be exercised repeatedly during local development.
-  const resetChallengeForDevelopment = useCallback(async () => {
-    if (!__DEV__) return;
-    await commit(emptyDailyChallengeRecord(todayKey));
-    // A development reset removes this date's completion from statistics too,
-    // allowing a clean replay without touching earlier dates or preferences.
-    await removeHistoryDate(todayKey);
-  }, [commit, removeHistoryDate, todayKey]);
-
-  return {
-    todayKey,
-    record,
-    isLoading: isLoading || !preferencesLoaded || record.dateKey !== todayKey,
-    challengeQuestions,
-    currentQuestion,
-    selectedAnswer,
-    correctCount,
-    startChallenge,
-    answerQuestion,
-    nextQuestion,
-    resetChallengeForDevelopment,
-  };
+    dailyStore.commitRecord({ dateKey: todayKey, questionIds: selected.map(q => q.id), currentIndex: 0, answers: {}, started: true, completed: false }, day);
+    await dailyStore.flushLocal();
+  }
+  async function answerQuestion(answerIndex: number) {
+    if (!currentDate() || !record.started || record.completed || record.answers[String(record.currentIndex)] !== undefined) return;
+    if (!currentQuestion || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= currentQuestion.answers.length) return;
+    dailyStore.commitRecord({ ...record, answers: { ...record.answers, [String(record.currentIndex)]: answerIndex } }, day);
+    await dailyStore.flushLocal();
+  }
+  async function nextQuestion() {
+    if (!currentDate() || !record.started || record.completed || selectedAnswer === null) return;
+    dailyStore.commitRecord(record.currentIndex < DAILY_CHALLENGE_SIZE - 1 ? { ...record, currentIndex: record.currentIndex + 1 } : { ...record, completed: true }, day);
+    await dailyStore.flushLocal();
+  }
+  async function resetChallengeForDevelopment() {
+    if (__DEV__ && !snapshot.userId) await dailyStore.resetGuestDate(todayKey);
+  }
+  return { todayKey, record, isLoading: !snapshot.ready || !preferencesLoaded, challengeQuestions, currentQuestion, selectedAnswer, correctCount, startChallenge, answerQuestion, nextQuestion, resetChallengeForDevelopment, accountScoped: Boolean(snapshot.userId), reviewAvailable: challengeQuestions.length === record.questionIds.length };
 }

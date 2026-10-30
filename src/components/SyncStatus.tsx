@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useLearningSession, useLearningSnapshot } from "../state/LearningSession";
+import DailySyncControls from "./DailySyncControls";
+import { useLearningSession, useLearningSnapshot, useDailySnapshot } from "../state/LearningSession";
 import { getLearningStore } from "../lib/learningSync";
 import { describeLearningBackup, type LearningBackup } from "../utils/learningBackup";
 import { colors } from "../theme";
@@ -8,12 +9,15 @@ const labels = {
   loading: "Φόρτωση προόδου…", local: "Αποθηκευμένα στη συσκευή · Επισκέπτης", queued: "Αλλαγές σε αναμονή συγχρονισμού", syncing: "Συγχρονισμός…", saved: "Συγχρονισμένα στον λογαριασμό", waiting: "Αναμονή σύνδεσης", error: "Ο συγχρονισμός χρειάζεται έλεγχο", "local-error": "Πρόβλημα αποθήκευσης στη συσκευή",
 };
 export default function SyncStatus({ detailed = false }: { detailed?: boolean }) {
-  const { store, email } = useLearningSession();
+  const { store, dailyStore, email } = useLearningSession();
   const snapshot = useLearningSnapshot();
+  const daily = useDailySnapshot();
+  const priority = ["local-error", "error", "waiting", "syncing", "queued", "loading", "saved", "local"];
+  const combined = priority.indexOf(daily.status) < priority.indexOf(snapshot.status) ? daily : snapshot;
   const [guest, setGuest] = useState<LearningBackup | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const needsRetry = ["waiting", "error", "local-error"].includes(snapshot.status);
+  const needsRetry = ["waiting", "error", "local-error"].includes(combined.status);
   async function prepareImport() {
     if (busy) return;
     setBusy(true); setMessage("");
@@ -27,13 +31,14 @@ export default function SyncStatus({ detailed = false }: { detailed?: boolean })
   }
   return <View style={detailed ? styles.panel : styles.bar}>
     <View style={styles.row}>
-      <Text style={styles.label} accessibilityLiveRegion="polite">{labels[snapshot.status]}</Text>
-      {needsRetry ? <Pressable style={styles.retry} accessibilityRole="button" onPress={() => void store.retry()}><Text style={styles.link}>Επανάληψη</Text></Pressable> : null}
+      <Text style={styles.label} accessibilityLiveRegion="polite">{labels[combined.status]}</Text>
+      {needsRetry ? <Pressable style={styles.retry} accessibilityRole="button" onPress={() => { void store.retry(); void dailyStore.retry(); }}><Text style={styles.link}>Επανάληψη</Text></Pressable> : null}
     </View>
     {detailed ? <>
-      {snapshot.error ? <Text style={styles.body}>{snapshot.error}</Text> : null}
-      <Text style={styles.body}>{snapshot.userId ? `Λογαριασμός: ${email ?? "Συνδεδεμένος χρήστης"}. Η πρόοδος άρθρων και οι σελιδοδείκτες συγχρονίζονται αυτόματα όσο η εφαρμογή είναι ανοιχτή. Κάθε λογαριασμός έχει ξεχωριστά τοπικά δεδομένα.` : "Διαβάζεις ως επισκέπτης. Η πρόοδος άρθρων παραμένει σε αυτή τη συσκευή."}</Text>
-      <Text style={styles.note}>Ημερήσια quiz, ιστορικό και προτιμήσεις παραμένουν στη συσκευή και δεν περιλαμβάνονται στον συγχρονισμό.</Text>
+      {combined.error ? <Text style={styles.body}>{combined.error}</Text> : null}
+      <Text style={styles.note}>Άρθρα: {labels[snapshot.status]} · Ημερήσια: {labels[daily.status]}</Text>
+      <Text style={styles.body}>{snapshot.userId ? `Λογαριασμός: ${email ?? "Συνδεδεμένος χρήστης"}. Η πρόοδος άρθρων, οι σελιδοδείκτες και τα ημερήσια δεδομένα συγχρονίζονται αυτόματα όσο η εφαρμογή είναι ανοιχτή. Κάθε λογαριασμός έχει ξεχωριστά τοπικά δεδομένα.` : "Διαβάζεις ως επισκέπτης. Η πρόοδος άρθρων παραμένει σε αυτή τη συσκευή."}</Text>
+      <Text style={styles.note}>Το ιστορικό μετρά μία ολοκλήρωση ανά ημερομηνία Αθήνας. Οι αλλαγές προτιμήσεων ισχύουν για την επόμενη πρόκληση που θα ξεκινήσεις.</Text>
       {snapshot.userId ? guest ? <View style={styles.importBox}>
         <Text style={styles.body}>Πρόοδος επισκέπτη: {describeLearningBackup(guest)}</Text>
         <Text style={styles.note}>Θα προστεθεί στον λογαριασμό {email ?? "που χρησιμοποιείς"} και θα συγχρονιστεί. Το αντίγραφο επισκέπτη παραμένει στη συσκευή. Η εισαγωγή μπορεί να επαναφέρει παλιούς σελιδοδείκτες.</Text>
@@ -44,6 +49,7 @@ export default function SyncStatus({ detailed = false }: { detailed?: boolean })
         }}><Text style={styles.link}>Προσθήκη στον λογαριασμό</Text></Pressable>
         <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" onPress={() => setGuest(null)}><Text style={styles.link}>Ακύρωση εισαγωγής</Text></Pressable>
       </View> : <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" onPress={() => void prepareImport()}><Text style={styles.link}>Προεπισκόπηση εισαγωγής προόδου επισκέπτη</Text></Pressable> : null}
+      <DailySyncControls />
       {message ? <Text style={styles.body} accessibilityLiveRegion="polite">{message}</Text> : null}
     </> : null}
   </View>;
