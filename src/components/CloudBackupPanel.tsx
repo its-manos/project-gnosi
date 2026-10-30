@@ -48,9 +48,9 @@ export default function CloudBackupPanel({ userId, deviceBackup, onRestoreBackup
   }
   return <View style={styles.panel}>
     <Text style={styles.title}>Αντίγραφο προόδου</Text>
-    <Text style={styles.body}>Μετέφερε άρθρα και αποθηκευμένα στον λογαριασμό σου. Οι μεταφορές γίνονται μόνο με τα παρακάτω κουμπιά.</Text>
+    <Text style={styles.body}>Πρόσθετο χειροκίνητο αντίγραφο για επαναφορά. Ο αυτόματος συγχρονισμός λειτουργεί ξεχωριστά.</Text>
     <Text style={styles.body}>Σε αυτή τη συσκευή: {describeLearningBackup(deviceBackup)}</Text>
-    <Text style={styles.note}>Η επαναφορά προσθέτει ολοκληρωμένα και αποθηκευμένα άρθρα. Για κάθε άρθρο κρατά την προσπάθεια με τις περισσότερες απαντήσεις· σε ισοπαλία, τη νεότερη. Δεν μεταφέρει αφαιρέσεις σελιδοδεικτών ή ημερήσια quiz. Τα δεδομένα της συσκευής παραμένουν μετά την αποσύνδεση.</Text>
+    <Text style={styles.note}>Η επαναφορά προσθέτει ολοκληρωμένα και αποθηκευμένα άρθρα. Για κάθε άρθρο κρατά την προσπάθεια με τις περισσότερες απαντήσεις· σε ισοπαλία, τη νεότερη. Δεν μεταφέρει αφαιρέσεις σελιδοδεικτών ή ημερήσια quiz. Μετά την αποσύνδεση βλέπεις την ξεχωριστή πρόοδο επισκέπτη.</Text>
     {!preview ? <>
       <ActionButton label="Προεπισκόπηση αποθήκευσης στον λογαριασμό" disabled={busy} secondary onPress={() => prepare("save")} />
       <ActionButton label="Προεπισκόπηση επαναφοράς στη συσκευή" disabled={busy} secondary onPress={() => prepare("restore")} />
@@ -59,7 +59,7 @@ export default function CloudBackupPanel({ userId, deviceBackup, onRestoreBackup
       <Text style={styles.body}>Στον λογαριασμό: {preview.cloudSummary}</Text>
       {preview.date ? <Text style={styles.note}>Τελευταία αποθήκευση: {new Intl.DateTimeFormat("el-GR", { dateStyle: "short", timeStyle: "short" }).format(new Date(preview.date))}</Text> : null}
       <Text style={styles.body}>Μετά τη μεταφορά: {describeLearningBackup(preview.payload)}</Text>
-      <Text style={styles.note}>{preview.kind === "save" ? "Θα ενωθούν το αντίγραφο λογαριασμού και τα δεδομένα αυτής της συσκευής. Η συσκευή δεν θα αλλάξει." : "Θα προστεθούν δεδομένα σε αυτή τη συσκευή. Το αντίγραφο λογαριασμού δεν θα αλλάξει."}</Text>
+      <Text style={styles.note}>{preview.kind === "save" ? "Θα ενωθούν το αντίγραφο λογαριασμού και τα δεδομένα αυτής της συσκευής. Η συσκευή δεν θα αλλάξει." : "Θα προστεθούν δεδομένα σε αυτή τη συσκευή. Το χειροκίνητο αντίγραφο δεν θα αλλάξει. Οι προσθήκες θα συγχρονιστούν αυτόματα."}</Text>
       <ActionButton label={preview.kind === "save" ? "Επιβεβαίωση αποθήκευσης" : "Επιβεβαίωση επαναφοράς"} disabled={busy} onPress={() => {
         void run(async () => {
           if (preview.kind === "save") await saveAccountBackup(supabase!, userId, preview.payload, preview.revision);

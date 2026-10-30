@@ -1,4 +1,5 @@
 import type { BackupControls } from "../components/CloudBackupPanel";
+import SyncStatus from "../components/SyncStatus";
 import AccountPanel from "../components/AccountPanel";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -19,6 +20,7 @@ import { colors } from "../theme";
 
 type Props = {
   backupControls?: BackupControls;
+  canResetLessonProgress?: boolean;
   onHome: () => void;
   completedLessons: Lesson[];
   inProgressLesson: Lesson | null;
@@ -53,6 +55,7 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
 
 export default function ProgressScreen({
   backupControls,
+  canResetLessonProgress = true,
   onHome,
   completedLessons,
   inProgressLesson,
@@ -156,6 +159,7 @@ export default function ProgressScreen({
   return (
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.header} />
+      <SyncStatus detailed />
       <View style={styles.accountSection}>
         <ActionButton label={isAccountOpen ? "Απόκρυψη στοιχείων λογαριασμού" : "Λογαριασμός — Σύνδεση / Εγγραφή"} style={styles.accountButton} secondary onPress={() => setIsAccountOpen((open) => !open)} />
         {isAccountOpen ? <AccountPanel backupControls={backupControls} /> : null}
@@ -269,12 +273,12 @@ export default function ProgressScreen({
       {__DEV__ ? (
         <View style={styles.devTools}>
           <Text style={styles.devLabel}>ΕΡΓΑΛΕΙΑ ΑΝΑΠΤΥΞΗΣ</Text>
-          <Text style={styles.devDescription}>Καθαρίζει μόνο την πρόοδο μαθημάτων — ολοκληρώσεις και ημιτελείς προσπάθειες. Δεν επηρεάζει bookmarks, προτιμήσεις ή καθημερινά quiz.</Text>
+          <Text style={styles.devDescription}>Διαθέσιμο μόνο ως επισκέπτης. Καθαρίζει τοπικές ολοκληρώσεις και ημιτελείς προσπάθειες, χωρίς να διαγράφει δεδομένα λογαριασμού.</Text>
           <ActionButton
             label={isResetting ? "Γίνεται καθαρισμός…" : "Καθαρισμός προόδου μαθημάτων (DEV)"}
             onPress={confirmResetLessonProgress}
             secondary
-            disabled={!lessonProgressLoaded || isResetting}
+            disabled={!canResetLessonProgress || !lessonProgressLoaded || isResetting}
           />
         </View>
       ) : null}

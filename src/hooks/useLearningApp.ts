@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { lessons } from "../data/lessons";
-import { mergeLearningBackups, type LearningBackup } from "../utils/learningBackup";
+import type { LearningBackup } from "../utils/learningBackup";
+import { calculateScore } from "../utils/legacyLearning";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
+import { useLearningSession, useLearningSnapshot } from "../state/LearningSession";
+function countInlineQuestions(id: string): number { const lesson = lessons.find(l => l.id === id); return lesson ? getInlineQuestionCount(lesson) : 0; }
 
 export type AppScreen =
   | "home"
@@ -15,171 +17,6 @@ export type AppScreen =
   | "saved"
   | "search";
 
-type SavedLessonAttempt = {
-  checkpointAnswers: Record<number, number>;
-  score: number;
-  updatedAt: number;
-  /** True when this is an unfinished replay of a previously completed lesson. */
-  replayOfCompletedLesson: boolean;
-};
-
-type SavedLessonAttempts = Record<string, SavedLessonAttempt>;
-
-const COMPLETED_STORAGE_KEY = "@gnosi/completed-lesson-ids";
-const ATTEMPTS_STORAGE_KEY = "@gnosi/in-progress-lesson-attempts";
-
-function countInlineQuestions(lessonId: string): number {
-  const lesson = lessons.find((item) => item.id === lessonId);
-  return lesson ? getInlineQuestionCount(lesson) : 0;
-}
-
-// Serialize writes so a slower older write cannot overwrite a newer attempt.
-let attemptsWriteQueue: Promise<void> = Promise.resolve();
-let completedWriteQueue: Promise<void> = Promise.resolve();
-
-function persistLessonAttempts(
-  attempts: SavedLessonAttempts
-): Promise<void> {
-  const serializedAttempts = JSON.stringify(attempts);
-
-  attemptsWriteQueue = attemptsWriteQueue.then(async () => {
-    try {
-      await AsyncStorage.setItem(
-        ATTEMPTS_STORAGE_KEY,
-        serializedAttempts
-      );
-    } catch (error) {
-      console.warn("Could not save unfinished lessons:", error);
-    }
-  });
-
-  return attemptsWriteQueue;
-}
-
-function persistCompletedLessonIds(lessonIds: string[]): Promise<void> {
-  const serializedIds = JSON.stringify(lessonIds);
-
-  completedWriteQueue = completedWriteQueue.then(async () => {
-    try {
-      await AsyncStorage.setItem(COMPLETED_STORAGE_KEY, serializedIds);
-    } catch (error) {
-      console.warn("Could not save completed lessons:", error);
-    }
-  });
-
-  return completedWriteQueue;
-}
-
-function calculateScore(
-  lessonId: string,
-  checkpointAnswers: Record<number, number>
-): number {
-  const lesson = lessons.find((item) => item.id === lessonId);
-  if (!lesson) return 0;
-
-  return Object.entries(checkpointAnswers).reduce(
-    (score, [indexString, answerIndex]) => {
-      const question = lesson.questions[Number(indexString)];
-      return question && question.correctIndex === answerIndex
-        ? score + 1
-        : score;
-    },
-    0
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function parseCompletedLessonIds(value: string | null): string[] {
-  if (!value) return [];
-
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed) || !parsed.every((id) => typeof id === "string")) {
-      return [];
-    }
-
-    const knownIds = new Set(lessons.map((lesson) => lesson.id));
-    return [...new Set(parsed.filter((id: string) => knownIds.has(id)))];
-  } catch {
-    return [];
-  }
-}
-
-function parseSavedAttempts(
-  value: string | null,
-  completedLessonIds: string[]
-): SavedLessonAttempts {
-  if (!value) return {};
-
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!isRecord(parsed)) return {};
-
-    const completedIds = new Set(completedLessonIds);
-    const validAttempts: SavedLessonAttempts = {};
-
-    for (const [lessonId, rawAttempt] of Object.entries(parsed)) {
-      const lesson = lessons.find((item) => item.id === lessonId);
-      if (!lesson || !isRecord(rawAttempt)) continue;
-
-      const replayOfCompletedLesson = rawAttempt.replayOfCompletedLesson === true;
-      // Ignore stale attempts left by earlier versions when a lesson had already
-      // been completed. A deliberate replay, saved by the current version, is
-      // allowed to resume while the original completed record remains intact.
-      if (completedIds.has(lessonId) && !replayOfCompletedLesson) continue;
-
-      const rawAnswers = rawAttempt.checkpointAnswers;
-      if (!isRecord(rawAnswers)) continue;
-
-      const maxInlineQuestions = countInlineQuestions(lessonId);
-      const checkpointAnswers: Record<number, number> = {};
-
-      for (const [rawIndex, rawAnswer] of Object.entries(rawAnswers)) {
-        const questionIndex = Number(rawIndex);
-        if (
-          !Number.isInteger(questionIndex) ||
-          questionIndex < 0 ||
-          questionIndex >= maxInlineQuestions ||
-          typeof rawAnswer !== "number" ||
-          !Number.isInteger(rawAnswer)
-        ) {
-          continue;
-        }
-
-        const question = lesson.questions[questionIndex];
-        if (question && rawAnswer >= 0 && rawAnswer < question.answers.length) {
-          checkpointAnswers[questionIndex] = rawAnswer;
-        }
-      }
-
-      // Only retain actual attempts. If a reader exits before answering the
-      // first checkpoint, reopening the lesson naturally starts at the top.
-      if (Object.keys(checkpointAnswers).length === 0) continue;
-
-      const updatedAt =
-        typeof rawAttempt.updatedAt === "number" &&
-        Number.isFinite(rawAttempt.updatedAt)
-          ? rawAttempt.updatedAt
-          : Date.now();
-
-      validAttempts[lessonId] = {
-        checkpointAnswers,
-        // Recompute the score from the current lesson data. This prevents an
-        // edited question bank from restoring a stale or incorrect score.
-        score: calculateScore(lessonId, checkpointAnswers),
-        updatedAt,
-        replayOfCompletedLesson,
-      };
-    }
-
-    return validAttempts;
-  } catch {
-    return {};
-  }
-}
 
 export function useLearningApp() {
   const [screen, setScreen] = useState<AppScreen>("home");
@@ -195,43 +32,11 @@ export function useLearningApp() {
 
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, number>>({});
   const [score, setScore] = useState(0);
-  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
-  const [lessonAttempts, setLessonAttempts] = useState<SavedLessonAttempts>({});
-  const [progressLoaded, setProgressLoaded] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadProgress() {
-      try {
-        const [completedValue, attemptsValue] = await Promise.all([
-          AsyncStorage.getItem(COMPLETED_STORAGE_KEY),
-          AsyncStorage.getItem(ATTEMPTS_STORAGE_KEY),
-        ]);
-
-        const validCompletedIds = parseCompletedLessonIds(completedValue);
-        const validAttempts = parseSavedAttempts(attemptsValue, validCompletedIds);
-
-        if (isMounted) {
-          setCompletedLessonIds(validCompletedIds);
-          setLessonAttempts(validAttempts);
-        }
-      } catch (error) {
-        console.warn("Could not load learning progress:", error);
-      } finally {
-        if (isMounted) setProgressLoaded(true);
-      }
-    }
-
-    void loadProgress();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Unfinished attempts are written at the point of each checkpoint change.
-  // This avoids depending on a later render effect to persist the answer.
+  const { store } = useLearningSession();
+  const snapshot = useLearningSnapshot();
+  const completedLessonIds = snapshot.backup.completedIds;
+  const lessonAttempts = snapshot.backup.attempts;
+  const progressLoaded = snapshot.ready;
 
   function resetAttempt() {
     setCheckpointAnswers({});
@@ -248,7 +53,7 @@ export function useLearningApp() {
     setActiveCategoryId(lesson.categoryId);
     setActiveSubcategoryId(lesson.subcategoryId);
 
-    const savedAttempt = lessonAttempts[lesson.id];
+    const savedAttempt = store.getSnapshot().backup.attempts[lesson.id];
 
     if (savedAttempt) {
       setCheckpointAnswers(savedAttempt.checkpointAnswers);
@@ -277,30 +82,14 @@ export function useLearningApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressLoaded, pendingOpenLessonId, lessonAttempts, completedLessonIds]);
 
-  function removeAttempt(lessonId: string): Promise<void> {
-    if (!lessonAttempts[lessonId]) return Promise.resolve();
-
-    const nextAttempts = { ...lessonAttempts };
-    delete nextAttempts[lessonId];
-
-    setLessonAttempts(nextAttempts);
-    return persistLessonAttempts(nextAttempts);
+  function removeAttempt(lessonId: string): Promise<boolean> {
+    store.clearAttempt(lessonId);
+    return store.flushLocal();
   }
 
   async function markActiveLessonComplete() {
-    const nextCompletedIds = completedLessonIds.includes(activeLessonId)
-      ? completedLessonIds
-      : [...completedLessonIds, activeLessonId];
-
-    setCompletedLessonIds(nextCompletedIds);
-
-    // Wait for both writes before navigating to Results. This avoids relying
-    // exclusively on a post-render effect at the moment the user finishes.
-    await Promise.all([
-      persistCompletedLessonIds(nextCompletedIds),
-      removeAttempt(activeLessonId),
-    ]);
-
+    store.complete(activeLessonId);
+    await store.flushLocal();
     setScreen("results");
   }
 
@@ -377,20 +166,13 @@ export function useLearningApp() {
     // Persist the exact answer snapshot immediately, rather than waiting for a
     // React effect after the next render. This keeps resume data reliable when
     // the reader leaves the lesson or backgrounds the app right after answering.
-    const nextAttempts: SavedLessonAttempts = {
-      ...lessonAttempts,
-      [activeLessonId]: {
-        checkpointAnswers: nextAnswers,
-        score: nextScore,
-        updatedAt: Date.now(),
-        replayOfCompletedLesson:
-          lessonAttempts[activeLessonId]?.replayOfCompletedLesson ??
-          completedLessonIds.includes(activeLessonId),
-      },
-    };
-
-    setLessonAttempts(nextAttempts);
-    void persistLessonAttempts(nextAttempts);
+    const current = store.getSnapshot().backup;
+    store.answer(activeLessonId, {
+      checkpointAnswers: nextAnswers,
+      score: nextScore,
+      updatedAt: Date.now(),
+      replayOfCompletedLesson: current.attempts[activeLessonId]?.replayOfCompletedLesson ?? current.completedIds.includes(activeLessonId),
+    });
 
     // Keep the passed correctIndex in the function contract used by the card.
     // Calculate the stored score from lesson data to avoid drift if state updates batch.
@@ -417,43 +199,11 @@ export function useLearningApp() {
 
   async function resetLessonProgressForDevelopment(): Promise<void> {
     if (!__DEV__) return;
-
-    // Wait for queued snapshots to finish first so an older write cannot
-    // recreate lesson progress after the development reset removes the keys.
-    await Promise.all([
-      attemptsWriteQueue.catch(() => undefined),
-      completedWriteQueue.catch(() => undefined),
-    ]);
-
-    try {
-      await Promise.all([
-        AsyncStorage.removeItem(COMPLETED_STORAGE_KEY),
-        AsyncStorage.removeItem(ATTEMPTS_STORAGE_KEY),
-      ]);
-      setCompletedLessonIds([]);
-      setLessonAttempts({});
-      setCheckpointAnswers({});
-      setQuestionIndex(0);
-      setSelectedAnswer(null);
-      setScore(0);
-    } catch (error) {
-      console.warn("Could not reset lesson progress for development:", error);
-      throw error;
-    }
+    await store.resetGuestProgress();
+    resetAttempt();
   }
-
   async function mergeRestoredProgress(backup: LearningBackup): Promise<void> {
-    if (!progressLoaded) throw new Error("local_not_ready");
-    const merged = mergeLearningBackups({ schemaVersion: 1, completedIds: completedLessonIds, savedIds: [], attempts: lessonAttempts }, backup);
-    // Apply before yielding: subsequent reading actions see the merged state,
-    // and their writes queue after this restore rather than being overwritten.
-    setCompletedLessonIds(merged.completedIds);
-    setLessonAttempts(merged.attempts);
-    const completedWrite = completedWriteQueue.then(() => AsyncStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify(merged.completedIds)));
-    const attemptsWrite = attemptsWriteQueue.then(() => AsyncStorage.setItem(ATTEMPTS_STORAGE_KEY, JSON.stringify(merged.attempts)));
-    completedWriteQueue = completedWrite.catch(() => undefined);
-    attemptsWriteQueue = attemptsWrite.catch(() => undefined);
-    await Promise.all([completedWrite, attemptsWrite]);
+    await store.restoreProgress(backup);
   }
 
   const latestAttemptEntry = Object.entries(lessonAttempts)
@@ -504,5 +254,6 @@ export function useLearningApp() {
     finishInlineLesson,
     restartLesson,
     resetLessonProgressForDevelopment,
+    canResetLessonProgress: store.userId === null,
   };
 }

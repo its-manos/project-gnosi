@@ -114,7 +114,7 @@ export default function AccountPanel({ backupControls }: { backupControls?: Back
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.card}>
       <Text style={styles.title}>Λογαριασμός</Text>
-      <Text style={styles.body}>Η σύνδεση είναι προαιρετική. Μπορείς να αποθηκεύσεις αντίγραφο προόδου στον λογαριασμό και να το επαναφέρεις σε άλλη συσκευή. Η σύνδεση από μόνη της δεν μεταφέρει ή διαγράφει δεδομένα.</Text>
+      <Text style={styles.body}>Η σύνδεση είναι προαιρετική. Η πρόοδος άρθρων και οι σελιδοδείκτες συγχρονίζονται αυτόματα στον λογαριασμό σου. Η προηγούμενη πρόοδος επισκέπτη εισάγεται μόνο αν το επιλέξεις στην οθόνη προόδου.</Text>
       {!supabase ? <Text style={styles.error}>Δεν έχει ρυθμιστεί η σύνδεση Supabase. Έλεγξε τις EXPO_PUBLIC_SUPABASE_URL και EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY στο .env και επανεκκίνησε το Expo. Μπορείς να συνεχίσεις να μαθαίνεις χωρίς λογαριασμό.</Text>
         : loading ? <ActivityIndicator color={colors.accentLight} />
         : session ? <>
@@ -129,7 +129,7 @@ export default function AccountPanel({ backupControls }: { backupControls?: Back
               const { data, error: readError } = await client.from('profiles').select('user_id').eq('user_id', session.user.id).single();
               if (readError) throw readError;
               if (data.user_id !== session.user.id) throw new Error('Profile mismatch');
-              if (mounted.current) setMessage('Η σύνδεση με τη βάση λειτουργεί. Το προφίλ σου είναι διαθέσιμο. Χρησιμοποίησε τα κουμπιά αντιγράφου για να μεταφέρεις την πρόοδό σου.');
+              if (mounted.current) setMessage('Η σύνδεση με τη βάση λειτουργεί. Το προφίλ σου είναι διαθέσιμο. Ο αυτόματος συγχρονισμός εκτελείται όταν υπάρχει σύνδεση.');
             });
           }} />
           {backupControls ? <CloudBackupPanel key={session.user.id} userId={session.user.id} {...backupControls} onBusyChange={setBusy} /> : <Text style={styles.body}>Περίμενε να φορτωθεί η τοπική πρόοδος για να χρησιμοποιήσεις τα αντίγραφα.</Text>}

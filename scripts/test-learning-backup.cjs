@@ -63,23 +63,5 @@ const flush=async()=>{for(let i=0;i<40;i++)await Promise.resolve();};
  button(tree,'Προεπισκόπηση επαναφοράς στη συσκευή').props.onPress();await flush();tree=render();uid='user-b';button(tree,'Επιβεβαίωση επαναφοράς').props.onPress();await flush();tree=render();assert.equal(restored.length,1,'Account change cannot apply previous account data.');uid='user-a';
  row={...row,payload:{schemaVersion:99}};button(tree,'Προεπισκόπηση επαναφοράς στη συσκευή').props.onPress();await flush();tree=render();assert.ok(JSON.stringify(tree).includes('μη έγκυρα'));assert.equal(restored.length,1);
  cleanup();assert.equal(busy.at(-1),false);
- // Exercise actual local hooks: hydrate, additive restore, disk persistence and repeated restore.
- function harness(file,extra={}) {
-  let state=[],index=0,dependencies=[],effects=[];
-  const storage=new Map();
-  const asyncStorage={getItem:async k=>storage.get(k)??null,setItem:async(k,v)=>{storage.set(k,v);},removeItem:async k=>{storage.delete(k);}};
-  const hooks={useState:initial=>{const i=index++;if(!(i in state))state[i]=typeof initial==='function'?initial():initial;return[state[i],v=>{state[i]=typeof v==='function'?v(state[i]):v;}];},useEffect:(fn,deps)=>{const i=index++;if(!dependencies[i]||deps.some((d,j)=>d!==dependencies[i][j])){dependencies[i]=deps;effects.push(fn);}}};
-  const m=compile(file,{react:hooks,'@react-native-async-storage/async-storage':{__esModule:true,default:asyncStorage},'../data/lessons':data,'../utils/lessonProgress':progress,'../utils/learningBackup':util,...extra});
-  const invokeHook=Object.values(m)[0];
-  return {storage,render(){index=0;const value=invokeHook();const run=effects;effects=[];for(const fn of run)fn();return value;}};
- }
- const learning=harness('src/hooks/useLearningApp.ts');learning.storage.set('@gnosi/completed-lesson-ids',JSON.stringify([b.id]));learning.storage.set('@gnosi/in-progress-lesson-attempts',JSON.stringify(local.attempts));learning.render();await flush();let app=learning.render();assert.equal(app.progressLoaded,true);
- await app.mergeRestoredProgress(cloud);app=learning.render();assert.deepEqual(plain(app.completedLessonIds),[b.id,c.id].sort());assert.equal(Object.keys(app.lessonAttempts[a.id].checkpointAnswers).length,2);
- assert.deepEqual(JSON.parse(learning.storage.get('@gnosi/completed-lesson-ids')),[b.id,c.id].sort());
- await app.mergeRestoredProgress(cloud);app=learning.render();assert.equal(app.completedLessonIds.length,2);
- const restoreWrite=app.mergeRestoredProgress(cloud);app=learning.render();app.openLesson(a.id);app=learning.render();
- app.answerCheckpoint(2,a.questions[2].correctIndex,a.questions[2].correctIndex);await restoreWrite;await flush();
- assert.equal(Object.keys(JSON.parse(learning.storage.get('@gnosi/in-progress-lesson-attempts'))[a.id].checkpointAnswers).length,3,'New reading writes follow restore writes.');
- const saved=harness('src/hooks/useSavedLessons.ts');saved.storage.set('@gnosi/saved-lesson-ids',JSON.stringify([a.id]));saved.render();await flush();let bookmarks=saved.render();await flush();await bookmarks.mergeRestoredBookmarks([b.id,a.id]);bookmarks=saved.render();assert.equal(bookmarks.savedLessonIds.length,2);await flush();assert.equal(JSON.parse(saved.storage.get('@gnosi/saved-lesson-ids')).length,2);
- console.log('Learning backup checks passed: schema validation, additive/idempotent merge, whole-attempt selection, score recomputation, replay, explicit previews/cancel, double taps, account changes, revision conflicts, malformed data and real local-hook persistence. API/native views mocked.');
+ console.log('Learning backup checks passed: schema validation, additive/idempotent merge, whole-attempt selection, score recomputation, replay, explicit previews/cancel, double taps, account changes, revision conflicts, malformed data. Local persistence is covered by test-automatic-sync.cjs. API/native views mocked.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

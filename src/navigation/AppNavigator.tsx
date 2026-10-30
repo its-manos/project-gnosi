@@ -22,6 +22,7 @@ import SavedLessonsScreen from "../screens/SavedLessonsScreen";
 import SearchScreen from "../screens/SearchScreen";
 import DailyChallengeScreen from "../screens/DailyChallengeScreen";
 import DailyChallengePreferencesScreen from "../screens/DailyChallengePreferencesScreen";
+import SyncStatus from "../components/SyncStatus";
 import ProgressScreen from "../screens/ProgressScreen";
 
 export default function AppNavigator() {
@@ -194,6 +195,7 @@ export default function AppNavigator() {
           inProgressLessonCount={app.inProgressLessonCount}
           totalLessonCount={lessons.length}
           lessonProgressLoaded={app.progressLoaded}
+          canResetLessonProgress={app.canResetLessonProgress}
           onOpenLesson={app.openLesson}
           onResetLessonProgressForDevelopment={app.resetLessonProgressForDevelopment}
         />
@@ -311,6 +313,7 @@ export default function AppNavigator() {
         style={styles.screenViewport}
         edges={["top", "left", "right"]}
       >
+        {app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus /> : null}
         {screenContent}
       </SafeAreaView>
       <BottomNavigation
