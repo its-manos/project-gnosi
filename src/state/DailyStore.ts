@@ -36,6 +36,7 @@ export class DailyStore {
   async start(): Promise<void> {
     this.active = true; this.generation += 1;
     if (!this.ready) {
+      this.status = "loading"; this.error = ""; this.emit();
       if (!this.loading) this.loading = this.load().finally(() => { this.loading = null; });
       await this.loading;
     }
@@ -43,17 +44,25 @@ export class DailyStore {
   }
   stop() { this.active = false; this.generation += 1; if (this.timer) clearTimeout(this.timer); this.timer = null; }
   private async load() {
+    let stage = "D01";
     try {
       const storedDevice = await this.storage.getItem("@gnosi/sync-device-id");
       this.device = storedDevice && /^[a-zA-Z0-9_-]{1,100}$/.test(storedDevice) ? storedDevice : `d_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
+      stage = "D02";
       await this.storage.setItem("@gnosi/sync-device-id", this.device);
+      stage = "D03";
       const raw = await this.storage.getItem(this.key);
       if (raw) {
+        stage = "D04";
         const local = JSON.parse(raw);
+        stage = "D05";
         if (local.format !== 1 || local.userId !== this.userId || typeof local.dirty !== "boolean") throw new Error("invalid_daily");
+        stage = "D06";
         this.doc = parseDailyDocument(local.doc); this.dirty = local.dirty;
       } else if (!this.userId) {
+        stage = "D07";
         const [prefsRaw, recordRaw, historyRaw] = await Promise.all(["@gnosi/daily-challenge-preferences-v1", DAILY_CHALLENGE_STORAGE_KEY, DAILY_CHALLENGE_HISTORY_STORAGE_KEY].map(key => this.storage.getItem(key)));
+        stage = "D08";
         const migrated = emptyDailyDocument();
         if (prefsRaw) migrated.preferences = { stamp: [0, "legacy"], value: parseDailyChallengePreferences(prefsRaw) };
         for (const history of parseDailyChallengeHistory(historyRaw)) migrated.days[history.dateKey] = { run: [0, "legacy"], edit: [0, "legacy"], history, record: { dateKey: history.dateKey, started: true, completed: true, currentIndex: 6, questionIds: history.questionIds, answers: history.answers } };
@@ -64,11 +73,23 @@ export class DailyStore {
           const day = { run: [0, "legacy"] as Stamp, edit: [0, "legacy"] as Stamp, record, history };
           migrated.days[date] = migrated.days[date]?.history ? migrated.days[date] : day;
         }
+        stage = "D08";
         this.doc = parseDailyDocument(migrated);
       }
+      stage = "D09";
       await this.persist();
       this.ready = true; this.status = this.userId ? "queued" : "local"; this.error = ""; this.emit();
-    } catch { this.status = "local-error"; this.error = "Δεν φορτώθηκε η τοπική πρόοδος. Ελευθέρωσε χώρο ή δοκίμασε ξανά. Δεν αντικαταστάθηκαν τα αποθηκευμένα δεδομένα."; this.emit(); }
+    } catch (error) {
+      // Keep the stored bytes intact, but expose the actual failure in the
+      // Metro/device logs so storage, parsing and quota problems are distinct.
+      const reason = typeof error === "object" && error !== null && "message" in error
+        ? String(error.message) : String(error);
+      console.warn(`Could not load local daily progress (${stage}):`, reason);
+      this.status = "local-error";
+      const kind = stage === "D04" ? "JSON" : reason === "invalid_daily" ? "VALIDATION" : "READ_WRITE";
+      this.error = `Δεν φορτώθηκε η τοπική πρόοδος. Δοκίμασε ξανά. Αν το πρόβλημα συνεχίζεται, στείλε μας τον κωδικό ${stage}/${kind}. Τα αποθηκευμένα δεδομένα διατηρήθηκαν.`;
+      this.emit();
+    }
   }
   private persist(): Promise<void> {
     const serialized = JSON.stringify({ format: 1, userId: this.userId, doc: this.doc, dirty: this.dirty });

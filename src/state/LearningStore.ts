@@ -36,6 +36,7 @@ export class LearningStore {
   async start(): Promise<void> {
     this.active = true; this.generation += 1;
     if (!this.ready) {
+      this.status = "loading"; this.error = ""; this.emit();
       if (!this.loading) this.loading = this.load().finally(() => { this.loading = null; });
       await this.loading;
     }
@@ -43,27 +44,43 @@ export class LearningStore {
   }
   stop() { this.active = false; this.generation += 1; if (this.timer) clearTimeout(this.timer); this.timer = null; }
   private async load() {
+    let stage = "L01";
     try {
       const storedDevice = await this.storage.getItem("@gnosi/sync-device-id");
       this.device = storedDevice && /^[a-zA-Z0-9_-]{1,100}$/.test(storedDevice) ? storedDevice : `d_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
+      stage = "L02";
       await this.storage.setItem("@gnosi/sync-device-id", this.device);
+      stage = "L03";
       const raw = await this.storage.getItem(this.key);
       if (raw) {
+        stage = "L04";
         const local = JSON.parse(raw);
+        stage = "L05";
         if (local.format !== 1 || local.userId !== this.userId || typeof local.dirty !== "boolean") throw new Error("invalid_sync");
+        stage = "L06";
         this.doc = parseSyncDocument(local.doc); this.dirty = local.dirty;
       } else if (!this.userId) {
+        stage = "L07";
         // Legacy device data has no reliable account owner. Preserve it as guest
         // data and require explicit import before associating it with an account.
         const [completedRaw, attemptsRaw, savedRaw] = await Promise.all(["@gnosi/completed-lesson-ids", "@gnosi/in-progress-lesson-attempts", "@gnosi/saved-lesson-ids"].map(key => this.storage.getItem(key)));
+        stage = "L08";
         const completedIds = parseCompletedLessonIds(completedRaw);
         const saved: unknown = savedRaw ? JSON.parse(savedRaw) : [];
         const savedIds = Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string" && known.has(id)) : [];
         this.doc = seedSyncBackup({ schemaVersion: 1, completedIds, savedIds, attempts: parseSavedAttempts(attemptsRaw, completedIds) });
       }
+      stage = "L09";
       await this.persist();
       this.ready = true; this.status = this.userId ? "queued" : "local"; this.error = ""; this.emit();
-    } catch { this.status = "local-error"; this.error = "Δεν φορτώθηκε η τοπική πρόοδος. Ελευθέρωσε χώρο ή δοκίμασε ξανά. Δεν αντικαταστάθηκαν τα αποθηκευμένα δεδομένα."; this.emit(); }
+    } catch (error) {
+      const reason = typeof error === "object" && error !== null && "message" in error ? String(error.message) : String(error);
+      console.warn(`Could not load local article progress (${stage}):`, reason);
+      const kind = ["invalid_sync", "invalid_backup", "unknown_catalogue"].includes(reason) ? reason : stage === "L04" ? "JSON" : "READ_WRITE";
+      this.status = "local-error";
+      this.error = `Δεν φορτώθηκε η τοπική πρόοδος. Δοκίμασε ξανά. Αν το πρόβλημα συνεχίζεται, στείλε μας τον κωδικό ${stage}/${kind}. Τα αποθηκευμένα δεδομένα διατηρήθηκαν.`;
+      this.emit();
+    }
   }
   private persist(): Promise<void> {
     const serialized = JSON.stringify({ format: 1, userId: this.userId, doc: this.doc, dirty: this.dirty });
