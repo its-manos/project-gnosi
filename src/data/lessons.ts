@@ -1,3 +1,4 @@
+import { catalogueExpansion } from "./catalogueExpansion";
 import { additionalLessons } from "./additionalLessons";
 
 export type Category = {
@@ -33,6 +34,9 @@ export type LessonSource = {
 };
 
 export type Lesson = {
+  coverKind?: "editorial";
+  contentNote?: string;
+  editorialReviewedAt?: string;
   id: string;
   categoryId: string;
   subcategoryId: string;
@@ -85,6 +89,12 @@ export const categories: Category[] = [
     title: "Γεωγραφία & Κοινωνία",
     emoji: "🌍",
     description: "Χώρες, κοινωνίες και παράξενα μέρη",
+  },
+  {
+    id: "difficult-history",
+    title: "Ταμπού της Ιστορίας",
+    emoji: "🕯️",
+    description: "Δύσκολες ιστορίες, τεκμήρια και ανθρώπινες εμπειρίες — χωρίς εντυπωσιοθηρία.",
   },
 ];
 
@@ -197,6 +207,9 @@ export const subcategories: Subcategory[] = [
     title: "Κοινωνίες",
     description: "Πώς οργανώνονται και εξελίσσονται οι ανθρώπινες κοινωνίες.",
   },
+  { id: "genocide-memory", categoryId: "difficult-history", title: "Γενοκτονίες & μνήμη", description: "Διώξεις, ιστορικά τεκμήρια και η ευθύνη της μνήμης." },
+  { id: "colonialism-slavery", categoryId: "difficult-history", title: "Αποικιοκρατία & δουλεία", description: "Καταναγκασμός, οικονομικά συστήματα και κριτική ανάγνωση των πηγών." },
+  { id: "power-exclusion", categoryId: "difficult-history", title: "Εξουσία & αποκλεισμός", description: "Λογοκρισία, ψευδοεπιστήμη και ανθρώπινα δικαιώματα." },
 ];
 
 export const lessons: Lesson[] = [
@@ -309,4 +322,5 @@ export const lessons: Lesson[] = [
     ]
   },
   ...additionalLessons,
+  ...catalogueExpansion,
 ];

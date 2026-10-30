@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 import { colors } from "../theme";
 
 type Props = {
@@ -6,6 +7,7 @@ type Props = {
   onPress: () => void;
   secondary?: boolean;
   disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export default function ActionButton({
@@ -13,6 +15,7 @@ export default function ActionButton({
   onPress,
   secondary = false,
   disabled = false,
+  style,
 }: Props) {
   return (
     <Pressable
@@ -24,6 +27,7 @@ export default function ActionButton({
         styles.button,
         secondary && styles.secondary,
         disabled && styles.disabled,
+        style,
       ]}
     >
       <Text style={[styles.label, secondary && styles.secondaryLabel]}>

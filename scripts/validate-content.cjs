@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global __dirname */
 /**
  * Validate the ΓΝΩΣΗ lesson catalogue without a test framework.
  * Uses the project's existing TypeScript dependency to load the data files.
@@ -76,6 +77,16 @@ for (const subcategory of subcategories) {
   }
 }
 
+for (const subcategory of subcategories) {
+  if (!lessons.some((lesson) => lesson.subcategoryId === subcategory.id)) {
+    fail(`Subcategory "${subcategory.id}" has no articles`);
+  }
+}
+for (const category of categories) {
+  const expansion = lessons.filter((lesson) => lesson.categoryId === category.id && lesson.editorialReviewedAt);
+  if (expansion.length < 5) fail(`Category "${category.id}" needs at least five new reviewed articles`);
+}
+
 for (const lesson of lessons) {
   if (!categoryIds.has(lesson.categoryId)) {
     fail(`Lesson "${lesson.id}" references unknown category "${lesson.categoryId}"`);
@@ -93,8 +104,27 @@ for (const lesson of lessons) {
       fail(`Lesson "${lesson.id}" is missing required field "${field}"`);
     }
   }
-  if (!isHttpsUrl(lesson.imageUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageUrl`);
-  if (!isHttpsUrl(lesson.imageCreditUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageCreditUrl`);
+  if (lesson.coverKind !== 'editorial' && !isHttpsUrl(lesson.imageUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageUrl`);
+  if (lesson.coverKind !== 'editorial' && !isHttpsUrl(lesson.imageCreditUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageCreditUrl`);
+  if (lesson.editorialReviewedAt) {
+    if (paragraphCount(lesson) !== 6 || lesson.questions?.length !== 3) {
+      fail(`New lesson "${lesson.id}" must have six paragraphs and three inline checkpoints`);
+    }
+    for (const question of lesson.questions ?? []) {
+      if (question.answers?.length !== 4 || new Set(question.answers).size !== 4) {
+        fail(`New lesson "${lesson.id}" needs four distinct answer choices per question`);
+      }
+    }
+  }
+  if (lesson.categoryId === 'difficult-history' && !lesson.contentNote?.trim()) {
+    fail(`Difficult-history lesson "${lesson.id}" needs a content note`);
+  }
+  if (lesson.coverKind === 'editorial' && (lesson.imageUrl || lesson.imageCreditUrl)) {
+    fail(`Illustrated lesson "${lesson.id}" unexpectedly declares a remote photo`);
+  }
+  if (lesson.editorialReviewedAt && !/^\d{4}-\d{2}-\d{2}$/.test(lesson.editorialReviewedAt)) {
+    fail(`Lesson "${lesson.id}" has an invalid editorial date`);
+  }
   if (!Array.isArray(lesson.sections) || lesson.sections.length === 0) {
     fail(`Lesson "${lesson.id}" has no sections`);
   }
@@ -167,7 +197,7 @@ for (const lessonId of mediaLessonIds) {
 }
 
 for (const lesson of lessons) {
-  if (!Object.prototype.hasOwnProperty.call(inlineArticleMedia, lesson.id)) {
+  if (lesson.coverKind !== 'editorial' && !Object.prototype.hasOwnProperty.call(inlineArticleMedia, lesson.id)) {
     warn(`Lesson "${lesson.id}" has no supplementary inline images (main cover image is separate)`);
   }
 }

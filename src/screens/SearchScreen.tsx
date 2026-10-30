@@ -1,3 +1,4 @@
+import { getReadingState, type ReadingState } from "../utils/readingDiscovery";
 import { useMemo, useState } from "react";
 import {
   Keyboard,
@@ -15,6 +16,9 @@ import LessonCard from "../components/LessonCard";
 import { colors } from "../theme";
 
 type Props = {
+  completedLessonIds: string[];
+  inProgressLessonIds: string[];
+  progressLoaded: boolean;
   lessons: Lesson[];
   categories: Category[];
   subcategories: Subcategory[];
@@ -33,6 +37,9 @@ function normalizeSearchText(value: string): string {
 }
 
 export default function SearchScreen({
+  completedLessonIds,
+  inProgressLessonIds,
+  progressLoaded,
   lessons,
   categories,
   subcategories,
@@ -40,6 +47,8 @@ export default function SearchScreen({
   onOpenLesson,
 }: Props) {
   const [query, setQuery] = useState("");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [status, setStatus] = useState<ReadingState | "all">("all");
   const normalizedQuery = normalizeSearchText(query);
 
   // Build the full-text index only when the content catalogue changes, not
@@ -79,13 +88,11 @@ export default function SearchScreen({
     [lessons, categories, subcategories]
   );
 
-  const results = useMemo(() => {
-    if (!normalizedQuery) return searchIndex.map((entry) => entry.lesson);
-
-    return searchIndex
-      .filter((entry) => entry.normalizedText.includes(normalizedQuery))
-      .map((entry) => entry.lesson);
-  }, [searchIndex, normalizedQuery]);
+  const results = useMemo(() => searchIndex.filter(({ lesson, normalizedText }) => (
+    (!normalizedQuery || normalizedText.includes(normalizedQuery)) &&
+    (!categoryId || lesson.categoryId === categoryId) &&
+    (status === "all" || (progressLoaded && getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) === status))
+  )).map((entry) => entry.lesson), [searchIndex, normalizedQuery, categoryId, status, progressLoaded, completedLessonIds, inProgressLessonIds]);
 
   return (
     <ScrollView
@@ -128,9 +135,29 @@ export default function SearchScreen({
         )}
       </View>
 
+      <Text style={styles.filterLabel}>Κατηγορία</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+        {[{ id: null, title: "Όλες" }, ...categories].map((category) => (
+          <Pressable key={category.id ?? "all"} onPress={() => setCategoryId(category.id)} accessibilityRole="button"
+            accessibilityState={{ selected: categoryId === category.id }}
+            style={[styles.chip, categoryId === category.id && styles.activeChip]}>
+            <Text style={styles.chipText}>{category.title}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+      <Text style={styles.filterLabel}>Η ανάγνωσή σου</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+        {([{ id: "all", title: "Όλα" }, { id: "unread", title: "Αδιάβαστα" }, { id: "in-progress", title: "Σε εξέλιξη" }, { id: "completed", title: "Ολοκληρωμένα" }] as const).map((filter) => (
+          <Pressable key={filter.id} onPress={() => setStatus(filter.id)} disabled={!progressLoaded && filter.id !== "all"}
+            accessibilityRole="button" accessibilityState={{ selected: status === filter.id, disabled: !progressLoaded && filter.id !== "all" }}
+            style={[styles.chip, status === filter.id && styles.activeChip]}><Text style={styles.chipText}>{filter.title}</Text></Pressable>
+        ))}
+      </ScrollView>
+      {!progressLoaded ? <Text style={styles.emptyText}>Φόρτωση προόδου ανάγνωσης…</Text> : null}
+
       <View style={styles.resultsHeader}>
         <Text style={styles.sectionTitle}>
-          {normalizedQuery ? "Αποτελέσματα" : "Όλα τα μαθήματα"}
+          {normalizedQuery || categoryId || status !== "all" ? "Αποτελέσματα" : "Όλα τα μαθήματα"}
         </Text>
         <Text style={styles.count}>
           {results.length} {results.length === 1 ? "μάθημα" : "μαθήματα"}
@@ -154,7 +181,7 @@ export default function SearchScreen({
                   .join("  ·  ")}
               </Text>
               <LessonCard
-                lesson={lesson}
+                lesson={lesson} readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined}
                 onPress={() => onOpenLesson(lesson.id)}
               />
             </View>
@@ -165,10 +192,10 @@ export default function SearchScreen({
           <Text style={styles.emptyEmoji}>🔎</Text>
           <Text style={styles.emptyTitle}>Δεν βρέθηκαν μαθήματα</Text>
           <Text style={styles.emptyText}>
-            Δοκίμασε μια πιο γενική λέξη ή αναζήτησε μια άλλη θεματική.
+            Δοκίμασε μια πιο γενική λέξη ή άλλαξε τα φίλτρα κατηγορίας και ανάγνωσης.
           </Text>
           <Pressable
-            onPress={() => setQuery("")}
+            onPress={() => { setQuery(""); setCategoryId(null); setStatus("all"); }}
             style={styles.resetButton}
             accessibilityRole="button"
           >
@@ -181,6 +208,11 @@ export default function SearchScreen({
 }
 
 const styles = StyleSheet.create({
+  filterLabel: { color: colors.textMuted, fontSize: 12, lineHeight: 20, marginBottom: 8 },
+  filters: { gap: 8, paddingBottom: 18 },
+  chip: { minHeight: 44, paddingHorizontal: 15, paddingVertical: 11, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  activeChip: { borderColor: colors.accentLight, backgroundColor: colors.accentSurface },
+  chipText: { color: colors.text, fontSize: 13, lineHeight: 20 },
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 30, fontWeight: "900", lineHeight: 38, marginBottom: 10 },

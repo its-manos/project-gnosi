@@ -32,6 +32,7 @@ vm.runInNewContext(compiled,{module:mod,exports:mod.exports,require(id){
  if(id==='react-native')return {Text:'Text',View:'View',TextInput:'Input',ActivityIndicator:'Spinner',KeyboardAvoidingView:'Keyboard',Platform:{OS:'android'},StyleSheet:{create:x=>x}};
  if(id==='../lib/supabase')return {get supabase(){return configured?client:null;}};
  if(id==='../theme')return {colors:{}};
+ if(id==='./CloudBackupPanel')return {__esModule:true,default:'CloudBackupPanel'};
  if(id==='./ActionButton')return {__esModule:true,default:'Button'};
  throw new Error(id);
 }});

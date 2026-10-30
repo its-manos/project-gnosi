@@ -84,9 +84,19 @@ export function useSavedLessons() {
     );
   }
 
+  async function mergeRestoredBookmarks(incomingIds: string[]): Promise<void> {
+    if (!isLoaded) throw new Error("local_not_ready");
+    const merged = [...new Set([...savedLessonIds, ...incomingIds.filter(id => VALID_LESSON_IDS.has(id))])];
+    setSavedLessonIds(merged);
+    const write = savedLessonsWriteQueue.then(() => AsyncStorage.setItem(SAVED_LESSONS_STORAGE_KEY, JSON.stringify(merged)));
+    savedLessonsWriteQueue = write.catch(() => undefined);
+    await write;
+  }
+
   return {
     savedLessonIds,
     isSavedLessonsLoaded: isLoaded,
     toggleSavedLesson,
+    mergeRestoredBookmarks,
   };
 }

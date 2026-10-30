@@ -1,3 +1,4 @@
+import { getReadingState } from "../utils/readingDiscovery";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import AppHeader from "../components/AppHeader";
@@ -5,6 +6,9 @@ import LessonCard from "../components/LessonCard";
 import { colors } from "../theme";
 
 type Props = {
+  completedLessonIds: string[];
+  inProgressLessonIds: string[];
+  progressLoaded: boolean;
   category: Category;
   subcategory: Subcategory;
   lessons: Lesson[];
@@ -12,7 +16,7 @@ type Props = {
   onOpenLesson: (lessonId: string) => void;
 };
 
-export default function SubcategoryScreen({ category, subcategory, lessons, onBack, onOpenLesson }: Props) {
+export default function SubcategoryScreen({ category, subcategory, lessons, onBack, onOpenLesson, completedLessonIds, inProgressLessonIds, progressLoaded }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onBack} />
@@ -21,7 +25,7 @@ export default function SubcategoryScreen({ category, subcategory, lessons, onBa
       <Text style={styles.body}>{subcategory.description}</Text>
       <Text style={styles.sectionTitle}>Μαθήματα</Text>
       {lessons.length > 0 ? lessons.map((lesson) => (
-        <LessonCard key={lesson.id} lesson={lesson} onPress={() => onOpenLesson(lesson.id)} />
+        <LessonCard key={lesson.id} lesson={lesson} readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined} onPress={() => onOpenLesson(lesson.id)} />
       )) : (
         <View style={styles.empty}>
           <Text style={styles.emptyEmoji}>📚</Text>

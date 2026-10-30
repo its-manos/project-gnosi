@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 type MapRegion = {
   id: string;
@@ -14,6 +14,7 @@ type Props = {
   regions: MapRegion[];
   onSelectRegion: (id: string) => void;
   emptyMessage?: string;
+  overview?: boolean;
 };
 
 type Point = { x: number; y: number };
@@ -31,19 +32,19 @@ const ROW_GAP = 146;
 const TOP_PADDING = 76;
 
 const LAND_COLORS = [
-  "#65569B",
-  "#326E70",
-  "#8B6B42",
-  "#3D638F",
-  "#8A4F6A",
-  "#4D765E",
+  "#716287",
+  "#427C78",
+  "#9C8055",
+  "#557A92",
+  "#986E7F",
+  "#62866A",
   "#8A645E",
   "#516A91",
 ];
 
 function columnCount(count: number) {
   if (count <= 1) return 1;
-  if (count <= 4) return 2;
+  if (count <= 8) return 2;
   // Keep a roomy three-column map for the current catalogue (up to 24
   // regions). More columns are only used for larger future catalogues.
   if (count <= 24) return 3;
@@ -56,14 +57,36 @@ function stableNoise(seed: number) {
   return value - Math.floor(value);
 }
 
-function makeLayout(regions: MapRegion[]): PositionedRegion[] {
+function overviewRows(count: number): number[] {
+  if (count === 5) return [2, 3];
+  if (count === 6) return [3, 3];
+  if (count === 7) return [2, 3, 2];
+  if (count === 8) return [3, 2, 3];
+  const columns = columnCount(count);
+  return Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
+}
+
+function makeLayout(regions: MapRegion[], overview: boolean): PositionedRegion[] {
   const count = regions.length;
   if (count === 0) return [];
 
   const columns = columnCount(count);
   const cellWidth = MAP_WIDTH / columns;
 
+  const rowSizes = overviewRows(count);
   return regions.map((region, index) => {
+    if (overview && count > 1) {
+      let row = 0;
+      let column = index;
+      while (column >= rowSizes[row]) { column -= rowSizes[row]; row += 1; }
+      const cell = MAP_WIDTH / rowSizes[row];
+      return {
+        ...region, cx: cell * (column + 0.5) + Math.sin(index * 1.7) * 3,
+        cy: 72 + row * 128 + Math.cos(index * 1.4) * 4,
+        rx: Math.min(65, cell * 0.36), ry: 46,
+        seed: index + 1, fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
+      };
+    }
     const row = Math.floor(index / columns);
     const column = index % columns;
     const noise = stableNoise(index + 1);
@@ -73,9 +96,11 @@ function makeLayout(regions: MapRegion[]): PositionedRegion[] {
     // recalculated from the number of categories/regions supplied.
     const shift = row % 2 === 1 ? cellWidth * 0.065 : -cellWidth * 0.015;
     const horizontalDrift = Math.cos((index + 1) * 1.63) * cellWidth * 0.055;
+    const rowSize = Math.min(columns, count - row * columns);
+    const rowOffset = (columns - rowSize) * cellWidth / 2;
     const cx = count === 1
       ? MAP_WIDTH / 2
-      : cellWidth * (column + 0.5) + shift + horizontalDrift;
+      : cellWidth * (column + 0.5) + rowOffset + shift + horizontalDrift;
     const verticalDrift = Math.sin((column + 1) * 1.91 + row * 1.47) * 18;
     const cy = count === 1
       ? 82
@@ -168,16 +193,17 @@ export default function FantasyMap({
   regions,
   onSelectRegion,
   emptyMessage = "Νέες περιοχές θα εμφανιστούν εδώ.",
+  overview = false,
 }: Props) {
   const [showList, setShowList] = useState(false);
-  const positionedRegions = useMemo(() => makeLayout(regions), [regions]);
+  const positionedRegions = useMemo(() => makeLayout(regions, overview), [regions, overview]);
   const columns = columnCount(regions.length);
-  const rows = Math.max(1, Math.ceil(regions.length / columns));
-  const mapHeight = regions.length === 1 ? 168 : rows * ROW_GAP + 16;
+  const rows = Math.max(1, overview ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
+  const mapHeight = regions.length === 1 ? 168 : overview ? rows * 128 + 32 : rows * ROW_GAP + 16;
   // Larger text is practical because the layout uses at most three columns for
   // up to 24 regions. Large catalogues retain a list view for full labels.
-  const labelFontSize = columns >= 5 ? 9 : columns === 4 ? 9.6 : 10.2;
-  const maxLabelChars = columns >= 5 ? 9 : columns === 4 ? 11 : 12;
+  const labelFontSize = overview ? 12.5 : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
+  const maxLabelChars = columns >= 4 ? 10 : columns === 3 ? 12 : 16;
 
   if (regions.length === 0) {
     return (
@@ -201,44 +227,61 @@ export default function FantasyMap({
 
   return (
     <View style={styles.container}>
-      <View style={styles.mapFrame}>
+      <View style={[styles.viewControls, overview && styles.overviewControls]}>
+        {overview ? <Text style={styles.overviewLabel}>Θεματικές</Text> : null}
+        {([{ label: "Χάρτης", list: false }, { label: "Λίστα", list: true }] as const).map((mode) => (
+          <Pressable key={mode.label} accessibilityRole="button"
+            accessibilityLabel={mode.list ? "Προβολή ως λίστα" : "Προβολή χάρτη"}
+            accessibilityState={{ selected: showList === mode.list }}
+            onPress={() => setShowList(mode.list)}
+            style={[styles.viewButton, showList === mode.list && styles.viewButtonActive]}>
+            <Text style={[styles.viewButtonText, showList === mode.list && styles.viewButtonTextActive]}>{mode.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame, { aspectRatio: MAP_WIDTH / mapHeight }]}>
       <Svg
         width="100%"
-        height={mapHeight}
+        height="100%"
         viewBox={`0 0 ${MAP_WIDTH} ${mapHeight}`}
         preserveAspectRatio="xMidYMid meet"
         accessibilityLabel="Διαδραστικός φανταστικός χάρτης γνώσης"
       >
-        {/* Subtle cartographic contours in the ocean. */}
-        <Ellipse cx={MAP_WIDTH / 2} cy={mapHeight / 2} rx={155} ry={Math.max(70, mapHeight * 0.42)} fill="none" stroke="#26354A" strokeWidth={1} opacity={0.38} />
-        <Ellipse cx={MAP_WIDTH / 2} cy={mapHeight / 2} rx={128} ry={Math.max(56, mapHeight * 0.34)} fill="none" stroke="#26354A" strokeWidth={1} opacity={0.27} />
-        <Ellipse cx={MAP_WIDTH / 2} cy={mapHeight / 2} rx={96} ry={Math.max(42, mapHeight * 0.25)} fill="none" stroke="#26354A" strokeWidth={1} opacity={0.19} />
-
-        {Array.from({ length: 30 }, (_, index) => {
-          const x = 13 + ((index * 71) % 334);
-          const y = 15 + ((index * 47) % Math.max(20, mapHeight - 25));
-          const radius = index % 5 === 0 ? 1.5 : 0.8;
-          return (
-            <Circle
-              key={`star-${index}`}
-              cx={x}
-              cy={y}
-              r={radius}
-              fill={index % 4 === 0 ? "#A89BFF" : "#6C89A7"}
-              opacity={index % 4 === 0 ? 0.65 : 0.36}
-            />
-          );
-        })}
-
+        <Defs>
+          <LinearGradient id="atlas-sea" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor="#172C36" /><Stop offset="1" stopColor="#101C27" />
+          </LinearGradient>
+          {positionedRegions.map((region) => (
+            <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
+              <Stop offset="0" stopColor={region.fill} /><Stop offset="1" stopColor="#253B40" />
+            </LinearGradient>
+          ))}
+        </Defs>
+        <Rect width={MAP_WIDTH} height={mapHeight} rx={20} fill="url(#atlas-sea)" />
+        {Array.from({ length: 9 }, (_, index) => (
+          <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
+            stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
+        ))}
+        {Array.from({ length: rows * 4 }, (_, index) => (
+          <Path key={`parallel-${index}`} d={`M 0 ${index * 40} Q 180 ${index * 40 + 30} 360 ${index * 40}`}
+            stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
+        ))}
+        <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15} fill="none" stroke="#89AAA6" strokeOpacity={0.18} />
+        <G opacity={0.65}>
+          <Circle cx={326} cy={30} r={13} fill="none" stroke="#C9BB92" strokeWidth={0.6} />
+          <Path d="M326 13 L330 30 L326 45 L322 30 Z" fill="#C9BB92" />
+          <Path d="M312 30 L326 26 L340 30 L326 34 Z" fill="#799B9D" />
+          <SvgText x={305} y={23} fill="#C9BB92" fontSize={7}>Β</SvgText>
+        </G>
         {connectorPaths.map((connector) => (
           <Path
             key={connector.key}
             d={connector.d}
             fill="none"
-            stroke="#7C8BA8"
+            stroke="#BEB896"
             strokeWidth={1}
-            strokeDasharray="2 7"
-            opacity={0.42}
+            strokeDasharray="2 5"
+            opacity={0.32}
           />
         ))}
 
@@ -261,7 +304,7 @@ export default function FantasyMap({
             ),
           );
           const labelLines = wrapTitle(region.title, maxLabelChars);
-          const labelStartY = region.cy + (labelLines.length > 1 ? 10 : 14);
+          const labelStartY = region.cy + 14;
           const detailY = labelStartY + labelLines.length * (labelFontSize + 2) + 1;
 
           return (
@@ -269,18 +312,21 @@ export default function FantasyMap({
               key={region.id}
               onPress={() => onSelectRegion(region.id)}
             >
+              <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={0.6} />
+              <Path d={islandPath} fill="none" stroke={region.fill} strokeWidth={13} strokeOpacity={0.09} />
+              <Path d={islandPath} fill="none" stroke="#94C0B7" strokeWidth={6} strokeOpacity={0.13} />
               <Path
                 d={islandPath}
-                fill={region.fill}
+                fill={`url(#land-${region.seed})`}
                 fillOpacity={0.92}
-                stroke="#B9B6DF"
+                stroke="#CFC9A9"
                 strokeWidth={1.35}
                 strokeOpacity={0.62}
               />
               <Path
                 d={innerPath}
                 fill="none"
-                stroke="#D8D0FF"
+                stroke="#D7D3B4"
                 strokeWidth={0.7}
                 strokeDasharray="2 4"
                 strokeOpacity={0.42}
@@ -292,7 +338,7 @@ export default function FantasyMap({
                 cy={region.cy + region.ry * 0.52}
                 r={Math.max(2.1, region.rx * 0.075)}
                 fill={region.fill}
-                stroke="#B9B6DF"
+                stroke="#CFC9A9"
                 strokeWidth={0.6}
                 strokeOpacity={0.5}
               />
@@ -301,15 +347,20 @@ export default function FantasyMap({
                 cy={region.cy - region.ry * 0.48}
                 r={Math.max(1.7, region.rx * 0.055)}
                 fill={region.fill}
-                stroke="#B9B6DF"
+                stroke="#CFC9A9"
                 strokeWidth={0.6}
                 strokeOpacity={0.4}
               />
 
+              {/* Terrain sits above the labels; coastlines remain fully tappable. */}
+              <Path d={`M ${region.cx - 25} ${region.cy - 18} l 10 -14 l 10 14 m -7 -2 l 14 -20 l 16 20`}
+                fill="none" stroke="#EEE5C7" strokeOpacity={0.28} strokeWidth={1.1} strokeLinejoin="round" />
+              <Path d={`M ${region.cx - 20} ${region.cy - 18} l 5 -7 l 5 7 m 9 -8 l 3 -5 l 5 6`}
+                fill="none" stroke="#EEE5C7" strokeOpacity={0.3} strokeWidth={0.8} />
               <SvgText
                 x={region.cx}
-                y={region.cy - 11}
-                fontSize={columns >= 5 ? 11 : 14}
+                y={region.cy - 5}
+                fontSize={columns >= 4 ? 12 : 18}
                 textAnchor="middle"
                 fill="#FFFFFF"
               >
@@ -339,7 +390,7 @@ export default function FantasyMap({
                   fontSize={columns >= 5 ? 7.2 : columns === 4 ? 7.8 : 8.2}
                   fontWeight="500"
                   textAnchor="middle"
-                  fill="#E6E3FF"
+                  fill="#F0E9D6"
                   opacity={0.88}
                 >
                   {region.detail}
@@ -349,27 +400,14 @@ export default function FantasyMap({
           );
         })}
       </Svg>
-      </View>
-
-      <Pressable
-        style={styles.listToggle}
-        onPress={() => setShowList((visible) => !visible)}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: showList }}
-        accessibilityLabel={showList ? "Προβολή χάρτη" : "Προβολή λίστας με όλες τις θεματικές"}
-      >
-        <Text style={styles.listToggleGlyph}>{showList ? "⌖" : "☷"}</Text>
-        <Text style={styles.listToggleText}>
-          {showList ? "Προβολή χάρτη" : "Προβολή ως λίστα"}
-        </Text>
-      </Pressable>
+      </View> : null}
 
       {showList ? (
-        <View style={styles.regionList}>
+        <View testID="knowledge-region-list" style={styles.regionList}>
           {positionedRegions.map((region) => (
             <Pressable
               key={`list-${region.id}`}
-              style={styles.regionListItem}
+              style={[styles.regionListItem, overview && styles.overviewListItem]}
               onPress={() => onSelectRegion(region.id)}
               accessibilityRole="button"
               accessibilityLabel={`${region.title}${region.detail ? `, ${region.detail}` : ""}`}
@@ -400,24 +438,20 @@ const styles = StyleSheet.create({
   mapFrame: {
     width: "100%",
     overflow: "hidden",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#33454C",
+    marginBottom: 12,
   },
-  listToggle: {
-    alignSelf: "flex-end",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-  },
-  listToggleGlyph: {
-    color: "#B1A5FF",
-    fontSize: 18,
-  },
-  listToggleText: {
-    color: "#B1A5FF",
-    fontSize: 12,
-    fontWeight: "700",
-  },
+  viewControls: { flexDirection: "row", alignSelf: "flex-end", backgroundColor: "#181E2A", padding: 4, borderRadius: 14, marginVertical: 12 },
+  overviewFrame: { maxWidth: 520, alignSelf: "center" },
+  overviewControls: { flexWrap: "wrap", rowGap: 8, alignSelf: "stretch", alignItems: "center", marginTop: 4, marginBottom: 10, backgroundColor: "transparent", padding: 0 },
+  overviewLabel: { flex: 1, minWidth: 72, color: "#AAB3BF", fontSize: 13, lineHeight: 20, paddingRight: 8 },
+  overviewListItem: { paddingVertical: 10, paddingHorizontal: 12, minHeight: 60 },
+  viewButton: { paddingHorizontal: 20, paddingVertical: 11, borderRadius: 10, minHeight: 44 },
+  viewButtonActive: { backgroundColor: "#343448" },
+  viewButtonText: { color: "#AAB3BF", fontSize: 14, fontWeight: "600" },
+  viewButtonTextActive: { color: "#F3EEE2" },
   regionList: {
     gap: 8,
     marginTop: 2,
@@ -427,7 +461,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 12,
+    padding: 16,
     backgroundColor: "#151928",
     borderWidth: 1,
     borderColor: "#282D41",
@@ -447,10 +481,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   regionListTitle: {
-    color: "#F6F5FC",
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 20,
+    color: "#F3EEE2",
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 24,
   },
   regionListDetail: {
     color: "#9EA3BA",

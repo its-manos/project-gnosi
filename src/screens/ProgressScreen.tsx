@@ -1,3 +1,4 @@
+import type { BackupControls } from "../components/CloudBackupPanel";
 import AccountPanel from "../components/AccountPanel";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -17,6 +18,7 @@ import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
 
 type Props = {
+  backupControls?: BackupControls;
   onHome: () => void;
   completedLessons: Lesson[];
   inProgressLesson: Lesson | null;
@@ -50,6 +52,7 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
 }
 
 export default function ProgressScreen({
+  backupControls,
   onHome,
   completedLessons,
   inProgressLesson,
@@ -152,9 +155,11 @@ export default function ProgressScreen({
 
   return (
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" />
-      <ActionButton label={isAccountOpen ? "Απόκρυψη στοιχείων λογαριασμού" : "Λογαριασμός — Σύνδεση / Εγγραφή"} secondary onPress={() => setIsAccountOpen((open) => !open)} />
-      {isAccountOpen ? <AccountPanel /> : null}
+      <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.header} />
+      <View style={styles.accountSection}>
+        <ActionButton label={isAccountOpen ? "Απόκρυψη στοιχείων λογαριασμού" : "Λογαριασμός — Σύνδεση / Εγγραφή"} style={styles.accountButton} secondary onPress={() => setIsAccountOpen((open) => !open)} />
+        {isAccountOpen ? <AccountPanel backupControls={backupControls} /> : null}
+      </View>
 
       <Text style={styles.eyebrow}>Η ΔΙΑΔΡΟΜΗ ΣΟΥ</Text>
       <Text style={styles.title}>Η πρόοδός σου</Text>
@@ -278,6 +283,9 @@ export default function ProgressScreen({
 }
 
 const styles = StyleSheet.create({
+  header: { marginBottom: 12 },
+  accountSection: { marginBottom: 24 },
+  accountButton: { marginTop: 0 },
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 42 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.5, marginBottom: 10 },
   title: { color: colors.text, fontSize: 31, lineHeight: 39, fontWeight: "900", marginBottom: 10 },

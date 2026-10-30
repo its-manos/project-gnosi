@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import ActionButton from './ActionButton';
+import CloudBackupPanel, { type BackupControls } from './CloudBackupPanel';
 import { supabase } from '../lib/supabase';
 import { colors } from '../theme';
 
@@ -19,8 +20,8 @@ function friendlyError(error: unknown): string {
   return 'Η ενέργεια δεν ολοκληρώθηκε. Έλεγξε τη σύνδεση στο διαδίκτυο και τις ρυθμίσεις Supabase και ξαναδοκίμασε.';
 }
 
-/** Account-only milestone. Learning data stays device-local for all users. */
-export default function AccountPanel() {
+/** Optional account with explicit, additive cloud backup/restore. */
+export default function AccountPanel({ backupControls }: { backupControls?: BackupControls } = {}) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(Boolean(supabase));
   const [busy, setBusy] = useState(false);
@@ -113,7 +114,7 @@ export default function AccountPanel() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.card}>
       <Text style={styles.title}>Λογαριασμός</Text>
-      <Text style={styles.body}>Η σύνδεση είναι προαιρετική. Σε αυτή την έκδοση η πρόοδος και τα αποθηκευμένα άρθρα παραμένουν στη συσκευή και δεν συγχρονίζονται ακόμη, ακόμη κι αν αλλάξεις λογαριασμό.</Text>
+      <Text style={styles.body}>Η σύνδεση είναι προαιρετική. Μπορείς να αποθηκεύσεις αντίγραφο προόδου στον λογαριασμό και να το επαναφέρεις σε άλλη συσκευή. Η σύνδεση από μόνη της δεν μεταφέρει ή διαγράφει δεδομένα.</Text>
       {!supabase ? <Text style={styles.error}>Δεν έχει ρυθμιστεί η σύνδεση Supabase. Έλεγξε τις EXPO_PUBLIC_SUPABASE_URL και EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY στο .env και επανεκκίνησε το Expo. Μπορείς να συνεχίσεις να μαθαίνεις χωρίς λογαριασμό.</Text>
         : loading ? <ActivityIndicator color={colors.accentLight} />
         : session ? <>
@@ -128,9 +129,10 @@ export default function AccountPanel() {
               const { data, error: readError } = await client.from('profiles').select('user_id').eq('user_id', session.user.id).single();
               if (readError) throw readError;
               if (data.user_id !== session.user.id) throw new Error('Profile mismatch');
-              if (mounted.current) setMessage('Η σύνδεση με τη βάση λειτουργεί. Το προφίλ σου είναι διαθέσιμο. Η πρόοδος δεν συγχρονίζεται ακόμη.');
+              if (mounted.current) setMessage('Η σύνδεση με τη βάση λειτουργεί. Το προφίλ σου είναι διαθέσιμο. Χρησιμοποίησε τα κουμπιά αντιγράφου για να μεταφέρεις την πρόοδό σου.');
             });
           }} />
+          {backupControls ? <CloudBackupPanel key={session.user.id} userId={session.user.id} {...backupControls} onBusyChange={setBusy} /> : <Text style={styles.body}>Περίμενε να φορτωθεί η τοπική πρόοδος για να χρησιμοποιήσεις τα αντίγραφα.</Text>}
           <ActionButton label="Αποσύνδεση από αυτή τη συσκευή" disabled={busy} onPress={() => {
             void run(async () => {
               const { error: signoutError } = await supabase!.auth.signOut({ scope: 'local' });

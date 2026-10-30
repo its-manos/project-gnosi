@@ -1,3 +1,6 @@
+import { parseLearningBackup } from "../utils/learningBackup";
+import { getHomeDiscovery, getRelatedLessons } from "../utils/readingDiscovery";
+import { useAthensDate } from "../hooks/useAthensDate";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +26,7 @@ import ProgressScreen from "../screens/ProgressScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
+  const discoveryDate = useAthensDate();
   const bookmarks = useSavedLessons();
   const dailyPreferences = useDailyChallengePreferences();
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
@@ -39,11 +43,12 @@ export default function AppNavigator() {
     if (preferencesOrigin === "home") setIsDailyChallengeOpen(false);
   }, [preferencesOrigin]);
 
+  const savePreferences = dailyPreferences.savePreferences;
   const saveDailyPreferences = useCallback(async (preferences: DailyChallengePreferences) => {
-    const saved = await dailyPreferences.savePreferences(preferences);
+    const saved = await savePreferences(preferences);
     if (saved) setIsDailyPreferencesOpen(false);
     return saved;
-  }, [dailyPreferences.savePreferences]);
+  }, [savePreferences]);
 
   const activeCategory =
     categories.find((item) => item.id === app.activeCategoryId) ?? categories[0];
@@ -72,11 +77,14 @@ export default function AppNavigator() {
     (lesson) => lesson.id === app.inProgressLessonId
   ) ?? null;
 
+  const discovery = getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate);
+  const related = activeLesson ? getRelatedLessons(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate) : [];
+
   const currentScreen = app.screen;
   const setAppScreen = app.setScreen;
   const activeLessonTitle = activeLesson?.title ?? "μαθήματος";
 
-  const navigateTo = useCallback((destination: AppScreen) => {
+  const navigateTo = (destination: AppScreen) => {
     if (destination === currentScreen) return;
 
     // Returning from the legacy standalone quiz to its article is an internal
@@ -115,7 +123,7 @@ export default function AppNavigator() {
     }
 
     setAppScreen(destination);
-  }, [currentScreen, setAppScreen, activeLessonTitle]);
+  };
 
   let screenContent: ReactNode = null;
 
@@ -147,7 +155,9 @@ export default function AppNavigator() {
         <HomeScreen
           categories={categories}
           subcategories={subcategories}
-          featuredLesson={lessons.find((item) => item.id === "ancient-athens") ?? activeLesson}
+          featuredLesson={discovery.featured}
+          suggestedLessons={discovery.suggestions}
+          progressLoaded={app.progressLoaded}
           completedCount={app.completedLessonIds.length}
           savedCount={bookmarks.savedLessonIds.length}
           inProgressLesson={inProgressLesson}
@@ -167,6 +177,15 @@ export default function AppNavigator() {
     case "progress":
       screenContent = (
         <ProgressScreen
+          backupControls={app.progressLoaded && bookmarks.isSavedLessonsLoaded ? {
+            deviceBackup: parseLearningBackup({ schemaVersion: 1, completedIds: app.completedLessonIds, savedIds: bookmarks.savedLessonIds, attempts: app.lessonAttempts }),
+            onRestoreBackup: async backup => {
+              await Promise.all([
+                app.mergeRestoredProgress(backup),
+                bookmarks.mergeRestoredBookmarks(backup.savedIds),
+              ]);
+            },
+          } : undefined}
           onHome={() => navigateTo("home")}
           completedLessons={completedLessons}
           inProgressLesson={inProgressLesson}
@@ -184,6 +203,9 @@ export default function AppNavigator() {
     case "search":
       screenContent = (
         <SearchScreen
+          completedLessonIds={app.completedLessonIds}
+          inProgressLessonIds={app.inProgressLessonIds}
+          progressLoaded={app.progressLoaded}
           lessons={lessons}
           categories={categories}
           subcategories={subcategories}
@@ -196,6 +218,9 @@ export default function AppNavigator() {
     case "saved":
       screenContent = (
         <SavedLessonsScreen
+          completedLessonIds={app.completedLessonIds}
+          inProgressLessonIds={app.inProgressLessonIds}
+          progressLoaded={app.progressLoaded}
           lessons={savedLessons}
           onBack={() => navigateTo("home")}
           onOpenLesson={app.openLesson}
@@ -219,6 +244,9 @@ export default function AppNavigator() {
     case "subcategory":
       screenContent = (
         <SubcategoryScreen
+          completedLessonIds={app.completedLessonIds}
+          inProgressLessonIds={app.inProgressLessonIds}
+          progressLoaded={app.progressLoaded}
           category={activeCategory}
           subcategory={activeSubcategory}
           lessons={subcategoryLessons}
@@ -266,6 +294,9 @@ export default function AppNavigator() {
           score={app.score}
           onHome={() => navigateTo("home")}
           onReadAgain={app.restartLesson}
+          recommendations={related}
+          onOpenLesson={app.openLesson}
+          onBrowse={() => navigateTo("search")}
         />
       );
       break;

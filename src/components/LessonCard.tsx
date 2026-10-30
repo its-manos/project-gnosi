@@ -1,37 +1,35 @@
+import { readingStateLabels, type ReadingState } from "../utils/readingDiscovery";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Lesson } from "../data/lessons";
-import ResilientImage from "./ResilientImage";
+import LessonCover from "./LessonCover";
 import { colors } from "../theme";
 
-type Props = { lesson: Lesson; onPress: () => void };
+type Props = { lesson: Lesson; onPress: () => void; readingState?: ReadingState };
 
-export default function LessonCard({ lesson, onPress }: Props) {
+export default function LessonCard({ lesson, onPress, readingState }: Props) {
   return (
     <Pressable
       style={styles.card}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Άνοιγμα μαθήματος: ${lesson.title}`}
+      accessibilityLabel={`Άνοιγμα μαθήματος: ${lesson.title}${readingState ? `, ${readingStateLabels[readingState]}` : ""}`}
     >
-      <ResilientImage
-        uri={lesson.imageUrl}
-        style={styles.image}
-        resizeMode="cover"
-        accessibilityLabel={lesson.title}
-        fallbackLabel="Η φωτογραφία του μαθήματος δεν είναι διαθέσιμη"
-        loadingLabel="Φόρτωση φωτογραφίας…"
-      />
+      <LessonCover lesson={lesson} style={styles.image} />
       <View style={styles.content}>
         <Text style={styles.eyebrow}>{lesson.readingMinutes} ΛΕΠΤΑ ΑΝΑΓΝΩΣΗΣ</Text>
+        {readingState ? <Text style={[styles.readingState, readingState === "completed" && styles.completedState]}>{readingStateLabels[readingState]}</Text> : null}
         <Text style={styles.title}>{lesson.title}</Text>
         <Text style={styles.summary}>{lesson.summary}</Text>
-        <Text style={styles.meta}>{lesson.questions.length} ερωτήσεις</Text>
+        <Text style={styles.meta}>{lesson.questions.length} ερωτήσεις · {lesson.sources.length} πηγές</Text>
+        {lesson.contentNote ? <Text style={styles.contentNote}>Δύσκολο ιστορικό θέμα · χωρίς γραφικές περιγραφές</Text> : null}
       </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  readingState: { color: "#B9D8CE", fontSize: 12, lineHeight: 20, marginBottom: 9, fontWeight: "600" },
+  completedState: { color: colors.textMuted },
   card: {
     backgroundColor: colors.surfaceSoft,
     borderColor: colors.border,
@@ -63,5 +61,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginBottom: 12,
   },
+  contentNote: { color: "#D2C3A4", fontSize: 12, lineHeight: 19, marginTop: 10 },
   meta: { color: colors.textMuted, fontSize: 12, fontWeight: "600" },
 });

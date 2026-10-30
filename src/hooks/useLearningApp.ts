@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { lessons } from "../data/lessons";
+import { mergeLearningBackups, type LearningBackup } from "../utils/learningBackup";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
 
 export type AppScreen =
@@ -268,6 +269,8 @@ export function useLearningApp() {
     if (!progressLoaded || !pendingOpenLessonId) return;
 
     const lessonId = pendingOpenLessonId;
+    // Resolve a navigation tap queued before AsyncStorage hydration completed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPendingOpenLessonId(null);
     activateLesson(lessonId);
     // The pending ID is cleared in this effect, so it runs only for a queued open.
@@ -439,11 +442,29 @@ export function useLearningApp() {
     }
   }
 
+  async function mergeRestoredProgress(backup: LearningBackup): Promise<void> {
+    if (!progressLoaded) throw new Error("local_not_ready");
+    const merged = mergeLearningBackups({ schemaVersion: 1, completedIds: completedLessonIds, savedIds: [], attempts: lessonAttempts }, backup);
+    // Apply before yielding: subsequent reading actions see the merged state,
+    // and their writes queue after this restore rather than being overwritten.
+    setCompletedLessonIds(merged.completedIds);
+    setLessonAttempts(merged.attempts);
+    const completedWrite = completedWriteQueue.then(() => AsyncStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify(merged.completedIds)));
+    const attemptsWrite = attemptsWriteQueue.then(() => AsyncStorage.setItem(ATTEMPTS_STORAGE_KEY, JSON.stringify(merged.attempts)));
+    completedWriteQueue = completedWrite.catch(() => undefined);
+    attemptsWriteQueue = attemptsWrite.catch(() => undefined);
+    await Promise.all([completedWrite, attemptsWrite]);
+  }
+
   const latestAttemptEntry = Object.entries(lessonAttempts)
     .filter(([lessonId, attempt]) =>
       !completedLessonIds.includes(lessonId) || attempt.replayOfCompletedLesson
     )
     .sort(([, first], [, second]) => second.updatedAt - first.updatedAt)[0];
+
+  const inProgressLessonIds = Object.entries(lessonAttempts)
+    .filter(([id, attempt]) => !completedLessonIds.includes(id) || attempt.replayOfCompletedLesson)
+    .map(([id]) => id);
 
   const inProgressLessonId = progressLoaded
     ? latestAttemptEntry?.[0] ?? null
@@ -461,8 +482,11 @@ export function useLearningApp() {
     checkpointAnswers,
     score,
     completedLessonIds,
+    lessonAttempts,
+    mergeRestoredProgress,
     progressLoaded,
     inProgressLessonId,
+    inProgressLessonIds,
     inProgressAnsweredCount: Object.keys(inProgressCheckpointAnswers).length,
     inProgressQuestionCount: inProgressLessonId
       ? countInlineQuestions(inProgressLessonId)

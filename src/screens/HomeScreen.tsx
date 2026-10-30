@@ -1,14 +1,17 @@
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import type { Category, Lesson, Subcategory } from "../data/lessons";
-import AppHeader from "../components/AppHeader";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Svg, { Circle, Path } from "react-native-svg";
+import { lessons, type Category, type Lesson, type Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
+import ReadingPick from "../components/ReadingPick";
 import { colors } from "../theme";
 
 type Props = {
   categories: Category[];
   subcategories: Subcategory[];
-  featuredLesson: Lesson;
+  featuredLesson: Lesson | null;
+  suggestedLessons: Lesson[];
+  progressLoaded: boolean;
   completedCount: number;
   savedCount: number;
   inProgressLesson: Lesson | null;
@@ -24,397 +27,119 @@ type Props = {
 };
 
 export default function HomeScreen({
-  categories,
-  subcategories,
-  featuredLesson,
-  completedCount,
-  savedCount,
-  inProgressLesson,
-  inProgressAnsweredCount,
-  inProgressQuestionCount,
-  onResumeLesson,
-  onOpenCategory,
-  onOpenLesson,
-  onOpenSaved,
-  onOpenSearch,
-  onStartDailyChallenge,
-  onOpenDailyPreferences,
+  categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
+  inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
+  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences,
 }: Props) {
-  const mapRegions = useMemo(
-    () => categories.map((category) => {
-      const count = subcategories.filter(
-        (subcategory) => subcategory.categoryId === category.id
-      ).length;
-
-      return {
-        id: category.id,
-        title: category.title,
-        emoji: category.emoji,
-        detail: count === 1 ? "1 περιοχή" : `${count} περιοχές`,
-      };
-    }),
-    [categories, subcategories]
-  );
+  const mapRegions = useMemo(() => categories.map((category) => {
+    const count = lessons.filter((lesson) => lesson.categoryId === category.id).length;
+    return { id: category.id, title: category.title, emoji: category.emoji,
+      detail: count === 1 ? "1 άρθρο" : `${count} άρθρα` };
+  }), [categories]);
+  const resumeProgress = inProgressQuestionCount > 0
+    ? Math.min(100, Math.max(0, inProgressAnsweredCount / inProgressQuestionCount * 100)) : 0;
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <AppHeader />
-
-      <View style={styles.headingRow}>
-        <View style={styles.headingText}>
-          <Text style={styles.eyebrow}>Ο ΑΤΛΑΣ ΤΗΣ ΓΝΩΣΗΣ</Text>
-          <Text style={styles.title}>Πού θα ταξιδέψεις;</Text>
-        </View>
-
+    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.topBar}>
+        <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.quickActions}>
-          <Pressable
-            style={styles.iconButton}
-            onPress={onOpenSearch}
-            accessibilityRole="button"
-            accessibilityLabel="Αναζήτηση μαθημάτων"
-          >
-            <Text style={styles.iconButtonText}>⌕</Text>
+          <Pressable style={styles.iconButton} onPress={onOpenSearch} accessibilityRole="button" accessibilityLabel="Αναζήτηση μαθημάτων">
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}>
+              <Circle cx={10.5} cy={10.5} r={6.5} stroke={colors.accentLight} strokeWidth={1.8} />
+              <Path d="m16 16 4.5 4.5" stroke={colors.accentLight} strokeWidth={1.8} strokeLinecap="round" />
+            </Svg>
           </Pressable>
-          <Pressable
-            style={styles.iconButton}
-            onPress={onOpenSaved}
-            accessibilityRole="button"
-            accessibilityLabel={`Αποθηκευμένα μαθήματα: ${savedCount}`}
-          >
-            <Text style={styles.iconButtonText}>♧</Text>
-            {savedCount > 0 ? (
-              <View style={styles.savedDot} />
-            ) : null}
+          <Pressable style={styles.iconButton} onPress={onOpenSaved} accessibilityRole="button" accessibilityLabel={`Αποθηκευμένα μαθήματα: ${savedCount}`}>
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}>
+              <Path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" stroke={colors.accentLight} strokeWidth={1.8} strokeLinejoin="round" />
+            </Svg>
+            {savedCount > 0 ? <View style={styles.savedDot} /> : null}
           </Pressable>
         </View>
       </View>
 
-      <Text style={styles.hint}>
-        Άγγιξε μια χώρα για να ανακαλύψεις τις θεματικές της περιοχές.
-      </Text>
-
-      <Pressable
-        style={styles.dailyChallengeCard}
-        onPress={onStartDailyChallenge}
-        accessibilityRole="button"
-        accessibilityLabel="Ξεκίνα την καθημερινή πρόκληση με επτά ερωτήσεις"
-      >
-        <View style={styles.dailyChallengeIcon}>
-          <Text style={styles.dailyChallengeGlyph}>✦</Text>
-        </View>
-        <View style={styles.dailyChallengeCopy}>
-          <Text style={styles.dailyChallengeEyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
-          <Text style={styles.dailyChallengeTitle}>7 ερωτήσεις γνώσεων</Text>
-          <Text style={styles.dailyChallengeMeta}>Έως 700 πόντοι · Νέα πρόκληση κάθε μέρα</Text>
-        </View>
-        <Text style={styles.dailyChallengeArrow}>→</Text>
-      </Pressable>
-      <Pressable
-        style={styles.preferencesLink}
-        onPress={onOpenDailyPreferences}
-        accessibilityRole="button"
-        accessibilityLabel="Προσαρμογή θεμάτων και δυσκολίας της καθημερινής πρόκλησης"
-      >
-        <Text style={styles.preferencesGlyph}>⚙</Text>
-        <Text style={styles.preferencesLinkText}>Προσαρμογή θεμάτων και δυσκολίας</Text>
-        <Text style={styles.preferencesArrow}>→</Text>
-      </Pressable>
-
-      <View style={styles.mapLabelRow}>
-        <Text style={styles.mapLabel}>ΟΙ ΓΝΩΣΤΟΙ ΚΟΣΜΟΙ</Text>
-        <Text style={styles.mapCount}>
-          {categories.length} ΧΩΡΕΣ · {subcategories.length} ΠΕΡΙΟΧΕΣ
-        </Text>
+      <View style={styles.intro}>
+        <Text style={styles.title}>Πού θα ταξιδέψεις;</Text>
+        <Text style={styles.subtitle}>{categories.length} θεματικές · {lessons.length} άρθρα με πηγές</Text>
       </View>
 
-      <FantasyMap
-        regions={mapRegions}
-        onSelectRegion={onOpenCategory}
-        emptyMessage="Οι πρώτοι κόσμοι γνώσης θα εμφανιστούν εδώ."
-      />
-
-      <View style={styles.progressLine}>
-        <View style={styles.progressDot} />
-        <Text style={styles.progressText}>
-          {completedCount} {completedCount === 1 ? "μάθημα" : "μαθήματα"} ολοκληρωμένα
-        </Text>
-        <View style={styles.progressDivider} />
-        <Text style={styles.progressText}>
-          {savedCount} αποθηκευμένα
-        </Text>
+      <View testID="home-exploration" style={styles.exploration}>
+        <FantasyMap overview regions={mapRegions} onSelectRegion={onOpenCategory}
+          emptyMessage="Οι πρώτοι κόσμοι γνώσης θα εμφανιστούν εδώ." />
       </View>
 
-      {inProgressLesson ? (
-        <Pressable
-          style={styles.resumeCard}
-          onPress={() => onResumeLesson(inProgressLesson.id)}
-          accessibilityRole="button"
-          accessibilityLabel={`Συνέχισε το μάθημα ${inProgressLesson.title}`}
-        >
-          <View style={styles.resumeIcon}>
-            <Text style={styles.discoveryGlyph}>↗</Text>
-          </View>
-          <View style={styles.discoveryContent}>
-            <Text style={styles.resumeEyebrow}>ΣΥΝΕΧΙΣΕ ΑΠΟ ΕΚΕΙ ΠΟΥ ΕΜΕΙΝΕΣ</Text>
-            <Text style={styles.discoveryTitle} numberOfLines={2}>
-              {inProgressLesson.title}
-            </Text>
-            <Text style={styles.discoveryMeta}>
-              {inProgressAnsweredCount} από {inProgressQuestionCount} checkpoints · Συνέχεια →
-            </Text>
-            <View style={styles.resumeProgressTrack}>
-              <View
-                style={[
-                  styles.resumeProgressFill,
-                  {
-                    width: `${inProgressQuestionCount > 0 ? (inProgressAnsweredCount / inProgressQuestionCount) * 100 : 0}%`,
-                  },
-                ]}
-              />
-            </View>
-          </View>
-        </Pressable>
-      ) : null}
+      <View testID="home-secondary-content" style={styles.secondary}>
+        {inProgressLesson ? (
+          <Pressable style={styles.resumeCard} onPress={() => onResumeLesson(inProgressLesson.id)}
+            accessibilityRole="button" accessibilityLabel={`Συνέχισε το μάθημα ${inProgressLesson.title}`}>
+            <Text style={styles.eyebrow}>ΣΥΝΕΧΙΣΕ ΑΠΟ ΕΚΕΙ ΠΟΥ ΕΜΕΙΝΕΣ</Text>
+            <Text style={styles.cardTitle}>{inProgressLesson.title}</Text>
+            <Text style={styles.meta}>{inProgressAnsweredCount} από {inProgressQuestionCount} ερωτήσεις · Συνέχεια →</Text>
+            <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${resumeProgress}%` }]} /></View>
+          </Pressable>
+        ) : null}
 
-      {(!inProgressLesson || inProgressLesson.id !== featuredLesson.id) ? (
-        <Pressable
-          style={styles.discoveryCard}
-          onPress={() => onOpenLesson(featuredLesson.id)}
-          accessibilityRole="button"
-          accessibilityLabel={`Σημερινή ανακάλυψη: ${featuredLesson.title}`}
-        >
-          <View style={styles.discoveryIcon}>
-            <Text style={styles.discoveryGlyph}>✦</Text>
-          </View>
-          <View style={styles.discoveryContent}>
-            <Text style={styles.discoveryEyebrow}>ΜΙΑ ΜΙΚΡΗ ΑΝΑΚΑΛΥΨΗ</Text>
-            <Text style={styles.discoveryTitle} numberOfLines={2}>
-              {featuredLesson.title}
-            </Text>
-            <Text style={styles.discoveryMeta}>
-              {featuredLesson.readingMinutes} λεπτά ανάγνωσης · Δες το άρθρο →
-            </Text>
-          </View>
-        </Pressable>
-      ) : null}
+        <View style={styles.dailyCard}>
+          <Pressable style={styles.dailyMain} onPress={onStartDailyChallenge} accessibilityRole="button"
+            accessibilityLabel="Ξεκίνα την καθημερινή πρόκληση με επτά ερωτήσεις">
+            <Text style={styles.dailyGlyph}>✦</Text>
+            <View style={styles.dailyCopy}><Text style={styles.eyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
+              <Text style={styles.cardTitle}>7 ερωτήσεις γνώσεων</Text><Text style={styles.meta}>Έως 700 πόντοι · Νέα πρόκληση κάθε μέρα</Text></View>
+            <Text style={styles.arrow}>→</Text>
+          </Pressable>
+          <Pressable onPress={onOpenDailyPreferences} style={styles.preferences} accessibilityRole="button"
+            accessibilityLabel="Προσαρμογή θεμάτων και δυσκολίας της καθημερινής πρόκλησης">
+            <Text style={styles.preferencesText}>Προσαρμογή θεμάτων και δυσκολίας →</Text>
+          </Pressable>
+        </View>
 
-      <Text style={styles.footerNote}>
-        Κάθε χώρα κρύβει έναν διαφορετικό τρόπο να δεις τον κόσμο.
-      </Text>
+        <Text style={styles.sectionTitle}>Μια μικρή ανακάλυψη</Text>
+        {!progressLoaded ? <ActivityIndicator color={colors.accentLight} accessibilityLabel="Φόρτωση προτάσεων ανάγνωσης" />
+          : featuredLesson ? <ReadingPick lesson={featuredLesson} label="Η ΑΝΑΚΑΛΥΨΗ ΤΗΣ ΗΜΕΡΑΣ" featured onPress={() => onOpenLesson(featuredLesson.id)} />
+          : <View style={styles.emptyCard}><Text style={styles.cardTitle}>Διάλεξε την επόμενη διαδρομή σου</Text>
+            <Text style={styles.meta}>Δεν υπάρχουν άλλες αδιάβαστες προτάσεις. Συνέχισε ό,τι άρχισες ή ξαναβρες ένα αγαπημένο άρθρο.</Text>
+            <Pressable onPress={onOpenSearch} style={styles.browseButton} accessibilityRole="button"><Text style={styles.preferencesText}>Όλα τα άρθρα →</Text></Pressable>
+          </View>}
+
+        {progressLoaded && suggestedLessons.length > 0 ? <View>
+          <Text style={styles.sectionTitle}>Και μια άλλη οπτική</Text>
+          {suggestedLessons.map((lesson) => <ReadingPick key={lesson.id} lesson={lesson} label="ΜΙΑ ΑΚΟΜΗ ΑΝΑΚΑΛΥΨΗ" onPress={() => onOpenLesson(lesson.id)} />)}
+        </View> : null}
+
+        <Text style={styles.footer}>{completedCount} ολοκληρωμένα · {savedCount} αποθηκευμένα</Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 34,
-  },
-  headingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    marginBottom: 8,
-  },
-  headingText: { flex: 1 },
-  eyebrow: {
-    color: colors.accent,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.5,
-    marginBottom: 7,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 27,
-    fontWeight: "900",
-    lineHeight: 33,
-    letterSpacing: -0.6,
-  },
+  content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 36, width: "100%", maxWidth: 680, alignSelf: "center" },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 },
+  logo: { color: colors.accentLight, fontSize: 22, lineHeight: 30, fontWeight: "900", letterSpacing: 3, flexShrink: 1 },
   quickActions: { flexDirection: "row", gap: 8 },
-  iconButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 15,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconButtonText: {
-    color: colors.accentLight,
-    fontSize: 25,
-    lineHeight: 29,
-    fontWeight: "600",
-  },
-  savedDot: {
-    position: "absolute",
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    right: 8,
-    top: 7,
-    backgroundColor: colors.success,
-  },
-  hint: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  dailyChallengeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "#201D38",
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: 18,
-    padding: 13,
-    marginBottom: 20,
-  },
-  dailyChallengeIcon: {
-    width: 44,
-    height: 48,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.accentSurface,
-  },
-  dailyChallengeGlyph: { color: colors.accentLight, fontSize: 25 },
-  dailyChallengeCopy: { flex: 1, gap: 4 },
-  dailyChallengeEyebrow: { color: colors.accentLight, fontSize: 8, fontWeight: "900", letterSpacing: 1.0 },
-  dailyChallengeTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "900" },
-  dailyChallengeMeta: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
-  dailyChallengeArrow: { color: colors.accentLight, fontSize: 23, fontWeight: "800", paddingLeft: 2 },
-  preferencesLink: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 8, marginTop: -11, marginBottom: 21, paddingHorizontal: 5, paddingVertical: 4 },
-  preferencesGlyph: { color: colors.accentLight, fontSize: 15 },
-  preferencesLinkText: { color: colors.textBody, fontSize: 11, fontWeight: "700" },
-  preferencesArrow: { color: colors.accentLight, fontSize: 15, fontWeight: "800" },
-  mapLabelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 1,
-  },
-  mapLabel: {
-    color: "#7F89A4",
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-  },
-  mapCount: {
-    color: "#7F89A4",
-    fontSize: 8,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-  },
-  progressLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 9,
-    marginTop: -2,
-    marginBottom: 14,
-  },
-  progressDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.success,
-  },
-  progressText: { color: colors.textMuted, fontSize: 10 },
-  progressDivider: {
-    height: 12,
-    width: 1,
-    backgroundColor: colors.border,
-    marginHorizontal: 2,
-  },
-  discoveryCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 13,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 19,
-    padding: 14,
-  },
-  discoveryIcon: {
-    width: 43,
-    height: 49,
-    borderRadius: 13,
-    backgroundColor: colors.accentSurface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  discoveryGlyph: { color: colors.accentLight, fontSize: 24 },
-  discoveryContent: { flex: 1, gap: 4 },
-  discoveryEyebrow: {
-    color: colors.accentLight,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.1,
-  },
-  discoveryTitle: {
-    color: colors.text,
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "800",
-  },
-  discoveryMeta: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
-  resumeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 13,
-    backgroundColor: "#1B1B31",
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: 19,
-    padding: 14,
-    marginBottom: 12,
-  },
-  resumeIcon: {
-    width: 43,
-    height: 49,
-    borderRadius: 13,
-    backgroundColor: colors.accentSurface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  resumeEyebrow: {
-    color: colors.accentLight,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 0.8,
-    marginBottom: 3,
-  },
-  resumeProgressTrack: {
-    height: 4,
-    backgroundColor: colors.border,
-    borderRadius: 3,
-    overflow: "hidden",
-    marginTop: 8,
-    width: "100%",
-  },
-  resumeProgressFill: {
-    height: "100%",
-    backgroundColor: colors.success,
-    borderRadius: 3,
-  },
-  footerNote: {
-    color: "#68728A",
-    fontSize: 10,
-    lineHeight: 16,
-    textAlign: "center",
-    marginTop: 18,
-  },
+  iconButton: { width: 44, height: 44, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  savedDot: { position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
+  intro: { gap: 4, marginBottom: 8 },
+  title: { color: colors.text, fontSize: 25, lineHeight: 32, fontWeight: "700", letterSpacing: -0.4 },
+  subtitle: { color: colors.textMuted, fontSize: 12, lineHeight: 20 },
+  exploration: { marginBottom: 8 },
+  secondary: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 20 },
+  resumeCard: { borderWidth: 1, borderColor: "#514B6A", borderRadius: 18, backgroundColor: colors.surface, padding: 18, gap: 8, marginBottom: 16 },
+  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 16, fontWeight: "800", letterSpacing: 0.7 },
+  cardTitle: { color: colors.text, fontSize: 17, lineHeight: 25, fontWeight: "700" },
+  meta: { color: colors.textMuted, fontSize: 12, lineHeight: 20 },
+  progressTrack: { height: 4, borderRadius: 3, backgroundColor: colors.border, marginTop: 3 },
+  progressFill: { height: "100%", borderRadius: 3, backgroundColor: colors.success },
+  dailyCard: { backgroundColor: "#202431", borderWidth: 1, borderColor: colors.border, borderRadius: 18, overflow: "hidden", marginBottom: 8 },
+  dailyMain: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
+  dailyGlyph: { color: colors.accentLight, fontSize: 28 },
+  dailyCopy: { flex: 1, gap: 4 },
+  arrow: { color: colors.accentLight, fontSize: 24 },
+  preferences: { minHeight: 44, justifyContent: "center", paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.border },
+  preferencesText: { color: colors.accentLight, fontSize: 13, lineHeight: 21, fontWeight: "600" },
+  sectionTitle: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "700", marginTop: 18, marginBottom: 14 },
+  emptyCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 18, gap: 10 },
+  browseButton: { minHeight: 44, justifyContent: "center" },
+  footer: { color: colors.textMuted, fontSize: 12, lineHeight: 20, textAlign: "center", marginTop: 18 },
 });

@@ -1,3 +1,5 @@
+import ReadingPick from "../components/ReadingPick";
+import type { Recommendation } from "../utils/readingDiscovery";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Lesson } from "../data/lessons";
 import ActionButton from "../components/ActionButton";
@@ -5,9 +7,9 @@ import AppHeader from "../components/AppHeader";
 import { colors } from "../theme";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
 
-type Props = { lesson: Lesson; score: number; onHome: () => void; onReadAgain: () => void };
+type Props = { lesson: Lesson; score: number; onHome: () => void; onReadAgain: () => void; recommendations: Recommendation[]; onOpenLesson: (id: string) => void; onBrowse: () => void };
 
-export default function ResultsScreen({ lesson, score, onHome, onReadAgain }: Props) {
+export default function ResultsScreen({ lesson, score, onHome, onReadAgain, recommendations, onOpenLesson, onBrowse }: Props) {
   const totalQuestions = getInlineQuestionCount(lesson);
   const perfectScore = totalQuestions > 0 && score === totalQuestions;
   const percentage = totalQuestions > 0
@@ -29,6 +31,15 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain }: Pr
           <Text style={styles.score}>{score} / {totalQuestions}</Text>
           <Text style={styles.meta}>{percentage}% σωστές απαντήσεις</Text>
         </View>
+        <View style={styles.nextSection}>
+          <Text style={styles.nextTitle}>Τι θα διαβάσεις μετά;</Text>
+          {recommendations.length ? recommendations.map(({ lesson: next, reason }) => (
+            <ReadingPick key={next.id} lesson={next}
+              label={reason === "same-topic" ? "ΣΤΗΝ ΙΔΙΑ ΘΕΜΑΤΙΚΗ" : reason === "same-category" ? "ΣΤΗΝ ΙΔΙΑ ΚΑΤΗΓΟΡΙΑ" : "ΜΙΑ ΔΙΑΦΟΡΕΤΙΚΗ ΔΙΑΔΡΟΜΗ"}
+              onPress={() => onOpenLesson(next.id)} />
+          )) : <Text style={styles.body}>Δεν υπάρχουν άλλες αδιάβαστες προτάσεις. Μπορείς να συνεχίσεις ένα άρθρο από την αρχική ή να επιστρέψεις σε όσα ολοκλήρωσες.</Text>}
+          <ActionButton label="Εξερεύνησε όλα τα άρθρα" onPress={onBrowse} secondary />
+        </View>
         <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} />
         <ActionButton label="Ξαναδιάβασε το άρθρο" onPress={onReadAgain} secondary />
       </View>
@@ -37,8 +48,10 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain }: Pr
 }
 
 const styles = StyleSheet.create({
+  nextSection: { width: "100%", marginTop: 12, marginBottom: 16 },
+  nextTitle: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "700", marginBottom: 16 },
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
-  container: { alignItems: "center", paddingTop: 50 },
+  container: { alignItems: "center", paddingTop: 24 },
   emoji: { fontSize: 64, marginBottom: 24 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 29, lineHeight: 36, fontWeight: "900", textAlign: "center", marginBottom: 14 },

@@ -1,11 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 import { colors } from "../theme";
 
-type Props = { onBack?: () => void; backLabel?: string };
+type Props = { onBack?: () => void; backLabel?: string; style?: StyleProp<ViewStyle> };
 
-export default function AppHeader({ onBack, backLabel = "ΠΙΣΩ" }: Props) {
+export default function AppHeader({ onBack, backLabel = "ΠΙΣΩ", style }: Props) {
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, style]}>
       {onBack ? (
         <Pressable style={styles.side} onPress={onBack} accessibilityRole="button">
           <Text style={styles.backText}>‹ {backLabel}</Text>

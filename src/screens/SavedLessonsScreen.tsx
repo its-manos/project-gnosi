@@ -1,3 +1,4 @@
+import { getReadingState } from "../utils/readingDiscovery";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Lesson } from "../data/lessons";
 import ActionButton from "../components/ActionButton";
@@ -6,6 +7,9 @@ import LessonCard from "../components/LessonCard";
 import { colors } from "../theme";
 
 type Props = {
+  completedLessonIds: string[];
+  inProgressLessonIds: string[];
+  progressLoaded: boolean;
   lessons: Lesson[];
   onBack: () => void;
   onOpenLesson: (lessonId: string) => void;
@@ -13,6 +17,9 @@ type Props = {
 };
 
 export default function SavedLessonsScreen({
+  completedLessonIds,
+  inProgressLessonIds,
+  progressLoaded,
   lessons,
   onBack,
   onOpenLesson,
@@ -39,7 +46,7 @@ export default function SavedLessonsScreen({
       ) : (
         lessons.map((lesson) => (
           <View key={lesson.id} style={styles.lessonItem}>
-            <LessonCard lesson={lesson} onPress={() => onOpenLesson(lesson.id)} />
+            <LessonCard lesson={lesson} readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined} onPress={() => onOpenLesson(lesson.id)} />
             <Pressable
               onPress={() => onRemoveSavedLesson(lesson.id)}
               accessibilityRole="button"
