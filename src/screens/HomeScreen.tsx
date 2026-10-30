@@ -4,6 +4,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { lessons, type Category, type Lesson, type Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import ReadingPick from "../components/ReadingPick";
+import WeeklyReviewCard from "../components/WeeklyReviewCard";
 import { colors } from "../theme";
 
 type Props = {
@@ -24,18 +25,17 @@ type Props = {
   onOpenSearch: () => void;
   onStartDailyChallenge: () => void;
   onOpenDailyPreferences: () => void;
+  onWeeklyReview?: () => void;
 };
 
 export default function HomeScreen({
   categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
-  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences,
+  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview,
 }: Props) {
-  const mapRegions = useMemo(() => categories.map((category) => {
-    const count = lessons.filter((lesson) => lesson.categoryId === category.id).length;
-    return { id: category.id, title: category.title, emoji: category.emoji,
-      detail: count === 1 ? "1 άρθρο" : `${count} άρθρα` };
-  }), [categories]);
+  const mapRegions = useMemo(() => categories.map((category) => ({
+    id: category.id, title: category.title, emoji: category.emoji,
+  })), [categories]);
   const resumeProgress = inProgressQuestionCount > 0
     ? Math.min(100, Math.max(0, inProgressAnsweredCount / inProgressQuestionCount * 100)) : 0;
 
@@ -94,6 +94,7 @@ export default function HomeScreen({
           </Pressable>
         </View>
 
+        {onWeeklyReview ? <WeeklyReviewCard onOpen={onWeeklyReview} /> : null}
         <Text style={styles.sectionTitle}>Μια μικρή ανακάλυψη</Text>
         {!progressLoaded ? <ActivityIndicator color={colors.accentLight} accessibilityLabel="Φόρτωση προτάσεων ανάγνωσης" />
           : featuredLesson ? <ReadingPick lesson={featuredLesson} label="Η ΑΝΑΚΑΛΥΨΗ ΤΗΣ ΗΜΕΡΑΣ" featured onPress={() => onOpenLesson(featuredLesson.id)} />

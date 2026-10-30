@@ -1,16 +1,20 @@
 import { lessons } from "../data/lessons";
 import { parseLearningBackup, type BackupAttempt, type LearningBackup } from "./learningBackup";
+import { mergeCompletionEvents, parseCompletionEvents, type CompletionEvents } from "./learningActivity";
+import { mergeWeeklyAnswers, parseWeeklyAnswers, type WeeklyAnswers } from "./weeklyReview";
 export type Stamp = [number, string];
 export type ProgressValue = { completed: boolean; attempt: BackupAttempt | null };
 type Register<T> = { stamp: Stamp; value: T };
-export type SyncDocument = { schemaVersion: 1; clock: number; progress: Record<string, Register<ProgressValue>>; bookmarks: Record<string, Register<boolean>> };
+export type SyncDocument = { schemaVersion: 1; clock: number; progress: Record<string, Register<ProgressValue>>; bookmarks: Record<string, Register<boolean>>; activity: CompletionEvents; weeklyReviews?: WeeklyAnswers };
 const known = new Set(lessons.map(l => l.id));
 const record = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
-export const emptySyncDocument = (): SyncDocument => ({ schemaVersion: 1, clock: 0, progress: {}, bookmarks: {} });
+export const emptySyncDocument = (): SyncDocument => ({ schemaVersion: 1, clock: 0, progress: {}, bookmarks: {}, activity: {} });
 const ordered = <T,>(values: Record<string, T>): Record<string, T> => Object.fromEntries(Object.entries(values).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
 export function parseSyncDocument(raw: unknown): SyncDocument {
   if (!record(raw) || raw.schemaVersion !== 1 || !Number.isSafeInteger(raw.clock) || (raw.clock as number) < 0 || !record(raw.progress) || !record(raw.bookmarks)) throw new Error("invalid_sync");
   const result = emptySyncDocument(); result.clock = raw.clock as number;
+  result.activity = parseCompletionEvents(raw.activity);
+  result.weeklyReviews = parseWeeklyAnswers(raw.weeklyReviews, result.activity);
   const stamp = (entry: unknown): Register<unknown> => {
     if (!record(entry) || !Array.isArray(entry.stamp) || entry.stamp.length !== 2 || !Number.isSafeInteger(entry.stamp[0]) || entry.stamp[0] < 0 || entry.stamp[0] > result.clock || typeof entry.stamp[1] !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(entry.stamp[1])) throw new Error("invalid_sync");
     return { stamp: [entry.stamp[0], entry.stamp[1]], value: entry.value };
@@ -42,7 +46,7 @@ function winner<T>(a: Register<T> | undefined, b: Register<T>): Register<T> {
 /** Logical edit order (device ID breaks concurrent ties), completion union,
  * whole-attempt registers and permanent bookmark/attempt tombstones. */
 export function mergeSyncDocuments(a: SyncDocument, b: SyncDocument): SyncDocument {
-  const merged: SyncDocument = { schemaVersion: 1, clock: Math.max(a.clock, b.clock), progress: { ...a.progress }, bookmarks: { ...a.bookmarks } };
+  const merged: SyncDocument = { schemaVersion: 1, clock: Math.max(a.clock, b.clock), progress: { ...a.progress }, bookmarks: { ...a.bookmarks }, activity: mergeCompletionEvents(a.activity, b.activity), weeklyReviews: mergeWeeklyAnswers(a.weeklyReviews, b.weeklyReviews) };
   for (const [id, entry] of Object.entries(b.progress)) {
     const current = merged.progress[id]; const selected = winner(current, entry);
     merged.progress[id] = { stamp: selected.stamp, value: { ...selected.value, completed: Boolean(current?.value.completed || entry.value.completed) } };

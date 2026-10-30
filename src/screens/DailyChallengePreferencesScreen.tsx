@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
@@ -28,11 +28,6 @@ export default function DailyChallengePreferencesScreen({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
-  useEffect(() => {
-    if (isLoading) return;
-    setTopicIds(initialPreferences.topicIds);
-    setDifficulty(initialPreferences.difficulty);
-  }, [initialPreferences, isLoading]);
 
   function toggleTopic(topicId: string) {
     setSaveError(false);
@@ -65,7 +60,7 @@ export default function DailyChallengePreferencesScreen({
       <Text style={styles.eyebrow}>Η ΔΙΚΗ ΣΟΥ ΠΡΟΚΛΗΣΗ</Text>
       <Text style={styles.title}>Παίξε με τους δικούς σου όρους.</Text>
       <Text style={styles.body}>
-        Διάλεξε 3 έως 5 αγαπημένα θέματα και τη δυσκολία που προτιμάς. Οι επιλογές αποθηκεύονται στη συσκευή σου.
+        Διάλεξε 3 έως 5 αγαπημένα θέματα και τη δυσκολία που προτιμάς. Οι επιλογές αποθηκεύονται στη συσκευή και συγχρονίζονται όταν είσαι συνδεδεμένος σε λογαριασμό.
       </Text>
 
       {isLoading ? (

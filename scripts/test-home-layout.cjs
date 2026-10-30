@@ -26,6 +26,7 @@ const categories = [
 ].map(([id, title, emoji]) => ({ id, title, emoji }));
 const lessons = categories.map((c,i) => ({ id: String(i), categoryId: c.id, title: 'Άρθρο '+i }));
 const home = compile('src/screens/HomeScreen.tsx', {
+  '../components/WeeklyReviewCard': { __esModule: true, default: 'WeeklyReviewCard' },
   '../data/lessons': { lessons }, '../theme': { colors: {} },
   '../components/FantasyMap': { __esModule: true, default: 'FantasyMap' },
   '../components/ReadingPick': { __esModule: true, default: 'ReadingPick' },
@@ -45,6 +46,7 @@ press('Αναζήτηση μαθημάτων'); press('Αποθηκευμένα 
 assert.deepEqual(selected, ['search', 'saved', '0']);
 const mapProps = nodes(tree).find(n => n.type === 'FantasyMap').props;
 assert.equal(mapProps.overview, true);
+assert.ok(mapProps.regions.every(region => region.detail === undefined), 'Home map labels omit per-category article counts in both map and list views.');
 const map = compile('src/components/FantasyMap.tsx');
 let mapTree = map(mapProps);
 const world = nodes(mapTree).find(n => n.type === 'svg');

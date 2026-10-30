@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),ts=require('typescript');
 function compile(file,imports={}) {
  const m={exports:{}};const code=ts.transpileModule(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,jsx:ts.JsxEmit.ReactJSX}}).outputText;
- vm.runInNewContext(code,{module:m,exports:m.exports,console,setTimeout,clearTimeout,setInterval,clearInterval,__DEV__:true,require:id=>{if(id in imports)return imports[id];throw Error(id);}});return m.exports;
+ vm.runInNewContext(code,{module:m,exports:m.exports,console,setTimeout,clearTimeout,setInterval,clearInterval,__DEV__:true,require:id=>{if(id in imports)return imports[id];if(id.startsWith('.')){const target=path.normalize(path.join(path.dirname(file),id));return compile(fs.existsSync(path.join(__dirname,'..',target+'.ts'))?target+'.ts':target+'.tsx');}throw Error(id);}});return m.exports;
 }
 const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts')});
 const progress=compile('src/utils/lessonProgress.ts');
@@ -85,7 +85,7 @@ function state(s) {return s.getSnapshot();}
  // The actual learning/bookmark hooks write to the scoped store, not legacy keys.
  function harness(file,s) {
   let slots=[],cursor=0,deps=[],effects=[];
-  const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect:(fn,d)=>{const i=cursor++;if(!deps[i]||d.some((v,j)=>v!==deps[i][j])){deps[i]=d;effects.push(fn);}}};
+  const react={useRef:init=>{const i=cursor++;if(!(i in slots))slots[i]={current:init};return slots[i];},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect:(fn,d)=>{const i=cursor++;if(!deps[i]||d.some((v,j)=>v!==deps[i][j])){deps[i]=d;effects.push(fn);}}};
   const session={useLearningSession:()=>({store:s}),useLearningSnapshot:()=>s.getSnapshot()};
   const m=compile(file,{react,'../data/lessons':data,'../utils/legacyLearning':legacy,'../utils/lessonProgress':progress,'../state/LearningSession':session});const invoke=Object.values(m)[0];
   return ()=>{cursor=0;const result=invoke();const run=effects;effects=[];for(const e of run)e();return result;};
@@ -94,7 +94,13 @@ function state(s) {return s.getSnapshot();}
  const savedRender=harness('src/hooks/useSavedLessons.ts',hookStore);let saved=savedRender();saved.toggleSavedLesson(a.id);saved=savedRender();assert.ok(saved.savedLessonIds.includes(a.id));saved.toggleSavedLesson(a.id);assert.ok(!state(hookStore).backup.savedIds.includes(a.id));
  for(let i=1;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex);app=render();}
  app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.ok(app.completedLessonIds.includes(a.id));assert.equal(app.lessonAttempts[a.id],undefined);
+ assert.equal(Object.keys(hookStore.getSnapshot().activity).length,1);
+ app.finishInlineLesson();await flush();assert.equal(Object.keys(hookStore.getSnapshot().activity).length,1,'Repeated finish does not duplicate the completion run.');
+ app.restartLesson();app=render();for(let i=0;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex);app=render();}
+ app.finishInlineLesson();await flush();app=render();assert.equal(Object.keys(hookStore.getSnapshot().activity).length,2);assert.equal(Object.values(hookStore.getSnapshot().activity).filter(event=>event.wasCompleted).length,1);
+ app.startQuiz();app=render();for(let i=0;i<a.questions.length;i++){app.chooseAnswer(a.questions[i].correctIndex,a.questions[i].correctIndex);app=render();app.nextQuestion(a.questions.length);app=render();}await flush();app=render();assert.equal(app.screen,'results');assert.equal(Object.keys(hookStore.getSnapshot().activity).length,3,'Standalone quiz captures all answers too.');
  await app.mergeRestoredProgress({...empty(),completedIds:[b.id]});app=render();assert.ok(app.completedLessonIds.includes(b.id));await app.resetLessonProgressForDevelopment();assert.equal(state(hookStore).backup.completedIds.length,0);
+ assert.equal(Object.keys(hookStore.getSnapshot().activity).length,0,'Guest development reset clears its activity history too.');
  // Root auth boundary remount key changes A -> B -> guest and ignores stale initial session.
  let authCallback,resolveInitial,authEffect,authSlots=[],authCursor=0;
  const fakeClient={auth:{getSession:()=>new Promise(r=>{resolveInitial=r;}),onAuthStateChange:fn=>{authCallback=fn;return{data:{subscription:{unsubscribe(){}}}};}}};

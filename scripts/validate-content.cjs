@@ -107,8 +107,8 @@ for (const lesson of lessons) {
   if (lesson.coverKind !== 'editorial' && !isHttpsUrl(lesson.imageUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageUrl`);
   if (lesson.coverKind !== 'editorial' && !isHttpsUrl(lesson.imageCreditUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageCreditUrl`);
   if (lesson.editorialReviewedAt) {
-    if (paragraphCount(lesson) !== 6 || lesson.questions?.length !== 3) {
-      fail(`New lesson "${lesson.id}" must have six paragraphs and three inline checkpoints`);
+    if (paragraphCount(lesson) < 8 || lesson.questions?.length !== 4) {
+      fail(`New lesson "${lesson.id}" must have at least eight paragraphs and four inline checkpoints`);
     }
     for (const question of lesson.questions ?? []) {
       if (question.answers?.length !== 4 || new Set(question.answers).size !== 4) {

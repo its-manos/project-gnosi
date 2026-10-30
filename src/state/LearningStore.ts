@@ -1,11 +1,15 @@
 import { lessons } from "../data/lessons";
+import { mergeCompletionEvents, parseCompletionEvents, quizFingerprint, type CompletionEvents } from "../utils/learningActivity";
+import { getInlineQuestionCount } from "../utils/lessonProgress";
+import { getAthensDateKey } from "../utils/dailyChallenge";
+import { mergeWeeklyAnswers, weeklyPlan, type WeeklyAnswers } from "../utils/weeklyReview";
 import { mergeLearningBackups, type LearningBackup, type BackupAttempt } from "../utils/learningBackup";
 import { parseCompletedLessonIds, parseSavedAttempts } from "../utils/legacyLearning";
 import { emptySyncDocument, mergeSyncDocuments, parseSyncDocument, seedSyncBackup, syncBackup, type SyncDocument, type ProgressValue } from "../utils/syncDocument";
 export type SyncTransport = { pull: () => Promise<{ doc: SyncDocument; revision: number } | null>; seed: () => Promise<LearningBackup | null>; push: (doc: SyncDocument, revision: number) => Promise<void> };
 type Storage = { getItem: (key: string) => Promise<string | null>; setItem: (key: string, value: string) => Promise<void> };
 export type SyncStatus = "loading" | "local" | "queued" | "syncing" | "saved" | "waiting" | "error" | "local-error";
-export type LearningSnapshot = { ready: boolean; backup: LearningBackup; status: SyncStatus; error: string; userId: string | null };
+export type LearningSnapshot = { ready: boolean; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; status: SyncStatus; error: string; userId: string | null };
 const known = new Set(lessons.map(l => l.id));
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 export class LearningStore {
@@ -29,7 +33,7 @@ export class LearningStore {
     this.key = `@gnosi/learning-v2/${userId ?? "guest"}`;
     this.snapshot = this.makeSnapshot();
   }
-  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, backup: syncBackup(this.doc), status: this.status, error: this.error, userId: this.userId }; }
+  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, backup: syncBackup(this.doc), activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, status: this.status, error: this.error, userId: this.userId }; }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
@@ -113,8 +117,42 @@ export class LearningStore {
     this.change({ ...this.doc, clock: stamp[0], bookmarks: { ...this.doc.bookmarks, [id]: { stamp, value } } });
   }
   answer(id: string, attempt: BackupAttempt) { this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt }); }
-  complete(id: string) { this.setProgress(id, { completed: true, attempt: null }); }
+  complete(id: string, run?: { id: string; answers: Record<number, number> }) {
+    if (!run) { this.setProgress(id, { completed: true, attempt: null }); return; }
+    const lesson = lessons.find(item => item.id === id);
+    if (!lesson || !/^[a-zA-Z0-9_-]{1,100}$/.test(run.id)) throw new Error("invalid_completion");
+    const eventId = `${this.device}_${run.id}`;
+    // The completion button may fire twice before navigation. One run is one event.
+    if (this.doc.activity[eventId]) return;
+    const questionCount = getInlineQuestionCount(lesson);
+    let correctCount = 0;
+    const missedQuestionIndices: number[] = [];
+    if (questionCount < 1) throw new Error("invalid_completion");
+    for (let index = 0; index < questionCount; index++) {
+      const answer = run.answers[index], question = lesson.questions[index];
+      if (!Number.isInteger(answer) || answer < 0 || answer >= question.answers.length) throw new Error("incomplete_quiz");
+      if (answer === question.correctIndex) correctCount++;
+      else missedQuestionIndices.push(index);
+    }
+    const activity = parseCompletionEvents({ ...this.doc.activity, [eventId]: {
+      lessonId: id, at: Date.now(), wasCompleted: this.doc.progress[id]?.value.completed ?? false,
+      correctCount, questionCount, quizKey: quizFingerprint(lesson.questions), missedQuestionIndices,
+    } });
+    const stamp = this.stamp();
+    // The event and completion share one local write and one sync revision.
+    this.change({ ...this.doc, clock: stamp[0], activity, progress: { ...this.doc.progress, [id]: { stamp, value: { completed: true, attempt: null } } } });
+  }
   clearAttempt(id: string) { this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt: null }); }
+  answerWeekly(id: string, answerIndex: number): boolean {
+    if (this.doc.weeklyReviews?.[id]) return false;
+    const item = weeklyPlan(this.doc.activity, this.doc.weeklyReviews, getAthensDateKey()).find(q => q.id === id);
+    if (!item || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= item.lesson.questions[item.questionIndex].answers.length) return false;
+    const stamp = this.stamp();
+    this.change({ ...this.doc, clock: stamp[0], weeklyReviews: { ...this.doc.weeklyReviews, [id]: {
+      sourceId: item.sourceId, questionIndex: item.questionIndex, week: item.week, answerIndex, at: Date.now(),
+    } } });
+    return true;
+  }
   async restoreProgress(incoming: LearningBackup) {
     const merged = mergeLearningBackups(this.snapshot.backup, incoming);
     for (const id of new Set([...merged.completedIds, ...Object.keys(merged.attempts)])) {
@@ -124,9 +162,21 @@ export class LearningStore {
     await this.latestWrite;
   }
   async restoreBookmarks(ids: string[]) { for (const id of ids) this.setBookmark(id, true); await this.latestWrite; }
+  async importGuest(incoming: LearningBackup, events: CompletionEvents, reviews: WeeklyAnswers = {}) {
+    const merged = mergeLearningBackups(this.snapshot.backup, incoming);
+    const activity = mergeCompletionEvents(this.doc.activity, events);
+    const stamp = this.stamp(), progress = { ...this.doc.progress }, bookmarks = { ...this.doc.bookmarks };
+    for (const id of new Set([...merged.completedIds, ...Object.keys(merged.attempts)])) {
+      const value = { completed: merged.completedIds.includes(id), attempt: merged.attempts[id] ?? null };
+      if (!same(progress[id]?.value, value)) progress[id] = { stamp, value };
+    }
+    for (const id of merged.savedIds) if (!bookmarks[id]?.value) bookmarks[id] = { stamp, value: true };
+    this.change({ ...this.doc, clock: stamp[0], progress, bookmarks, activity, weeklyReviews: mergeWeeklyAnswers(this.doc.weeklyReviews, reviews) });
+    await this.latestWrite;
+  }
   async resetGuestProgress() {
     if (this.userId) throw new Error("guest_only_reset");
-    this.change({ ...this.doc, progress: {} }); await this.latestWrite;
+    this.change({ ...this.doc, progress: {}, activity: {}, weeklyReviews: {} }); await this.latestWrite;
   }
   async flushLocal() { try { await this.latestWrite; return true; } catch { return false; } }
   async retry() {

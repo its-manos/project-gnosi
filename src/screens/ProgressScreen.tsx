@@ -1,6 +1,8 @@
 import type { BackupControls } from "../components/CloudBackupPanel";
 import SyncStatus from "../components/SyncStatus";
 import AccountPanel from "../components/AccountPanel";
+import WeeklyReviewCard from "../components/WeeklyReviewCard";
+import LearningActivityPanel, { CategoryProgress } from "../components/LearningActivityPanel";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useDailySnapshot } from "../state/LearningSession";
@@ -13,6 +15,8 @@ import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
 
 type Props = {
+  onWeeklyReview?: () => void;
+  onOpenWelcome?: () => void;
   backupControls?: BackupControls;
   canResetLessonProgress?: boolean;
   onHome: () => void;
@@ -48,6 +52,8 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
 }
 
 export default function ProgressScreen({
+  onWeeklyReview,
+  onOpenWelcome,
   backupControls,
   canResetLessonProgress = true,
   onHome,
@@ -90,7 +96,7 @@ export default function ProgressScreen({
 
     Alert.alert(
       "Καθαρισμός προόδου μαθημάτων",
-      "Θα διαγραφούν τα ολοκληρωμένα μαθήματα και οι ημιτελείς προσπάθειες ανάγνωσης από αυτή τη συσκευή. Τα αποθηκευμένα άρθρα και η πρόοδος της καθημερινής πρόκλησης δεν θα αλλάξουν.",
+      "Θα διαγραφούν οι ολοκληρώσεις, οι ημιτελείς προσπάθειες και η καταγεγραμμένη δραστηριότητα μαθημάτων του επισκέπτη. Τα αποθηκευμένα άρθρα και η πρόοδος της καθημερινής πρόκλησης δεν θα αλλάξουν.",
       [
         { text: "Άκυρο", style: "cancel" },
         {
@@ -118,15 +124,20 @@ export default function ProgressScreen({
   return (
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.header} />
-      <SyncStatus detailed />
+      <SyncStatus />
       <View style={styles.accountSection}>
         <ActionButton label={isAccountOpen ? "Απόκρυψη στοιχείων λογαριασμού" : "Λογαριασμός — Σύνδεση / Εγγραφή"} style={styles.accountButton} secondary onPress={() => setIsAccountOpen((open) => !open)} />
-        {isAccountOpen ? <AccountPanel backupControls={backupControls} /> : null}
+        {isAccountOpen ? <><SyncStatus detailed /><AccountPanel backupControls={backupControls} /></> : null}
       </View>
 
       <Text style={styles.eyebrow}>Η ΔΙΑΔΡΟΜΗ ΣΟΥ</Text>
       <Text style={styles.title}>Η πρόοδός σου</Text>
       <Text style={styles.intro}>Κάθε μικρό βήμα προσθέτει μια νέα γνώση. Δες πώς τα πηγαίνεις στις καθημερινές προκλήσεις και στα άρθρα.</Text>
+
+      {onOpenWelcome ? <Pressable style={styles.guideLink} accessibilityRole="button" onPress={onOpenWelcome}><Text style={styles.guideLinkText}>Δες τον οδηγό εκκίνησης →</Text></Pressable> : null}
+
+      {onWeeklyReview ? <WeeklyReviewCard onOpen={onWeeklyReview} /> : null}
+      <LearningActivityPanel todayKey={todayKey} />
 
       <Text style={styles.sectionTitle}>Καθημερινή πρόκληση</Text>
       {!historyLoaded ? (
@@ -229,10 +240,12 @@ export default function ProgressScreen({
         </View>
       )}
 
+      <CategoryProgress />
+
       {__DEV__ ? (
         <View style={styles.devTools}>
           <Text style={styles.devLabel}>ΕΡΓΑΛΕΙΑ ΑΝΑΠΤΥΞΗΣ</Text>
-          <Text style={styles.devDescription}>Διαθέσιμο μόνο ως επισκέπτης. Καθαρίζει τοπικές ολοκληρώσεις και ημιτελείς προσπάθειες, χωρίς να διαγράφει δεδομένα λογαριασμού.</Text>
+          <Text style={styles.devDescription}>Διαθέσιμο μόνο ως επισκέπτης. Καθαρίζει ολοκληρώσεις, ημιτελείς προσπάθειες και δραστηριότητα μαθημάτων του επισκέπτη, χωρίς να διαγράφει δεδομένα λογαριασμού.</Text>
           <ActionButton
             label={isResetting ? "Γίνεται καθαρισμός…" : "Καθαρισμός προόδου μαθημάτων (DEV)"}
             onPress={confirmResetLessonProgress}
@@ -246,6 +259,8 @@ export default function ProgressScreen({
 }
 
 const styles = StyleSheet.create({
+  guideLink: { minHeight: 44, justifyContent: "center", paddingVertical: 10, marginBottom: 10 },
+  guideLinkText: { color: colors.accentLight, fontSize: 13, lineHeight: 21 },
   header: { marginBottom: 12 },
   accountSection: { marginBottom: 24 },
   accountButton: { marginTop: 0 },

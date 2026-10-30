@@ -2,7 +2,7 @@ import { parseLearningBackup } from "../utils/learningBackup";
 import { getHomeDiscovery, getRelatedLessons } from "../utils/readingDiscovery";
 import { useAthensDate } from "../hooks/useAthensDate";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
 
@@ -12,12 +12,18 @@ import { useSavedLessons } from "../hooks/useSavedLessons";
 import { useDailyChallengePreferences } from "../hooks/useDailyChallengePreferences";
 import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import BottomNavigation from "../components/BottomNavigation";
+import WelcomeScreen from "../screens/WelcomeScreen";
+import { useWelcome } from "../hooks/useWelcome";
+import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
+import { finishWelcome } from "../utils/firstRun";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
 import SubcategoryScreen from "../screens/SubcategoryScreen";
 import LessonScreen from "../screens/LessonScreen";
 import QuizScreen from "../screens/QuizScreen";
 import ResultsScreen from "../screens/ResultsScreen";
+import ReviewMistakesScreen from "../screens/ReviewMistakesScreen";
+import WeeklyReviewScreen from "../screens/WeeklyReviewScreen";
 import SavedLessonsScreen from "../screens/SavedLessonsScreen";
 import SearchScreen from "../screens/SearchScreen";
 import DailyChallengeScreen from "../screens/DailyChallengeScreen";
@@ -30,6 +36,10 @@ export default function AppNavigator() {
   const discoveryDate = useAthensDate();
   const bookmarks = useSavedLessons();
   const dailyPreferences = useDailyChallengePreferences();
+  const { dailyStore } = useLearningSession();
+  const daily = useDailySnapshot();
+  const hasActivity = app.completedLessonIds.length > 0 || app.inProgressLessonCount > 0 || bookmarks.savedLessonIds.length > 0 || daily.doc.preferences !== null || Object.keys(daily.doc.days).length > 0;
+  const welcome = useWelcome(daily.userId, hasActivity);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
   const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
   const [preferencesOrigin, setPreferencesOrigin] = useState<"home" | "daily">("home");
@@ -50,6 +60,16 @@ export default function AppNavigator() {
     if (saved) setIsDailyPreferencesOpen(false);
     return saved;
   }, [savePreferences]);
+
+  async function completeWelcome(preferences: DailyChallengePreferences, destination: "daily" | "home") {
+    const completed = await finishWelcome(dailyStore, preferences, destination, welcome.isCurrent, welcome.complete);
+    if (!completed || !welcome.isCurrent()) return false;
+    app.setScreen("home"); setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(destination === "daily");
+    return true;
+  }
+  async function skipWelcome() {
+    if (await welcome.skip()) { app.setScreen("home"); setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(false); }
+  }
 
   const activeCategory =
     categories.find((item) => item.id === app.activeCategoryId) ?? categories[0];
@@ -126,13 +146,18 @@ export default function AppNavigator() {
     setAppScreen(destination);
   };
 
+  if (welcome.loading) return <SafeAreaView style={styles.welcomeLoading}><ActivityIndicator color="#B1A5FF" /><Text style={styles.welcomeLoadingText}>Φόρτωση…</Text></SafeAreaView>;
+
   let screenContent: ReactNode = null;
 
   if (!activeCategory || !activeSubcategory || !activeLesson) {
     return null;
   }
 
-  if (isDailyPreferencesOpen) {
+  if (welcome.visible) {
+    screenContent = <WelcomeScreen initialPreferences={dailyPreferences.preferences} replay={welcome.replay}
+      hasStartedChallenge={Boolean(daily.doc.days[discoveryDate]?.record.started)} onFinish={completeWelcome} onSkip={skipWelcome} />;
+  } else if (isDailyPreferencesOpen) {
     screenContent = (
       <DailyChallengePreferencesScreen
         initialPreferences={dailyPreferences.preferences}
@@ -154,6 +179,7 @@ export default function AppNavigator() {
     case "home":
       screenContent = (
         <HomeScreen
+          onWeeklyReview={() => app.setScreen("weekly-review")}
           categories={categories}
           subcategories={subcategories}
           featuredLesson={discovery.featured}
@@ -178,6 +204,8 @@ export default function AppNavigator() {
     case "progress":
       screenContent = (
         <ProgressScreen
+          onWeeklyReview={() => app.setScreen("weekly-review")}
+          onOpenWelcome={welcome.open}
           backupControls={app.progressLoaded && bookmarks.isSavedLessonsLoaded ? {
             deviceBackup: parseLearningBackup({ schemaVersion: 1, completedIds: app.completedLessonIds, savedIds: bookmarks.savedLessonIds, attempts: app.lessonAttempts }),
             onRestoreBackup: async backup => {
@@ -289,11 +317,26 @@ export default function AppNavigator() {
       );
       break;
 
+    case "weekly-review":
+      screenContent = <WeeklyReviewScreen key={daily.userId ?? "guest"} onBack={() => app.setScreen("progress")} />;
+      break;
+
+    case "review":
+      screenContent = <ReviewMistakesScreen lesson={activeLesson} indices={app.reviewIndices} index={app.reviewIndex} selected={app.reviewAnswer}
+        onChoose={app.answerReview} onNext={app.nextReviewQuestion} onRetry={app.retryReviewQuestion} onBack={app.endMistakeReview} />;
+      break;
+
     case "results":
       screenContent = (
         <ResultsScreen
+          lessonScores={app.lessonScores}
+          onWeeklyReview={() => app.setScreen("weekly-review")}
           lesson={activeLesson}
           score={app.score}
+          review={app.review}
+          returning={app.resultMode === "returning"}
+          practiceComplete={app.practiceComplete}
+          onReviewMistakes={app.startMistakeReview}
           onHome={() => navigateTo("home")}
           onReadAgain={app.restartLesson}
           recommendations={related}
@@ -313,22 +356,24 @@ export default function AppNavigator() {
         style={styles.screenViewport}
         edges={["top", "left", "right"]}
       >
-        {app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus /> : null}
+        {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus /> : null}
         {screenContent}
       </SafeAreaView>
-      <BottomNavigation
+      {!welcome.visible ? <BottomNavigation
         currentScreen={isDailyChallengeOpen ? "home" : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
           setIsDailyChallengeOpen(false);
           navigateTo(destination);
         }}
-      />
+      /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  welcomeLoading: { flex: 1, backgroundColor: "#0B0D15", alignItems: "center", justifyContent: "center", gap: 14 },
+  welcomeLoadingText: { color: "#ABB0C1", fontSize: 14 },
   container: {
     flex: 1,
     backgroundColor: "#0B0D15",

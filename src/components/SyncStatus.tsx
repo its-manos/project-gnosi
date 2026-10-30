@@ -4,6 +4,8 @@ import DailySyncControls from "./DailySyncControls";
 import { useLearningSession, useLearningSnapshot, useDailySnapshot } from "../state/LearningSession";
 import { getLearningStore } from "../lib/learningSync";
 import { describeLearningBackup, type LearningBackup } from "../utils/learningBackup";
+import type { CompletionEvents } from "../utils/learningActivity";
+import type { WeeklyAnswers } from "../utils/weeklyReview";
 import { colors } from "../theme";
 const labels = {
   loading: "Φόρτωση προόδου…", local: "Αποθηκευμένα στη συσκευή · Επισκέπτης", queued: "Αλλαγές σε αναμονή συγχρονισμού", syncing: "Συγχρονισμός…", saved: "Συγχρονισμένα στον λογαριασμό", waiting: "Αναμονή σύνδεσης", error: "Ο συγχρονισμός χρειάζεται έλεγχο", "local-error": "Πρόβλημα αποθήκευσης στη συσκευή",
@@ -14,7 +16,7 @@ export default function SyncStatus({ detailed = false }: { detailed?: boolean })
   const daily = useDailySnapshot();
   const priority = ["local-error", "error", "waiting", "syncing", "queued", "loading", "saved", "local"];
   const combined = priority.indexOf(daily.status) < priority.indexOf(snapshot.status) ? daily : snapshot;
-  const [guest, setGuest] = useState<LearningBackup | null>(null);
+  const [guest, setGuest] = useState<{ backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers } | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const needsRetry = ["waiting", "error", "local-error"].includes(combined.status);
@@ -25,7 +27,7 @@ export default function SyncStatus({ detailed = false }: { detailed?: boolean })
       const guestStore = getLearningStore(null); await guestStore.start();
       const state = guestStore.getSnapshot();
       if (!state.ready) throw new Error("local_guest");
-      setGuest(state.backup);
+      setGuest({ backup: state.backup, activity: state.activity, weeklyReviews: state.weeklyReviews });
     } catch { setMessage("Δεν φορτώθηκε η πρόοδος επισκέπτη. Δοκίμασε ξανά."); }
     finally { setBusy(false); }
   }
@@ -38,14 +40,16 @@ export default function SyncStatus({ detailed = false }: { detailed?: boolean })
       {combined.error ? <Text style={styles.body}>{combined.error}</Text> : null}
       <Text style={styles.note}>Άρθρα: {labels[snapshot.status]} · Ημερήσια: {labels[daily.status]}</Text>
       <Text style={styles.body}>{snapshot.userId ? `Λογαριασμός: ${email ?? "Συνδεδεμένος χρήστης"}. Η πρόοδος άρθρων, οι σελιδοδείκτες και τα ημερήσια δεδομένα συγχρονίζονται αυτόματα όσο η εφαρμογή είναι ανοιχτή. Κάθε λογαριασμός έχει ξεχωριστά τοπικά δεδομένα.` : "Διαβάζεις ως επισκέπτης. Η πρόοδος άρθρων παραμένει σε αυτή τη συσκευή."}</Text>
-      <Text style={styles.note}>Το ιστορικό μετρά μία ολοκλήρωση ανά ημερομηνία Αθήνας. Οι αλλαγές προτιμήσεων ισχύουν για την επόμενη πρόκληση που θα ξεκινήσεις.</Text>
+      <Text style={styles.note}>Η ημερήσια πρόκληση κρατά ένα αποτέλεσμα ανά ημερομηνία Αθήνας. Στα μαθήματα, οι πρώτες ολοκληρώσεις και οι επαναλήψεις μετριούνται χωριστά.</Text>
       {snapshot.userId ? guest ? <View style={styles.importBox}>
-        <Text style={styles.body}>Πρόοδος επισκέπτη: {describeLearningBackup(guest)}</Text>
+        <Text style={styles.body}>Πρόοδος επισκέπτη: {describeLearningBackup(guest.backup)}</Text>
+        <Text style={styles.body}>Χρονολογημένες ολοκληρώσεις μαθημάτων: {Object.keys(guest.activity).length}</Text>
+        <Text style={styles.body}>Απαντήσεις δεύτερης ευκαιρίας: {Object.keys(guest.weeklyReviews).length}</Text>
         <Text style={styles.note}>Θα προστεθεί στον λογαριασμό {email ?? "που χρησιμοποιείς"} και θα συγχρονιστεί. Το αντίγραφο επισκέπτη παραμένει στη συσκευή. Η εισαγωγή μπορεί να επαναφέρει παλιούς σελιδοδείκτες.</Text>
         <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" accessibilityState={{ disabled: busy }} onPress={() => {
           if (busy) return;
           setBusy(true);
-          void Promise.all([store.restoreProgress(guest), store.restoreBookmarks(guest.savedIds)]).then(() => { setGuest(null); setMessage("Η πρόοδος επισκέπτη προστέθηκε. Οι αλλαγές θα συγχρονιστούν αυτόματα."); }).catch(() => setMessage("Η εισαγωγή δεν αποθηκεύτηκε πλήρως. Δοκίμασε ξανά.")).finally(() => setBusy(false));
+          void store.importGuest(guest.backup, guest.activity, guest.weeklyReviews).then(() => { setGuest(null); setMessage("Η πρόοδος και η δραστηριότητα επισκέπτη προστέθηκαν. Οι αλλαγές θα συγχρονιστούν αυτόματα."); }).catch(() => setMessage("Η εισαγωγή δεν αποθηκεύτηκε πλήρως. Δοκίμασε ξανά.")).finally(() => setBusy(false));
         }}><Text style={styles.link}>Προσθήκη στον λογαριασμό</Text></Pressable>
         <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" onPress={() => setGuest(null)}><Text style={styles.link}>Ακύρωση εισαγωγής</Text></Pressable>
       </View> : <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" onPress={() => void prepareImport()}><Text style={styles.link}>Προεπισκόπηση εισαγωγής προόδου επισκέπτη</Text></Pressable> : null}

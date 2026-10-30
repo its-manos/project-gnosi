@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { lessons } from "../data/lessons";
 import type { LearningBackup } from "../utils/learningBackup";
 import { calculateScore } from "../utils/legacyLearning";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
 import { useLearningSession, useLearningSnapshot } from "../state/LearningSession";
+import { lessonReview } from "../utils/lessonReview";
+import { lessonScores } from "../utils/weeklyReview";
 function countInlineQuestions(id: string): number { const lesson = lessons.find(l => l.id === id); return lesson ? getInlineQuestionCount(lesson) : 0; }
 
 export type AppScreen =
@@ -13,12 +15,16 @@ export type AppScreen =
   | "lesson"
   | "quiz"
   | "results"
+  | "review"
+  | "weekly-review"
   | "progress"
   | "saved"
   | "search";
 
 
 export function useLearningApp() {
+  const completionRun = useRef("");
+  function newCompletionRun() { completionRun.current = `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`; }
   const [screen, setScreen] = useState<AppScreen>("home");
   const [activeCategoryId, setActiveCategoryId] = useState("history");
   const [activeSubcategoryId, setActiveSubcategoryId] = useState("ancient-greece");
@@ -32,11 +38,19 @@ export function useLearningApp() {
 
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, number>>({});
   const [score, setScore] = useState(0);
+  const [resultMode, setResultMode] = useState<"finished" | "returning">("finished");
+  const [reviewIndices, setReviewIndices] = useState<number[]>([]);
+  const [reviewIndex, setReviewIndex] = useState(0);
+  const [reviewAnswer, setReviewAnswer] = useState<number | null>(null);
+  const [practiceComplete, setPracticeComplete] = useState(false);
+  const reviewSession = useRef<{ lessonId: string; index: number; answer: number | null }>({ lessonId: "", index: 0, answer: null });
   const { store } = useLearningSession();
   const snapshot = useLearningSnapshot();
   const completedLessonIds = snapshot.backup.completedIds;
   const lessonAttempts = snapshot.backup.attempts;
   const progressLoaded = snapshot.ready;
+  const activeLesson = lessons.find(lesson => lesson.id === activeLessonId) ?? lessons[0];
+  const review = lessonReview(activeLesson, snapshot.activity);
 
   function resetAttempt() {
     setCheckpointAnswers({});
@@ -48,6 +62,9 @@ export function useLearningApp() {
   function activateLesson(lessonId: string) {
     const lesson = lessons.find((item) => item.id === lessonId);
     if (!lesson) return;
+    newCompletionRun();
+    setPracticeComplete(false);
+    reviewSession.current = { lessonId: "", index: 0, answer: null };
 
     setActiveLessonId(lesson.id);
     setActiveCategoryId(lesson.categoryId);
@@ -65,7 +82,12 @@ export function useLearningApp() {
 
     setQuestionIndex(0);
     setSelectedAnswer(null);
-    setScreen("lesson");
+    const previous = store.getSnapshot();
+    if (previous.backup.completedIds.includes(lessonId) && !savedAttempt) {
+      setResultMode("returning");
+      setScore(lessonReview(lesson, previous.activity).result?.correctCount ?? 0);
+      setScreen("results");
+    } else setScreen("lesson");
   }
 
   // If someone opens a lesson before AsyncStorage finishes loading, delay the
@@ -88,8 +110,9 @@ export function useLearningApp() {
   }
 
   async function markActiveLessonComplete() {
-    store.complete(activeLessonId);
+    store.complete(activeLessonId, { id: completionRun.current, answers: checkpointAnswers });
     await store.flushLocal();
+    setResultMode("finished");
     setScreen("results");
   }
 
@@ -117,6 +140,7 @@ export function useLearningApp() {
   }
 
   function startQuiz() {
+    newCompletionRun();
     setQuestionIndex(0);
     setSelectedAnswer(null);
     setCheckpointAnswers({});
@@ -127,6 +151,7 @@ export function useLearningApp() {
   function chooseAnswer(answerIndex: number, correctIndex: number) {
     if (selectedAnswer !== null) return;
     setSelectedAnswer(answerIndex);
+    setCheckpointAnswers(current => ({ ...current, [questionIndex]: answerIndex }));
     if (answerIndex === correctIndex) {
       setScore((currentScore) => currentScore + 1);
     }
@@ -192,9 +217,49 @@ export function useLearningApp() {
   }
 
   function restartLesson() {
+    newCompletionRun();
+    setPracticeComplete(false);
     void removeAttempt(activeLessonId);
     resetAttempt();
     setScreen("lesson");
+  }
+
+  function startMistakeReview() {
+    const current = lessonReview(activeLesson, store.getSnapshot().activity);
+    if (current.status !== "available") return;
+    setReviewIndices(current.indices);
+    reviewSession.current = { lessonId: activeLessonId, index: 0, answer: null };
+    setReviewIndex(0);
+    setReviewAnswer(null);
+    setPracticeComplete(false);
+    setScreen("review");
+  }
+  function answerReview(answer: number) {
+    const question = activeLesson.questions[reviewIndices[reviewIndex]];
+    const session = reviewSession.current;
+    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== null || !Number.isInteger(answer) || answer < 0 || answer >= question.answers.length) return;
+    session.answer = answer;
+    setReviewAnswer(answer);
+  }
+  function nextReviewQuestion() {
+    const question = activeLesson.questions[reviewIndices[reviewIndex]];
+    const session = reviewSession.current;
+    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== question.correctIndex) return;
+    session.index++;
+    session.answer = null;
+    setReviewIndex(session.index);
+    setReviewAnswer(null);
+  }
+  function retryReviewQuestion() {
+    const session = reviewSession.current, question = activeLesson.questions[reviewIndices[reviewIndex]];
+    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer === null || session.answer === question.correctIndex) return;
+    session.answer = null;
+    setReviewAnswer(null);
+  }
+  function endMistakeReview() {
+    setPracticeComplete(reviewIndices.length > 0 && reviewIndex === reviewIndices.length);
+    reviewSession.current = { lessonId: "", index: 0, answer: null };
+    setScreen("results");
   }
 
   async function resetLessonProgressForDevelopment(): Promise<void> {
@@ -231,6 +296,18 @@ export function useLearningApp() {
     selectedAnswer,
     checkpointAnswers,
     score,
+    resultMode,
+    review,
+    lessonScores: lessonScores(activeLesson, snapshot.activity, snapshot.weeklyReviews),
+    reviewIndices,
+    reviewIndex,
+    reviewAnswer,
+    practiceComplete,
+    startMistakeReview,
+    answerReview,
+    nextReviewQuestion,
+    retryReviewQuestion,
+    endMistakeReview,
     completedLessonIds,
     lessonAttempts,
     mergeRestoredProgress,

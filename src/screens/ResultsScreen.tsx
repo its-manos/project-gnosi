@@ -6,14 +6,19 @@ import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import { colors } from "../theme";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
+import type { ReviewState } from "../utils/lessonReview";
+import type { lessonScores as calculateLessonScores } from "../utils/weeklyReview";
 
-type Props = { lesson: Lesson; score: number; onHome: () => void; onReadAgain: () => void; recommendations: Recommendation[]; onOpenLesson: (id: string) => void; onBrowse: () => void };
+type Props = { lesson: Lesson; score: number; onHome: () => void; onReadAgain: () => void; recommendations: Recommendation[]; onOpenLesson: (id: string) => void; onBrowse: () => void;
+  lessonScores?: ReturnType<typeof calculateLessonScores>; onWeeklyReview?: () => void;
+  review?: ReviewState; returning?: boolean; practiceComplete?: boolean; onReviewMistakes?: () => void };
 
-export default function ResultsScreen({ lesson, score, onHome, onReadAgain, recommendations, onOpenLesson, onBrowse }: Props) {
-  const totalQuestions = getInlineQuestionCount(lesson);
-  const perfectScore = totalQuestions > 0 && score === totalQuestions;
+export default function ResultsScreen({ lesson, score, onHome, onReadAgain, recommendations, onOpenLesson, onBrowse, review, returning = false, practiceComplete = false, onReviewMistakes, lessonScores, onWeeklyReview }: Props) {
+  const totalQuestions = review?.result?.questionCount ?? getInlineQuestionCount(lesson);
+  const displayedScore = returning ? lessonScores?.best ?? review?.result?.correctCount ?? null : score;
+  const perfectScore = totalQuestions > 0 && displayedScore === totalQuestions;
   const percentage = totalQuestions > 0
-    ? Math.round((score / totalQuestions) * 100)
+    ? Math.round((displayedScore ?? 0) / totalQuestions * 100)
     : 0;
 
   return (
@@ -21,15 +26,35 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain, reco
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" />
       <View style={styles.container}>
         <Text style={styles.emoji}>{perfectScore ? "🏆" : "✨"}</Text>
-        <Text style={styles.eyebrow}>ΜΑΘΗΜΑ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
+        <Text style={styles.eyebrow}>{returning ? "ΕΠΙΣΤΡΟΦΗ ΣΤΟ ΜΑΘΗΜΑ" : "ΜΑΘΗΜΑ ΟΛΟΚΛΗΡΩΘΗΚΕ"}</Text>
         <Text style={styles.title}>
-          {perfectScore ? "Εξαιρετικά!" : score >= 2 ? "Πολύ καλή προσπάθεια!" : "Κάθε μέρα μαθαίνεις κάτι νέο."}
+          {returning ? "Πώς θέλεις να συνεχίσεις;" : perfectScore ? "Εξαιρετικά!" : score >= 2 ? "Πολύ καλή προσπάθεια!" : "Κάθε μέρα μαθαίνεις κάτι νέο."}
         </Text>
-        <Text style={styles.body}>Ολοκλήρωσες το μάθημα «{lesson.title}».</Text>
-        <View style={styles.scoreCard}>
-          <Text style={styles.muted}>Η βαθμολογία σου</Text>
-          <Text style={styles.score}>{score} / {totalQuestions}</Text>
+        <Text style={styles.body}>{returning ? "Έχεις ήδη ολοκληρώσει" : "Ολοκλήρωσες"} το μάθημα «{lesson.title}».</Text>
+        {displayedScore !== null ? <View style={styles.scoreCard}>
+          <Text style={styles.muted}>{returning ? lessonScores?.best !== null && lessonScores?.best !== undefined ? "Καλύτερη πλήρης προσπάθεια" : "Τελευταία καταγεγραμμένη πλήρης προσπάθεια" : "Η βαθμολογία αυτής της προσπάθειας"}</Text>
+          <Text style={styles.score}>{displayedScore} / {totalQuestions}</Text>
           <Text style={styles.meta}>{percentage}% σωστές απαντήσεις</Text>
+          {returning && review?.result ? <Text style={styles.meta}>Τελευταία πλήρης: {review.result.correctCount} / {review.result.questionCount}</Text> : null}
+        </View> : null}
+        {lessonScores?.best !== null && lessonScores?.best !== undefined ? <View style={styles.scoreCard}>
+          <Text style={styles.muted}>Καλύτερη πλήρης προσπάθεια</Text>
+          <Text style={styles.cardScore}>{lessonScores.best} / {lessonScores.total}</Text>
+          <Text style={styles.muted}>Κατάκτηση γνώσης</Text>
+          <Text style={styles.cardScore}>{lessonScores.hasDetails ? `${lessonScores.mastered} / ${lessonScores.total}` : "Χρειάζεται νέα προσπάθεια"}</Text>
+          <Text style={styles.body}>Ερωτήσεις που απάντησες σωστά σε πλήρη προσπάθεια ή στην εβδομαδιαία δεύτερη ευκαιρία. Η άμεση εξάσκηση σε προετοιμάζει, χωρίς να αλλάζει τη βαθμολογία.</Text>
+        </View> : null}
+        <View style={styles.reviewSection}>
+          {practiceComplete ? <Text style={styles.reviewSuccess}>Διόρθωσες τις ερωτήσεις στην εξάσκηση. Το αρχικό σκορ παραμένει ίδιο.</Text> : null}
+          {review?.status === "available" && onReviewMistakes ? <>
+            <ActionButton label={`Εξάσκηση στα λάθη (${review.indices.length})`} onPress={onReviewMistakes} />
+            <Text style={styles.body}>Μόνο τα λάθη της τελευταίας πλήρους προσπάθειας. Χωρίς νέα ολοκλήρωση ή αύξηση επαναλήψεων.</Text>
+          </> : null}
+          {review?.status === "missing-details" || review?.status === "no-result" ? <Text style={styles.body}>Για την παλιότερη προσπάθεια δεν είχαν αποθηκευτεί οι ερωτήσεις που χάθηκαν. Μια νέα πλήρης προσπάθεια θα ενεργοποιήσει τη στοχευμένη εξάσκηση.</Text> : null}
+          {review?.status === "changed" ? <Text style={styles.body}>Το quiz έχει αλλάξει από την προηγούμενη προσπάθεια. Κάνε μια πλήρη επανάληψη για εξάσκηση στις τωρινές ερωτήσεις.</Text> : null}
+          <ActionButton label="Πλήρης επανάληψη μαθήματος" onPress={onReadAgain} secondary />
+          <Text style={styles.body}>Η πλήρης επανάληψη περιλαμβάνει όλες τις ερωτήσεις και καταγράφεται ως νέα προσπάθεια, ανεξάρτητα από το σκορ.</Text>
+          {onWeeklyReview ? <><ActionButton label="Η εβδομαδιαία δεύτερη ευκαιρία" onPress={onWeeklyReview} secondary /><Text style={styles.body}>Τα νέα λάθη μπαίνουν στη δεύτερη ευκαιρία από την επόμενη Δευτέρα. Το καλύτερο σκορ σου διατηρείται ακόμη κι αν μια επανάληψη δεν πάει τόσο καλά.</Text></> : null}
         </View>
         <View style={styles.nextSection}>
           <Text style={styles.nextTitle}>Τι θα διαβάσεις μετά;</Text>
@@ -41,13 +66,15 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain, reco
           <ActionButton label="Εξερεύνησε όλα τα άρθρα" onPress={onBrowse} secondary />
         </View>
         <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} />
-        <ActionButton label="Ξαναδιάβασε το άρθρο" onPress={onReadAgain} secondary />
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  cardScore: { color: colors.accentLight, fontSize: 28, fontWeight: "800", marginVertical: 10 },
+  reviewSection: { width: "100%", gap: 12, marginVertical: 16 },
+  reviewSuccess: { color: colors.success, fontSize: 14, lineHeight: 23, textAlign: "center" },
   nextSection: { width: "100%", marginTop: 12, marginBottom: 16 },
   nextTitle: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "700", marginBottom: 16 },
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
