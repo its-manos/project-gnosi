@@ -10,11 +10,10 @@ export const perceptionLessons: Lesson[] = [
     "summary": "Ο αμφιβληστροειδής δεν στέλνει μια έτοιμη φωτογραφία στον εγκέφαλο. Πώς, λοιπόν, βλέπουμε;",
     "intro": "Βρίσκεσαι σε μια καφετέρια και κοιτάζεις απέναντι ένα πρόσωπο. Χωρίς προσπάθεια, βλέπεις το πρόσωπο, ξεχωρίζεις το φλιτζάνι από το φόντο και αναγνωρίζεις μια κίνηση στην άκρη του οπτικού σου πεδίου. Μοιάζει σαν τα μάτια να τραβούν ένα συνεχές βίντεο. Όμως η όραση είναι μια συνεργασία φωτός, αισθητήριων κυττάρων και νευρικής επεξεργασίας — όχι ένα απλό αρχείο εικόνας.",
     "readingMinutes": 5,
-    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Eye-diagram.png?width=1200",
-    "imageResizeMode": "contain",
-    "imageCaption": "Σχηματική τομή του ανθρώπινου ματιού. Ο φακός εστιάζει το φως και ο αμφιβληστροειδής μετατρέπει το φωτεινό ερέθισμα σε σήματα.",
-    "imageCredit": "Graft / Wikimedia Commons · Public domain",
-    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Eye-diagram.png",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Anatomy%20of%20eye%20of%20human%20being.jpg?width=1200",
+    "imageCaption": "Σχηματική ανατομία του ματιού. Το φως περνά από τον κερατοειδή και τον φακό πριν φτάσει στον αμφιβληστροειδή.",
+    "imageCredit": "Aliyu Mohammed Aliyu / Wikimedia Commons · CC0",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Anatomy_of_eye_of_human_being.jpg",
     "sections": [
       {
         "title": "Το φως δεν φτάνει παντού με τον ίδιο τρόπο",
@@ -113,11 +112,10 @@ export const perceptionLessons: Lesson[] = [
     "summary": "Υπάρχει μια μικρή περιοχή σε κάθε μάτι χωρίς φωτοϋποδοχείς. Γιατί δεν τη βλέπουμε;",
     "intro": "Κοίταξε έναν άδειο τοίχο. Το οπτικό σου πεδίο φαίνεται συνεχές, χωρίς μαύρες τρύπες. Κι όμως, σε κάθε μάτι υπάρχει μια θέση από την οποία δεν έρχεται πληροφορία φωτός. Δεν πρόκειται για πάθηση ούτε για σφάλμα. Είναι συνέπεια της φυσιολογικής ανατομίας μας και μια από τις πιο εντυπωσιακές ευκαιρίες να καταλάβουμε πώς λειτουργεί η αντίληψη.",
     "readingMinutes": 5,
-    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Blind%20spot%20test.svg?width=1200",
-    "imageResizeMode": "contain",
-    "imageCaption": "Δοκιμή τυφλού σημείου: κλείσε το αριστερό μάτι, κοίτα σταθερά τον σταυρό με το δεξί και άλλαξε αργά την απόσταση από την εικόνα.",
-    "imageCredit": "Frisko / Wikimedia Commons · Public domain",
-    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Blind_spot_test.svg",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Blind%20spot%20demonstration.svg?width=1200",
+    "imageCaption": "Δοκιμή τυφλού σημείου με δύο σχήματα. Η εξαφάνιση ενός σχήματος εξαρτάται από το μάτι, την απόσταση και το σημείο εστίασης.",
+    "imageCredit": "NicoRay / Wikimedia Commons · Public domain",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Blind_spot_demonstration.svg",
     "sections": [
       {
         "title": "Εκεί όπου βγαίνει το οπτικό νεύρο",
@@ -216,11 +214,10 @@ export const perceptionLessons: Lesson[] = [
     "summary": "Δύο ίδια χρώματα μπορούν να δίνουν διαφορετική εντύπωση. Τι ρόλο παίζει το φόντο;",
     "intro": "Βλέπεις δύο μικρά γκρίζα τετράγωνα: το ένα πάνω σε ανοιχτό φόντο, το άλλο σε πολύ σκούρο. Το δεύτερο μοιάζει φωτεινότερο, ακόμη κι αν τα τετράγωνα έχουν ακριβώς ίδια τιμή χρώματος. Δεν πρόκειται για λάθος της οθόνης. Η εμφάνιση ενός χρώματος εξαρτάται και από όσα το περιβάλλουν.",
     "readingMinutes": 5,
-    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Simultaneous%20contrast2.svg?width=1200",
-    "imageResizeMode": "contain",
-    "imageCaption": "Τα δύο γκρίζα τετράγωνα έχουν την ίδια φωτεινότητα, αλλά φαίνονται διαφορετικά σε ανοιχτό και σκούρο φόντο.",
-    "imageCredit": "László Németh / Wikimedia Commons · CC0 1.0",
-    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Simultaneous_contrast2.svg",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Simultaneous%20Contrast.svg?width=1200",
+    "imageCaption": "Δύο ίδια γκρίζα ορθογώνια μοιάζουν διαφορετικά εξαιτίας του περιβάλλοντος φωτεινού ή σκούρου φόντου.",
+    "imageCredit": "Qef / Wikimedia Commons · Public domain",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Simultaneous_Contrast.svg",
     "sections": [
       {
         "title": "Δεν βλέπουμε χρώματα απομονωμένα",
