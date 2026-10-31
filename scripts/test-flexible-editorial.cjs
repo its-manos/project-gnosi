@@ -86,4 +86,26 @@ const evidenceLegacy=parseLearningBackup({schemaVersion:1,completedIds:[],savedI
 assert.ok(!evidenceLegacy.attempts[evidence.id] && evidenceLegacy.savedIds.includes(evidence.id));
 const evidenceCurrent=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[evidence.id],attempts:{[evidence.id]:{...evidenceAttempt,quizKey:quizFingerprint(evidence.questions)}}});
 assert.equal(evidenceCurrent.attempts[evidence.id].score,1);
+
+const chronology=lessons.find(l=>l.id==="greek-chronology");
+assert.ok(chronology && chronology.requireCurrentAttemptQuiz,"chronology must reject incompatible legacy attempts");
+assert.equal(chronology.sections.flatMap(s=>s.paragraphs).length,22);
+assert.deepEqual(progress.getQuestionPlacements(chronology).map(p=>p.afterParagraphNumber),[5,11,17,20]);
+assert.deepEqual(progress.getQuestionPlacements(chronology).map(p=>p.questionId),[
+ "greek-time-overlap","greek-time-after-palaces","greek-time-iron-and-geometric","greek-time-beyond-classical"
+]);
+assert.equal(progress.getVisibleParagraphLimit(chronology,{}),5);
+assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2}),11);
+assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2,1:1}),17);
+assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2,1:1,2:3}),20);
+assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2,1:1,2:3,3:2}),22);
+assert.equal(progress.getResumeParagraphNumber(chronology,{0:2,1:1}),12);
+assert.deepEqual(inlineArticleMedia[chronology.id].map(f=>f.afterParagraphId),["mycenaean-overlap"]);
+assert.ok(chronology.questions.every(q=>q.version==="1"&&q.answers.length===4&&q.explanation.length>35));
+assert.ok(!lessonQuizMatches(chronology,"q_unrelated"));
+const chronologyAttempt={checkpointAnswers:{0:2},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
+const chronologyLegacy=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[chronology.id],attempts:{[chronology.id]:chronologyAttempt}});
+assert.ok(!chronologyLegacy.attempts[chronology.id]&&chronologyLegacy.savedIds.includes(chronology.id));
+const chronologyCurrent=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[chronology.id],attempts:{[chronology.id]:{...chronologyAttempt,quizKey:quizFingerprint(chronology.questions)}}});
+assert.equal(chronologyCurrent.attempts[chronology.id].score,1);
 console.log("Flexible editorial placement and backward-compatible progress regression checks passed.");
