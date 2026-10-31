@@ -10,7 +10,7 @@ const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof i
  const store=new LearningStore(null,{getItem:async()=>null,setItem:async()=>{}});await store.start();const daily=emptyDailyDocument();
  const modelHook=()=>({model:buildKnowledgeModel({...store.getSnapshot().backup,...store.getSnapshot()},daily,today),today,ready:store.getSnapshot().ready});
  const session={'../state/LearningSession':{useLearningSession:()=>({store}),useLearningSnapshot:store.getSnapshot,useDailySnapshot:()=>({ready:true,doc:daily})}};
- const components=Object.fromEntries(['ActionButton','AnswerOption','AppHeader','SyncStatus','SourceLink'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
+ const components=Object.fromEntries(['ActionButton','AnswerOption','AppHeader','SyncStatus','SourceLink','QuizReveal'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
  const Screen=load('src/screens/KnowledgeReviewScreen.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,...components,'../hooks/useKnowledgeModel':{useKnowledgeModel:modelHook}}).default;
  const render=()=>{cursor=0;return Screen({onBack:()=>backs++});},button=(tree,label)=>nodes(tree).find(n=>n.type==='ActionButton'&&n.props.label===label);
  let tree=render();assert.ok(text(tree).includes('Ολοκλήρωσε ένα μάθημα'));assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,0);

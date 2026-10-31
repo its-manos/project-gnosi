@@ -1,3 +1,4 @@
+import { motionAllowed, playPreferences } from "../play/preferences";
 import { quizRewardSummary } from "../gamification/rewards";
 import { adaptLessonQuestion } from "../quiz/adapters";
 import ZoomableLessonImage from "../components/ZoomableLessonImage";
@@ -63,7 +64,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
       const y = target === "finish" ? finishPosition.current : paragraphY(target);
       if (y !== undefined && y !== null) {
         pendingScroll.current = null;
-        scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true });
+        scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: motionAllowed(playPreferences.getSnapshot()) });
       }
       return;
     }

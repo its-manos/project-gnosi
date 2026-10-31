@@ -1,3 +1,4 @@
+import PlayFeedback from "./src/play/PlayFeedback";
 import { BetaAnalyticsProvider } from "./src/state/BetaAnalytics";
 import { useSupabaseLifecycle } from "./src/hooks/useSupabaseLifecycle";
 import { StatusBar, StyleSheet, View } from "react-native";
@@ -13,7 +14,7 @@ export default function App() {
     <SafeAreaProvider>
       <View style={styles.root}>
         <StatusBar barStyle="light-content" />
-        <BetaAnalyticsProvider><LearningSession><AppNavigator /></LearningSession></BetaAnalyticsProvider>
+        <BetaAnalyticsProvider><LearningSession><PlayFeedback><AppNavigator /></PlayFeedback></LearningSession></BetaAnalyticsProvider>
       </View>
     </SafeAreaProvider>
   );

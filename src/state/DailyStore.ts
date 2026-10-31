@@ -1,5 +1,6 @@
+import { emitPlayFeedback } from "../play/events";
 import { createDailyResultDetails } from "../utils/dailyResults";
-import { awardQuiz } from "../gamification/rewards";
+import { awardQuiz, totalRewardXP } from "../gamification/rewards";
 import { migrateDailyRewards } from "../gamification/migration";
 import { adaptDailyQuestion } from "../quiz/adapters";
 import { questions } from "../data/questions";
@@ -126,12 +127,22 @@ export class DailyStore {
   commitRecord(record: DailyChallengeRecord, expected: DailyDay | undefined): boolean {
     const current = this.doc.days[record.dateKey];
     if (!same(current, expected) || current?.record.completed) return false;
+    const beforeXP = totalRewardXP(this.doc.rewards ?? {});
     const stamp = this.stamp();
     const details = record.completed ? createDailyResultDetails(record,questions) : undefined;
     const history = record.completed ? createCompletedHistoryEntry(record) : null;
     if (record.completed && !history) throw new Error("invalid_daily");
     const rewards = record.completed ? awardQuiz(this.doc.rewards ?? {}, `day:${record.dateKey}`, record.questionIds.map(id => adaptDailyQuestion(questions.find(q => q.id === id)!)), record.answers, "daily") : this.doc.rewards;
     this.change({ ...this.doc, clock: stamp[0], rewards, days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history, ...(details ? {details} : {}) } } });
+    if (this.active) {
+      const run = current?.run ?? stamp, base = `daily:${record.dateKey}:${run[0]}:${run[1]}`;
+      if (record.completed) emitPlayFeedback({ id: `${base}:complete`, kind: "complete", scope: this.userId ?? "guest", xp: totalRewardXP(this.doc.rewards ?? {}) - beforeXP, label: "Η καθημερινή πρόκληση ολοκληρώθηκε" });
+      else for (const [slot, answer] of Object.entries(record.answers)) {
+        if (current?.record.answers[slot] !== undefined) continue;
+        const q = questions.find(q => q.id === record.questionIds[Number(slot)]);
+        if (q) emitPlayFeedback({ id: `${base}:answer:${slot}`, kind: answer === q.correctIndex ? "correct" : "incorrect", scope: this.userId ?? "guest" });
+      }
+    }
     return true;
   }
   async importGuest(incoming: DailyDocument) {

@@ -1,3 +1,4 @@
+import { emitPlayFeedback, type FeedbackKind } from "../play/events";
 import { buildKnowledgeModel } from "../knowledge/model";
 import { mergeKnowledgeReviews, type KnowledgeReviews, type KnowledgeSession } from "../knowledge/records";
 import { isCurrentKnowledgeSession, restoreKnowledgeQuiz } from "../knowledge/session";
@@ -119,6 +120,9 @@ export class LearningStore {
     if (!Number.isSafeInteger(this.doc.clock + 1)) throw new Error("invalid_sync");
     return [this.doc.clock + 1, this.device];
   }
+  private feedback(kind: FeedbackKind, id: string, xp = 0, label?: string) {
+    if (this.active) emitPlayFeedback({ kind, id, scope: this.userId ?? "guest", xp, label });
+  }
   setProgress(id: string, value: ProgressValue) {
     if (!known.has(id)) return;
     const stamp = this.stamp();
@@ -129,7 +133,17 @@ export class LearningStore {
     const stamp = this.stamp();
     this.change({ ...this.doc, clock: stamp[0], bookmarks: { ...this.doc.bookmarks, [id]: { stamp, value } } });
   }
-  answer(id: string, attempt: BackupAttempt) { this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt }); }
+  answer(id: string, attempt: BackupAttempt) {
+    const previous = this.doc.progress[id]?.value.attempt?.checkpointAnswers ?? {};
+    this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt });
+    const lesson = lessons.find(l => l.id === id);
+    if (!lesson) return;
+    for (const [slot, answer] of Object.entries(attempt.checkpointAnswers)) {
+      if (previous[Number(slot)] !== undefined) continue;
+      const question = lesson.questions[Number(slot)], result = question && evaluateChoice(question, answer);
+      if (result?.valid) this.feedback(result.correct ? "correct" : "incorrect", `inline:${this.device}:${id}:${attempt.updatedAt}:${slot}`);
+    }
+  }
   complete(id: string, run?: { id: string; answers: Record<number, number> }) {
     if (!run) { this.setProgress(id, { completed: true, attempt: null }); return 0; }
     const lesson = lessons.find(item => item.id === id);
@@ -152,13 +166,16 @@ export class LearningStore {
     if (!hasReward(rewards, `category:${lesson.categoryId}`)) rewards[`category:${lesson.categoryId}`] = REWARD_RULES.category;
     // Reward, event and completion share one write and one sync revision.
     this.change({ ...this.doc, clock: stamp[0], rewards, activity, progress: { ...this.doc.progress, [id]: { stamp, value: { completed: true, attempt: null } } } });
-    return totalRewardXP(this.doc.rewards ?? {}) - before;
+    const earned = totalRewardXP(this.doc.rewards ?? {}) - before;
+    this.feedback("complete", `lesson-complete:${eventId}`, earned, lesson.title);
+    return earned;
   }
   clearAttempt(id: string) { this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt: null }); }
   answerWeekly(id: string, answerIndex: number): boolean {
     if (this.doc.weeklyReviews?.[id]) return false;
     const item = weeklyPlan(this.doc.activity, this.doc.weeklyReviews, getAthensDateKey()).find(q => q.id === id);
     if (!item || !evaluateChoice(item.lesson.questions[item.questionIndex], answerIndex).valid) return false;
+    const beforeXP = totalRewardXP(this.doc.rewards ?? {});
     const stamp = this.stamp();
     const weeklyReviews = { ...this.doc.weeklyReviews, [id]: {
       sourceId: item.sourceId, questionIndex: item.questionIndex, week: item.week, answerIndex, at: Date.now(),
@@ -174,6 +191,7 @@ export class LearningStore {
     const plan = weeklyPlan(this.doc.activity, weeklyReviews, getAthensDateKey());
     if (plan.length && plan.every(q => weeklyReviews[q.id]) && !hasReward(rewards, `review:${item.week}`)) rewards[`review:${item.week}`] = REWARD_RULES.review;
     this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards });
+    this.feedback(row?.correct ? "correct" : "incorrect", `weekly-answer:${id}`, totalRewardXP(this.doc.rewards ?? {}) - beforeXP);
     return true;
   }
   startKnowledgeReview(mode: "scheduled" | "practice", daily: DailyDocument): boolean {
@@ -206,6 +224,10 @@ export class LearningStore {
     const knowledgeReviews = firstToday ? mergeKnowledgeReviews(this.doc.knowledgeReviews, { [token.id]: { [saved.date]: { version: token.version, answerIndex, at: now, mode: saved.mode } } }) : this.doc.knowledgeReviews;
     const value = { ...saved, answers: legacyAnswerSlots(result.session), qualifiedIndices: qualified ? [...saved.qualifiedIndices, saved.currentIndex] : saved.qualifiedIndices };
     const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], knowledgeReviews, knowledgeSession: { stamp, value } });
+    const after = firstToday ? buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date).items.find(i => i.question.id === token.id) : item;
+    const mastered = item.state !== "mastered" && after?.state === "mastered";
+    const correct = evaluateChoice(quiz.questions[quiz.currentIndex].content as { answers: string[]; correctIndex: number }, answerIndex).correct;
+    this.feedback(mastered ? "mastered" : correct ? "correct" : "incorrect", `knowledge-answer:${id}:${saved.currentIndex}`, 0, mastered ? item.topicTitle : undefined);
     return true;
   }
   advanceKnowledgeReview(id: string, token: QuestionToken): boolean {
@@ -218,6 +240,7 @@ export class LearningStore {
     if (earnedXP) rewards[key] = REWARD_RULES.review;
     const value = { ...saved, currentIndex: result.session.currentIndex, completed: result.session.completed, earnedXP };
     const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], rewards, knowledgeSession: { stamp, value } });
+    if (result.session.completed) this.feedback("complete", `knowledge-complete:${id}`, earnedXP, saved.mode === "practice" ? "Η εξάσκηση ολοκληρώθηκε" : "Η δοκιμή κατανόησης ολοκληρώθηκε");
     return true;
   }
   async restoreProgress(incoming: LearningBackup) {

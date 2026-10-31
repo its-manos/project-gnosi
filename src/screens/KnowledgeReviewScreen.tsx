@@ -1,3 +1,4 @@
+import QuizReveal from "../components/QuizReveal";
 import { conceptById } from "../knowledge/concepts";
 import { lessons } from "../data/lessons";
 import { useState } from "react";
@@ -66,7 +67,7 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
       : q && item ? <>
         <Text style={styles.label}>{quiz.currentIndex + 1} / {quiz.questions.length} · {saved.mode === "practice" ? "ΕΞΑΣΚΗΣΗ" : "ΕΠΑΝΑΛΗΨΗ"}</Text>
         <Text style={styles.body}>{item.topicTitle} · {MASTERY_LABELS[item.state]}</Text>
-        <View style={styles.card}><Text style={styles.heading}>{q.prompt}</Text></View>
+        <QuizReveal key={q.id}><View style={styles.card}><Text style={styles.heading}>{q.prompt}</Text></View></QuizReveal>
         {shuffledIndices(q.content.answers.length, `${saved.id}:${q.id}`).map((index, display) => <AnswerOption key={index} label={q.content.answers[index]} index={display} selected={answer === index} correct={q.content.correctIndex === index} locked={answer !== undefined} onPress={() => { if (!store.answerKnowledgeReview(saved.id, questionToken(quiz!), index, daily.doc)) setMessage("Η προσπάθεια άλλαξε. Άνοιξε ξανά την επανάληψη."); }} />)}
         {answer !== undefined ? <View style={styles.card} accessibilityLiveRegion="polite">
           <Text style={styles.heading}>{answer === q.content.correctIndex ? "Το θυμήθηκες!" : "Ας το θυμηθούμε ξανά"}</Text>

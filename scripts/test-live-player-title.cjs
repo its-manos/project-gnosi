@@ -11,7 +11,7 @@ const useKnowledgeProfile=load('src/hooks/useKnowledgeProfile.ts',{
  '../state/LearningSession':{useLearningSnapshot:()=>learning.getSnapshot(),useDailySnapshot:()=>daily.getSnapshot()},
  './useAthensDate':{useAthensDate:()=> '2026-10-31'}
 }).useKnowledgeProfile;
-const Card=load('src/components/KnowledgeProgress.tsx',{
+const Card=load('src/components/KnowledgeProgress.tsx',{ './ProgressBar':{__esModule:true,default:'ProgressBar'},
  react:{useState:()=>[expanded,v=>{expanded=typeof v==='function'?v(expanded):v;}]},
  'react/jsx-runtime':{jsx,jsxs:jsx},
  'react-native':{Text:'Text',View:'View',Pressable:'Pressable',StyleSheet:{create:x=>x}},

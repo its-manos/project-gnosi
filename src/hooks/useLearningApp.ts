@@ -1,3 +1,4 @@
+import { emitPlayFeedback } from "../play/events";
 import { quizRewardSummary } from "../gamification/rewards";
 import { adaptLessonQuestion } from "../quiz/adapters";
 import { advanceQuizSession, calculateQuizResults, createQuizSession, evaluateChoice, submitQuizAnswer } from "../quiz/engine";
@@ -33,6 +34,7 @@ export type AppScreen =
 
 
 export function useLearningApp() {
+  const feedbackAttempt = useRef(0);
   const completionRun = useRef("");
   const standaloneSession = useRef<QuizSession | null>(null);
   const renderRun = completionRun.current;
@@ -184,6 +186,7 @@ export function useLearningApp() {
     const transition = submitQuizAnswer(session, { id: question.id, version: question.version }, answerIndex);
     if (!transition.changed) return;
     standaloneSession.current = transition.session;
+    emitPlayFeedback({ scope: store.userId ?? "guest", id: `standalone:${session.id}:${question.id}`, kind: evaluateChoice(activeLesson.questions[questionIndex], answerIndex).correct ? "correct" : "incorrect" });
     setSelectedAnswer(answerIndex);
     setCheckpointAnswers(legacyAnswerSlots(transition.session));
     setScore(calculateQuizResults(transition.session).correctCount);
@@ -272,6 +275,8 @@ export function useLearningApp() {
     const session = reviewSession.current;
     if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== null || !evaluateChoice(question, answer).valid) return;
     session.answer = answer;
+    feedbackAttempt.current++;
+    emitPlayFeedback({ scope: store.userId ?? "guest", id: `mistake:${activeLessonId}:${reviewIndex}:${completionRun.current}:${feedbackAttempt.current}`, kind: evaluateChoice(question, answer).correct ? "correct" : "incorrect" });
     setReviewAnswer(answer);
   }
   function nextReviewQuestion() {

@@ -1,3 +1,4 @@
+import { AnswerMotion } from "../play/motion";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { colors } from "../theme";
 
@@ -14,7 +15,7 @@ export default function AnswerOption({ label, index, selected, correct, locked, 
   const answerIsCorrect = locked && correct;
   const answerIsWrong = locked && selected && !correct;
   return (
-    <Pressable
+    <AnswerMotion active={answerIsCorrect || answerIsWrong}><Pressable
       style={({ pressed }) => [styles.button, answerIsCorrect && styles.correct, answerIsWrong && styles.wrong, pressed && !locked && styles.pressed]}
       onPress={onPress}
       disabled={locked}
@@ -25,7 +26,7 @@ export default function AnswerOption({ label, index, selected, correct, locked, 
       <Text style={styles.label}>{label}</Text>
       {answerIsCorrect && <Text style={styles.icon}>✓</Text>}
       {answerIsWrong && <Text style={styles.icon}>✕</Text>}
-    </Pressable>
+    </Pressable></AnswerMotion>
   );
 }
 

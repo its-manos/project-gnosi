@@ -1,3 +1,4 @@
+import ProgressBar from "./ProgressBar";
 import { playerTitle } from "../gamification/rules";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -15,10 +16,7 @@ export default function KnowledgeProgress({ compact = false }: { compact?: boole
     {ready ? <Text key={`player-title-${p.level}`} testID="player-title" style={styles.playerTitle} accessibilityLiveRegion="polite">{playerTitle(p.level)}</Text> : null}
     <Text style={styles.value}>{ready ? p.totalXP.toLocaleString("el-GR") : "—"} XP</Text>
     {ready ? <>
-      <View style={styles.track} accessible accessibilityRole="progressbar" accessibilityLabel="Πρόοδος επιπέδου"
-        accessibilityValue={{ min: 0, max: p.required, now: p.earned }}>
-        <View style={[styles.fill, { width: `${p.earned / p.required * 100}%` }]} />
-      </View>
+      <ProgressBar progress={p.earned / p.required * 100} label={`Πρόοδος επιπέδου: ${p.earned} από ${p.required} XP`} />
       <Text style={styles.body}>{p.remaining} XP μέχρι το επόμενο επίπεδο</Text>
       {!compact ? <>
         <View style={styles.metrics}>
@@ -52,8 +50,6 @@ const styles = StyleSheet.create({
   level: { color: colors.accentLight, fontSize: 14, fontWeight: "800" },
   playerTitle: { color: colors.accentLight, fontSize: 20, lineHeight: 28, fontWeight: "800", flexShrink: 1, maxWidth: "100%" },
   value: { color: colors.text, fontSize: 32, fontWeight: "900" },
-  track: { height: 8, borderRadius: 8, overflow: "hidden", backgroundColor: colors.border },
-  fill: { height: "100%", backgroundColor: colors.accent, borderRadius: 8 },
   body: { color: colors.textMuted, fontSize: 12, lineHeight: 20 },
   metrics: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   metric: { color: colors.textBody, fontSize: 12, lineHeight: 20, fontWeight: "700" },

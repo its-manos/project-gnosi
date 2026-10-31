@@ -1,3 +1,4 @@
+import QuizReveal from "../components/QuizReveal";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Lesson } from "../data/lessons";
 import ActionButton from "../components/ActionButton";
@@ -33,11 +34,11 @@ export default function QuizScreen({ combo = 0, lesson, questionIndex, selectedA
         <Text style={styles.counter}>{questionIndex + 1} / {lesson.questions.length}</Text>
       </View>
       <ProgressBar progress={((questionIndex + 1) / lesson.questions.length) * 100} />
-      <View style={styles.questionCard}>
+      <QuizReveal key={`${lesson.id}-${questionIndex}`}><View style={styles.questionCard}>
         <Text style={styles.questionNumber}>ΕΡΩΤΗΣΗ {questionIndex + 1}</Text>
         <Text style={styles.question}>{question.question}</Text>
       </View>
-      <View style={styles.answers}>
+      </QuizReveal><View style={styles.answers}>
         {question.answers.map((answer, index) => (
           <AnswerOption
             key={answer}
@@ -52,7 +53,7 @@ export default function QuizScreen({ combo = 0, lesson, questionIndex, selectedA
       </View>
       <ReportContentButton key={questionIndex} target={lessonReportTarget(lesson, questionIndex)} />
       {selectedAnswer !== null && (
-        <View style={styles.feedback}>
+        <QuizReveal><View style={styles.feedback}>
           <Text style={styles.feedbackTitle}>{isCorrect ? "Σωστά! 🎉" : "Όχι ακριβώς!"}</Text>
           <Text style={styles.body}>{question.explanation}</Text>
           <ActionButton
@@ -61,7 +62,7 @@ export default function QuizScreen({ combo = 0, lesson, questionIndex, selectedA
           />
           {combo > 1 ? <Text style={styles.scoreNote}>ΣΕΡΙ {combo}</Text> : null}
           <Text style={styles.scoreNote}>Σωστές απαντήσεις μέχρι τώρα: {score}</Text>
-        </View>
+        </View></QuizReveal>
       )}
     </ScrollView>
   );

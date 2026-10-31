@@ -7,7 +7,7 @@ const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t
 let expanded=false;
 const common={react:{useState:initial=>[initial,()=>{}],useRef:()=>({current:null})},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native};
 const p=knowledgeProfile(lessons,[],{},{},[],'2026-10-31',{'day:2026-10-31':220});
-const Card=load('src/components/KnowledgeProgress.tsx',{...common,react:{useState:()=>[expanded,v=>{expanded=typeof v==='function'?v(expanded):v;}]},'../hooks/useKnowledgeProfile':{useKnowledgeProfile:()=>({ready:true,profile:p})}}).default;
+const Card=load('src/components/KnowledgeProgress.tsx',{ './ProgressBar':{__esModule:true,default:'ProgressBar'},...common,react:{useState:()=>[expanded,v=>{expanded=typeof v==='function'?v(expanded):v;}]},'../hooks/useKnowledgeProfile':{useKnowledgeProfile:()=>({ready:true,profile:p})}}).default;
 let tree=Card({});assert.ok(text(tree).includes('Επίπεδο 2'));assert.equal(nodes(tree).find(n=>n.props?.testID==='player-title').props.children,'Μαθητευόμενος');assert.ok(text(tree).includes('220 XP'));
 nodes(tree).find(n=>n.type==='Pressable').props.onPress();tree=Card({});assert.ok(text(tree).includes('30 XP'));assert.ok(text(tree).includes('10 / 15 / 20 XP'));assert.ok(text(tree).includes('Τα κερδισμένα XP διατηρούνται'));
 const stubs=Object.fromEntries(['QuizReveal','DailyAnswerReview','KnowledgeProgress','ActionButton','AnswerOption','AppHeader','ProgressBar','DailyMistakeReview','ReportContentButton','LessonResultChart'].map(n=>['../components/'+n,{__esModule:true,default:n}]));

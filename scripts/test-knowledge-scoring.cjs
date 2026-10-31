@@ -1,3 +1,4 @@
+/* global __dirname */
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),ts=require('typescript');
 const cache=new Map();
 function load(file,overrides={}) {
@@ -42,13 +43,13 @@ assert.equal(p([lesson.id],JSON.parse(JSON.stringify({a:event})),JSON.parse(JSON
 // Render the actual card and verify disclosure, loading, compact and accessibility.
 let expanded=false,ready=true;
 const jsx=(type,props)=>({type,props});
-const Card=load('src/components/KnowledgeProgress.tsx',{
+const Card=load('src/components/KnowledgeProgress.tsx',{ './ProgressBar':{__esModule:true,default:'ProgressBar'},
  react:{useState:()=>[expanded,v=>{expanded=typeof v==='function'?v(expanded):v;}]},
  'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{View:'View',Text:'Text',Pressable:'Pressable',StyleSheet:{create:x=>x}},
  '../hooks/useKnowledgeProfile':{useKnowledgeProfile:()=>({profile:remembered,ready})}
 }).default;
 const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
-let tree=Card({});assert.ok(nodes(tree).some(n=>n.props?.accessibilityRole==='progressbar'));
+let tree=Card({});assert.ok(nodes(tree).some(n=>n.type==='ProgressBar'&&n.props.progress>=0&&n.props.progress<=100));
 nodes(tree).find(n=>n.type==='Pressable').props.onPress();tree=Card({});assert.equal(expanded,true);
 assert.ok(nodes(tree).find(n=>n.type==='Pressable').props.accessibilityState.expanded);
 assert.equal(nodes(Card({compact:true})).filter(n=>n.type==='Pressable').length,0);

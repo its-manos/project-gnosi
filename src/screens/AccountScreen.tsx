@@ -1,3 +1,4 @@
+import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -15,6 +16,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
     <AppHeader onBack={onBack} />
     <View style={styles.mark} accessible={false}><Text style={styles.glyph}>✦</Text></View>
     <Text style={styles.title}>Λογαριασμός και ρυθμίσεις</Text>
+    <PlayFeedbackSettings />
     <AccountPanel backupControls={backupControls} />
     <PendingReportsPanel />
     <UsageSharing />

@@ -1,0 +1,22 @@
+/* global __dirname */
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{load}=require('./helpers/load-typescript.cjs');
+const {FeedbackGate,emitPlayFeedback,subscribePlayFeedback}=load('src/play/events.ts');
+const {PlayPreferencesStore,motionAllowed}=load('src/play/preferences.ts');
+const {configurePlayFeedback}=require('./configure-play-feedback.cjs');
+(async()=>{
+ const gate=new FeedbackGate(),event={scope:'one',id:'answer:1',kind:'correct'};
+ assert.equal(gate.accept(event,'two',true,0),false);assert.equal(gate.accept(event,'one',false,0),false);assert.equal(gate.accept(event,'one',true,0),true);assert.equal(gate.accept(event,'one',true,1),false);
+ assert.equal(gate.accept({...event,id:'level',kind:'level-up'},'one',true,10),true);assert.equal(gate.accept({...event,id:'complete',kind:'complete'},'one',true,20),false,'rare celebration is not replaced by a lower-priority sound');assert.equal(gate.accept({...event,id:'later'},'one',true,1000),true);
+ let got=0;const off=subscribePlayFeedback(()=>{got++;}),bad=subscribePlayFeedback(()=>{throw Error('cosmetic failure');});emitPlayFeedback(event);assert.equal(got,1);off();bad();emitPlayFeedback(event);assert.equal(got,1);
+ const disk=new Map(),storage={getItem:async k=>disk.get(k)??null,setItem:async(k,v)=>{disk.set(k,v);}};
+ let prefs=new PlayPreferencesStore();assert.equal(motionAllowed(prefs.getSnapshot()),false,'motion is conservative until preferences/device settings load');await prefs.load(storage);prefs.setMotion(false);assert.equal(motionAllowed(prefs.getSnapshot()),true);
+ await Promise.all([prefs.set('sound',false),prefs.set('animations',false),prefs.set('sound',true)]);prefs=new PlayPreferencesStore();await prefs.load(storage);assert.equal(prefs.getSnapshot().sound,true);assert.equal(prefs.getSnapshot().animations,false);prefs.setMotion(false);assert.equal(motionAllowed(prefs.getSnapshot()),false);await prefs.set('animations',true);prefs.setMotion(true);assert.equal(motionAllowed(prefs.getSnapshot()),false,'system reduced motion wins');
+ const broken=new PlayPreferencesStore();await broken.load({getItem:async()=>'{broken',setItem:async()=>{throw Error('disk full');}});assert.equal(broken.getSnapshot().error,true);assert.equal(broken.getSnapshot().sound,false);await broken.set('sound',true);assert.equal(broken.getSnapshot().error,true);await broken.load(storage);assert.equal(broken.getSnapshot().error,false);
+ const config={expo:{name:'Keep me',extra:{eas:{projectId:'existing-id'}},updates:{url:'existing-url'},android:{package:'gr.existing.app',runtimeVersion:'old'},plugins:[['some-plugin',{key:1}],['expo-audio',{other:true,recordAudioAndroid:true}]]}};
+ const configured=configurePlayFeedback(config);assert.equal(configured.expo.extra.eas.projectId,'existing-id');assert.equal(configured.expo.updates.url,'existing-url');assert.equal(configured.expo.android.package,'gr.existing.app');assert.equal(configured.expo.runtimeVersion.policy,'fingerprint');assert.equal(configured.expo.android.runtimeVersion.policy,'fingerprint');assert.deepEqual(configured.expo.plugins[0],config.expo.plugins[0]);assert.equal(configured.expo.plugins[1][1].other,true);assert.equal(configured.expo.plugins[1][1].recordAudioAndroid,false);assert.equal(configured.expo.plugins[1][1].microphonePermission,false);assert.equal(configured.expo.plugins[1][1].enableBackgroundPlayback,false);assert.deepEqual(configurePlayFeedback(configured),configured);assert.equal(config.expo.android.runtimeVersion,'old','input not mutated');
+ for(const kind of ['correct','incorrect','complete','mastered','level-up']){
+  const bytes=fs.readFileSync(path.join(__dirname,'../assets/sounds',kind+'.wav'));assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.toString('ascii',8,12),'WAVE');assert.equal(bytes.readUInt16LE(22),1);assert.equal(bytes.readUInt16LE(34),16);const seconds=(bytes.length-44)/2/bytes.readUInt32LE(24);assert.ok(seconds>.1&&seconds<1.2);
+  let peak=0,energy=0;for(let i=44;i<bytes.length;i+=2){const value=bytes.readInt16LE(i);peak=Math.max(peak,Math.abs(value));energy+=value*value;}assert.ok(energy>0);assert.ok(peak<32767*.7,'no clipping or near-full-scale transient');
+ }
+ console.log('Play feedback passed: scope/foreground/dedup/priority policy, failure isolation, persistent independent settings, reduced motion, corrupt/storage recovery, safe/idempotent native config merge and five short non-clipping bundled cues.');
+})().catch(e=>{console.error(e);process.exitCode=1;});
