@@ -9,7 +9,9 @@ import { architectureArticleMedia } from "./architectureMedia";
  * that links to the corresponding Commons file page and licence information.
  */
 export type InlineArticleImage = {
-  afterParagraphCount: number;
+  afterParagraphCount?: number;
+  /** Stable optional anchor; preferable for editorially revised articles. */
+  afterParagraphId?: string;
   url: string;
   caption: string;
   credit: string;
@@ -30,6 +32,14 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
   ...astronomyArticleMedia,
   ...worldHistoryArticleMedia,
   ...supplementaryArticleMedia,
+  "perception-eyes-not-cameras": [{
+    afterParagraphId: "retina-fovea",
+    url: commonsFileUrl("Human photoreceptor distribution.svg"),
+    resizeMode: "contain",
+    caption: "Σχηματική κατανομή κωνίων (συνεχής γραμμή) και ραβδίων (διακεκομμένη) ως προς την απόσταση από το κέντρο του βλέμματος. Τα κενά στο γράφημα αντιστοιχούν στο φυσιολογικό τυφλό σημείο, το θέμα του επόμενου μαθήματος. Άγγιξε για μεγέθυνση.",
+    credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
+    creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
+  }],
   "ancient-athens": [
     {
       afterParagraphCount: 3,

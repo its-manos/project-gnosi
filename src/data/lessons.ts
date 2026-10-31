@@ -29,10 +29,14 @@ export type LessonQuestion = QuestionMetadata & {
   explanation: string;
 };
 
+export type LessonParagraph = string | { id: string; text: string };
+
 export type LessonSection = {
   title: string;
-  paragraphs: string[];
+  paragraphs: LessonParagraph[];
 };
+
+export type LessonCheckpoint = { questionId: string; afterParagraphId: string };
 
 export type LessonSource = {
   title: string;
@@ -42,6 +46,11 @@ export type LessonSource = {
 
 export type Lesson = {
   coverKind?: "editorial";
+  imageResizeMode?: "cover" | "contain";
+  /** Opt-in for revised lessons: unversioned legacy attempts cannot be trusted. */
+  requireCurrentAttemptQuiz?: boolean;
+  /** Explicit, stable anchor-based checkpoint placement. Omit for legacy pairs. */
+  checkpoints?: LessonCheckpoint[];
   contentNote?: string;
   editorialReviewedAt?: string;
   /** Prior quiz versions with identical objectives, question order and answer keys. */

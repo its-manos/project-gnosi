@@ -1,6 +1,7 @@
 import { calculateChoiceResults } from "../quiz/engine";
 import { lessons } from "../data/lessons";
 import { getInlineQuestionCount } from "./lessonProgress";
+import { quizFingerprint } from "./learningActivity";
 import type { BackupAttempt } from "./learningBackup";
 type SavedLessonAttempts = Record<string, BackupAttempt>;
 function countInlineQuestions(id: string) { const lesson = lessons.find(l => l.id === id); return lesson ? getInlineQuestionCount(lesson) : 0; }
@@ -52,6 +53,8 @@ export function parseSavedAttempts(
       if (!lesson || !isRecord(rawAttempt)) continue;
 
       const replayOfCompletedLesson = rawAttempt.replayOfCompletedLesson === true;
+      const quizKey = typeof rawAttempt.quizKey === "string" ? rawAttempt.quizKey : undefined;
+      if ((quizKey && quizKey !== quizFingerprint(lesson.questions)) || (lesson.requireCurrentAttemptQuiz && !quizKey)) continue;
       // Ignore stale attempts left by earlier versions when a lesson had already
       // been completed. A deliberate replay, saved by the current version, is
       // allowed to resume while the original completed record remains intact.
@@ -93,6 +96,7 @@ export function parseSavedAttempts(
 
       validAttempts[lessonId] = {
         checkpointAnswers,
+        ...(quizKey ? { quizKey } : {}),
         // Recompute the score from the current lesson data. This prevents an
         // edited question bank from restoring a stale or incorrect score.
         score: calculateScore(lessonId, checkpointAnswers),

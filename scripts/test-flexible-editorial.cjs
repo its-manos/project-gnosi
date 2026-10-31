@@ -1,0 +1,44 @@
+/* global __dirname */
+/** Node-only regression checks for new anchor-based article format and safe quiz migration. */
+const fs=require("node:fs"), path=require("node:path"), assert=require("node:assert/strict"),ts=require("typescript");
+require.extensions[".ts"]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
+const root=path.join(__dirname,"..");
+const {lessons}=require(root+"/src/data/lessons.ts");
+const progress=require(root+"/src/utils/lessonProgress.ts");
+const {parseLearningBackup}=require(root+"/src/utils/learningBackup.ts");
+const {quizFingerprint,lessonQuizMatches}=require(root+"/src/utils/learningActivity.ts");
+const {inlineArticleMedia}=require(root+"/src/data/articleMedia.ts");
+const lesson=lessons.find(l=>l.id==="perception-eyes-not-cameras");
+assert.ok(lesson);
+assert.equal(progress.getParagraphCount(lesson),15);
+assert.equal(progress.getInlineQuestionCount(lesson),3);
+const placements=progress.getQuestionPlacements(lesson);
+assert.deepEqual(placements.map(p=>p.afterParagraphNumber),[4,10,13]);
+assert.deepEqual(placements.map(p=>p.questionId),["eyes-fovea","eyes-retina-computes","eyes-stabilized-vision"]);
+const q=lesson.questions;
+for(let i=0;i<q.length;i++){assert.ok(q[i].id);assert.equal(q[i].answers.length,4);assert.ok(q[i].explanation.length>35);}
+const v=(answers)=>progress.getVisibleParagraphLimit(lesson,answers);
+assert.equal(v({}),4);assert.equal(v({0:0}),10);assert.equal(v({0:0,1:1}),13);assert.equal(v({0:0,1:1,2:0}),15);
+assert.equal(progress.getResumeParagraphNumber(lesson,{}),null);
+assert.equal(progress.getResumeParagraphNumber(lesson,{0:0}),5);
+assert.equal(progress.getResumeParagraphNumber(lesson,{0:0,1:1}),11);
+assert.equal(progress.getResumeParagraphNumber(lesson,{0:0,1:1,2:0}),14);
+assert.equal(inlineArticleMedia[lesson.id][0].afterParagraphId,"retina-fovea");
+const old=lessons.find(l=>l.id==="ancient-athens");
+assert.ok(old && !old.checkpoints);assert.equal(progress.getQuestionPlacements(old)[0].afterParagraphNumber,2);
+assert.equal(progress.getVisibleParagraphLimit(old,{}),2);
+assert.equal(progress.getResumeParagraphNumber(old,{0:old.questions[0].correctIndex}),3);
+const make=(attempt)=>({schemaVersion:1,completedIds:[],savedIds:[lesson.id],attempts:{[lesson.id]:attempt}});
+const attempt={checkpointAnswers:{0:q[0].correctIndex},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
+const legacy=parseLearningBackup(make(attempt));
+assert.ok(!legacy.attempts[lesson.id],"Unversioned old answers must not be repurposed");assert.ok(legacy.savedIds.includes(lesson.id));
+const current=quizFingerprint(q);
+const valid=parseLearningBackup(make({...attempt,quizKey:current}));
+assert.equal(valid.attempts[lesson.id].quizKey,current);
+assert.equal(valid.attempts[lesson.id].score,1);
+const stale=parseLearningBackup(make({...attempt,quizKey:"q_other"}));
+assert.ok(!stale.attempts[lesson.id]);
+const completed=parseLearningBackup({...make(attempt),completedIds:[lesson.id]});
+assert.ok(completed.completedIds.includes(lesson.id));
+assert.ok(!lessonQuizMatches(lesson,"q_other"),"Historical changed answers must not count for current mistake review");
+console.log("Flexible editorial placement and backward-compatible progress regression checks passed.");
