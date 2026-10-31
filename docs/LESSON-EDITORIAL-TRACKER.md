@@ -50,7 +50,7 @@ The other P0 pilot has **24 curriculum lessons**, with stable IDs assigned only 
 **Other planned paths:** The other 16 planned paths remain at the proposal/chapter-outline stage in [CONTENT-CURRICULUM-v1.md](CONTENT-CURRICULUM-v1.md), without individually assigned lesson IDs. Existing pre-pilot catalogue lessons have not been converted into approved research-first work.
 
 ## Current handoff and outstanding work
-- **Latest lesson fully completed under the new standard:** none. Latest research-first **Integrated**: `perception-eyes-not-cameras` (commit to be recorded after GitHub publication; see branch head).
+- **Latest lesson fully completed under the new standard:** none. Latest research-first **Integrated**: `perception-eyes-not-cameras` ([ca112802](https://github.com/its-manos/project-gnosi/commit/ca112802827c59965ba8aefa384925e9d87365f8)).
 - **Status cannot be promoted to Validated without executing checks:** `npm run typecheck`, `npm run validate:content`, `node scripts/test-flexible-editorial.cjs`, `node scripts/test-reader-pilot.cjs`, `node scripts/test-editorial-compatibility.cjs` and related progress/XP/audio tests.
 - **Device QA pending:** iOS + Android Expo Go/preview; question unlocking after paragraphs 4/10/13; scroll/resume, font scaling, back/forward navigation; media load and attribution link; cover square-image `contain`; inline graph readability/zoom; sound and per-question XP; replay of a previously completed lesson; stale in-progress attempts; saved lessons; offline behavior.
 - **Scientific/editorial acceptance pending:** Greek read-through, claims, source links, chart labels and captions. Media URLs use Wikimedia redirects and are *not* confirmed to load on device; bundling local rasterized assets later is advised if reliable offline viewing is required.
@@ -60,6 +60,6 @@ The other P0 pilot has **24 curriculum lessons**, with stable IDs assigned only 
 ### Commit ledger
 | Date | Lesson ID | Reference | Scope |
 |---|---|---|---|
-| 2026-10-31 | `perception-eyes-not-cameras` | See latest commit on `content/curriculum-v1` | First research-first integration; pending verification |
+| 2026-10-31 | `perception-eyes-not-cameras` | [`ca112802`](https://github.com/its-manos/project-gnosi/commit/ca112802827c59965ba8aefa384925e9d87365f8) | First research-first integration; pending verification |
 
 Update this tracker **at the start and end** of each editorial session. Record an actual checked commit SHA, tests and device sign-off once performed.
