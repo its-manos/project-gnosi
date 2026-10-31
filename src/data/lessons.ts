@@ -2,6 +2,7 @@ import type { QuestionMetadata } from "../quiz/types";
 import { worldHistoryLessons } from "./worldHistoryLessons";
 import { greekWorldLessons } from "./greekWorldLessons";
 import { greekEvidenceLessons } from "./greekEvidenceLessons";
+import { greekChronologyLessons } from "./greekChronologyLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -450,6 +451,7 @@ export const lessons: Lesson[] = [
   ...originalLessons.map(lesson => ({ ...lesson, ...astronomyRevisions[lesson.id] })),
   ...greekWorldLessons,
   ...greekEvidenceLessons,
+  ...greekChronologyLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
