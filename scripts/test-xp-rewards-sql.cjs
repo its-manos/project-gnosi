@@ -1,6 +1,7 @@
 /* global __dirname */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{PGlite}=require(process.env.GNOSI_PGLITE_MODULE || '@electric-sql/pglite');
 const root=path.resolve(__dirname,'..');
+const {load}=require('./helpers/load-typescript.cjs');
 (async()=>{
  const db=new PGlite();
  await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);
@@ -13,10 +14,15 @@ const root=path.resolve(__dirname,'..');
  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
  const learning={schemaVersion:1,clock:0,progress:{},bookmarks:{},activity:{},weeklyReviews:{},rewards:{'lesson:ancient-athens':80,'category:history':25}};
  const daily={schemaVersion:1,clock:0,preferences:null,days:{},rewards:{'day:2026-10-31':90,'seen:daily:planet-largest':0}};
+ const record=load('src/utils/sharedDailyChallenge.ts').createSharedDailyRecord('2026-10-31');
+ const bank=load('src/data/questions.ts').questions;
+ record.completed=true;record.currentIndex=6;record.answers=Object.fromEntries(record.questionIds.map((id,i)=>[i,bank.find(q=>q.id===id).correctIndex]));
+ daily.days['2026-10-31']=JSON.parse(JSON.stringify({run:[0,'test'],edit:[0,'test'],record,history:load('src/utils/dailyChallengeHistory.ts').createCompletedHistoryEntry(record),details:load('src/utils/dailyResults.ts').createDailyResultDetails(record,bank)}));
  await db.exec('set role authenticated');
  const save=async(domain,doc,rev,who=user)=>(await db.query(`select * from public.save_${domain}_sync($1::jsonb,$2::bigint,$3::uuid)`,[JSON.stringify(doc),rev,who])).rows[0];
  let l=await save('learning',learning,0),d=await save('daily',daily,0);
  assert.equal(l.revision,1);assert.equal(d.revision,1);
+ assert.deepEqual((await db.query('select payload from public.daily_sync where user_id=$1',[user])).rows[0].payload.days['2026-10-31'],daily.days['2026-10-31'],'existing RPC preserves shared-set revision and compact result metadata without a schema migration');
  const oldLearning={...learning};delete oldLearning.rewards;
  l=await save('learning',oldLearning,l.revision);
  let row=(await db.query('select payload from public.learning_sync where user_id=$1',[user])).rows[0].payload;

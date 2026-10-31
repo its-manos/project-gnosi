@@ -30,6 +30,7 @@ function loadTypeScript(relativePath, requireShim = () => {
 const topicsModule = loadTypeScript('src/data/dailyChallengeTopics.ts');
 const questionData = loadTypeScript('src/data/questions.ts');
 const dailyUtils = loadTypeScript('src/utils/dailyChallenge.ts', (id) => {
+  if (id === './sharedDailyChallenge') return require('./helpers/load-typescript.cjs').load('src/utils/sharedDailyChallenge.ts');
   if (id === '../data/questions') return questionData;
   if (id === '../data/dailyChallengeTopics') return topicsModule;
   throw new Error(`Unexpected import: ${id}`);

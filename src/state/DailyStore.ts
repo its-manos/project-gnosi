@@ -1,3 +1,4 @@
+import { createDailyResultDetails } from "../utils/dailyResults";
 import { awardQuiz } from "../gamification/rewards";
 import { migrateDailyRewards } from "../gamification/migration";
 import { adaptDailyQuestion } from "../quiz/adapters";
@@ -126,10 +127,11 @@ export class DailyStore {
     const current = this.doc.days[record.dateKey];
     if (!same(current, expected) || current?.record.completed) return false;
     const stamp = this.stamp();
+    const details = record.completed ? createDailyResultDetails(record,questions) : undefined;
     const history = record.completed ? createCompletedHistoryEntry(record) : null;
     if (record.completed && !history) throw new Error("invalid_daily");
     const rewards = record.completed ? awardQuiz(this.doc.rewards ?? {}, `day:${record.dateKey}`, record.questionIds.map(id => adaptDailyQuestion(questions.find(q => q.id === id)!)), record.answers, "daily") : this.doc.rewards;
-    this.change({ ...this.doc, clock: stamp[0], rewards, days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history } } });
+    this.change({ ...this.doc, clock: stamp[0], rewards, days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history, ...(details ? {details} : {}) } } });
     return true;
   }
   async importGuest(incoming: DailyDocument) {

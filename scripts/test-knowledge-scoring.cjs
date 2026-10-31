@@ -60,8 +60,8 @@ const Screen=load('src/screens/DailyChallengeScreen.tsx',{
  react:{useState:init=>[init,()=>{}],useRef:()=>({current:null})},
  'react/jsx-runtime':{jsx,jsxs:jsx},
  'react-native':{View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x}},
- '../hooks/useDailyChallenge':{useDailyChallenge:()=>({record:{dateKey:today,completed:true,answers:Object.fromEntries(challenge.map((q,i)=>[String(i),q.correctIndex]))},challengeQuestions:challenge,currentQuestion:null,correctCount:5,isLoading:false,reviewAvailable:true})},
- ...Object.fromEntries(['KnowledgeProgress','ActionButton','AnswerOption','AppHeader','ProgressBar','DailyMistakeReview','ReportContentButton'].map(n=>['../components/'+n,{__esModule:true,default:n}]))
+ '../hooks/useDailyChallenge':{useDailyChallenge:()=>({record:{dateKey:today,completed:true,started:true,currentIndex:6,questionIds:challenge.map(q=>q.id),answers:Object.fromEntries(challenge.map((q,i)=>[String(i),i<5?q.correctIndex:(q.correctIndex+1)%4]))},challengeQuestions:challenge,currentQuestion:null,correctCount:5,isLoading:false,reviewAvailable:true})},
+ ...Object.fromEntries(['QuizReveal','DailyAnswerReview','KnowledgeProgress','ActionButton','AnswerOption','AppHeader','ProgressBar','DailyMistakeReview','ReportContentButton'].map(n=>['../components/'+n,{__esModule:true,default:n}]))
 }).default;
 const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
 const result=Screen({preferences:{topicIds:[],difficulty:'medium'},preferencesLoaded:true,onHome(){},onOpenPreferences(){}});

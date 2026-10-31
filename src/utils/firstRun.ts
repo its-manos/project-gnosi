@@ -1,7 +1,6 @@
-import { questions, DAILY_CHALLENGE_SIZE } from "../data/questions";
 import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
-import { getAthensDateKey, selectDailyQuestions } from "./dailyChallenge";
-import { currentDailyPreferences } from "./dailySyncDocument";
+import { getAthensDateKey } from "./dailyChallenge";
+import { createSharedDailyRecord } from "./sharedDailyChallenge";
 import type { DailyStore } from "../state/DailyStore";
 export const WELCOME_STORAGE_KEY = "@gnosi/welcome-v1";
 export const LEGACY_WELCOME_KEYS = ["@gnosi/completed-lesson-ids", "@gnosi/in-progress-lesson-attempts", "@gnosi/saved-lesson-ids", "@gnosi/daily-challenge-v1", "@gnosi/daily-challenge-history-v1", "@gnosi/daily-challenge-preferences-v1"];
@@ -17,9 +16,8 @@ export async function finishWelcome(store: DailyStore, preferences: DailyChallen
     const date = getAthensDateKey();
     const state = store.getSnapshot();
     if (!state.doc.days[date]) {
-      const selected = selectDailyQuestions(date, questions, currentDailyPreferences(state.doc));
-      if (selected.length !== DAILY_CHALLENGE_SIZE) return false;
-      if (!store.commitRecord({ dateKey: date, questionIds: selected.map(q => q.id), currentIndex: 0, answers: {}, started: true, completed: false }, undefined)) return false;
+      const record = createSharedDailyRecord(date);
+      if (!record || !store.commitRecord(record,undefined)) return false;
     }
     if (!await store.flushLocal() || !isCurrent()) return false;
   }

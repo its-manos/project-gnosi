@@ -13,7 +13,7 @@ A Greek-language mobile micro-learning app built with React Native, Expo, and Ty
 - Multiple-choice checkpoints after pairs of paragraphs
 - Progressive reading: the next passage unlocks after an answer
 - Instant feedback and lesson results
-- Four-step onboarding: welcome, two ways to play, daily-quiz interests and a friendly send-off
+- Four-step onboarding: welcome, two ways to play, interests for post-quiz lesson recommendations and a friendly send-off
 - Sequential lesson paths with existing progress preserved
 - Local persistence of completed lessons and unfinished checkpoint attempts
 - Resume card for the most recent in-progress lesson
@@ -155,3 +155,18 @@ npm run typecheck
 ```
 
 Read [the Phase 2 rules and architecture](docs/xp-phase-2.md), [validation report](docs/xp-phase-2-validation.md) and [application steps](APPLY-XP-PHASE-2.md). These are personal progress rewards; public competitive scoring remains a future server-validated feature.
+
+## Shared daily challenge — Phase 3
+
+New daily challenges share a published, date-based seven-question set: two easy, three medium and two hard questions across four categories. Existing started/completed sessions stay pinned. Interests now guide the recommended lesson after the quiz.
+
+Results include accuracy, retained day XP, a recorded highest combo, a supported category summary, all-answer explanations/source review and unscored mistake practice. Compact result evidence preserves the original breakdown; older results without it retain their frozen score and XP. Native opacity transitions respect reduced motion.
+
+```bash
+node scripts/test-daily-phase3.cjs
+node scripts/test-daily-phase3-ui.cjs
+node scripts/test-quiz-reveal.cjs
+npm run typecheck
+```
+
+No new SQL migration or production dependency is needed. Read [Phase 3 architecture and compatibility](docs/daily-challenge-phase-3.md), [validation](docs/daily-challenge-phase-3-validation.md) and [application steps](APPLY-DAILY-CHALLENGE-PHASE-3.md). Keep the published shared pool immutable; reviewed content changes require a new pool version.

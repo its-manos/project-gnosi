@@ -51,7 +51,7 @@ function disk(id){const map=new Map([['@gnosi/sync-device-id',id]]);return{map,g
  assert.equal(ds.commitRecord(rec,ds.getSnapshot().doc.days[rec.dateKey]),false);assert.equal(ds.getSnapshot().doc.rewards['day:2026-10-31'],paid);
  const reDaily=new DailyStore(null,dailyDisk);stores.push(reDaily);await reDaily.start();assert.equal(reDaily.getSnapshot().doc.rewards['day:2026-10-31'],paid);
  const doc=reDaily.getSnapshot().doc,oldDaily=plain(doc);delete oldDaily.rewards;assert.equal(daily.mergeDailyDocuments(doc,oldDaily).rewards['day:2026-10-31'],paid);
- const losing = plain(doc); losing.rewards[`day:${rec.dateKey}`] = 34;
+ const losing = plain(doc); delete losing.days[rec.dateKey].details; losing.rewards[`day:${rec.dateKey}`] = 34;
  const wrongAnswers = Object.fromEntries(questions.slice(0,7).map((q,i)=>[i,(q.correctIndex+1)%4]));
  losing.days[rec.dateKey].record.answers = wrongAnswers; losing.days[rec.dateKey].history.answers = wrongAnswers;
  losing.days[rec.dateKey].history.correctCount = 0; losing.days[rec.dateKey].history.score = 0;

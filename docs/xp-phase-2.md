@@ -1,5 +1,7 @@
 # Phase 2 — Permanent XP, combos and player titles
 
+The later [Phase 3 daily experience](daily-challenge-phase-3.md) replaces personalized selection with a shared daily set. The XP accounting described here remains in use.
+
 ## Delivered
 
 The existing question engine now feeds a permanent XP ledger. Difficulty rewards, session combos, Greek player titles and credited-XP feedback are enabled. The daily quiz still uses seven personalized questions, Athens calendar dates and 100 quiz points per correct answer. Mastery and article progress remain separate from XP.

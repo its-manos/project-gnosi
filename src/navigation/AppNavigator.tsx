@@ -230,6 +230,9 @@ export default function AppNavigator() {
   } else if (isDailyChallengeOpen) {
     screenContent = (
       <DailyChallengeScreen
+        completedLessonIds={app.completedLessonIds} inProgressLessonIds={app.inProgressLessonIds}
+        onOpenLesson={id => { setIsDailyChallengeOpen(false); app.openLesson(id); }}
+        onWeeklyReview={() => { setIsDailyChallengeOpen(false); app.setScreen("weekly-review"); }}
         onHome={() => setIsDailyChallengeOpen(false)}
         onOpenPreferences={() => openDailyPreferences("daily")}
         preferences={dailyPreferences.preferences}

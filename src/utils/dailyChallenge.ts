@@ -1,3 +1,4 @@
+import { readDailyMetadata, type DailyRecordMetadata } from "./sharedDailyChallenge";
 import {
   DAILY_CHALLENGE_SIZE,
   questions,
@@ -11,7 +12,7 @@ import {
 
 export const DAILY_CHALLENGE_STORAGE_KEY = "@gnosi/daily-challenge-v1";
 
-export type DailyChallengeRecord = {
+export type DailyChallengeRecord = DailyRecordMetadata & {
   dateKey: string;
   questionIds: string[];
   currentIndex: number;
@@ -194,6 +195,7 @@ export function parseDailyChallengeRecord(
     }
 
     return {
+      ...readDailyMetadata(parsed),
       dateKey,
       questionIds: questionIds as string[],
       currentIndex: parsed.currentIndex as number,

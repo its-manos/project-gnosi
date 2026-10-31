@@ -66,7 +66,7 @@ export default function WelcomeScreen({ initialPreferences, replay, hasStartedCh
         <Text style={styles.body}>Μια γρήγορη πρόκληση ή μια διαδρομή με περισσότερες ανακαλύψεις; Μπορείς να απολαμβάνεις και τα δύο.</Text>
         <View style={styles.modeCard} testID="welcome-daily-mode">
           <View style={styles.modeHeading}><Text style={styles.modeGlyph} accessible={false}>⚡</Text><Text style={styles.modeTitle}>Καθημερινή πρόκληση</Text></View>
-          <Text style={styles.small}>7 ερωτήσεις κάθε μέρα, με βάση τα ενδιαφέροντά σου. Μετά από κάθε απάντηση, μια εξήγηση σε βοηθά να μάθεις κάτι νέο.</Text>
+          <Text style={styles.small}>7 κοινές ερωτήσεις κάθε μέρα, από διαφορετικά θέματα. Μετά από κάθε απάντηση, μια εξήγηση σε βοηθά να μάθεις κάτι νέο.</Text>
           <Text style={styles.modeMeta}>Μια μικρή καθημερινή συνήθεια.</Text>
         </View>
         <View style={styles.modeCard} testID="welcome-guided-mode">
@@ -78,7 +78,7 @@ export default function WelcomeScreen({ initialPreferences, replay, hasStartedCh
       </> : step === 2 ? <>
         <Text style={styles.eyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ ΣΟΥ</Text>
         <Text accessibilityRole="header" style={styles.title}>Τι σου κινεί την περιέργεια;</Text>
-        <Text style={styles.body}>Διάλεξε 3 έως 5 θέματα για τις καθημερινές ερωτήσεις σου. Μπορείς να τα αλλάξεις όποτε θέλεις.</Text>
+        <Text style={styles.body}>Διάλεξε 3 έως 5 θέματα για τις προτάσεις μαθημάτων μετά το quiz. Μπορείς να τα αλλάξεις όποτε θέλεις.</Text>
         <Text style={styles.count} accessibilityLiveRegion="polite">{topics.length} / 5 επιλεγμένα · τουλάχιστον 3</Text>
         <View style={styles.grid}>
           {DAILY_CHALLENGE_TOPICS.map(topic => {
@@ -92,7 +92,7 @@ export default function WelcomeScreen({ initialPreferences, replay, hasStartedCh
             </Pressable>;
           })}
         </View>
-        <Text style={styles.note}>Τη δυσκολία της πρόκλησης τη ρυθμίζεις από την αρχική.</Text>
+        <Text style={styles.note}>Η κοινή πρόκληση περιέχει εύκολες, μεσαίες και δύσκολες ερωτήσεις.</Text>
         <ActionButton label="Συνέχεια →" disabled={busy || topics.length < 3 || topics.length > 5} onPress={() => advance(3)} />
       </> : <>
         <View style={styles.heroMark} accessible={false}><Text style={styles.heroGlyph}>✓</Text></View>
@@ -100,10 +100,10 @@ export default function WelcomeScreen({ initialPreferences, replay, hasStartedCh
         <Text accessibilityRole="header" style={styles.title}>Καλή διασκέδαση!</Text>
         <Text style={styles.body}>Διάλεξε μια διαδρομή, δοκίμασε όσα ξέρεις και ανακάλυψε κάτι καινούργιο. Ελπίζουμε να βρεις πολλά που θα σου μείνουν.</Text>
         <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>Τα θέματα της καθημερινής σου πρόκλησης</Text>
+          <Text style={styles.summaryTitle}>Τα ενδιαφέροντά σου</Text>
           <Text style={styles.small}>{DAILY_CHALLENGE_TOPICS.filter(topic => topics.includes(topic.id)).map(topic => topic.title).join(" · ")}</Text>
         </View>
-        {hasStartedChallenge ? <Text style={styles.note}>Η σημερινή πρόκληση διατηρείται. Οι νέες επιλογές θα ισχύσουν στην επόμενη που θα ξεκινήσεις.</Text> : null}
+        {hasStartedChallenge ? <Text style={styles.note}>Η σημερινή πρόκληση διατηρείται. Οι επιλογές σου βοηθούν στις προτάσεις μαθημάτων.</Text> : null}
         <ActionButton label={busy ? "Αποθήκευση…" : "Πάμε στη ΓΝΩΣΗ →"} disabled={busy || topics.length < 3 || topics.length > 5} onPress={finish} />
       </>}
       {error ? <Text style={styles.error} accessibilityLiveRegion="polite">Δεν ολοκληρώθηκε η αποθήκευση. Οι επιλογές σου παραμένουν εδώ. Δοκίμασε ξανά ή παράλειψε τον οδηγό.</Text> : null}

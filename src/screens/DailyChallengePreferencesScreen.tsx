@@ -3,9 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import {
-  CHALLENGE_DIFFICULTIES,
   DAILY_CHALLENGE_TOPICS,
-  type ChallengeDifficulty,
   type DailyChallengePreferences,
 } from "../data/dailyChallengeTopics";
 import { colors } from "../theme";
@@ -24,7 +22,7 @@ export default function DailyChallengePreferencesScreen({
   onCancel,
 }: Props) {
   const [topicIds, setTopicIds] = useState<string[]>(initialPreferences.topicIds);
-  const [difficulty, setDifficulty] = useState<ChallengeDifficulty>(initialPreferences.difficulty);
+  const difficulty = initialPreferences.difficulty;
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
@@ -57,9 +55,9 @@ export default function DailyChallengePreferencesScreen({
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onCancel} backLabel="ΠΙΣΩ" />
 
-      <Text style={styles.title}>Η πρόκληση στα μέτρα σου</Text>
+      <Text style={styles.title}>Τα ενδιαφέροντά σου</Text>
       <Text style={styles.body}>
-        Διάλεξε τα θέματα και τη δυσκολία σου.
+        Διάλεξε θέματα για τις προτάσεις μαθημάτων μετά το quiz. Η καθημερινή πρόκληση έχει το ίδιο σετ ερωτήσεων για όλους.
       </Text>
 
       {isLoading ? (
@@ -101,34 +99,6 @@ export default function DailyChallengePreferencesScreen({
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Επίπεδο δυσκολίας</Text>
-          <View style={styles.difficultyList}>
-            {CHALLENGE_DIFFICULTIES.map((item) => {
-              const selected = difficulty === item.id;
-              return (
-                <Pressable
-                  key={item.id}
-                  style={[styles.difficultyOption, selected && styles.difficultyOptionSelected]}
-                  onPress={() => { setDifficulty(item.id); setSaveError(false); }}
-                  disabled={isSaving}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected, disabled: isSaving }}
-                >
-                  <View style={styles.difficultyCopy}>
-                    <Text style={styles.difficultyTitle}>{item.title}</Text>
-                    <Text style={styles.topicDescription}>{item.description}</Text>
-                  </View>
-                  <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
-                    {selected ? <View style={styles.radioInner} /> : null}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Text style={styles.helper}>
-            Αν χρειαστεί, προσθέτουμε ερωτήσεις από άλλα θέματα για να συμπληρωθούν οι 7.
-          </Text>
           {saveError ? (
             <Text style={styles.errorText}>Δεν αποθηκεύτηκαν οι αλλαγές. Έλεγξε τον διαθέσιμο χώρο στη συσκευή και δοκίμασε ξανά.</Text>
           ) : null}
@@ -140,7 +110,7 @@ export default function DailyChallengePreferencesScreen({
           />
           <ActionButton label="Ακύρωση" onPress={onCancel} secondary disabled={isSaving} />
           <Text style={styles.footerNote}>
-            Οι αλλαγές ισχύουν από την επόμενη πρόκληση που θα ξεκινήσεις.
+            Οι επιλογές σου ενημερώνουν τις προτάσεις μαθημάτων. Οι ερωτήσεις της κοινής πρόκλησης παραμένουν ίδιες για όλους.
           </Text>
         </>
       )}

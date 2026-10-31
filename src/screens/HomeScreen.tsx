@@ -92,8 +92,8 @@ export default function HomeScreen({
             <Text style={styles.arrow}>→</Text>
           </Pressable>
           <Pressable onPress={onOpenDailyPreferences} style={styles.preferences} accessibilityRole="button"
-            accessibilityLabel="Προσαρμογή θεμάτων και δυσκολίας της καθημερινής πρόκλησης">
-            <Text style={styles.preferencesText}>Προσαρμογή θεμάτων και δυσκολίας →</Text>
+            accessibilityLabel="Ρύθμιση ενδιαφερόντων για προτάσεις μαθημάτων">
+            <Text style={styles.preferencesText}>Τα ενδιαφέροντά σου →</Text>
           </Pressable>
         </View>
 

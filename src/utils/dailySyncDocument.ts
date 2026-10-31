@@ -1,10 +1,12 @@
+import { readDailyMetadata } from "./sharedDailyChallenge";
+import { parseDailyResultDetails, enrichDailyDay, type DailyResultDetails } from "./dailyResults";
 import { mergeRewardLedgers, parseRewardLedger, type RewardLedger } from "../gamification/rewards";
 import { migrateDailyRewards } from "../gamification/migration";
 import { DEFAULT_DAILY_CHALLENGE_PREFERENCES, normalizeDailyChallengePreferences, DAILY_CHALLENGE_TOPICS, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { parseDailyChallengeRecord, type DailyChallengeRecord } from "./dailyChallenge";
 import { parseDailyChallengeHistory, type DailyChallengeHistoryEntry } from "./dailyChallengeHistory";
 import { compareStamps, type Stamp } from "./syncDocument";
-export type DailyDay = { run: Stamp; edit: Stamp; record: DailyChallengeRecord; history: DailyChallengeHistoryEntry | null };
+export type DailyDay = { run: Stamp; edit: Stamp; record: DailyChallengeRecord; history: DailyChallengeHistoryEntry | null; details?: DailyResultDetails };
 export type DailyDocument = { schemaVersion: 1; rewards?: RewardLedger; clock: number; preferences: { stamp: Stamp; value: DailyChallengePreferences } | null; days: Record<string, DailyDay> };
 const object = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 export const emptyDailyDocument = (): DailyDocument => ({ schemaVersion: 1, clock: 0, preferences: null, days: {} });
@@ -37,18 +39,25 @@ export function parseDailyDocument(raw: unknown): DailyDocument {
       if (!history || history.dateKey !== date || rawDay.record.dateKey !== date || rawDay.record.started !== true || rawDay.record.currentIndex !== 6 || JSON.stringify(rawDay.record.questionIds) !== JSON.stringify(history.questionIds)) throw new Error("invalid_daily");
       for (let i = 0; i < 7; i += 1) if (!object(rawDay.record.answers) || rawDay.record.answers[String(i)] !== history.answers[String(i)]) throw new Error("invalid_daily");
       if (Object.keys(rawDay.record.answers as object).length !== 7) throw new Error("invalid_daily");
-      record = { dateKey: date, started: true, completed: true, currentIndex: 6, questionIds: history.questionIds, answers: history.answers };
+      record = { ...readDailyMetadata(rawDay.record), dateKey: date, started: true, completed: true, currentIndex: 6, questionIds: history.questionIds, answers: history.answers };
     } else {
       const parsed = parseDailyChallengeRecord(JSON.stringify(rawDay.record), date);
       if (!parsed?.started || parsed.completed || rawDay.history !== null) throw new Error("invalid_daily");
       record = parsed;
     }
-    doc.days[date] = { run, edit, record, history };
+    const details = rawDay.details === undefined ? undefined : history ? parseDailyResultDetails(rawDay.details,history.correctCount) : (()=>{throw new Error("invalid_daily");})();
+    if(details&&record.questionVersions&&JSON.stringify(details.questionVersions)!==JSON.stringify(record.questionVersions))throw new Error("invalid_daily");
+    doc.days[date] = { run, edit, record, history, ...(details ? {details} : {}) };
   }
   return doc;
 }
-const tie = (a: DailyDay, b: DailyDay) => JSON.stringify(a) < JSON.stringify(b) ? a : b;
-function chooseDay(a: DailyDay, b: DailyDay): DailyDay {
+const core = (day:DailyDay) => {const {selectionVersion: _selection,questionVersions:_versions,...record}=day.record;return JSON.stringify({run:day.run,edit:day.edit,record,history:day.history});};
+const tie = (a: DailyDay, b: DailyDay) => {
+  if(core(a)!==core(b))return core(a)<core(b)?a:b;
+  const rank=(d:DailyDay)=>`${d.record.questionVersions?'0':'1'}${d.details?'0':'1'}${d.record.selectionVersion?'0':'1'}${JSON.stringify(d)}`;
+  return rank(a)<rank(b)?a:b;
+};
+function chooseCoreDay(a: DailyDay, b: DailyDay): DailyDay {
   if (a.record.completed !== b.record.completed) return a.record.completed ? a : b;
   if (a.record.completed) { const order = compareStamps(a.edit, b.edit); return order < 0 ? a : order > 0 ? b : tie(a, b); }
   const runOrder = compareStamps(a.run, b.run);
@@ -57,6 +66,7 @@ function chooseDay(a: DailyDay, b: DailyDay): DailyDay {
   if (rank(a) !== rank(b)) return rank(a) > rank(b) ? a : b;
   const order = compareStamps(a.edit, b.edit); return order > 0 ? a : order < 0 ? b : tie(a, b);
 }
+function chooseDay(a:DailyDay,b:DailyDay):DailyDay {const selected=chooseCoreDay(a,b);return enrichDailyDay(selected,selected===a?b:a);}
 /** One whole attempt per Athens date. Completion wins over partial; concurrent
  * completed results choose the earliest logical completion, never highest score. */
 export function mergeDailyDocuments(a: DailyDocument, b: DailyDocument): DailyDocument {
