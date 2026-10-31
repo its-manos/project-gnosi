@@ -322,3 +322,12 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - Focus: evidence as selective survival; inscriptions, ostraka, authors, later narratives, missing voices and honest uncertainty. Specialist excavation techniques remain for `archaeology-methods`.
 - Updated automated/device evidence is still required for lessons 1–3.
 - **Next only, not started:** #4 `greek-chronology` — «Από τα ανάκτορα στις πόλεις: ένας χάρτης του χρόνου».
+
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 4
+- **Integrated**, not Validated or Approved: `greek-chronology`, «Από τα ανάκτορα στις πόλεις: οι εποχές της αρχαίας Ελλάδας». [Research, source/rights audit, compatibility and QA](greek-chronology-research.md).
+- Historical sequence: overlapping Cretan and mainland palatial cultures → post-palatial changes around 1200 BCE → diverse Early Iron Age communities, Geometric period and emerging alphabetic writing → Archaic, Classical and Hellenistic conventional boundaries. Labels are interpretive tools; chronological placement does not explain causality.
+- **Educational boundaries:** #4 is a chronology map, not a replacement for #6 `aegean-bronze-age`, #7 `minoan-crete`, #8 `mycenaean-palaces`, #9 `linear-b-decipherment`, #10 `palace-collapse`, #11 `geometric-greece`, #12 `rise-of-polis`, or #29 `hellenistic-kingdoms-cities`. Detailed archaeological dating belongs to `archaeology-methods`. Geography and maritime pathways belong to #5 `greek-geography-seas`.
+- **Curriculum remains 30 planned / 5 chapters.** Now **7 implemented**, 4 research-first Integrated (1–4), 3 older unapproved Drafted, 23 not started. 0 Validated, 0 Approved.
+- Local npm/Node tests and Android/iOS device QA **not executed in this session**; prior #3 reader-pilot fix awaits rerun. Check before any status promotion.
+- **Next only, not started:** #5 `greek-geography-seas` — «Η θάλασσα που ένωνε και χώριζε τις κοινότητες».
