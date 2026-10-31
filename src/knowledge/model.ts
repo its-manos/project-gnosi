@@ -8,79 +8,122 @@ import { lessonQuizMatches, shiftDateKey, type CompletionEvents } from "../utils
 import { getInlineQuestionCount } from "../utils/lessonProgress";
 import type { WeeklyAnswers } from "../utils/weeklyReview";
 import type { KnowledgeReviews, MasteryState } from "./records";
+import { masteryConcepts, type ConceptDefinition } from "./concepts";
 
 export const MASTERY_LABELS: Record<MasteryState, string> = { new: "Νέο", learning: "Μαθαίνεται", familiar: "Οικείο", mastered: "Κατακτημένο" };
-export type KnowledgeItem = { question: ChoiceQuestion; topicId: string; topicTitle: string };
+export type KnowledgeItem = { question: ChoiceQuestion; topicId: string; topicTitle: string; conceptId?: string; isAssessment?: boolean };
 const topicNames: Record<string, string> = { architecture: "Αρχιτεκτονική", space: "Διάστημα", geography: "Γεωγραφία", biology: "Βιολογία", physics: "Φυσική", chemistry: "Χημεία", sports: "Αθλητισμός", mathematics: "Μαθηματικά", languages: "Γλώσσες", technology: "Τεχνολογία", culture: "Πολιτισμός", general: "Γενικές γνώσεις" };
-export const knowledgeCatalogue: KnowledgeItem[] = [
+export const sourceCatalogue: KnowledgeItem[] = [
   ...lessons.flatMap(lesson => lesson.questions.slice(0, getInlineQuestionCount(lesson)).map((_, i) => ({ question: adaptLessonQuestion(lesson, i), topicId: `unit:${lesson.id}`, topicTitle: lesson.title }))),
   ...questions.map(q => ({ question: adaptDailyQuestion(q), topicId: `daily-topic:${q.categoryId}:${q.subcategoryId}`, topicTitle: subcategories.find(s => s.id === q.subcategoryId && s.categoryId === q.categoryId)?.title ?? topicNames[q.subcategoryId] ?? categories.find(c => c.id === q.categoryId)?.title ?? "Γενικές γνώσεις" })),
 ];
+export const knowledgeCatalogue: KnowledgeItem[] = [...sourceCatalogue, ...masteryConcepts.flatMap(c => c.variants.map(question => ({ question, topicId: `concept:${c.id}`, topicTitle: c.title, conceptId: c.id, isAssessment: true })))];
+const sourceItemsByConcept = new Map(masteryConcepts.map(c => [c.id, sourceCatalogue.filter(i => c.lessonIds.some(id => i.topicId === `unit:${id}`) || c.sourceQuestionIds.includes(i.question.id))]));
+const conceptSources = (c: ConceptDefinition) => sourceItemsByConcept.get(c.id)!;
 export const knowledgeById = new Map(knowledgeCatalogue.map(item => [item.question.id, item]));
-type Observation = { date: string; at: number; correct: boolean | null; recall: boolean; priority: number };
-export type QuestionKnowledge = KnowledgeItem & { state: MasteryState; successes: number; due: string | null; lastDate: string | null; reviewedToday: boolean };
 export type KnowledgeInput = { completedIds: string[]; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; knowledgeReviews?: KnowledgeReviews };
-/** Calendar-day heuristic. Three successes at successively longer due dates are required. */
-export function scheduleQuestion(item: KnowledgeItem, observations: Observation[], weakExposure: boolean, today: string): QuestionKnowledge {
-  let state: MasteryState = weakExposure ? "learning" : "new", successes = 0, due: string | null = weakExposure ? today : null, lastDate: string | null = null;
-  const byDate = new Map<string, Observation>();
-  for (const row of observations.filter(o => o.date <= today).sort((a, b) => a.date.localeCompare(b.date) || a.priority - b.priority || a.at - b.at)) if (!byDate.has(row.date)) byDate.set(row.date, row);
-  for (const row of byDate.values()) {
-    if (lastDate === null) {
-      state = "learning"; due = shiftDateKey(row.date, row.correct && item.question.difficulty === "easy" ? 2 : 1);
-    } else if (row.recall) {
-      if (row.correct === false) { successes = 0; state = "learning"; due = shiftDateKey(row.date, 1); }
-      else if (row.correct === true && due !== null && row.date >= due) {
-        successes = Math.min(3, successes + 1); state = successes === 3 ? "mastered" : "familiar";
-        const base = [1, 3, 7, 14][successes], factor = item.question.difficulty === "hard" ? .75 : item.question.difficulty === "easy" ? 1.25 : 1;
-        due = shiftDateKey(row.date, Math.max(1, Math.round(base * factor)));
-      }
+export type EvidenceStatus = "new" | "completed" | "assessing" | "needs-evidence" | "mastered";
+export type QuestionKnowledge = KnowledgeItem & { state: MasteryState; successes: number; due: string | null; lastDate: string | null; reviewedToday: boolean; novel: boolean; evidenceStatus: EvidenceStatus };
+export type ConceptKnowledge = { definition: ConceptDefinition; state: MasteryState; successes: number; due: string | null; lastDate: string | null; reviewedToday: boolean; novelIds: string[]; evidenceStatus: EvidenceStatus; active: boolean };
+type Exposure = { date: string | null };
+type Recall = { id: string; date: string; at: number; correct: boolean };
+
+/** Version 2 evidence is distinct transfer scenarios, not repetitions of lesson items.
+ * First undated exposure needs a dated baseline. Subsequent due successes must use
+ * different variants. Only the earliest scenario per concept/date is scored. A
+ * mastered concept is retired from routine reviews; exhausted banks wait for new
+ * editorial evidence instead of recycling answers. All old records remain intact. */
+export function scheduleConcept(definition: ConceptDefinition, exposure: Exposure | undefined, reviews: KnowledgeReviews, today: string): ConceptKnowledge {
+  const consumed = new Set<string>(), recalls: Recall[] = [];
+  for (const question of definition.variants) {
+    const facts = Object.entries(reviews[question.id] ?? {}).filter(([date]) => date <= today).sort(([a, x], [b, y]) => a.localeCompare(b) || x.at - y.at);
+    if (facts.length) consumed.add(question.id);
+    // One first-ever attempt per scenario. Repetition or a revised answer key can
+    // never turn a previously exposed scenario into fresh transfer evidence.
+    const first = facts[0];
+    if (first && first[1].mode === "scheduled" && first[1].version === question.version && first[1].answerIndex < question.content.answers.length) recalls.push({ id: question.id, date: first[0], at: first[1].at, correct: first[1].answerIndex === question.content.correctIndex });
+  }
+  const active = !!exposure || consumed.size > 0;
+  let state: MasteryState = active ? "learning" : "new", successes = 0;
+  let due: string | null = active ? exposure?.date ? shiftDateKey(exposure.date, 1) : today : null;
+  let lastDate: string | null = exposure?.date ?? null;
+  const dates = new Set<string>();
+  for (const row of recalls.sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at || a.id.localeCompare(b.id))) {
+    if (dates.has(row.date) || (exposure?.date && row.date < exposure.date)) continue;
+    dates.add(row.date);
+    if (lastDate === null) { due = shiftDateKey(row.date, 1); }
+    else if (!row.correct) { successes = 0; state = "learning"; due = shiftDateKey(row.date, 1); }
+    else if (due && row.date >= due) {
+      successes = Math.min(3, successes + 1); state = successes === 3 ? "mastered" : "familiar";
+      const q = definition.variants.find(q => q.id === row.id)!;
+      const factor = q.difficulty === "hard" ? .75 : q.difficulty === "easy" ? 1.25 : 1;
+      due = state === "mastered" ? null : shiftDateKey(row.date, Math.max(1, Math.round([1, 3, 7][successes] * factor)));
     }
     lastDate = row.date;
   }
-  return { ...item, state, successes, due, lastDate, reviewedToday: byDate.has(today) };
+  const novelIds = definition.variants.filter(q => !consumed.has(q.id)).map(q => q.id);
+  const evidenceStatus: EvidenceStatus = !active ? "new" : state === "mastered" ? "mastered" : !novelIds.length ? "needs-evidence" : "assessing";
+  if (evidenceStatus === "needs-evidence") due = null;
+  return { definition, state, successes, due, lastDate, reviewedToday: recalls.some(r => r.date === today), novelIds, evidenceStatus, active };
 }
+
 export function buildKnowledgeModel(input: KnowledgeInput, daily: DailyDocument, today: string) {
-  const evidence = new Map<string, Observation[]>(), weak = new Set<string>(), datedLessons = new Set<string>();
-  const add = (id: string, row: Observation) => { evidence.set(id, [...(evidence.get(id) ?? []), row]); };
+  const exposures = new Map<string, Exposure>();
+  const encounter = (id: string, date: string | null) => {
+    const current = exposures.get(id);
+    if (!current || (date && (!current.date || date < current.date))) exposures.set(id, { date });
+  };
+  for (const id of input.completedIds) { const l = lessons.find(l => l.id === id); if (l) for (let i = 0; i < getInlineQuestionCount(l); i++) encounter(adaptLessonQuestion(l, i).id, null); }
+  // A recorded obsolete revision must not be silently reseeded from completion.
+  const datedLessons = new Set<string>();
   for (const event of Object.values(input.activity)) {
-    const lesson = lessons.find(l => l.id === event.lessonId); if (!lesson) continue;
-    datedLessons.add(lesson.id);
+    const date = getAthensDateKey(new Date(event.at)), lesson = lessons.find(l => l.id === event.lessonId);
+    if (!lesson || date > today) continue;
+    if (!datedLessons.has(lesson.id)) {
+      datedLessons.add(lesson.id);
+      for (let i = 0; i < getInlineQuestionCount(lesson); i++) exposures.delete(adaptLessonQuestion(lesson, i).id);
+    }
     if (!lessonQuizMatches(lesson, event.quizKey)) continue;
-    for (let i = 0; i < Math.min(event.questionCount, getInlineQuestionCount(lesson)); i++) add(adaptLessonQuestion(lesson, i).id, { date: getAthensDateKey(new Date(event.at)), at: event.at, correct: event.missedQuestionIndices ? !event.missedQuestionIndices.includes(i) : event.correctCount === event.questionCount ? true : null, recall: false, priority: 0 });
+    for (let i = 0; i < Math.min(event.questionCount, getInlineQuestionCount(lesson)); i++) encounter(adaptLessonQuestion(lesson, i).id, date);
   }
-  for (const lesson of lessons.filter(l => input.completedIds.includes(l.id) && !datedLessons.has(l.id))) for (let i = 0; i < getInlineQuestionCount(lesson); i++) weak.add(adaptLessonQuestion(lesson, i).id);
   for (const day of Object.values(daily.days)) {
     if (!day.history || day.record.dateKey > today) continue;
-    day.record.questionIds.forEach((id, i) => {
-      const normalizedId = `daily:${id}`, item = knowledgeById.get(normalizedId); if (!item) return;
-      if (!day.details) { weak.add(normalizedId); return; }
-      if (day.details.questionVersions[i] !== item.question.version) return;
-      add(normalizedId, { date: day.record.dateKey, at: 0, correct: day.details.correctMask[i], recall: true, priority: 0 });
+    day.record.questionIds.forEach((id, index) => {
+      const q = knowledgeById.get(`daily:${id}`)?.question;
+      if (q && (!day.details || day.details.questionVersions[index] === q.version)) encounter(q.id, day.details ? day.record.dateKey : null);
     });
   }
-  for (const answer of Object.values(input.weeklyReviews)) {
-    const source = input.activity[answer.sourceId], lesson = source && lessons.find(l => l.id === source.lessonId);
-    if (!lesson || !lessonQuizMatches(lesson, source.quizKey) || !lesson.questions[answer.questionIndex]) continue;
-    const q = adaptLessonQuestion(lesson, answer.questionIndex);
-    if (answer.answerIndex >= q.content.answers.length) continue;
-    add(q.id, { date: getAthensDateKey(new Date(answer.at)), at: answer.at, correct: answer.answerIndex === q.content.correctIndex, recall: true, priority: 1 });
-  }
-  for (const [id, dates] of Object.entries(input.knowledgeReviews ?? {})) {
-    const q = knowledgeById.get(id)?.question; if (!q) continue;
-    for (const [date, fact] of Object.entries(dates)) if (fact.version === q.version && fact.answerIndex < q.content.answers.length) add(id, { date, at: fact.at, correct: fact.answerIndex === q.content.correctIndex, recall: true, priority: 2 });
-  }
-  const items = knowledgeCatalogue.map(item => scheduleQuestion(item, evidence.get(item.question.id) ?? [], weak.has(item.question.id), today));
-  const due = items.filter(i => i.state !== "new" && i.due && i.due <= today && !i.reviewedToday).sort((a, b) => a.due!.localeCompare(b.due!) || a.successes - b.successes || a.question.id.localeCompare(b.question.id));
-  const practice = items.filter(i => i.state !== "new").sort((a, b) => (a.lastDate ?? "").localeCompare(b.lastDate ?? "") || a.question.id.localeCompare(b.question.id));
-  const topics = [...new Set(items.map(i => i.topicId))].map(id => {
-    const rows = items.filter(i => i.topicId === id), state: MasteryState = rows.every(i => i.state === "mastered") ? "mastered" : rows.every(i => ["familiar", "mastered"].includes(i.state)) ? "familiar" : rows.some(i => i.state !== "new") ? "learning" : "new";
-    return { id, title: rows[0].topicTitle, categoryId: rows[0].question.categoryId, state, total: rows.length, mastered: rows.filter(i => i.state === "mastered").length };
+  const concepts = masteryConcepts.map(c => {
+    const encountered = conceptSources(c).flatMap(i => exposures.has(i.question.id) ? [exposures.get(i.question.id)!] : []);
+    const dates = encountered.flatMap(e => e.date ? [e.date] : []).sort();
+    return scheduleConcept(c, encountered.length ? { date: dates[0] ?? null } : undefined, input.knowledgeReviews ?? {}, today);
   });
-  const subjectId = (i: QuestionKnowledge) => i.question.subcategoryId === "architecture" ? "architecture" : i.question.categoryId;
-  const categoryProgress = [...new Set(items.map(subjectId))].map(id => {
-    const rows = items.filter(i => subjectId(i) === id), rank = { new: 0, learning: 1, familiar: 2, mastered: 3 };
-    return { id, title: categories.find(c => c.id === id)?.title ?? topicNames[id] ?? "Γενικές γνώσεις", percent: Math.round(rows.reduce((sum, i) => sum + rank[i.state], 0) / (rows.length * 3) * 100), mastered: rows.filter(i => i.state === "mastered").length, total: rows.length };
+  const sourceConcept = new Map<string, ConceptKnowledge>();
+  for (const c of concepts) for (const item of conceptSources(c.definition)) sourceConcept.set(item.question.id, c);
+  const items: QuestionKnowledge[] = knowledgeCatalogue.map(item => {
+    const c = item.conceptId ? concepts.find(c => c.definition.id === item.conceptId) : sourceConcept.get(item.question.id);
+    const seen = exposures.get(item.question.id);
+    return { ...item, conceptId: c?.definition.id, state: c?.state ?? (seen ? "learning" : "new"), successes: c?.successes ?? 0,
+      due: c?.due ?? null, lastDate: c?.lastDate ?? seen?.date ?? null, reviewedToday: c?.reviewedToday ?? false,
+      novel: item.isAssessment === true && (c?.novelIds.includes(item.question.id) ?? false), evidenceStatus: c?.evidenceStatus ?? (seen ? "completed" : "new") };
   });
-  return { items, due, practice, topics, categories: categoryProgress, recalled: items.filter(i => i.successes > 0).length };
+  // Exactly one fresh scenario for each concept. A short batch cannot repeat one idea.
+  const due = concepts.filter(c => c.active && c.due && c.due <= today && !c.reviewedToday && c.novelIds.length).sort((a, b) => a.due!.localeCompare(b.due!) || a.successes - b.successes || a.definition.id.localeCompare(b.definition.id)).map(c => items.find(i => i.question.id === c.novelIds[0])!);
+  // Voluntary practice is explicitly familiar material. It cannot consume fresh
+  // scenarios or change concept evidence, even on a later date.
+  const practice = items.filter(i => !i.isAssessment ? exposures.has(i.question.id) : !!input.knowledgeReviews?.[i.question.id] && Object.keys(input.knowledgeReviews[i.question.id]).some(date => date <= today)).sort((a, b) => (a.lastDate ?? "").localeCompare(b.lastDate ?? "") || a.question.id.localeCompare(b.question.id));
+  const topics = [...new Set(sourceCatalogue.map(i => i.topicId))].map(id => {
+    const sources = sourceCatalogue.filter(i => i.topicId === id), related = concepts.filter(c => conceptSources(c.definition).some(i => i.topicId === id));
+    const seen = sources.some(i => exposures.has(i.question.id)), active = seen || related.some(c => c.active);
+    const state: MasteryState = related.length && related.every(c => c.state === "mastered") ? "mastered" : related.length && related.every(c => ["familiar", "mastered"].includes(c.state)) ? "familiar" : active ? "learning" : "new";
+    const status = !active ? "Νέο" : !related.length ? (id.startsWith("unit:") ? "Ολοκληρώθηκε · χρειάζονται νέες δοκιμές" : "Συναντήθηκε · χρειάζονται νέες δοκιμές") : related.some(c => c.evidenceStatus === "needs-evidence") ? "Χρειάζονται περισσότερα στοιχεία" : MASTERY_LABELS[state];
+    return { id, title: sources[0].topicTitle, categoryId: sources[0].question.categoryId, state, total: related.length, mastered: related.filter(c => c.state === "mastered").length, status, covered: related.length > 0 };
+  });
+  const subject = (c: ConceptDefinition) => c.subcategoryId === "architecture" ? "architecture" : c.categoryId;
+  const ids = [...new Set([...sourceCatalogue.map(i => i.question.subcategoryId === "architecture" ? "architecture" : i.question.categoryId), ...concepts.map(c => subject(c.definition))])];
+  const categoryProgress = ids.map(id => {
+    const rows = concepts.filter(c => subject(c.definition) === id);
+    return { id, title: categories.find(c => c.id === id)?.title ?? topicNames[id] ?? "Γενικές γνώσεις", percent: rows.length ? Math.round(rows.reduce((sum, c) => sum + c.successes, 0) / (rows.length * 3) * 100) : 0, mastered: rows.filter(c => c.state === "mastered").length, total: rows.length };
+  });
+  return { items, due, practice, topics, categories: categoryProgress, concepts, recalled: concepts.filter(c => c.successes > 0).length, needsEvidence: topics.filter(t => t.state !== "new" && (!t.covered || t.status === "Χρειάζονται περισσότερα στοιχεία")).length };
 }

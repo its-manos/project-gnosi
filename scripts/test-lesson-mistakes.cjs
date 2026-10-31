@@ -58,8 +58,8 @@ function harness(store){
  const Results=compile('src/screens/ResultsScreen.tsx',natives).default,Drill=compile('src/screens/ReviewMistakesScreen.tsx',natives).default;
  const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
  const props={lesson,score:2,review:reviewUtil.lessonReview(lesson,original),recommendations:[],onReviewMistakes(){},onReadAgain(){},onHome(){},onOpenLesson(){},onBrowse(){}};
- let tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Εξάσκηση στα λάθη (2)'));assert.ok(!nodes(tree).some(n=>n.props?.label==='Πλήρης επανάληψη μαθήματος'));
- nodes(tree).find(n=>n.type==='Pressable'&&n.props.accessibilityState?.expanded===false).props.onPress();tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Πλήρης επανάληψη μαθήματος'),'full replay remains available under More options');resultDetails=false;
+ let tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Εξάσκηση στα λάθη (2)'));assert.ok(!nodes(tree).some(n=>n.props?.label==='Προαιρετική επανάληψη μαθήματος'));
+ nodes(tree).find(n=>n.type==='Pressable'&&n.props.accessibilityState?.expanded===false).props.onPress();tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Προαιρετική επανάληψη μαθήματος'),'full replay remains available under More options');resultDetails=false;
  tree=Results({...props,review:reviewUtil.lessonReview(lesson,{[key]:perfect})});assert.ok(!nodes(tree).some(n=>n.props?.label?.startsWith('Εξάσκηση στα λάθη')));
  const drillProps={lesson,indices:[1,3],index:0,selected:null,onChoose(){},onRetry(){},onNext(){},onBack(){}};
  tree=Drill(drillProps);assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,4);

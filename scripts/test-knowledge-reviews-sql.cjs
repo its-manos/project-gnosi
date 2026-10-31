@@ -7,9 +7,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
  for(const file of files)await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations',file),'utf8'));
  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations',files.at(-1)),'utf8'));
  const user='00000000-0000-4000-8000-000000000001',other='00000000-0000-4000-8000-000000000002';await db.query('insert into auth.users values($1),($2)',[user,other]);await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
- const q=load('src/knowledge/model.ts').knowledgeCatalogue[0].question;
+ const q=load('src/knowledge/concepts.ts').masteryConcepts[0].variants[0];
  const fact={version:q.version,answerIndex:0,at:Date.parse('2026-10-31T12:00:00Z'),mode:'scheduled'};
- const value={id:'kr:test:1',date:'2026-10-31',mode:'scheduled',questionIds:[q.id],questionVersions:[q.version],answers:{0:0},currentIndex:0,completed:true,beforeStates:['learning'],qualifiedIndices:[0],earnedXP:10};
+ const value={id:'kr2:test:1',date:'2026-10-31',mode:'scheduled',questionIds:[q.id],questionVersions:[q.version],answers:{0:0},currentIndex:0,completed:true,beforeStates:['learning'],qualifiedIndices:[0],earnedXP:10};
  const doc={schemaVersion:1,clock:5,progress:{},bookmarks:{},activity:{},weeklyReviews:{},rewards:{'review:2026-10-31':10},knowledgeReviews:{[q.id]:{'2026-10-31':fact}},knowledgeSession:{stamp:[5,'test'],value}};
  await db.exec('set role authenticated');
  const save=async(payload,revision,who=user)=>(await db.query('select * from public.save_learning_sync($1::jsonb,$2,$3::uuid)',[JSON.stringify(payload),revision,who])).rows[0];

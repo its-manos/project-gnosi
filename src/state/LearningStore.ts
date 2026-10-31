@@ -1,6 +1,6 @@
 import { buildKnowledgeModel } from "../knowledge/model";
 import { mergeKnowledgeReviews, type KnowledgeReviews, type KnowledgeSession } from "../knowledge/records";
-import { restoreKnowledgeQuiz } from "../knowledge/session";
+import { isCurrentKnowledgeSession, restoreKnowledgeQuiz } from "../knowledge/session";
 import { legacyAnswerSlots } from "../quiz/compatibility";
 import type { QuestionToken } from "../quiz/types";
 import type { DailyDocument } from "../utils/dailySyncDocument";
@@ -180,13 +180,13 @@ export class LearningStore {
     if (!this.ready || !this.active) return false;
     const date = getAthensDateKey(), current = this.doc.knowledgeSession?.value;
     if (current && !current.completed && current.date === date) {
-      try { restoreKnowledgeQuiz(current); return true; } catch { return false; }
+      try { if (!isCurrentKnowledgeSession(current)) return false; restoreKnowledgeQuiz(current); return true; } catch { return false; }
     }
     const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, date);
     const items = (mode === "scheduled" ? model.due : model.practice).slice(0, 5);
     if (!items.length) return false;
     const stamp = this.stamp();
-    const value: KnowledgeSession = { id: `kr:${this.device}:${stamp[0]}`, date, mode, questionIds: items.map(i => i.question.id), questionVersions: items.map(i => i.question.version), answers: {}, currentIndex: 0, completed: false, beforeStates: items.map(i => i.state), qualifiedIndices: [], earnedXP: 0 };
+    const value: KnowledgeSession = { id: `kr2:${this.device}:${stamp[0]}`, date, mode, questionIds: items.map(i => i.question.id), questionVersions: items.map(i => i.question.version), answers: {}, currentIndex: 0, completed: false, beforeStates: items.map(i => i.state), qualifiedIndices: [], earnedXP: 0 };
     this.change({ ...this.doc, clock: stamp[0], knowledgeSession: { stamp, value } });
     return true;
   }
@@ -196,12 +196,12 @@ export class LearningStore {
   }
   answerKnowledgeReview(id: string, token: QuestionToken, answerIndex: number, daily: DailyDocument): boolean {
     const saved = this.doc.knowledgeSession?.value, now = Date.now();
-    if (!this.ready || !this.active || !saved || saved.id !== id || saved.date !== getAthensDateKey(new Date(now))) return false;
+    if (!this.ready || !this.active || !saved || saved.id !== id || !isCurrentKnowledgeSession(saved) || saved.date !== getAthensDateKey(new Date(now))) return false;
     let quiz; try { quiz = restoreKnowledgeQuiz(saved); } catch { return false; }
     const result = submitQuizAnswer(quiz, token, answerIndex); if (!result.changed) return false;
     const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date);
     const item = model.items.find(i => i.question.id === token.id)!;
-    const firstToday = !item.reviewedToday && !this.doc.knowledgeReviews?.[token.id]?.[saved.date];
+    const firstToday = saved.mode === "scheduled" && item.isAssessment && item.novel && !item.reviewedToday && !this.doc.knowledgeReviews?.[token.id]?.[saved.date];
     const qualified = firstToday && item.due !== null && item.due <= saved.date;
     const knowledgeReviews = firstToday ? mergeKnowledgeReviews(this.doc.knowledgeReviews, { [token.id]: { [saved.date]: { version: token.version, answerIndex, at: now, mode: saved.mode } } }) : this.doc.knowledgeReviews;
     const value = { ...saved, answers: legacyAnswerSlots(result.session), qualifiedIndices: qualified ? [...saved.qualifiedIndices, saved.currentIndex] : saved.qualifiedIndices };
@@ -210,7 +210,7 @@ export class LearningStore {
   }
   advanceKnowledgeReview(id: string, token: QuestionToken): boolean {
     const saved = this.doc.knowledgeSession?.value;
-    if (!this.ready || !this.active || !saved || saved.id !== id || saved.date !== getAthensDateKey()) return false;
+    if (!this.ready || !this.active || !saved || saved.id !== id || !isCurrentKnowledgeSession(saved) || saved.date !== getAthensDateKey()) return false;
     let quiz; try { quiz = restoreKnowledgeQuiz(saved); } catch { return false; }
     const result = advanceQuizSession(quiz, token); if (!result.changed) return false;
     const rewards = { ...this.doc.rewards }, key = `review:${saved.date}`;

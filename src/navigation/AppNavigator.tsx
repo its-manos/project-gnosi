@@ -256,7 +256,7 @@ export default function AppNavigator() {
         <HomeScreen
           onKnowledgeReview={() => openKnowledgeReview("home")}
           onOpenProfile={() => openProfile("home")}
-          onWeeklyReview={() => app.setScreen("weekly-review")}
+          onWeeklyReview={() => openKnowledgeReview("progress")}
           categories={categories}
           subcategories={subcategories}
           featuredLesson={discovery.featured}
@@ -300,7 +300,7 @@ export default function AppNavigator() {
           initialView={progressView} onViewChange={setProgressView}
           onKnowledgeReview={() => openKnowledgeReview("progress")}
           onOpenProfile={() => openProfile("progress")}
-          onWeeklyReview={() => app.setScreen("weekly-review")}
+          onWeeklyReview={() => openKnowledgeReview("progress")}
           onHome={() => navigateTo("home")}
           completedLessons={completedLessons}
           inProgressLesson={inProgressLesson}
@@ -422,7 +422,7 @@ export default function AppNavigator() {
           earnedXP={app.earnedXP} highestCombo={app.highestCombo}
           key={activeLesson.id}
           lessonScores={app.lessonScores}
-          onWeeklyReview={() => app.setScreen("weekly-review")}
+          onWeeklyReview={() => openKnowledgeReview("progress")}
           lesson={activeLesson}
           score={app.score}
           review={app.review}

@@ -29,7 +29,7 @@ const actions={onReview:()=>calls.push('review'),onExplore:()=>calls.push('explo
 tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,1);assert.ok(!text(tree).endsWith('0'));nodes(tree).find(n=>n.type==='Action').props.onPress();assert.equal(calls.at(-1),'explore');
 model={...model,due:[{}],practice:[{}]};tree=Review(actions);nodes(tree).find(n=>n.type==='Action').props.onPress();assert.equal(calls.at(-1),'review');
 learning={...learning,knowledgeSession:{completed:false,date:'2026-10-30'}};tree=Review(actions);assert.ok(text(tree).includes('Συνέχισε εκεί που έμεινες'));
-learning={...learning,knowledgeSession:null};model={...model,due:[]};pending=[{id:'miss'}];tree=Review(actions);assert.ok(text(tree).includes('ελεύθερη εξάσκηση'));assert.ok(text(tree).includes('1 παλιά λάθη'));
+learning={...learning,knowledgeSession:null};model={...model,due:[]};pending=[{id:'miss'}];tree=Review(actions);assert.ok(text(tree).includes('ελεύθερη εξάσκηση'));assert.ok(!text(tree).includes('παλιά λάθη'),'legacy repeat prompts are retired');
 ready=false;tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0);ready=true;
 // The default learning map limits subjects without removing access to any subject or help.
 model={...model,categories:Array.from({length:8},(_,i)=>({id:String(i),title:'Θεματική '+i,percent:i,mastered:0,total:10}))};slots=[];cursor=0;

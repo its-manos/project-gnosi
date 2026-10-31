@@ -33,7 +33,7 @@ action(tree,'Επιστροφή στην αρχική').props.onPress();assert.e
 assert.ok(!action(tree,'Επόμενο μάθημα').props.secondary,'next is primary on success');
 assert.ok(nodes(tree).findIndex(n=>n.props?.label==='Επόμενο μάθημα')<nodes(tree).findIndex(n=>n.props?.accessibilityRole==='progressbar'),'actions precede supplementary path chart');
 nodes(tree).find(n=>n.type==='Pressable'&&n.props.accessibilityState?.expanded===false).props.onPress();tree=render(Screen,props);
-action(tree,'Πλήρης επανάληψη μαθήματος').props.onPress();assert.equal(replay,1);action(tree,'Εβδομαδιαία επανάληψη').props.onPress();assert.equal(weekly,1);
+action(tree,'Προαιρετική επανάληψη μαθήματος').props.onPress();assert.equal(replay,1);action(tree,'Νέες δοκιμές κατανόησης').props.onPress();assert.equal(weekly,1);
 assert.ok(nodes(tree).some(n=>n.type==='ReportContentButton'),'reporting remains available');
 for(let score=0;score<=4;score++){
  slots=[];const p={...props,score,review:score===4?props.review:{status:'available',indices:Array.from({length:4-score},(_,i)=>i),result:{questionCount:4,correctCount:score}}};tree=render(Screen,p);

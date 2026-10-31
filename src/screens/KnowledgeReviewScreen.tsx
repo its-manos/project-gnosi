@@ -1,8 +1,10 @@
+import { conceptById } from "../knowledge/concepts";
+import { lessons } from "../data/lessons";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useDailySnapshot, useLearningSession, useLearningSnapshot } from "../state/LearningSession";
 import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
-import { restoreKnowledgeQuiz } from "../knowledge/session";
+import { isCurrentKnowledgeSession, restoreKnowledgeQuiz } from "../knowledge/session";
 import { MASTERY_LABELS } from "../knowledge/model";
 import { calculateQuizResults, questionToken } from "../quiz/engine";
 import type { ChoiceQuestion, QuizSession } from "../quiz/types";
@@ -17,17 +19,25 @@ import { colors } from "../theme";
 export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }) {
   const { store } = useLearningSession(), learning = useLearningSnapshot(), daily = useDailySnapshot();
   const { model, today, ready } = useKnowledgeModel();
+  const [sectionFor, setSectionFor] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const saved = learning.knowledgeSession;
   let quiz: QuizSession | null = null;
   if (saved) { try { quiz = restoreKnowledgeQuiz(saved); } catch { /* Retain incompatible attempt until explicitly closed. */ } }
-  const expired = saved && (saved.date !== today || !quiz);
+  const expired = saved && (saved.date !== today || !quiz || !isCurrentKnowledgeSession(saved));
   const q = quiz?.questions[quiz.currentIndex] as ChoiceQuestion | undefined;
   const answer = q && quiz?.answers[q.id]?.value as number | undefined;
   const item = q && model.items.find(i => i.question.id === q.id);
+  const concept = item?.conceptId ? conceptById.get(item.conceptId) : undefined;
+  const teachingLesson = concept ? lessons.find(l => l.id === concept.lessonIds[0]) : undefined;
+  const variantIndex = concept?.variants.findIndex(v => v.id === q?.id) ?? -1;
+  const section = variantIndex >= 0 ? teachingLesson?.sections[concept!.teachingSections[variantIndex]] : undefined;
+  function nextReview(row: typeof item) {
+    return row?.state === "mastered" ? "Η έννοια κατακτήθηκε · δεν μπαίνει σε τακτική επανάληψη." : row?.evidenceStatus === "needs-evidence" ? "Χρειάζονται περισσότερες διαφορετικές δοκιμές. Δεν θα επαναλάβουμε την ίδια ερώτηση." : row?.due ? `Επόμενη επανάληψη: ${row.due.split("-").reverse().join("/")}` : "Ολοκληρώθηκε · χρειάζονται νέες δοκιμές για τεκμηρίωση.";
+  }
   const completed = quiz?.completed ? calculateQuizResults(quiz) : null;
   function start(mode: "scheduled" | "practice") {
-    if (!store.startKnowledgeReview(mode, daily.doc)) setMessage("Δεν υπάρχουν διαθέσιμες ερωτήσεις. Ολοκλήρωσε πρώτα ένα μάθημα ή καθημερινό quiz.");
+    if (!store.startKnowledgeReview(mode, daily.doc)) setMessage("Δεν υπάρχουν άλλες διαθέσιμες δοκιμές. Τα ολοκληρωμένα μαθήματά σου παραμένουν ολοκληρωμένα.");
     else setMessage("");
   }
   function close() { store.closeKnowledgeReview(saved?.id); setMessage(""); }
@@ -37,19 +47,20 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
     <Text style={styles.title}>{completed ? "Η γνώση σου δυναμώνει" : "Τι θυμάσαι σήμερα;"}</Text>
     {message ? <Text style={styles.body} accessibilityLiveRegion="polite">{message}</Text> : null}
     {!ready ? <Text style={styles.body}>Φόρτωση…</Text>
-      : expired ? <View style={styles.card}><Text style={styles.body}>Άλλαξε η ημέρα ή ενημερώθηκαν οι ερωτήσεις. Οι απαντήσεις σου διατηρούνται στην πρόοδο. Κλείσε αυτή την προσπάθεια για να ξεκινήσεις ξανά.</Text><ActionButton label="Νέα επανάληψη" onPress={close} /></View>
+      : expired ? <View style={styles.card}><Text style={styles.body}>Άλλαξε η ημέρα ή ενημερώθηκαν οι ερωτήσεις ή ο τρόπος επανάληψης. Οι απαντήσεις σου διατηρούνται στην πρόοδο. Κλείσε αυτή την προσπάθεια για να ξεκινήσεις ξανά.</Text><ActionButton label="Νέα επανάληψη" onPress={close} /></View>
       : !saved || !quiz ? <View style={styles.card}>
         <Text style={styles.heading}>{model.due.length ? `${model.due.length} ερωτήσεις σε περιμένουν` : "Είσαι εντάξει για σήμερα"}</Text>
-        <Text style={styles.body}>Έως 5 ερωτήσεις από όσα έχεις ήδη συναντήσει. Οι παλιότερες και οι πιο αδύναμες επιστρέφουν πρώτες.</Text>
+        <Text style={styles.body}>Έως 5 νέες περιπτώσεις, μία για κάθε έννοια. Δεν ξανακάνεις το μάθημα ούτε τις ίδιες ερωτήσεις.</Text>
         {model.due.length ? <ActionButton label="Ξεκίνα την επανάληψη" onPress={() => start("scheduled")} /> : null}
-        <Text style={styles.body}>10 XP για ολοκλήρωση προγραμματισμένης επανάληψης, μία φορά την ημέρα. Η ελεύθερη εξάσκηση δεν δίνει XP· οι πρόωρες σωστές απαντήσεις δεν ανεβάζουν την κατάκτηση.</Text>
+        <Text style={styles.body}>10 XP για ολοκλήρωση προγραμματισμένης επανάληψης, μία φορά την ημέρα. Η ελεύθερη εξάσκηση σε γνωστές ερωτήσεις δεν δίνει XP ούτε αλλάζει την κατάκτηση.</Text>
         {model.practice.length ? <ActionButton label="Θέλω λίγη εξάσκηση" onPress={() => start("practice")} /> : <Text style={styles.body}>Ολοκλήρωσε ένα μάθημα ή καθημερινό quiz για να δημιουργήσεις την πρώτη σου επανάληψη.</Text>}
+        {model.needsEvidence > 0 ? <Text style={styles.body}>Για ορισμένες ολοκληρωμένες ενότητες χρειάζονται περισσότερες διαφορετικές δοκιμές. Δεν χρειάζεται να ξαναδιαβάσεις το μάθημα.</Text> : null}
         <ActionButton label="Επιστροφή" onPress={onBack} />
       </View>
       : completed ? <View style={styles.card} accessibilityLiveRegion="polite">
         <Text style={styles.heading}>{completed.correctCount} / {completed.total} σωστές · +{saved.earnedXP} XP</Text>
-        <Text style={styles.body}>Κάθε ανάκληση δείχνει τι έμεινε. Τα λάθη επιστρέφουν νωρίτερα· οι σωστές απαντήσεις στη σειρά ανοίγουν μεγαλύτερα διαστήματα.</Text>
-        {saved.questionIds.map((id, i) => { const row = model.items.find(k => k.question.id === id); return row ? <View key={id} style={styles.row}><Text style={styles.heading}>{row.topicTitle}</Text><Text style={styles.body}>{row.question.prompt}</Text><Text style={styles.body}>{MASTERY_LABELS[saved.beforeStates[i]]} → {MASTERY_LABELS[row.state]} · {row.successes}/3 ανακλήσεις</Text><Text style={styles.body}>Επόμενη επανάληψη: {row.due?.split("-").reverse().join("/") ?? "—"}</Text></View> : null; })}
+        <Text style={styles.body}>Η κατάκτηση τεκμηριώνεται σε διαφορετικές περιπτώσεις, σε διαφορετικές ημέρες. Μετά την κατάκτηση η έννοια βγαίνει από τις τακτικές επαναλήψεις.</Text>
+        {saved.questionIds.map((id, i) => { const row = model.items.find(k => k.question.id === id); return row ? <View key={id} style={styles.row}><Text style={styles.heading}>{row.topicTitle}</Text><Text style={styles.body}>{row.question.prompt}</Text><Text style={styles.body}>{MASTERY_LABELS[saved.beforeStates[i]]} → {MASTERY_LABELS[row.state]} · {row.successes}/3 διαφορετικές δοκιμές</Text><Text style={styles.body}>{nextReview(row)}</Text></View> : null; })}
         <ActionButton label="Πίσω στην πρόοδο" onPress={onBack} /><ActionButton label="Άλλη μικρή επανάληψη" onPress={close} />
       </View>
       : q && item ? <>
@@ -60,8 +71,10 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
         {answer !== undefined ? <View style={styles.card} accessibilityLiveRegion="polite">
           <Text style={styles.heading}>{answer === q.content.correctIndex ? "Το θυμήθηκες!" : "Ας το θυμηθούμε ξανά"}</Text>
           <Text style={styles.body}>Σωστή απάντηση: {q.content.answers[q.content.correctIndex]}</Text><Text style={styles.body}>{q.explanation}</Text>
-          <Text style={styles.body}>{saved.qualifiedIndices.includes(quiz.currentIndex) ? `${MASTERY_LABELS[saved.beforeStates[quiz.currentIndex]]} → ${MASTERY_LABELS[item.state]} · ${item.successes}/3 ανακλήσεις` : "Οι πρόωρες σωστές απαντήσεις και οι επαναλήψεις της ίδιας ημέρας δεν αυξάνουν την κατάκτηση. Ένα νέο λάθος φέρνει την επόμενη επανάληψη νωρίτερα."}</Text>
-          <Text style={styles.body}>Επόμενη επανάληψη: {item.due?.split("-").reverse().join("/") ?? "—"}</Text>
+          <Text style={styles.body}>{saved.qualifiedIndices.includes(quiz.currentIndex) ? `${MASTERY_LABELS[saved.beforeStates[quiz.currentIndex]]} → ${MASTERY_LABELS[item.state]} · ${item.successes}/3 διαφορετικές δοκιμές` : "Η γνωστή ερώτηση ή δεύτερη απάντηση την ίδια ημέρα δεν αλλάζει την κατάκτηση."}</Text>
+          {saved.mode === "scheduled" && answer === q.content.correctIndex && saved.qualifiedIndices.includes(quiz.currentIndex) && item.successes === 0 ? <Text style={styles.body}>Η πρώτη χρονολογημένη δοκιμή ορίζει αφετηρία. Η κατάκτηση θα χρειαστεί νέες, διαφορετικές δοκιμές σε επόμενες ημέρες.</Text> : null}
+          <Text style={styles.body}>{nextReview(item)}</Text>
+          {section ? <><Pressable style={styles.sectionButton} accessibilityRole="button" accessibilityState={{ expanded: sectionFor === q.id }} onPress={() => setSectionFor(v => v === q.id ? null : q.id)}><Text style={styles.sectionLink}>{sectionFor === q.id ? "Κλείσιμο ενότητας −" : "Δες τη σχετική ενότητα (προαιρετικά) +"}</Text></Pressable>{sectionFor === q.id ? <View style={styles.row} testID="review-teaching-section"><Text style={styles.heading}>{section.title}</Text>{section.paragraphs.map((p, i) => <Text key={i} style={styles.body}>{p}</Text>)}<Text style={styles.body}>Μόνο ανάγνωση. Η ολοκλήρωση του μαθήματος δεν αλλάζει.</Text></View> : null}</> : null}
           {q.sources.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή τεκμηρίωσης" }} />)}
           <ActionButton label={quiz.currentIndex === quiz.questions.length - 1 ? "Δες το αποτέλεσμα" : "Συνέχεια"} onPress={() => { if (!store.advanceKnowledgeReview(saved.id, questionToken(quiz!))) setMessage("Η προσπάθεια άλλαξε. Άνοιξε ξανά την επανάληψη."); }} />
         </View> : null}
@@ -72,5 +85,6 @@ const styles = StyleSheet.create({
   content: { width: "100%", maxWidth: 720, alignSelf: "center", padding: 20, paddingBottom: 44, gap: 16 },
   label: { color: colors.accentLight, fontSize: 11, lineHeight: 19, fontWeight: "800" }, title: { color: colors.text, fontSize: 28, lineHeight: 36, fontWeight: "900" },
   heading: { color: colors.text, fontSize: 19, lineHeight: 28, fontWeight: "700" }, body: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
+  sectionButton: { minHeight: 44, justifyContent: "center" }, sectionLink: { color: colors.accentLight, fontSize: 13, lineHeight: 22, fontWeight: "700" },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 18, padding: 20, gap: 14 }, row: { gap: 8, paddingVertical: 10, borderTopWidth: 1, borderColor: colors.border },
 });

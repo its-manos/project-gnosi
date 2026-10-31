@@ -6,7 +6,6 @@ import Svg, { Circle } from "react-native-svg";
 import { type Category, type Lesson, type Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import ReadingPick from "../components/ReadingPick";
-import WeeklyReviewCard from "../components/WeeklyReviewCard";
 import { colors } from "../theme";
 
 type Props = {
@@ -35,7 +34,7 @@ type Props = {
 export default function HomeScreen({
   onKnowledgeReview, categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
-  onOpenCategory, onOpenLesson, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview, onOpenProfile,
+  onOpenCategory, onOpenLesson, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onOpenProfile,
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const xpFraction = profileReady ? Math.min(1, Math.max(0, profile.earned / profile.required)) : 0;
@@ -100,7 +99,6 @@ export default function HomeScreen({
         </View>
 
         {onKnowledgeReview ? <KnowledgeMastery compact onOpen={onKnowledgeReview} /> : null}
-        {onWeeklyReview ? <WeeklyReviewCard onOpen={onWeeklyReview} hideWhenEmpty /> : null}
         <Text style={styles.sectionTitle}>Μια μικρή ανακάλυψη</Text>
         {!progressLoaded ? <ActivityIndicator color={colors.accentLight} accessibilityLabel="Φόρτωση προτάσεων ανάγνωσης" />
           : featuredLesson ? <ReadingPick lesson={featuredLesson} label="Η ΑΝΑΚΑΛΥΨΗ ΤΗΣ ΗΜΕΡΑΣ" featured onPress={() => onOpenLesson(featuredLesson.id)} />

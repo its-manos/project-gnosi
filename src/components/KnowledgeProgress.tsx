@@ -23,7 +23,7 @@ export default function KnowledgeProgress({ compact = false }: { compact?: boole
       {!compact ? <>
         <View style={styles.metrics}>
           <Text style={styles.metric}>{p.explored} κατηγορίες εξερευνήθηκαν</Text>
-          <Text style={styles.metric}>{p.recalled} ερωτήσεις θυμήθηκες αργότερα</Text>
+          <Text style={styles.metric}>{p.recalled} έννοιες με διαφορετικές επιτυχημένες δοκιμές</Text>
         </View>
         <Text style={styles.body}>Μαθαίνεις, προχωράς. Θυμάσαι, κατακτάς. Εξερευνάς, κερδίζεις.</Text>
         <View style={styles.badges}>{p.badges.map(b => <View key={b.id} style={[styles.badge, b.unlocked && styles.unlocked]}>

@@ -39,18 +39,17 @@ export default function ResultsScreen({ earnedXP = 0, highestCombo = 0, lesson, 
       <Text style={styles.title}>{returning ? "Συνέχισε την ανακάλυψη" : perfect ? "Τα πέτυχες όλα!" : strongResult ? "Τα πήγες πολύ καλά!" : "Έκανες το επόμενο βήμα"}</Text>
       <Text style={styles.lessonTitle}>{lesson.title}</Text>
       {displayedScore !== null ? <LessonResultChart correct={displayedScore} total={total} label={returning ? "Το καλύτερο σκορ σου" : "Αυτή η προσπάθεια"} />
-        : <Text style={styles.message}>Κάνε μια νέα προσπάθεια για να δεις το σκορ σου.</Text>}
+        : <Text style={styles.message}>Η ολοκλήρωση διατηρείται. Δεν υπάρχει αναλυτικό παλιότερο σκορ.</Text>}
       {!returning ? <Text style={styles.success}>{earnedXP > 0 ? `+${earnedXP} XP` : "Τα XP αυτής της ολοκλήρωσης έχουν ήδη καταγραφεί."} · Καλύτερο σερί: {highestCombo}</Text> : null}
       <KnowledgeProgress compact />
       {practiceComplete ? <Text style={styles.success}>Ολοκλήρωσες την εξάσκηση στα λάθη.</Text> : null}
-      {displayedScore === null ? <ActionButton label="Πλήρης επανάληψη μαθήματος" onPress={onReadAgain} /> : null}
       {!strongResult && canPractice && !practiceComplete ? <ActionButton label={`Εξάσκηση στα λάθη (${review.indices.length})`} onPress={onReviewMistakes} /> : null}
       {nextLesson ? <View style={styles.next}>
         <Text style={styles.nextLabel}>ΣΤΗΝ ΙΔΙΑ ΔΙΑΔΡΟΜΗ</Text>
         <Text style={styles.nextTitle}>{nextLesson.title}</Text>
-        <ActionButton label="Επόμενο μάθημα" onPress={() => onOpenLesson(nextLesson.id)} secondary={displayedScore === null || (!strongResult && canPractice && !practiceComplete)} />
+        <ActionButton label="Επόμενο μάθημα" onPress={() => onOpenLesson(nextLesson.id)} secondary={(!strongResult && canPractice && !practiceComplete)} />
       </View> : null}
-      <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} secondary={displayedScore === null || !!nextLesson || (!strongResult && canPractice && !practiceComplete)} />
+      <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} secondary={!!nextLesson || (!strongResult && canPractice && !practiceComplete)} />
       {(strongResult || practiceComplete) && canPractice ? <ActionButton label={`Εξάσκηση στα λάθη (${review.indices.length})`} onPress={onReviewMistakes} secondary /> : null}
       {pathProgress ? <View style={styles.pathCard}>
         <View style={styles.pathHeading}><Text style={styles.pathTitle}>{pathProgress.title}</Text><Text style={styles.pathCount}>{pathProgress.completed} / {pathProgress.total}</Text></View>
@@ -67,14 +66,14 @@ export default function ResultsScreen({ earnedXP = 0, highestCombo = 0, lesson, 
       {details ? <View style={styles.details}>
         {lessonScores?.best !== null && lessonScores?.best !== undefined ? <>
           <Text style={styles.detailMetric}>Καλύτερο σκορ: {lessonScores.best} / {lessonScores.total}</Text>
-          <Text style={styles.small}>{lessonScores.hasDetails ? `Σωστά απαντημένες ερωτήσεις: ${lessonScores.mastered} / ${lessonScores.total}.` : "Μια νέα προσπάθεια θα καταγράψει ποιες ερωτήσεις γνωρίζεις."}</Text>
+          <Text style={styles.small}>{lessonScores.hasDetails ? `Σωστά απαντημένες ερωτήσεις: ${lessonScores.mastered} / ${lessonScores.total}.` : "Το παλιότερο σκορ δεν τεκμηριώνει κατάκτηση εννοιών."}</Text>
         </> : null}
         {practiceComplete ? <Text style={styles.small}>Η εξάσκηση δεν αλλάζει το σκορ της προσπάθειας.</Text> : null}
-        {review?.status === "missing-details" || review?.status === "no-result" ? <Text style={styles.small}>Δεν έχουν αποθηκευτεί τα παλιότερα λάθη. Κάνε μια πλήρη επανάληψη για νέα καταγραφή.</Text> : null}
-        {review?.status === "changed" ? <Text style={styles.small}>Οι ερωτήσεις έχουν αλλάξει. Κάνε μια νέα προσπάθεια στο ενημερωμένο μάθημα.</Text> : null}
-        {displayedScore !== null ? <ActionButton label="Πλήρης επανάληψη μαθήματος" onPress={onReadAgain} secondary /> : null}
+        {review?.status === "missing-details" || review?.status === "no-result" ? <Text style={styles.small}>Δεν έχουν αποθηκευτεί τα παλιότερα λάθη. Η ολοκλήρωση διατηρείται χωρίς να χρειάζεται επανάληψη.</Text> : null}
+        {review?.status === "changed" ? <Text style={styles.small}>Οι ερωτήσεις έχουν αλλάξει. Το παλιό σκορ δεν επανυπολογίζεται και η ολοκλήρωση διατηρείται.</Text> : null}
+        <ActionButton label="Προαιρετική επανάληψη μαθήματος" onPress={onReadAgain} secondary />
         <Text style={styles.small}>Το καλύτερο σκορ σου διατηρείται.</Text>
-        {onWeeklyReview ? <><ActionButton label="Εβδομαδιαία επανάληψη" onPress={onWeeklyReview} secondary /><Text style={styles.small}>Τα νέα λάθη επιστρέφουν από την επόμενη Δευτέρα.</Text></> : null}
+        {onWeeklyReview ? <><ActionButton label="Νέες δοκιμές κατανόησης" onPress={onWeeklyReview} secondary /><Text style={styles.small}>Το μάθημα ολοκληρώθηκε. Η κατανόηση ελέγχεται με διαφορετικές περιπτώσεις, όταν υπάρχουν διαθέσιμες.</Text></> : null}
         <ReportContentButton target={lessonReportTarget(lesson)} />
       </View> : null}
     </View>
