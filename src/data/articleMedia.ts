@@ -40,6 +40,16 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-chronology": [
+    {
+      afterParagraphId: "mycenaean-overlap",
+      url: commonsFileUrl("Stirrup jar, Mycenae, AM of Mycenae, 201608.jpg"),
+      resizeMode: "contain",
+      caption: "Μυκηναϊκό αγγείο με χαρακτηριστικές λαβές (stirrup jar) από τις Μυκήνες, περ. 1250–1180 π.Χ., στο Αρχαιολογικό Μουσείο Μυκηνών. Η παραγωγή του ανήκει σε εποχή πριν από τη διαμόρφωση των κλασικών πόλεων.",
+      credit: "Zde / Wikimedia Commons · CC BY-SA 4.0 · Φωτογραφία 2020",
+      creditUrl: commonsPageUrl("Stirrup jar, Mycenae, AM of Mycenae, 201608.jpg"),
+    },
+  ],
   "greek-history-through-evidence": [
     {
       afterParagraphId: "ostrakon-limits",
