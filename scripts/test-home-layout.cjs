@@ -53,6 +53,27 @@ const world = nodes(mapTree).find(n => n.type === 'svg');
 assert.equal(world.props.viewBox, '0 0 360 416', 'Seven-category overview uses three rows.');
 const targets = nodes(mapTree).filter(n => n.type === 'g' && n.props.onPress);
 assert.equal(targets.length, 7); targets[6].props.onPress(); assert.equal(selected.at(-1), 'difficult-history');
+// Foreground labels must follow ALL terrain, not just their own island.
+const svgChildren = [world.props.children].flat(Infinity).filter(n => n && typeof n === 'object');
+const terrain = svgChildren.filter(n => n.type === 'g' && n.props.pointerEvents === 'none');
+assert.equal(terrain.length, 7);
+assert.ok(svgChildren.indexOf(terrain.at(-1)) < svgChildren.indexOf(targets[0]));
+for (const [index, target] of targets.entries()) {
+  assert.equal(target.props.opacity, 1);
+  assert.equal(target.props.fillOpacity, 1);
+  assert.equal(target.props.stroke, 'none');
+  const hitArea = nodes(target).find(n => n.type === 'path');
+  assert.equal(hitArea.props.fill, 'transparent');
+  assert.ok(hitArea.props.d.endsWith(' Z'), 'Whole island remains tappable.');
+  const labels = nodes(target).filter(n => n.type === 'text');
+  assert.ok(labels.length >= 2);
+  for (const label of labels) {
+    assert.equal(label.props.stroke, undefined, 'Small glyphs must not have a dark outline.');
+    assert.equal(label.props.opacity, undefined, 'Labels inherit full opacity.');
+  }
+  target.props.onPress();
+  assert.equal(selected.at(-1), categories[index].id);
+}
 nodes(mapTree).find(n => n.props?.accessibilityLabel === 'Προβολή ως λίστα').props.onPress();
 mapTree = map(mapProps); assert.ok(!nodes(mapTree).some(n => n.type === 'svg'));
 assert.equal(nodes(mapTree).filter(n => n.props?.accessibilityHint).length, 7);
@@ -60,6 +81,10 @@ nodes(mapTree).find(n => n.props?.accessibilityLabel === 'Προβολή χάρ�
 assert.ok(nodes(map(mapProps)).some(n => n.type === 'svg'));
 const detailed = map({ ...mapProps, overview: false });
 assert.equal(nodes(detailed).find(n => n.type === 'svg').props.viewBox, '0 0 360 600', 'Detailed map remains unchanged.');
+const withDetails = map({ ...mapProps, regions: [{ id: 'one', title: 'Μία περιοχή', detail: '5 μαθήματα' }] });
+const detailLabel = nodes(withDetails).find(n => n.type === 'text' && n.props.children === '5 μαθήματα');
+assert.ok(detailLabel);
+assert.equal(detailLabel.props.opacity, undefined);
 tree = home({ ...props, progressLoaded: false, inProgressLesson: null });
 assert.ok(nodes(tree).some(n => n.type === 'FantasyMap'), 'Progress loading must never hide exploration.');
 console.log('Home layout checks passed: exploration first, secondary content retained, actions, compact seven-category map, list exclusivity, category selection, detailed map fallback and loading state. Mocked native views.');

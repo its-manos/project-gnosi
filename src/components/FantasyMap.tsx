@@ -303,14 +303,10 @@ export default function FantasyMap({
               region.seed + 0.42,
             ),
           );
-          const labelLines = wrapTitle(region.title, maxLabelChars);
-          const labelStartY = region.cy + 14;
-          const detailY = labelStartY + labelLines.length * (labelFontSize + 2) + 1;
-
           return (
             <G
               key={region.id}
-              onPress={() => onSelectRegion(region.id)}
+              pointerEvents="none"
             >
               <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={0.6} />
               <Path d={islandPath} fill="none" stroke={region.fill} strokeWidth={13} strokeOpacity={0.09} />
@@ -352,11 +348,28 @@ export default function FantasyMap({
                 strokeOpacity={0.4}
               />
 
-              {/* Terrain sits above the labels; coastlines remain fully tappable. */}
+              {/* Terrain is drawn before the foreground label layer. */}
               <Path d={`M ${region.cx - 25} ${region.cy - 18} l 10 -14 l 10 14 m -7 -2 l 14 -20 l 16 20`}
                 fill="none" stroke="#EEE5C7" strokeOpacity={0.28} strokeWidth={1.1} strokeLinejoin="round" />
               <Path d={`M ${region.cx - 20} ${region.cy - 18} l 5 -7 l 5 7 m 9 -8 l 3 -5 l 5 6`}
                 fill="none" stroke="#EEE5C7" strokeOpacity={0.3} strokeWidth={0.8} />
+            </G>
+          );
+        })}
+
+        {/* Draw every label after every island. Avoid text strokes, which can
+            reduce the visible white fill of small glyphs on Android. */}
+        {positionedRegions.map((region) => {
+          const labelLines = wrapTitle(region.title, maxLabelChars);
+          const labelStartY = region.cy + 14;
+          const detailY = labelStartY + labelLines.length * (labelFontSize + 2) + 1;
+
+          return (
+            <G key={`label-${region.id}`} opacity={1} fillOpacity={1} stroke="none"
+              onPress={() => onSelectRegion(region.id)}>
+              {/* Preserve the whole island as a touch target, including coasts. */}
+              <Path d={smoothClosedPath(makeIslandPoints(region.cx, region.cy, region.rx, region.ry, region.seed))}
+                fill="transparent" />
               <SvgText
                 x={region.cx}
                 y={region.cy - 5}
@@ -376,8 +389,6 @@ export default function FantasyMap({
                   fontWeight="700"
                   textAnchor="middle"
                   fill="#FFFFFF"
-                  stroke="#17202B"
-                  strokeWidth={0.18}
                 >
                   {line}
                 </SvgText>
@@ -391,7 +402,6 @@ export default function FantasyMap({
                   fontWeight="500"
                   textAnchor="middle"
                   fill="#F0E9D6"
-                  opacity={0.88}
                 >
                   {region.detail}
                 </SvgText>
