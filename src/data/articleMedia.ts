@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-history-through-evidence": [
+    {
+      afterParagraphId: "ostrakon-limits",
+      url: commonsFileUrl("Ostracon with the name of Themistocles.jpg"),
+      resizeMode: "contain",
+      caption: "Όστρακο με το όνομα του Θεμιστοκλή, στο Μουσείο της Αρχαίας Αγοράς. Η γραφή δεν αποκαλύπτει από μόνη της κίνητρα ή τελικό αποτέλεσμα.",
+      credit: "Marsyas / Wikimedia Commons · CC BY 4.0 · Φωτογραφία 2005",
+      creditUrl: commonsPageUrl("Ostracon with the name of Themistocles.jpg"),
+    },
+    {
+      afterParagraphId: "plangon-stele",
+      url: commonsFileUrl("Funerary stele of Plangon (inscription ΡΛΑNΓΩΝ).jpg"),
+      resizeMode: "contain",
+      caption: "Ταφική στήλη της Πλαγγόνας, περ. 310 π.Χ., με πουλί και κούκλα. Το μνημείο δεν διασώζει τα προσωπικά της λόγια.",
+      credit: "Yair-haklai / Wikimedia Commons · CC BY-SA 4.0 · Φωτογραφία 2024",
+      creditUrl: commonsPageUrl("Funerary stele of Plangon (inscription ΡΛΑNΓΩΝ).jpg"),
+    },
+  ],
   "greek-world-not-a-country": [
     {
       afterParagraphId: "map-shores",
