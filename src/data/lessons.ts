@@ -1,6 +1,7 @@
 import type { QuestionMetadata } from "../quiz/types";
 import { worldHistoryLessons } from "./worldHistoryLessons";
 import { greekWorldLessons } from "./greekWorldLessons";
+import { greekEvidenceLessons } from "./greekEvidenceLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -448,6 +449,7 @@ const originalLessons: Lesson[] = [
 export const lessons: Lesson[] = [
   ...originalLessons.map(lesson => ({ ...lesson, ...astronomyRevisions[lesson.id] })),
   ...greekWorldLessons,
+  ...greekEvidenceLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
