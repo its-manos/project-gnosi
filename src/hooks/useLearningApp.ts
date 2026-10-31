@@ -6,6 +6,7 @@ import { getInlineQuestionCount } from "../utils/lessonProgress";
 import { useLearningSession, useLearningSnapshot } from "../state/LearningSession";
 import { lessonReview } from "../utils/lessonReview";
 import { lessonScores } from "../utils/weeklyReview";
+import { getLessonAccess } from "../utils/lessonPath";
 function countInlineQuestions(id: string): number { const lesson = lessons.find(l => l.id === id); return lesson ? getInlineQuestionCount(lesson) : 0; }
 
 export type AppScreen =
@@ -17,6 +18,7 @@ export type AppScreen =
   | "results"
   | "review"
   | "weekly-review"
+  | "account"
   | "progress"
   | "saved"
   | "search";
@@ -24,6 +26,7 @@ export type AppScreen =
 
 export function useLearningApp() {
   const completionRun = useRef("");
+  const [lessonOrigin, setLessonOrigin] = useState<AppScreen>("subcategory");
   function newCompletionRun() { completionRun.current = `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`; }
   const [screen, setScreen] = useState<AppScreen>("home");
   const [activeCategoryId, setActiveCategoryId] = useState("history");
@@ -62,6 +65,14 @@ export function useLearningApp() {
   function activateLesson(lessonId: string) {
     const lesson = lessons.find((item) => item.id === lessonId);
     if (!lesson) return;
+    const backup = store.getSnapshot().backup;
+    if (!getLessonAccess(lesson, lessons, backup.completedIds, Object.keys(backup.attempts)).unlocked) {
+      setActiveCategoryId(lesson.categoryId);
+      setActiveSubcategoryId(lesson.subcategoryId);
+      setScreen("subcategory");
+      return;
+    }
+    if (!["lesson", "quiz", "results", "review"].includes(screen)) setLessonOrigin(screen);
     newCompletionRun();
     setPracticeComplete(false);
     reviewSession.current = { lessonId: "", index: 0, answer: null };
@@ -288,6 +299,7 @@ export function useLearningApp() {
 
   return {
     screen,
+    lessonBackScreen: lessonOrigin,
     setScreen,
     activeCategoryId,
     activeSubcategoryId,

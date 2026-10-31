@@ -5,15 +5,16 @@ import { weeklyPlan } from "../utils/weeklyReview";
 import ActionButton from "./ActionButton";
 import { colors } from "../theme";
 
-export default function WeeklyReviewCard({ onOpen }: { onOpen: () => void }) {
+export default function WeeklyReviewCard({ onOpen, hideWhenEmpty = false }: { onOpen: () => void; hideWhenEmpty?: boolean }) {
   const snapshot = useLearningSnapshot(), today = useAthensDate();
   if (!snapshot.ready) return null;
   const plan = weeklyPlan(snapshot.activity, snapshot.weeklyReviews, today);
   const done = plan.filter(item => snapshot.weeklyReviews[item.id]).length;
+  if (hideWhenEmpty && !plan.length) return null;
   return <View style={styles.card}>
-    <Text style={styles.title}>Η δεύτερη ευκαιρία της εβδομάδας</Text>
-    <Text style={styles.body}>{plan.length ? `${done} / ${plan.length} απαντήθηκαν · Διόρθωσε παλιά λάθη και αύξησε την κατάκτηση γνώσης σου.` : "Τα λάθη αυτής της εβδομάδας θα είναι διαθέσιμα από την επόμενη Δευτέρα. Αν δεν έχεις εκκρεμή λάθη, δεν χρειάζεται quiz!"}</Text>
-    <ActionButton secondary label={plan.length && done === plan.length ? "Δες το εβδομαδιαίο αποτέλεσμα" : plan.length ? "Πάμε για τη δεύτερη ευκαιρία" : "Πώς λειτουργεί;"} onPress={onOpen} />
+    <Text style={styles.title}>Η δεύτερη ευκαιρία σου</Text>
+    <Text style={styles.body}>{plan.length ? `${done} / ${plan.length} απαντήθηκαν` : "Νέες ερωτήσεις από λάθη σου κάθε Δευτέρα."}</Text>
+    <ActionButton secondary label={plan.length && done === plan.length ? "Δες το αποτέλεσμα" : done > 0 ? "Συνέχισε" : plan.length ? "Ξεκίνα" : "Πώς λειτουργεί;"} onPress={onOpen} />
   </View>;
 }
 const styles = StyleSheet.create({

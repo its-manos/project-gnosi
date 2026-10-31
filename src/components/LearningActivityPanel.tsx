@@ -18,7 +18,7 @@ function MiniMetric({ label, value, detail }: { label: string; value: string; de
   return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text><Text style={styles.small}>{detail}</Text></View>;
 }
 
-export default function LearningActivityPanel({ todayKey }: { todayKey: string }) {
+export default function LearningActivityPanel({ todayKey, compact = false }: { todayKey: string; compact?: boolean }) {
   const snapshot = useLearningSnapshot(), daily = useDailySnapshot();
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
   const [selectedKey, setSelectedKey] = useState("");
@@ -32,13 +32,13 @@ export default function LearningActivityPanel({ todayKey }: { todayKey: string }
 
   return <View style={styles.section}>
     <Text style={styles.title}>Η δραστηριότητά σου</Text>
-    <Text style={styles.small}>Οι πρώτες ολοκληρώσεις και οι πλήρεις επαναλήψεις μετριούνται χωριστά. Η εξάσκηση στα λάθη δεν προσθέτει νέα προσπάθεια.</Text>
-    <View style={styles.metrics}>
+    {compact ? <Text style={styles.small}>Αυτή την εβδομάδα: {summary.firstThisWeek} νέα μαθήματα · {summary.replaysThisWeek} επαναλήψεις</Text> : null}
+    {!compact ? <View style={styles.metrics}>
       <MiniMetric label="ΝΕΑ ΜΑΘΗΜΑΤΑ" value={String(summary.firstThisWeek)} detail="αυτή την εβδομάδα" />
-      <MiniMetric label="ΠΛΗΡΕΙΣ ΕΠΑΝΑΛΗΨΕΙΣ" value={String(summary.replaysThisWeek)} detail="αυτή την εβδομάδα · ανεξάρτητα από το σκορ" />
-      <MiniMetric label="ΕΝΕΡΓΕΣ ΗΜΕΡΕΣ" value={String(summary.activeDays)} detail="με μάθημα, ημερήσιο quiz ή δεύτερη ευκαιρία" />
-      <MiniMetric label="ΑΚΡΙΒΕΙΑ ΜΑΘΗΜΑΤΩΝ" value={summary.accuracy === null ? "—" : `${summary.accuracy}%`} detail={summary.questions ? `${summary.correct} / ${summary.questions} σωστές στις καταγεγραμμένες ολοκληρώσεις` : "θα εμφανιστεί με την πρώτη ολοκλήρωση"} />
-    </View>
+      <MiniMetric label="ΠΛΗΡΕΙΣ ΕΠΑΝΑΛΗΨΕΙΣ" value={String(summary.replaysThisWeek)} detail="αυτή την εβδομάδα" />
+      <MiniMetric label="ΕΝΕΡΓΕΣ ΗΜΕΡΕΣ" value={String(summary.activeDays)} detail="συνολικά" />
+      <MiniMetric label="ΑΚΡΙΒΕΙΑ ΜΑΘΗΜΑΤΩΝ" value={summary.accuracy === null ? "—" : `${summary.accuracy}%`} detail={summary.questions ? `${summary.correct} / ${summary.questions} σωστές` : "θα εμφανιστεί με την πρώτη ολοκλήρωση"} />
+    </View> : null}
     <View style={styles.chartCard}>
       <Text style={styles.chartTitle}>Ο ρυθμός σου</Text>
       <View style={styles.switchRow}>
@@ -48,7 +48,6 @@ export default function LearningActivityPanel({ todayKey }: { todayKey: string }
         </Pressable>)}
       </View>
       <Text style={styles.period}>{mode === "daily" ? "Τελευταίες 7 ημέρες" : "Τελευταίες 8 εβδομάδες · από Δευτέρα"}</Text>
-      <Text style={styles.small}>{mode === "weekly" ? "Η τρέχουσα εβδομάδα περιλαμβάνει όσα ολοκλήρωσες μέχρι σήμερα." : "Οι ημέρες υπολογίζονται με την ώρα Ελλάδας."}</Text>
       <View style={styles.chart}>
         <View style={styles.axis} accessible={false}><Text style={styles.axisText}>{max}</Text><Text style={styles.axisText}>0</Text></View>
         <View style={styles.bars}>
@@ -78,9 +77,10 @@ export default function LearningActivityPanel({ todayKey }: { todayKey: string }
         <Text style={styles.selectionTitle}>{rangeLabel(selected)}</Text>
         <Text style={styles.small}>{selected.first} νέα μαθήματα · {selected.replay} πλήρεις επαναλήψεις</Text>
       </View>
-      <Text style={styles.hint}>{total ? "Πάτησε μια στήλη για τις λεπτομέρειες." : "Οι πρώτες στήλες θα εμφανιστούν όταν ολοκληρώσεις ένα μάθημα."}</Text>
+      {!total ? <Text style={styles.hint}>Ολοκλήρωσε ένα μάθημα για να ξεκινήσεις.</Text> : null}
     </View>
-    {summary.undatedCount > 0 ? <Text style={styles.legacyNote}>{summary.undatedCount} παλιότερα ολοκληρωμένα μαθήματα παραμένουν στο σύνολό σου. Δεν εμφανίζονται στις στήλες, επειδή δεν είχε καταγραφεί η ημερομηνία τους.</Text> : null}
+    {compact ? <Text style={styles.small}>{summary.activeDays} ενεργές ημέρες · Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}</Text> : null}
+    {summary.undatedCount > 0 ? <Text style={styles.legacyNote}>{summary.undatedCount} παλιότερα μαθήματα χωρίς ημερομηνία — εκτός γραφήματος.</Text> : null}
   </View>;
 }
 
@@ -88,7 +88,6 @@ export function CategoryProgress() {
   const snapshot = useLearningSnapshot(), completed = new Set(snapshot.backup.completedIds);
   return <View style={styles.section}>
     <Text style={styles.title}>Οι κόσμοι που εξερευνάς</Text>
-    <Text style={styles.small}>Μοναδικά ολοκληρωμένα μαθήματα ανά θεματική, μαζί με τις παλιότερες ολοκληρώσεις.</Text>
     <View style={styles.categoryCard}>{categories.map(category => {
       const items = lessons.filter(lesson => lesson.categoryId === category.id);
       const count = items.filter(lesson => completed.has(lesson.id)).length;
@@ -132,7 +131,7 @@ const styles = StyleSheet.create({
   barLabel: { color: colors.textMuted, textAlign: "center", fontSize: 10, lineHeight: 16, marginTop: 7 },
   activeLabel: { color: colors.accentLight, fontWeight: "800" },
   legend: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 1 },
   dot: { width: 9, height: 9, borderRadius: 3 },
   selection: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, gap: 3 },
   selectionTitle: { color: colors.textBody, fontSize: 13, lineHeight: 21, fontWeight: "600" },
@@ -141,7 +140,7 @@ const styles = StyleSheet.create({
   categoryCard: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: 16, gap: 18 },
   category: { gap: 8 }, categoryHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
   categoryTitle: { flex: 1, color: colors.textBody, fontSize: 13, lineHeight: 21, fontWeight: "600" },
-  categoryCount: { color: colors.accentLight, fontSize: 12, lineHeight: 20 },
+  categoryCount: { color: colors.accentLight, fontSize: 12, lineHeight: 20, flexShrink: 0, fontVariant: ["tabular-nums"] },
   categoryTrack: { height: 6, backgroundColor: colors.border, borderRadius: 4, overflow: "hidden" },
   categoryFill: { height: "100%", backgroundColor: FIRST, borderRadius: 4 },
 });

@@ -10,7 +10,7 @@ import { colors } from "../theme";
 const labels = {
   loading: "Φόρτωση προόδου…", local: "Αποθηκευμένα στη συσκευή · Επισκέπτης", queued: "Αλλαγές σε αναμονή συγχρονισμού", syncing: "Συγχρονισμός…", saved: "Συγχρονισμένα στον λογαριασμό", waiting: "Αναμονή σύνδεσης", error: "Ο συγχρονισμός χρειάζεται έλεγχο", "local-error": "Πρόβλημα αποθήκευσης στη συσκευή",
 };
-export default function SyncStatus({ detailed = false }: { detailed?: boolean }) {
+export default function SyncStatus({ detailed = false, quiet = false }: { detailed?: boolean; quiet?: boolean }) {
   const { store, dailyStore, email } = useLearningSession();
   const snapshot = useLearningSnapshot();
   const daily = useDailySnapshot();
@@ -31,6 +31,7 @@ export default function SyncStatus({ detailed = false }: { detailed?: boolean })
     } catch { setMessage("Δεν φορτώθηκε η πρόοδος επισκέπτη. Δοκίμασε ξανά."); }
     finally { setBusy(false); }
   }
+  if (quiet && !detailed && ["local", "saved"].includes(combined.status)) return null;
   return <View style={detailed ? styles.panel : styles.bar}>
     <View style={styles.row}>
       <Text style={styles.label} accessibilityLiveRegion="polite">{labels[combined.status]}</Text>
@@ -39,8 +40,7 @@ export default function SyncStatus({ detailed = false }: { detailed?: boolean })
     {detailed ? <>
       {combined.error ? <Text style={styles.body}>{combined.error}</Text> : null}
       <Text style={styles.note}>Άρθρα: {labels[snapshot.status]} · Ημερήσια: {labels[daily.status]}</Text>
-      <Text style={styles.body}>{snapshot.userId ? `Λογαριασμός: ${email ?? "Συνδεδεμένος χρήστης"}. Η πρόοδος άρθρων, οι σελιδοδείκτες και τα ημερήσια δεδομένα συγχρονίζονται αυτόματα όσο η εφαρμογή είναι ανοιχτή. Κάθε λογαριασμός έχει ξεχωριστά τοπικά δεδομένα.` : "Διαβάζεις ως επισκέπτης. Η πρόοδος άρθρων παραμένει σε αυτή τη συσκευή."}</Text>
-      <Text style={styles.note}>Η ημερήσια πρόκληση κρατά ένα αποτέλεσμα ανά ημερομηνία Αθήνας. Στα μαθήματα, οι πρώτες ολοκληρώσεις και οι επαναλήψεις μετριούνται χωριστά.</Text>
+      <Text style={styles.body}>{snapshot.userId ? `Λογαριασμός: ${email ?? "Συνδεδεμένος χρήστης"}. Αυτόματος συγχρονισμός όσο η εφαρμογή είναι ανοιχτή.` : "Ως επισκέπτης, κρατάς την πρόοδό σου σε αυτή τη συσκευή."}</Text>
       {snapshot.userId ? guest ? <View style={styles.importBox}>
         <Text style={styles.body}>Πρόοδος επισκέπτη: {describeLearningBackup(guest.backup)}</Text>
         <Text style={styles.body}>Χρονολογημένες ολοκληρώσεις μαθημάτων: {Object.keys(guest.activity).length}</Text>

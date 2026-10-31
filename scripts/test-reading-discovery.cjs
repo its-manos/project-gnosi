@@ -15,7 +15,8 @@ function compile(file, imports) {
   } });
   return mod.exports;
 }
-const discovery = compile('src/utils/readingDiscovery.ts', {});
+const lessonPath = compile('src/utils/lessonPath.ts', {});
+const discovery = compile('src/utils/readingDiscovery.ts', { './lessonPath': lessonPath });
 const catalogue = Object.freeze([
   { id: 'a', categoryId: 'one', subcategoryId: 'topic-a' },
   { id: 'b', categoryId: 'one', subcategoryId: 'topic-a' },
@@ -53,6 +54,7 @@ let slots = [], cursor = 0;
 const jsx = (type, props) => ({ type, props });
 const search = compile('src/screens/SearchScreen.tsx', {
   '../utils/readingDiscovery': discovery,
+  '../utils/lessonPath': lessonPath,
   react: { useMemo: fn => fn(), useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = initial; return [slots[i], v => { slots[i] = typeof v === 'function' ? v(slots[i]) : v; }]; } },
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': { Keyboard: { dismiss() {} }, View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', TextInput: 'Input', StyleSheet: { create: s => s } },

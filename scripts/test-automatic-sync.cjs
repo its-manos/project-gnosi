@@ -5,7 +5,7 @@ function compile(file,imports={}) {
  const m={exports:{}};const code=ts.transpileModule(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,jsx:ts.JsxEmit.ReactJSX}}).outputText;
  vm.runInNewContext(code,{module:m,exports:m.exports,console,setTimeout,clearTimeout,setInterval,clearInterval,__DEV__:true,require:id=>{if(id in imports)return imports[id];if(id.startsWith('.')){const target=path.normalize(path.join(path.dirname(file),id));return compile(fs.existsSync(path.join(__dirname,'..',target+'.ts'))?target+'.ts':target+'.tsx');}throw Error(id);}});return m.exports;
 }
-const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts')});
+const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts'),'./architectureLessons':compile('src/data/architectureLessons.ts'),'./astronomyLessons':compile('src/data/astronomyLessons.ts'),'./worldHistoryLessons':compile('src/data/worldHistoryLessons.ts')});
 const progress=compile('src/utils/lessonProgress.ts');
 const backup=compile('src/utils/learningBackup.ts',{'../data/lessons':data,'./lessonProgress':progress});
 const legacy=compile('src/utils/legacyLearning.ts',{'../data/lessons':data,'./lessonProgress':progress});

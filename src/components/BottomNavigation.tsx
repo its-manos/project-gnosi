@@ -60,8 +60,8 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
 }
 
 function activeTabForScreen(screen: AppScreen): NavigationTarget | null {
-  if (["home", "category", "subcategory", "lesson"].includes(screen)) return "home";
-  if (screen === "progress") return "progress";
+  if (["home", "category", "subcategory", "lesson", "quiz", "results", "review"].includes(screen)) return "home";
+  if (["progress", "account", "weekly-review"].includes(screen)) return "progress";
   if (screen === "search") return "search";
   if (screen === "saved") return "saved";
   return null;

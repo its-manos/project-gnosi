@@ -12,7 +12,7 @@ function compile(file,imports={}) {
  vm.runInNewContext(code,{module:mod,exports:mod.exports,console,Intl,require:id=>{if(id in imports)return imports[id];throw Error(id);}});
  return mod.exports;
 }
-const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts')});
+const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts'),'./architectureLessons':compile('src/data/architectureLessons.ts'),'./astronomyLessons':compile('src/data/astronomyLessons.ts'),'./worldHistoryLessons':compile('src/data/worldHistoryLessons.ts')});
 const progress=compile('src/utils/lessonProgress.ts');
 const util=compile('src/utils/learningBackup.ts',{'../data/lessons':data,'./lessonProgress':progress});
 const plain=x=>JSON.parse(JSON.stringify(x));

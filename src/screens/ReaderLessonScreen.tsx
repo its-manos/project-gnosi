@@ -1,3 +1,5 @@
+import ZoomableLessonImage from "../components/ZoomableLessonImage";
+import { useBetaAnalytics } from "../state/BetaAnalytics";
 import { useRef, useState } from "react";
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ScrollViewInstance } from "react-native";
@@ -8,6 +10,8 @@ import ArticleFigure from "../components/ArticleFigure";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import LessonCover from "../components/LessonCover";
 import SourceLink from "../components/SourceLink";
+import ReportContentButton from "../components/ReportContentButton";
+import { lessonReportTarget } from "../utils/contentReports";
 import { inlineArticleMedia } from "../data/articleMedia";
 import { colors, reading } from "../theme";
 import { getInlineQuestionCount, getParagraphCount, getResumeParagraphNumber } from "../utils/lessonProgress";
@@ -15,6 +19,8 @@ import { getInlineQuestionCount, getParagraphCount, getResumeParagraphNumber } f
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
   onToggleSaved, checkpointAnswers, onAnswerCheckpoint, onFinishLesson, onBack }: Props) {
+  const { analytics } = useBetaAnalytics();
+  const lastSeenParagraph = useRef(0);
   const [readingSize, setReadingSize] = useState(18);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -76,6 +82,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           </Pressable>
           <Text style={styles.brand}>ΑΝΑΓΝΩΣΗ</Text>
           <View style={styles.tools}>
+            <ReportContentButton target={lessonReportTarget(lesson)} iconOnly />
             <Pressable style={[styles.control, settingsOpen && styles.active]} onPress={() => setSettingsOpen(v => !v)}
               accessibilityRole="button" accessibilityLabel="Ρυθμίσεις ανάγνωσης" accessibilityState={{ expanded: settingsOpen }}>
               <Text style={styles.controlText}>Αα</Text>
@@ -115,7 +122,16 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
         </View>
       </View>
       <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false} onContentSizeChange={flushScroll}>
+        showsVerticalScrollIndicator={false} onContentSizeChange={flushScroll} scrollEventThrottle={500}
+        onScroll={event => {
+          const bottom = event.nativeEvent.contentOffset.y + event.nativeEvent.layoutMeasurement.height;
+          const seen = Object.entries(paragraphPositions.current).filter(([, pos]) => {
+            const sectionY = sectionPositions.current[pos.sectionIndex];
+            return sectionY !== undefined && sectionY + pos.y < bottom;
+          }).map(([number]) => Number(number));
+          const last = Math.max(0, ...seen);
+          if (last > lastSeenParagraph.current) { lastSeenParagraph.current = last; void analytics.progress({ last_paragraph: last }); }
+        }}>
         <Text style={styles.eyebrow}>{category.title} / {subcategory.title}</Text>
         <Text accessibilityRole="header" style={styles.title}>{lesson.title}</Text>
         <View style={styles.metadata}>
@@ -131,7 +147,9 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
         {lesson.contentNote ? <View style={styles.note}><Text style={styles.cardTitle}>Πριν διαβάσεις</Text><Text style={[styles.noteText, textStyle]}>{lesson.contentNote}</Text></View> : null}
         <Text style={[styles.intro, textStyle]}>{lesson.intro}</Text>
         <View style={styles.coverBlock}>
-          <LessonCover lesson={lesson} style={styles.cover} />
+          {lesson.coverKind !== "editorial" ? <ZoomableLessonImage image={{ uri: lesson.imageUrl, caption: lesson.imageCaption, credit: lesson.imageCredit, creditUrl: lesson.imageCreditUrl }}>
+            <LessonCover lesson={lesson} style={styles.cover} />
+          </ZoomableLessonImage> : <LessonCover lesson={lesson} style={styles.cover} />}
           <Text style={styles.caption}>{lesson.imageCaption}</Text>
           {lesson.coverKind !== "editorial" ? <Pressable style={styles.creditControl} accessibilityRole="link"
             accessibilityLabel={`Πηγή φωτογραφίας: ${lesson.imageCredit}`}
@@ -139,7 +157,6 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
             <Text style={styles.link}>Φωτογραφία: {lesson.imageCredit} ↗</Text>
           </Pressable> : null}
         </View>
-        <Text style={styles.readingHint}>Διάβασε με τον ρυθμό σου. Μια μικρή ερώτηση μετά από κάθε δύο παραγράφους σε βοηθά να θυμάσαι όσα μαθαίνεις.</Text>
         {sections.map((section, sectionIndex) => section.start > visibleLimit ? null : (
           <View key={section.title} style={styles.section} onLayout={event => {
             sectionPositions.current[sectionIndex] = event.nativeEvent.layout.y;
@@ -161,13 +178,13 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphCount === number)
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
                 {question ? <View style={styles.checkpoint}>
-                  <InlineQuestionCard question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]}
+                  <InlineQuestionCard question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={lessonReportTarget(lesson, questionIndex)}
                     readingSize={readingSize} onSelectAnswer={(answerIndex, correctIndex) => onAnswerCheckpoint(questionIndex, answerIndex, correctIndex)} />
                   {answered ? <ActionButton label={number < paragraphCount ? "Συνέχεια ανάγνωσης ↓" : "Στο κλείσιμο του άρθρου ↓"} secondary onPress={() => {
                     restored.current = true;
                     pendingScroll.current = number < paragraphCount ? number + 1 : "finish";
                     flushScroll();
-                  }} /> : <Text style={styles.small}>Διάλεξε μια απάντηση για να συνεχίσεις. Η εξήγηση εμφανίζεται μετά από κάθε επιλογή.</Text>}
+                  }} /> : <Text style={styles.small}>Διάλεξε μια απάντηση για να συνεχίσεις.</Text>}
                 </View> : null}
               </View>;
             })}
@@ -198,7 +215,7 @@ function ReaderSources({ lesson }: { lesson: Props["lesson"] }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: reading.background },
   chrome: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10, borderBottomWidth: 1, borderColor: reading.border, backgroundColor: reading.background },
-  topbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 },
+  topbar: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 4 },
   brand: { color: reading.muted, fontSize: 10, letterSpacing: 1.2, flexShrink: 1 },
   tools: { flexDirection: "row", alignItems: "center", gap: 6 },
   control: { minHeight: 44, minWidth: 44, paddingHorizontal: 10, justifyContent: "center", alignItems: "center", borderRadius: 10 },
@@ -207,7 +224,7 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.4 },
   settings: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, paddingVertical: 6 },
   small: { color: reading.muted, fontSize: 12, lineHeight: 20 },
-  progressLine: { flexDirection: "row", justifyContent: "space-between", gap: 12, marginTop: 4, marginBottom: 6 },
+  progressLine: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 12, marginTop: 4, marginBottom: 6 },
   track: { height: 3, borderRadius: 2, overflow: "hidden", backgroundColor: reading.border },
   fill: { height: 3, backgroundColor: "#C3B79B" },
   viewport: { flex: 1 },

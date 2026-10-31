@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { LessonQuestion } from "../data/lessons";
 import { colors, reading } from "../theme";
+import ReportContentButton from "./ReportContentButton";
+import type { ReportTarget } from "../utils/contentReports";
 
 type Props = {
   question: LessonQuestion;
@@ -8,6 +10,7 @@ type Props = {
   selectedAnswer: number | undefined;
   onSelectAnswer: (answerIndex: number, correctIndex: number) => void;
   readingSize?: number;
+  reportTarget?: ReportTarget;
 };
 
 export default function InlineQuestionCard({
@@ -16,6 +19,7 @@ export default function InlineQuestionCard({
   selectedAnswer,
   onSelectAnswer,
   readingSize,
+  reportTarget,
 }: Props) {
   const answered = selectedAnswer !== undefined;
   const isCorrect = selectedAnswer === question.correctIndex;
@@ -61,6 +65,7 @@ export default function InlineQuestionCard({
           <Text style={[styles.feedbackText, readingSize ? { fontSize: readingSize - 1, lineHeight: Math.round(readingSize * 1.6) } : undefined]}>{question.explanation}</Text>
         </View>
       )}
+      {reportTarget ? <ReportContentButton target={reportTarget} /> : null}
     </View>
   );
 }

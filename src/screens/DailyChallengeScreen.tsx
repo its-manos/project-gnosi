@@ -5,6 +5,8 @@ import AnswerOption from "../components/AnswerOption";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
 import DailyMistakeReview from "../components/DailyMistakeReview";
+import ReportContentButton from "../components/ReportContentButton";
+import { dailyReportTarget } from "../utils/contentReports";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
 import { DAILY_CHALLENGE_TOPICS, CHALLENGE_DIFFICULTIES, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
@@ -62,7 +64,7 @@ export default function DailyChallengeScreen({
   return (
     <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" />
-      {accountScoped ? <Text style={styles.syncNote}>Η προσπάθεια και το αποτέλεσμα συγχρονίζονται με τις άλλες συσκευές σου. Αν συνεχίσεις αλλού, εδώ θα εμφανιστεί η κοινή πρόκληση.</Text> : null}
+      {accountScoped ? <Text style={styles.syncNote}>Η πρόοδός σου συγχρονίζεται στις συσκευές σου.</Text> : null}
 
       {isLoading ? (
         <View style={styles.centerState}>
@@ -87,17 +89,15 @@ export default function DailyChallengeScreen({
                 ? "Πολύ καλή προσπάθεια!"
                 : "Κάθε μέρα μαθαίνεις κάτι νέο."}
           </Text>
-          <Text style={styles.muted}>Ολοκλήρωσες τη σημερινή πρόκληση της ΓΝΩΣΗΣ.</Text>
           <View style={styles.scoreCard}>
             <Text style={styles.muted}>Οι πόντοι σου</Text>
             <Text style={styles.score}>{correctCount * 100} / 700</Text>
             <Text style={styles.scoreMeta}>{correctCount} από {DAILY_CHALLENGE_SIZE} σωστές απαντήσεις</Text>
-            <Text style={styles.scoreMeta}>{Math.round((correctCount / DAILY_CHALLENGE_SIZE) * 100)}% επιτυχία</Text>
           </View>
           <Text style={styles.tomorrowNote}>Η επόμενη πρόκληση θα είναι διαθέσιμη αύριο.</Text>
           {!reviewAvailable ? <Text style={styles.tomorrowNote}>Η βαθμολογία έχει διατηρηθεί. Η επανάληψη δεν είναι διαθέσιμη για ερωτήσεις παλαιότερης έκδοσης.</Text> : missedQuestions.length > 0 ? (
             <View style={styles.reviewInvitation}>
-              <Text style={styles.body}>Ξαναδοκίμασε τις ερωτήσεις που έχασες. Η εξάσκηση δεν αλλάζει το σημερινό σκορ ή το σερί σου.</Text>
+              <Text style={styles.body}>Ξαναδοκίμασε τα λάθη σου χωρίς αλλαγή στο σκορ.</Text>
               <ActionButton
                 label={`Επανάληψη λαθών (${missedQuestions.length}) →`}
                 onPress={() => { setReviewDateKey(record.dateKey); scrollRef.current?.scrollTo({ y: 0, animated: false }); }}
@@ -114,12 +114,9 @@ export default function DailyChallengeScreen({
           <Text style={styles.eyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
           <Text style={styles.title}>7 ερωτήσεις. Νέες γνώσεις κάθε μέρα.</Text>
           <Text style={styles.body}>
-            Δοκίμασε τις γνώσεις σου σε διαφορετικά θέματα. Κάθε σωστή απάντηση αξίζει 100 πόντους, μέχρι 700 συνολικά.
+            100 πόντοι για κάθε σωστή απάντηση.
           </Text>
           <View style={styles.featureList}>
-            <Text style={styles.feature}>• 7 ερωτήσεις πολλαπλής επιλογής</Text>
-            <Text style={styles.feature}>• Άμεση εξήγηση μετά από κάθε απάντηση</Text>
-            <Text style={styles.feature}>• Μπορείς να κλείσεις την εφαρμογή και να συνεχίσεις αργότερα</Text>
             <View style={styles.preferencesSummary}>
               <Text style={styles.preferencesSummaryLabel}>ΤΑ ΘΕΜΑΤΑ ΣΟΥ</Text>
               <Text style={styles.preferencesSummaryValue}>{selectedTopicNames.join(" · ")}</Text>
@@ -151,6 +148,7 @@ export default function DailyChallengeScreen({
             <Text style={styles.question}>{currentQuestion.question}</Text>
           </View>
           <View style={styles.answers}>
+            <ReportContentButton key={currentQuestion.id} target={dailyReportTarget(currentQuestion)} />
             {currentQuestion.answers.map((answer, index) => (
               <AnswerOption
                 key={`${currentQuestion.id}-${answer}`}
@@ -195,7 +193,7 @@ export default function DailyChallengeScreen({
 
 const styles = StyleSheet.create({
   syncNote: { color: colors.textMuted, fontSize: 12, lineHeight: 20, marginBottom: 16 },
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   centerState: { alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 16 },
   introContainer: { alignItems: "stretch", paddingTop: 24 },
   heroMark: { width: 72, height: 72, alignSelf: "center", alignItems: "center", justifyContent: "center", borderRadius: 24, backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.borderStrong, marginBottom: 25 },
@@ -208,7 +206,7 @@ const styles = StyleSheet.create({
   preferencesSummary: { marginTop: 5, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border, gap: 4 },
   preferencesSummaryLabel: { color: colors.accentLight, fontSize: 9, fontWeight: "900", letterSpacing: 1 },
   preferencesSummaryValue: { color: colors.text, fontSize: 12, lineHeight: 18, marginBottom: 8 },
-  progressRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10, marginBottom: 11 },
+  progressRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between", alignItems: "center", marginTop: 10, marginBottom: 11 },
   muted: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   counter: { color: colors.accentLight, fontSize: 13, fontWeight: "800" },
   questionCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 21, borderWidth: 1, borderColor: colors.border, marginTop: 25, marginBottom: 19 },

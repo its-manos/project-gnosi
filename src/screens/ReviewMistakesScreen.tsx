@@ -3,6 +3,8 @@ import type { Lesson } from "../data/lessons";
 import ActionButton from "../components/ActionButton";
 import AnswerOption from "../components/AnswerOption";
 import AppHeader from "../components/AppHeader";
+import ReportContentButton from "../components/ReportContentButton";
+import { lessonReportTarget } from "../utils/contentReports";
 import { colors } from "../theme";
 
 type Props = {
@@ -23,27 +25,28 @@ export default function ReviewMistakesScreen({ lesson, indices, index, selected,
     <AppHeader onBack={onBack} backLabel="ΑΠΟΤΕΛΕΣΜΑ" />
     <Text style={styles.eyebrow}>ΕΞΑΣΚΗΣΗ ΣΤΑ ΛΑΘΗ</Text>
     <Text style={styles.title}>{finished ? "Τα διόρθωσες όλα!" : lesson.title}</Text>
-    <Text style={styles.body}>Εδώ δουλεύεις μόνο τις ερωτήσεις που έχασες στην τελευταία πλήρη προσπάθεια. Η αρχική βαθμολογία και οι μετρητές δραστηριότητας παραμένουν όπως ήταν.</Text>
+    <Text style={styles.body}>Ξαναδοκίμασε τα λάθη σου. Το αρχικό σκορ διατηρείται.</Text>
     {finished ? <View style={styles.card}>
       <Text style={styles.cardTitle}>{indices.length} / {indices.length} ερωτήσεις διορθώθηκαν</Text>
-      <Text style={styles.body}>Μπορείς να επιστρέψεις στο αποτέλεσμα ή να κάνεις αργότερα μια πλήρη επανάληψη για ένα νέο σκορ.</Text>
+      <Text style={styles.body}>Για νέο σκορ, κάνε μια πλήρη επανάληψη του μαθήματος.</Text>
       <ActionButton label="Πίσω στο αποτέλεσμα" onPress={onBack} />
     </View> : question ? <>
-      <Text style={styles.counter}>{index + 1} από {indices.length} προς εξάσκηση · Ερώτηση μαθήματος {indices[index] + 1}</Text>
+      <Text style={styles.counter}>{index + 1} / {indices.length} ερωτήσεις</Text>
       <View style={styles.card}><Text style={styles.question}>{question.question}</Text></View>
+      <ReportContentButton key={indices[index]} target={lessonReportTarget(lesson, indices[index])} />
       <View style={styles.answers}>{question.answers.map((answer, answerIndex) => <AnswerOption key={answerIndex} label={answer} index={answerIndex}
         selected={selected === answerIndex} correct={answerIndex === question.correctIndex} locked={selected !== null} onPress={() => onChoose(answerIndex)} />)}</View>
       {selected !== null ? <View style={styles.card} accessibilityLiveRegion="polite">
         <Text style={styles.cardTitle}>{correct ? "Το βρήκες!" : "Ας το δούμε ακόμη μία φορά"}</Text>
         <Text style={styles.body}>{question.explanation}</Text>
-        {!correct ? <Text style={styles.body}>Ξαναδιάβασε την εξήγηση και απάντησε σωστά πριν προχωρήσεις.</Text> : null}
+        {!correct ? <Text style={styles.body}>Βρες τη σωστή απάντηση για να προχωρήσεις.</Text> : null}
         <ActionButton label={correct ? (index === indices.length - 1 ? "Ολοκλήρωση εξάσκησης" : "Επόμενη ερώτηση") : "Δοκίμασε ξανά"} onPress={correct ? onNext : onRetry} />
       </View> : null}
     </> : <ActionButton label="Πίσω στο αποτέλεσμα" onPress={onBack} />}
   </ScrollView>;
 }
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44, gap: 16 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44, gap: 16 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 18, fontWeight: "800", letterSpacing: 1 },
   title: { color: colors.text, fontSize: 27, lineHeight: 36, fontWeight: "800" },
   body: { color: colors.textBody, fontSize: 14, lineHeight: 23 },

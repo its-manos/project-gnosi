@@ -63,6 +63,11 @@ export function quizFingerprint(questions: { question: string; answers: string[]
   return `q_${(hash >>> 0).toString(16)}`;
 }
 
+/** Explicit editorial aliases only: same objectives, order and correct answer slots. */
+export function lessonQuizMatches(lesson: { questions: Parameters<typeof quizFingerprint>[0]; compatibleQuizKeys?: string[] }, key: string): boolean {
+  return key === quizFingerprint(lesson.questions) || lesson.compatibleQuizKeys?.includes(key) === true;
+}
+
 // Date-key arithmetic uses calendar dates in UTC, not local 24-hour intervals.
 // This preserves Athens day/week boundaries through DST transitions.
 export function shiftDateKey(key: string, days: number): string {

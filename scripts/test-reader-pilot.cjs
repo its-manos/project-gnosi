@@ -17,7 +17,8 @@ const react = {
   useRef: value => { const i = refIndex++; return refs[i] ??= { current: value }; },
 };
 const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
-const common = { react, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
+const analyticsScrollEvents = [];
+const common = { '../state/BetaAnalytics': {useBetaAnalytics: () => ({analytics:{progress:async value => {analyticsScrollEvents.push(value);}}})}, react, './ReportContentButton': { __esModule: true, default: 'ReportContentButton' }, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
   'react-native-svg': { __esModule: true, default: 'Svg', Path: 'Path' } };
 function compile(file, imports = {}) {
   const mod = { exports: {} };
@@ -31,11 +32,11 @@ function compile(file, imports = {}) {
 const progress = compile('src/utils/lessonProgress.ts');
 const addition = compile('src/data/additionalLessons.ts');
 const expansion = compile('src/data/catalogueExpansion.ts');
-const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './catalogueExpansion': expansion });
-const media = compile('src/data/articleMedia.ts');
+const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts') });
+const media = compile('src/data/articleMedia.ts', { './architectureMedia': compile('src/data/architectureMedia.ts'), './astronomyMedia': compile('src/data/astronomyMedia.ts'), './worldHistoryMedia': compile('src/data/worldHistoryMedia.ts') });
 const theme = compile('src/theme.ts');
-const stubs = Object.fromEntries(['ActionButton','ArticleFigure','InlineQuestionCard','LessonCover','SourceLink','AppHeader'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
-const imports = { ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress };
+const stubs = Object.fromEntries(['ZoomableLessonImage','ActionButton','ArticleFigure','InlineQuestionCard','LessonCover','SourceLink','AppHeader','ReportContentButton'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
+const imports = { ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
 const Reader = compile('src/screens/ReaderLessonScreen.tsx', imports).default;
 const Entry = compile('src/screens/LessonScreen.tsx', { ...imports, './ReaderLessonScreen': { __esModule: true, default: Reader } }).default;
 const lesson = data.lessons.find(l => l.id === 'ancient-athens');
@@ -79,6 +80,8 @@ const total = progress.getInlineQuestionCount(lesson);
 for(let i=0;i<total;i++) {
   const q=nodes(tree).filter(n => n.type === 'InlineQuestionCard').at(-1);
   assert.equal(q.props.questionNumber,i+1);
+  assert.equal(q.props.reportTarget.itemId,lesson.id);
+  assert.equal(q.props.reportTarget.questionIndex,i,'question reporting uses canonical checkpoint index');
   const choice=i===0 ? (q.props.question.correctIndex+1)%q.props.question.answers.length : q.props.question.correctIndex;
   q.props.onSelectAnswer(choice,q.props.question.correctIndex);
   assert.deepEqual(calls.at(-1),['answer',i,choice,q.props.question.correctIndex]);
@@ -146,15 +149,27 @@ for(const article of data.lessons) {
   const sources=nodes(tree).find(n=>typeof n.type==='function');
   assert.deepEqual(nodes(sources.type(sources.props)).filter(n=>n.type==='SourceLink').map(n=>n.props.source.url),Array.from(article.sources,s=>s.url));
 }
-assert.equal(data.lessons.length,45); assert.ok(notes>0); assert.ok(figures>0);
-// Completion -> results -> related article uses the existing callback contract.
-const discovery=compile('src/utils/readingDiscovery.ts');
-const recommendations=discovery.getRelatedLessons(lesson,data.lessons,[lesson.id],[],'2026-10-30');
-const Results=compile('src/screens/ResultsScreen.tsx',{...imports,'../components/ReadingPick':{__esModule:true,default:'ReadingPick'}}).default;
+assert.ok(data.lessons.length>=45); assert.ok(notes>0); assert.ok(figures>0);
+// Completion -> results -> next unlocked lesson uses the existing callback contract.
+const lessonPath=compile('src/utils/lessonPath.ts');
+const nextLesson=lessonPath.getNextPathLesson(lesson,data.lessons,[lesson.id]);
+const Results=compile('src/screens/ResultsScreen.tsx',{...imports,'../components/LessonResultChart':{__esModule:true,default:'LessonResultChart'}}).default;
 let destination=null;
-const resultTree=Results({lesson,score:total,recommendations,onHome:()=>{},onReadAgain:()=>{},onBrowse:()=>{},onOpenLesson:id=>{destination=id;}});
-const pick=nodes(resultTree).find(n=>n.type==='ReadingPick'); assert.ok(pick);pick.props.onPress();
+const resultTree=Results({lesson,score:total,nextLesson,onHome:()=>{},onReadAgain:()=>{},onBrowse:()=>{},onOpenLesson:id=>{destination=id;}});
+const pick=nodes(resultTree).find(n=>n.props?.label==='Επόμενο μάθημα'); assert.ok(pick);pick.props.onPress();
 const next=data.lessons.find(l=>l.id===destination);
 assert.ok(next && next.id!==lesson.id);
 assert.equal(Entry({...props,lesson:next}).type,Reader);
-console.log(`Reader checks passed for ${data.lessons.length} articles: every paragraph/checkpoint boundary, ${notes} content notes, ${figures} inline figures, source retention, text controls, resume, completion and related-article routing. Native views mocked.`);
+// Last visible paragraph is observed through native scroll/layout callbacks.
+reset(); tree=render();
+const firstMeasuredParagraph=byId(tree,'reader-paragraph-1');
+const firstMeasuredSection=nodes(tree).find(n=>n.type==='View'&&n.props?.onLayout&&n!==firstMeasuredParagraph&&nodes(n).includes(firstMeasuredParagraph));
+lay(firstMeasuredSection,100);lay(firstMeasuredParagraph,20);lay(byId(tree,'reader-paragraph-2'),180);
+const measuredScroll=nodes(tree).find(n=>n.type==='ScrollView');
+measuredScroll.props.onScroll({nativeEvent:{contentOffset:{y:0},layoutMeasurement:{height:200}}});
+measuredScroll.props.onScroll({nativeEvent:{contentOffset:{y:150},layoutMeasurement:{height:200}}});
+assert.equal(analyticsScrollEvents.at(-1).last_paragraph,2);
+const observedCount=analyticsScrollEvents.length;
+measuredScroll.props.onScroll({nativeEvent:{contentOffset:{y:0},layoutMeasurement:{height:200}}});
+assert.equal(analyticsScrollEvents.length,observedCount,'Scrolling back cannot lower the last-seen paragraph');
+console.log(`Reader checks passed for ${data.lessons.length} articles: every paragraph/checkpoint boundary, ${notes} content notes, ${figures} inline figures, source retention, text controls, resume, completion and next-lesson routing. Native views mocked.`);

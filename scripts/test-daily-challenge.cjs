@@ -95,10 +95,24 @@ const nicheSelection = selectDailyQuestions(dateKey, questions, nichePreferences
 assert.equal(nicheSelection.length, DAILY_CHALLENGE_SIZE, 'a narrow topic set must always produce a full challenge');
 assert.ok(nicheSelection.some((q) => nichePreferences.topicIds.includes(q.categoryId)), 'selection should include chosen topics where possible');
 const nicheExactQuestions = questions.filter((q) => nichePreferences.topicIds.includes(q.categoryId) && q.difficulty === nichePreferences.difficulty);
-for (const question of nicheExactQuestions) {
-  assert.ok(nicheSelection.some((selected) => selected.id === question.id),
-    `matching question ${question.id} should be prioritized before fallback questions`);
+if (nicheExactQuestions.length >= DAILY_CHALLENGE_SIZE) {
+  assert.ok(nicheSelection.every((q) => nicheExactQuestions.some((exact) => exact.id === q.id)),
+    'a full exact-match pool should not need fallback questions');
+} else {
+  for (const question of nicheExactQuestions) {
+    assert.ok(nicheSelection.some((selected) => selected.id === question.id),
+      `matching question ${question.id} should be prioritized before fallback questions`);
+  }
 }
+// Keep fallback coverage even as the real catalogue grows beyond seven matches.
+const scarceMatches = nicheExactQuestions.slice(0, 2);
+const fallbackBank = [...scarceMatches, ...questions.filter((q) =>
+  !nichePreferences.topicIds.includes(q.categoryId) && q.difficulty === 'hard')];
+assert.ok(fallbackBank.length >= DAILY_CHALLENGE_SIZE);
+const fallbackSelection = selectDailyQuestions(dateKey, fallbackBank, nichePreferences);
+assert.equal(fallbackSelection.length, DAILY_CHALLENGE_SIZE);
+assert.ok(scarceMatches.every((q) => fallbackSelection.some((selected) => selected.id === q.id)),
+  'scarce exact matches must be selected before filling from other topics');
 assert.ok(nicheSelection.every((q) => q.difficulty === 'hard'), 'the challenge should retain difficulty when the bank can fill it');
 assert.deepEqual(
   selectDailyQuestions(dateKey, questions, nichePreferences).map((q) => q.id),

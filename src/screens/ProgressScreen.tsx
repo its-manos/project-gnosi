@@ -1,15 +1,15 @@
-import type { BackupControls } from "../components/CloudBackupPanel";
+import UsageSharing from "../components/UsageSharing";
 import SyncStatus from "../components/SyncStatus";
-import AccountPanel from "../components/AccountPanel";
 import WeeklyReviewCard from "../components/WeeklyReviewCard";
 import LearningActivityPanel, { CategoryProgress } from "../components/LearningActivityPanel";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useDailySnapshot } from "../state/LearningSession";
+import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
-import type { Lesson } from "../data/lessons";
+import { lessons, type Lesson } from "../data/lessons";
+import { lessonScores } from "../utils/weeklyReview";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
@@ -17,7 +17,7 @@ import { colors } from "../theme";
 type Props = {
   onWeeklyReview?: () => void;
   onOpenWelcome?: () => void;
-  backupControls?: BackupControls;
+  onOpenAccount?: () => void;
   canResetLessonProgress?: boolean;
   onHome: () => void;
   completedLessons: Lesson[];
@@ -41,12 +41,11 @@ function formatDate(dateKey: string): string {
   }).format(date);
 }
 
-function MetricCard({ label, value, detail }: { label: string; value: string; detail?: string }) {
+function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.metricCard}>
-      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={[styles.metricLabel, styles.cardLabel]}>{label}</Text>
       <Text style={styles.metricValue}>{value}</Text>
-      {detail ? <Text style={styles.metricDetail}>{detail}</Text> : null}
     </View>
   );
 }
@@ -54,7 +53,7 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
 export default function ProgressScreen({
   onWeeklyReview,
   onOpenWelcome,
-  backupControls,
+  onOpenAccount,
   canResetLessonProgress = true,
   onHome,
   completedLessons,
@@ -67,8 +66,14 @@ export default function ProgressScreen({
   onOpenLesson,
   onResetLessonProgressForDevelopment,
 }: Props) {
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const learning = useLearningSnapshot();
   const daily = useDailySnapshot();
+  const [dailyExpanded, setDailyExpanded] = useState(false);
+  const [lessonsExpanded, setLessonsExpanded] = useState(false);
+  const mastery = useMemo(() => {
+    const rows = lessons.map(lesson => lessonScores(lesson, learning.activity, learning.weeklyReviews));
+    return { count: rows.reduce((sum, row) => sum + row.mastered, 0), unknown: completedLessons.filter(lesson => !lessonScores(lesson, learning.activity, learning.weeklyReviews).hasDetails).length };
+  }, [learning.activity, learning.weeklyReviews, completedLessons]);
   const history = useMemo(() => dailyHistory(daily.doc), [daily.doc]);
   const historyLoaded = daily.ready;
   const [isResetting, setIsResetting] = useState(false);
@@ -124,22 +129,50 @@ export default function ProgressScreen({
   return (
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.header} />
-      <SyncStatus />
-      <View style={styles.accountSection}>
-        <ActionButton label={isAccountOpen ? "Απόκρυψη στοιχείων λογαριασμού" : "Λογαριασμός — Σύνδεση / Εγγραφή"} style={styles.accountButton} secondary onPress={() => setIsAccountOpen((open) => !open)} />
-        {isAccountOpen ? <><SyncStatus detailed /><AccountPanel backupControls={backupControls} /></> : null}
+      <SyncStatus quiet />
+      <Text accessibilityRole="header" style={styles.title}>Η πρόοδός σου</Text>
+
+      <View testID="progress-overview" style={styles.overview}>
+        <View style={styles.completionHero}>
+          <Text style={styles.metricLabel}>ΟΛΟΚΛΗΡΩΜΕΝΑ ΜΑΘΗΜΑΤΑ</Text>
+          <Text style={styles.heroValue}>{lessonProgressLoaded ? completedLessons.length : "—"}<Text style={styles.heroTotal}> / {totalLessonCount}</Text></Text>
+          <View style={styles.track} accessible accessibilityRole="progressbar" accessibilityLabel="Ολοκληρωμένα μαθήματα" accessibilityValue={{ min: 0, max: totalLessonCount || 1, now: lessonProgressLoaded ? completedLessons.length : 0 }}>
+            <View style={[styles.trackFill, { width: lessonProgressLoaded ? `${lessonProgressPercent}%` : "0%" }]} />
+          </View>
+        </View>
+        <View style={styles.metricsGrid}>
+          <MetricCard label="ΤΡΕΧΟΝ ΗΜΕΡΗΣΙΟ ΣΕΡΙ" value={historyLoaded ? String(stats.currentStreak) : "—"} />
+          <MetricCard label="ΚΑΤΑΚΤΗΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ" value={learning.ready ? String(mastery.count) : "—"} />
+        </View>
+        {learning.ready && mastery.unknown > 0 ? <Text style={styles.muted}>Παλιότερα σκορ χωρίς ανάλυση: χρειάζεται επανάληψη.</Text> : null}
       </View>
 
-      <Text style={styles.eyebrow}>Η ΔΙΑΔΡΟΜΗ ΣΟΥ</Text>
-      <Text style={styles.title}>Η πρόοδός σου</Text>
-      <Text style={styles.intro}>Κάθε μικρό βήμα προσθέτει μια νέα γνώση. Δες πώς τα πηγαίνεις στις καθημερινές προκλήσεις και στα άρθρα.</Text>
+      {inProgressLesson && lessonProgressLoaded ? <View testID="progress-resume" style={styles.actionSection}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>Συνέχισε το μάθημα</Text>
+        <Pressable style={styles.resumeCard} onPress={() => onOpenLesson(inProgressLesson.id)} accessibilityRole="button" accessibilityLabel={`Συνέχισε το μάθημα ${inProgressLesson.title}`}>
+          <View style={styles.lessonTextBlock}><Text style={styles.lessonStatus}>ΣΕ ΕΞΕΛΙΞΗ</Text><Text style={styles.lessonTitle}>{inProgressLesson.title}</Text><Text style={styles.muted}>{inProgressAnsweredCount} / {inProgressQuestionCount} ερωτήσεις απαντήθηκαν</Text></View><Text style={styles.chevron}>→</Text>
+        </Pressable>
+        {inProgressLessonCount > 1 ? <Text style={styles.muted}>Έχεις ακόμη {inProgressLessonCount - 1} ημιτελείς προσπάθειες στις θεματικές σου.</Text> : null}
+      </View> : null}
 
-      {onOpenWelcome ? <Pressable style={styles.guideLink} accessibilityRole="button" onPress={onOpenWelcome}><Text style={styles.guideLinkText}>Δες τον οδηγό εκκίνησης →</Text></Pressable> : null}
+      {onWeeklyReview ? <View testID="progress-weekly"><WeeklyReviewCard onOpen={onWeeklyReview} /></View> : null}
+      <View testID="progress-activity"><LearningActivityPanel todayKey={todayKey} compact /></View>
 
-      {onWeeklyReview ? <WeeklyReviewCard onOpen={onWeeklyReview} /> : null}
-      <LearningActivityPanel todayKey={todayKey} />
+      <View testID="progress-categories">
+        <CategoryProgress />
+        {completedLessons.length > 0 ? <>
+          <Pressable style={styles.disclosure} accessibilityRole="button" accessibilityState={{ expanded: lessonsExpanded }} onPress={() => setLessonsExpanded(value => !value)}>
+            <View style={styles.accountCopy}><Text style={styles.accountTitle}>Τα ολοκληρωμένα μαθήματά σου</Text><Text style={styles.muted}>{completedLessons.length} μαθήματα</Text></View><Text style={styles.chevron}>{lessonsExpanded ? "−" : "+"}</Text>
+          </Pressable>
+          {lessonsExpanded ? <View style={styles.lessonProgressCard}>{completedLessons.map(lesson => <Pressable key={lesson.id} style={styles.completedLessonRow} onPress={() => onOpenLesson(lesson.id)} accessibilityRole="button"><Text style={styles.completedMark}>✓</Text><Text style={styles.completedLessonTitle}>{lesson.title}</Text><Text style={styles.chevron}>›</Text></Pressable>)}</View> : null}
+        </> : null}
+      </View>
 
-      <Text style={styles.sectionTitle}>Καθημερινή πρόκληση</Text>
+      <View testID="progress-daily">
+        <Pressable style={styles.disclosure} accessibilityRole="button" accessibilityState={{ expanded: dailyExpanded }} onPress={() => setDailyExpanded(value => !value)}>
+          <View style={styles.accountCopy}><Text style={styles.accountTitle}>Οι καθημερινές προκλήσεις σου</Text><Text style={styles.muted}>{historyLoaded ? `${stats.completedChallenges} quiz · ${stats.totalPoints.toLocaleString("el-GR")} πόντοι` : "Φόρτωση στατιστικών…"}</Text></View><Text style={styles.chevron}>{dailyExpanded ? "−" : "+"}</Text>
+        </Pressable>
+        {dailyExpanded ? <View testID="progress-daily-details" style={styles.dailyDetails}>
       {!historyLoaded ? (
         <View style={styles.loadingCard}>
           <ActivityIndicator color={colors.accentLight} />
@@ -148,31 +181,28 @@ export default function ProgressScreen({
       ) : (
         <>
           <View style={styles.metricsGrid}>
-            <MetricCard label="ΤΡΕΧΟΝ ΣΕΡΙ" value={`${stats.currentStreak}`} detail={stats.currentStreak === 1 ? "ημέρα" : "ημέρες"} />
-            <MetricCard label="ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ" value={`${stats.longestStreak}`} detail={stats.longestStreak === 1 ? "ημέρα" : "ημέρες"} />
-            <MetricCard label="ΟΛΟΚΛΗΡΩΜΕΝΑ QUIZ" value={`${stats.completedChallenges}`} detail="ημερήσιες προκλήσεις" />
-            <MetricCard label="ΣΥΝΟΛΙΚΟΙ ΠΟΝΤΟΙ" value={stats.totalPoints.toLocaleString("el-GR")} detail="100 πόντοι ανά σωστή απάντηση" />
+            <MetricCard label="ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ" value={`${stats.longestStreak}`} />
+            <MetricCard label="ΟΛΟΚΛΗΡΩΜΕΝΑ QUIZ" value={`${stats.completedChallenges}`} />
+            <MetricCard label="ΣΥΝΟΛΙΚΟΙ ΠΟΝΤΟΙ" value={stats.totalPoints.toLocaleString("el-GR")} />
           </View>
 
           <View style={styles.accuracyCard}>
             <View style={styles.accuracyHeader}>
               <View style={styles.accuracyCopy}>
                 <Text style={styles.metricLabel}>ΣΥΝΟΛΙΚΗ ΑΚΡΙΒΕΙΑ</Text>
-                <Text style={styles.accuracyValue}>{stats.accuracyPercent}%</Text>
+                <Text style={styles.accuracyValue}>{stats.totalAnswers ? `${stats.accuracyPercent}%` : "—"}</Text>
               </View>
               <Text style={styles.accuracyCount}>{stats.totalCorrectAnswers} / {stats.totalAnswers} σωστές</Text>
             </View>
             <View style={styles.track}>
               <View style={[styles.trackFill, { width: `${stats.accuracyPercent}%` }]} />
             </View>
-            <Text style={styles.metricDetail}>Η ακρίβεια υπολογίζεται από όλες τις ολοκληρωμένες ημερήσιες προκλήσεις.</Text>
           </View>
 
           <Text style={styles.sectionTitle}>Πρόσφατες προκλήσεις</Text>
           {history.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>Η πρώτη σου πρόκληση σε περιμένει</Text>
-              <Text style={styles.muted}>Μόλις ολοκληρώσεις την πρώτη ημερήσια πρόκληση, θα εμφανιστούν εδώ το σκορ και οι επιδόσεις σου.</Text>
             </View>
           ) : (
             <View style={styles.historyList}>
@@ -192,55 +222,17 @@ export default function ProgressScreen({
           )}
         </>
       )}
+        </View> : null}
+      </View>
 
-      <Text style={styles.sectionTitle}>Μαθήματα</Text>
-      {!lessonProgressLoaded ? (
-        <View style={styles.loadingCard}>
-          <ActivityIndicator color={colors.accentLight} />
-          <Text style={styles.muted}>Φόρτωση προόδου μαθημάτων…</Text>
-        </View>
-      ) : (
-        <View style={styles.lessonProgressCard}>
-          <View style={styles.lessonProgressHeader}>
-            <Text style={styles.lessonProgressHeading}>Ολοκληρωμένα μαθήματα</Text>
-            <Text style={styles.lessonProgressCount}>{completedLessons.length} / {totalLessonCount}</Text>
-          </View>
-          <View style={styles.track}>
-            <View style={[styles.trackFill, { width: `${lessonProgressPercent}%` }]} />
-          </View>
-          <Text style={styles.metricDetail}>{lessonProgressPercent}% του διαθέσιμου περιεχομένου έχει ολοκληρωθεί.</Text>
+      <View testID="progress-account" style={styles.footerSection}>
+        {onOpenAccount ? <Pressable accessibilityRole="button" onPress={onOpenAccount} style={styles.accountLink}>
+          <View style={styles.accountCopy}><Text style={styles.accountTitle}>Ο λογαριασμός μου</Text></View><Text style={styles.chevron}>›</Text>
+        </Pressable> : null}
+        {onOpenWelcome ? <Pressable style={styles.guideLink} accessibilityRole="button" onPress={onOpenWelcome}><Text style={styles.guideLinkText}>Δες τον οδηγό εκκίνησης →</Text></Pressable> : null}
+      </View>
 
-          {inProgressLesson ? (
-            <Pressable style={styles.inProgressRow} onPress={() => onOpenLesson(inProgressLesson.id)} accessibilityRole="button">
-              <View style={styles.lessonTextBlock}>
-                <Text style={styles.lessonStatus}>ΣΕ ΕΞΕΛΙΞΗ</Text>
-                <Text style={styles.lessonTitle}>{inProgressLesson.title}</Text>
-                <Text style={styles.muted}>{inProgressAnsweredCount} / {inProgressQuestionCount} ερωτήσεις checkpoint απαντήθηκαν</Text>
-              </View>
-              <Text style={styles.chevron}>›</Text>
-            </Pressable>
-          ) : null}
-
-          {completedLessons.length > 0 ? (
-            <View style={styles.completedLessonSection}>
-              <Text style={styles.subsectionTitle}>Ολοκληρωμένα</Text>
-              {completedLessons.slice(0, 5).map((lesson) => (
-                <Pressable key={lesson.id} style={styles.completedLessonRow} onPress={() => onOpenLesson(lesson.id)} accessibilityRole="button">
-                  <Text style={styles.completedMark}>✓</Text>
-                  <Text style={styles.completedLessonTitle}>{lesson.title}</Text>
-                  <Text style={styles.chevron}>›</Text>
-                </Pressable>
-              ))}
-              {completedLessons.length > 5 ? <Text style={styles.muted}>Και {completedLessons.length - 5} ακόμη μαθήματα.</Text> : null}
-            </View>
-          ) : (
-            <Text style={styles.muted}>Δεν έχεις ολοκληρώσει ακόμη κάποιο μάθημα.</Text>
-          )}
-          {inProgressLessonCount > 1 ? <Text style={styles.muted}>Έχεις {inProgressLessonCount} ημιτελείς προσπάθειες αποθηκευμένες.</Text> : null}
-        </View>
-      )}
-
-      <CategoryProgress />
+      <UsageSharing />
 
       {__DEV__ ? (
         <View style={styles.devTools}>
@@ -259,28 +251,38 @@ export default function ProgressScreen({
 }
 
 const styles = StyleSheet.create({
+  overview: { gap: 12, marginTop: 4, marginBottom: 16 },
+  completionHero: { backgroundColor: colors.accentSurface, borderRadius: 22, borderColor: colors.borderStrong, borderWidth: 1, padding: 20 },
+  heroValue: { color: colors.text, fontSize: 44, lineHeight: 56, fontWeight: "900", marginTop: 8 },
+  heroTotal: { color: colors.textMuted, fontSize: 20, fontWeight: "600" },
+  actionSection: { gap: 10, marginBottom: 12 },
+  resumeCard: { flexDirection: "row", alignItems: "center", padding: 18, backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.borderStrong, minHeight: 88 },
+  disclosure: { flexDirection: "row", alignItems: "center", minHeight: 72, padding: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, marginVertical: 8 },
+  dailyDetails: { paddingBottom: 12 },
+  footerSection: { marginTop: 22 },
   guideLink: { minHeight: 44, justifyContent: "center", paddingVertical: 10, marginBottom: 10 },
   guideLinkText: { color: colors.accentLight, fontSize: 13, lineHeight: 21 },
   header: { marginBottom: 12 },
-  accountSection: { marginBottom: 24 },
-  accountButton: { marginTop: 0 },
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 42 },
+  accountLink: { flexDirection: "row", alignItems: "center", padding: 16, marginBottom: 14, borderWidth: 1, borderColor: colors.border, borderRadius: 18, backgroundColor: colors.surface },
+  accountCopy: { flex: 1, gap: 4 },
+  accountTitle: { color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "800" },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 42 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.5, marginBottom: 10 },
   title: { color: colors.text, fontSize: 31, lineHeight: 39, fontWeight: "900", marginBottom: 10 },
   intro: { color: colors.textBody, fontSize: 14, lineHeight: 22, marginBottom: 25 },
   sectionTitle: { color: colors.text, fontSize: 19, fontWeight: "900", marginTop: 15, marginBottom: 13 },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  metricCard: { width: "48%", flexGrow: 1, minHeight: 112, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 17, padding: 15, justifyContent: "space-between" },
+  metricCard: { flexBasis: "46%", flexGrow: 1, minHeight: 112, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 17, padding: 15, gap: 8 },
   metricLabel: { color: colors.textMuted, fontSize: 9, fontWeight: "900", letterSpacing: 0.8, lineHeight: 14 },
-  metricValue: { color: colors.accentLight, fontSize: 29, fontWeight: "900", marginVertical: 5 },
-  metricDetail: { color: colors.textMuted, fontSize: 11, lineHeight: 17, marginTop: 7 },
+  cardLabel: { minHeight: 28, flexGrow: 1 },
+  metricValue: { color: colors.accentLight, fontSize: 29, lineHeight: 38, fontWeight: "900", fontVariant: ["tabular-nums"] },
   loadingCard: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 11, padding: 24, backgroundColor: colors.surface, borderRadius: 17 },
   muted: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   accuracyCard: { marginTop: 12, padding: 17, backgroundColor: colors.surfaceSoft, borderRadius: 18, borderWidth: 1, borderColor: colors.border },
-  accuracyHeader: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: 10 },
+  accuracyHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 10 },
   accuracyCopy: { flex: 1 },
   accuracyValue: { color: colors.text, fontSize: 30, fontWeight: "900", marginTop: 4 },
-  accuracyCount: { color: colors.textBody, fontSize: 11, textAlign: "right", marginBottom: 6 },
+  accuracyCount: { color: colors.textBody, fontSize: 11, textAlign: "right", marginBottom: 6, flexShrink: 1 },
   track: { height: 7, overflow: "hidden", backgroundColor: "#282D40", borderRadius: 20, marginTop: 13 },
   trackFill: { height: "100%", backgroundColor: colors.accent, borderRadius: 20 },
   emptyCard: { padding: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, gap: 8 },
@@ -304,7 +306,7 @@ const styles = StyleSheet.create({
   chevron: { color: colors.accentLight, fontSize: 28, fontWeight: "400", paddingLeft: 6 },
   completedLessonSection: { marginTop: 5, gap: 2 },
   subsectionTitle: { color: colors.textBody, fontSize: 11, fontWeight: "800", marginBottom: 7 },
-  completedLessonRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8 },
+  completedLessonRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8, minHeight: 48 },
   completedMark: { color: colors.success, fontSize: 15, fontWeight: "900" },
   completedLessonTitle: { color: colors.textBody, fontSize: 12, flex: 1 },
   devTools: { marginTop: 26, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: "#121523" },

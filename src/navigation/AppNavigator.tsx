@@ -1,8 +1,13 @@
+import { useBetaAnalytics } from "../state/BetaAnalytics";
+import type { AnalyticsScreen } from "../utils/betaAnalytics";
+import { getInlineQuestionCount } from "../utils/lessonProgress";
 import { parseLearningBackup } from "../utils/learningBackup";
-import { getHomeDiscovery, getRelatedLessons } from "../utils/readingDiscovery";
+import { getHomeDiscovery } from "../utils/readingDiscovery";
+import { getLessonAccess, getNextPathLesson, getSubcategoryPath } from "../utils/lessonPath";
+import { welcomeLessonCandidates } from "../utils/welcomeLesson";
 import { useAthensDate } from "../hooks/useAthensDate";
-import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, BackHandler, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
 
@@ -15,7 +20,7 @@ import BottomNavigation from "../components/BottomNavigation";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { useWelcome } from "../hooks/useWelcome";
 import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
-import { finishWelcome } from "../utils/firstRun";
+import { finishWelcome, type WelcomeDestination } from "../utils/firstRun";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
 import SubcategoryScreen from "../screens/SubcategoryScreen";
@@ -24,6 +29,7 @@ import QuizScreen from "../screens/QuizScreen";
 import ResultsScreen from "../screens/ResultsScreen";
 import ReviewMistakesScreen from "../screens/ReviewMistakesScreen";
 import WeeklyReviewScreen from "../screens/WeeklyReviewScreen";
+import AccountScreen from "../screens/AccountScreen";
 import SavedLessonsScreen from "../screens/SavedLessonsScreen";
 import SearchScreen from "../screens/SearchScreen";
 import DailyChallengeScreen from "../screens/DailyChallengeScreen";
@@ -33,6 +39,7 @@ import ProgressScreen from "../screens/ProgressScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
+  const { analytics, enabled: usageEnabled } = useBetaAnalytics();
   const discoveryDate = useAthensDate();
   const bookmarks = useSavedLessons();
   const dailyPreferences = useDailyChallengePreferences();
@@ -43,6 +50,8 @@ export default function AppNavigator() {
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
   const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
   const [preferencesOrigin, setPreferencesOrigin] = useState<"home" | "daily">("home");
+  const [accountOrigin, setAccountOrigin] = useState<"home" | "progress">("home");
+  const openAccount = (origin: "home" | "progress") => { setAccountOrigin(origin); app.setScreen("account"); };
 
   const openDailyPreferences = useCallback((origin: "home" | "daily") => {
     setPreferencesOrigin(origin);
@@ -61,14 +70,22 @@ export default function AppNavigator() {
     return saved;
   }, [savePreferences]);
 
-  async function completeWelcome(preferences: DailyChallengePreferences, destination: "daily" | "home") {
+  async function completeWelcome(preferences: DailyChallengePreferences, destination: WelcomeDestination, lessonId?: string) {
+    const selectedLesson = destination === "lesson" ? lessons.find(l => l.id === lessonId) : null;
+    if (destination === "lesson" && (!selectedLesson || !getLessonAccess(selectedLesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked)) return false;
     const completed = await finishWelcome(dailyStore, preferences, destination, welcome.isCurrent, welcome.complete);
     if (!completed || !welcome.isCurrent()) return false;
-    app.setScreen("home"); setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(destination === "daily");
+    void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: 4, replay: welcome.replay });
+    setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(destination === "daily");
+    if (selectedLesson) app.openLesson(selectedLesson.id);
+    else app.setScreen("home");
     return true;
   }
-  async function skipWelcome() {
-    if (await welcome.skip()) { app.setScreen("home"); setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(false); }
+  async function skipWelcome(step = 1) {
+    if (await welcome.skip()) {
+      void analytics.track("onboarding_skipped", { screen: "welcome", onboarding_step: step, replay: welcome.replay });
+      app.setScreen("home"); setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(false);
+    }
   }
 
   const activeCategory =
@@ -83,7 +100,7 @@ export default function AppNavigator() {
     [app.activeCategoryId]
   );
   const subcategoryLessons = useMemo(
-    () => lessons.filter((item) => item.subcategoryId === app.activeSubcategoryId),
+    () => getSubcategoryPath(lessons, app.activeSubcategoryId),
     [app.activeSubcategoryId]
   );
   const savedLessons = useMemo(
@@ -99,7 +116,7 @@ export default function AppNavigator() {
   ) ?? null;
 
   const discovery = getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate);
-  const related = activeLesson ? getRelatedLessons(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate) : [];
+  const nextLesson = activeLesson ? getNextPathLesson(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds) : null;
 
   const currentScreen = app.screen;
   const setAppScreen = app.setScreen;
@@ -146,6 +163,49 @@ export default function AppNavigator() {
     setAppScreen(destination);
   };
 
+  // Use the same leave guard as the on-screen controls for Android system Back.
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (welcome.visible || welcome.loading) return false;
+      if (isDailyPreferencesOpen) { closeDailyPreferences(); return true; }
+      if (isDailyChallengeOpen) { setIsDailyChallengeOpen(false); return true; }
+      if (app.screen === "home") return false;
+      if (app.screen === "review") { app.endMistakeReview(); return true; }
+      const destination: AppScreen = app.screen === "account" ? accountOrigin
+        : app.screen === "weekly-review" ? "progress"
+        : app.screen === "lesson" || app.screen === "results" ? app.lessonBackScreen
+        : app.screen === "quiz" ? "lesson"
+        : app.screen === "subcategory" ? "category" : "home";
+      navigateTo(destination);
+      return true;
+    });
+    return () => subscription.remove();
+  });
+
+  const analyticsScreen: AnalyticsScreen = welcome.visible ? "welcome"
+    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen;
+  const answeredForAnalytics = Object.keys(app.checkpointAnswers).length;
+  const analyticsLessonId = activeLesson?.id;
+  useEffect(() => {
+    if (!welcome.loading && usageEnabled) void analytics.view(analyticsScreen);
+  }, [analytics, usageEnabled, welcome.loading, analyticsScreen]);
+  useEffect(() => {
+    if (!usageEnabled || welcome.loading) return;
+    if ((analyticsScreen === "lesson" || analyticsScreen === "quiz") && activeLesson) {
+      void analytics.lesson({ screen: analyticsScreen, lesson_id: activeLesson.id, category_id: activeLesson.categoryId,
+        subcategory_id: activeLesson.subcategoryId, answered_count: answeredForAnalytics, total_questions: getInlineQuestionCount(activeLesson) });
+    } else if (analyticsScreen === "results" && app.resultMode === "finished") {
+      void analytics.completeLesson();
+    } else void analytics.lesson(null);
+    // Counts are updated separately, so checkpoints do not create new visits.
+  }, [analytics, usageEnabled, welcome.loading, analyticsScreen, analyticsLessonId]);
+  useEffect(() => {
+    if (usageEnabled && (analyticsScreen === "lesson" || analyticsScreen === "quiz")) {
+      void analytics.progress({ answered_count: answeredForAnalytics });
+    }
+  }, [analytics, usageEnabled, analyticsScreen, answeredForAnalytics]);
+  useEffect(() => () => { void analytics.lesson(null, "account_change"); }, [analytics]);
+
   if (welcome.loading) return <SafeAreaView style={styles.welcomeLoading}><ActivityIndicator color="#B1A5FF" /><Text style={styles.welcomeLoadingText}>Φόρτωση…</Text></SafeAreaView>;
 
   let screenContent: ReactNode = null;
@@ -156,6 +216,7 @@ export default function AppNavigator() {
 
   if (welcome.visible) {
     screenContent = <WelcomeScreen initialPreferences={dailyPreferences.preferences} replay={welcome.replay}
+      lessonCandidates={welcomeLessonCandidates(lessons, app.completedLessonIds, app.inProgressLessonIds)}
       hasStartedChallenge={Boolean(daily.doc.days[discoveryDate]?.record.started)} onFinish={completeWelcome} onSkip={skipWelcome} />;
   } else if (isDailyPreferencesOpen) {
     screenContent = (
@@ -179,6 +240,7 @@ export default function AppNavigator() {
     case "home":
       screenContent = (
         <HomeScreen
+          onOpenAccount={() => openAccount("home")}
           onWeeklyReview={() => app.setScreen("weekly-review")}
           categories={categories}
           subcategories={subcategories}
@@ -201,20 +263,20 @@ export default function AppNavigator() {
       );
       break;
 
+    case "account":
+      screenContent = <AccountScreen onBack={() => app.setScreen(accountOrigin)}
+        backupControls={app.progressLoaded && bookmarks.isSavedLessonsLoaded ? {
+          deviceBackup: parseLearningBackup({ schemaVersion: 1, completedIds: app.completedLessonIds, savedIds: bookmarks.savedLessonIds, attempts: app.lessonAttempts }),
+          onRestoreBackup: async backup => { await Promise.all([app.mergeRestoredProgress(backup), bookmarks.mergeRestoredBookmarks(backup.savedIds)]); },
+        } : undefined} />;
+      break;
+
     case "progress":
       screenContent = (
         <ProgressScreen
+          onOpenAccount={() => openAccount("progress")}
           onWeeklyReview={() => app.setScreen("weekly-review")}
           onOpenWelcome={welcome.open}
-          backupControls={app.progressLoaded && bookmarks.isSavedLessonsLoaded ? {
-            deviceBackup: parseLearningBackup({ schemaVersion: 1, completedIds: app.completedLessonIds, savedIds: bookmarks.savedLessonIds, attempts: app.lessonAttempts }),
-            onRestoreBackup: async backup => {
-              await Promise.all([
-                app.mergeRestoredProgress(backup),
-                bookmarks.mergeRestoredBookmarks(backup.savedIds),
-              ]);
-            },
-          } : undefined}
           onHome={() => navigateTo("home")}
           completedLessons={completedLessons}
           inProgressLesson={inProgressLesson}
@@ -248,6 +310,7 @@ export default function AppNavigator() {
     case "saved":
       screenContent = (
         <SavedLessonsScreen
+          catalogue={lessons}
           completedLessonIds={app.completedLessonIds}
           inProgressLessonIds={app.inProgressLessonIds}
           progressLoaded={app.progressLoaded}
@@ -298,7 +361,7 @@ export default function AppNavigator() {
           checkpointAnswers={app.checkpointAnswers}
           onAnswerCheckpoint={app.answerCheckpoint}
           onFinishLesson={app.finishInlineLesson}
-          onBack={() => navigateTo("subcategory")}
+          onBack={() => navigateTo(app.lessonBackScreen)}
         />
       );
       break;
@@ -329,6 +392,7 @@ export default function AppNavigator() {
     case "results":
       screenContent = (
         <ResultsScreen
+          key={activeLesson.id}
           lessonScores={app.lessonScores}
           onWeeklyReview={() => app.setScreen("weekly-review")}
           lesson={activeLesson}
@@ -339,9 +403,10 @@ export default function AppNavigator() {
           onReviewMistakes={app.startMistakeReview}
           onHome={() => navigateTo("home")}
           onReadAgain={app.restartLesson}
-          recommendations={related}
+          nextLesson={nextLesson}
+          pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: subcategoryLessons.filter(l => app.completedLessonIds.includes(l.id)).length }}
           onOpenLesson={app.openLesson}
-          onBrowse={() => navigateTo("search")}
+          onBrowse={() => navigateTo("category")}
         />
       );
       break;
@@ -356,7 +421,7 @@ export default function AppNavigator() {
         style={styles.screenViewport}
         edges={["top", "left", "right"]}
       >
-        {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus /> : null}
+        {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus quiet /> : null}
         {screenContent}
       </SafeAreaView>
       {!welcome.visible ? <BottomNavigation

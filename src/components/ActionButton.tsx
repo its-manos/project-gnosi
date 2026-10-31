@@ -23,10 +23,11 @@ export default function ActionButton({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      style={[
+      style={({ pressed }) => [
         styles.button,
         secondary && styles.secondary,
         disabled && styles.disabled,
+        pressed && !disabled && styles.pressed,
         style,
       ]}
     >
@@ -38,6 +39,7 @@ export default function ActionButton({
 }
 
 const styles = StyleSheet.create({
+  pressed: { opacity: 0.8, transform: [{ scale: 0.985 }] },
   button: {
     minHeight: 52,
     backgroundColor: colors.accent,
@@ -59,6 +61,8 @@ const styles = StyleSheet.create({
   label: {
     color: "#171426",
     fontSize: 14,
+    lineHeight: 21,
+    flexShrink: 1,
     fontWeight: "900",
     textAlign: "center",
   },

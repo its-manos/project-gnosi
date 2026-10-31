@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import { lessons, type Category, type Lesson, type Subcategory } from "../data/lessons";
+import { type Category, type Lesson, type Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import ReadingPick from "../components/ReadingPick";
 import WeeklyReviewCard from "../components/WeeklyReviewCard";
@@ -26,12 +26,13 @@ type Props = {
   onStartDailyChallenge: () => void;
   onOpenDailyPreferences: () => void;
   onWeeklyReview?: () => void;
+  onOpenAccount?: () => void;
 };
 
 export default function HomeScreen({
   categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
-  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview,
+  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview, onOpenAccount,
 }: Props) {
   const mapRegions = useMemo(() => categories.map((category) => ({
     id: category.id, title: category.title, emoji: category.emoji,
@@ -44,6 +45,9 @@ export default function HomeScreen({
       <View style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.quickActions}>
+          {onOpenAccount ? <Pressable style={styles.iconButton} onPress={onOpenAccount} accessibilityRole="button" accessibilityLabel="Ο λογαριασμός μου">
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}><Circle cx={12} cy={8} r={3.5} stroke={colors.accentLight} strokeWidth={1.8} /><Path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2" stroke={colors.accentLight} strokeWidth={1.8} strokeLinecap="round" /></Svg>
+          </Pressable> : null}
           <Pressable style={styles.iconButton} onPress={onOpenSearch} accessibilityRole="button" accessibilityLabel="Αναζήτηση μαθημάτων">
             <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}>
               <Circle cx={10.5} cy={10.5} r={6.5} stroke={colors.accentLight} strokeWidth={1.8} />
@@ -61,7 +65,6 @@ export default function HomeScreen({
 
       <View style={styles.intro}>
         <Text style={styles.title}>Πού θα ταξιδέψεις;</Text>
-        <Text style={styles.subtitle}>{categories.length} θεματικές · {lessons.length} άρθρα με πηγές</Text>
       </View>
 
       <View testID="home-exploration" style={styles.exploration}>
@@ -73,7 +76,7 @@ export default function HomeScreen({
         {inProgressLesson ? (
           <Pressable style={styles.resumeCard} onPress={() => onResumeLesson(inProgressLesson.id)}
             accessibilityRole="button" accessibilityLabel={`Συνέχισε το μάθημα ${inProgressLesson.title}`}>
-            <Text style={styles.eyebrow}>ΣΥΝΕΧΙΣΕ ΑΠΟ ΕΚΕΙ ΠΟΥ ΕΜΕΙΝΕΣ</Text>
+            <Text style={styles.eyebrow}>ΣΥΝΕΧΙΣΕ ΤΟ ΜΑΘΗΜΑ</Text>
             <Text style={styles.cardTitle}>{inProgressLesson.title}</Text>
             <Text style={styles.meta}>{inProgressAnsweredCount} από {inProgressQuestionCount} ερωτήσεις · Συνέχεια →</Text>
             <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${resumeProgress}%` }]} /></View>
@@ -85,7 +88,7 @@ export default function HomeScreen({
             accessibilityLabel="Ξεκίνα την καθημερινή πρόκληση με επτά ερωτήσεις">
             <Text style={styles.dailyGlyph}>✦</Text>
             <View style={styles.dailyCopy}><Text style={styles.eyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
-              <Text style={styles.cardTitle}>7 ερωτήσεις γνώσεων</Text><Text style={styles.meta}>Έως 700 πόντοι · Νέα πρόκληση κάθε μέρα</Text></View>
+              <Text style={styles.cardTitle}>7 ερωτήσεις γνώσεων</Text><Text style={styles.meta}>Νέα πρόκληση κάθε μέρα</Text></View>
             <Text style={styles.arrow}>→</Text>
           </Pressable>
           <Pressable onPress={onOpenDailyPreferences} style={styles.preferences} accessibilityRole="button"
@@ -94,12 +97,12 @@ export default function HomeScreen({
           </Pressable>
         </View>
 
-        {onWeeklyReview ? <WeeklyReviewCard onOpen={onWeeklyReview} /> : null}
+        {onWeeklyReview ? <WeeklyReviewCard onOpen={onWeeklyReview} hideWhenEmpty /> : null}
         <Text style={styles.sectionTitle}>Μια μικρή ανακάλυψη</Text>
         {!progressLoaded ? <ActivityIndicator color={colors.accentLight} accessibilityLabel="Φόρτωση προτάσεων ανάγνωσης" />
           : featuredLesson ? <ReadingPick lesson={featuredLesson} label="Η ΑΝΑΚΑΛΥΨΗ ΤΗΣ ΗΜΕΡΑΣ" featured onPress={() => onOpenLesson(featuredLesson.id)} />
           : <View style={styles.emptyCard}><Text style={styles.cardTitle}>Διάλεξε την επόμενη διαδρομή σου</Text>
-            <Text style={styles.meta}>Δεν υπάρχουν άλλες αδιάβαστες προτάσεις. Συνέχισε ό,τι άρχισες ή ξαναβρες ένα αγαπημένο άρθρο.</Text>
+            <Text style={styles.meta}>Εξερεύνησε τις θεματικές ή ξαναδιάβασε ένα αγαπημένο άρθρο.</Text>
             <Pressable onPress={onOpenSearch} style={styles.browseButton} accessibilityRole="button"><Text style={styles.preferencesText}>Όλα τα άρθρα →</Text></Pressable>
           </View>}
 

@@ -57,10 +57,9 @@ export default function DailyChallengePreferencesScreen({
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onCancel} backLabel="ΠΙΣΩ" />
 
-      <Text style={styles.eyebrow}>Η ΔΙΚΗ ΣΟΥ ΠΡΟΚΛΗΣΗ</Text>
-      <Text style={styles.title}>Παίξε με τους δικούς σου όρους.</Text>
+      <Text style={styles.title}>Η πρόκληση στα μέτρα σου</Text>
       <Text style={styles.body}>
-        Διάλεξε 3 έως 5 αγαπημένα θέματα και τη δυσκολία που προτιμάς. Οι επιλογές αποθηκεύονται στη συσκευή και συγχρονίζονται όταν είσαι συνδεδεμένος σε λογαριασμό.
+        Διάλεξε τα θέματα και τη δυσκολία σου.
       </Text>
 
       {isLoading ? (
@@ -71,10 +70,10 @@ export default function DailyChallengePreferencesScreen({
       ) : (
         <>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Τα θέματα που σε ενδιαφέρουν</Text>
+            <Text style={styles.sectionTitle}>Τα ενδιαφέροντά σου</Text>
             <Text style={styles.counter}>{topicIds.length} / 5</Text>
           </View>
-          <Text style={styles.helper}>Επίλεξε τουλάχιστον 3 θέματα.</Text>
+          <Text style={styles.helper}>Επίλεξε 3–5 θέματα.</Text>
 
           <View style={styles.topicGrid}>
             {DAILY_CHALLENGE_TOPICS.map((topic) => {
@@ -97,7 +96,6 @@ export default function DailyChallengePreferencesScreen({
                     </View>
                   </View>
                   <Text style={styles.topicTitle}>{topic.title}</Text>
-                  <Text style={styles.topicDescription}>{topic.description}</Text>
                 </Pressable>
               );
             })}
@@ -129,7 +127,7 @@ export default function DailyChallengePreferencesScreen({
           </View>
 
           <Text style={styles.helper}>
-            Θα προτιμώνται οι ερωτήσεις που ταιριάζουν και στα θέματα και στη δυσκολία σου. Αν δεν υπάρχουν αρκετές, η πρόκληση συμπληρώνεται με επιπλέον ερωτήσεις ώστε να έχει πάντα 7.
+            Αν χρειαστεί, προσθέτουμε ερωτήσεις από άλλα θέματα για να συμπληρωθούν οι 7.
           </Text>
           {saveError ? (
             <Text style={styles.errorText}>Δεν αποθηκεύτηκαν οι αλλαγές. Έλεγξε τον διαθέσιμο χώρο στη συσκευή και δοκίμασε ξανά.</Text>
@@ -142,7 +140,7 @@ export default function DailyChallengePreferencesScreen({
           />
           <ActionButton label="Ακύρωση" onPress={onCancel} secondary disabled={isSaving} />
           <Text style={styles.footerNote}>
-            Η αλλαγή προτιμήσεων δεν αλλάζει μια πρόκληση που έχει ήδη ξεκινήσει ή ολοκληρωθεί. Θα εφαρμοστεί στην επόμενη νέα πρόκληση.
+            Οι αλλαγές ισχύουν από την επόμενη πρόκληση που θα ξεκινήσεις.
           </Text>
         </>
       )}
@@ -151,16 +149,16 @@ export default function DailyChallengePreferencesScreen({
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 10 },
   title: { color: colors.text, fontSize: 29, lineHeight: 37, fontWeight: "900", marginBottom: 12 },
   body: { color: colors.textBody, fontSize: 14, lineHeight: 22, marginBottom: 24 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 5 },
+  sectionHeader: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between", marginBottom: 5 },
   sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "900", marginTop: 12, marginBottom: 8 },
   counter: { color: colors.accentLight, fontSize: 12, fontWeight: "900" },
   helper: { color: colors.textMuted, fontSize: 11, lineHeight: 17, marginBottom: 12 },
   topicGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 23 },
-  topicCard: { width: "48%", minHeight: 137, flexGrow: 1, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 12 },
+  topicCard: { flexBasis: "46%", minHeight: 104, flexGrow: 1, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 12 },
   topicCardSelected: { backgroundColor: colors.accentSurface, borderColor: colors.accent },
   topicCardDisabled: { opacity: 0.45 },
   topicTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },

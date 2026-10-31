@@ -1,4 +1,5 @@
 import { getReadingState } from "../utils/readingDiscovery";
+import { getLessonAccess } from "../utils/lessonPath";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Lesson } from "../data/lessons";
 import ActionButton from "../components/ActionButton";
@@ -11,6 +12,7 @@ type Props = {
   inProgressLessonIds: string[];
   progressLoaded: boolean;
   lessons: Lesson[];
+  catalogue: Lesson[];
   onBack: () => void;
   onOpenLesson: (lessonId: string) => void;
   onRemoveSavedLesson: (lessonId: string) => void;
@@ -21,6 +23,7 @@ export default function SavedLessonsScreen({
   inProgressLessonIds,
   progressLoaded,
   lessons,
+  catalogue,
   onBack,
   onOpenLesson,
   onRemoveSavedLesson,
@@ -28,25 +31,25 @@ export default function SavedLessonsScreen({
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <AppHeader onBack={onBack} backLabel="ΑΡΧΙΚΗ" />
-      <Text style={styles.eyebrow}>Η ΠΡΟΣΩΠΙΚΗ ΣΟΥ ΣΥΛΛΟΓΗ</Text>
       <Text style={styles.title}>Αποθηκευμένα άρθρα</Text>
-      <Text style={styles.intro}>
-        Κράτησε εδώ όσα θέλεις να ξαναδιαβάσεις ή να εξερευνήσεις αργότερα.
-      </Text>
 
       {lessons.length === 0 ? (
         <View style={styles.emptyCard}>
           <Text style={styles.emoji}>🔖</Text>
           <Text style={styles.emptyTitle}>Η λίστα σου είναι ακόμη άδεια</Text>
           <Text style={styles.body}>
-            Όταν βρεις ένα άρθρο που σου αρέσει, πάτησε «Αποθήκευση άρθρου» για να το βρίσκεις εύκολα εδώ.
+            Πάτησε τον σελιδοδείκτη σε ένα άρθρο για να το κρατήσεις εδώ.
           </Text>
           <ActionButton label="Επιστροφή στην αρχική" onPress={onBack} />
         </View>
       ) : (
-        lessons.map((lesson) => (
+        lessons.map((lesson) => {
+          const access = getLessonAccess(lesson, catalogue, completedLessonIds, inProgressLessonIds);
+          return (
           <View key={lesson.id} style={styles.lessonItem}>
-            <LessonCard lesson={lesson} readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined} onPress={() => onOpenLesson(lesson.id)} />
+            <LessonCard lesson={lesson} readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined}
+              lockedReason={!progressLoaded ? "Φόρτωση προόδου…" : !access.unlocked ? `Ολοκλήρωσε πρώτα: ${access.prerequisite?.title}` : undefined}
+              onPress={() => onOpenLesson(lesson.id)} />
             <Pressable
               onPress={() => onRemoveSavedLesson(lesson.id)}
               accessibilityRole="button"
@@ -55,14 +58,15 @@ export default function SavedLessonsScreen({
               <Text style={styles.removeText}>Αφαίρεση από αποθηκευμένα</Text>
             </Pressable>
           </View>
-        ))
+          );
+        })
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 30, fontWeight: "900", lineHeight: 38, marginBottom: 10 },
   intro: { color: "#A7ACC1", fontSize: 14, lineHeight: 23, marginBottom: 24 },
@@ -71,6 +75,6 @@ const styles = StyleSheet.create({
   emptyTitle: { color: colors.text, fontSize: 20, fontWeight: "800", marginBottom: 10 },
   body: { color: "#A7ACC1", fontSize: 14, lineHeight: 23 },
   lessonItem: { marginBottom: 16 },
-  removeButton: { alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 4, marginTop: -8 },
+  removeButton: { alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingVertical: 8, paddingHorizontal: 4 },
   removeText: { color: colors.accentLight, fontSize: 12, fontWeight: "700" },
 });

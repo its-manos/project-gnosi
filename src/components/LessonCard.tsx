@@ -4,20 +4,22 @@ import type { Lesson } from "../data/lessons";
 import LessonCover from "./LessonCover";
 import { colors } from "../theme";
 
-type Props = { lesson: Lesson; onPress: () => void; readingState?: ReadingState };
+type Props = { lesson: Lesson; onPress: () => void; readingState?: ReadingState; lockedReason?: string; position?: number };
 
-export default function LessonCard({ lesson, onPress, readingState }: Props) {
+export default function LessonCard({ lesson, onPress, readingState, lockedReason, position }: Props) {
   return (
     <Pressable
-      style={styles.card}
+      style={[styles.card, !!lockedReason && styles.locked]}
       onPress={onPress}
+      disabled={!!lockedReason}
       accessibilityRole="button"
-      accessibilityLabel={`Άνοιγμα μαθήματος: ${lesson.title}${readingState ? `, ${readingStateLabels[readingState]}` : ""}`}
+      accessibilityState={{ disabled: !!lockedReason }}
+      accessibilityLabel={`${lesson.title}${lockedReason ? `, Κλειδωμένο. ${lockedReason}` : readingState ? `, ${readingStateLabels[readingState]}` : ""}`}
     >
       <LessonCover lesson={lesson} style={styles.image} />
       <View style={styles.content}>
-        <Text style={styles.eyebrow}>{lesson.readingMinutes} ΛΕΠΤΑ ΑΝΑΓΝΩΣΗΣ</Text>
-        {readingState ? <Text style={[styles.readingState, readingState === "completed" && styles.completedState]}>{readingStateLabels[readingState]}</Text> : null}
+        <Text style={styles.eyebrow}>{position ? `ΒΗΜΑ ${position} · ` : ""}{lesson.readingMinutes} ΛΕΠΤΑ ΑΝΑΓΝΩΣΗΣ</Text>
+        {lockedReason ? <Text style={styles.lockLabel}>Κλειδωμένο · {lockedReason}</Text> : readingState ? <Text style={[styles.readingState, readingState === "completed" && styles.completedState]}>{readingStateLabels[readingState]}</Text> : null}
         <Text style={styles.title}>{lesson.title}</Text>
         <Text style={styles.summary}>{lesson.summary}</Text>
         <Text style={styles.meta}>{lesson.questions.length} ερωτήσεις · {lesson.sources.length} πηγές</Text>
@@ -28,6 +30,8 @@ export default function LessonCard({ lesson, onPress, readingState }: Props) {
 }
 
 const styles = StyleSheet.create({
+  locked: { borderStyle: "dashed" },
+  lockLabel: { color: colors.textMuted, fontSize: 12, lineHeight: 20, marginBottom: 9 },
   readingState: { color: "#B9D8CE", fontSize: 12, lineHeight: 20, marginBottom: 9, fontWeight: "600" },
   completedState: { color: colors.textMuted },
   card: {

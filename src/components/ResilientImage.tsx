@@ -12,6 +12,7 @@ import type {
   ViewStyle,
 } from "react-native";
 import { colors } from "../theme";
+import { bundledLessonImages } from "../data/bundledLessonImages";
 
 type ImageStatus = "loading" | "loaded" | "error";
 
@@ -22,6 +23,7 @@ type Props = {
   accessibilityLabel?: string;
   fallbackLabel?: string;
   loadingLabel?: string;
+  onDimensions?: (size: { width: number; height: number }) => void;
 };
 
 type PlaceholderProps = {
@@ -71,6 +73,7 @@ export default function ResilientImage({
   accessibilityLabel,
   fallbackLabel = "Η εικόνα δεν είναι διαθέσιμη",
   loadingLabel = "Φόρτωση εικόνας…",
+  onDimensions,
 }: Props) {
   const hasValidUri = typeof uri === "string" && uri.trim().length > 0;
   const normalizedUri = hasValidUri ? uri!.trim() : null;
@@ -92,12 +95,18 @@ export default function ResilientImage({
       {hasValidUri ? (
         <Image
           key={normalizedUri!}
-          source={{ uri: normalizedUri! }}
+          source={bundledLessonImages[normalizedUri!] ?? { uri: normalizedUri! }}
           style={styles.image}
           resizeMode={resizeMode}
           accessible={Boolean(accessibilityLabel)}
           accessibilityLabel={accessibilityLabel}
-          onLoad={() => setLastLoad({ uri: normalizedUri, status: "loaded" })}
+          onLoad={event => {
+            setLastLoad({ uri: normalizedUri, status: "loaded" });
+            const source = event?.nativeEvent?.source;
+            if (source && Number.isFinite(source.width) && Number.isFinite(source.height) && source.width > 0 && source.height > 0) {
+              onDimensions?.({ width: source.width, height: source.height });
+            }
+          }}
           onError={(event) => {
             const reason = event.nativeEvent?.error ?? "Unknown native image error";
             console.warn(`[ΓΝΩΣΗ] Failed to load image: ${normalizedUri}`, reason);

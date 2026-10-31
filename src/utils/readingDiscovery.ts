@@ -1,4 +1,5 @@
 import type { Lesson } from "../data/lessons";
+import { getLessonAccess } from "./lessonPath";
 
 export type ReadingState = "unread" | "in-progress" | "completed";
 export type Recommendation = { lesson: Lesson; reason: "same-topic" | "same-category" | "explore" };
@@ -17,7 +18,7 @@ function unreadPool(catalogue: readonly Lesson[], completed: readonly string[], 
   return catalogue.filter((lesson) => {
     if (seen.has(lesson.id)) return false;
     seen.add(lesson.id);
-    return getReadingState(lesson.id, completed, inProgress) === "unread";
+    return getReadingState(lesson.id, completed, inProgress) === "unread" && getLessonAccess(lesson, catalogue, completed, inProgress).unlocked;
   }).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 

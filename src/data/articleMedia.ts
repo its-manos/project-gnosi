@@ -1,3 +1,7 @@
+import { worldHistoryArticleMedia } from "./worldHistoryMedia";
+import { astronomyArticleMedia } from "./astronomyMedia";
+import { architectureArticleMedia } from "./architectureMedia";
+
 /**
  * Additional inline illustrations for ΓΝΩΣΗ lessons.
  * Images are served from Wikimedia Commons; each figure displays a credit
@@ -9,6 +13,7 @@ export type InlineArticleImage = {
   caption: string;
   credit: string;
   creditUrl: string;
+  resizeMode?: "cover" | "contain";
 };
 
 function commonsFileUrl(filename: string): string {
@@ -20,6 +25,9 @@ function commonsPageUrl(filename: string): string {
 }
 
 export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
+  ...architectureArticleMedia,
+  ...astronomyArticleMedia,
+  ...worldHistoryArticleMedia,
   "ancient-athens": [
     {
       afterParagraphCount: 3,
@@ -136,6 +144,7 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     {
       afterParagraphCount: 3,
       url: commonsFileUrl("Internet access diagram.svg"),
+      resizeMode: "contain",
       caption: "Ένα απλοποιημένο διάγραμμα της διαδρομής από μια οικιακή συσκευή προς μια υπηρεσία στο διαδίκτυο.",
       credit: "Ferran / Wikimedia Commons · CC BY-SA 4.0",
       creditUrl: commonsPageUrl("Internet access diagram.svg"),
@@ -143,6 +152,7 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     {
       afterParagraphCount: 7,
       url: commonsFileUrl("Structure of the Internet.svg"),
+      resizeMode: "contain",
       caption: "Το διαδίκτυο αποτελείται από πολλά αλληλοσυνδεδεμένα δίκτυα, παρόχους και σημεία ανταλλαγής δεδομένων.",
       credit: "BWenk / Wikimedia Commons · CC BY-SA 4.0",
       creditUrl: commonsPageUrl("Structure of the Internet.svg"),

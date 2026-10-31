@@ -1,0 +1,267 @@
+[
+  {
+    "id": "ancient-athens",
+    "kind": "lesson",
+    "sha256": "28285d79bf401417a78f8e827f039c6915852206aa7734eb4a487d1bf09e5749"
+  },
+  {
+    "id": "pompeii-everyday-life",
+    "kind": "lesson",
+    "sha256": "a9f9abe66c0708757e79ecbc25a600e19d5e7604ce936c220ca3350c4d317952"
+  },
+  {
+    "id": "why-mars-is-red",
+    "kind": "questions",
+    "sha256": "3270eb67250f0f473a749a50ff6e426b5a54e68783af4554ff1b6251932ebdfc"
+  },
+  {
+    "id": "sleep-and-memory",
+    "kind": "lesson",
+    "sha256": "2062b291aa58c626f9b69ab1664bdaca5fe0f9cebb9e61b926146c79229d2a76"
+  },
+  {
+    "id": "octopus-intelligence",
+    "kind": "lesson",
+    "sha256": "578bcdcf11bbf80e296ee31cde507450c832044511a381fac80a9e491501aa42"
+  },
+  {
+    "id": "life-at-hydrothermal-vents",
+    "kind": "lesson",
+    "sha256": "52ef59da52d60428db066192eb36be879e44f97196b64e715a184ce08d92886c"
+  },
+  {
+    "id": "how-language-models-generate-text",
+    "kind": "lesson",
+    "sha256": "5c9ba9b00f2e52af25da2e154724d6111373e15b4af2126f9027dd550e14a5b8"
+  },
+  {
+    "id": "what-happens-when-you-open-a-website",
+    "kind": "lesson",
+    "sha256": "403636138af37d5394c63e62015cb7645293331cfc319a5582396db853afd22e"
+  },
+  {
+    "id": "impressionism-and-light",
+    "kind": "lesson",
+    "sha256": "09cfbebd8a038914369ef648b7ba6e8b859b24f878b9a5d2da09863a72fe0f78"
+  },
+  {
+    "id": "iceland-two-plates",
+    "kind": "lesson",
+    "sha256": "78c58b87e1656beae4ca9ef00574a32ebfa510c731638687f311f10f9d16dd92"
+  },
+  {
+    "id": "athens-who-voted",
+    "kind": "lesson",
+    "sha256": "a7bf8435f6c49f6bca69258e9d765ac01ab83d561e194d1bc186b0b91d08e9eb"
+  },
+  {
+    "id": "antikythera-gears",
+    "kind": "lesson",
+    "sha256": "b4984e95d056bf6bd561de285f1a11085ab0489dd5186a27ac48ea81db3ef5cb"
+  },
+  {
+    "id": "linear-b-decipherment",
+    "kind": "lesson",
+    "sha256": "71e90c78fada39ee33928a1c0ca70e232b0f092e5cba9bc01a771230fc665096"
+  },
+  {
+    "id": "osiris-afterlife",
+    "kind": "lesson",
+    "sha256": "b271494ac62ec2961bc38c419f942dc3f2b9d34169acf4442ec7ffc95d4ab910"
+  },
+  {
+    "id": "silk-roads-ideas",
+    "kind": "lesson",
+    "sha256": "af327dc4d386e7f178caee3e6fe96c69052f5db922b129cf0a5b62419d64a5d5"
+  },
+  {
+    "id": "moon-phases-not-shadow",
+    "kind": "questions",
+    "sha256": "2b745e1161f6f13c9a541a3502f57dade56b363cc7bba6ac70ad64414db3c67a"
+  },
+  {
+    "id": "orbit-continuous-fall",
+    "kind": "questions",
+    "sha256": "2eab94d96e6f6cd97792ac91f275cc321f65e286c3643ceb4b6d9b1be1bb895d"
+  },
+  {
+    "id": "dna-cell-instructions",
+    "kind": "lesson",
+    "sha256": "b3bff654925c328f21f2fe1896c47d46895afa62c9e3d449f4c270fcb9b5ab49"
+  },
+  {
+    "id": "sound-to-brain",
+    "kind": "lesson",
+    "sha256": "c25ca213583d51533d1e6275204c90ed7bcf03772cc6a3ec9c63e76303c6e184"
+  },
+  {
+    "id": "blue-sky-red-sunset",
+    "kind": "lesson",
+    "sha256": "f563edc0208934724aa7823ceefec908981ddf50e6c8ecb1040d1e1c41048dac"
+  },
+  {
+    "id": "corals-are-animals",
+    "kind": "lesson",
+    "sha256": "d1f5863456e8449e2989e1762fa4bf45c42ce9a5767b0810ee8f8afc3087cc9b"
+  },
+  {
+    "id": "whales-nutrient-pump",
+    "kind": "lesson",
+    "sha256": "40e4abaa897ab63a2597ce14ed904284b06ef5e068541d01abccc4bb0ebe0930"
+  },
+  {
+    "id": "flowers-hidden-couriers",
+    "kind": "lesson",
+    "sha256": "d59f9c13537898aaae3fe7dd8995a265c8a174481100748b285d6fb6f3fddc5b"
+  },
+  {
+    "id": "fungi-under-forest",
+    "kind": "lesson",
+    "sha256": "295911c7899968e1149b85ae9c9c3d95c1074f6efff0adba46675b4279ec0a4f"
+  },
+  {
+    "id": "migration-rest-stops",
+    "kind": "lesson",
+    "sha256": "3a8f8d1a723925afcd0f25450581eb5dbbaca4389fc4a20cf498851c96e0be23"
+  },
+  {
+    "id": "dns-address-book",
+    "kind": "lesson",
+    "sha256": "e6d77e1179bfe4177cf830d41952ff4cd4329c8253d1f03911daec713160e4f0"
+  },
+  {
+    "id": "public-private-keys",
+    "kind": "lesson",
+    "sha256": "0823b2c9eaedb0bfff53b547961bfbfdd0598399648d1c3422ecea5c4e76058d"
+  },
+  {
+    "id": "ai-bias-context",
+    "kind": "lesson",
+    "sha256": "0133e5d3bc93e254aa323ca585a9cf1eab5b69d47e86f8b20007d69d6e59be72"
+  },
+  {
+    "id": "printing-before-gutenberg",
+    "kind": "lesson",
+    "sha256": "02b97a19c132eb0423189386d703d43b9ca33cb5a5ad35d3d2a4bd19d3d3c1a9"
+  },
+  {
+    "id": "transistor-small-switch",
+    "kind": "lesson",
+    "sha256": "dc3bfad5f91eb9e30457b9601f642397db8a7854c9a2a81634798d6c62b1c4f3"
+  },
+  {
+    "id": "lascaux-looking-back",
+    "kind": "lesson",
+    "sha256": "dc7f2605884c4a02c92c29356f0d2b3eb27567692253d96be1005a25612b2b12"
+  },
+  {
+    "id": "jazz-conversation",
+    "kind": "lesson",
+    "sha256": "34f2ba256eea2f8dd86b590b6d6bee10658f3600c559a5fbca09dc1702ad3e21"
+  },
+  {
+    "id": "blues-beyond-sadness",
+    "kind": "lesson",
+    "sha256": "4bedef498830f7d01eb7dbf6382cb5c60efee8d814b979523070c2b9ae1a329a"
+  },
+  {
+    "id": "editing-builds-meaning",
+    "kind": "lesson",
+    "sha256": "226b8a95c3886d9c55e3c32ad91af97ded44a4a599bf1788f1218fb6a471bd2d"
+  },
+  {
+    "id": "foley-invisible-performance",
+    "kind": "lesson",
+    "sha256": "7685a10da2f76f58ca77c91254eeb999ad55c37eab1821718ca846f2185e6b0b"
+  },
+  {
+    "id": "netherlands-room-for-water",
+    "kind": "lesson",
+    "sha256": "c435034883e1e816db620ba974fb0aa8e11a6b795ba23e7b7dfb75759c35f5ab"
+  },
+  {
+    "id": "dead-sea-changing-lake",
+    "kind": "lesson",
+    "sha256": "c8b9e22fde9a064fd71b70d31c308cdda6f39f426c4b9894da8d1d877d607c63"
+  },
+  {
+    "id": "caves-water-carves",
+    "kind": "lesson",
+    "sha256": "7b86415765ccf2880416cb658b64c0a6ab6fced6d99a1b0e72be6dfd5fba0b3c"
+  },
+  {
+    "id": "uruk-city-landscape",
+    "kind": "lesson",
+    "sha256": "42086efda3d163967e5274865d7576bd1d633c4db9a510ad8582a2f69fcfb174"
+  },
+  {
+    "id": "city-boundaries-counting",
+    "kind": "lesson",
+    "sha256": "64b2589e37d53e3b1c0a1689c5c1c64a42ff18e9c05dde6b5e9ced548b49dbf7"
+  },
+  {
+    "id": "holocaust-evidence-exclusion",
+    "kind": "lesson",
+    "sha256": "fac41e8129bdc161978f62ddce4cac5dd1cd3a1d827a1e8b5c31fa0f24b5fcaa"
+  },
+  {
+    "id": "atlantic-slavery-records",
+    "kind": "lesson",
+    "sha256": "9deff00ab72d8a5e4f2e7f02ecdb1a50e2cfa8f822c45c774da9105b514b261f"
+  },
+  {
+    "id": "eugenics-scientific-authority",
+    "kind": "lesson",
+    "sha256": "f6b060dd15bbf521556b0dc958001d0ef0b934da47865c49b4633f921ba0d1a4"
+  },
+  {
+    "id": "congo-colonial-memory",
+    "kind": "lesson",
+    "sha256": "1387ac87e389fa59098f4e0580d64c70f12b7a7a6f94e8cd1e93e0ed2dcf402f"
+  },
+  {
+    "id": "dictatorship-censorship-greece",
+    "kind": "lesson",
+    "sha256": "57e4a79433b3afdbbe97e2d1776f7a95bc5882b88472c7ed606240416ede100d"
+  },
+  {
+    "id": "architecture-introduction",
+    "kind": "lesson",
+    "sha256": "153ff09282b6f3f82ef746a56d2a9362b732a39ffc62110a8a8e2d8f2f8fd84f"
+  },
+  {
+    "id": "architecture-reading-drawings",
+    "kind": "lesson",
+    "sha256": "a6333eeefa2b2fef1155851e03e5c2c481769a64cfd70def5422a456b300a0c1"
+  },
+  {
+    "id": "architecture-space-light",
+    "kind": "lesson",
+    "sha256": "7260c686e0bc2f01e0be8aca299f68cc8331822dd9dcdf55e6b14f8d40ae922a"
+  },
+  {
+    "id": "architecture-structure",
+    "kind": "lesson",
+    "sha256": "63a3c787c7bf6ab191cfaaa03409de144c9340938bf05628b49643ed5ebe68a2"
+  },
+  {
+    "id": "architecture-materials",
+    "kind": "lesson",
+    "sha256": "92f87e839d3bbfcc820e931ddf95b485ad768d4c9b1de22adbfad2b89e857dc6"
+  },
+  {
+    "id": "architecture-climate",
+    "kind": "lesson",
+    "sha256": "ed21cf0cf8a03f4a8d1067aa160ab51c1d96c6dd47e2974645601f5ba16f41b0"
+  },
+  {
+    "id": "architecture-city",
+    "kind": "lesson",
+    "sha256": "09b2113b46e9202726f2e29e2e05ad5bed507b2d3a4c9a9d18298f463b041584"
+  },
+  {
+    "id": "architecture-reuse",
+    "kind": "lesson",
+    "sha256": "229f900b6727b88ad687ab49050bacd593efba004c8a2d0f8442109ed251a76d"
+  }
+]

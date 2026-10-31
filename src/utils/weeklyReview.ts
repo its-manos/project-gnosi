@@ -1,6 +1,6 @@
 import { lessons, type Lesson } from "../data/lessons";
 import { getAthensDateKey } from "./dailyChallenge";
-import { mondayOf, quizFingerprint, type CompletionEvents } from "./learningActivity";
+import { lessonQuizMatches, mondayOf, quizFingerprint, type CompletionEvents } from "./learningActivity";
 
 export type WeeklyAnswer = { sourceId: string; questionIndex: number; week: string; answerIndex: number; at: number };
 export type WeeklyAnswers = Record<string, WeeklyAnswer>;
@@ -37,8 +37,8 @@ export function mergeWeeklyAnswers(a: WeeklyAnswers = {}, b: WeeklyAnswers = {})
 }
 
 function evidence(lesson: Lesson, events: CompletionEvents, answers: WeeklyAnswers, before = "9999-12-31") {
-  const key = quizFingerprint(lesson.questions), known = new Set<number>();
-  const matching = Object.entries(events).filter(([, e]) => e.lessonId === lesson.id && e.quizKey === key && getAthensDateKey(new Date(e.at)) < before);
+  const known = new Set<number>();
+  const matching = Object.entries(events).filter(([, e]) => e.lessonId === lesson.id && lessonQuizMatches(lesson, e.quizKey) && getAthensDateKey(new Date(e.at)) < before);
   for (const [, event] of matching) {
     if (event.missedQuestionIndices || event.correctCount === event.questionCount) {
       for (let i = 0; i < event.questionCount; i++) if (!event.missedQuestionIndices?.includes(i)) known.add(i);
@@ -46,7 +46,7 @@ function evidence(lesson: Lesson, events: CompletionEvents, answers: WeeklyAnswe
   }
   for (const answer of Object.values(answers)) {
     const source = events[answer.sourceId];
-    if (answer.week < before && source?.lessonId === lesson.id && source.quizKey === key && lesson.questions[answer.questionIndex]?.correctIndex === answer.answerIndex) known.add(answer.questionIndex);
+    if (answer.week < before && source?.lessonId === lesson.id && lessonQuizMatches(lesson, source.quizKey) && lesson.questions[answer.questionIndex]?.correctIndex === answer.answerIndex) known.add(answer.questionIndex);
   }
   return { matching, known };
 }
@@ -68,14 +68,14 @@ export function weeklyPlan(events: CompletionEvents, answers: WeeklyAnswers = {}
       if (known.has(questionIndex) || seen.has(questionIndex)) continue;
       seen.add(questionIndex);
       const id = weeklyId(week, lesson.id, event.quizKey, questionIndex);
-      const lastWeek = Object.values(answers).filter(a => a.week < week && events[a.sourceId]?.lessonId === lesson.id && events[a.sourceId]?.quizKey === event.quizKey && a.questionIndex === questionIndex).map(a => a.week).sort().pop() ?? "0000-00-00";
+      const lastWeek = Object.values(answers).filter(a => a.week < week && events[a.sourceId]?.lessonId === lesson.id && lessonQuizMatches(lesson, events[a.sourceId].quizKey) && a.questionIndex === questionIndex).map(a => a.week).sort().pop() ?? "0000-00-00";
       candidates.push({ id, sourceId, lesson, questionIndex, week, priority: `${lastWeek}_${quizFingerprint([{ question: `${week}_${id}`, answers: [], correctIndex: 0 }])}` });
     }
   }
   // Keep answered items even if an older offline attempt arrives midweek.
   const answered: WeeklyItem[] = Object.entries(answers).filter(([, a]) => a.week === week).flatMap(([id, a]) => {
     const source = events[a.sourceId], lesson = lessons.find(l => l.id === source?.lessonId);
-    return lesson && source.quizKey === quizFingerprint(lesson.questions) ? [{ id, sourceId: a.sourceId, lesson, questionIndex: a.questionIndex, week }] : [];
+    return lesson && lessonQuizMatches(lesson, source.quizKey) ? [{ id, sourceId: a.sourceId, lesson, questionIndex: a.questionIndex, week }] : [];
   });
   const used = new Set(answered.map(item => item.id));
   return [...answered.sort((a, b) => a.id.localeCompare(b.id)), ...candidates.filter(c => !used.has(c.id)).sort((a, b) => a.priority.localeCompare(b.priority) || a.id.localeCompare(b.id)).slice(0, Math.max(0, 10 - answered.length))];

@@ -1,4 +1,5 @@
 import { getReadingState, type ReadingState } from "../utils/readingDiscovery";
+import { getLessonAccess } from "../utils/lessonPath";
 import { useMemo, useState } from "react";
 import {
   Keyboard,
@@ -102,11 +103,7 @@ export default function SearchScreen({
     >
       <AppHeader onBack={onBack} backLabel="ΑΡΧΙΚΗ" />
 
-      <Text style={styles.eyebrow}>ΑΝΑΚΑΛΥΨΕ ΚΑΤΙ ΝΕΟ</Text>
       <Text style={styles.title}>Τι θέλεις να μάθεις;</Text>
-      <Text style={styles.intro}>
-        Ψάξε ανάμεσα σε τίτλους, θεματικές, περιλήψεις και το περιεχόμενο των άρθρων.
-      </Text>
 
       <View style={styles.searchBox}>
         <Text style={styles.searchIcon}>⌕</Text>
@@ -172,6 +169,7 @@ export default function SearchScreen({
           const subcategory = subcategories.find(
             (item) => item.id === lesson.subcategoryId
           );
+          const access = getLessonAccess(lesson, lessons, completedLessonIds, inProgressLessonIds);
 
           return (
             <View key={lesson.id} style={styles.resultItem}>
@@ -182,6 +180,7 @@ export default function SearchScreen({
               </Text>
               <LessonCard
                 lesson={lesson} readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined}
+                lockedReason={!progressLoaded ? "Φόρτωση προόδου…" : !access.unlocked ? `Ολοκλήρωσε πρώτα: ${access.prerequisite?.title}` : undefined}
                 onPress={() => onOpenLesson(lesson.id)}
               />
             </View>
@@ -213,16 +212,16 @@ const styles = StyleSheet.create({
   chip: { minHeight: 44, paddingHorizontal: 15, paddingVertical: 11, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   activeChip: { borderColor: colors.accentLight, backgroundColor: colors.accentSurface },
   chipText: { color: colors.text, fontSize: 13, lineHeight: 20 },
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 30, fontWeight: "900", lineHeight: 38, marginBottom: 10 },
   intro: { color: colors.textBody, fontSize: 14, lineHeight: 23, marginBottom: 20 },
   searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 16, paddingHorizontal: 14, minHeight: 56, marginBottom: 26 },
   searchIcon: { color: colors.accent, fontSize: 27, marginRight: 10 },
   input: { flex: 1, color: colors.text, fontSize: 14, paddingVertical: 12 },
-  clearButton: { padding: 4, marginLeft: 6 },
+  clearButton: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center", marginLeft: 6 },
   clearText: { color: colors.textMuted, fontSize: 25, lineHeight: 28 },
-  resultsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  resultsHeader: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   sectionTitle: { color: colors.text, fontSize: 19, fontWeight: "800" },
   count: { color: colors.textMuted, fontSize: 12 },
   resultItem: { marginBottom: 2 },

@@ -8,6 +8,8 @@ import ActionButton from "../components/ActionButton";
 import AnswerOption from "../components/AnswerOption";
 import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
+import ReportContentButton from "../components/ReportContentButton";
+import { lessonReportTarget } from "../utils/contentReports";
 import { colors } from "../theme";
 
 export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
@@ -30,27 +32,28 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
   }
   return <ScrollView contentContainerStyle={styles.content}>
     <AppHeader onBack={onBack} backLabel="ΠΙΣΩ" />
-    <SyncStatus detailed />
+    <SyncStatus quiet />
     <Text style={styles.eyebrow}>ΕΒΔΟΜΑΔΑ ΑΠΟ {initial.week.split("-").reverse().join("/")}</Text>
     <Text style={styles.title}>{finished ? "Ένα βήμα πιο κοντά στη γνώση" : "Θυμάσαι τώρα;"}</Text>
-    <Text style={styles.body}>Έως 10 λάθη από προηγούμενες εβδομάδες, με μία απάντηση ανά ερώτηση. Κάθε σωστή απάντηση αυξάνει την κατάκτηση γνώσης. Το καλύτερο σκορ πλήρους προσπάθειας μένει ξεχωριστό.</Text>
+    <Text style={styles.body}>Παλιά λάθη, νέα ευκαιρία. Μία απάντηση ανά ερώτηση αυτή την εβδομάδα.</Text>
     {message ? <Text style={styles.body} accessibilityLiveRegion="polite">{message}</Text> : null}
     {expired ? <View style={styles.card}><Text style={styles.body}>Άλλαξε η εβδομάδα ή ο λογαριασμός. Άνοιξε ξανά το quiz για τα τωρινά δεδομένα.</Text><ActionButton label="Επιστροφή" onPress={onBack} /></View>
       : !snapshot.ready ? <Text style={styles.body}>Φόρτωση προόδου…</Text>
-      : !items.length ? <View style={styles.card}><Text style={styles.heading}>Καμία εκκρεμής ερώτηση αυτή την εβδομάδα</Text><Text style={styles.body}>Κάθε Δευτέρα, με ώρα Αθήνας, εμφανίζονται έως 10 παλιά λάθη. Όσα απαντήσεις λάθος μπορούν να επιστρέψουν άλλη εβδομάδα. Μπορείς να σταματήσεις και να συνεχίσεις όποτε θέλεις, χωρίς ποινή.</Text><ActionButton label="Επιστροφή στην εξερεύνηση" onPress={onBack} /></View>
-      : finished ? <View style={styles.card} accessibilityLiveRegion="polite"><Text style={styles.heading}>{correct} / {items.length} διορθώθηκαν</Text><Text style={styles.body}>{correct === items.length ? "Έδωσες σε κάθε παλιό λάθος μια νέα, σωστή απάντηση!" : "Τα λάθη είναι αφετηρία. Δες τις εξηγήσεις και θα τα ξανασυναντήσεις σε επόμενη εβδομάδα."} Δεν προστέθηκαν ολοκληρώσεις μαθημάτων ή πλήρεις επαναλήψεις.</Text>
+      : !items.length ? <View style={styles.card}><Text style={styles.heading}>Καμία εκκρεμής ερώτηση αυτή την εβδομάδα</Text><Text style={styles.body}>Έως 10 παλιά λάθη επιστρέφουν κάθε Δευτέρα. Προς το παρόν, συνέχισε την εξερεύνηση!</Text><ActionButton label="Επιστροφή στην εξερεύνηση" onPress={onBack} /></View>
+      : finished ? <View style={styles.card} accessibilityLiveRegion="polite"><Text style={styles.heading}>{correct} / {items.length} διορθώθηκαν</Text><Text style={styles.body}>{correct === items.length ? "Έδωσες σε κάθε παλιό λάθος μια νέα, σωστή απάντηση!" : "Τα λάθη είναι αφετηρία. Δες τις εξηγήσεις και θα τα ξανασυναντήσεις σε επόμενη εβδομάδα."}</Text>
         {items.filter(q => snapshot.weeklyReviews[q.id]?.answerIndex !== q.lesson.questions[q.questionIndex].correctIndex).map(q => <View key={q.id} style={styles.card}><Text style={styles.heading}>{q.lesson.questions[q.questionIndex].question}</Text><Text style={styles.body}>Σωστή απάντηση: {q.lesson.questions[q.questionIndex].answers[q.lesson.questions[q.questionIndex].correctIndex]}</Text><Text style={styles.body}>{q.lesson.questions[q.questionIndex].explanation}</Text></View>)}
         <ActionButton label="Πίσω στην πρόοδο" onPress={onBack} /></View>
       : item && question ? <>
         <Text style={styles.eyebrow}>{done} / {items.length} ΑΠΑΝΤΗΘΗΚΑΝ · {item.lesson.title}</Text>
         <View style={styles.card}><Text style={styles.heading}>{question.question}</Text></View>
+        <ReportContentButton key={item.id} target={lessonReportTarget(item.lesson, item.questionIndex)} />
         {shuffledIndices(question.answers.length, item.id).map((originalIndex, displayIndex) => <AnswerOption key={originalIndex} label={question.answers[originalIndex]} index={displayIndex} selected={answer?.answerIndex === originalIndex} correct={question.correctIndex === originalIndex} locked={Boolean(answer)} onPress={() => choose(originalIndex)} />)}
-        {answer ? <View style={styles.card} accessibilityLiveRegion="polite"><Text style={styles.heading}>{answer.answerIndex === question.correctIndex ? "Το κράτησες στη μνήμη σου!" : "Δεν χάθηκε η ευκαιρία να μάθεις"}</Text><Text style={styles.body}>{question.explanation}</Text><Text style={styles.body}>{answer.answerIndex === question.correctIndex ? "Η ερώτηση κατακτήθηκε. Η αρχική προσπάθεια διατηρεί το σκορ της." : "Αυτή η ερώτηση παραμένει για επόμενη εβδομάδα. Η άμεση εξάσκηση στο μάθημα είναι πάντα διαθέσιμη."}</Text><ActionButton label={done === items.length ? "Δες το αποτέλεσμα" : "Συνέχεια"} onPress={() => setFeedbackId(null)} /></View> : null}
+        {answer ? <View style={styles.card} accessibilityLiveRegion="polite"><Text style={styles.heading}>{answer.answerIndex === question.correctIndex ? "Το κράτησες στη μνήμη σου!" : "Ας το θυμηθούμε"}</Text><Text style={styles.body}>{question.explanation}</Text><Text style={styles.body}>{answer.answerIndex === question.correctIndex ? "Η ερώτηση κατακτήθηκε!" : "Θα έχεις άλλη ευκαιρία σε επόμενη εβδομάδα."}</Text><ActionButton label={done === items.length ? "Δες το αποτέλεσμα" : "Συνέχεια"} onPress={() => setFeedbackId(null)} /></View> : null}
       </> : null}
   </ScrollView>;
 }
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 44, gap: 16 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", padding: 20, paddingBottom: 44, gap: 16 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 19, fontWeight: "800" },
   title: { color: colors.text, fontSize: 28, lineHeight: 36, fontWeight: "900" },
   heading: { color: colors.text, fontSize: 21, lineHeight: 30, fontWeight: "700" },

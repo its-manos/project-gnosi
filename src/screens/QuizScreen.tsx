@@ -4,6 +4,8 @@ import ActionButton from "../components/ActionButton";
 import AnswerOption from "../components/AnswerOption";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
+import ReportContentButton from "../components/ReportContentButton";
+import { lessonReportTarget } from "../utils/contentReports";
 import { colors } from "../theme";
 
 type Props = {
@@ -47,6 +49,7 @@ export default function QuizScreen({ lesson, questionIndex, selectedAnswer, scor
           />
         ))}
       </View>
+      <ReportContentButton key={questionIndex} target={lessonReportTarget(lesson, questionIndex)} />
       {selectedAnswer !== null && (
         <View style={styles.feedback}>
           <Text style={styles.feedbackTitle}>{isCorrect ? "Σωστά! 🎉" : "Όχι ακριβώς!"}</Text>
@@ -63,10 +66,10 @@ export default function QuizScreen({ lesson, questionIndex, selectedAnswer, scor
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 30, fontWeight: "900", lineHeight: 38, marginBottom: 10 },
-  progressRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 18, marginBottom: 11 },
+  progressRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between", alignItems: "center", marginTop: 18, marginBottom: 11 },
   muted: { color: "#979CB3", fontSize: 12, lineHeight: 19 },
   counter: { color: "#C0B5FF", fontSize: 13, fontWeight: "800" },
   questionCard: { backgroundColor: "#181C2B", borderRadius: 20, padding: 21, borderWidth: 1, borderColor: "#30354B", marginTop: 27, marginBottom: 19 },

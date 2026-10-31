@@ -25,7 +25,7 @@ function harness(store){
 }
 (async()=>{
  const storage=disk(),store=new LearningStore(null,storage);stores.push(store);await store.start();
- const render=harness(store);let app=render();app.openLesson(lesson.id);app=render();assert.equal(app.screen,'lesson');
+ const render=harness(store);let app=render();app.setScreen('saved');app=render();app.openLesson(lesson.id);app=render();assert.equal(app.screen,'lesson');assert.equal(app.lessonBackScreen,'saved','reader remembers entry from saved lessons');
  for(let i=0;i<4;i++){const correct=lesson.questions[i].correctIndex;app.answerCheckpoint(i,[1,3].includes(i)?(correct+1)%4:correct,correct);app=render();}
  app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.equal(app.score,2);assert.equal(app.review.status,'available');assert.deepEqual(plain(app.review.indices),[1,3]);
  const original=plain(store.getSnapshot().activity);assert.deepEqual(Object.values(original)[0].missedQuestionIndices,[1,3]);
@@ -53,11 +53,13 @@ function harness(store){
 
  // The real screens expose separate actions and branch correctly on feedback.
  const jsx=(type,props)=>({type,props});
- const natives={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{ScrollView:'ScrollView',View:'View',Text:'Text',StyleSheet:{create:x=>x}},'../components/ActionButton':{default:'ActionButton',__esModule:true},'../components/AppHeader':{default:'AppHeader',__esModule:true},'../components/AnswerOption':{default:'AnswerOption',__esModule:true},'../components/ReadingPick':{default:'ReadingPick',__esModule:true}};
+ let resultDetails=false;
+ const natives={react:{useState:()=>[resultDetails,v=>{resultDetails=typeof v==='function'?v(resultDetails):v;}]},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{Pressable:'Pressable',ScrollView:'ScrollView',View:'View',Text:'Text',StyleSheet:{create:x=>x}},'../components/LessonResultChart':{default:'Chart',__esModule:true},'../components/ReportContentButton':{default:'ReportContentButton',__esModule:true},'../components/ActionButton':{default:'ActionButton',__esModule:true},'../components/AppHeader':{default:'AppHeader',__esModule:true},'../components/AnswerOption':{default:'AnswerOption',__esModule:true},'../components/ReadingPick':{default:'ReadingPick',__esModule:true}};
  const Results=compile('src/screens/ResultsScreen.tsx',natives).default,Drill=compile('src/screens/ReviewMistakesScreen.tsx',natives).default;
  const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
  const props={lesson,score:2,review:reviewUtil.lessonReview(lesson,original),recommendations:[],onReviewMistakes(){},onReadAgain(){},onHome(){},onOpenLesson(){},onBrowse(){}};
- let tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Εξάσκηση στα λάθη (2)'));assert.ok(nodes(tree).some(n=>n.props?.label==='Πλήρης επανάληψη μαθήματος'));
+ let tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Εξάσκηση στα λάθη (2)'));assert.ok(!nodes(tree).some(n=>n.props?.label==='Πλήρης επανάληψη μαθήματος'));
+ nodes(tree).find(n=>n.type==='Pressable'&&n.props.accessibilityState?.expanded===false).props.onPress();tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Πλήρης επανάληψη μαθήματος'),'full replay remains available under More options');resultDetails=false;
  tree=Results({...props,review:reviewUtil.lessonReview(lesson,{[key]:perfect})});assert.ok(!nodes(tree).some(n=>n.props?.label?.startsWith('Εξάσκηση στα λάθη')));
  const drillProps={lesson,indices:[1,3],index:0,selected:null,onChoose(){},onRetry(){},onNext(){},onBack(){}};
  tree=Drill(drillProps);assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,4);

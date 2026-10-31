@@ -5,6 +5,8 @@ import { colors } from "../theme";
 import ActionButton from "./ActionButton";
 import AnswerOption from "./AnswerOption";
 import ProgressBar from "./ProgressBar";
+import ReportContentButton from "./ReportContentButton";
+import { dailyReportTarget } from "../utils/contentReports";
 
 type Props = {
   questions: GeneralKnowledgeQuestion[];
@@ -54,7 +56,7 @@ export default function DailyMistakeReview({ questions, onDone, onAdvance }: Pro
         <Text style={styles.eyebrow}>Η ΕΠΑΝΑΛΗΨΗ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
         <Text style={styles.title}>Ένα βήμα πιο κοντά στη γνώση.</Text>
         <Text style={styles.body}>Σωστές στην εξάσκηση: {correctCount} / {questions.length}</Text>
-        <Text style={styles.note}>Το αρχικό σου σκορ και το σερί παραμένουν ίδια. Μπορείς να εξασκηθείς ξανά από το αποτέλεσμα της ημέρας.</Text>
+        <Text style={styles.note}>Το σκορ και το σερί σου διατηρούνται.</Text>
         <ActionButton label="Επιστροφή στο αποτέλεσμα" onPress={onDone} />
       </View>
     );
@@ -63,9 +65,10 @@ export default function DailyMistakeReview({ questions, onDone, onAdvance }: Pro
   return (
     <View style={styles.container}>
       <Text style={styles.eyebrow}>ΕΠΑΝΑΛΗΨΗ ΛΑΘΩΝ · {index + 1} / {questions.length}</Text>
-      <Text style={styles.note}>Εξάσκηση χωρίς πόντους. Η πρόοδος αυτής της επανάληψης δεν αποθηκεύεται.</Text>
+      <Text style={styles.note}>Χωρίς πόντους · η εξάσκηση δεν αποθηκεύεται.</Text>
       <ProgressBar progress={((index + 1) / questions.length) * 100} />
       <Text style={styles.question}>{question.question}</Text>
+      <ReportContentButton key={question.id} target={dailyReportTarget(question)} />
       <View style={styles.answers}>
         {question.answers.map((answer, answerIndex) => (
           <AnswerOption
