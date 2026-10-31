@@ -5,7 +5,8 @@ const sync=load('src/utils/syncDocument.ts'),daily=load('src/utils/dailySyncDocu
 const {LearningStore}=load('src/state/LearningStore.ts'),{DailyStore}=load('src/state/DailyStore.ts');
 const oldProfile=load('src/utils/knowledgeScoring.ts').knowledgeProfile,activity=load('src/utils/learningActivity.ts');
 const plain=x=>JSON.parse(JSON.stringify(x));
-const lesson=lessons[0],qs=lesson.questions.map((_,i)=>adaptLessonQuestion(lesson,i)),correct=Object.fromEntries(lesson.questions.map((q,i)=>[i,q.correctIndex]));
+const lesson=lessons.find(l=>l.questions.length===4&&!l.requireCurrentAttemptQuiz);assert.ok(lesson,'legacy four-question XP fixture required');
+const qs=lesson.questions.map((_,i)=>adaptLessonQuestion(lesson,i)),correct=Object.fromEntries(lesson.questions.map((q,i)=>[i,q.correctIndex]));
 const base=qs.map(q=>({...q,difficulty:'easy'}));
 let stats=rewards.quizRewardSummary(base,correct,'lesson',{},true);
 assert.equal(stats.combo,qs.length);assert.equal(stats.highestCombo,qs.length);assert.equal(stats.comboXP,12);assert.equal(stats.totalXP,82);

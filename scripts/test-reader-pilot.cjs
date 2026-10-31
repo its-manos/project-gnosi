@@ -143,7 +143,7 @@ for(const article of data.lessons) {
     const limit=progress.getVisibleParagraphLimit(article,props.checkpointAnswers);
     for(let number=1;number<=paragraphs.length;number++) {
       assert.equal(Boolean(byId(tree,`reader-paragraph-${number}`)),number<=limit,article.id+' paragraph '+number);
-      if(number<=limit) assert.ok(nodes(byId(tree,`reader-paragraph-${number}`)).some(n=>n.type==='Text' && n.props.children===paragraphs[number-1]));
+      if(number<=limit) assert.ok(nodes(byId(tree,`reader-paragraph-${number}`)).some(n=>n.type==='Text' && n.props.children===progress.getParagraphText(paragraphs[number-1])));
     }
     assert.equal(Boolean(byId(tree,'reader-finish')),answered===count,article.id+' completion gate');
     const visibleMedia=nodes(tree).filter(n=>n.type==='ArticleFigure').map(n=>n.props.figure);

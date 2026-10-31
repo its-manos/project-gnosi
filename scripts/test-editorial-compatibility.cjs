@@ -21,6 +21,23 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
  for(const old of before){
   const lesson=lessons.find(l=>l.id===old.id),oldKey=activity.quizFingerprint(old.questions);
   assert.equal(lesson.categoryId,old.categoryId);assert.equal(lesson.subcategoryId,old.subcategoryId);
+  if(old.id==='ancient-athens'){
+   // The research-first rewrite has three different questions. The earlier
+   // four-question event is immutable but its mistake indices cannot migrate.
+   assert.equal(old.questions.length,4);assert.equal(lesson.questions.length,3);
+   assert.equal(progress.getInlineQuestionCount(lesson),3);
+   assert.deepEqual(progress.getQuestionPlacements(lesson).map(p=>p.afterParagraphNumber),[3,9,13]);
+   assert.equal(progress.getResumeParagraphNumber(lesson,{0:lesson.questions[0].correctIndex}),4);
+   assert.ok(lesson.requireCurrentAttemptQuiz);
+   assert.notEqual(oldKey,activity.quizFingerprint(lesson.questions));
+   assert.equal(activity.lessonQuizMatches(lesson,oldKey),false);
+   const legacy={old:event(lesson,oldKey,[1,3])};
+   assert.equal(lessonReview(lesson,legacy).status,'changed');
+   assert.equal(weekly.lessonScores(lesson,legacy).best,null);
+   assert.equal(weekly.weeklyPlan(legacy,{},'2026-10-20').length,0);
+   assert.deepEqual(sync.mergeSyncDocuments({...sync.emptySyncDocument(),activity:legacy},sync.emptySyncDocument()).activity,legacy);
+   continue;
+  }
   assert.equal(lesson.questions.length,old.questions.length);
   lesson.questions.forEach((q,i)=>{
    assert.equal(q.correctIndex,old.questions[i].correctIndex,'saved answer slots must keep meaning');
@@ -57,7 +74,7 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
  }
  assert.equal(changed,37);
  // Load real old-format persisted progress through the current store.
- const old=before[0],lesson=lessons[0],key=activity.quizFingerprint(old.questions);
+ const old=before.find(row=>row.id!=='ancient-athens'),lesson=lessons.find(row=>row.id===old.id),key=activity.quizFingerprint(old.questions);
  const doc={...sync.emptySyncDocument(),clock:1,progress:{[lesson.id]:{stamp:[1,'oldphone'],value:{completed:true,attempt:null}}},activity:{old:event(lesson,key,[1,3])}};
  const disk=new Map([['@gnosi/sync-device-id','editorialtest'],['@gnosi/learning-v2/guest',JSON.stringify({format:1,userId:null,dirty:false,doc})]]);
  const storage={getItem:async k=>disk.get(k)??null,setItem:async(k,v)=>{disk.set(k,v);}};
@@ -67,5 +84,16 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
  await store.flushLocal();
  const reopened=new LearningStore(null,storage);stores.push(reopened);await reopened.start();
  assert.deepEqual(reopened.getSnapshot().activity,doc.activity,'restart preserves original quiz fingerprint');
- console.log('Editorial checks passed: 45 stable lessons, 180 answer keys/objectives retained; 37 historical quiz aliases preserve mistake practice, scores, mastery, weekly IDs, next-week eligibility, sync and persisted startup. Unrelated versions remain excluded.');
+ // An old Athens completion remains completed even though its old question slots
+ // must not be replayed against the new lesson's checkpoint order.
+ const athensOld=before.find(row=>row.id==='ancient-athens'),athens=lessons.find(row=>row.id==='ancient-athens');
+ const legacyKey=activity.quizFingerprint(athensOld.questions),legacyEvent=event(athens,legacyKey,[1,3]);
+ const docAthens={...sync.emptySyncDocument(),clock:1,progress:{[athens.id]:{stamp:[1,'oldphone'],value:{completed:true,attempt:null}}},activity:{old:legacyEvent}};
+ const athensDisk=new Map([['@gnosi/sync-device-id','athenscompat'],['@gnosi/learning-v2/guest',JSON.stringify({format:1,userId:null,dirty:false,doc:docAthens})]]);
+ const athensStorage={getItem:async k=>athensDisk.get(k)??null,setItem:async(k,v)=>{athensDisk.set(k,v);}};
+ const athensStore=new LearningStore(null,athensStorage);stores.push(athensStore);await athensStore.start();
+ assert.ok(athensStore.getSnapshot().backup.completedIds.includes(athens.id),'old Athens completion must survive revised questions');
+ assert.deepEqual(athensStore.getSnapshot().activity.old,legacyEvent,'old Athens scoring event must be immutable');
+ assert.equal(lessonReview(athens,athensStore.getSnapshot().activity).status,'changed','old mistake slots cannot map to revised quiz');
+ console.log('Editorial checks passed: 44 unchanged old lessons preserve answer slots, quiz aliases and weekly reviews; rewritten Athens retains historical completion/events without treating obsolete mistake indices as current.');
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>stores.forEach(s=>s.stop()));

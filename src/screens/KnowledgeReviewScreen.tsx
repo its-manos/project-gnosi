@@ -1,6 +1,7 @@
 import QuizReveal from "../components/QuizReveal";
 import { conceptById } from "../knowledge/concepts";
 import { lessons } from "../data/lessons";
+import { getParagraphText } from "../utils/lessonProgress";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useDailySnapshot, useLearningSession, useLearningSnapshot } from "../state/LearningSession";
@@ -75,7 +76,7 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
           <Text style={styles.body}>{saved.qualifiedIndices.includes(quiz.currentIndex) ? `${MASTERY_LABELS[saved.beforeStates[quiz.currentIndex]]} → ${MASTERY_LABELS[item.state]} · ${item.successes}/3 διαφορετικές δοκιμές` : "Η γνωστή ερώτηση ή δεύτερη απάντηση την ίδια ημέρα δεν αλλάζει την κατάκτηση."}</Text>
           {saved.mode === "scheduled" && answer === q.content.correctIndex && saved.qualifiedIndices.includes(quiz.currentIndex) && item.successes === 0 ? <Text style={styles.body}>Η πρώτη χρονολογημένη δοκιμή ορίζει αφετηρία. Η κατάκτηση θα χρειαστεί νέες, διαφορετικές δοκιμές σε επόμενες ημέρες.</Text> : null}
           <Text style={styles.body}>{nextReview(item)}</Text>
-          {section ? <><Pressable style={styles.sectionButton} accessibilityRole="button" accessibilityState={{ expanded: sectionFor === q.id }} onPress={() => setSectionFor(v => v === q.id ? null : q.id)}><Text style={styles.sectionLink}>{sectionFor === q.id ? "Κλείσιμο ενότητας −" : "Δες τη σχετική ενότητα (προαιρετικά) +"}</Text></Pressable>{sectionFor === q.id ? <View style={styles.row} testID="review-teaching-section"><Text style={styles.heading}>{section.title}</Text>{section.paragraphs.map((p, i) => <Text key={i} style={styles.body}>{p}</Text>)}<Text style={styles.body}>Μόνο ανάγνωση. Η ολοκλήρωση του μαθήματος δεν αλλάζει.</Text></View> : null}</> : null}
+          {section ? <><Pressable style={styles.sectionButton} accessibilityRole="button" accessibilityState={{ expanded: sectionFor === q.id }} onPress={() => setSectionFor(v => v === q.id ? null : q.id)}><Text style={styles.sectionLink}>{sectionFor === q.id ? "Κλείσιμο ενότητας −" : "Δες τη σχετική ενότητα (προαιρετικά) +"}</Text></Pressable>{sectionFor === q.id ? <View style={styles.row} testID="review-teaching-section"><Text style={styles.heading}>{section.title}</Text>{section.paragraphs.map((p, i) => <Text key={i} style={styles.body}>{getParagraphText(p)}</Text>)}<Text style={styles.body}>Μόνο ανάγνωση. Η ολοκλήρωση του μαθήματος δεν αλλάζει.</Text></View> : null}</> : null}
           {q.sources.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή τεκμηρίωσης" }} />)}
           <ActionButton label={quiz.currentIndex === quiz.questions.length - 1 ? "Δες το αποτέλεσμα" : "Συνέχεια"} onPress={() => { if (!store.advanceKnowledgeReview(saved.id, questionToken(quiz!))) setMessage("Η προσπάθεια άλλαξε. Άνοιξε ξανά την επανάληψη."); }} />
         </View> : null}

@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),{load}=require('./helpers/load-typesc
 const jsx=(type,props)=>({type,props}),flush=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
 const events=load('src/play/events.ts'),status=load('src/play/soundStatus.ts'),prefs=load('src/play/preferences.ts');
 const {LearningStore}=load('src/state/LearningStore.ts'),{DailyStore}=load('src/state/DailyStore.ts'),{lessons}=load('src/data/lessons.ts'),{questions}=load('src/data/questions.ts');
-const {getAthensDateKey}=load('src/utils/dailyChallenge.ts'),{createSharedDailyRecord}=load('src/utils/sharedDailyChallenge.ts');
+const {getAthensDateKey}=load('src/utils/dailyChallenge.ts'),{createSharedDailyRecord}=load('src/utils/sharedDailyChallenge.ts'),{quizFingerprint}=load('src/utils/learningActivity.ts');
 const {dailyRecordSession,updateDailyRecord}=load('src/quiz/compatibility.ts'),{questionToken,submitQuizAnswer,advanceQuizSession}=load('src/quiz/engine.ts');
 const heard=[],players=[],warmups=[];
 const {FeedbackAudio}=load('src/play/audio.ts',{'react-native':{Platform:{OS:'android'}},'./soundStatus':status,'expo-audio':{setAudioModeAsync:async()=>{},createAudioPlayer:source=>{
@@ -22,15 +22,15 @@ const native={View:'View',Text:'Text',StyleSheet:{create:x=>x},Animated:{Value:c
  const render=()=>{cursor=0;Provider({children:null});const pending=effects;effects=[];pending.forEach(fn=>fn());};
  try{
  render();await flush();assert.deepEqual(heard,[],'hydration stays quiet');assert.deepEqual(warmups,[],'no native play() on app startup, even muted');
- const lesson=lessons[0],answers={},first=lesson.questions[0];answers[0]=first.correctIndex;
- store.answer(lesson.id,{checkpointAnswers:{...answers},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false});
+ const lesson=lessons[0],answers={},first=lesson.questions[0],quizKey=quizFingerprint(lesson.questions);answers[0]=first.correctIndex;
+ store.answer(lesson.id,{checkpointAnswers:{...answers},quizKey,score:1,updatedAt:Date.now(),replayOfCompletedLesson:false});
  await flush();render();assert.deepEqual(heard,[],'first lesson answer waits for sound preferences instead of being lost');
  resolvePreferences();await flush();assert.deepEqual(heard,['correct'],'the first lesson answer plays without test-sound prewarming');
  status.requestSoundPreview();await flush();assert.deepEqual(heard,['correct','correct'],'preview works after the real first answer');
- for(let i=1;i<3;i++){const q=lesson.questions[i],answer=(q.correctIndex+1)%q.answers.length;answers[i]=answer;store.answer(lesson.id,{checkpointAnswers:{...answers},score:1,updatedAt:Date.now()+i,replayOfCompletedLesson:false});await flush();render();}
+ for(let i=1;i<3;i++){const q=lesson.questions[i],answer=(q.correctIndex+1)%q.answers.length;answers[i]=answer;store.answer(lesson.id,{checkpointAnswers:{...answers},quizKey,score:1,updatedAt:Date.now()+i,replayOfCompletedLesson:false});await flush();render();}
  assert.deepEqual(heard,['correct','correct','incorrect','incorrect'],'real answers and preview replay after repeated Android STATE_ENDED');
  assert.deepEqual(warmups.slice(0,2),['correct','incorrect'],'cold players warmed only after first request for each cue');
- const n=heard.length;store.answer(lesson.id,{checkpointAnswers:{...answers},score:1,updatedAt:Date.now()+10,replayOfCompletedLesson:false});await flush();assert.equal(heard.length,n,'duplicate tap remains silent');
+ const n=heard.length;store.answer(lesson.id,{checkpointAnswers:{...answers},quizKey,score:1,updatedAt:Date.now()+10,replayOfCompletedLesson:false});await flush();assert.equal(heard.length,n,'duplicate tap remains silent');
  const date=getAthensDateKey();dailyStore.commitRecord(createSharedDailyRecord(date),undefined);
  const expected=[];while(!dailyStore.getSnapshot().doc.days[date].record.completed){const day=dailyStore.getSnapshot().doc.days[date],record=day.record,session=dailyRecordSession(record,questions),token=questionToken(session);
  if(record.answers[record.currentIndex]===undefined){const q=questions.find(q=>'daily:'+q.id===token.id),right=record.currentIndex%2===0;expected.push(right?'correct':'incorrect');dailyStore.commitRecord(updateDailyRecord(record,submitQuizAnswer(session,token,right?q.correctIndex:(q.correctIndex+1)%q.answers.length).session),day);await flush();render();}
