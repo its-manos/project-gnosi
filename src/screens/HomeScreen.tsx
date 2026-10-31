@@ -28,13 +28,13 @@ type Props = {
   onStartDailyChallenge: () => void;
   onOpenDailyPreferences: () => void;
   onWeeklyReview?: () => void;
-  onOpenAccount?: () => void;
+  onOpenProfile?: () => void;
 };
 
 export default function HomeScreen({
   onKnowledgeReview, categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
-  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview, onOpenAccount,
+  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview, onOpenProfile,
 }: Props) {
   const mapRegions = useMemo(() => categories.map((category) => ({
     id: category.id, title: category.title, emoji: category.emoji,
@@ -47,7 +47,7 @@ export default function HomeScreen({
       <View style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.quickActions}>
-          {onOpenAccount ? <Pressable style={styles.iconButton} onPress={onOpenAccount} accessibilityRole="button" accessibilityLabel="Ο λογαριασμός μου">
+          {onOpenProfile ? <Pressable style={styles.iconButton} onPress={onOpenProfile} accessibilityRole="button" accessibilityLabel="Το προφίλ μου">
             <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}><Circle cx={12} cy={8} r={3.5} stroke={colors.accentLight} strokeWidth={1.8} /><Path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2" stroke={colors.accentLight} strokeWidth={1.8} strokeLinecap="round" /></Svg>
           </Pressable> : null}
           <Pressable style={styles.iconButton} onPress={onOpenSearch} accessibilityRole="button" accessibilityLabel="Αναζήτηση μαθημάτων">

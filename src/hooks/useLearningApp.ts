@@ -24,6 +24,8 @@ export type AppScreen =
   | "review"
   | "weekly-review"
   | "knowledge-review"
+  | "profile"
+  | "player-stats"
   | "account"
   | "progress"
   | "saved"

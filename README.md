@@ -176,3 +176,7 @@ No new SQL migration or production dependency is needed. Read [Phase 3 architect
 Progress now separates permanent XP from retention across learning units and subjects, including Architecture. Short, resumable reviews use the existing quiz engine, Athens dates and bounded offline evidence. Three correctly spaced recalls are required for mastery; same-day practice cannot inflate it. Existing lessons, daily challenges, weekly reviews and player titles remain compatible.
 
 Apply migration `supabase/migrations/202610310013_knowledge_reviews.sql` before releasing this phase. See [installation and beta commands](APPLY-KNOWLEDGE-MASTERY-PHASE-4.md), [design and compatibility](docs/knowledge-mastery-phase-4.md), and [validation and device checklist](docs/knowledge-mastery-phase-4-validation.md). Phase 5 is not included.
+
+## Profile and focused Progress
+
+After Phase 4, Progress focuses on resume/review actions and separate Knowledge/Reading views. The home avatar and Progress header open a dedicated player Profile with live title/XP/achievements and links to detailed Statistics, account/settings and interests. Full history and activity charts are available on demand. No new database migration or dependency is needed. See [design, validation and device checklist](docs/profile-progress-redesign.md) and `APPLY-PROFILE-REDESIGN.md` for install/commit/beta commands. Phase 5 remains on hold.

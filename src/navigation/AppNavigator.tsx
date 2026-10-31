@@ -1,3 +1,5 @@
+import ProfileScreen from "../screens/ProfileScreen";
+import PlayerStatsScreen from "../screens/PlayerStatsScreen";
 import KnowledgeReviewScreen from "../screens/KnowledgeReviewScreen";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import type { AnalyticsScreen } from "../utils/betaAnalytics";
@@ -50,13 +52,16 @@ export default function AppNavigator() {
   const welcome = useWelcome(daily.userId, hasActivity);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
   const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
-  const [preferencesOrigin, setPreferencesOrigin] = useState<"home" | "daily">("home");
+  const [preferencesOrigin, setPreferencesOrigin] = useState<"home" | "daily" | "profile">("home");
   const [knowledgeOrigin, setKnowledgeOrigin] = useState<"home" | "progress">("progress");
   const openKnowledgeReview = (origin: "home" | "progress") => { setKnowledgeOrigin(origin); app.setScreen("knowledge-review"); };
-  const [accountOrigin, setAccountOrigin] = useState<"home" | "progress">("home");
-  const openAccount = (origin: "home" | "progress") => { setAccountOrigin(origin); app.setScreen("account"); };
+  const [progressView, setProgressView] = useState<"knowledge" | "reading">("knowledge");
+  const [profileOrigin, setProfileOrigin] = useState<"home" | "progress">("home");
+  const openProfile = (origin: "home" | "progress") => { setProfileOrigin(origin); app.setScreen("profile"); };
+  const [accountOrigin, setAccountOrigin] = useState<"home" | "progress" | "profile">("home");
+  const openAccount = (origin: "home" | "progress" | "profile") => { setAccountOrigin(origin); app.setScreen("account"); };
 
-  const openDailyPreferences = useCallback((origin: "home" | "daily") => {
+  const openDailyPreferences = useCallback((origin: "home" | "daily" | "profile") => {
     setPreferencesOrigin(origin);
     setIsDailyPreferencesOpen(true);
   }, []);
@@ -175,6 +180,8 @@ export default function AppNavigator() {
       if (app.screen === "home") return false;
       if (app.screen === "review") { app.endMistakeReview(); return true; }
       const destination: AppScreen = app.screen === "account" ? accountOrigin
+        : app.screen === "profile" ? profileOrigin
+        : app.screen === "player-stats" ? "profile"
         : app.screen === "knowledge-review" ? knowledgeOrigin
         : app.screen === "weekly-review" ? "progress"
         : app.screen === "lesson" || app.screen === "results" ? app.lessonBackScreen
@@ -187,7 +194,7 @@ export default function AppNavigator() {
   });
 
   const analyticsScreen: AnalyticsScreen = welcome.visible ? "welcome"
-    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen;
+    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" ? "progress" : app.screen;
   const answeredForAnalytics = Object.keys(app.checkpointAnswers).length;
   const analyticsLessonId = activeLesson?.id;
   useEffect(() => {
@@ -248,7 +255,7 @@ export default function AppNavigator() {
       screenContent = (
         <HomeScreen
           onKnowledgeReview={() => openKnowledgeReview("home")}
-          onOpenAccount={() => openAccount("home")}
+          onOpenProfile={() => openProfile("home")}
           onWeeklyReview={() => app.setScreen("weekly-review")}
           categories={categories}
           subcategories={subcategories}
@@ -271,8 +278,16 @@ export default function AppNavigator() {
       );
       break;
 
+    case "profile":
+      screenContent = <ProfileScreen onBack={() => app.setScreen(profileOrigin)} onStats={() => app.setScreen("player-stats")}
+        onAccount={() => openAccount("profile")} onInterests={() => openDailyPreferences("profile")} onGuide={welcome.open} />;
+      break;
+    case "player-stats":
+      screenContent = <PlayerStatsScreen onBack={() => app.setScreen("profile")} completedLessons={completedLessons} totalLessonCount={lessons.length} lessonProgressLoaded={app.progressLoaded} />;
+      break;
     case "account":
       screenContent = <AccountScreen onBack={() => app.setScreen(accountOrigin)}
+        devControls={{ canResetLessonProgress: app.canResetLessonProgress, lessonProgressLoaded: app.progressLoaded, onResetLessonProgressForDevelopment: app.resetLessonProgressForDevelopment }}
         backupControls={app.progressLoaded && bookmarks.isSavedLessonsLoaded ? {
           deviceBackup: parseLearningBackup({ schemaVersion: 1, completedIds: app.completedLessonIds, savedIds: bookmarks.savedLessonIds, attempts: app.lessonAttempts }),
           onRestoreBackup: async backup => { await Promise.all([app.mergeRestoredProgress(backup), bookmarks.mergeRestoredBookmarks(backup.savedIds)]); },
@@ -282,10 +297,10 @@ export default function AppNavigator() {
     case "progress":
       screenContent = (
         <ProgressScreen
+          initialView={progressView} onViewChange={setProgressView}
           onKnowledgeReview={() => openKnowledgeReview("progress")}
-          onOpenAccount={() => openAccount("progress")}
+          onOpenProfile={() => openProfile("progress")}
           onWeeklyReview={() => app.setScreen("weekly-review")}
-          onOpenWelcome={welcome.open}
           onHome={() => navigateTo("home")}
           completedLessons={completedLessons}
           inProgressLesson={inProgressLesson}
@@ -294,9 +309,7 @@ export default function AppNavigator() {
           inProgressLessonCount={app.inProgressLessonCount}
           totalLessonCount={lessons.length}
           lessonProgressLoaded={app.progressLoaded}
-          canResetLessonProgress={app.canResetLessonProgress}
           onOpenLesson={app.openLesson}
-          onResetLessonProgressForDevelopment={app.resetLessonProgressForDevelopment}
         />
       );
       break;
@@ -440,7 +453,7 @@ export default function AppNavigator() {
         {screenContent}
       </SafeAreaView>
       {!welcome.visible ? <BottomNavigation
-        currentScreen={isDailyChallengeOpen ? "home" : app.screen}
+        currentScreen={isDailyChallengeOpen ? "home" : app.screen === "profile" ? profileOrigin : app.screen === "player-stats" ? profileOrigin : app.screen === "account" ? accountOrigin === "profile" ? profileOrigin : accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
           setIsDailyChallengeOpen(false);
