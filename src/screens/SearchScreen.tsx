@@ -1,5 +1,6 @@
 import { getReadingState, type ReadingState } from "../utils/readingDiscovery";
 import { getLessonAccess } from "../utils/lessonPath";
+import { getParagraphText } from "../utils/lessonProgress";
 import { useMemo, useState } from "react";
 import {
   Keyboard,
@@ -73,7 +74,7 @@ export default function SearchScreen({
         subcategory?.description ?? "",
         ...lesson.sections.flatMap((section) => [
           section.title,
-          ...section.paragraphs,
+          ...section.paragraphs.map(getParagraphText),
         ]),
         ...lesson.sources.flatMap((source) => [
           source.title,
