@@ -40,6 +40,16 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "linear-b-decipherment": [
+    {
+      afterParagraphId: "pylos-test-1953",
+      url: commonsFileUrl("Linear B tablet, Pylos, 13th century BC, NAMA, 191139.jpg"),
+      resizeMode: "contain",
+      caption: "Μουσειακή προθήκη με πινακίδες από την Πύλο, ανάμεσά τους η PY Ta 641. Η συλλαβική ανάγνωση ti-ri-po-de κοντά στο εικονόγραμμα τρίποδου υπήρξε ανεξάρτητη δοκιμή. Άγγιξε για μεγέθυνση.",
+      credit: "Zde / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2019",
+      creditUrl: commonsPageUrl("Linear B tablet, Pylos, 13th century BC, NAMA, 191139.jpg"),
+    },
+  ],
   "mycenaean-palaces": [
     {
       afterParagraphId: "hides-tablet",

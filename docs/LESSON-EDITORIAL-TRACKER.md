@@ -155,3 +155,10 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Evidence:** scholarly articles (Shelmerdine, Bendall, Lupack, Halstead, Hruby, Cosmopoulos, Judson) and Commons file-description licence pages inspected; static connector preflight only. **No actual typecheck, content validator, Node regression suite, CI or Android/iOS device test run in this integration environment.** Earlier unconfirmed lesson-7 Node QA remains unconfirmed.
 - **Counts:** 30 planned, 11 implemented, 8 Integrated, 3 older Drafted, 19 Not started, 0 Validated, 0 Approved.
 - **Next only:** #9 `linear-b-decipherment` — «Η γραφή που έκρυβε ελληνικά». It exists as a Drafted legacy lesson. Protect existing completion/quiz data when revising.
+
+### Editorial session note — Ancient Greece lesson 9 · 2026-11-01
+- **Integrated, not Validated/Approved:** `linear-b-decipherment` — «Γραμμική Β: τα μοτίβα που αποκάλυψαν ελληνικά». [Evidence, image rights, compatibility and QA](linear-b-decipherment-research.md).
+- Existing ID rewritten in place; **21 stable paragraphs, five version-1 anchored questions**. The original quiz fingerprint `q_d2c4cdd5` is intentionally not aliased to rewritten answer content, and `requireCurrentAttemptQuiz: true` prevents stale unversioned attempts. Historical progress and XP events are not modified.
+- KN Fp 13 cover (vintagedept, CC BY 2.0) and PY Ta 641 museum display photograph (Zde, CC BY-SA 4.0); all mobile media, Zoom, Node, TypeScript, XP/audio/replay and Supabase checks pending locally. Path order repaired; #9 immediately follows #8.
+- **30 planned / 5 chapters: 11 implemented (9 Integrated, 2 Drafted), 19 Not started, 0 Validated, 0 Approved.** Previous lessons 1–8 retain their statuses.
+- **Next only:** #10 `palace-collapse` «Μετά την κατάρρευση των ανακτόρων»; not developed.

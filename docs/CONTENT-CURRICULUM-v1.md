@@ -263,7 +263,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 6. `aegean-bronze-age` — «Το Αιγαίο πριν από τις πόλεις-κράτη»
 7. `minoan-crete` — «Η Κρήτη των ανακτόρων»
 8. `mycenaean-palaces` — «Ποιος διοικούσε τα μυκηναϊκά ανάκτορα;»
-9. `linear-b-decipherment` — «Η γραφή που έκρυβε ελληνικά» (existing live ID)
+9. `linear-b-decipherment` — «Γραμμική Β: τα μοτίβα που αποκάλυψαν ελληνικά» (existing ID; research-first Integrated, QA pending)
 10. `palace-collapse` — «Μετά την κατάρρευση των ανακτόρων»
 11. `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες»
 
@@ -300,7 +300,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `ancient-athens`: household archaeology, distinct building phases, everyday work and evidence limits. Do **not** retell detailed democratic institutions, the Linear B decipherment or the Antikythera mechanism here.
 - `greek-world-not-a-country`: definitions, dispersed communities, regional diversity; reserve geography specifics for `greek-geography-seas` and polis institutions for `rise-of-polis`.
 - `greek-history-through-evidence`: historians' sources and their biases; archaeological techniques in depth belong to proposed `archaeology-methods`.
-- `linear-b-decipherment`: preserve existing article; focus on decipherment, with administrative palace context in `mycenaean-palaces`.
+- `linear-b-decipherment`: revised existing article; Bennett’s sign classification, Kober’s inflectional grids, Ventris’s 1952 predictions, Chadwick’s philology, new PY Ta 641 test and translation limits. Palace administration stays in `mycenaean-palaces`; destruction in `palace-collapse`; alphabetic developments in `geometric-greece`; generic excavation methods in `archaeology-methods`.
 - `athens-who-voted`: retain the existing article as the primary home for franchise limits; `athens-law-courts` goes deeper into procedure, not franchise recap.
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
@@ -360,3 +360,9 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - **Boundary:** Pylian administration, material contexts, Mycenaean regional variation. #7 remains the Minoan-Crete case study; #9 covers decipherment history and linguistic method; #10 is the palace destruction/aftermath topic; broader Bronze Age resources, chronological periods, and archaeology methods are not retold.
 - **Plan unchanged:** 30 planned / five chapters; **11 in app: 8 Integrated, 3 older Drafted, 19 Not started; 0 Validated / 0 Approved.** Source and rights pages reviewed; automated npm/Node and Android/iOS runtime tests not executed here. No XP, audio, Supabase or database migration.
 - **Next only, not researched:** #9 `linear-b-decipherment` — «Η γραφή που έκρυβε ελληνικά» (existing Drafted ID; review legacy quiz/version before rewriting).
+
+### Editorial session note — Ancient Greece lesson 9 · 2026-11-01
+- **Integrated**, not Validated/Approved: `linear-b-decipherment`, «Γραμμική Β: τα μοτίβα που αποκάλυψαν ελληνικά». [Sources, media, QA and progress compatibility](linear-b-decipherment-research.md).
+- 21 stable paragraphs / five sections, five version-1 anchored reasoning checkpoints, one credited KN Fp 13 cover and one attributed Pylos inline image. Historical lesson ID and completion/XP activity retained; legacy quiz key is deliberately not aliased to new questions.
+- Repaired Ancient Greece explicit path order (#9 immediately after #8). **30 planned / five chapters, 11 implemented, 9 Integrated, 2 older Drafted, 19 Not started, 0 Validated and 0 Approved.** Connector structural preflight only, npm/Node and native device checks not run.
+- Next ONLY: #10 `palace-collapse` «Μετά την κατάρρευση των ανακτόρων» (Chapter II); not developed here.
