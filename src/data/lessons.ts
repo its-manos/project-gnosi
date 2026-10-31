@@ -2,6 +2,7 @@ import type { QuestionMetadata } from "../quiz/types";
 import { worldHistoryLessons } from "./worldHistoryLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
+import { geologyLessons } from "./geologyLessons";
 import { perceptionLessons } from "./perceptionLessons";
 import { catalogueExpansion } from "./catalogueExpansion";
 import { additionalLessons } from "./additionalLessons";
@@ -216,6 +217,7 @@ export const subcategories: Subcategory[] = [
   },
   { id: "architecture", categoryId: "culture", title: "Αρχιτεκτονική", description: "Από την πρώτη παρατήρηση στη σύνθεση: χώρος, φως, κατασκευή και πόλη." },
   { id: "brain-perception", categoryId: "science", title: "Εγκέφαλος και Ψευδαισθήσεις", description: "Πώς ο εγκέφαλος μετατρέπει το φως σε εμπειρία: όραση, χρώμα, βάθος και μοτίβα." },
+  { id: "geology-hidden-earth", categoryId: "science", title: "Γεωλογία και η κρυμμένη Γη", description: "Πετρώματα, γεωλογικός χρόνος και απολιθώματα: μάθε να διαβάζεις την ιστορία του πλανήτη." },
   { id: "genocide-memory", categoryId: "difficult-history", title: "Γενοκτονίες & μνήμη", description: "Διώξεις, ιστορικά τεκμήρια και η ευθύνη της μνήμης." },
   { id: "colonialism-slavery", categoryId: "difficult-history", title: "Αποικιοκρατία & δουλεία", description: "Καταναγκασμός, οικονομικά συστήματα και κριτική ανάγνωση των πηγών." },
   { id: "power-exclusion", categoryId: "difficult-history", title: "Εξουσία & αποκλεισμός", description: "Λογοκρισία, ψευδοεπιστήμη και ανθρώπινα δικαιώματα." },
@@ -345,4 +347,5 @@ export const lessons: Lesson[] = [
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
+  ...geologyLessons,
 ];
