@@ -10,7 +10,7 @@ const palette: Record<string, string> = {
 
 export default function LessonCover({ lesson, style }: { lesson: Lesson; style: StyleProp<ViewStyle> }) {
   if (lesson.coverKind !== "editorial") {
-    return <ResilientImage uri={lesson.imageUrl} style={style} resizeMode={lesson.imageResizeMode ?? "cover"}
+    return <ResilientImage uri={lesson.imageUrl} style={style} resizeMode="cover"
       accessibilityLabel={lesson.imageCaption} fallbackLabel="Η φωτογραφία του άρθρου δεν είναι διαθέσιμη" loadingLabel="Φόρτωση φωτογραφίας…" />;
   }
   const category = categories.find((item) => item.id === lesson.categoryId);
