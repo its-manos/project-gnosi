@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "minoan-crete": [
+    {
+      afterParagraphId: "mu-district",
+      url: commonsFileUrl("Malia Minoan-site Palace Central-court 20230608 094807.jpg"),
+      resizeMode: "contain",
+      caption: "Η σημερινή εικόνα της κεντρικής αυλής των Μαλίων. Διαφέρει από τη συνοικία Μ, που βρισκόταν έξω από το κυρίως ανακτορικό συγκρότημα.",
+      credit: "Rigorius / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+      creditUrl: commonsPageUrl("Malia Minoan-site Palace Central-court 20230608 094807.jpg"),
+    },
+    {
+      afterParagraphId: "gournia-streets",
+      url: commonsFileUrl("Gournia archaeological site from east.jpg"),
+      resizeMode: "contain",
+      caption: "Ανασκαμμένα κατάλοιπα στα Γουρνιά. Οι τοίχοι και τα περάσματα αποκαλύπτουν τον οικιστικό ιστό, όχι μία πλήρη αναπαράσταση των αρχαίων σπιτιών.",
+      credit: "Wikimedia Commons · δημιουργός και άδεια προς επανέλεγχο πριν από τη δημοσίευση",
+      creditUrl: commonsPageUrl("Gournia archaeological site from east.jpg"),
+    },
+  ],
   "aegean-bronze-age": [
     {
       afterParagraphId: "spindle-evidence",
