@@ -141,3 +141,10 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Verified:** connector branch/source inspection, historical institution and image rights pages, in-memory structural preflight. **Not run:** npm typecheck, content validator, Node regression suite, iOS/Android QA or remote-image device loading. Reader-pilot previous fix rerun remains unconfirmed. Do not promote previous lessons.
 - **Progress:** 30 planned / 5 chapters, **9 in app, 6 Integrated, 3 Drafted, 21 Not started, 0 Validated, 0 Approved**.
 - **Next ONLY, not started:** #7 `minoan-crete` — «Η Κρήτη των ανακτόρων» (Chapter II).
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 7
+- **Integrated, not Validated or Approved:** `minoan-crete` — «Πέρα από την Κνωσό: οι κόσμοι της μινωικής Κρήτης». [Research, source criticism, image rights, checkpoints and QA](minoan-crete-research.md).
+- **Focus:** Malia court and the Mu Quarter, administrative traces without an assumed island-wide kingdom, homes and workshops at Gournia, maritime connections at Zakros, ritual imagery, snake-figurine restorations and the modern presentation of Knossos. **22 stable paragraphs, four version-1 questions after 4/10/15/20; cover and two attributed inline figures.**
+- **Validation:** Editorial preflight/connector inspection only. The dedicated `scripts/test-minoan-crete.cjs` was added but **has not been run**; `npm run typecheck`, `npm run validate:content`, all Node integration scripts and Android/iOS QA await a local checkout. Existing 1–6 stay Integrated and are not silently promoted.
+- **Progress:** 30 planned / 5 chapters; **10 implemented**, **7 Integrated**, **3 earlier Drafted**, **20 Not started**, **0 Validated / 0 Approved**. No changes to prior quiz IDs, XP/audio, daily challenges or Supabase.
+- **Next only (not started):** #8 `mycenaean-palaces` — «Ποιος διοικούσε τα μυκηναϊκά ανάκτορα;»; Chapter II.
