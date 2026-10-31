@@ -31,6 +31,8 @@ events.emitPlayFeedback({...e,id:'mastery-with-xp',xp:10,kind:'mastered'});
 tree=render();assert.ok(nodes(tree).some(n=>n.props.testID==='play-celebration'),'positive XP mastery remains visible');
 events.emitPlayFeedback({...e,id:'replay-after-mastery',xp:0,kind:'correct',answerXP:0});
 tree=render();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP after a milestone closes the popup');
+await prefs.playPreferences.set('sound',false);
+assert.equal(prefs.playPreferences.getSnapshot().sound,false,'restore muted preference after replay audio check');
 
  const Settings=load('src/components/PlayFeedbackSettings.tsx',{react:h.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../play/preferences':prefs,'../play/soundStatus':status,'./ActionButton':{__esModule:true,default:'Button'}}).default;tree=h.render(()=>Settings());const switches=nodes(tree).filter(n=>n.type==='Switch');assert.equal(switches.length,2);assert.equal(switches[0].props.value,false);assert.equal(switches[1].props.value,true);switches[1].props.onValueChange(false);await flush();assert.equal(prefs.playPreferences.getSnapshot().animations,false);assert.equal(prefs.playPreferences.getSnapshot().sound,false);
  await prefs.playPreferences.set('sound',true);status.requestSoundPreview();assert.equal(sounds.at(-1),'correct','test sound uses live provider');await prefs.playPreferences.set('sound',false);const afterPreview=sounds.length;h.cleanup();assert.equal(disposed,1);events.emitPlayFeedback({...e,id:'after-unmount'});assert.equal(sounds.length,afterPreview,'unmounted provider cannot play');
