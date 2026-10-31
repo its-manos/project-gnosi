@@ -242,3 +242,70 @@ Separate unpublished editorial metadata from the shipped catalogue. Never expose
 - MIT 14.160 Behavioral Economics (advanced inspiration only): https://student.mit.edu/catalog/m14a.html
 
 Reference curricula guide sequencing only; all new Gnosi articles require independent fact verification, original prose, and separately verified media rights.
+
+
+## 12. Finalized v1 learning path — Ιστορία / Αρχαία Ελλάδα (2026-11-01)
+
+**Editorial decision:** 30 lessons in five chapters. These are planned curriculum entries, not 30 published lessons. The four pre-existing article IDs remain unchanged; only `ancient-athens` has received the research-first rewrite in this session. The pilot begins from an accessible archaeological case study, then establishes chronological and geographic foundations before proceeding into Bronze Age, poleis, conflicts and cultural developments. This opening order is thematic, not an assertion that Classical Athens predates Mycenaean Greece.
+
+**Outcome:** By completion, readers can distinguish successive eras, understand the diversity of Greek-speaking communities, interpret evidence critically, explain institutions and social differences, and recognize how trade, warfare, intellectual activity and Hellenistic change reshaped the Mediterranean. Review sequencing when individual lessons are researched; no arbitrary lesson cap.
+
+### Chapter I. Η πόλη πίσω από τα μνημεία
+
+1. `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα» (existing live ID)
+2. `greek-world-not-a-country` — «Οι Έλληνες χωρίς ένα ελληνικό κράτος»
+3. `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;»
+4. `greek-chronology` — «Από τα ανάκτορα στις πόλεις: ένας χάρτης του χρόνου»
+5. `greek-geography-seas` — «Η θάλασσα που ένωνε και χώριζε τις κοινότητες»
+
+### Chapter II. Πριν από την κλασική Ελλάδα
+
+6. `aegean-bronze-age` — «Το Αιγαίο πριν από τις πόλεις-κράτη»
+7. `minoan-crete` — «Η Κρήτη των ανακτόρων»
+8. `mycenaean-palaces` — «Ποιος διοικούσε τα μυκηναϊκά ανάκτορα;»
+9. `linear-b-decipherment` — «Η γραφή που έκρυβε ελληνικά» (existing live ID)
+10. `palace-collapse` — «Μετά την κατάρρευση των ανακτόρων»
+11. `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες»
+
+### Chapter III. Ο κόσμος των πόλεων
+
+12. `rise-of-polis` — «Η γέννηση της πόλης-κράτους»
+13. `greek-settlements-networks` — «Από τη Μασσαλία ως τη Μαύρη Θάλασσα»
+14. `sparta-society` — «Η Σπάρτη πέρα από τον μύθο του πολεμιστή»
+15. `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;» (existing live ID)
+16. `athens-law-courts` — «Νόμοι, δικαστήρια και κλήρωση στην Αθήνα»
+17. `greek-war-hoplites` — «Ο οπλίτης και η πόλη»
+18. `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις»
+
+### Chapter IV. Πόλεμος, εξουσία και μεταβολές
+
+19. `persian-wars-greek-world` — «Οι Περσικοί πόλεμοι μέσα από δύο κόσμους»
+20. `athenian-empire` — «Πώς μια συμμαχία έγινε αθηναϊκή ηγεμονία»
+21. `peloponnesian-war` — «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο»
+22. `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία»
+23. `macedon-philip` — «Η άνοδος της Μακεδονίας»
+24. `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές»
+
+### Chapter V. Ιδέες, τέχνη και κληρονομιές
+
+25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία»
+26. `greek-philosophy-in-context` — «Φιλοσοφία στους δρόμους και στις σχολές»
+27. `greek-science-knowledge` — «Οι αρχαίοι ερευνητές και τα όρια της γνώσης»
+28. `greek-images-sculpture` — «Αγάλματα με χρώματα και ιστορίες»
+29. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ένας κόσμος πολλών βασιλείων»
+30. `antikythera-gears` — «Ένας ουρανός μέσα σε γρανάζια» (existing live ID)
+
+### Educational boundaries and overlap map
+
+- `ancient-athens`: household archaeology, distinct building phases, everyday work and evidence limits. Do **not** retell detailed democratic institutions, the Linear B decipherment or the Antikythera mechanism here.
+- `greek-world-not-a-country`: definitions, dispersed communities, regional diversity; reserve geography specifics for `greek-geography-seas` and polis institutions for `rise-of-polis`.
+- `greek-history-through-evidence`: historians' sources and their biases; archaeological techniques in depth belong to proposed `archaeology-methods`.
+- `linear-b-decipherment`: preserve existing article; focus on decipherment, with administrative palace context in `mycenaean-palaces`.
+- `athens-who-voted`: retain the existing article as the primary home for franchise limits; `athens-law-courts` goes deeper into procedure, not franchise recap.
+- `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
+- `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
+- `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
+
+**Next lesson:** `greek-world-not-a-country` — «Οι Έλληνες χωρίς ένα ελληνικό κράτος» (Chapter I, lesson 2). Opening should not repeat the archaeological household case study. Cover diversity of communities, Greek language/cult association without treating identity as timeless, and the limits of modern nation-state labels. Verify titles and scope after research.
+
+**Course-level inspiration to consult:** Yale [Introduction to Ancient Greek History](https://oyc.yale.edu/classics/clcv-205); Met Museum [Greek Art chronological essays](https://www.metmuseum.org/toah/hd/grlg/hd_grlg.htm); Cambridge Mycenaean Epigraphy Group. These inform sequence but are not substitutes for claim-specific sources.
