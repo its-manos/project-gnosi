@@ -10,10 +10,10 @@ export const greekWorldLessons: Lesson[] = [
     "summary": "Από το Αιγαίο ως τη Σικελία, κοινές λέξεις και ιερά συνέδεαν διαφορετικές πατρίδες. Πόσο κοινός ήταν τελικά αυτός ο κόσμος;",
     "readingMinutes": 7,
     "intro": "Η λέξη «Ελλάδα» πάνω σε έναν σημερινό χάρτη περικλείεται από σύνορα. Στην αρχαιότητα, αν ενώναμε όλα τα μέρη όπου μιλούσαν ελληνικά, η γραμμή θα περνούσε από νησιά, παράλια και μακρινές πόλεις — χωρίς να σχηματίζει την επικράτεια ενός ενιαίου κράτους. Κι όμως, άνθρωποι σε αυτές τις διαφορετικές κοινότητες μπορούσαν να αναγνωρίζουν μεταξύ τους κάτι κοινό.",
-    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Apollo-delphi.jpg?width=1200",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Delphi-Archaeological%20Site.jpg?width=1200",
     "imageCaption": "Το ιερό του Απόλλωνα στους Δελφούς σήμερα. Κοινά ιερά έφερναν σε επαφή ανθρώπους από πολλές πολιτικά διαφορετικές κοινότητες.",
-    "imageCredit": "Odysses / Wikimedia Commons · CC BY-SA 4.0 · Φωτογραφία 2015",
-    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Apollo-delphi.jpg",
+    "imageCredit": "F. Harbin / Wikimedia Commons · CC BY 3.0 · Φωτογραφία 2012",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Delphi-Archaeological_Site.jpg",
     "requireCurrentAttemptQuiz": true,
     "sections": [
       {
