@@ -254,7 +254,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 1. `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα» (existing live ID)
 2. `greek-world-not-a-country` — «Ένας ελληνικός κόσμος, όχι ένα κράτος» (research-first Integrated; QA pending)
-3. `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;»
+3. `greek-history-through-evidence` — «Το παρελθόν δεν μιλά με μία φωνή» (Integrated; QA pending)
 4. `greek-chronology` — «Από τα ανάκτορα στις πόλεις: ένας χάρτης του χρόνου»
 5. `greek-geography-seas` — «Η θάλασσα που ένωνε και χώριζε τις κοινότητες»
 
@@ -315,3 +315,10 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - Lesson 2 `greek-world-not-a-country` is **Integrated** under final title «Ένας ελληνικός κόσμος, όχι ένα κράτος». See [research/media audit](greek-world-not-a-country-research.md). Article is about diversity of belonging, language, religious connections and the modern nation-state anachronism, not about House Θ or the mechanics of settlement founding.
 - Lesson 1 is still Integrated, not Validated. Lesson 2 is Integrated, not Validated. Device/npm/editorial acceptance remains to be recorded.
 - **Next in line (do not draft now):** lesson 3 `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;».
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 3
+- Lesson 3 `greek-history-through-evidence` — «Το παρελθόν δεν μιλά με μία φωνή» — Integrated. [Research/media/QA](greek-history-through-evidence-research.md).
+- Ancient Greece remains a 30-lesson, five-chapter plan: six lessons currently implemented, three research-first Integrated (1–3), three prior unapproved drafts; 24 remain not started. None Validated/Approved.
+- Focus: evidence as selective survival; inscriptions, ostraka, authors, later narratives, missing voices and honest uncertainty. Specialist excavation techniques remain for `archaeology-methods`.
+- Updated automated/device evidence is still required for lessons 1–3.
+- **Next only, not started:** #4 `greek-chronology` — «Από τα ανάκτορα στις πόλεις: ένας χάρτης του χρόνου».
