@@ -1,7 +1,8 @@
+import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import KnowledgeMastery from "../components/KnowledgeMastery";
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, Path } from "react-native-svg";
+import Svg, { Circle } from "react-native-svg";
 import { type Category, type Lesson, type Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import ReadingPick from "../components/ReadingPick";
@@ -34,8 +35,11 @@ type Props = {
 export default function HomeScreen({
   onKnowledgeReview, categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
-  onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview, onOpenProfile,
+  onOpenCategory, onOpenLesson, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview, onOpenProfile,
 }: Props) {
+  const { profile, ready: profileReady } = useKnowledgeProfile();
+  const xpFraction = profileReady ? Math.min(1, Math.max(0, profile.earned / profile.required)) : 0;
+  const ringLength = 2 * Math.PI * 28;
   const mapRegions = useMemo(() => categories.map((category) => ({
     id: category.id, title: category.title, emoji: category.emoji,
   })), [categories]);
@@ -46,23 +50,19 @@ export default function HomeScreen({
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
-        <View style={styles.quickActions}>
-          {onOpenProfile ? <Pressable style={styles.iconButton} onPress={onOpenProfile} accessibilityRole="button" accessibilityLabel="Το προφίλ μου">
-            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}><Circle cx={12} cy={8} r={3.5} stroke={colors.accentLight} strokeWidth={1.8} /><Path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2" stroke={colors.accentLight} strokeWidth={1.8} strokeLinecap="round" /></Svg>
-          </Pressable> : null}
-          <Pressable style={styles.iconButton} onPress={onOpenSearch} accessibilityRole="button" accessibilityLabel="Αναζήτηση μαθημάτων">
-            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}>
-              <Circle cx={10.5} cy={10.5} r={6.5} stroke={colors.accentLight} strokeWidth={1.8} />
-              <Path d="m16 16 4.5 4.5" stroke={colors.accentLight} strokeWidth={1.8} strokeLinecap="round" />
-            </Svg>
-          </Pressable>
-          <Pressable style={styles.iconButton} onPress={onOpenSaved} accessibilityRole="button" accessibilityLabel={`Αποθηκευμένα μαθήματα: ${savedCount}`}>
-            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" accessible={false}>
-              <Path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" stroke={colors.accentLight} strokeWidth={1.8} strokeLinejoin="round" />
-            </Svg>
-            {savedCount > 0 ? <View style={styles.savedDot} /> : null}
-          </Pressable>
-        </View>
+        {onOpenProfile ? <Pressable testID="home-level-profile" style={styles.levelBadge} onPress={onOpenProfile}
+          accessibilityRole="button" accessibilityLabel={profileReady ? `Το προφίλ μου. Επίπεδο ${profile.level}. ${profile.earned} από ${profile.required} XP για το επόμενο επίπεδο.` : "Το προφίλ μου. Φόρτωση επιπέδου."}
+          accessibilityHint="Άνοιξε το προφίλ σου" hitSlop={4}>
+          <Svg width={64} height={64} viewBox="0 0 64 64" style={styles.levelRing} accessible={false} pointerEvents="none">
+            <Circle cx={32} cy={32} r={28} fill="none" stroke={colors.borderStrong} strokeWidth={3.5} />
+            {xpFraction > 0 ? <Circle testID="home-xp-ring" cx={32} cy={32} r={28} fill="none" stroke={colors.accentLight} strokeWidth={3.5}
+              strokeLinecap="round" strokeDasharray={`${ringLength * xpFraction} ${ringLength}`} rotation={-90} origin="32, 32" /> : null}
+          </Svg>
+          <View pointerEvents="none" style={styles.levelCenter}>
+            <Text style={styles.levelCaption} maxFontSizeMultiplier={1.3}>ΕΠ.</Text>
+            <Text testID="home-level" style={styles.levelNumber} numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.3}>{profileReady ? profile.level : "—"}</Text>
+          </View>
+        </Pressable> : null}
       </View>
 
       <View style={styles.intro}>
@@ -124,9 +124,11 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 36, width: "100%", maxWidth: 680, alignSelf: "center" },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 },
   logo: { color: colors.accentLight, fontSize: 22, lineHeight: 30, fontWeight: "900", letterSpacing: 3, flexShrink: 1 },
-  quickActions: { flexDirection: "row", gap: 8 },
-  iconButton: { width: 44, height: 44, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  savedDot: { position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
+  levelBadge: { width: 64, height: 64, alignItems: "center", justifyContent: "center", borderRadius: 32, backgroundColor: colors.surface },
+  levelRing: { position: "absolute", top: 0, left: 0 },
+  levelCenter: { width: 46, alignItems: "center", justifyContent: "center" },
+  levelCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 12, fontWeight: "800", letterSpacing: 1 },
+  levelNumber: { color: colors.accentLight, fontSize: 22, lineHeight: 28, fontWeight: "900", fontVariant: ["tabular-nums"] },
   intro: { gap: 4, marginBottom: 8 },
   title: { color: colors.text, fontSize: 25, lineHeight: 32, fontWeight: "700", letterSpacing: -0.4 },
   subtitle: { color: colors.textMuted, fontSize: 12, lineHeight: 20 },

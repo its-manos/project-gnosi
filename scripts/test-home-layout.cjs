@@ -25,7 +25,9 @@ const categories = [
   ['technology','Τεχνολογία','⚡'], ['culture','Τέχνες & Πολιτισμός','🎨'], ['geography','Γεωγραφία & Κοινωνία','🌍'], ['difficult-history','Ταμπού της Ιστορίας','🕯️'],
 ].map(([id, title, emoji]) => ({ id, title, emoji }));
 const lessons = categories.map((c,i) => ({ id: String(i), categoryId: c.id, title: 'Άρθρο '+i }));
+let player = { ready: true, profile: { level: 3, earned: 150, required: 600 } };
 const home = compile('src/screens/HomeScreen.tsx', {
+  '../hooks/useKnowledgeProfile': { useKnowledgeProfile: () => player },
   '../components/KnowledgeMastery': { __esModule: true, default: 'KnowledgeMastery' },
   '../components/WeeklyReviewCard': { __esModule: true, default: 'WeeklyReviewCard' },
   '../data/lessons': { lessons }, '../theme': { colors: {} },
@@ -34,7 +36,7 @@ const home = compile('src/screens/HomeScreen.tsx', {
 });
 const nodes = t => t && typeof t === 'object' ? [t, ...[t.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const selected = [];
-const props = { categories, featuredLesson: lessons[1], suggestedLessons: lessons.slice(2,4), progressLoaded: true, completedCount: 1, savedCount: 1, inProgressLesson: lessons[0], inProgressAnsweredCount: 1, inProgressQuestionCount: 3, onKnowledgeReview: () => selected.push('knowledge'), onOpenCategory: id => selected.push(id), onResumeLesson: id => selected.push(id), onStartDailyChallenge: () => selected.push('daily'), onOpenDailyPreferences: () => selected.push('preferences'), onOpenSearch: () => selected.push('search'), onOpenSaved: () => selected.push('saved'), onOpenLesson: id => selected.push(id) };
+const props = { categories, featuredLesson: lessons[1], suggestedLessons: lessons.slice(2,4), progressLoaded: true, completedCount: 1, savedCount: 1, inProgressLesson: lessons[0], inProgressAnsweredCount: 1, inProgressQuestionCount: 3, onOpenProfile: () => selected.push('profile'), onKnowledgeReview: () => selected.push('knowledge'), onOpenCategory: id => selected.push(id), onResumeLesson: id => selected.push(id), onStartDailyChallenge: () => selected.push('daily'), onOpenDailyPreferences: () => selected.push('preferences'), onOpenSearch: () => selected.push('search'), onOpenSaved: () => selected.push('saved'), onOpenLesson: id => selected.push(id) };
 let tree = home(props);
 nodes(tree).find(n => n.type === 'KnowledgeMastery').props.onOpen();
 assert.equal(selected.pop(), 'knowledge');
@@ -45,8 +47,15 @@ assert.ok(exploration >= 0 && exploration < secondary, 'Exploration must precede
 assert.ok(!nodes(direct[exploration]).some(n => n.type === 'ReadingPick'));
 assert.equal(nodes(direct[secondary]).filter(n => n.type === 'ReadingPick').length, 3);
 const press = label => nodes(tree).find(n => n.type === 'Pressable' && n.props.accessibilityLabel === label).props.onPress();
-press('Αναζήτηση μαθημάτων'); press('Αποθηκευμένα μαθήματα: 1'); press('Συνέχισε το μάθημα Άρθρο 0');
-assert.deepEqual(selected, ['search', 'saved', '0']);
+const badge = nodes(tree).find(n => n.props.testID === 'home-level-profile');
+assert.ok(badge.props.accessibilityLabel.includes('Επίπεδο 3'));assert.ok(badge.props.accessibilityLabel.includes('150 από 600 XP'));badge.props.onPress();
+assert.ok(!nodes(tree).some(n => n.props.accessibilityLabel === 'Αναζήτηση μαθημάτων' || n.props.accessibilityLabel === 'Αποθηκευμένα μαθήματα: 1'));
+const ring = nodes(tree).find(n => n.props.testID === 'home-xp-ring');assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(' ')[0]) - 2 * Math.PI * 28 * .25) < 1e-9);
+press('Συνέχισε το μάθημα Άρθρο 0');assert.deepEqual(selected, ['profile', '0']);
+player = { ready: true, profile: { level: 4, earned: 0, required: 800 } };let updated = home(props);assert.equal(nodes(updated).find(n=>n.props.testID==='home-level').props.children,4);assert.ok(!nodes(updated).some(n=>n.props.testID==='home-xp-ring'),'exact level-up resets ring without a zero-progress dot');
+player = { ready: false, profile: { level: 1, earned: 0, required: 200 } };updated=home(props);assert.equal(nodes(updated).find(n=>n.props.testID==='home-level').props.children,'—');assert.ok(!nodes(updated).some(n=>n.props.testID==='home-xp-ring'));
+player = { ready: true, profile: { level: 12, earned: 4800, required: 4800 } };updated=home(props);assert.ok(Math.abs(Number(nodes(updated).find(n=>n.props.testID==='home-xp-ring').props.strokeDasharray.split(' ')[0])-2*Math.PI*28)<1e-9);
+
 const mapProps = nodes(tree).find(n => n.type === 'FantasyMap').props;
 assert.equal(mapProps.overview, true);
 assert.ok(mapProps.regions.every(region => region.detail === undefined), 'Home map labels omit per-category article counts in both map and list views.');
