@@ -120,8 +120,8 @@ export class LearningStore {
     if (!Number.isSafeInteger(this.doc.clock + 1)) throw new Error("invalid_sync");
     return [this.doc.clock + 1, this.device];
   }
-  private feedback(kind: FeedbackKind, id: string, xp = 0, label?: string) {
-    if (this.active) emitPlayFeedback({ kind, id, scope: this.userId ?? "guest", xp, label });
+  private feedback(kind: FeedbackKind, id: string, xp = 0, label?: string, answerXP?: number, pendingXP = false) {
+    if (this.active) emitPlayFeedback({ kind, id, scope: this.userId ?? "guest", xp, label, answerXP, pendingXP });
   }
   setProgress(id: string, value: ProgressValue) {
     if (!known.has(id)) return;
@@ -138,10 +138,13 @@ export class LearningStore {
     this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt });
     const lesson = lessons.find(l => l.id === id);
     if (!lesson) return;
+    const ledger = this.doc.rewards ?? {};
+    const rows = quizRewardSummary(lesson.questions.map((_, i) => adaptLessonQuestion(lesson, i)), attempt.checkpointAnswers, "lesson", ledger).rows;
     for (const [slot, answer] of Object.entries(attempt.checkpointAnswers)) {
       if (previous[Number(slot)] !== undefined) continue;
       const question = lesson.questions[Number(slot)], result = question && evaluateChoice(question, answer);
-      if (result?.valid) this.feedback(result.correct ? "correct" : "incorrect", `inline:${this.device}:${id}:${attempt.updatedAt}:${slot}`);
+      const row = rows[Number(slot)], answerXP = hasReward(ledger, `lesson:${id}`) ? 0 : (row?.baseXP ?? 0) + (row?.comboXP ?? 0);
+      if (result?.valid) this.feedback(result.correct ? "correct" : "incorrect", `inline:${this.device}:${id}:${attempt.updatedAt}:${slot}`, 0, undefined, answerXP, answerXP > 0);
     }
   }
   complete(id: string, run?: { id: string; answers: Record<number, number> }) {
@@ -191,7 +194,8 @@ export class LearningStore {
     const plan = weeklyPlan(this.doc.activity, weeklyReviews, getAthensDateKey());
     if (plan.length && plan.every(q => weeklyReviews[q.id]) && !hasReward(rewards, `review:${item.week}`)) rewards[`review:${item.week}`] = REWARD_RULES.review;
     this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards });
-    this.feedback(row?.correct ? "correct" : "incorrect", `weekly-answer:${id}`, totalRewardXP(this.doc.rewards ?? {}) - beforeXP);
+    const earned = totalRewardXP(this.doc.rewards ?? {}) - beforeXP;
+    this.feedback(row?.correct ? "correct" : "incorrect", `weekly-answer:${id}`, earned, undefined, earned);
     return true;
   }
   startKnowledgeReview(mode: "scheduled" | "practice", daily: DailyDocument): boolean {
@@ -227,7 +231,7 @@ export class LearningStore {
     const after = firstToday ? buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date).items.find(i => i.question.id === token.id) : item;
     const mastered = item.state !== "mastered" && after?.state === "mastered";
     const correct = evaluateChoice(quiz.questions[quiz.currentIndex].content as { answers: string[]; correctIndex: number }, answerIndex).correct;
-    this.feedback(mastered ? "mastered" : correct ? "correct" : "incorrect", `knowledge-answer:${id}:${saved.currentIndex}`, 0, mastered ? item.topicTitle : undefined);
+    this.feedback(mastered ? "mastered" : correct ? "correct" : "incorrect", `knowledge-answer:${id}:${saved.currentIndex}`, 0, mastered ? item.topicTitle : undefined, 0);
     return true;
   }
   advanceKnowledgeReview(id: string, token: QuestionToken): boolean {

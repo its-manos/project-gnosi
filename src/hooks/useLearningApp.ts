@@ -1,5 +1,5 @@
 import { emitPlayFeedback } from "../play/events";
-import { quizRewardSummary } from "../gamification/rewards";
+import { hasReward, quizRewardSummary } from "../gamification/rewards";
 import { adaptLessonQuestion } from "../quiz/adapters";
 import { advanceQuizSession, calculateQuizResults, createQuizSession, evaluateChoice, submitQuizAnswer } from "../quiz/engine";
 import { legacyAnswerSlots, restoreLegacySession } from "../quiz/compatibility";
@@ -186,7 +186,10 @@ export function useLearningApp() {
     const transition = submitQuizAnswer(session, { id: question.id, version: question.version }, answerIndex);
     if (!transition.changed) return;
     standaloneSession.current = transition.session;
-    emitPlayFeedback({ scope: store.userId ?? "guest", id: `standalone:${session.id}:${question.id}`, kind: evaluateChoice(activeLesson.questions[questionIndex], answerIndex).correct ? "correct" : "incorrect" });
+    const ledger = store.getSnapshot().rewards;
+    const row = quizRewardSummary(activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)), legacyAnswerSlots(transition.session), "lesson", ledger).rows[questionIndex];
+    const answerXP = hasReward(ledger, `lesson:${activeLesson.id}`) ? 0 : (row?.baseXP ?? 0) + (row?.comboXP ?? 0);
+    emitPlayFeedback({ scope: store.userId ?? "guest", id: `standalone:${session.id}:${question.id}`, kind: evaluateChoice(activeLesson.questions[questionIndex], answerIndex).correct ? "correct" : "incorrect", answerXP, pendingXP: answerXP > 0 });
     setSelectedAnswer(answerIndex);
     setCheckpointAnswers(legacyAnswerSlots(transition.session));
     setScore(calculateQuizResults(transition.session).correctCount);
@@ -276,7 +279,7 @@ export function useLearningApp() {
     if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== null || !evaluateChoice(question, answer).valid) return;
     session.answer = answer;
     feedbackAttempt.current++;
-    emitPlayFeedback({ scope: store.userId ?? "guest", id: `mistake:${activeLessonId}:${reviewIndex}:${completionRun.current}:${feedbackAttempt.current}`, kind: evaluateChoice(question, answer).correct ? "correct" : "incorrect" });
+    emitPlayFeedback({ scope: store.userId ?? "guest", id: `mistake:${activeLessonId}:${reviewIndex}:${completionRun.current}:${feedbackAttempt.current}`, kind: evaluateChoice(question, answer).correct ? "correct" : "incorrect", answerXP: 0 });
     setReviewAnswer(answer);
   }
   function nextReviewQuestion() {

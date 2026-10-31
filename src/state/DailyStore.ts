@@ -1,6 +1,6 @@
 import { emitPlayFeedback } from "../play/events";
 import { createDailyResultDetails } from "../utils/dailyResults";
-import { awardQuiz, totalRewardXP } from "../gamification/rewards";
+import { awardQuiz, hasReward, quizRewardSummary, totalRewardXP } from "../gamification/rewards";
 import { migrateDailyRewards } from "../gamification/migration";
 import { adaptDailyQuestion } from "../quiz/adapters";
 import { questions } from "../data/questions";
@@ -128,6 +128,8 @@ export class DailyStore {
     const current = this.doc.days[record.dateKey];
     if (!same(current, expected) || current?.record.completed) return false;
     const beforeXP = totalRewardXP(this.doc.rewards ?? {});
+    const ledger = this.doc.rewards ?? {};
+    const rows = quizRewardSummary(record.questionIds.map(id => adaptDailyQuestion(questions.find(q => q.id === id)!)), record.answers, "daily", ledger).rows;
     const stamp = this.stamp();
     const details = record.completed ? createDailyResultDetails(record,questions) : undefined;
     const history = record.completed ? createCompletedHistoryEntry(record) : null;
@@ -140,7 +142,8 @@ export class DailyStore {
       else for (const [slot, answer] of Object.entries(record.answers)) {
         if (current?.record.answers[slot] !== undefined) continue;
         const q = questions.find(q => q.id === record.questionIds[Number(slot)]);
-        if (q) emitPlayFeedback({ id: `${base}:answer:${slot}`, kind: answer === q.correctIndex ? "correct" : "incorrect", scope: this.userId ?? "guest" });
+        const row = rows[Number(slot)], answerXP = hasReward(ledger, `day:${record.dateKey}`) ? 0 : (row?.baseXP ?? 0) + (row?.comboXP ?? 0);
+        if (q) emitPlayFeedback({ id: `${base}:answer:${slot}`, kind: answer === q.correctIndex ? "correct" : "incorrect", scope: this.userId ?? "guest", answerXP, pendingXP: answerXP > 0 });
       }
     }
     return true;
