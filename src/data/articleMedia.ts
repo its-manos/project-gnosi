@@ -46,7 +46,7 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
       url: commonsFileUrl("NAMA Linear B tablet of Pylos.jpg"),
       resizeMode: "contain",
       caption: "Η αυθεντική πινακίδα PY Ub 1318 από την Πύλο, στο Εθνικό Αρχαιολογικό Μουσείο. Καταγράφει διανομή δερμάτων σε τεχνίτες· η φωτογραφία δεν αποτελεί μεταγραφή του κειμένου. Άγγιξε για μεγέθυνση.",
-      credit: "Flickr photographer / Wikimedia Commons · CC BY 2.0 · αρχικό αρχείο 2009",
+      credit: "Sharon Mollerus / Wikimedia Commons · CC BY 2.0 · φωτογραφία 2009",
       creditUrl: commonsPageUrl("NAMA Linear B tablet of Pylos.jpg"),
     },
     {
