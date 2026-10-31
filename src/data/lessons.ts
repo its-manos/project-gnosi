@@ -4,6 +4,7 @@ import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
 import { perceptionLessons } from "./perceptionLessons";
+import { perceptionAttentionLessons } from "./perceptionAttentionLessons";
 import { catalogueExpansion } from "./catalogueExpansion";
 import { additionalLessons } from "./additionalLessons";
 
@@ -347,5 +348,6 @@ export const lessons: Lesson[] = [
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
+  ...perceptionAttentionLessons,
   ...geologyLessons,
 ];
