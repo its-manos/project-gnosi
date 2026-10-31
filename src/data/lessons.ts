@@ -40,8 +40,6 @@ export type LessonSource = {
 
 export type Lesson = {
   coverKind?: "editorial";
-  /** Show the complete educational diagram in a fixed cover frame. */
-  imageResizeMode?: "cover" | "contain";
   contentNote?: string;
   editorialReviewedAt?: string;
   /** Prior quiz versions with identical objectives, question order and answer keys. */
