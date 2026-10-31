@@ -1,3 +1,4 @@
+import KnowledgeMastery from "../components/KnowledgeMastery";
 import KnowledgeProgress from "../components/KnowledgeProgress";
 import UsageSharing from "../components/UsageSharing";
 import SyncStatus from "../components/SyncStatus";
@@ -16,6 +17,7 @@ import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
 
 type Props = {
+  onKnowledgeReview?: () => void;
   onWeeklyReview?: () => void;
   onOpenWelcome?: () => void;
   onOpenAccount?: () => void;
@@ -52,6 +54,7 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProgressScreen({
+  onKnowledgeReview,
   onWeeklyReview,
   onOpenWelcome,
   onOpenAccount,
@@ -158,6 +161,7 @@ export default function ProgressScreen({
         {inProgressLessonCount > 1 ? <Text style={styles.muted}>Έχεις ακόμη {inProgressLessonCount - 1} ημιτελείς προσπάθειες στις θεματικές σου.</Text> : null}
       </View> : null}
 
+      {onKnowledgeReview ? <View testID="progress-mastery"><KnowledgeMastery onOpen={onKnowledgeReview} /></View> : null}
       {onWeeklyReview ? <View testID="progress-weekly"><WeeklyReviewCard onOpen={onWeeklyReview} /></View> : null}
       <View testID="progress-activity"><LearningActivityPanel todayKey={todayKey} compact /></View>
 

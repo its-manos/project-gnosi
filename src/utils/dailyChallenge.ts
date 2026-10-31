@@ -32,14 +32,11 @@ export function emptyDailyChallengeRecord(dateKey: string): DailyChallengeRecord
   };
 }
 
+const athensFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Athens", year: "numeric", month: "2-digit", day: "2-digit" });
+
 /** Return the calendar date in the app's chosen Europe/Athens timezone. */
 export function getAthensDateKey(date: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Athens",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
+  const parts = athensFormatter.formatToParts(date);
 
   const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
   return `${part("year")}-${part("month")}-${part("day")}`;

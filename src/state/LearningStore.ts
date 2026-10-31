@@ -1,8 +1,14 @@
+import { buildKnowledgeModel } from "../knowledge/model";
+import { mergeKnowledgeReviews, type KnowledgeReviews, type KnowledgeSession } from "../knowledge/records";
+import { restoreKnowledgeQuiz } from "../knowledge/session";
+import { legacyAnswerSlots } from "../quiz/compatibility";
+import type { QuestionToken } from "../quiz/types";
+import type { DailyDocument } from "../utils/dailySyncDocument";
 import { awardQuiz, hasReward, mergeRewardLedgers, quizRewardSummary, totalRewardXP, type RewardLedger } from "../gamification/rewards";
 import { migrateLearningRewards } from "../gamification/migration";
 import { REWARD_RULES } from "../gamification/rules";
 import { adaptLessonQuestion } from "../quiz/adapters";
-import { calculateChoiceResults, evaluateChoice } from "../quiz/engine";
+import { advanceQuizSession, submitQuizAnswer, calculateChoiceResults, evaluateChoice } from "../quiz/engine";
 import { lessons } from "../data/lessons";
 import { mergeCompletionEvents, parseCompletionEvents, quizFingerprint, lessonQuizMatches, type CompletionEvents } from "../utils/learningActivity";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
@@ -14,7 +20,7 @@ import { emptySyncDocument, mergeSyncDocuments, parseSyncDocument, seedSyncBacku
 export type SyncTransport = { pull: () => Promise<{ doc: SyncDocument; revision: number } | null>; seed: () => Promise<LearningBackup | null>; push: (doc: SyncDocument, revision: number) => Promise<void> };
 type Storage = { getItem: (key: string) => Promise<string | null>; setItem: (key: string, value: string) => Promise<void> };
 export type SyncStatus = "loading" | "local" | "queued" | "syncing" | "saved" | "waiting" | "error" | "local-error";
-export type LearningSnapshot = { ready: boolean; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards: RewardLedger; status: SyncStatus; error: string; userId: string | null };
+export type LearningSnapshot = { ready: boolean; knowledgeReviews: KnowledgeReviews; knowledgeSession: KnowledgeSession | null; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards: RewardLedger; status: SyncStatus; error: string; userId: string | null };
 const known = new Set(lessons.map(l => l.id));
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 export class LearningStore {
@@ -38,7 +44,7 @@ export class LearningStore {
     this.key = `@gnosi/learning-v2/${userId ?? "guest"}`;
     this.snapshot = this.makeSnapshot();
   }
-  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, backup: syncBackup(this.doc), activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId }; }
+  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: syncBackup(this.doc), activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId }; }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
@@ -170,6 +176,50 @@ export class LearningStore {
     this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards });
     return true;
   }
+  startKnowledgeReview(mode: "scheduled" | "practice", daily: DailyDocument): boolean {
+    if (!this.ready || !this.active) return false;
+    const date = getAthensDateKey(), current = this.doc.knowledgeSession?.value;
+    if (current && !current.completed && current.date === date) {
+      try { restoreKnowledgeQuiz(current); return true; } catch { return false; }
+    }
+    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, date);
+    const items = (mode === "scheduled" ? model.due : model.practice).slice(0, 5);
+    if (!items.length) return false;
+    const stamp = this.stamp();
+    const value: KnowledgeSession = { id: `kr:${this.device}:${stamp[0]}`, date, mode, questionIds: items.map(i => i.question.id), questionVersions: items.map(i => i.question.version), answers: {}, currentIndex: 0, completed: false, beforeStates: items.map(i => i.state), qualifiedIndices: [], earnedXP: 0 };
+    this.change({ ...this.doc, clock: stamp[0], knowledgeSession: { stamp, value } });
+    return true;
+  }
+  closeKnowledgeReview(expectedId?: string) {
+    if (!this.ready || !this.active || (expectedId !== undefined && this.doc.knowledgeSession?.value?.id !== expectedId)) return;
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], knowledgeSession: { stamp, value: null } });
+  }
+  answerKnowledgeReview(id: string, token: QuestionToken, answerIndex: number, daily: DailyDocument): boolean {
+    const saved = this.doc.knowledgeSession?.value, now = Date.now();
+    if (!this.ready || !this.active || !saved || saved.id !== id || saved.date !== getAthensDateKey(new Date(now))) return false;
+    let quiz; try { quiz = restoreKnowledgeQuiz(saved); } catch { return false; }
+    const result = submitQuizAnswer(quiz, token, answerIndex); if (!result.changed) return false;
+    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date);
+    const item = model.items.find(i => i.question.id === token.id)!;
+    const firstToday = !item.reviewedToday && !this.doc.knowledgeReviews?.[token.id]?.[saved.date];
+    const qualified = firstToday && item.due !== null && item.due <= saved.date;
+    const knowledgeReviews = firstToday ? mergeKnowledgeReviews(this.doc.knowledgeReviews, { [token.id]: { [saved.date]: { version: token.version, answerIndex, at: now, mode: saved.mode } } }) : this.doc.knowledgeReviews;
+    const value = { ...saved, answers: legacyAnswerSlots(result.session), qualifiedIndices: qualified ? [...saved.qualifiedIndices, saved.currentIndex] : saved.qualifiedIndices };
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], knowledgeReviews, knowledgeSession: { stamp, value } });
+    return true;
+  }
+  advanceKnowledgeReview(id: string, token: QuestionToken): boolean {
+    const saved = this.doc.knowledgeSession?.value;
+    if (!this.ready || !this.active || !saved || saved.id !== id || saved.date !== getAthensDateKey()) return false;
+    let quiz; try { quiz = restoreKnowledgeQuiz(saved); } catch { return false; }
+    const result = advanceQuizSession(quiz, token); if (!result.changed) return false;
+    const rewards = { ...this.doc.rewards }, key = `review:${saved.date}`;
+    const earnedXP = result.session.completed && saved.mode === "scheduled" && saved.qualifiedIndices.length > 0 ? Math.max(0, REWARD_RULES.review - (rewards[key] ?? 0)) : 0;
+    if (earnedXP) rewards[key] = REWARD_RULES.review;
+    const value = { ...saved, currentIndex: result.session.currentIndex, completed: result.session.completed, earnedXP };
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], rewards, knowledgeSession: { stamp, value } });
+    return true;
+  }
   async restoreProgress(incoming: LearningBackup) {
     const merged = mergeLearningBackups(this.snapshot.backup, incoming);
     for (const id of new Set([...merged.completedIds, ...Object.keys(merged.attempts)])) {
@@ -179,7 +229,7 @@ export class LearningStore {
     await this.latestWrite;
   }
   async restoreBookmarks(ids: string[]) { for (const id of ids) this.setBookmark(id, true); await this.latestWrite; }
-  async importGuest(incoming: LearningBackup, events: CompletionEvents, reviews: WeeklyAnswers = {}, guestRewards: RewardLedger = {}) {
+  async importGuest(incoming: LearningBackup, events: CompletionEvents, reviews: WeeklyAnswers = {}, guestRewards: RewardLedger = {}, guestKnowledge: KnowledgeReviews = {}) {
     const merged = mergeLearningBackups(this.snapshot.backup, incoming);
     const activity = mergeCompletionEvents(this.doc.activity, events);
     const stamp = this.stamp(), progress = { ...this.doc.progress }, bookmarks = { ...this.doc.bookmarks };
@@ -188,12 +238,13 @@ export class LearningStore {
       if (!same(progress[id]?.value, value)) progress[id] = { stamp, value };
     }
     for (const id of merged.savedIds) if (!bookmarks[id]?.value) bookmarks[id] = { stamp, value: true };
-    this.change({ ...this.doc, clock: stamp[0], progress, bookmarks, activity, rewards: mergeRewardLedgers(this.doc.rewards, guestRewards), weeklyReviews: mergeWeeklyAnswers(this.doc.weeklyReviews, reviews) });
+    this.change({ ...this.doc, clock: stamp[0], knowledgeReviews: mergeKnowledgeReviews(this.doc.knowledgeReviews, guestKnowledge), progress, bookmarks, activity, rewards: mergeRewardLedgers(this.doc.rewards, guestRewards), weeklyReviews: mergeWeeklyAnswers(this.doc.weeklyReviews, reviews) });
     await this.latestWrite;
   }
   async resetGuestProgress() {
     if (this.userId) throw new Error("guest_only_reset");
-    this.change({ ...this.doc, progress: {}, activity: {}, weeklyReviews: {}, rewards: {} }); await this.latestWrite;
+    const stamp = this.stamp();
+    this.change({ ...this.doc, clock: stamp[0], knowledgeReviews: {}, knowledgeSession: { stamp, value: null }, progress: {}, activity: {}, weeklyReviews: {}, rewards: {} }); await this.latestWrite;
   }
   async flushLocal() { try { await this.latestWrite; return true; } catch { return false; } }
   async retry() {

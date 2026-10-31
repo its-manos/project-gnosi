@@ -23,6 +23,7 @@ export type AppScreen =
   | "results"
   | "review"
   | "weekly-review"
+  | "knowledge-review"
   | "account"
   | "progress"
   | "saved"

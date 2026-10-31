@@ -26,6 +26,7 @@ const categories = [
 ].map(([id, title, emoji]) => ({ id, title, emoji }));
 const lessons = categories.map((c,i) => ({ id: String(i), categoryId: c.id, title: 'Άρθρο '+i }));
 const home = compile('src/screens/HomeScreen.tsx', {
+  '../components/KnowledgeMastery': { __esModule: true, default: 'KnowledgeMastery' },
   '../components/WeeklyReviewCard': { __esModule: true, default: 'WeeklyReviewCard' },
   '../data/lessons': { lessons }, '../theme': { colors: {} },
   '../components/FantasyMap': { __esModule: true, default: 'FantasyMap' },
@@ -33,8 +34,10 @@ const home = compile('src/screens/HomeScreen.tsx', {
 });
 const nodes = t => t && typeof t === 'object' ? [t, ...[t.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const selected = [];
-const props = { categories, featuredLesson: lessons[1], suggestedLessons: lessons.slice(2,4), progressLoaded: true, completedCount: 1, savedCount: 1, inProgressLesson: lessons[0], inProgressAnsweredCount: 1, inProgressQuestionCount: 3, onOpenCategory: id => selected.push(id), onResumeLesson: id => selected.push(id), onStartDailyChallenge: () => selected.push('daily'), onOpenDailyPreferences: () => selected.push('preferences'), onOpenSearch: () => selected.push('search'), onOpenSaved: () => selected.push('saved'), onOpenLesson: id => selected.push(id) };
+const props = { categories, featuredLesson: lessons[1], suggestedLessons: lessons.slice(2,4), progressLoaded: true, completedCount: 1, savedCount: 1, inProgressLesson: lessons[0], inProgressAnsweredCount: 1, inProgressQuestionCount: 3, onKnowledgeReview: () => selected.push('knowledge'), onOpenCategory: id => selected.push(id), onResumeLesson: id => selected.push(id), onStartDailyChallenge: () => selected.push('daily'), onOpenDailyPreferences: () => selected.push('preferences'), onOpenSearch: () => selected.push('search'), onOpenSaved: () => selected.push('saved'), onOpenLesson: id => selected.push(id) };
 let tree = home(props);
+nodes(tree).find(n => n.type === 'KnowledgeMastery').props.onOpen();
+assert.equal(selected.pop(), 'knowledge');
 const direct = tree.props.children;
 const exploration = direct.findIndex(n => n?.props?.testID === 'home-exploration');
 const secondary = direct.findIndex(n => n?.props?.testID === 'home-secondary-content');

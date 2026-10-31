@@ -1,3 +1,4 @@
+import KnowledgeMastery from "../components/KnowledgeMastery";
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -8,6 +9,7 @@ import WeeklyReviewCard from "../components/WeeklyReviewCard";
 import { colors } from "../theme";
 
 type Props = {
+  onKnowledgeReview?: () => void;
   categories: Category[];
   subcategories: Subcategory[];
   featuredLesson: Lesson | null;
@@ -30,7 +32,7 @@ type Props = {
 };
 
 export default function HomeScreen({
-  categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
+  onKnowledgeReview, categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
   onOpenCategory, onOpenLesson, onOpenSaved, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onWeeklyReview, onOpenAccount,
 }: Props) {
@@ -97,6 +99,7 @@ export default function HomeScreen({
           </Pressable>
         </View>
 
+        {onKnowledgeReview ? <KnowledgeMastery compact onOpen={onKnowledgeReview} /> : null}
         {onWeeklyReview ? <WeeklyReviewCard onOpen={onWeeklyReview} hideWhenEmpty /> : null}
         <Text style={styles.sectionTitle}>Μια μικρή ανακάλυψη</Text>
         {!progressLoaded ? <ActivityIndicator color={colors.accentLight} accessibilityLabel="Φόρτωση προτάσεων ανάγνωσης" />

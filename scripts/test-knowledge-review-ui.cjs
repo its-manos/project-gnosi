@@ -1,0 +1,30 @@
+const assert=require('node:assert/strict'),{load}=require('./helpers/load-typescript.cjs');
+const {LearningStore}=load('src/state/LearningStore.ts'),{emptyDailyDocument}=load('src/utils/dailySyncDocument.ts'),{getAthensDateKey}=load('src/utils/dailyChallenge.ts');
+const {buildKnowledgeModel,knowledgeById}=load('src/knowledge/model.ts'),{lessons}=load('src/data/lessons.ts');
+const jsx=(type,props)=>({type,props}),nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
+const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
+const native={View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x}};
+let slots=[],cursor=0,today=getAthensDateKey(),backs=0;
+const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
+(async()=>{
+ const store=new LearningStore(null,{getItem:async()=>null,setItem:async()=>{}});await store.start();const daily=emptyDailyDocument();
+ const modelHook=()=>({model:buildKnowledgeModel({...store.getSnapshot().backup,...store.getSnapshot()},daily,today),today,ready:store.getSnapshot().ready});
+ const session={'../state/LearningSession':{useLearningSession:()=>({store}),useLearningSnapshot:store.getSnapshot,useDailySnapshot:()=>({ready:true,doc:daily})}};
+ const components=Object.fromEntries(['ActionButton','AnswerOption','AppHeader','SyncStatus','SourceLink'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
+ const Screen=load('src/screens/KnowledgeReviewScreen.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,...components,'../hooks/useKnowledgeModel':{useKnowledgeModel:modelHook}}).default;
+ const render=()=>{cursor=0;return Screen({onBack:()=>backs++});},button=(tree,label)=>nodes(tree).find(n=>n.type==='ActionButton'&&n.props.label===label);
+ let tree=render();assert.ok(text(tree).includes('Ολοκλήρωσε ένα μάθημα'));assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,0);
+ store.complete(lessons[0].id);tree=render();button(tree,'Ξεκίνα την επανάληψη').props.onPress();tree=render();assert.ok(text(tree).includes('ΕΠΑΝΑΛΗΨΗ'));assert.ok(nodes(tree).some(n=>n.type==='AnswerOption'));
+ const first=store.getSnapshot().knowledgeSession.questionIds[0],q=knowledgeById.get(first).question;
+ nodes(tree).find(n=>n.type==='AnswerOption'&&n.props.label===q.content.answers[q.content.correctIndex]).props.onPress();tree=render();assert.ok(nodes(tree).filter(n=>n.type==='AnswerOption').every(n=>n.props.locked));assert.ok(text(tree).includes(q.explanation));assert.equal(nodes(tree).filter(n=>n.type==='SourceLink').length,q.sources.length);assert.ok(text(tree).includes('Σωστή απάντηση:'));assert.ok(text(tree).includes('0/3 ανακλήσεις'),'first dated legacy review sets baseline, not fake recall');
+ while(!store.getSnapshot().knowledgeSession.completed){tree=render();let s=store.getSnapshot().knowledgeSession;if(s.answers[s.currentIndex]===undefined)nodes(tree).find(n=>n.type==='AnswerOption').props.onPress();tree=render();nodes(tree).find(n=>n.type==='ActionButton'&&['Συνέχεια','Δες το αποτέλεσμα'].includes(n.props.label)).props.onPress();}
+ tree=render();assert.ok(text(tree).includes('+10 XP'));assert.ok(text(tree).includes('Επόμενη επανάληψη:'));button(tree,'Πίσω στην πρόοδο').props.onPress();assert.equal(backs,1);
+ button(tree,'Άλλη μικρή επανάληψη').props.onPress();tree=render();button(tree,'Θέλω λίγη εξάσκηση').props.onPress();tree=render();assert.ok(text(tree).includes('ΕΞΑΣΚΗΣΗ'));
+ const saved=store.getSnapshot().knowledgeSession,record=knowledgeById.get(saved.questionIds[0]);record.question.version='changed-for-test';tree=render();assert.ok(text(tree).includes('ενημερώθηκαν οι ερωτήσεις'));assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,0,'changed scored content is never silently regraded');record.question.version=saved.questionVersions[0];
+ today='2099-12-31';tree=render();assert.ok(text(tree).includes('Άλλαξε η ημέρα'));today=getAthensDateKey();
+ slots=[];cursor=0;
+ const Mastery=load('src/components/KnowledgeMastery.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,'../hooks/useKnowledgeModel':{useKnowledgeModel:modelHook},'./ActionButton':{__esModule:true,default:'ActionButton'}}).default;
+ tree=Mastery({onOpen:()=>backs++});assert.ok(text(tree).includes('Δεν μετρούν άρθρα'));assert.ok(nodes(tree).some(n=>n.props.accessibilityRole==='progressbar'));nodes(tree).find(n=>n.type==='ActionButton').props.onPress();assert.equal(backs,2);
+ nodes(tree).find(n=>n.type==='Pressable').props.onPress();cursor=0;tree=Mastery({onOpen(){}});assert.ok(text(tree).includes('Μαθαίνεται'));
+ await store.flushLocal();store.stop();console.log('Knowledge UI passed: fresh profile, due/practice launch, locked answers, explanation/source, honest baseline feedback, saved results/XP/next dates, content and midnight guards, category bars, topic disclosure and back callbacks. Native views mocked.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

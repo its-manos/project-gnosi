@@ -170,3 +170,9 @@ npm run typecheck
 ```
 
 No new SQL migration or production dependency is needed. Read [Phase 3 architecture and compatibility](docs/daily-challenge-phase-3.md), [validation](docs/daily-challenge-phase-3-validation.md) and [application steps](APPLY-DAILY-CHALLENGE-PHASE-3.md). Keep the published shared pool immutable; reviewed content changes require a new pool version.
+
+## Phase 4: knowledge mastery and spaced review
+
+Progress now separates permanent XP from retention across learning units and subjects, including Architecture. Short, resumable reviews use the existing quiz engine, Athens dates and bounded offline evidence. Three correctly spaced recalls are required for mastery; same-day practice cannot inflate it. Existing lessons, daily challenges, weekly reviews and player titles remain compatible.
+
+Apply migration `supabase/migrations/202610310013_knowledge_reviews.sql` before releasing this phase. See [installation and beta commands](APPLY-KNOWLEDGE-MASTERY-PHASE-4.md), [design and compatibility](docs/knowledge-mastery-phase-4.md), and [validation and device checklist](docs/knowledge-mastery-phase-4-validation.md). Phase 5 is not included.

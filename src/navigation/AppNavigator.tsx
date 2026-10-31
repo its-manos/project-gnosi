@@ -1,3 +1,4 @@
+import KnowledgeReviewScreen from "../screens/KnowledgeReviewScreen";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import type { AnalyticsScreen } from "../utils/betaAnalytics";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
@@ -50,6 +51,8 @@ export default function AppNavigator() {
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
   const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
   const [preferencesOrigin, setPreferencesOrigin] = useState<"home" | "daily">("home");
+  const [knowledgeOrigin, setKnowledgeOrigin] = useState<"home" | "progress">("progress");
+  const openKnowledgeReview = (origin: "home" | "progress") => { setKnowledgeOrigin(origin); app.setScreen("knowledge-review"); };
   const [accountOrigin, setAccountOrigin] = useState<"home" | "progress">("home");
   const openAccount = (origin: "home" | "progress") => { setAccountOrigin(origin); app.setScreen("account"); };
 
@@ -172,6 +175,7 @@ export default function AppNavigator() {
       if (app.screen === "home") return false;
       if (app.screen === "review") { app.endMistakeReview(); return true; }
       const destination: AppScreen = app.screen === "account" ? accountOrigin
+        : app.screen === "knowledge-review" ? knowledgeOrigin
         : app.screen === "weekly-review" ? "progress"
         : app.screen === "lesson" || app.screen === "results" ? app.lessonBackScreen
         : app.screen === "quiz" ? "lesson"
@@ -183,7 +187,7 @@ export default function AppNavigator() {
   });
 
   const analyticsScreen: AnalyticsScreen = welcome.visible ? "welcome"
-    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen;
+    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen;
   const answeredForAnalytics = Object.keys(app.checkpointAnswers).length;
   const analyticsLessonId = activeLesson?.id;
   useEffect(() => {
@@ -232,7 +236,7 @@ export default function AppNavigator() {
       <DailyChallengeScreen
         completedLessonIds={app.completedLessonIds} inProgressLessonIds={app.inProgressLessonIds}
         onOpenLesson={id => { setIsDailyChallengeOpen(false); app.openLesson(id); }}
-        onWeeklyReview={() => { setIsDailyChallengeOpen(false); app.setScreen("weekly-review"); }}
+        onWeeklyReview={() => { setIsDailyChallengeOpen(false); openKnowledgeReview("home"); }}
         onHome={() => setIsDailyChallengeOpen(false)}
         onOpenPreferences={() => openDailyPreferences("daily")}
         preferences={dailyPreferences.preferences}
@@ -243,6 +247,7 @@ export default function AppNavigator() {
     case "home":
       screenContent = (
         <HomeScreen
+          onKnowledgeReview={() => openKnowledgeReview("home")}
           onOpenAccount={() => openAccount("home")}
           onWeeklyReview={() => app.setScreen("weekly-review")}
           categories={categories}
@@ -277,6 +282,7 @@ export default function AppNavigator() {
     case "progress":
       screenContent = (
         <ProgressScreen
+          onKnowledgeReview={() => openKnowledgeReview("progress")}
           onOpenAccount={() => openAccount("progress")}
           onWeeklyReview={() => app.setScreen("weekly-review")}
           onOpenWelcome={welcome.open}
@@ -382,6 +388,10 @@ export default function AppNavigator() {
           onNextQuestion={app.nextQuestion}
         />
       );
+      break;
+
+    case "knowledge-review":
+      screenContent = <KnowledgeReviewScreen key={daily.userId ?? "guest"} onBack={() => app.setScreen(knowledgeOrigin)} />;
       break;
 
     case "weekly-review":

@@ -1,3 +1,4 @@
+/* global __dirname */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
 function load(file,imports={}){const m={exports:{}};const c=ts.transpileModule(fs.readFileSync(path.join(root,file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;new Function('require','module','exports',c)(id=>{if(id in imports)return imports[id];if(id.startsWith('.')){let p=path.normalize(path.join(path.dirname(file),id));return load(p+(fs.existsSync(path.join(root,p+'.ts'))?'.ts':'.tsx'));}throw Error(id);},m,m.exports);return m.exports;}
@@ -17,13 +18,16 @@ const common={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state
  // Exercise effects from the real navigator, not a reimplementation of routing.
  hook.enabled=true;events.length=0;const nav=harness(),data=load('src/data/lessons.ts');
  const lesson=data.lessons[0],app={screen:'home',activeCategoryId:lesson.categoryId,activeSubcategoryId:lesson.subcategoryId,activeLessonId:lesson.id,checkpointAnswers:{},completedLessonIds:[],inProgressLessonIds:[],inProgressLessonCount:0,lessonAttempts:{},progressLoaded:true,resultMode:'finished',setScreen:s=>{app.screen=s;}};
- const screens=['Home','Category','Subcategory','Lesson','Quiz','Results','ReviewMistakes','WeeklyReview','Account','SavedLessons','Search','DailyChallenge','DailyChallengePreferences','Progress','Welcome'];
+ const screens=['Home','Category','Subcategory','Lesson','Quiz','Results','ReviewMistakes','WeeklyReview','KnowledgeReview','Account','SavedLessons','Search','DailyChallenge','DailyChallengePreferences','Progress','Welcome'];
  const imports={...common,react:nav.react,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useAthensDate':{useAthensDate:()=> '2026-10-31'},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[]})},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:prefs,savePreferences:async()=>true})},'../hooks/useWelcome':{useWelcome:()=>({visible:false,loading:false,replay:false})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:{}}),useDailySnapshot:()=>({doc:{days:{},preferences:null},userId:null})},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'},...Object.fromEntries(screens.map(n=>['../screens/'+n+'Screen',{__esModule:true,default:n}]))};
  const Navigator=load('src/navigation/AppNavigator.tsx',imports).default;
  const render=()=>nav.render(()=>Navigator());render();app.screen='lesson';render();app.checkpointAnswers={0:0};render();app.screen='results';render();
  assert.ok(events.some(e=>e[0]==='lesson'&&e[1]?.lesson_id===lesson.id));assert.ok(events.some(e=>e[0]==='progress'&&e[1]?.answered_count===1));assert.equal(events.filter(e=>e[0]==='completeLesson').length,1);
  events.length=0;app.resultMode='returning';app.activeLessonId=data.lessons[1].id;render();assert.ok(!events.some(e=>e[0]==='completeLesson'),'Saved results never count as new completions');
  app.screen='lesson';render();events.length=0;app.screen='home';render();assert.ok(events.some(e=>e[0]==='lesson'&&e[1]===null),'Confirmed navigation leaves the visit');
+ // Review routes retain their launcher origin and use the existing analytics enum.
+ app.screen='home';tree=render();nodes(tree).find(n=>n.type==='Home').props.onKnowledgeReview();assert.equal(app.screen,'knowledge-review');tree=render();assert.ok(events.some(e=>e[0]==='view'&&e[1]==='review'));nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'home');
+ app.screen='progress';tree=render();nodes(tree).find(n=>n.type==='Progress').props.onKnowledgeReview();tree=render();nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'progress');
  // Provider uses actual AppState events and the existing RPC transport.
  const providerDisk=new Map(),sent=[];let onAppState,intervalTick,cleanupProvider;
  const core=load('src/utils/betaAnalytics.ts');

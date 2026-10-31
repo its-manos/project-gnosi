@@ -23,7 +23,7 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
   const [selectedKey, setSelectedKey] = useState("");
   const dailyDates = useMemo(() => dailyHistory(daily.doc).map(row => row.dateKey), [daily.doc]);
-  const summary = useMemo(() => activitySummary(snapshot.activity, snapshot.backup.completedIds, dailyDates, todayKey, Object.values(snapshot.weeklyReviews ?? {}).map(answer => getAthensDateKey(new Date(answer.at)))), [snapshot.activity, snapshot.backup.completedIds, snapshot.weeklyReviews, dailyDates, todayKey]);
+  const summary = useMemo(() => activitySummary(snapshot.activity, snapshot.backup.completedIds, dailyDates, todayKey, [...Object.values(snapshot.weeklyReviews ?? {}).map(answer => getAthensDateKey(new Date(answer.at))), ...Object.values(snapshot.knowledgeReviews ?? {}).flatMap(dates => Object.keys(dates))]), [snapshot.activity, snapshot.backup.completedIds, snapshot.weeklyReviews, snapshot.knowledgeReviews, dailyDates, todayKey]);
   const buckets = useMemo(() => activityBuckets(snapshot.activity, todayKey, mode), [snapshot.activity, todayKey, mode]);
   const selected = buckets.find(bucket => bucket.key === selectedKey) ?? buckets[buckets.length - 1];
   const max = Math.max(1, ...buckets.map(bucket => bucket.first + bucket.replay));
