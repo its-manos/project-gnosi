@@ -114,3 +114,12 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - Fixed `scripts/test-reader-pilot.cjs` fixture map on `content/curriculum-v1` in commit [`6291b6f`](https://github.com/its-manos/project-gnosi/commit/6291b6f2c91ebb78a4390833f759d52636857efd). **Reader-pilot has not yet been rerun after the fix; do not claim a pass.** This change is test-only, not an app/runtime behavior change.
 - `npm run typecheck` status is **not established by the pasted output**, and is not claimed as passed here. Content validator does not verify actual URLs, image rights, history, or devices. Lessons 1, 2, and 3 remain **Integrated**, not Validated/Approved.
 - Next local check: `git pull origin content/curriculum-v1 && node scripts/test-reader-pilot.cjs`. Device QA remains pending, including images and the native first-answer sound.
+
+
+### Lesson 4 session audit — 2026-11-01
+- `greek-chronology` — **Integrated**, not Validated/Approved. Final title: «Από τα ανάκτορα στις πόλεις: οι εποχές της αρχαίας Ελλάδας». [Research/rights/QA](greek-chronology-research.md).
+- 22 stable paragraphs, five sections, four versioned anchored questions (paragraphs 5/11/17/20), cover image CC0 and Mycenaean vessel CC BY-SA 4.0, estimated 8 minutes.
+- Differentiated narrative: chronology and periodization, overlapping Bronze Age societies, uneven change after palatial disruption, Early Iron Age and emergence of communities, Archaic–Classical–Hellenistic transition. Specialist historical depth reserved for lessons 6–12 and 29; detailed maritime geography for lesson 5.
+- **Actual evidence:** GitHub connector edits, file-source inspection and image licensing checks. npm/Node and native Android/iOS tests not executable in this environment, so **no new automated pass** is claimed. Prior lesson 3 reader-pilot fix is present, but its successful rerun is unconfirmed. TypeScript status also unconfirmed.
+- **Progress:** Ancient Greece **30 planned, 7 implemented, 4 Integrated, 3 Drafted, 23 Not started, 0 Validated, 0 Approved**.
+- **Next only, NOT started:** #5 `greek-geography-seas` «Η θάλασσα που ένωνε και χώριζε τις κοινότητες» (Chapter I). Research physical geography and maritime connectivity, without repeating lesson 4 historical periods.
