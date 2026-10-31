@@ -1,3 +1,4 @@
+import { playerTitle } from "../gamification/rules";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
@@ -9,8 +10,9 @@ export default function KnowledgeProgress({ compact = false }: { compact?: boole
   return <View style={styles.card} testID="knowledge-progress">
     <View style={styles.heading}>
       <Text style={styles.label}>ΤΟ ΤΑΞΙΔΙ ΤΗΣ ΓΝΩΣΗΣ</Text>
-      <Text style={styles.level}>{ready ? `Επίπεδο ${p.level} · ${p.title}` : "Φόρτωση…"}</Text>
+      <Text style={styles.level}>{ready ? `Επίπεδο ${p.level}` : "Φόρτωση…"}</Text>
     </View>
+    {ready ? <Text key={`player-title-${p.level}`} testID="player-title" style={styles.playerTitle} accessibilityLiveRegion="polite">{playerTitle(p.level)}</Text> : null}
     <Text style={styles.value}>{ready ? p.totalXP.toLocaleString("el-GR") : "—"} XP</Text>
     {ready ? <>
       <View style={styles.track} accessible accessibilityRole="progressbar" accessibilityLabel="Πρόοδος επιπέδου"
@@ -48,6 +50,7 @@ const styles = StyleSheet.create({
   heading: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 },
   label: { color: colors.textMuted, fontSize: 10, lineHeight: 18, fontWeight: "800" },
   level: { color: colors.accentLight, fontSize: 14, fontWeight: "800" },
+  playerTitle: { color: colors.accentLight, fontSize: 20, lineHeight: 28, fontWeight: "800", flexShrink: 1, maxWidth: "100%" },
   value: { color: colors.text, fontSize: 32, fontWeight: "900" },
   track: { height: 8, borderRadius: 8, overflow: "hidden", backgroundColor: colors.border },
   fill: { height: "100%", backgroundColor: colors.accent, borderRadius: 8 },
