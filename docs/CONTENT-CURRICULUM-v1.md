@@ -340,3 +340,9 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - **30 planned / 5 chapters; 8 implemented: 5 Integrated, 3 older unapproved Drafted, 22 Not started; 0 Validated, 0 Approved.** Existing lesson IDs and progress policy preserved.
 - Connector/source static checks only; npm, Node and native device tests **not executed**, current TypeScript and prior reader-pilot rerun unconfirmed. No changes to XP/audio/Supabase logic.
 - **Next only, not started:** #6 `aegean-bronze-age`, «Το Αιγαίο πριν από τις πόλεις-κράτη» (Chapter II).
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 6
+- **Integrated, not Validated/Approved**: `aegean-bronze-age`, «Σπίτια, εργαστήρια και δίκτυα: το Αιγαίο της Εποχής του Χαλκού». [Research, sources, image rights and QA](aegean-bronze-age-research.md).
+- Social/material Bronze Age framework: 19 anchored paragraphs, four reasoning questions after 5/10/15/18, Poliochni cover and two attributed inline images. Chronology (#4), sailing conditions (#5), Uluburun world-history example and future palace-specific lessons are not repeated.
+- Ancient Greece remains **30 planned / five chapters, 9 implemented (6 Integrated, 3 Drafted), 21 Not started, 0 Validated/Approved**. Existing IDs, scoring, audio, replay and Supabase untouched. Node/TypeScript/native QA not executed in this session.
+- **Next only:** #7 `minoan-crete` «Η Κρήτη των ανακτόρων» (Chapter II); not developed yet.

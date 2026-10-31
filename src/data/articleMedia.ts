@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "aegean-bronze-age": [
+    {
+      afterParagraphId: "spindle-evidence",
+      url: commonsFileUrl("Bronze Age Stone Spindle Whorls from Tiryns Acropolis (28356795022).jpg"),
+      resizeMode: "contain",
+      caption: "Λίθινα σφονδύλια της Εποχής του Χαλκού από την Τίρυνθα: τεκμήρια για το γνέσιμο, όχι για την ταυτότητα των ανθρώπων που εργάζονταν. Άγγιξε για μεγέθυνση.",
+      credit: "Gary Todd / Wikimedia Commons · CC0 1.0 · φωτογραφία 2016",
+      creditUrl: commonsPageUrl("Bronze Age Stone Spindle Whorls from Tiryns Acropolis (28356795022).jpg"),
+    },
+    {
+      afterParagraphId: "lerna-seals",
+      url: commonsFileUrl("Lerna SE fortification wall detail.jpg"),
+      resizeMode: "contain",
+      caption: "Τμήμα πρωτοελλαδικής οχύρωσης στη Λέρνα. Τα ορατά καλύμματα είναι σύγχρονα· στη φωτογραφία δεν απεικονίζονται τα πήλινα σφραγίσματα.",
+      credit: "Mark Landon / Wikimedia Commons · CC BY-SA 4.0 · λήψη 1990",
+      creditUrl: commonsPageUrl("Lerna SE fortification wall detail.jpg"),
+    },
+  ],
   "greek-geography-seas": [
     {
       afterParagraphId: "archipelago-mental-map",

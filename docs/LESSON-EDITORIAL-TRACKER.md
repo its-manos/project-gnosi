@@ -133,3 +133,11 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Observed verification:** branch code and historical/lawful-media sources inspected; inline ID and anchor static checks performed. **Not executed:** npm typecheck/content validation, Node regression suite, native iOS/Android QA, remote image runtime availability. Prior `test-reader-pilot.cjs` fixture correction is present; successful local rerun and TypeScript pass still unconfirmed. No promotion to Validated/Approved.
 - **Counts:** 30 planned / five chapters, **8 implemented**, **5 Integrated**, **3 older Drafted**, 22 Not started, **0 Validated / 0 Approved**.
 - **Next only, not started:** #6 `aegean-bronze-age`, «Το Αιγαίο πριν από τις πόλεις-κράτη» — Chapter II / Πριν από την κλασική Ελλάδα.
+
+### Lesson 6 session audit — 2026-11-01
+- `aegean-bronze-age` — **Integrated, not Validated/Approved** under final title «Σπίτια, εργαστήρια και δίκτυα: το Αιγαίο της Εποχής του Χαλκού». [Claim-to-source research, rights and outstanding QA](aegean-bronze-age-research.md).
+- 19 stable paragraphs in four sections; questions `bronze-period-labels` / `bronze-different-power` / `bronze-exchange-proof` / `bronze-archives-silence` after 5/10/15/18. Poliochni cover, Tiryns spindle-whorls and Lerna fortification photos (rights recorded). 9-minute reading estimate including checks.
+- Coverage avoids #4 chronology, #5 winds, world-history Uluburun and later palatial/Linear B specialist material. Four version-1 questions, new stable IDs and explicit anchors; progress, XP>0 popup, replay rewards, audio and Supabase unaffected.
+- **Verified:** connector branch/source inspection, historical institution and image rights pages, in-memory structural preflight. **Not run:** npm typecheck, content validator, Node regression suite, iOS/Android QA or remote-image device loading. Reader-pilot previous fix rerun remains unconfirmed. Do not promote previous lessons.
+- **Progress:** 30 planned / 5 chapters, **9 in app, 6 Integrated, 3 Drafted, 21 Not started, 0 Validated, 0 Approved**.
+- **Next ONLY, not started:** #7 `minoan-crete` — «Η Κρήτη των ανακτόρων» (Chapter II).
