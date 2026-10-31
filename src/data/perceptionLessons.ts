@@ -11,7 +11,7 @@ export const perceptionLessons: Lesson[] = [
     "intro": "Βρίσκεσαι σε μια καφετέρια και κοιτάζεις απέναντι ένα πρόσωπο. Χωρίς προσπάθεια, βλέπεις το πρόσωπο, ξεχωρίζεις το φλιτζάνι από το φόντο και αναγνωρίζεις μια κίνηση στην άκρη του οπτικού σου πεδίου. Μοιάζει σαν τα μάτια να τραβούν ένα συνεχές βίντεο. Όμως η όραση είναι μια συνεργασία φωτός, αισθητήριων κυττάρων και νευρικής επεξεργασίας — όχι ένα απλό αρχείο εικόνας.",
     "readingMinutes": 5,
     "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Anatomy%20of%20eye%20of%20human%20being.jpg?width=1200",
-    "imageCaption": "Η ανατομία του ματιού. Το φως περνά από τον κερατοειδή και τον φακό πριν φτάσει στον αμφιβληστροειδή.",
+    "imageCaption": "Σχηματική ανατομία του ματιού. Το φως περνά από τον κερατοειδή και τον φακό πριν φτάσει στον αμφιβληστροειδή.",
     "imageCredit": "Aliyu Mohammed Aliyu / Wikimedia Commons · CC0",
     "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Anatomy_of_eye_of_human_being.jpg",
     "sections": [
