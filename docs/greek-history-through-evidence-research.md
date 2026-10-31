@@ -45,3 +45,10 @@ History is not a direct recording of events. It is a reasoned reconstruction fro
 
 ## Handoff
 **Next lesson, not begun:** #4 `greek-chronology` — «Από τα ανάκτορα στις πόλεις: ένας χάρτης του χρόνου». First re-run and record prior QA before proposing any status upgrades; then research chronological periodization, uncertain transition boundaries and the relation between the Bronze Age, early Iron Age and the emergence of poleis. Do not duplicate the specialist Linear B lesson or the Bronze Age palace narratives reserved for later chapters.
+
+### Local QA follow-up — 2026-11-01 / lesson 3 reader-pilot fixture
+- User-provided local output **passed**: `npm run validate:content` (structure validation), `node scripts/test-flexible-editorial.cjs`, `node scripts/test-lesson-path.cjs`, `node scripts/test-editorial-compatibility.cjs`, `node scripts/test-article-images.cjs`, `node scripts/test-xp-rewards.cjs`, `node scripts/test-answer-sound-route.cjs`, and `node scripts/test-play-feedback-ui.cjs`. Native sound and UI in these scripts are **mocked**, not physical-device passes.
+- `node scripts/test-reader-pilot.cjs` **failed** at its manual TypeScript fixture loader: `Error: ./greekEvidenceLessons`. The new lesson file was missing from the test's local import map, even though `src/data/lessons.ts` correctly imported it.
+- Fixed `scripts/test-reader-pilot.cjs` fixture map on `content/curriculum-v1` in commit [`6291b6f`](https://github.com/its-manos/project-gnosi/commit/6291b6f2c91ebb78a4390833f759d52636857efd). **Reader-pilot has not yet been rerun after the fix; do not claim a pass.** This change is test-only, not an app/runtime behavior change.
+- `npm run typecheck` status is **not established by the pasted output**, and is not claimed as passed here. Content validator does not verify actual URLs, image rights, history, or devices. Lessons 1, 2, and 3 remain **Integrated**, not Validated/Approved.
+- Next local check: `git pull origin content/curriculum-v1 && node scripts/test-reader-pilot.cjs`. Device QA remains pending, including images and the native first-answer sound.
