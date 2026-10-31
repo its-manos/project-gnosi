@@ -72,7 +72,7 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
   assert.equal(progress.getInlineQuestionCount(lesson),4);
   assert.equal(progress.getResumeParagraphNumber(lesson,{0:old.questions[0].correctIndex}),3);
  }
- assert.equal(changed,37);
+ assert.equal(changed,36,'the other 44 legacy lessons retain 36 changed textual quiz fingerprints; rewritten Athens has a separate incompatible version');
  // Load real old-format persisted progress through the current store.
  const old=before.find(row=>row.id!=='ancient-athens'),lesson=lessons.find(row=>row.id===old.id),key=activity.quizFingerprint(old.questions);
  const doc={...sync.emptySyncDocument(),clock:1,progress:{[lesson.id]:{stamp:[1,'oldphone'],value:{completed:true,attempt:null}}},activity:{old:event(lesson,key,[1,3])}};
