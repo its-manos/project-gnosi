@@ -9,7 +9,7 @@ export default function KnowledgeProgress({ compact = false }: { compact?: boole
   return <View style={styles.card} testID="knowledge-progress">
     <View style={styles.heading}>
       <Text style={styles.label}>ΤΟ ΤΑΞΙΔΙ ΤΗΣ ΓΝΩΣΗΣ</Text>
-      <Text style={styles.level}>{ready ? `Επίπεδο ${p.level}` : "Φόρτωση…"}</Text>
+      <Text style={styles.level}>{ready ? `Επίπεδο ${p.level} · ${p.title}` : "Φόρτωση…"}</Text>
     </View>
     <Text style={styles.value}>{ready ? p.totalXP.toLocaleString("el-GR") : "—"} XP</Text>
     {ready ? <>
@@ -34,10 +34,10 @@ export default function KnowledgeProgress({ compact = false }: { compact?: boole
         {expanded ? <View style={styles.rules}>
           <Text style={styles.body}>Μάθηση: {p.learningXP} XP · Καθημερινό quiz: {p.challengeXP} XP</Text>
           <Text style={styles.body}>Ανάκληση: {p.recallXP} XP · Εξερεύνηση: {p.explorationXP} XP</Text>
-          <Text style={styles.body}>40 XP για την πρώτη ολοκλήρωση μαθήματος και έως 40 XP για την ακρίβεια της πρώτης προσπάθειας. 25 XP για κάθε νέα κατηγορία.</Text>
-          <Text style={styles.body}>20 XP για κάθε ολοκληρωμένο καθημερινό quiz και 10 XP ανά σωστή απάντηση. Οι πόντοι του quiz παραμένουν ξεχωριστοί.</Text>
-          <Text style={styles.body}>15 XP την πρώτη φορά που θυμάσαι σωστά ένα παλιό λάθος στην εβδομαδιαία επανάληψη. Η άμεση εξάσκηση δεν μετρά ως ανάκληση.</Text>
-          <Text style={styles.body}>Οι επαναλήψεις μαθημάτων δεν δίνουν επιπλέον XP. Τα παλιότερα μαθήματα διατηρούν την πρόοδό τους, χωρίς να επινοούνται σκορ.</Text>
+          <Text style={styles.body}>30 XP για την πρώτη ολοκλήρωση μαθήματος. Σωστή απάντηση: 10 / 15 / 20 XP για εύκολες / μεσαίες / δύσκολες ερωτήσεις. 25 XP για κάθε νέα κατηγορία.</Text>
+          <Text style={styles.body}>20 XP για την καθημερινή πρόκληση, 2 XP ανά νέα λανθασμένη απάντηση και επιπλέον 20 XP για 7/7. Οι πόντοι του quiz παραμένουν ξεχωριστοί.</Text>
+          <Text style={styles.body}>Στις συνεχόμενες σωστές απαντήσεις: +2 XP ανά βήμα του σερί, έως +10 XP ανά νέα ερώτηση. Το λάθος μηδενίζει το σερί. Η εβδομαδιαία επανάληψη δίνει μία ανταμοιβή ανά ερώτηση και 10 XP για ολοκλήρωση.</Text>
+          <Text style={styles.body}>Τα κερδισμένα XP διατηρούνται. Οι επαναλήψεις μαθημάτων και οι ήδη απαντημένες καθημερινές ερωτήσεις δεν δίνουν νέο XP. Η άμεση εξάσκηση δεν δίνει XP.</Text>
         </View> : null}
       </> : null}
     </> : null}

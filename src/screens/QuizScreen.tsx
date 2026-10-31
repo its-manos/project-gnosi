@@ -9,6 +9,7 @@ import { lessonReportTarget } from "../utils/contentReports";
 import { colors } from "../theme";
 
 type Props = {
+  combo?: number;
   lesson: Lesson;
   questionIndex: number;
   selectedAnswer: number | null;
@@ -18,7 +19,7 @@ type Props = {
   onNextQuestion: (questionCount: number) => void;
 };
 
-export default function QuizScreen({ lesson, questionIndex, selectedAnswer, score, onBack, onChooseAnswer, onNextQuestion }: Props) {
+export default function QuizScreen({ combo = 0, lesson, questionIndex, selectedAnswer, score, onBack, onChooseAnswer, onNextQuestion }: Props) {
   const question = lesson.questions[questionIndex];
   const isCorrect = selectedAnswer === question.correctIndex;
 
@@ -58,6 +59,7 @@ export default function QuizScreen({ lesson, questionIndex, selectedAnswer, scor
             label={questionIndex === lesson.questions.length - 1 ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →"}
             onPress={() => onNextQuestion(lesson.questions.length)}
           />
+          {combo > 1 ? <Text style={styles.scoreNote}>ΣΕΡΙ {combo}</Text> : null}
           <Text style={styles.scoreNote}>Σωστές απαντήσεις μέχρι τώρα: {score}</Text>
         </View>
       )}

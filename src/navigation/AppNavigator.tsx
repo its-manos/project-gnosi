@@ -369,6 +369,7 @@ export default function AppNavigator() {
     case "quiz":
       screenContent = (
         <QuizScreen
+          combo={app.combo}
           lesson={activeLesson}
           questionIndex={app.questionIndex}
           selectedAnswer={app.selectedAnswer}
@@ -392,6 +393,7 @@ export default function AppNavigator() {
     case "results":
       screenContent = (
         <ResultsScreen
+          earnedXP={app.earnedXP} highestCombo={app.highestCombo}
           key={activeLesson.id}
           lessonScores={app.lessonScores}
           onWeeklyReview={() => app.setScreen("weekly-review")}

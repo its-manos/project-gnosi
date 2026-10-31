@@ -29,6 +29,7 @@ export default function DailyChallengeScreen({
 }: Props) {
   const {
     record,
+    rewardSummary, rewardXP,
     isLoading,
     challengeQuestions,
     currentQuestion,
@@ -95,8 +96,9 @@ export default function DailyChallengeScreen({
             <Text style={styles.muted}>Οι πόντοι σου</Text>
             <Text style={styles.score}>{correctCount * 100} / 700</Text>
             <Text style={styles.scoreMeta}>{correctCount} από {DAILY_CHALLENGE_SIZE} σωστές απαντήσεις</Text>
-            <Text style={styles.scoreMeta}>Αυτή η πρόκληση: {dailyXP(correctCount)} XP</Text>
+            <Text style={styles.scoreMeta}>XP ημέρας: {rewardXP ?? dailyXP(correctCount)} XP</Text>
           </View>
+          {rewardSummary ? <Text style={styles.scoreMeta}>Καλύτερο σερί: {rewardSummary.highestCombo}</Text> : null}
           <KnowledgeProgress compact />
           <Text style={styles.tomorrowNote}>Η επόμενη πρόκληση θα είναι διαθέσιμη αύριο.</Text>
           {!reviewAvailable ? <Text style={styles.tomorrowNote}>Η βαθμολογία έχει διατηρηθεί. Η επανάληψη δεν είναι διαθέσιμη για ερωτήσεις παλαιότερης έκδοσης.</Text> : missedQuestions.length > 0 ? (
@@ -181,6 +183,7 @@ export default function DailyChallengeScreen({
                 label={record.currentIndex === DAILY_CHALLENGE_SIZE - 1 ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →"}
                 onPress={() => { setSourceError(false); void nextQuestion(); }}
               />
+              {rewardSummary && rewardSummary.combo > 1 ? <Text style={styles.scoreNote}>ΣΕΡΙ {rewardSummary.combo} · +{rewardSummary.rows[record.currentIndex]?.comboXP ?? 0} XP μπόνους</Text> : null}
               <Text style={styles.scoreNote}>Σωστές μέχρι τώρα: {correctCount} · {correctCount * 100} πόντοι</Text>
             </View>
           ) : null}

@@ -5,6 +5,7 @@ import ReportContentButton from "./ReportContentButton";
 import type { ReportTarget } from "../utils/contentReports";
 
 type Props = {
+  combo?: number;
   question: LessonQuestion;
   questionNumber: number;
   selectedAnswer: number | undefined;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function InlineQuestionCard({
+  combo = 0,
   question,
   questionNumber,
   selectedAnswer,
@@ -61,6 +63,7 @@ export default function InlineQuestionCard({
 
       {answered && (
         <View accessibilityLiveRegion="polite" style={[styles.feedback, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
+          {combo > 1 ? <Text style={styles.feedbackTitle}>ΣΕΡΙ {combo}</Text> : null}
           <Text style={styles.feedbackTitle}>{isCorrect ? "Σωστά — συνέχισε!" : "Κράτησέ το για την επόμενη φορά."}</Text>
           <Text style={[styles.feedbackText, readingSize ? { fontSize: readingSize - 1, lineHeight: Math.round(readingSize * 1.6) } : undefined]}>{question.explanation}</Text>
         </View>

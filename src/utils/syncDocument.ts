@@ -1,3 +1,5 @@
+import { mergeRewardLedgers, parseRewardLedger, type RewardLedger } from "../gamification/rewards";
+import { migrateLearningRewards } from "../gamification/migration";
 import { lessons } from "../data/lessons";
 import { parseLearningBackup, type BackupAttempt, type LearningBackup } from "./learningBackup";
 import { mergeCompletionEvents, parseCompletionEvents, type CompletionEvents } from "./learningActivity";
@@ -5,7 +7,7 @@ import { mergeWeeklyAnswers, parseWeeklyAnswers, type WeeklyAnswers } from "./we
 export type Stamp = [number, string];
 export type ProgressValue = { completed: boolean; attempt: BackupAttempt | null };
 type Register<T> = { stamp: Stamp; value: T };
-export type SyncDocument = { schemaVersion: 1; clock: number; progress: Record<string, Register<ProgressValue>>; bookmarks: Record<string, Register<boolean>>; activity: CompletionEvents; weeklyReviews?: WeeklyAnswers };
+export type SyncDocument = { schemaVersion: 1; rewards?: RewardLedger; clock: number; progress: Record<string, Register<ProgressValue>>; bookmarks: Record<string, Register<boolean>>; activity: CompletionEvents; weeklyReviews?: WeeklyAnswers };
 const known = new Set(lessons.map(l => l.id));
 const record = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 export const emptySyncDocument = (): SyncDocument => ({ schemaVersion: 1, clock: 0, progress: {}, bookmarks: {}, activity: {} });
@@ -13,6 +15,7 @@ const ordered = <T,>(values: Record<string, T>): Record<string, T> => Object.fro
 export function parseSyncDocument(raw: unknown): SyncDocument {
   if (!record(raw) || raw.schemaVersion !== 1 || !Number.isSafeInteger(raw.clock) || (raw.clock as number) < 0 || !record(raw.progress) || !record(raw.bookmarks)) throw new Error("invalid_sync");
   const result = emptySyncDocument(); result.clock = raw.clock as number;
+  if (raw.rewards !== undefined) result.rewards = parseRewardLedger(raw.rewards, "learning");
   result.activity = parseCompletionEvents(raw.activity);
   result.weeklyReviews = parseWeeklyAnswers(raw.weeklyReviews, result.activity);
   const stamp = (entry: unknown): Register<unknown> => {
@@ -52,6 +55,7 @@ export function mergeSyncDocuments(a: SyncDocument, b: SyncDocument): SyncDocume
     merged.progress[id] = { stamp: selected.stamp, value: { ...selected.value, completed: Boolean(current?.value.completed || entry.value.completed) } };
   }
   for (const [id, entry] of Object.entries(b.bookmarks)) merged.bookmarks[id] = winner(merged.bookmarks[id], entry);
+  if (a.rewards !== undefined || b.rewards !== undefined) merged.rewards = migrateLearningRewards(lessons, Object.keys(merged.progress).filter(id => merged.progress[id].value.completed), merged.activity, merged.weeklyReviews ?? {}, mergeRewardLedgers(a.rewards, b.rewards));
   return parseSyncDocument(merged);
 }
 export function syncBackup(doc: SyncDocument): LearningBackup {

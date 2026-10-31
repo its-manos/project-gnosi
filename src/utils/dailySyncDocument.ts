@@ -1,9 +1,11 @@
+import { mergeRewardLedgers, parseRewardLedger, type RewardLedger } from "../gamification/rewards";
+import { migrateDailyRewards } from "../gamification/migration";
 import { DEFAULT_DAILY_CHALLENGE_PREFERENCES, normalizeDailyChallengePreferences, DAILY_CHALLENGE_TOPICS, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { parseDailyChallengeRecord, type DailyChallengeRecord } from "./dailyChallenge";
 import { parseDailyChallengeHistory, type DailyChallengeHistoryEntry } from "./dailyChallengeHistory";
 import { compareStamps, type Stamp } from "./syncDocument";
 export type DailyDay = { run: Stamp; edit: Stamp; record: DailyChallengeRecord; history: DailyChallengeHistoryEntry | null };
-export type DailyDocument = { schemaVersion: 1; clock: number; preferences: { stamp: Stamp; value: DailyChallengePreferences } | null; days: Record<string, DailyDay> };
+export type DailyDocument = { schemaVersion: 1; rewards?: RewardLedger; clock: number; preferences: { stamp: Stamp; value: DailyChallengePreferences } | null; days: Record<string, DailyDay> };
 const object = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 export const emptyDailyDocument = (): DailyDocument => ({ schemaVersion: 1, clock: 0, preferences: null, days: {} });
 export const dailyDateValid = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(Date.parse(`${date}T12:00:00Z`)) && new Date(`${date}T12:00:00Z`).toISOString().slice(0, 10) === date;
@@ -15,6 +17,7 @@ export function currentDailyPreferences(doc: DailyDocument): DailyChallengePrefe
 export function parseDailyDocument(raw: unknown): DailyDocument {
   if (!object(raw) || raw.schemaVersion !== 1 || !Number.isSafeInteger(raw.clock) || (raw.clock as number) < 0 || !object(raw.days)) throw new Error("invalid_daily");
   const doc = emptyDailyDocument(); doc.clock = raw.clock as number;
+  if (raw.rewards !== undefined) doc.rewards = parseRewardLedger(raw.rewards, "daily");
   const stamp = (value: unknown): Stamp => {
     if (!Array.isArray(value) || value.length !== 2 || !Number.isSafeInteger(value[0]) || value[0] < 0 || value[0] > doc.clock || typeof value[1] !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(value[1])) throw new Error("invalid_daily");
     return [value[0], value[1]];
@@ -64,7 +67,9 @@ export function mergeDailyDocuments(a: DailyDocument, b: DailyDocument): DailyDo
   }
   const days = { ...a.days };
   for (const [date, day] of Object.entries(b.days)) days[date] = days[date] ? chooseDay(days[date], day) : day;
-  return parseDailyDocument({ schemaVersion: 1, clock: Math.max(a.clock, b.clock), preferences, days });
+  const result: DailyDocument = { schemaVersion: 1, clock: Math.max(a.clock, b.clock), preferences, days };
+  if (a.rewards !== undefined || b.rewards !== undefined) result.rewards = migrateDailyRewards(dailyHistory(result), mergeRewardLedgers(a.rewards, b.rewards));
+  return parseDailyDocument(result);
 }
 export function dailyHistory(doc: DailyDocument): DailyChallengeHistoryEntry[] {
   return Object.values(doc.days).flatMap(day => day.history ? [day.history] : []).sort((a, b) => b.dateKey.localeCompare(a.dateKey));

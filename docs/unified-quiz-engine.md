@@ -79,7 +79,7 @@ No new XP balance or reward events are emitted. Existing lesson/date/question re
 - Native generic session snapshots pin scored content and revisions. Legacy in-progress numeric records do not contain such snapshots; they keep the existing revalidation-against-current-content behavior. Do not reorder published legacy slots or edit an active question's answer positions without the existing editorial compatibility process. A later versioned wire-format migration is required to pin every legacy in-progress revision across devices.
 - The legacy standalone quiz remains memory-only before completion. The primary inline lesson flow and daily challenge resume from device storage. It retains its existing leave warning.
 - Scoring is suitable for personal offline progress. A client with editable local data is not a trusted public leaderboard authority. Server-validated competitive scoring is a later phase.
-- Phase 2 must reconcile the previous derived XP foundation with the brief's never-decreasing reward accounting before introducing the new XP values and combo bonuses. Phase 1 intentionally does not rebalance or reset existing XP.
+- Phase 1 did not rebalance XP. The permanent accounting and new reward rules are now implemented in [Phase 2](xp-phase-2.md), with legacy XP preserved.
 
 ## Verification and manual testing
 

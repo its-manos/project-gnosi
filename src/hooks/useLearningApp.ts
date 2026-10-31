@@ -1,3 +1,4 @@
+import { quizRewardSummary } from "../gamification/rewards";
 import { adaptLessonQuestion } from "../quiz/adapters";
 import { advanceQuizSession, calculateQuizResults, createQuizSession, evaluateChoice, submitQuizAnswer } from "../quiz/engine";
 import { legacyAnswerSlots, restoreLegacySession } from "../quiz/compatibility";
@@ -47,6 +48,7 @@ export function useLearningApp() {
 
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, number>>({});
   const [score, setScore] = useState(0);
+  const [earnedXP, setEarnedXP] = useState(0);
   const [resultMode, setResultMode] = useState<"finished" | "returning">("finished");
   const [reviewIndices, setReviewIndices] = useState<number[]>([]);
   const [reviewIndex, setReviewIndex] = useState(0);
@@ -80,6 +82,7 @@ export function useLearningApp() {
     }
     if (!["lesson", "quiz", "results", "review"].includes(screen)) setLessonOrigin(screen);
     newCompletionRun();
+    setEarnedXP(0);
     standaloneSession.current = null;
     setPracticeComplete(false);
     reviewSession.current = { lessonId: "", index: 0, answer: null };
@@ -129,7 +132,7 @@ export function useLearningApp() {
 
   async function markActiveLessonComplete(answers = checkpointAnswers) {
     if (renderRun !== completionRun.current) return;
-    store.complete(activeLessonId, { id: completionRun.current, answers });
+    setEarnedXP(store.complete(activeLessonId, { id: completionRun.current, answers }));
     setScore(calculateScore(activeLessonId, answers));
     await store.flushLocal();
     if (renderRun !== completionRun.current) return;
@@ -162,6 +165,7 @@ export function useLearningApp() {
 
   function startQuiz() {
     newCompletionRun();
+    setEarnedXP(0);
     standaloneSession.current = createQuizSession(`quiz:${activeLessonId}:${completionRun.current}`, "lesson", activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)));
     setQuestionIndex(0);
     setSelectedAnswer(null);
@@ -242,6 +246,7 @@ export function useLearningApp() {
 
   function restartLesson() {
     newCompletionRun();
+    setEarnedXP(0);
     standaloneSession.current = null;
     setPracticeComplete(false);
     void removeAttempt(activeLessonId);
@@ -322,6 +327,9 @@ export function useLearningApp() {
     selectedAnswer,
     checkpointAnswers,
     score,
+    earnedXP,
+    combo: quizRewardSummary(activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)), checkpointAnswers, "lesson").combo,
+    highestCombo: quizRewardSummary(activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)), checkpointAnswers, "lesson").highestCombo,
     resultMode,
     review,
     lessonScores: lessonScores(activeLesson, snapshot.activity, snapshot.weeklyReviews),

@@ -1,3 +1,4 @@
+import { mergeRewardLedgers } from "../gamification/rewards";
 import { useMemo } from "react";
 import { lessons } from "../data/lessons";
 import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
@@ -8,7 +9,7 @@ import { useAthensDate } from "./useAthensDate";
 export function useKnowledgeProfile() {
   const learning = useLearningSnapshot(), daily = useDailySnapshot(), today = useAthensDate();
   const profile = useMemo(() => knowledgeProfile(lessons, learning.backup.completedIds,
-    learning.activity, learning.weeklyReviews, dailyHistory(daily.doc), today),
-  [learning.backup.completedIds, learning.activity, learning.weeklyReviews, daily.doc, today]);
+    learning.activity, learning.weeklyReviews, dailyHistory(daily.doc), today, mergeRewardLedgers(learning.rewards, daily.doc.rewards)),
+  [learning.backup.completedIds, learning.activity, learning.weeklyReviews, learning.rewards, daily.doc, today]);
   return { profile, ready: learning.ready && daily.ready };
 }

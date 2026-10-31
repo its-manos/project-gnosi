@@ -1,7 +1,11 @@
+import { awardQuiz } from "../gamification/rewards";
+import { migrateDailyRewards } from "../gamification/migration";
+import { adaptDailyQuestion } from "../quiz/adapters";
+import { questions } from "../data/questions";
 import { parseDailyChallengePreferences, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { DAILY_CHALLENGE_STORAGE_KEY, getAthensDateKey, parseDailyChallengeRecord, type DailyChallengeRecord } from "../utils/dailyChallenge";
 import { createCompletedHistoryEntry, DAILY_CHALLENGE_HISTORY_STORAGE_KEY, parseDailyChallengeHistory } from "../utils/dailyChallengeHistory";
-import { emptyDailyDocument, mergeDailyDocuments, parseDailyDocument, dailyPreferences, type DailyDocument, type DailyDay } from "../utils/dailySyncDocument";
+import { emptyDailyDocument, mergeDailyDocuments, parseDailyDocument, dailyPreferences, dailyHistory, type DailyDocument, type DailyDay } from "../utils/dailySyncDocument";
 import type { Stamp } from "../utils/syncDocument";
 import type { SyncStatus } from "./LearningStore";
 export type DailyTransport = { pull: () => Promise<{ doc: DailyDocument; revision: number } | null>; push: (doc: DailyDocument, revision: number) => Promise<void> };
@@ -77,6 +81,7 @@ export class DailyStore {
         this.doc = parseDailyDocument(migrated);
       }
       stage = "D09";
+      this.doc.rewards = migrateDailyRewards(dailyHistory(this.doc), this.doc.rewards);
       await this.persist();
       this.ready = true; this.status = this.userId ? "queued" : "local"; this.error = ""; this.emit();
     } catch (error) {
@@ -104,6 +109,7 @@ export class DailyStore {
   }
   private change(doc: DailyDocument) {
     if (!this.ready) throw new Error("local_not_ready");
+    if (doc.rewards !== undefined) doc = { ...doc, rewards: migrateDailyRewards(dailyHistory(doc), doc.rewards) };
     this.doc = parseDailyDocument(doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
     this.emit(); void this.persist(); this.schedule();
   }
@@ -122,7 +128,8 @@ export class DailyStore {
     const stamp = this.stamp();
     const history = record.completed ? createCompletedHistoryEntry(record) : null;
     if (record.completed && !history) throw new Error("invalid_daily");
-    this.change({ ...this.doc, clock: stamp[0], days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history } } });
+    const rewards = record.completed ? awardQuiz(this.doc.rewards ?? {}, `day:${record.dateKey}`, record.questionIds.map(id => adaptDailyQuestion(questions.find(q => q.id === id)!)), record.answers, "daily") : this.doc.rewards;
+    this.change({ ...this.doc, clock: stamp[0], rewards, days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history } } });
     return true;
   }
   async importGuest(incoming: DailyDocument) {
@@ -136,7 +143,8 @@ export class DailyStore {
   async resetGuestDate(date: string) {
     if (this.userId) throw new Error("guest_only_reset");
     const days = { ...this.doc.days }; delete days[date];
-    this.change({ ...this.doc, days }); await this.latestWrite;
+    const rewards = { ...this.doc.rewards }; delete rewards[`day:${date}`];
+    this.change({ ...this.doc, days, rewards }); await this.latestWrite;
   }
   async flushLocal() { try { await this.latestWrite; return true; } catch { return false; } }
   async retry() {

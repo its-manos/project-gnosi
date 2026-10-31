@@ -141,3 +141,17 @@ npm run typecheck
 ```
 
 See [the engine audit and architecture](docs/unified-quiz-engine.md) for session APIs, migration boundaries and device checks, and [validation results](docs/quiz-engine-validation.md) for the automated test report. New question formats, XP rebalancing, combos and spaced repetition are separate later phases.
+
+## Permanent XP and combos — Phase 2
+
+XP is now retained in the existing account-scoped sync documents. Centralized rules reward new learning, difficulty, session combos, daily participation/perfect results and weekly recall. Previous XP is preserved during migration. Player levels display Greek titles, and lesson/daily results distinguish XP from quiz points.
+
+**Apply `supabase/migrations/202610310012_xp_rewards.sql` before publishing this client update.** It protects rewards from older-client writes without adding tables. No new mobile dependencies are needed.
+
+```bash
+node scripts/test-xp-rewards.cjs
+node scripts/test-xp-ui.cjs
+npm run typecheck
+```
+
+Read [the Phase 2 rules and architecture](docs/xp-phase-2.md), [validation report](docs/xp-phase-2-validation.md) and [application steps](APPLY-XP-PHASE-2.md). These are personal progress rewards; public competitive scoring remains a future server-validated feature.

@@ -66,6 +66,6 @@ const Screen=load('src/screens/DailyChallengeScreen.tsx',{
 const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
 const result=Screen({preferences:{topicIds:[],difficulty:'medium'},preferencesLoaded:true,onHome(){},onOpenPreferences(){}});
 assert.ok(text(result).includes('500 / 700'),'daily points remain unchanged');
-assert.ok(text(result).includes('Αυτή η πρόκληση: 70 XP'),'daily XP is distinct from quiz points');
+assert.ok(text(result).includes('XP ημέρας: 70 XP'),'daily XP is distinct from quiz points');
 assert.equal(nodes(result).filter(n=>n.type==='KnowledgeProgress'&&n.props.compact).length,1);
 console.log('Daily result integration passed: separate points/XP and one compact progress card.');

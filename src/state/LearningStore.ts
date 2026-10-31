@@ -1,6 +1,10 @@
+import { awardQuiz, hasReward, mergeRewardLedgers, quizRewardSummary, totalRewardXP, type RewardLedger } from "../gamification/rewards";
+import { migrateLearningRewards } from "../gamification/migration";
+import { REWARD_RULES } from "../gamification/rules";
+import { adaptLessonQuestion } from "../quiz/adapters";
 import { calculateChoiceResults, evaluateChoice } from "../quiz/engine";
 import { lessons } from "../data/lessons";
-import { mergeCompletionEvents, parseCompletionEvents, quizFingerprint, type CompletionEvents } from "../utils/learningActivity";
+import { mergeCompletionEvents, parseCompletionEvents, quizFingerprint, lessonQuizMatches, type CompletionEvents } from "../utils/learningActivity";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 import { mergeWeeklyAnswers, weeklyPlan, type WeeklyAnswers } from "../utils/weeklyReview";
@@ -10,7 +14,7 @@ import { emptySyncDocument, mergeSyncDocuments, parseSyncDocument, seedSyncBacku
 export type SyncTransport = { pull: () => Promise<{ doc: SyncDocument; revision: number } | null>; seed: () => Promise<LearningBackup | null>; push: (doc: SyncDocument, revision: number) => Promise<void> };
 type Storage = { getItem: (key: string) => Promise<string | null>; setItem: (key: string, value: string) => Promise<void> };
 export type SyncStatus = "loading" | "local" | "queued" | "syncing" | "saved" | "waiting" | "error" | "local-error";
-export type LearningSnapshot = { ready: boolean; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; status: SyncStatus; error: string; userId: string | null };
+export type LearningSnapshot = { ready: boolean; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards: RewardLedger; status: SyncStatus; error: string; userId: string | null };
 const known = new Set(lessons.map(l => l.id));
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 export class LearningStore {
@@ -34,7 +38,7 @@ export class LearningStore {
     this.key = `@gnosi/learning-v2/${userId ?? "guest"}`;
     this.snapshot = this.makeSnapshot();
   }
-  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, backup: syncBackup(this.doc), activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, status: this.status, error: this.error, userId: this.userId }; }
+  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, backup: syncBackup(this.doc), activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId }; }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
@@ -76,6 +80,7 @@ export class LearningStore {
         this.doc = seedSyncBackup({ schemaVersion: 1, completedIds, savedIds, attempts: parseSavedAttempts(attemptsRaw, completedIds) });
       }
       stage = "L09";
+      this.doc.rewards = migrateLearningRewards(lessons, syncBackup(this.doc).completedIds, this.doc.activity, this.doc.weeklyReviews ?? {}, this.doc.rewards);
       await this.persist();
       this.ready = true; this.status = this.userId ? "queued" : "local"; this.error = ""; this.emit();
     } catch (error) {
@@ -100,6 +105,7 @@ export class LearningStore {
   }
   private change(doc: SyncDocument) {
     if (!this.ready) throw new Error("local_not_ready");
+    if (doc.rewards !== undefined) doc = { ...doc, rewards: migrateLearningRewards(lessons, syncBackup(doc).completedIds, doc.activity, doc.weeklyReviews ?? {}, doc.rewards) };
     this.doc = parseSyncDocument(doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
     this.emit(); void this.persist(); this.schedule();
   }
@@ -119,12 +125,12 @@ export class LearningStore {
   }
   answer(id: string, attempt: BackupAttempt) { this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt }); }
   complete(id: string, run?: { id: string; answers: Record<number, number> }) {
-    if (!run) { this.setProgress(id, { completed: true, attempt: null }); return; }
+    if (!run) { this.setProgress(id, { completed: true, attempt: null }); return 0; }
     const lesson = lessons.find(item => item.id === id);
     if (!lesson || !/^[a-zA-Z0-9_-]{1,100}$/.test(run.id)) throw new Error("invalid_completion");
     const eventId = `${this.device}_${run.id}`;
     // The completion button may fire twice before navigation. One run is one event.
-    if (this.doc.activity[eventId]) return;
+    if (this.doc.activity[eventId]) return 0;
     const questionCount = getInlineQuestionCount(lesson);
     if (questionCount < 1) throw new Error("invalid_completion");
     const result = calculateChoiceResults(lesson.questions.slice(0, questionCount), run.answers);
@@ -135,8 +141,12 @@ export class LearningStore {
       correctCount, questionCount, quizKey: quizFingerprint(lesson.questions), missedQuestionIndices,
     } });
     const stamp = this.stamp();
-    // The event and completion share one local write and one sync revision.
-    this.change({ ...this.doc, clock: stamp[0], activity, progress: { ...this.doc.progress, [id]: { stamp, value: { completed: true, attempt: null } } } });
+    const before = totalRewardXP(this.doc.rewards ?? {});
+    const rewards = { ...awardQuiz(this.doc.rewards ?? {}, `lesson:${id}`, lesson.questions.slice(0, questionCount).map((_, i) => adaptLessonQuestion(lesson, i)), run.answers, "lesson") };
+    if (!hasReward(rewards, `category:${lesson.categoryId}`)) rewards[`category:${lesson.categoryId}`] = REWARD_RULES.category;
+    // Reward, event and completion share one write and one sync revision.
+    this.change({ ...this.doc, clock: stamp[0], rewards, activity, progress: { ...this.doc.progress, [id]: { stamp, value: { completed: true, attempt: null } } } });
+    return totalRewardXP(this.doc.rewards ?? {}) - before;
   }
   clearAttempt(id: string) { this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt: null }); }
   answerWeekly(id: string, answerIndex: number): boolean {
@@ -144,9 +154,20 @@ export class LearningStore {
     const item = weeklyPlan(this.doc.activity, this.doc.weeklyReviews, getAthensDateKey()).find(q => q.id === id);
     if (!item || !evaluateChoice(item.lesson.questions[item.questionIndex], answerIndex).valid) return false;
     const stamp = this.stamp();
-    this.change({ ...this.doc, clock: stamp[0], weeklyReviews: { ...this.doc.weeklyReviews, [id]: {
+    const weeklyReviews = { ...this.doc.weeklyReviews, [id]: {
       sourceId: item.sourceId, questionIndex: item.questionIndex, week: item.week, answerIndex, at: Date.now(),
-    } } });
+    } };
+    const rewards = { ...this.doc.rewards };
+    const ordered = Object.entries(weeklyReviews).filter(([, a]) => { const source = this.doc.activity[a.sourceId], lesson = source && lessons.find(l => l.id === source.lessonId); return a.week === item.week && lesson && lessonQuizMatches(lesson, source.quizKey) && lesson.questions[a.questionIndex]; }).sort(([aId, a], [bId, b]) => a.at - b.at || (aId < bId ? -1 : aId > bId ? 1 : 0));
+    const normalized = ordered.map(([, a]) => { const source = this.doc.activity[a.sourceId]; const lesson = lessons.find(l => l.id === source.lessonId)!; return adaptLessonQuestion(lesson, a.questionIndex); });
+    const answers = Object.fromEntries(ordered.map(([, a], i) => [i, a.answerIndex]));
+    const summary = quizRewardSummary(normalized, answers, "review");
+    const row = summary.rows[ordered.findIndex(([key]) => key === id)];
+    const recallKey = `recall:${item.lesson.id}:${item.questionIndex}`;
+    if (row?.correct && !hasReward(rewards, recallKey)) rewards[recallKey] = row.baseXP + row.comboXP;
+    const plan = weeklyPlan(this.doc.activity, weeklyReviews, getAthensDateKey());
+    if (plan.length && plan.every(q => weeklyReviews[q.id]) && !hasReward(rewards, `review:${item.week}`)) rewards[`review:${item.week}`] = REWARD_RULES.review;
+    this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards });
     return true;
   }
   async restoreProgress(incoming: LearningBackup) {
@@ -158,7 +179,7 @@ export class LearningStore {
     await this.latestWrite;
   }
   async restoreBookmarks(ids: string[]) { for (const id of ids) this.setBookmark(id, true); await this.latestWrite; }
-  async importGuest(incoming: LearningBackup, events: CompletionEvents, reviews: WeeklyAnswers = {}) {
+  async importGuest(incoming: LearningBackup, events: CompletionEvents, reviews: WeeklyAnswers = {}, guestRewards: RewardLedger = {}) {
     const merged = mergeLearningBackups(this.snapshot.backup, incoming);
     const activity = mergeCompletionEvents(this.doc.activity, events);
     const stamp = this.stamp(), progress = { ...this.doc.progress }, bookmarks = { ...this.doc.bookmarks };
@@ -167,12 +188,12 @@ export class LearningStore {
       if (!same(progress[id]?.value, value)) progress[id] = { stamp, value };
     }
     for (const id of merged.savedIds) if (!bookmarks[id]?.value) bookmarks[id] = { stamp, value: true };
-    this.change({ ...this.doc, clock: stamp[0], progress, bookmarks, activity, weeklyReviews: mergeWeeklyAnswers(this.doc.weeklyReviews, reviews) });
+    this.change({ ...this.doc, clock: stamp[0], progress, bookmarks, activity, rewards: mergeRewardLedgers(this.doc.rewards, guestRewards), weeklyReviews: mergeWeeklyAnswers(this.doc.weeklyReviews, reviews) });
     await this.latestWrite;
   }
   async resetGuestProgress() {
     if (this.userId) throw new Error("guest_only_reset");
-    this.change({ ...this.doc, progress: {}, activity: {}, weeklyReviews: {} }); await this.latestWrite;
+    this.change({ ...this.doc, progress: {}, activity: {}, weeklyReviews: {}, rewards: {} }); await this.latestWrite;
   }
   async flushLocal() { try { await this.latestWrite; return true; } catch { return false; } }
   async retry() {

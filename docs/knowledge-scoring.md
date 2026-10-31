@@ -1,4 +1,6 @@
-# Gnosi scoring foundation
+# Historical v1 scoring foundation
+
+The current rules and permanent accounting are documented in [Phase 2](xp-phase-2.md). This document records the earlier foundation and its migration baseline.
 
 Learning gives progress. Remembering gives mastery. Exploring gives rewards.
 

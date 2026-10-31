@@ -1,3 +1,6 @@
+import { LEGACY_REWARD_RULES } from "../gamification/rules";
+import { quizRewardSummary } from "../gamification/rewards";
+import { adaptDailyQuestion } from "../quiz/adapters";
 import { advanceQuizSession, questionToken, submitQuizAnswer, calculateChoiceResults } from "../quiz/engine";
 import { dailyRecordSession, updateDailyRecord } from "../quiz/compatibility";
 import { questions, DAILY_CHALLENGE_SIZE, type GeneralKnowledgeQuestion } from "../data/questions";
@@ -15,6 +18,8 @@ export function useDailyChallenge(preferences: DailyChallengePreferences, prefer
   const currentQuestion = record.started && !record.completed ? questions.find(q => q.id === record.questionIds[record.currentIndex]) ?? null : null;
   const selectedAnswer = record.answers[String(record.currentIndex)] ?? null;
   const correctCount = day?.history?.correctCount ?? calculateChoiceResults(challengeQuestions, record.answers).correctCount;
+  const rewardSummary = quizRewardSummary(challengeQuestions.map(adaptDailyQuestion), record.answers, "daily", snapshot.doc.rewards ?? {}, record.completed);
+  const rewardXP = record.completed ? snapshot.doc.rewards?.[`day:${record.dateKey}`] ?? LEGACY_REWARD_RULES.daily + correctCount * LEGACY_REWARD_RULES.dailyCorrect : rewardSummary.totalXP;
   const currentDate = () => getAthensDateKey() === todayKey;
   async function startChallenge() {
     if (!snapshot.ready || !preferencesLoaded || !currentDate() || record.started || record.completed) return;
@@ -45,5 +50,5 @@ export function useDailyChallenge(preferences: DailyChallengePreferences, prefer
   async function resetChallengeForDevelopment() {
     if (__DEV__ && !snapshot.userId) await dailyStore.resetGuestDate(todayKey);
   }
-  return { todayKey, record, isLoading: !snapshot.ready || !preferencesLoaded, challengeQuestions, currentQuestion, selectedAnswer, correctCount, startChallenge, answerQuestion, nextQuestion, resetChallengeForDevelopment, accountScoped: Boolean(snapshot.userId), reviewAvailable: challengeQuestions.length === record.questionIds.length };
+  return { rewardSummary, rewardXP, todayKey, record, isLoading: !snapshot.ready || !preferencesLoaded, challengeQuestions, currentQuestion, selectedAnswer, correctCount, startChallenge, answerQuestion, nextQuestion, resetChallengeForDevelopment, accountScoped: Boolean(snapshot.userId), reviewAvailable: challengeQuestions.length === record.questionIds.length };
 }

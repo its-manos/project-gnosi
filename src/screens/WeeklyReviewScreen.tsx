@@ -42,7 +42,7 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
       : !items.length ? <View style={styles.card}><Text style={styles.heading}>Καμία εκκρεμής ερώτηση αυτή την εβδομάδα</Text><Text style={styles.body}>Έως 10 παλιά λάθη επιστρέφουν κάθε Δευτέρα. Προς το παρόν, συνέχισε την εξερεύνηση!</Text><ActionButton label="Επιστροφή στην εξερεύνηση" onPress={onBack} /></View>
       : finished ? <View style={styles.card} accessibilityLiveRegion="polite"><Text style={styles.heading}>{correct} / {items.length} διορθώθηκαν</Text><Text style={styles.body}>{correct === items.length ? "Έδωσες σε κάθε παλιό λάθος μια νέα, σωστή απάντηση!" : "Τα λάθη είναι αφετηρία. Δες τις εξηγήσεις και θα τα ξανασυναντήσεις σε επόμενη εβδομάδα."}</Text>
         {items.filter(q => snapshot.weeklyReviews[q.id]?.answerIndex !== q.lesson.questions[q.questionIndex].correctIndex).map(q => <View key={q.id} style={styles.card}><Text style={styles.heading}>{q.lesson.questions[q.questionIndex].question}</Text><Text style={styles.body}>Σωστή απάντηση: {q.lesson.questions[q.questionIndex].answers[q.lesson.questions[q.questionIndex].correctIndex]}</Text><Text style={styles.body}>{q.lesson.questions[q.questionIndex].explanation}</Text></View>)}
-        <ActionButton label="Πίσω στην πρόοδο" onPress={onBack} /></View>
+        <Text style={styles.body}>XP ολοκλήρωσης: {snapshot.rewards?.[`review:${initial.week}`] ?? 0}</Text><ActionButton label="Πίσω στην πρόοδο" onPress={onBack} /></View>
       : item && question ? <>
         <Text style={styles.eyebrow}>{done} / {items.length} ΑΠΑΝΤΗΘΗΚΑΝ · {item.lesson.title}</Text>
         <View style={styles.card}><Text style={styles.heading}>{question.question}</Text></View>

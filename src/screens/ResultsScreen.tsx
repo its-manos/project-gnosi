@@ -13,6 +13,7 @@ import type { lessonScores as calculateLessonScores } from "../utils/weeklyRevie
 import { colors } from "../theme";
 
 type Props = {
+  earnedXP?: number; highestCombo?: number;
   lesson: Lesson; score: number; onHome: () => void; onReadAgain: () => void;
   onOpenLesson: (id: string) => void; onBrowse: () => void; nextLesson?: Lesson | null;
   pathProgress?: { title: string; completed: number; total: number };
@@ -20,7 +21,7 @@ type Props = {
   review?: ReviewState; returning?: boolean; practiceComplete?: boolean; onReviewMistakes?: () => void;
 };
 
-export default function ResultsScreen({ lesson, score, onHome, onReadAgain, onOpenLesson, onBrowse, nextLesson, pathProgress, review, returning = false, practiceComplete = false, onReviewMistakes, lessonScores, onWeeklyReview }: Props) {
+export default function ResultsScreen({ earnedXP = 0, highestCombo = 0, lesson, score, onHome, onReadAgain, onOpenLesson, onBrowse, nextLesson, pathProgress, review, returning = false, practiceComplete = false, onReviewMistakes, lessonScores, onWeeklyReview }: Props) {
   const [details, setDetails] = useState(false);
   const total = getInlineQuestionCount(lesson);
   const displayedScore = returning
@@ -39,6 +40,7 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain, onOp
       <Text style={styles.lessonTitle}>{lesson.title}</Text>
       {displayedScore !== null ? <LessonResultChart correct={displayedScore} total={total} label={returning ? "Το καλύτερο σκορ σου" : "Αυτή η προσπάθεια"} />
         : <Text style={styles.message}>Κάνε μια νέα προσπάθεια για να δεις το σκορ σου.</Text>}
+      {!returning ? <Text style={styles.success}>{earnedXP > 0 ? `+${earnedXP} XP` : "Τα XP αυτής της ολοκλήρωσης έχουν ήδη καταγραφεί."} · Καλύτερο σερί: {highestCombo}</Text> : null}
       <KnowledgeProgress compact />
       {practiceComplete ? <Text style={styles.success}>Ολοκλήρωσες την εξάσκηση στα λάθη.</Text> : null}
       {displayedScore === null ? <ActionButton label="Πλήρης επανάληψη μαθήματος" onPress={onReadAgain} /> : null}
