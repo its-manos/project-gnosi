@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "mycenaean-palaces": [
+    {
+      afterParagraphId: "hides-tablet",
+      url: commonsFileUrl("NAMA Linear B tablet of Pylos.jpg"),
+      resizeMode: "contain",
+      caption: "Η αυθεντική πινακίδα PY Ub 1318 από την Πύλο, στο Εθνικό Αρχαιολογικό Μουσείο. Καταγράφει διανομή δερμάτων σε τεχνίτες· η φωτογραφία δεν αποτελεί μεταγραφή του κειμένου. Άγγιξε για μεγέθυνση.",
+      credit: "Flickr photographer / Wikimedia Commons · CC BY 2.0 · αρχικό αρχείο 2009",
+      creditUrl: commonsPageUrl("NAMA Linear B tablet of Pylos.jpg"),
+    },
+    {
+      afterParagraphId: "tiryns-gate",
+      url: commonsFileUrl("Palace of Tiryns, entrance.jpg"),
+      resizeMode: "contain",
+      caption: "Η είσοδος στην οχυρωμένη ακρόπολη της Τίρυνθας. Η μνημειακή πρόσβαση δηλώνει κατασκευή και προβολή ισχύος, όχι τον ακριβή χάρτη των εξαρτημένων κοινοτήτων.",
+      credit: "Karelksir / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2015",
+      creditUrl: commonsPageUrl("Palace of Tiryns, entrance.jpg"),
+    },
+  ],
   "minoan-crete": [
     {
       afterParagraphId: "mu-district",

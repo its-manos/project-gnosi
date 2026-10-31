@@ -148,3 +148,10 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Validation:** Editorial preflight/connector inspection only. The dedicated `scripts/test-minoan-crete.cjs` was added but **has not been run**; `npm run typecheck`, `npm run validate:content`, all Node integration scripts and Android/iOS QA await a local checkout. Existing 1–6 stay Integrated and are not silently promoted.
 - **Progress:** 30 planned / 5 chapters; **10 implemented**, **7 Integrated**, **3 earlier Drafted**, **20 Not started**, **0 Validated / 0 Approved**. No changes to prior quiz IDs, XP/audio, daily challenges or Supabase.
 - **Next only (not started):** #8 `mycenaean-palaces` — «Ποιος διοικούσε τα μυκηναϊκά ανάκτορα;»; Chapter II.
+
+### Ancient Greece Lesson 8 audit — 2026-11-01
+- **`mycenaean-palaces`: Integrated, not Validated/Approved.** Όσα μετρούσε το ανάκτορο: εξουσία και εργασία στη μυκηναϊκή Πύλο. [Research, source/rights ledger and follow-up QA](mycenaean-palaces-research.md).
+- 25 stable paragraphs, five anchored version-1 questions after 4/10/15/20/24, 1 attributed megaron cover and 2 attributed inline images. Lesson-8-only data, path placement and Node fixture updated; original lesson IDs, results, XP, audio, synchronization and historical data left unchanged.
+- **Evidence:** scholarly articles (Shelmerdine, Bendall, Lupack, Halstead, Hruby, Cosmopoulos, Judson) and Commons file-description licence pages inspected; static connector preflight only. **No actual typecheck, content validator, Node regression suite, CI or Android/iOS device test run in this integration environment.** Earlier unconfirmed lesson-7 Node QA remains unconfirmed.
+- **Counts:** 30 planned, 11 implemented, 8 Integrated, 3 older Drafted, 19 Not started, 0 Validated, 0 Approved.
+- **Next only:** #9 `linear-b-decipherment` — «Η γραφή που έκρυβε ελληνικά». It exists as a Drafted legacy lesson. Protect existing completion/quiz data when revising.
