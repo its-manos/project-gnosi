@@ -1,3 +1,4 @@
+import KnowledgeProgress from "../components/KnowledgeProgress";
 import UsageSharing from "../components/UsageSharing";
 import SyncStatus from "../components/SyncStatus";
 import WeeklyReviewCard from "../components/WeeklyReviewCard";
@@ -132,6 +133,8 @@ export default function ProgressScreen({
       <SyncStatus quiet />
       <Text accessibilityRole="header" style={styles.title}>Η πρόοδός σου</Text>
 
+      <KnowledgeProgress />
+
       <View testID="progress-overview" style={styles.overview}>
         <View style={styles.completionHero}>
           <Text style={styles.metricLabel}>ΟΛΟΚΛΗΡΩΜΕΝΑ ΜΑΘΗΜΑΤΑ</Text>
@@ -142,7 +145,7 @@ export default function ProgressScreen({
         </View>
         <View style={styles.metricsGrid}>
           <MetricCard label="ΤΡΕΧΟΝ ΗΜΕΡΗΣΙΟ ΣΕΡΙ" value={historyLoaded ? String(stats.currentStreak) : "—"} />
-          <MetricCard label="ΚΑΤΑΚΤΗΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ" value={learning.ready ? String(mastery.count) : "—"} />
+          <MetricCard label="ΣΩΣΤΑ ΑΠΑΝΤΗΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ" value={learning.ready ? String(mastery.count) : "—"} />
         </View>
         {learning.ready && mastery.unknown > 0 ? <Text style={styles.muted}>Παλιότερα σκορ χωρίς ανάλυση: χρειάζεται επανάληψη.</Text> : null}
       </View>

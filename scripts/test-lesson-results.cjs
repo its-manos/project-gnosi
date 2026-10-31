@@ -13,7 +13,7 @@ let slots=[],cursor=0;
 const jsx=(type,props)=>({type,props});
 const react={useMemo:fn=>fn(),useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
 const native=Object.fromEntries(['View','Text','Pressable','ScrollView','TextInput'].map(n=>[n,n]));native.StyleSheet={create:x=>x};native.Keyboard={dismiss(){}};
-const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,...Object.fromEntries(['ActionButton','AppHeader','LessonResultChart','ReportContentButton','LessonCard','LessonCover'].map(n=>['../components/'+n,{__esModule:true,default:n}]))};
+const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,...Object.fromEntries(['KnowledgeProgress','ActionButton','AppHeader','LessonResultChart','ReportContentButton','LessonCard','LessonCover'].map(n=>['../components/'+n,{__esModule:true,default:n}]))};
 const {lessons,categories,subcategories}=load('src/data/lessons.ts');
 const {getSubcategoryPath}=load('src/utils/lessonPath.ts');
 const Screen=load('src/screens/ResultsScreen.tsx',stubs).default;
@@ -62,3 +62,5 @@ const cards=nodes(tree).filter(n=>n.type==='LessonCard');assert.deepEqual(cards.
 const Card=load('src/components/LessonCard.tsx',{...stubs,'./LessonCover':{__esModule:true,default:'Cover'}}).default;
 const card=Card({lesson:locked,onPress(){},lockedReason:'Ολοκλήρωσε πρώτα το προηγούμενο μάθημα'});assert.equal(card.props.disabled,true);assert.equal(card.props.accessibilityState.disabled,true);
 console.log('Lesson result UI passed: brief copy, exact score chart, success/low-score priorities, next/home callbacks, persistent mistake practice, collapsed replay/weekly/report options, best-vs-latest, changed/legacy results, final lesson and locked saved/subcategory cards. Native views mocked.');
+
+assert.equal(nodes(render(Screen,props)).filter(n=>n.type==='KnowledgeProgress').length,1,'exactly one XP card on the result screen');

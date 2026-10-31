@@ -1,3 +1,4 @@
+import KnowledgeProgress from "../components/KnowledgeProgress";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Lesson } from "../data/lessons";
@@ -38,6 +39,7 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain, onOp
       <Text style={styles.lessonTitle}>{lesson.title}</Text>
       {displayedScore !== null ? <LessonResultChart correct={displayedScore} total={total} label={returning ? "Το καλύτερο σκορ σου" : "Αυτή η προσπάθεια"} />
         : <Text style={styles.message}>Κάνε μια νέα προσπάθεια για να δεις το σκορ σου.</Text>}
+      <KnowledgeProgress compact />
       {practiceComplete ? <Text style={styles.success}>Ολοκλήρωσες την εξάσκηση στα λάθη.</Text> : null}
       {displayedScore === null ? <ActionButton label="Πλήρης επανάληψη μαθήματος" onPress={onReadAgain} /> : null}
       {!strongResult && canPractice && !practiceComplete ? <ActionButton label={`Εξάσκηση στα λάθη (${review.indices.length})`} onPress={onReviewMistakes} /> : null}
@@ -63,7 +65,7 @@ export default function ResultsScreen({ lesson, score, onHome, onReadAgain, onOp
       {details ? <View style={styles.details}>
         {lessonScores?.best !== null && lessonScores?.best !== undefined ? <>
           <Text style={styles.detailMetric}>Καλύτερο σκορ: {lessonScores.best} / {lessonScores.total}</Text>
-          <Text style={styles.small}>{lessonScores.hasDetails ? `Κατακτημένες ερωτήσεις: ${lessonScores.mastered} / ${lessonScores.total}.` : "Μια νέα προσπάθεια θα καταγράψει ποιες ερωτήσεις γνωρίζεις."}</Text>
+          <Text style={styles.small}>{lessonScores.hasDetails ? `Σωστά απαντημένες ερωτήσεις: ${lessonScores.mastered} / ${lessonScores.total}.` : "Μια νέα προσπάθεια θα καταγράψει ποιες ερωτήσεις γνωρίζεις."}</Text>
         </> : null}
         {practiceComplete ? <Text style={styles.small}>Η εξάσκηση δεν αλλάζει το σκορ της προσπάθειας.</Text> : null}
         {review?.status === "missing-details" || review?.status === "no-result" ? <Text style={styles.small}>Δεν έχουν αποθηκευτεί τα παλιότερα λάθη. Κάνε μια πλήρη επανάληψη για νέα καταγραφή.</Text> : null}

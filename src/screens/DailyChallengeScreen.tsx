@@ -1,3 +1,5 @@
+import { dailyXP } from "../utils/knowledgeScoring";
+import KnowledgeProgress from "../components/KnowledgeProgress";
 import { useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
@@ -93,7 +95,9 @@ export default function DailyChallengeScreen({
             <Text style={styles.muted}>Οι πόντοι σου</Text>
             <Text style={styles.score}>{correctCount * 100} / 700</Text>
             <Text style={styles.scoreMeta}>{correctCount} από {DAILY_CHALLENGE_SIZE} σωστές απαντήσεις</Text>
+            <Text style={styles.scoreMeta}>Αυτή η πρόκληση: {dailyXP(correctCount)} XP</Text>
           </View>
+          <KnowledgeProgress compact />
           <Text style={styles.tomorrowNote}>Η επόμενη πρόκληση θα είναι διαθέσιμη αύριο.</Text>
           {!reviewAvailable ? <Text style={styles.tomorrowNote}>Η βαθμολογία έχει διατηρηθεί. Η επανάληψη δεν είναι διαθέσιμη για ερωτήσεις παλαιότερης έκδοσης.</Text> : missedQuestions.length > 0 ? (
             <View style={styles.reviewInvitation}>
