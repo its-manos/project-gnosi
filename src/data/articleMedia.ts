@@ -43,18 +43,19 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
   "ancient-athens": [
     {
       afterParagraphId: "theta-workshop",
-      url: commonsFileUrl("Athens Acropolis Museum excavation 06.jpg"),
+      url: commonsFileUrl("Excavations under the Acropolis Museum 6.jpg"),
       resizeMode: "contain",
-      caption: "Η ανασκαφή κάτω από το Μουσείο της Ακρόπολης: διαδοχικές φάσεις κατοίκησης που δεν ανήκουν όλες στην κλασική εποχή.",
-      credit: "Ad Meskens / Wikimedia Commons · CC BY-SA 4.0",
-      creditUrl: commonsPageUrl("Athens Acropolis Museum excavation 06.jpg"),
+      caption: "Ανασκαμμένα κατάλοιπα κάτω από το Μουσείο της Ακρόπολης. Η φωτογραφία δείχνει το ανασκαφικό σύνολο, όχι αποκλειστικά την Οικία Θ.",
+      credit: "Marcus Cyron / Wikimedia Commons · CC BY-SA 3.0",
+      creditUrl: commonsPageUrl("Excavations under the Acropolis Museum 6.jpg"),
     },
     {
       afterParagraphId: "agora-evidence",
-      url: commonsFileUrl("Ancient Agora of Athens (2016).jpg"),
-      caption: "Η Αρχαία Αγορά στην Αθήνα. Ο σημερινός αρχαιολογικός χώρος είναι αποτέλεσμα ανασκαφών και μεταγενέστερων αλλαγών, όχι αυτούσια εικόνα της πόλης του 5ου αιώνα π.Χ.",
-      credit: "Wikimedia Commons · άδεια και διαστάσεις προς επανέλεγχο πριν από παραγωγική διανομή",
-      creditUrl: commonsPageUrl("Ancient Agora of Athens (2016).jpg"),
+      url: commonsFileUrl("Ancient agora of Athens.jpg"),
+      resizeMode: "cover",
+      caption: "Η Αρχαία Αγορά σήμερα: ο χώρος όπου συνυπήρχαν συναλλαγές, δημόσιες λειτουργίες και καθημερινή δραστηριότητα.",
+      credit: "SiaKou96 / Wikimedia Commons · CC BY-SA 4.0",
+      creditUrl: commonsPageUrl("Ancient agora of Athens.jpg"),
     },
   ],
   "pompeii-everyday-life": [
