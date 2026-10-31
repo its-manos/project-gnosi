@@ -13,15 +13,15 @@ All lessons belong to `science / brain-perception`. Each includes original Greek
 
 ## Media provenance and constraints
 
-The first pass uses Wikimedia Commons **raster thumbnail URLs** through `Special:FilePath` (SVG sources with `?width=1200`), not native SVG URLs.
+The first three lesson cover illustrations were replaced following mobile visual review on 2026-10-31. For those lessons `imageResizeMode: "contain"` displays the complete diagram in the app's 210-point-high cover frame rather than cropping it. The other two covers keep their existing cover scaling.
 
-- `Anatomy of eye of human being.jpg`, Aliyu Mohammed Aliyu, CC0 1.0, https://commons.wikimedia.org/wiki/File:Anatomy_of_eye_of_human_being.jpg
-- `Blind spot demonstration.svg`, NicoRay, simple-geometry public domain, https://commons.wikimedia.org/wiki/File:Blind_spot_demonstration.svg
-- `Simultaneous Contrast.svg`, Qef (based on Xanzzibar and K. P. Miyapuram), public domain, https://commons.wikimedia.org/wiki/File:Simultaneous_Contrast.svg
-- `Binocular vision Stereopsis.svg`, T.vanschaik, CC0 1.0, https://commons.wikimedia.org/wiki/File:Binocular_vision_Stereopsis.svg
-- `Gestalt proximity.svg`, Kasufcgslfguhvsne, public domain, https://commons.wikimedia.org/wiki/File:Gestalt_proximity.svg
+1. `perception-eyes-not-cameras`: `Eye-diagram.png`, Graft / Wikimedia Commons, public domain (simple geometry), https://commons.wikimedia.org/wiki/File:Eye-diagram.png (391 × 237).
+2. `perception-blind-spot`: `Blind spot test.svg`, Frisko / Wikimedia Commons, public domain, https://commons.wikimedia.org/wiki/File:Blind_spot_test.svg (929 × 148). **Very wide; image remains uncropped and will be vertically letterboxed.** Keep the text of the dot-and-cross activity consistent with the diagram; test legibility on a phone.
+3. `perception-color-context`: `Simultaneous contrast2.svg`, László Németh / Wikimedia Commons, CC0 1.0, https://commons.wikimedia.org/wiki/File:Simultaneous_contrast2.svg (400 × 200).
+4. `perception-depth-two-eyes`: `Binocular vision Stereopsis.svg`, T.vanschaik, CC0 1.0, https://commons.wikimedia.org/wiki/File:Binocular_vision_Stereopsis.svg.
+5. `perception-gestalt-whole`: `Gestalt proximity.svg`, Kasufcgslfguhvsne, public domain, https://commons.wikimedia.org/wiki/File:Gestalt_proximity.svg.
 
-**Important device QA:** the existing `ResilientImage` loader must render Commons SVG raster thumbnail redirects correctly on both platforms; verify the blind-spot diagram is usable at the device's physical display size and with its actual figure orientation. For production reliability, package licensed raster versions into `assets/lesson-images`, register matching URLs in `bundledLessonImages.ts`, and verify all license/attribution statements against Commons. Current image URLs require connectivity.
+Covers currently use Commons Special:FilePath URLs (SVG thumbnails requested with `?width=1200`), not native SVG assets. For production reliability, package licensed raster versions into `assets/lesson-images`, register URL mappings in `bundledLessonImages.ts`, and verify all license/attribution statements against Commons. Current image URLs require connectivity.
 
 ## Research & editorial starting points
 
