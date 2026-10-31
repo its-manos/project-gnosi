@@ -35,6 +35,7 @@ function loadTypeScriptModule(relativePath, mockedImports = {}) {
 
 const questionBank = loadTypeScriptModule('src/data/questions.ts');
 const historyModule = loadTypeScriptModule('src/utils/dailyChallengeHistory.ts', {
+  '../quiz/engine': loadTypeScriptModule('src/quiz/engine.ts'),
   '../data/questions': questionBank,
 });
 const { questions, DAILY_CHALLENGE_SIZE } = questionBank;

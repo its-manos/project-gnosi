@@ -1,3 +1,4 @@
+import type { QuestionMetadata } from "../quiz/types";
 import { worldHistoryLessons } from "./worldHistoryLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
@@ -18,7 +19,7 @@ export type Subcategory = {
   description: string;
 };
 
-export type LessonQuestion = {
+export type LessonQuestion = QuestionMetadata & {
   question: string;
   answers: string[];
   correctIndex: number;

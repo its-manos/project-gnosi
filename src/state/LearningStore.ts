@@ -1,3 +1,4 @@
+import { calculateChoiceResults, evaluateChoice } from "../quiz/engine";
 import { lessons } from "../data/lessons";
 import { mergeCompletionEvents, parseCompletionEvents, quizFingerprint, type CompletionEvents } from "../utils/learningActivity";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
@@ -125,15 +126,10 @@ export class LearningStore {
     // The completion button may fire twice before navigation. One run is one event.
     if (this.doc.activity[eventId]) return;
     const questionCount = getInlineQuestionCount(lesson);
-    let correctCount = 0;
-    const missedQuestionIndices: number[] = [];
     if (questionCount < 1) throw new Error("invalid_completion");
-    for (let index = 0; index < questionCount; index++) {
-      const answer = run.answers[index], question = lesson.questions[index];
-      if (!Number.isInteger(answer) || answer < 0 || answer >= question.answers.length) throw new Error("incomplete_quiz");
-      if (answer === question.correctIndex) correctCount++;
-      else missedQuestionIndices.push(index);
-    }
+    const result = calculateChoiceResults(lesson.questions.slice(0, questionCount), run.answers);
+    if (!result.complete) throw new Error("incomplete_quiz");
+    const correctCount = result.correctCount, missedQuestionIndices = result.incorrectIndices;
     const activity = parseCompletionEvents({ ...this.doc.activity, [eventId]: {
       lessonId: id, at: Date.now(), wasCompleted: this.doc.progress[id]?.value.completed ?? false,
       correctCount, questionCount, quizKey: quizFingerprint(lesson.questions), missedQuestionIndices,
@@ -146,7 +142,7 @@ export class LearningStore {
   answerWeekly(id: string, answerIndex: number): boolean {
     if (this.doc.weeklyReviews?.[id]) return false;
     const item = weeklyPlan(this.doc.activity, this.doc.weeklyReviews, getAthensDateKey()).find(q => q.id === id);
-    if (!item || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= item.lesson.questions[item.questionIndex].answers.length) return false;
+    if (!item || !evaluateChoice(item.lesson.questions[item.questionIndex], answerIndex).valid) return false;
     const stamp = this.stamp();
     this.change({ ...this.doc, clock: stamp[0], weeklyReviews: { ...this.doc.weeklyReviews, [id]: {
       sourceId: item.sourceId, questionIndex: item.questionIndex, week: item.week, answerIndex, at: Date.now(),

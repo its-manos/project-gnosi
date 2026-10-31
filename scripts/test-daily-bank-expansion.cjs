@@ -20,7 +20,7 @@ function load(relative, imports = {}) {
 }
 const data = load('src/data/questions.ts');
 const topics = load('src/data/dailyChallengeTopics.ts');
-const imports = { '../data/questions': data, '../data/dailyChallengeTopics': topics };
+const imports = { '../quiz/engine': load('src/quiz/engine.ts'), '../data/questions': data, '../data/dailyChallengeTopics': topics };
 const daily = load('src/utils/dailyChallenge.ts', imports);
 const history = load('src/utils/dailyChallengeHistory.ts', imports);
 const original = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/daily-bank-before-expansion.json'), 'utf8'));

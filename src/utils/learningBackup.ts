@@ -1,3 +1,4 @@
+import { evaluateChoice } from "../quiz/engine";
 import { lessons } from "../data/lessons";
 import { getInlineQuestionCount } from "./lessonProgress";
 
@@ -38,9 +39,9 @@ export function parseLearningBackup(value: unknown): LearningBackup {
     for (let i = 0; i < getInlineQuestionCount(lesson); i += 1) {
       const answer = raw.checkpointAnswers[i];
       if (answer === undefined) break;
-      if (typeof answer !== "number" || !Number.isInteger(answer) || answer < 0 || answer >= lesson.questions[i].answers.length) throw new Error("invalid_backup");
+      if (typeof answer !== "number" || !evaluateChoice(lesson.questions[i], answer).valid) throw new Error("invalid_backup");
       checkpointAnswers[i] = answer;
-      if (answer === lesson.questions[i].correctIndex) score += 1;
+      if (evaluateChoice(lesson.questions[i], answer).correct) score += 1;
     }
     if (Object.keys(checkpointAnswers).length) attempts[id] = { checkpointAnswers, score, updatedAt: raw.updatedAt, replayOfCompletedLesson };
   }

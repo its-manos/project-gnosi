@@ -1,3 +1,4 @@
+import { calculateChoiceResults, LEGACY_QUIZ_POINTS } from "../quiz/engine";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
 import type { DailyChallengeRecord } from "./dailyChallenge";
 
@@ -44,7 +45,7 @@ export function parseDailyChallengeHistory(value: string | null): DailyChallenge
         (item.correctCount as number) < 0 ||
         (item.correctCount as number) > DAILY_CHALLENGE_SIZE ||
         !Number.isInteger(item.score) ||
-        item.score !== (item.correctCount as number) * 100
+        item.score !== (item.correctCount as number) * LEGACY_QUIZ_POINTS.dailyCorrect
       ) {
         continue;
       }
@@ -88,22 +89,18 @@ export function createCompletedHistoryEntry(
     return null;
   }
 
-  let correctCount = 0;
-  for (let index = 0; index < DAILY_CHALLENGE_SIZE; index += 1) {
-    const question = questions.find((item) => item.id === record.questionIds[index]);
-    const answer = record.answers[String(index)];
-    if (!question || !Number.isInteger(answer) || answer < 0 || answer >= question.answers.length) {
-      return null;
-    }
-    if (answer === question.correctIndex) correctCount += 1;
-  }
+  const selected = record.questionIds.map(id => questions.find(question => question.id === id));
+  if (selected.some(question => !question)) return null;
+  const result = calculateChoiceResults(selected as NonNullable<typeof selected[number]>[], record.answers);
+  if (!result.complete) return null;
+  const correctCount = result.correctCount;
 
   return {
     dateKey: record.dateKey,
     questionIds: [...record.questionIds],
     answers: { ...record.answers },
     correctCount,
-    score: correctCount * 100,
+    score: correctCount * LEGACY_QUIZ_POINTS.dailyCorrect,
   };
 }
 

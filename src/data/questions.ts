@@ -1,9 +1,10 @@
+import type { QuestionMetadata } from "../quiz/types";
 /**
  * Reviewed question bank for the daily general-knowledge challenge.
  * Each question has four choices, one correct answer, a short explanation,
  * and a source URL for editorial verification.
  */
-export type GeneralKnowledgeQuestion = {
+export type GeneralKnowledgeQuestion = QuestionMetadata & {
   id: string;
   categoryId: string;
   subcategoryId: string;

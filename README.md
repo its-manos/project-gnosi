@@ -129,3 +129,15 @@ npx expo-doctor
 ```
 
 Run these after installing dependencies and fix any warnings relevant to the project before publishing.
+
+## Unified quiz engine — Phase 1
+
+Daily challenges, lesson checkpoints and standalone quizzes now share the pure TypeScript engine in `src/quiz/`. Adapters preserve the existing banks and sources while adding normalized question IDs, scored-content revisions and optional concept/media metadata. Current lesson and daily storage, account synchronization, frozen results and XP rules remain compatible.
+
+```bash
+node scripts/test-quiz-engine.cjs
+node scripts/test-quiz-integration.cjs
+npm run typecheck
+```
+
+See [the engine audit and architecture](docs/unified-quiz-engine.md) for session APIs, migration boundaries and device checks, and [validation results](docs/quiz-engine-validation.md) for the automated test report. New question formats, XP rebalancing, combos and spaced repetition are separate later phases.

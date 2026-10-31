@@ -14,7 +14,7 @@ function compile(file,imports={}) {
 }
 const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts'),'./architectureLessons':compile('src/data/architectureLessons.ts'),'./astronomyLessons':compile('src/data/astronomyLessons.ts'),'./worldHistoryLessons':compile('src/data/worldHistoryLessons.ts')});
 const progress=compile('src/utils/lessonProgress.ts');
-const util=compile('src/utils/learningBackup.ts',{'../data/lessons':data,'./lessonProgress':progress});
+const util=compile('src/utils/learningBackup.ts',{'../quiz/engine':compile('src/quiz/engine.ts'),'../data/lessons':data,'./lessonProgress':progress});
 const plain=x=>JSON.parse(JSON.stringify(x));
 const a=data.lessons[0],b=data.lessons[1],c=data.lessons[2];
 const empty=()=>({schemaVersion:1,completedIds:[],savedIds:[],attempts:{}});

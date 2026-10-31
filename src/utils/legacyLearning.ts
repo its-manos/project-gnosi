@@ -1,3 +1,4 @@
+import { calculateChoiceResults } from "../quiz/engine";
 import { lessons } from "../data/lessons";
 import { getInlineQuestionCount } from "./lessonProgress";
 import type { BackupAttempt } from "./learningBackup";
@@ -10,15 +11,7 @@ export function calculateScore(
   const lesson = lessons.find((item) => item.id === lessonId);
   if (!lesson) return 0;
 
-  return Object.entries(checkpointAnswers).reduce(
-    (score, [indexString, answerIndex]) => {
-      const question = lesson.questions[Number(indexString)];
-      return question && question.correctIndex === answerIndex
-        ? score + 1
-        : score;
-    },
-    0
-  );
+  return calculateChoiceResults(lesson.questions, checkpointAnswers).correctCount;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

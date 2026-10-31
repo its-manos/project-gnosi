@@ -1,3 +1,7 @@
+import { adaptLessonQuestion } from "../quiz/adapters";
+import { advanceQuizSession, calculateQuizResults, createQuizSession, evaluateChoice, submitQuizAnswer } from "../quiz/engine";
+import { legacyAnswerSlots, restoreLegacySession } from "../quiz/compatibility";
+import type { QuizSession } from "../quiz/types";
 import { useEffect, useRef, useState } from "react";
 import { lessons } from "../data/lessons";
 import type { LearningBackup } from "../utils/learningBackup";
@@ -26,6 +30,8 @@ export type AppScreen =
 
 export function useLearningApp() {
   const completionRun = useRef("");
+  const standaloneSession = useRef<QuizSession | null>(null);
+  const renderRun = completionRun.current;
   const [lessonOrigin, setLessonOrigin] = useState<AppScreen>("subcategory");
   function newCompletionRun() { completionRun.current = `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`; }
   const [screen, setScreen] = useState<AppScreen>("home");
@@ -74,6 +80,7 @@ export function useLearningApp() {
     }
     if (!["lesson", "quiz", "results", "review"].includes(screen)) setLessonOrigin(screen);
     newCompletionRun();
+    standaloneSession.current = null;
     setPracticeComplete(false);
     reviewSession.current = { lessonId: "", index: 0, answer: null };
 
@@ -120,9 +127,12 @@ export function useLearningApp() {
     return store.flushLocal();
   }
 
-  async function markActiveLessonComplete() {
-    store.complete(activeLessonId, { id: completionRun.current, answers: checkpointAnswers });
+  async function markActiveLessonComplete(answers = checkpointAnswers) {
+    if (renderRun !== completionRun.current) return;
+    store.complete(activeLessonId, { id: completionRun.current, answers });
+    setScore(calculateScore(activeLessonId, answers));
     await store.flushLocal();
+    if (renderRun !== completionRun.current) return;
     setResultMode("finished");
     setScreen("results");
   }
@@ -152,6 +162,7 @@ export function useLearningApp() {
 
   function startQuiz() {
     newCompletionRun();
+    standaloneSession.current = createQuizSession(`quiz:${activeLessonId}:${completionRun.current}`, "lesson", activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)));
     setQuestionIndex(0);
     setSelectedAnswer(null);
     setCheckpointAnswers({});
@@ -159,25 +170,31 @@ export function useLearningApp() {
     setScreen("quiz");
   }
 
-  function chooseAnswer(answerIndex: number, correctIndex: number) {
-    if (selectedAnswer !== null) return;
+  function chooseAnswer(answerIndex: number, _correctIndex: number) {
+    if (renderRun !== completionRun.current) return;
+    const session = standaloneSession.current, question = session?.questions[questionIndex];
+    if (!session || !question) return;
+    const transition = submitQuizAnswer(session, { id: question.id, version: question.version }, answerIndex);
+    if (!transition.changed) return;
+    standaloneSession.current = transition.session;
     setSelectedAnswer(answerIndex);
-    setCheckpointAnswers(current => ({ ...current, [questionIndex]: answerIndex }));
-    if (answerIndex === correctIndex) {
-      setScore((currentScore) => currentScore + 1);
-    }
+    setCheckpointAnswers(legacyAnswerSlots(transition.session));
+    setScore(calculateQuizResults(transition.session).correctCount);
   }
 
-  function nextQuestion(questionCount: number) {
-    if (selectedAnswer === null) return;
-
-    if (questionIndex < questionCount - 1) {
-      setQuestionIndex((currentIndex) => currentIndex + 1);
+  function nextQuestion(_questionCount: number) {
+    if (renderRun !== completionRun.current) return;
+    const session = standaloneSession.current, question = session?.questions[questionIndex];
+    if (!session || !question) return;
+    const transition = advanceQuizSession(session, { id: question.id, version: question.version });
+    if (!transition.changed) return;
+    standaloneSession.current = transition.session;
+    if (transition.session.completed) {
+      void markActiveLessonComplete(legacyAnswerSlots(transition.session));
+    } else {
+      setQuestionIndex(transition.session.currentIndex);
       setSelectedAnswer(null);
-      return;
     }
-
-    void markActiveLessonComplete();
   }
 
   function answerCheckpoint(
@@ -185,50 +202,47 @@ export function useLearningApp() {
     answerIndex: number,
     correctIndex: number
   ) {
-    if (checkpointAnswers[checkpointIndex] !== undefined) return;
-
-    const lesson = lessons.find((item) => item.id === activeLessonId);
+    if (renderRun !== completionRun.current) return;
+    const lesson = lessons.find(item => item.id === activeLessonId);
     if (!lesson) return;
-
-    const nextAnswers = {
-      ...checkpointAnswers,
-      [checkpointIndex]: answerIndex,
-    };
-    const nextScore = calculateScore(activeLessonId, nextAnswers);
-
-    setCheckpointAnswers(nextAnswers);
-    setScore(nextScore);
-
-    // Persist the exact answer snapshot immediately, rather than waiting for a
-    // React effect after the next render. This keeps resume data reliable when
-    // the reader leaves the lesson or backgrounds the app right after answering.
     const current = store.getSnapshot().backup;
+    const previous = current.attempts[activeLessonId]?.checkpointAnswers ?? checkpointAnswers;
+    const normalized = lesson.questions.slice(0, getInlineQuestionCount(lesson)).map((_, i) => adaptLessonQuestion(lesson, i));
+    const question = normalized[checkpointIndex];
+    if (!question) return;
+    const session = restoreLegacySession(`inline:${lesson.id}`, "lesson", normalized, previous);
+    const transition = submitQuizAnswer(session, { id: question.id, version: question.version }, answerIndex);
+    if (!transition.changed) return;
+    const nextAnswers = legacyAnswerSlots(transition.session);
+    const nextScore = calculateQuizResults(transition.session).correctCount;
+    // Store state changes synchronously before React renders, preventing stale double taps.
     store.answer(activeLessonId, {
       checkpointAnswers: nextAnswers,
       score: nextScore,
       updatedAt: Date.now(),
       replayOfCompletedLesson: current.attempts[activeLessonId]?.replayOfCompletedLesson ?? current.completedIds.includes(activeLessonId),
     });
-
-    // Keep the passed correctIndex in the function contract used by the card.
-    // Calculate the stored score from lesson data to avoid drift if state updates batch.
-    if (answerIndex === correctIndex && lesson.questions[checkpointIndex]?.correctIndex !== correctIndex) {
+    setCheckpointAnswers(nextAnswers);
+    setScore(nextScore);
+    if (lesson.questions[checkpointIndex]?.correctIndex !== correctIndex) {
       console.warn("Checkpoint answer key differs from lesson data:", lesson.id, checkpointIndex);
     }
   }
 
   function finishInlineLesson() {
+    if (renderRun !== completionRun.current) return;
+    const answers = store.getSnapshot().backup.attempts[activeLessonId]?.checkpointAnswers ?? checkpointAnswers;
     const requiredAnswers = countInlineQuestions(activeLessonId);
-    const answeredCount = Object.keys(checkpointAnswers).filter(
-      (key) => Number(key) < requiredAnswers
-    ).length;
-
+    const result = calculateScore(activeLessonId, answers);
+    const answeredCount = Object.keys(answers).filter(key => Number(key) < requiredAnswers).length;
     if (requiredAnswers === 0 || answeredCount < requiredAnswers) return;
-    void markActiveLessonComplete();
+    setScore(result);
+    void markActiveLessonComplete(answers);
   }
 
   function restartLesson() {
     newCompletionRun();
+    standaloneSession.current = null;
     setPracticeComplete(false);
     void removeAttempt(activeLessonId);
     resetAttempt();
@@ -248,14 +262,14 @@ export function useLearningApp() {
   function answerReview(answer: number) {
     const question = activeLesson.questions[reviewIndices[reviewIndex]];
     const session = reviewSession.current;
-    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== null || !Number.isInteger(answer) || answer < 0 || answer >= question.answers.length) return;
+    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== null || !evaluateChoice(question, answer).valid) return;
     session.answer = answer;
     setReviewAnswer(answer);
   }
   function nextReviewQuestion() {
     const question = activeLesson.questions[reviewIndices[reviewIndex]];
     const session = reviewSession.current;
-    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== question.correctIndex) return;
+    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || !evaluateChoice(question, session.answer).correct) return;
     session.index++;
     session.answer = null;
     setReviewIndex(session.index);
@@ -263,7 +277,7 @@ export function useLearningApp() {
   }
   function retryReviewQuestion() {
     const session = reviewSession.current, question = activeLesson.questions[reviewIndices[reviewIndex]];
-    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer === null || session.answer === question.correctIndex) return;
+    if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer === null || evaluateChoice(question, session.answer).correct) return;
     session.answer = null;
     setReviewAnswer(null);
   }

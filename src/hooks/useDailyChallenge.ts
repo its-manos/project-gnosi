@@ -1,3 +1,5 @@
+import { advanceQuizSession, questionToken, submitQuizAnswer, calculateChoiceResults } from "../quiz/engine";
+import { dailyRecordSession, updateDailyRecord } from "../quiz/compatibility";
 import { questions, DAILY_CHALLENGE_SIZE, type GeneralKnowledgeQuestion } from "../data/questions";
 import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { useAthensDate } from "./useAthensDate";
@@ -12,7 +14,7 @@ export function useDailyChallenge(preferences: DailyChallengePreferences, prefer
   const challengeQuestions = record.questionIds.map(id => questions.find(q => q.id === id)).filter((q): q is GeneralKnowledgeQuestion => Boolean(q));
   const currentQuestion = record.started && !record.completed ? questions.find(q => q.id === record.questionIds[record.currentIndex]) ?? null : null;
   const selectedAnswer = record.answers[String(record.currentIndex)] ?? null;
-  const correctCount = day?.history?.correctCount ?? record.questionIds.reduce((count, id, index) => count + Number(record.answers[String(index)] === questions.find(q => q.id === id)?.correctIndex), 0);
+  const correctCount = day?.history?.correctCount ?? calculateChoiceResults(challengeQuestions, record.answers).correctCount;
   const currentDate = () => getAthensDateKey() === todayKey;
   async function startChallenge() {
     if (!snapshot.ready || !preferencesLoaded || !currentDate() || record.started || record.completed) return;
@@ -24,12 +26,20 @@ export function useDailyChallenge(preferences: DailyChallengePreferences, prefer
   async function answerQuestion(answerIndex: number) {
     if (!currentDate() || !record.started || record.completed || record.answers[String(record.currentIndex)] !== undefined) return;
     if (!currentQuestion || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= currentQuestion.answers.length) return;
-    dailyStore.commitRecord({ ...record, answers: { ...record.answers, [String(record.currentIndex)]: answerIndex } }, day);
+    const session = dailyRecordSession(record, questions);
+    if (!session) return;
+    const transition = submitQuizAnswer(session, questionToken(session), answerIndex);
+    if (!transition.changed) return;
+    dailyStore.commitRecord(updateDailyRecord(record, transition.session), day);
     await dailyStore.flushLocal();
   }
   async function nextQuestion() {
     if (!currentDate() || !record.started || record.completed || selectedAnswer === null) return;
-    dailyStore.commitRecord(record.currentIndex < DAILY_CHALLENGE_SIZE - 1 ? { ...record, currentIndex: record.currentIndex + 1 } : { ...record, completed: true }, day);
+    const session = dailyRecordSession(record, questions);
+    if (!session) return;
+    const transition = advanceQuizSession(session, questionToken(session));
+    if (!transition.changed) return;
+    dailyStore.commitRecord(updateDailyRecord(record, transition.session), day);
     await dailyStore.flushLocal();
   }
   async function resetChallengeForDevelopment() {
