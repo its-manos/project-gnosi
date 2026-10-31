@@ -31,7 +31,10 @@ export default function SyncStatus({ detailed = false, quiet = false }: { detail
     } catch { setMessage("Δεν φορτώθηκε η πρόοδος επισκέπτη. Δοκίμασε ξανά."); }
     finally { setBusy(false); }
   }
-  if (quiet && !detailed && ["local", "saved"].includes(combined.status)) return null;
+  // Home uses quiet mode: routine background sync must not insert a row and
+  // move the map on every sync cycle. Keep actionable failures and retry visible;
+  // detailed/non-quiet views still expose every status.
+  if (quiet && !detailed && !needsRetry) return null;
   return <View style={detailed ? styles.panel : styles.bar}>
     <View style={styles.row}>
       <Text style={styles.label} accessibilityLiveRegion="polite">{labels[combined.status]}</Text>
