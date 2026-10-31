@@ -40,6 +40,16 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-geography-seas": [
+    {
+      afterParagraphId: "archipelago-mental-map",
+      url: commonsFileUrl("Map of the Aegean Sea.svg"),
+      resizeMode: "contain",
+      caption: "Σύγχρονος τοπογραφικός χάρτης του Αιγαίου: ορεινή στεριά, ακτές και νησιά. Δεν αποτυπώνει τεκμηριωμένα αρχαία δρομολόγια. Άγγιξε για μεγέθυνση.",
+      credit: "Goran tek-en / Wikimedia Commons · CC BY-SA 4.0 · χάρτης 2019",
+      creditUrl: commonsPageUrl("Map of the Aegean Sea.svg"),
+    },
+  ],
   "greek-chronology": [
     {
       afterParagraphId: "mycenaean-overlap",

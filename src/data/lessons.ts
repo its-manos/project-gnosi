@@ -3,6 +3,7 @@ import { worldHistoryLessons } from "./worldHistoryLessons";
 import { greekWorldLessons } from "./greekWorldLessons";
 import { greekEvidenceLessons } from "./greekEvidenceLessons";
 import { greekChronologyLessons } from "./greekChronologyLessons";
+import { greekGeographyLessons } from "./greekGeographyLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -452,6 +453,7 @@ export const lessons: Lesson[] = [
   ...greekWorldLessons,
   ...greekEvidenceLessons,
   ...greekChronologyLessons,
+  ...greekGeographyLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,

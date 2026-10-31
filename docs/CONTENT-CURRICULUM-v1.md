@@ -255,8 +255,8 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 1. `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα» (existing live ID)
 2. `greek-world-not-a-country` — «Ένας ελληνικός κόσμος, όχι ένα κράτος» (research-first Integrated; QA pending)
 3. `greek-history-through-evidence` — «Το παρελθόν δεν μιλά με μία φωνή» (Integrated; QA pending)
-4. `greek-chronology` — «Από τα ανάκτορα στις πόλεις: ένας χάρτης του χρόνου»
-5. `greek-geography-seas` — «Η θάλασσα που ένωνε και χώριζε τις κοινότητες»
+4. `greek-chronology` — «Από τα ανάκτορα στις πόλεις: οι εποχές της αρχαίας Ελλάδας»
+5. `greek-geography-seas` — «Βουνά, όρμοι και άνεμοι: οι δρόμοι του αρχαίου Αιγαίου»
 
 ### Chapter II. Πριν από την κλασική Ελλάδα
 
@@ -331,3 +331,12 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - **Curriculum remains 30 planned / 5 chapters.** Now **7 implemented**, 4 research-first Integrated (1–4), 3 older unapproved Drafted, 23 not started. 0 Validated, 0 Approved.
 - Local npm/Node tests and Android/iOS device QA **not executed in this session**; prior #3 reader-pilot fix awaits rerun. Check before any status promotion.
 - **Next only, not started:** #5 `greek-geography-seas` — «Η θάλασσα που ένωνε και χώριζε τις κοινότητες».
+
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 5
+- **Integrated**, not Validated/Approved: `greek-geography-seas` — «Βουνά, όρμοι και άνεμοι: οι δρόμοι του αρχαίου Αιγαίου». [Research, source and image rights, compatibility and QA](greek-geography-seas-research.md).
+- Land and sea form combined networks; island approaches depend on currents, winds, landing sites, terrain, technology and changing political circumstances. 18 stable paragraphs / four anchored reasoning questions; cover a modern Amorgos coastal photograph and inline Aegean topographic map.
+- Overlap boundary: geographical orientation only, not Bronze Age administrations (#6–11), polis formation (#12), Mediterranean settlement systems (#13), or repeated chronology (#4).
+- **30 planned / 5 chapters; 8 implemented: 5 Integrated, 3 older unapproved Drafted, 22 Not started; 0 Validated, 0 Approved.** Existing lesson IDs and progress policy preserved.
+- Connector/source static checks only; npm, Node and native device tests **not executed**, current TypeScript and prior reader-pilot rerun unconfirmed. No changes to XP/audio/Supabase logic.
+- **Next only, not started:** #6 `aegean-bronze-age`, «Το Αιγαίο πριν από τις πόλεις-κράτη» (Chapter II).

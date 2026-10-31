@@ -1,0 +1,20 @@
+/* Standalone editorial structure regression for Ancient Greece lesson 5. */
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,f);
+const root=path.resolve(__dirname,'..');
+const {lessons}=require(root+'/src/data/lessons.ts');
+const {lessonPaths,getSubcategoryPath,getLessonAccess}=require(root+'/src/utils/lessonPath.ts');
+const {inlineArticleMedia}=require(root+'/src/data/articleMedia.ts');
+const l=lessons.find(item=>item.id==='greek-geography-seas');
+assert.ok(l); assert.equal(l.requireCurrentAttemptQuiz,true); assert.equal(l.questions.length,4);
+const ids=l.sections.flatMap(s=>s.paragraphs.map(p=>p.id));assert.equal(ids.length,18);assert.equal(new Set(ids).size,ids.length);
+assert.deepEqual(l.checkpoints.map(c=>c.afterParagraphId),['local-geographies','season-not-lock','evidence-versus-possibility','no-geographic-destiny']);
+assert.ok(l.checkpoints.every(c=>ids.includes(c.afterParagraphId)&&l.questions.some(q=>q.id===c.questionId)));
+assert.ok(l.questions.every(q=>q.version==='1'&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>30));
+assert.deepEqual(lessonPaths['ancient-greece'].slice(0,5),['ancient-athens','greek-world-not-a-country','greek-history-through-evidence','greek-chronology','greek-geography-seas']);
+assert.equal(getSubcategoryPath(lessons,'ancient-greece')[4].id,l.id);
+assert.equal(getLessonAccess(l,lessons,[]).unlocked,false);
+assert.equal(getLessonAccess(l,lessons,['greek-chronology']).unlocked,true);
+assert.equal(getLessonAccess(l,lessons,[],[l.id]).unlocked,true);
+const media=inlineArticleMedia[l.id];assert.equal(media.length,1);assert.equal(media[0].afterParagraphId,'archipelago-mental-map');assert.equal(media[0].resizeMode,'contain');
+console.log('Ancient Greece lesson 5 content anchors, compatibility and access assertions passed.');

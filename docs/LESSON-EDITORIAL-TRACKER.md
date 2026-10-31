@@ -123,3 +123,13 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Actual evidence:** GitHub connector edits, file-source inspection and image licensing checks. npm/Node and native Android/iOS tests not executable in this environment, so **no new automated pass** is claimed. Prior lesson 3 reader-pilot fix is present, but its successful rerun is unconfirmed. TypeScript status also unconfirmed.
 - **Progress:** Ancient Greece **30 planned, 7 implemented, 4 Integrated, 3 Drafted, 23 Not started, 0 Validated, 0 Approved**.
 - **Next only, NOT started:** #5 `greek-geography-seas` «Η θάλασσα που ένωνε και χώριζε τις κοινότητες» (Chapter I). Research physical geography and maritime connectivity, without repeating lesson 4 historical periods.
+
+
+### Lesson 5 session audit — 2026-11-01
+- **Integrated**, not Validated or Approved: `greek-geography-seas` — «Βουνά, όρμοι και άνεμοι: οι δρόμοι του αρχαίου Αιγαίου». [Research and rights audit](greek-geography-seas-research.md).
+- 18 anchored paragraphs in four sections; questions `aegean-land-sea-complement`, `aegean-wind-direction`, `aegean-route-evidence`, `aegean-geography-not-destiny` after paragraphs 4/9/13/17, version 1 and stable IDs.
+- Images: coastal Amorgos photograph (Zde, CC BY-SA 4.0, cover) and modern Aegean topographic map (Goran tek-en, CC BY-SA 4.0, inline, contain and zoom); remote delivery remains untested.
+- Research difference: physical constraints and changing connectivity, not another regional identity map or chronological retelling. Specialists reserved for Bronze Age/polis/settlements and separate archaeology.
+- **Observed verification:** branch code and historical/lawful-media sources inspected; inline ID and anchor static checks performed. **Not executed:** npm typecheck/content validation, Node regression suite, native iOS/Android QA, remote image runtime availability. Prior `test-reader-pilot.cjs` fixture correction is present; successful local rerun and TypeScript pass still unconfirmed. No promotion to Validated/Approved.
+- **Counts:** 30 planned / five chapters, **8 implemented**, **5 Integrated**, **3 older Drafted**, 22 Not started, **0 Validated / 0 Approved**.
+- **Next only, not started:** #6 `aegean-bronze-age`, «Το Αιγαίο πριν από τις πόλεις-κράτη» — Chapter II / Πριν από την κλασική Ελλάδα.
