@@ -40,6 +40,16 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "palace-collapse": [
+    {
+      afterParagraphId: "mycenae-after",
+      url: commonsFileUrl("Megaron at the acropolis of Mycenae, 201518.jpg"),
+      resizeMode: "contain",
+      caption: "Τα σημερινά κατάλοιπα του μεγάρου στις Μυκήνες. Πρόκειται για κτίσμα της ανακτορικής περιόδου, όχι για φωτογραφία του στρώματος καταστροφής ή της μεταγενέστερης κατοίκησης. Άγγιξε για μεγέθυνση.",
+      credit: "Zde / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2020",
+      creditUrl: commonsPageUrl("Megaron at the acropolis of Mycenae, 201518.jpg"),
+    },
+  ],
   "linear-b-decipherment": [
     {
       afterParagraphId: "pylos-test-1953",
