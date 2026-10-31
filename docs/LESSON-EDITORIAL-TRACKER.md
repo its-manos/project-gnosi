@@ -63,3 +63,22 @@ The other P0 pilot has **24 curriculum lessons**, with stable IDs assigned only 
 | 2026-10-31 | `perception-eyes-not-cameras` | [`ca112802`](https://github.com/its-manos/project-gnosi/commit/ca112802827c59965ba8aefa384925e9d87365f8) | First research-first integration; pending verification |
 
 Update this tracker **at the start and end** of each editorial session. Record an actual checked commit SHA, tests and device sign-off once performed.
+
+
+## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (updated 2026-11-01)
+
+- **v1 plan:** 30 lessons / 5 chapters, detailed ordered IDs, titles and overlap map in [curriculum](CONTENT-CURRICULUM-v1.md#12-finalized-v1-learning-path--ιστορία--αρχαία-ελλάδα-2026-11-01).
+- **Already in app:** 4 original lesson IDs, of which **1** has been newly research-first rewritten. All others are old drafts (not independently approved). The remaining 26 proposed IDs are **Not started**, not yet integrated into the app or published as empty navigation items.
+- **Chapter I:** #1 `ancient-athens` — **Integrated**; #2 `greek-world-not-a-country` — **Not started**; #3 `greek-history-through-evidence` — **Not started**; #4 `greek-chronology` — **Not started**; #5 `greek-geography-seas` — **Not started**.
+- **Chapter II:** #6 `aegean-bronze-age`, #7 `minoan-crete`, #8 `mycenaean-palaces`, #10 `palace-collapse`, #11 `geometric-greece` — **Not started**; #9 `linear-b-decipherment` — **Drafted** (existing app lesson).
+- **Chapter III:** #12 `rise-of-polis`, #13 `greek-settlements-networks`, #14 `sparta-society`, #16 `athens-law-courts`, #17 `greek-war-hoplites`, #18 `greek-sanctuaries-games` — **Not started**; #15 `athens-who-voted` — **Drafted** (existing app lesson).
+- **Chapter IV:** #19–24, IDs and titles in curriculum — **Not started**.
+- **Chapter V:** #25–29, IDs and titles in curriculum — **Not started**; #30 `antikythera-gears` — **Drafted** (existing app lesson).
+
+### Current session handoff
+- **Integrated:** `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα», formerly «Μια μέρα στην αρχαία Αθήνα». [Research/media details](ancient-athens-research.md). Narrative: excavated House Θ → Agora → marginalized groups and evidence limits. Opening: monument contrasted with excavated home. Reading estimate: 6 minutes.
+- **Unique contribution:** domestic archaeological material and chronological/site interpretation; detailed democracy, Mycenae, Hellenistic technology and archaeological methods deliberately reserved.
+- **Questions/images:** 3 stable questions after paragraphs 3/9/13; modern licensed excavation/Agora photos; source citations in lesson. Cover, inline loading, zoom, cropping and accessibility require device QA.
+- **Validation status:** **Integrated, not Validated/Approved.** GitHub edits and source review completed; **no local npm/TypeScript/device tests executed**. Test script updated but still must be run. Include XP replays, stale attempts, audio and saved progress tests.
+- **Next:** `greek-world-not-a-country` — «Οι Έλληνες χωρίς ένα ελληνικό κράτος» (chapter I lesson 2). Begin only next session; do not repeat House Θ or Agora everyday-life analysis.
+- **Historical progress of research-first reviews:** 1 Integrated; 0 Validated; 0 Approved, for Ancient Greece v1.
