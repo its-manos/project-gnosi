@@ -14,6 +14,9 @@ export class FeedbackAudio {
   private players = new Map<FeedbackKind, AudioPlayer>();
   private subscriptions: { remove: () => void }[] = [];
   private failedKinds = new Set<FeedbackKind>();
+  // Android reports isLoaded=false at STATE_ENDED. That means a completed cue
+  // needs rewinding, not that its bundled source has disappeared.
+  private preparedKinds = new Set<FeedbackKind>();
   private generation = 0;
   private alive = true;
   private starting: Promise<void> | null = null;
@@ -34,9 +37,11 @@ export class FeedbackAudio {
         const player = createAudioPlayer(sources[kind], { downloadFirst: false, keepAudioSessionActive: false });
         player.volume = kind === "incorrect" ? .45 : .65; player.loop = false;
         this.players.set(kind, player);
+        if (player.isLoaded) this.preparedKinds.add(kind);
         this.subscriptions.push(player.addListener("playbackStatusUpdate", status => {
           if (!this.alive) return;
           if (status.error) { this.failedKinds.add(kind); reportSoundStatus("error", "Ο ήχος δεν φορτώθηκε. Δοκίμασε ξανά."); return; }
+          if (status.isLoaded || status.didJustFinish) this.preparedKinds.add(kind);
           if (status.playing) reportSoundStatus("playing", "Αναπαραγωγή · έλεγξε την ένταση πολυμέσων και τη σύνδεση Bluetooth.");
           else if (status.isLoaded && !this.pending && !this.failedKinds.size && getSoundStatus().phase !== "playing") reportSoundStatus("ready", "Ήχοι έτοιμοι · ένταση από τα πολυμέσα της συσκευής.");
           this.pending?.();
@@ -53,7 +58,12 @@ export class FeedbackAudio {
     this.generation++; this.pending = null; clearTimeout(this.timer);
     for (const player of this.players.values()) { try { player.pause(); } catch { /* Optional feedback. */ } }
   }
-  preview(allowed: () => boolean) { this.release(); this.play("correct", allowed); }
+  preview(allowed: () => boolean) {
+    // Exercise the same cached-player path used by answers. Rebuild only after
+    // an actual failure; rebuilding every preview concealed Android replay bugs.
+    if (this.failedKinds.size || getSoundStatus().phase === "error") this.release();
+    this.play("correct", allowed);
+  }
   play(kind: FeedbackKind, allowed: () => boolean) {
     this.stop();
     if (!this.alive || !allowed()) return;
@@ -66,14 +76,14 @@ export class FeedbackAudio {
       if (!current() || this.pending !== attempt) return;
       try {
         const player = this.players.get(kind);
-        if (!player?.isLoaded) return;
+        if (!player || (!player.isLoaded && !this.preparedKinds.has(kind))) return;
         this.pending = null;
         const begin = () => {
           if (!current()) return;
           try { player.play(); clearTimeout(timer); } catch { clearTimeout(timer); failed(); }
         };
         // First playback is already at zero. Avoid an unnecessary native seek.
-        if (player.currentTime === 0) begin();
+        if (player.isLoaded && player.currentTime === 0) begin();
         else void player.seekTo(0).then(begin).catch(() => { clearTimeout(timer); failed(); });
       } catch { this.pending = null; clearTimeout(timer); failed(); }
     };
@@ -85,6 +95,7 @@ export class FeedbackAudio {
     for (const player of this.players.values()) { try { player.remove(); } catch { /* Already released. */ } }
     this.players.clear();
     this.failedKinds.clear();
+    this.preparedKinds.clear();
   }
   dispose() { this.alive = false; this.release(); }
 }
