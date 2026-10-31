@@ -346,3 +346,10 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - Social/material Bronze Age framework: 19 anchored paragraphs, four reasoning questions after 5/10/15/18, Poliochni cover and two attributed inline images. Chronology (#4), sailing conditions (#5), Uluburun world-history example and future palace-specific lessons are not repeated.
 - Ancient Greece remains **30 planned / five chapters, 9 implemented (6 Integrated, 3 Drafted), 21 Not started, 0 Validated/Approved**. Existing IDs, scoring, audio, replay and Supabase untouched. Node/TypeScript/native QA not executed in this session.
 - **Next only:** #7 `minoan-crete` «Η Κρήτη των ανακτόρων» (Chapter II); not developed yet.
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 7
+- **Integrated, not Validated or Approved:** `minoan-crete` — «Πέρα από την Κνωσό: οι κόσμοι της μινωικής Κρήτης». See [claim-to-source ledger, images and pending QA](minoan-crete-research.md). Title replaces «Η Κρήτη των ανακτόρων» without changing the stable ID or the five-chapter, 30-lesson structure.
+- Added Cretan archaeological depth: Malia's central court, storage/administration and Mu Quarter, Gournia's homes/workshops, Zakros's geographic connections, cult contexts and Knossos's modern reconstructions. **Do not infer one proven island-wide kingdom or a single Minoan ancient identity.**
+- Overlap: #6 `aegean-bronze-age` remains the comparative household/material-exchange overview; #8 `mycenaean-palaces` will examine mainland administration, #9 `linear-b-decipherment` the decipherment, #10 `palace-collapse` the end of palatial systems, #11 `geometric-greece` later communities. #7 does not repeat #4 chronological map, #5 navigation or separate archaeological-methods curriculum.
+- **30 planned / 5 chapters, 10 implemented (7 Integrated, 3 earlier Drafted), 20 Not started, zero Validated or Approved.** Code is integrated with existing reader and lesson paths; Node/TypeScript/native QA not executed in this session. No empty navigation entries added.
+- **Next only, not researched here:** #8 `mycenaean-palaces` — «Ποιος διοικούσε τα μυκηναϊκά ανάκτορα;».
