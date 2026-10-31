@@ -1,3 +1,4 @@
+import { supplementaryArticleMedia } from "./supplementaryMedia";
 import { worldHistoryArticleMedia } from "./worldHistoryMedia";
 import { astronomyArticleMedia } from "./astronomyMedia";
 import { architectureArticleMedia } from "./architectureMedia";
@@ -28,6 +29,7 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
   ...architectureArticleMedia,
   ...astronomyArticleMedia,
   ...worldHistoryArticleMedia,
+  ...supplementaryArticleMedia,
   "ancient-athens": [
     {
       afterParagraphCount: 3,

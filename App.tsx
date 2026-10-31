@@ -1,3 +1,4 @@
+import { BetaAnalyticsProvider } from "./src/state/BetaAnalytics";
 import { useSupabaseLifecycle } from "./src/hooks/useSupabaseLifecycle";
 import { StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -12,7 +13,7 @@ export default function App() {
     <SafeAreaProvider>
       <View style={styles.root}>
         <StatusBar barStyle="light-content" />
-        <LearningSession><AppNavigator /></LearningSession>
+        <BetaAnalyticsProvider><LearningSession><AppNavigator /></LearningSession></BetaAnalyticsProvider>
       </View>
     </SafeAreaProvider>
   );

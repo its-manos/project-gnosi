@@ -33,7 +33,7 @@ const progress = compile('src/utils/lessonProgress.ts');
 const addition = compile('src/data/additionalLessons.ts');
 const expansion = compile('src/data/catalogueExpansion.ts');
 const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts') });
-const media = compile('src/data/articleMedia.ts', { './architectureMedia': compile('src/data/architectureMedia.ts'), './astronomyMedia': compile('src/data/astronomyMedia.ts'), './worldHistoryMedia': compile('src/data/worldHistoryMedia.ts') });
+const media = compile('src/data/articleMedia.ts', { './architectureMedia': compile('src/data/architectureMedia.ts'), './astronomyMedia': compile('src/data/astronomyMedia.ts'), './worldHistoryMedia': compile('src/data/worldHistoryMedia.ts'), './supplementaryMedia': compile('src/data/supplementaryMedia.ts') });
 const theme = compile('src/theme.ts');
 const stubs = Object.fromEntries(['ZoomableLessonImage','ActionButton','ArticleFigure','InlineQuestionCard','LessonCover','SourceLink','AppHeader','ReportContentButton'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
 const imports = { ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };

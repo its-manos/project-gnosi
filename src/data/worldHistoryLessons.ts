@@ -1,6 +1,6 @@
 import type { Lesson } from "./lessons";
 
-/** Original Greek survey: docs/world-history-path.md. Published IDs and answer slots are stable. */
+/** Original Greek path with photographic/documentary covers; see docs/world-history-photos.md. */
 export const worldHistoryLessons: Lesson[] = [
   {
     "id": "world-introduction",
@@ -102,11 +102,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.youtube.com/watch?v=xuCn8ux2gbs"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Τρία είδη τεκμηρίων",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Linear%20B%20tablet%2C%20Pylos%2C%2013th%20century%20BC%2C%20NAMA%2C%20191139.jpg?width=1200",
+    "imageCaption": "Πινακίδες Γραμμικής Β από την Πύλο, 13ος αιώνας π.Χ. Ένα παράδειγμα υλικού τεκμηρίου: τα χαραγμένα σημεία χρειάζονται γλώσσα, χρονολόγηση και αρχαιολογικό πλαίσιο για να αφηγηθούν ιστορία.",
+    "imageCredit": "Zde · CC BY-SA 4.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Linear_B_tablet,_Pylos,_13th_century_BC,_NAMA,_191139.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -205,11 +204,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://science.nasa.gov/earth/facts/"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Οι μεγάλες χρονικές αποστάσεις",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/The%20Earth%20seen%20from%20Apollo%2017.jpg?width=1200",
+    "imageCaption": "Η Γη στη φωτογραφία «Blue Marble» του πληρώματος Apollo 17, στις 7 Δεκεμβρίου 1972. Ένα σύγχρονο στιγμιότυπο του πλανήτη του οποίου το μακρινό παρελθόν εξετάζει το μάθημα.",
+    "imageCredit": "NASA / πλήρωμα Apollo 17 · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:The_Earth_seen_from_Apollo_17.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -318,11 +316,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.nature.com/articles/s41467-021-23286-7"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Η ζωή σε διαδοχικά ζουμ",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Living%20stromatolites%2C%20Shark%20Bay%2C%20Western%20Australia.png?width=1200",
+    "imageCaption": "Σύγχρονοι ζωντανοί στρωματόλιθοι στο Shark Bay της Αυστραλίας. Οι δομές αυτές συνδέουν μικροβιακή δραστηριότητα και γεωλογικά ίχνη· η εικόνα δεν είναι φωτογραφία της αρχαιότερης ζωής.",
+    "imageCredit": "Ed Landing & Markes E. Johnson (in: Journal of Marine Science and Engineering, 2024) · CC BY 4.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Living_stromatolites,_Shark_Bay,_Western_Australia.png",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -426,11 +423,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-sapiens"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Τρεις τρόποι να μελετήσουμε τους ανθρώπους",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Acheulean%20handaxe%20found%20in%20southern%20England%20-%2055465763081.jpg?width=1200",
+    "imageCaption": "Αχελαίος χειροπέλεκυς από τη νότια Αγγλία. Τα λίθινα εργαλεία προσφέρουν στοιχεία για τεχνικές και ανθρώπινες δραστηριότητες· το είδος του κατασκευαστή δεν προσδιορίζεται μόνο από το σχήμα.",
+    "imageCredit": "Tim Sheerman-Chase · CC BY 4.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Acheulean_handaxe_found_in_southern_England_-_55465763081.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -529,11 +525,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://naturalhistory.si.edu/education/teaching-resources/anthropology-and-social-studies/human-evolution"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Η αποθήκη αλλάζει τις δυνατότητες",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Woman%20harvesting%20wheat%2C%20Raisen%20district%2C%20Madhya%20Pradesh%2C%20India%20ggia%20version.jpg?width=1200",
+    "imageCaption": "Σύγχρονη συγκομιδή σιταριού στην περιοχή Raisen της Ινδίας. Η εικόνα δίνει υλικό πλαίσιο στη σχέση καλλιέργειας και εργασίας, χωρίς να αποτελεί αναπαράσταση μιας νεολιθικής κοινότητας.",
+    "imageCredit": "Yann Forget · CC BY-SA 3.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Woman_harvesting_wheat,_Raisen_district,_Madhya_Pradesh,_India_ggia_version.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -632,11 +627,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://humanorigins.si.edu/human-characteristics/humans-change-world"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Από την παραγωγή στο αρχείο",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/White%20Temple%20ziggurat%20in%20Uruk.jpg?width=1200",
+    "imageCaption": "Η αναβαθμίδα του Λευκού Ναού στην Ουρούκ. Τα κατάλοιπα δείχνουν τη μνημειακή κλίμακα ενός πρώιμου αστικού κέντρου· τα αρχεία, οι κατοικίες και η ύπαιθρος συμπληρώνουν την εικόνα της κοινωνίας του.",
+    "imageCredit": "tobeytravels · CC BY-SA 2.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:White_Temple_ziggurat_in_Uruk.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -740,11 +734,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.nature.com/articles/s41586-022-05693-y"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Πώς μεταδίδεται μια διακοπή",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Uluburun%20copper%20ingot%20small%20oxhide.jpg?width=1200",
+    "imageCaption": "Χάλκινη πλίνθος σε σχήμα δέρματος βοδιού από το ναυάγιο του Ουλουμπουρούν, στο Μουσείο Υποβρύχιας Αρχαιολογίας της Αλικαρνασσού. Ένα πραγματικό αντικείμενο του φορτίου που συνδέει υλικά, μεταφορές και παραγωγή.",
+    "imageCredit": "Zunkir · CC BY-SA 4.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Uluburun_copper_ingot_small_oxhide.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -853,11 +846,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.metmuseum.org/essays/art-of-the-hellenistic-age-and-the-hellenistic-tradition"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Από την κατάκτηση στη διακυβέρνηση",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Persepolis%20stairs%20of%20the%20Apadana%20relief.jpg?width=1200",
+    "imageCaption": "Ανάγλυφο της σκάλας της Απαδάνα στην Περσέπολη. Η αυτοκρατορική μνημειακή τέχνη είναι τεκμήριο δημόσιας παρουσίασης της εξουσίας, όχι πλήρης καταγραφή της εμπειρίας όλων των υπηκόων.",
+    "imageCredit": "Phillip Maiwald ( Nikopol ) · CC BY-SA 3.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Persepolis_stairs_of_the_Apadana_relief.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -961,11 +953,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.metmuseum.org/essays/the-birth-of-islam"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Η διάδοση δεν είναι φωτοτυπία",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Bhaisajyaguru%20mural%20from%20Mogao%20Cave%20322%2C%20Dunhuang.jpg?width=1200",
+    "imageCaption": "Βουδιστική τοιχογραφία από το σπήλαιο 322 του Μογκάο, στο Ντουνχουάν, της πρώιμης περιόδου Τανγκ. Μια συγκεκριμένη εικόνα θρησκευτικής παράδοσης σε τόπο μακρινών επαφών και μετασχηματισμών.",
+    "imageCredit": "Unknown author Unknown author · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Bhaisajyaguru_mural_from_Mogao_Cave_322,_Dunhuang.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -1079,11 +1070,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.metmuseum.org/essays/the-art-of-the-abbasid-period-750-1258"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Ο Ινδικός Ωκεανός ως δίκτυο",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Malwiya%2C%20Samarra%2C%201960.jpg?width=1200",
+    "imageCaption": "Ο σπειροειδής μιναρές της Μεγάλης Τζαμίας στη Σαμάρα του Ιράκ. Φωτογραφία του Latif al-Ani, του 1960, που δίνει υλικό πλαίσιο στον αββασιδικό κόσμο πέρα από τη δυτική Ευρώπη.",
+    "imageCredit": "لطيف العاني (Latif al-Ani) · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Malwiya,_Samarra,_1960.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -1192,11 +1182,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://whc.unesco.org/en/list/715"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Διαφορετικές κοινωνίες, διαφορετικά τεκμήρια",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Wall%20of%20the%20great%20enclosure%20%28far%29%2C%20Great%20Zimbabwe.JPG?width=1200",
+    "imageCaption": "Λιθόκτιστο τείχος της Μεγάλης Ζιμπάμπουε. Η αρχιτεκτονική της αποτελεί υλικό τεκμήριο αφρικανικού αστικού και πολιτικού κέντρου με τοπική παραγωγή και ευρύτερες ανταλλαγές.",
+    "imageCredit": "Jens Klinzing · CC BY 3.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Wall_of_the_great_enclosure_(far),_Great_Zimbabwe.JPG",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -1300,11 +1289,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.arch.cam.ac.uk/news/plague-medieval-cambridge"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Από την επαφή στην άνιση επίπτωση",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Mongol%20soldiers%20by%20Rashid%20al-Din%201305.JPG?width=1200",
+    "imageCaption": "Μογγόλοι τοξότες σε μικρογραφία του Χρονικού του Rashid al-Din, σε χειρόγραφο περίπου του 1430–1434 (BnF, Supplément Persan 1113, φ. 72r). Πρόκειται για μεταγενέστερη ιστορική απεικόνιση, όχι για φωτογραφία ή σύγχρονη μαρτυρία κάθε κατάκτησης.",
+    "imageCredit": "BnF, Supplément Persan 1113 / Χρονικό του Rashid al-Din · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Mongol_soldiers_by_Rashid_al-Din_1305.JPG",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3,
     "contentNote": "Αναφορές σε πανδημία, μαζικούς θανάτους και διώξεις, χωρίς γραφικές περιγραφές."
@@ -1409,11 +1397,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.loc.gov/exhibits/exploring-the-early-americas/precontact-america.html"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Η Κολομβιανή Ανταλλαγή",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Waldseemuller%20map%202.jpg?width=1200",
+    "imageCaption": "Ο παγκόσμιος χάρτης του Martin Waldseemüller, του 1507. Μια ιστορική ευρωπαϊκή χαρτογραφική σύνθεση της εποχής των υπερωκεάνιων συνδέσεων, με τις γνώσεις και τα όρια της δικής της εποχής.",
+    "imageCredit": "Martin Waldseemüller · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Waldseemuller_map_2.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3,
     "contentNote": "Αναφορές σε κατακτήσεις, επιδημίες και καταναγκαστική εργασία."
@@ -1518,11 +1505,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://whc.unesco.org/en/list/180"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Τρεις διαφορετικές ερωτήσεις στα αρχεία",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Am%20I%20not%20a%20Man%20and%20a%20Brother%2C%20medallion%20modelled%20by%20William%20H.%20Hackwood%2C%20Wedgwood%2C%20Etruria%2C%20England%2C%20c.%201786%2C%20tinted%20stoneware%20-%20Brooklyn%20Museum%20-%20DSC09289.JPG?width=1200",
+    "imageCaption": "Μετάλλιο του κινήματος κατά της δουλείας με το σύνθημα «Am I Not a Man and a Brother». Ιστορικό αντικείμενο πολιτικής έκκλησης, που μας καλεί να εξετάσουμε ποιος απευθυνόταν σε ποιο κοινό.",
+    "imageCredit": "Daderot · CC0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Am_I_not_a_Man_and_a_Brother,_medallion_modelled_by_William_H._Hackwood,_Wedgwood,_Etruria,_England,_c._1786,_tinted_stoneware_-_Brooklyn_Museum_-_DSC09289.JPG",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3,
     "contentNote": "Αναφορές σε δουλεία, εξαναγκαστική μεταφορά και θανάτους, χωρίς γραφικές περιγραφές."
@@ -1632,11 +1618,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://blogs.loc.gov/international-collections/2021/06/the-history-of-printing-in-asia-according-to-library-of-congress-asian-collections-part-1/"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Διακήρυξη, εφαρμογή, διεκδίκηση",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Declaration%20of%20the%20Rights%20of%20Man%20and%20of%20the%20Citizen%20in%201789%20%28brighter%29.jpg?width=1200",
+    "imageCaption": "Αλληγορική παρουσίαση της Διακήρυξης των Δικαιωμάτων του Ανθρώπου και του Πολίτη του 1789, έργο αποδιδόμενο στον Le Barbier. Οι διακηρυγμένες αρχές είναι αφετηρία για να εξετάσουμε ποιοι απέκτησαν δικαιώματα στην πράξη.",
+    "imageCredit": "Αποδιδόμενο στον Jean-Jacques-François Le Barbier / Musée Carnavalet · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Declaration_of_the_Rights_of_Man_and_of_the_Citizen_in_1789_(brighter).jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -1740,11 +1725,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://science.nasa.gov/climate-change/causes/"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Η μηχανή μέσα σε ένα σύστημα",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Boulton%20%26%20Watt%20steam%20engine%2C%20Sydney%20Powerhouse%20Museum%2C%202014%20%2815243331353%29.jpg?width=1200",
+    "imageCaption": "Ατμομηχανή Boulton & Watt του 1785 στο Powerhouse Museum του Σίδνεϊ, φωτογραφημένη το 2014. Η μεγάλη κλίμακα του μηχανισμού συνδέει την τεχνογνωσία με ενέργεια, υλικά, εγκαταστάσεις και συντήρηση.",
+    "imageCredit": "David Maciulaitis  from Auckland, New Zealand · CC BY 2.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Boulton_%26_Watt_steam_engine,_Sydney_Powerhouse_Museum,_2014_(15243331353).jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   },
@@ -1843,11 +1827,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.un.org/en/global-issues/decolonization"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Τρεις φακοί για μια υποδομή",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Map%20of%20Congo%20Free%20State%20with%20territorial%20subdivisions%20of%20concessionaires%2C%20end%20of%2019th%20begin%20of%2020th%20century.jpg?width=1200",
+    "imageCaption": "Ιστορικός χάρτης περιοχών παραχωρήσεων στο αποκαλούμενο «Ελεύθερο Κράτος του Κονγκό», στα τέλη του 19ου–αρχές του 20ού αιώνα. Χαρτογραφεί αξιώσεις ελέγχου και εκμετάλλευσης, όχι τις ανθρώπινες εμπειρίες όσων ζούσαν εκεί.",
+    "imageCredit": "NAB, Archives Hubert Droogmans, no. 96. · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Map_of_Congo_Free_State_with_territorial_subdivisions_of_concessionaires,_end_of_19th_begin_of_20th_century.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3,
     "contentNote": "Αναφορές σε αποικιακή βία, ρατσιστικές ιδεολογίες και καταναγκαστική εργασία."
@@ -1957,11 +1940,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.un.org/about-us/history-of-the-un"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Τρεις χρονικοί σταθμοί, διαφορετικές κλίμακες",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Big%20four.jpg?width=1200",
+    "imageCaption": "Οι τέσσερις ηγέτες Lloyd George, Orlando, Clemenceau και Wilson στη Διάσκεψη Ειρήνης του Παρισιού, τον Μάιο του 1919. Το μεταπολεμικό στιγμιότυπο δίνει πρόσωπα στις πολιτικές διαπραγματεύσεις, χωρίς να εξηγεί μόνο του τον επόμενο πόλεμο.",
+    "imageCredit": "Edward N. Jackson (US Army Signal Corps) · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Big_four.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3,
     "contentNote": "Αναφορές σε πολέμους, γενοκτονία, μαζικούς θανάτους και πυρηνικά όπλα, χωρίς γραφικές περιγραφές."
@@ -2076,11 +2058,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.loc.gov/classroom-materials/united-states-history-primary-source-timeline/post-war-united-states-1945-1968/cold-war/"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Δύο διαδικασίες που αλληλεπιδρούν",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/A%20crowd%20of%20West%20German%20citizens%20gathers%20at%20the%20newly%20created%20opening%20in%20the%20Berlin%20Wall%20at%20Potsdamer%20Platz.jpg?width=1200",
+    "imageCaption": "Πλήθος σε νέο άνοιγμα του Τείχους του Βερολίνου στην Potsdamer Platz, 14 Νοεμβρίου 1989. Συγκεκριμένο στιγμιότυπο των αλλαγών στο τέλος του Ψυχρού Πολέμου, όχι σύνοψη όλων των παγκόσμιων εμπειριών του.",
+    "imageCredit": "U.S. Department of Defense / National Archives, αρχειακή φωτογραφία · Public domain · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:A_crowd_of_West_German_citizens_gathers_at_the_newly_created_opening_in_the_Berlin_Wall_at_Potsdamer_Platz.jpg",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3,
     "contentNote": "Αναφορές σε πολέμους, αποικιακή βία και εκτοπισμούς."
@@ -2185,11 +2166,10 @@ export const worldHistoryLessons: Lesson[] = [
         "url": "https://www.metmuseum.org/essays/trade-routes-between-europe-and-asia-during-antiquity"
       }
     ],
-    "coverKind": "editorial",
-    "imageUrl": "",
-    "imageCaption": "Ένα αντικείμενο, πολλές ιστορίες",
-    "imageCredit": "ΓΝΩΣΗ · Πρωτότυπο εκπαιδευτικό διάγραμμα",
-    "imageCreditUrl": "",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Disassembled%20Vernee%20M5.png?width=1200",
+    "imageCaption": "Αποσυναρμολογημένο κινητό Vernee M5, με τα εξαρτήματά του τοποθετημένα σε πλαίσιο. Η πραγματική συσκευή δείχνει την υλική πλευρά του ψηφιακού κόσμου· το σενάριο εφοδιαστικής αλυσίδας του μαθήματος παραμένει υποθετικό.",
+    "imageCredit": "Justin Sijbolts · CC BY-SA 4.0 · Σμίκρυνση και μετατροπή JPEG",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Disassembled_Vernee_M5.png",
     "editorialReviewedAt": "2026-10-31",
     "readingMinutes": 3
   }

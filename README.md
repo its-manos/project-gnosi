@@ -2,7 +2,7 @@
 
 A Greek-language mobile micro-learning app built with React Native, Expo, and TypeScript. Readers explore a fantasy atlas of knowledge, choose a topic, read an illustrated article with sources, answer short checkpoints throughout the article, and build a local learning history.
 
-> **Status:** early MVP. The app is intentionally account-free; learning progress and bookmarks are stored on the device.
+> **Status:** private-beta preparation. Start as a guest, with optional accounts for syncing progress. Android APK and iPhone TestFlight build profiles are configured; cloud signing/distribution still requires your own Expo and platform accounts.
 
 ## Features
 
@@ -13,6 +13,8 @@ A Greek-language mobile micro-learning app built with React Native, Expo, and Ty
 - Multiple-choice checkpoints after pairs of paragraphs
 - Progressive reading: the next passage unlocks after an answer
 - Instant feedback and lesson results
+- Four-step onboarding: welcome, two ways to play, daily-quiz interests and a friendly send-off
+- Sequential lesson paths with existing progress preserved
 - Local persistence of completed lessons and unfinished checkpoint attempts
 - Resume card for the most recent in-progress lesson
 - Local article bookmarks
@@ -96,25 +98,27 @@ src/
 - **Lesson**: title, summary, introduction, image and credits, sections/paragraphs, sources, and questions.
 - **Inline checkpoint**: one of a lesson's questions, displayed after every two paragraphs until the reader answers.
 
-Add lessons in `src/data/lessons.ts` or `src/data/additionalLessons.ts`. Keep IDs unique and stable; each lesson's `categoryId` and `subcategoryId` must match existing entries. Keep image attribution with each remote figure and verify image licences before public release.
+Add lessons in `src/data/lessons.ts`, `src/data/additionalLessons.ts` or `src/data/catalogueExpansion.ts`. Keep IDs unique and stable; each lesson's `categoryId` and `subcategoryId` must match existing entries. Keep published path ordering stable in `src/utils/lessonPath.ts`. Keep image attribution with each remote figure and verify image licences before public release.
 
-## Local persistence behavior
+## Accounts and persistence
 
-- Completed lesson IDs are stored under `@gnosi/completed-lesson-ids`.
-- Unfinished inline-question attempts are stored under `@gnosi/in-progress-lesson-attempts`.
-- Bookmarks are stored under `@gnosi/saved-lesson-ids`.
-- Reopening an unfinished lesson restores answered checkpoints and opens near the paragraph before the next unanswered question.
-- Opening a previously completed lesson starts a new reading attempt while preserving its completion record. If the reader answers a checkpoint and leaves, that replay can also be resumed.
-- Data is not synced across devices or backed up to an account. Reinstalling the app may remove it.
+- Play immediately as a guest, or sign in with email/password for account-scoped automatic sync.
+- If email confirmation is enabled, signup uses a code entered in the app and needs working SMTP: [Account email setup](docs/account-email-setup.md). For the small private beta, keep the working email configuration already tested; this update does not change hosted authentication settings.
+- Learning data is stored under account-scoped learning-v2 keys; daily challenges have their own scoped document. Legacy device progress migrates into the guest scope.
+- In-progress checkpoints resume from the saved answers. Completed lessons show their results, best full-attempt score, mastery, immediate mistake practice and full retry options.
+- Dated completion events power daily/weekly activity charts; eligible past mistakes can appear in the weekly second-chance quiz. Reviews do not inflate completion/replay counts.
+- Guest progress joins an account only through explicit preview/import. Automatic account sync includes result/review history; legacy downloadable backups contain completions, bookmarks and unfinished attempts only.
 
-## Known limitations / next work
+## Beta checks
 
-- There is no account system, backend, cross-device sync, or cloud backup.
-- The main learning journey uses inline checkpoints. `QuizScreen.tsx`, `questions.ts`, `AnswerOption.tsx`, and `ProgressBar.tsx` are legacy/reserved code and should either be brought into use intentionally or removed in a dedicated cleanup.
-- Remote images require a network connection and can change or become unavailable; an image fallback would improve resilience.
-- Some SVG map labels are very small on compact screens. Add an accessible category/region list alternative and review text scaling before public release.
-- There is no automated test suite or CI pipeline yet. Test the resume, completion, bookmark, and leave-warning flows manually after changes.
-- Article facts, references, source URLs and image licences need a final editorial review before public release.
+- Follow [Private beta](docs/private-beta.md) for Expo linking, environment setup, Android APK installation and the later iPhone/TestFlight route. After linking, run `npm run beta:updates:setup` to preserve your project ID and configure automatic updates, then `npm run beta:check` after environment setup. Compatible Android updates can be published with `npm run beta:update:android -- --message "Describe this update"`; testers need the new update-enabled APK once.
+- Learners can report lesson/question problems from the reader and quizzes. Configure the private inbox migration and see [Content reporting](docs/content-reporting.md) for submission, offline retry and editorial review.
+
+- Test signup/signin with a non-team email address in the installed APK before sharing. If confirmation is enabled, verify delivery with the hosted sender/template; automated Auth tests mock delivery.
+- Sharing an Expo Go development QR requires a reachable running development server. Independent beta distribution needs an installable build and appropriate platform distribution setup.
+- Verify device typography, large text, keyboard/form scrolling, map/list selection, saved/search return navigation and Android system Back.
+- The 45-lesson editorial pass is documented in [Editorial review](docs/lesson-editorial-review.md). It is not external academic certification. Remote imagery depends on its host's availability; phone checks remain part of release acceptance.
+- Competitive leaderboard scores are not implemented or server-verified yet.
 
 ## Suggested validation commands
 

@@ -1,0 +1,438 @@
+{
+  "mediaFields": [
+    "coverKind",
+    "imageUrl",
+    "imageCaption",
+    "imageCredit",
+    "imageCreditUrl"
+  ],
+  "changedIds": [
+    "world-introduction",
+    "world-universe-earth",
+    "world-life",
+    "world-humans",
+    "world-farming",
+    "world-cities-writing",
+    "world-bronze-networks",
+    "world-empires",
+    "world-beliefs",
+    "world-medieval-networks",
+    "world-many-centres",
+    "world-mongols-plague",
+    "world-ocean-connections",
+    "world-slavery-capital",
+    "world-ideas-revolutions",
+    "world-industry",
+    "world-imperialism-resistance",
+    "world-world-wars",
+    "world-cold-war-decolonization",
+    "world-connected-present"
+  ],
+  "lessons": [
+    {
+      "id": "ancient-athens",
+      "sha256": "28285d79bf401417a78f8e827f039c6915852206aa7734eb4a487d1bf09e5749",
+      "contentSha256": "73e7ee777eeabccbf02e2412def8a3978480a4832a9b2794095cc857467ebd01"
+    },
+    {
+      "id": "pompeii-everyday-life",
+      "sha256": "a9f9abe66c0708757e79ecbc25a600e19d5e7604ce936c220ca3350c4d317952",
+      "contentSha256": "753075bd0a3fc49306ae4e4bda9012aa100be91d81be68f68ee66ab950359570"
+    },
+    {
+      "id": "why-mars-is-red",
+      "sha256": "f9310f0c7b8b6950b8603f04e85374ad199c30361dce77f00c62dcc3342e61e3",
+      "contentSha256": "6fecd3a8aaad5b8b1a09dd85130c965c0b4c0e7d5e8f4303dd11dfb1dd1e4225"
+    },
+    {
+      "id": "sleep-and-memory",
+      "sha256": "2062b291aa58c626f9b69ab1664bdaca5fe0f9cebb9e61b926146c79229d2a76",
+      "contentSha256": "a8062b2bbd61d464f01a240a4fe8f63ba866565218d5558f8017c5d77e79d9b7"
+    },
+    {
+      "id": "octopus-intelligence",
+      "sha256": "578bcdcf11bbf80e296ee31cde507450c832044511a381fac80a9e491501aa42",
+      "contentSha256": "6a0ab5fce111bf0e9e4d6544ae2a8b8b12198b185ff4084a75ec7ccb94b993b1"
+    },
+    {
+      "id": "life-at-hydrothermal-vents",
+      "sha256": "52ef59da52d60428db066192eb36be879e44f97196b64e715a184ce08d92886c",
+      "contentSha256": "73f98bb1a68b784a864a7fa09d80c1bff5ff10e304d6cc89cdf77c10f99867f6"
+    },
+    {
+      "id": "how-language-models-generate-text",
+      "sha256": "5c9ba9b00f2e52af25da2e154724d6111373e15b4af2126f9027dd550e14a5b8",
+      "contentSha256": "d1807ff844d6ca563da65ba8980cf9e6d1fa693a72e23fd356c0cba6644293b1"
+    },
+    {
+      "id": "what-happens-when-you-open-a-website",
+      "sha256": "403636138af37d5394c63e62015cb7645293331cfc319a5582396db853afd22e",
+      "contentSha256": "bd1345789408eb44e04026beb5d6e50ba8abeb0952b6394fa1976fdaa9946b90"
+    },
+    {
+      "id": "impressionism-and-light",
+      "sha256": "09cfbebd8a038914369ef648b7ba6e8b859b24f878b9a5d2da09863a72fe0f78",
+      "contentSha256": "c1b484469f80ffd54f2c79e86ac6e998e3fa32c8201905274e35b1a87490d37c"
+    },
+    {
+      "id": "iceland-two-plates",
+      "sha256": "78c58b87e1656beae4ca9ef00574a32ebfa510c731638687f311f10f9d16dd92",
+      "contentSha256": "6d7cfb6715615432711da7cb966dc9b7cd739bdd37da7dd24d828b7be2111072"
+    },
+    {
+      "id": "athens-who-voted",
+      "sha256": "a7bf8435f6c49f6bca69258e9d765ac01ab83d561e194d1bc186b0b91d08e9eb",
+      "contentSha256": "450b14b62889ed2c203c553addf0737e245b9cacd9ac570f04943f81d38d0e17"
+    },
+    {
+      "id": "antikythera-gears",
+      "sha256": "b4984e95d056bf6bd561de285f1a11085ab0489dd5186a27ac48ea81db3ef5cb",
+      "contentSha256": "55726e7b3e39e3d2432e1682eaf3e85059b0fc3506d1ada924f683dc845ad7db"
+    },
+    {
+      "id": "linear-b-decipherment",
+      "sha256": "71e90c78fada39ee33928a1c0ca70e232b0f092e5cba9bc01a771230fc665096",
+      "contentSha256": "7cc0bfc39e3b192227364d5ac0f30be2784f85ea0f0ea29f8e417e5c195fe28a"
+    },
+    {
+      "id": "osiris-afterlife",
+      "sha256": "b271494ac62ec2961bc38c419f942dc3f2b9d34169acf4442ec7ffc95d4ab910",
+      "contentSha256": "c9d85b6a0998f4950b5bb9244b2c95018ab5b2c31fbf0aaef172609d08f332dd"
+    },
+    {
+      "id": "silk-roads-ideas",
+      "sha256": "af327dc4d386e7f178caee3e6fe96c69052f5db922b129cf0a5b62419d64a5d5",
+      "contentSha256": "aeaf8492948c801acff24ff990544c5c9047f977652f13a5c8ce9ecbc025e26d"
+    },
+    {
+      "id": "moon-phases-not-shadow",
+      "sha256": "d84ed7add101de05a493e4aecf227efa5fc604d858833f8c58c21c99e991b742",
+      "contentSha256": "a6a86e94fea491f45066018b46573a696aa7c00b4822b48c1ac439ea0f5d595c"
+    },
+    {
+      "id": "orbit-continuous-fall",
+      "sha256": "bf8139f74fe34089aab7f0c4084768d21afd296ee7ff3b9dfc28ed07a4443f7f",
+      "contentSha256": "b1ececaf03da0a59a81d915635e0ea764234064f47b0bfc7e971f7c96355cd9c"
+    },
+    {
+      "id": "dna-cell-instructions",
+      "sha256": "b3bff654925c328f21f2fe1896c47d46895afa62c9e3d449f4c270fcb9b5ab49",
+      "contentSha256": "d3b285dee97b74955e848cc83af20c7aa79a5258e55e17e889acd3c52b0a39d0"
+    },
+    {
+      "id": "sound-to-brain",
+      "sha256": "c25ca213583d51533d1e6275204c90ed7bcf03772cc6a3ec9c63e76303c6e184",
+      "contentSha256": "9668bfc1e704c2af3231e42f9ffc87c2d3a5784f6dd959d3e8982ad869eb6f91"
+    },
+    {
+      "id": "blue-sky-red-sunset",
+      "sha256": "f563edc0208934724aa7823ceefec908981ddf50e6c8ecb1040d1e1c41048dac",
+      "contentSha256": "05e75e8d89b235a56d61323b860d3f71573213ff3fbfca4bb79bfdbba15bbefc"
+    },
+    {
+      "id": "corals-are-animals",
+      "sha256": "d1f5863456e8449e2989e1762fa4bf45c42ce9a5767b0810ee8f8afc3087cc9b",
+      "contentSha256": "a31a762c568bac48755c904e716ba7f509717a1dfca2a58fa46db7aef578a36b"
+    },
+    {
+      "id": "whales-nutrient-pump",
+      "sha256": "40e4abaa897ab63a2597ce14ed904284b06ef5e068541d01abccc4bb0ebe0930",
+      "contentSha256": "9b56c06b896b53a615b8b12ad228b41f2af0b33d056f25eb86a323659d8a85c3"
+    },
+    {
+      "id": "flowers-hidden-couriers",
+      "sha256": "d59f9c13537898aaae3fe7dd8995a265c8a174481100748b285d6fb6f3fddc5b",
+      "contentSha256": "660f2162b471dc849f37f3562f58c0bf254a76553abcbe76bfdf6841befc5329"
+    },
+    {
+      "id": "fungi-under-forest",
+      "sha256": "295911c7899968e1149b85ae9c9c3d95c1074f6efff0adba46675b4279ec0a4f",
+      "contentSha256": "fba4eb351691e74cf55a11125267b8f67d25e7fcb9e55db6baa716840ec03c3f"
+    },
+    {
+      "id": "migration-rest-stops",
+      "sha256": "3a8f8d1a723925afcd0f25450581eb5dbbaca4389fc4a20cf498851c96e0be23",
+      "contentSha256": "18da8c4e03dbe6852b32a21dafdc32eb97e89a609b3bb79edf866b2378c07f72"
+    },
+    {
+      "id": "dns-address-book",
+      "sha256": "e6d77e1179bfe4177cf830d41952ff4cd4329c8253d1f03911daec713160e4f0",
+      "contentSha256": "573d941c2f6bbf8ca94c67a8c68c23ca158bc57f877614e57dd76a4c52920d83"
+    },
+    {
+      "id": "public-private-keys",
+      "sha256": "0823b2c9eaedb0bfff53b547961bfbfdd0598399648d1c3422ecea5c4e76058d",
+      "contentSha256": "9bbc21c25db9210667267a8e1aa54a004249c347868e59b092f7fd20f21b93f4"
+    },
+    {
+      "id": "ai-bias-context",
+      "sha256": "0133e5d3bc93e254aa323ca585a9cf1eab5b69d47e86f8b20007d69d6e59be72",
+      "contentSha256": "c37562534f61d06a07b4f053b57c1d5091ee3fcde82369cceb3964388d5087d0"
+    },
+    {
+      "id": "printing-before-gutenberg",
+      "sha256": "02b97a19c132eb0423189386d703d43b9ca33cb5a5ad35d3d2a4bd19d3d3c1a9",
+      "contentSha256": "c911730f85673a972178b7964a4114b49518e06b9d1f87cd20d9d5921d97665d"
+    },
+    {
+      "id": "transistor-small-switch",
+      "sha256": "dc3bfad5f91eb9e30457b9601f642397db8a7854c9a2a81634798d6c62b1c4f3",
+      "contentSha256": "cb6f077f2aaf6fc0a09e142a330778dfde2d4c0f946a0979d679e2bad92574c9"
+    },
+    {
+      "id": "lascaux-looking-back",
+      "sha256": "dc7f2605884c4a02c92c29356f0d2b3eb27567692253d96be1005a25612b2b12",
+      "contentSha256": "81ff4d25e9ce3133e00e58afcaab3eec37ca6529ffe0e6d22e1e5c498fad2983"
+    },
+    {
+      "id": "jazz-conversation",
+      "sha256": "34f2ba256eea2f8dd86b590b6d6bee10658f3600c559a5fbca09dc1702ad3e21",
+      "contentSha256": "8d67c1e671d373c421fa5bd2c8dc200aa0786e6cfe7ce08f8d099eabd64334dd"
+    },
+    {
+      "id": "blues-beyond-sadness",
+      "sha256": "4bedef498830f7d01eb7dbf6382cb5c60efee8d814b979523070c2b9ae1a329a",
+      "contentSha256": "e1112f7f7595d272a65e7a95be1d37ee09fed4d0627cba1a07374881cfede1be"
+    },
+    {
+      "id": "editing-builds-meaning",
+      "sha256": "226b8a95c3886d9c55e3c32ad91af97ded44a4a599bf1788f1218fb6a471bd2d",
+      "contentSha256": "08f30eff347c0b33cada75d0b4c82ece7869f3c211fde92a8ea5f9ec73cd56ed"
+    },
+    {
+      "id": "foley-invisible-performance",
+      "sha256": "7685a10da2f76f58ca77c91254eeb999ad55c37eab1821718ca846f2185e6b0b",
+      "contentSha256": "6fe3ba7b8b7705b9654ec7ce42778dcbe453d33f57931d8198a3e18255a86a87"
+    },
+    {
+      "id": "netherlands-room-for-water",
+      "sha256": "c435034883e1e816db620ba974fb0aa8e11a6b795ba23e7b7dfb75759c35f5ab",
+      "contentSha256": "1c7c0a7fa7b78dd6046e2cfe684121ed2200e14d97b508949e0e87ce6a14057f"
+    },
+    {
+      "id": "dead-sea-changing-lake",
+      "sha256": "c8b9e22fde9a064fd71b70d31c308cdda6f39f426c4b9894da8d1d877d607c63",
+      "contentSha256": "13bddd679d3046ff6d57341c772e6192f4f9fbf7b5c69be59d78d7b0f60bcbe7"
+    },
+    {
+      "id": "caves-water-carves",
+      "sha256": "7b86415765ccf2880416cb658b64c0a6ab6fced6d99a1b0e72be6dfd5fba0b3c",
+      "contentSha256": "ce4c6c6889e340c7f373c09e5280044e49dd783448126f31286eadfdc034e500"
+    },
+    {
+      "id": "uruk-city-landscape",
+      "sha256": "42086efda3d163967e5274865d7576bd1d633c4db9a510ad8582a2f69fcfb174",
+      "contentSha256": "e3e4332ccc99d9d619884d91e3fe3eee713e0c84fec73e99869f9281cd2d45e7"
+    },
+    {
+      "id": "city-boundaries-counting",
+      "sha256": "64b2589e37d53e3b1c0a1689c5c1c64a42ff18e9c05dde6b5e9ced548b49dbf7",
+      "contentSha256": "b31a7189a9015f7108ef13e8eba582ee8189e0f38bc65093cb41da671b45b6c1"
+    },
+    {
+      "id": "holocaust-evidence-exclusion",
+      "sha256": "fac41e8129bdc161978f62ddce4cac5dd1cd3a1d827a1e8b5c31fa0f24b5fcaa",
+      "contentSha256": "c368086c4a0d8338bba114c9d901c7fd1c2ec91412f9db05e7ee9770f3cfdb9d"
+    },
+    {
+      "id": "atlantic-slavery-records",
+      "sha256": "9deff00ab72d8a5e4f2e7f02ecdb1a50e2cfa8f822c45c774da9105b514b261f",
+      "contentSha256": "cdc6e8ade27355725df298e95bb90c851e0a6d1f0427fa859ca620d7de088a1a"
+    },
+    {
+      "id": "eugenics-scientific-authority",
+      "sha256": "f6b060dd15bbf521556b0dc958001d0ef0b934da47865c49b4633f921ba0d1a4",
+      "contentSha256": "2894cf49152f40b87a0fc23b0373123aa20cfea5f300fd071fc1818352abf95f"
+    },
+    {
+      "id": "congo-colonial-memory",
+      "sha256": "1387ac87e389fa59098f4e0580d64c70f12b7a7a6f94e8cd1e93e0ed2dcf402f",
+      "contentSha256": "b54a667a39c40af1f6ddd82e359195d50379158538995fb4e0104aa30b67df9f"
+    },
+    {
+      "id": "dictatorship-censorship-greece",
+      "sha256": "57e4a79433b3afdbbe97e2d1776f7a95bc5882b88472c7ed606240416ede100d",
+      "contentSha256": "005089332997a2300da338d61211f306f7e15bec16d1c27885474b91e29f16e3"
+    },
+    {
+      "id": "architecture-introduction",
+      "sha256": "153ff09282b6f3f82ef746a56d2a9362b732a39ffc62110a8a8e2d8f2f8fd84f",
+      "contentSha256": "a68d9591f42ed19c5dab0fb77d0e031c4f552fa2d73a48fe1664b747a70dbe22"
+    },
+    {
+      "id": "architecture-reading-drawings",
+      "sha256": "a6333eeefa2b2fef1155851e03e5c2c481769a64cfd70def5422a456b300a0c1",
+      "contentSha256": "2172f333a4749879931e15acf70da64d2c92141d409474c3a04ad2e0bd8f5a0a"
+    },
+    {
+      "id": "architecture-space-light",
+      "sha256": "7260c686e0bc2f01e0be8aca299f68cc8331822dd9dcdf55e6b14f8d40ae922a",
+      "contentSha256": "11d0db393240e20325f1d56295c3114613b7041850b9e0abbf4a68a3ddb70cc0"
+    },
+    {
+      "id": "architecture-structure",
+      "sha256": "63a3c787c7bf6ab191cfaaa03409de144c9340938bf05628b49643ed5ebe68a2",
+      "contentSha256": "250ac1f8dd4ba0d346ca712bf164a220f4c85b0e481dd449d1d1cbca06474c92"
+    },
+    {
+      "id": "architecture-materials",
+      "sha256": "92f87e839d3bbfcc820e931ddf95b485ad768d4c9b1de22adbfad2b89e857dc6",
+      "contentSha256": "0a8001c03680680d38cf3da698a3edde5c066f11d6a5bb4dac528474cea5ce46"
+    },
+    {
+      "id": "architecture-climate",
+      "sha256": "ed21cf0cf8a03f4a8d1067aa160ab51c1d96c6dd47e2974645601f5ba16f41b0",
+      "contentSha256": "fb4f538e99a4cd843602748752a3bbe7d8be6c2d59a7709d972f25905ef2f59a"
+    },
+    {
+      "id": "architecture-city",
+      "sha256": "09b2113b46e9202726f2e29e2e05ad5bed507b2d3a4c9a9d18298f463b041584",
+      "contentSha256": "9d9610aef4d6fdc2b578998f21dac39ac4d40d6cfaeaf2682831276d00e4cacd"
+    },
+    {
+      "id": "architecture-reuse",
+      "sha256": "229f900b6727b88ad687ab49050bacd593efba004c8a2d0f8442109ed251a76d",
+      "contentSha256": "843b37de303c5e6d6469503d4c011450923be4881e62cab575148543d5e00917"
+    },
+    {
+      "id": "astronomy-introduction",
+      "sha256": "5b77cb5f37fe9e09681742c50c2500c9857bb7cc282a903c609c9b000f4bdce2",
+      "contentSha256": "f7ca66d4ad95a86b122e07493afb7575dc8b501a562f81937bab81fe64f7c2d4"
+    },
+    {
+      "id": "astronomy-sky-motion",
+      "sha256": "9b6ff4aac0112323cc677fce5f59e354340345d11abbdc3e31f49156203336be",
+      "contentSha256": "5f721ae214ee8926d6370e55a8596bde99a04f9dbad18d3f2aa35c6c476b47b3"
+    },
+    {
+      "id": "astronomy-solar-system",
+      "sha256": "15e5389ace2332216485910422dd54d8d8be6cb15610e3c1a4c6794a7efb18f6",
+      "contentSha256": "146238581dba504b72b8f2d7a3879f291448d4de5063de3cbd1f874db229531b"
+    },
+    {
+      "id": "astronomy-light",
+      "sha256": "881141ae3b1456060bf321e39a1bbb6955ccb50759f27c9f8e05d2a63b4929c6",
+      "contentSha256": "469c3bb80b1ebe6dbefac1720ea334945577e2fa2513857a910efee4648cc2d9"
+    },
+    {
+      "id": "astronomy-stars",
+      "sha256": "ea80e737c799d6487590a3d2ee1c7b163b98568e6a085dcc2c3fbcdad0187a94",
+      "contentSha256": "d3ae72191431e2bc611d96f766775051af46c6bfaaac831515fd9edbd765c6ff"
+    },
+    {
+      "id": "astronomy-galaxies",
+      "sha256": "0dc5839b80b9b46ab5326b92ad4c5e71d6c0fe3161e264f5289c2727a01ee785",
+      "contentSha256": "8a10c5c18400f98e0b3ddfbd7d267e8e902ff0f5e525fc56e91929b627f805a7"
+    },
+    {
+      "id": "astronomy-expanding-universe",
+      "sha256": "6379eaf11cee18714b20f2335e096338dc6c393115339d10ffb32f6324fd983b",
+      "contentSha256": "aec076cdddcc3866c9d03f1b22251544082d31800a1d119b6bde258ff8cf93e1"
+    },
+    {
+      "id": "astronomy-exoplanet-evidence",
+      "sha256": "04ae5f8a86a0557cb130e14a6a8e0a8053fb11915d6850a7bbe31226726fedf7",
+      "contentSha256": "96ab761d8859984190752b631e25fbe930241691d64b6db0d10acde42f5be865"
+    },
+    {
+      "id": "world-introduction",
+      "sha256": "4a88eb31b0fb6fd254aed8edabb2b91aed93840dd7107a0267c5f732eb641be3",
+      "contentSha256": "b550e996dfdd9ab817a6b3cc3865cdf31aeaccebbebb48720db2c24cc3b0e593"
+    },
+    {
+      "id": "world-universe-earth",
+      "sha256": "6dfb0c6fa829d2fbeedf588c0ec250c5a322d7f2a248f31acc30a838e4994790",
+      "contentSha256": "3a6ce251d36095600875b88a044d0cf4cf9a1a96b26fa30b12b8b6aa77b8bde9"
+    },
+    {
+      "id": "world-life",
+      "sha256": "eaf4a54b0732f805c39957c976bb85d566b9844e8bf9d824d45404744505498b",
+      "contentSha256": "7228ae75308aa6c841d318c596a08802cfd365bd58f4e08ec0850a7ab0e10ecd"
+    },
+    {
+      "id": "world-humans",
+      "sha256": "4644adad7ffc357dea97eef7ca88ae1196ea77781cb10f66c620ced9de97574d",
+      "contentSha256": "61e8600a76c52dd5f7812b8088ae36377b99de3b438c2c662b494ff3f46a16e4"
+    },
+    {
+      "id": "world-farming",
+      "sha256": "c22dcc6777f598b80cf431c973f5eeb35adbc5b353af38758325ce976ca28c11",
+      "contentSha256": "13f20731a20cffc28a5fcdf3a992261b8a6f5742392e2c0a29468f2d303feeb2"
+    },
+    {
+      "id": "world-cities-writing",
+      "sha256": "da1f07704dfea990ef8ce6c0955c3d4a3f2614e7a118ad87c367323d12df7ac4",
+      "contentSha256": "56c8ac99b04e400e8fed726bf265840f9949379c586135fc718880fa49712ca3"
+    },
+    {
+      "id": "world-bronze-networks",
+      "sha256": "476ec125c1b8a7053c9df300a547025d626f979077a28d57146896544137f897",
+      "contentSha256": "276bb88c1b3a4e90b13a3c594c267ec2916343ebb97cb2dd0be59bb16d64188a"
+    },
+    {
+      "id": "world-empires",
+      "sha256": "1795e9bc8b2e2433a88558552f2b48ee52a2849c2f3d97a80847aa468f577716",
+      "contentSha256": "f3405a71fd3c20a2b989f417b3b4f7d7d012a7ff1d8cb4c94667074ae9ec9598"
+    },
+    {
+      "id": "world-beliefs",
+      "sha256": "783b3fc4305b178dbf468d9ae85b0c236ce3d7ea507ac7ebb4bcca6b24150566",
+      "contentSha256": "65e5bce0758c96d933032c31566f15a636922862be1af5eee3098c091952067e"
+    },
+    {
+      "id": "world-medieval-networks",
+      "sha256": "d6af5bfe11b55ee03ad357917ea49c8ce9485d3025949b8d679193c78e60c19f",
+      "contentSha256": "0199b0155edb98db4891c66c3586768519ae14fd4c0c91e057a6201ef635f89e"
+    },
+    {
+      "id": "world-many-centres",
+      "sha256": "df436c12b57f4899e89ee2b5640466a0eac4085c198fc23993f79ad32aa9555b",
+      "contentSha256": "c0a18c79ea99675ac13a8911f13edd3d57c1f9fde1324d54601617a15a946103"
+    },
+    {
+      "id": "world-mongols-plague",
+      "sha256": "c8b90890901bbcdf170e8c18578477ac31e8ce76d33680cfb03df248f3dce2e6",
+      "contentSha256": "fb7244dc96670e6f0f9e96a399e6fe8a52d34296bf3b92ae3930dec521229e94"
+    },
+    {
+      "id": "world-ocean-connections",
+      "sha256": "a1b6041b86ec5c61bf17435133d09017b48589b64e69a4b3ca0ec713dcb7f2bc",
+      "contentSha256": "64ca0ba9b18c25b7f9b90fc3caa0727f967fc75fcd2a5e0da227103364bbe009"
+    },
+    {
+      "id": "world-slavery-capital",
+      "sha256": "34eab9f423b376bb3f3f1d83f500b8b6948c285a07a7b8c4391d8a533d17bced",
+      "contentSha256": "4281e2322fe033ce67af0e4f87b8ad04b06ca3f3935c4e6c3970e610343e733f"
+    },
+    {
+      "id": "world-ideas-revolutions",
+      "sha256": "197311f2138dcf5042bc65ef554fd5f1aaf57dc95e9da82ab260921e5b3ae536",
+      "contentSha256": "8e1b04039c69eb6e24859c287603d106bbc45629eb7017ed26b8b7788e0bd1b3"
+    },
+    {
+      "id": "world-industry",
+      "sha256": "2e4324b23215cad4f8f98ffae9c2418936542883b225871c9c5c1cfa55647e70",
+      "contentSha256": "ec2e241d7b3906e68d0d512d47758339569a231063307d1da64a1fb6e3bc1022"
+    },
+    {
+      "id": "world-imperialism-resistance",
+      "sha256": "51537d4dd9e8489676623fde040c94d1d463f39b2dd7e4b9fe73ed631df9a53d",
+      "contentSha256": "6ce98121507d28f6392176e92a0c16130266ed2fd59370243cf4dddc770fc658"
+    },
+    {
+      "id": "world-world-wars",
+      "sha256": "31cd89336d9337df351fcf0fc45fe5ccdc04017ffe6a7f4eda7ea44e88ba331c",
+      "contentSha256": "17191d770468aa38b6006a266db468d6bae8e259721362b99a916477abed774b"
+    },
+    {
+      "id": "world-cold-war-decolonization",
+      "sha256": "47f8a1c1605d74a5ab7f06642748021350b9ea1303fd3182c09d22b667f9c97e",
+      "contentSha256": "827cbad115342510ee40243e0ab8b5f8326a53af6a31759e38a68a80a6c2d81c"
+    },
+    {
+      "id": "world-connected-present",
+      "sha256": "09ae501202e49c5ca4d62209caf97bf03c36adabbbf9def4bbed2a6bd67ff0c9",
+      "contentSha256": "ea0d7c1e261c9e2ac0662301d68c4bef2732db4fc667d547fa5f703fffbb4f52"
+    }
+  ]
+}
