@@ -242,10 +242,10 @@ const originalLessons: Lesson[] = [
     "summary": "Ένα σπίτι, μια αυλή και μερικά μικρά ευρήματα αποκαλύπτουν την Αθήνα των ανθρώπων — και τα όρια όσων ξέρουμε γι’ αυτούς.",
     "readingMinutes": 6,
     "intro": "Ο Παρθενώνας αφηγείται την ιστορία μιας ισχυρής πόλης. Μια αυλή με φθαρμένες πλάκες, ένας αγωγός νερού και οι τοίχοι ενός σπιτιού αφηγούνται κάτι διαφορετικό: πώς κατοικούσαν, εργάζονταν και συνυπήρχαν άνθρωποι που δεν άφησαν διάσημα ονόματα. Αρκεί να προσέξουμε και τη χρονολογία κάθε ίχνους.",
-    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Athens%20Acropolis%20Museum%20excavation%2002.jpg?width=1200",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Athens%20Acropolis%20Museum%20Excavation.jpg?width=1200",
     "imageCaption": "Κατάλοιπα της αρχαίας γειτονιάς κάτω από το Μουσείο της Ακρόπολης. Οι ορατοί τοίχοι δεν ανήκουν όλοι στην ίδια εποχή.",
-    "imageCredit": "Ad Meskens / Wikimedia Commons · CC BY-SA 4.0 · Φωτογραφία 2019",
-    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Athens_Acropolis_Museum_excavation_02.jpg",
+    "imageCredit": "Yair-haklai / Wikimedia Commons · CC BY-SA 4.0 · Φωτογραφία 2024",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Athens_Acropolis_Museum_Excavation.jpg",
     "requireCurrentAttemptQuiz": true,
     "sections": [
       {
