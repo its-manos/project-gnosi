@@ -43,19 +43,19 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
   "minoan-crete": [
     {
       afterParagraphId: "mu-district",
-      url: commonsFileUrl("Malia Minoan-site Palace Central-court 20230608 094807.jpg"),
+      url: commonsFileUrl("The Palace in Malia Crete.jpg"),
       resizeMode: "contain",
-      caption: "Η σημερινή εικόνα της κεντρικής αυλής των Μαλίων. Διαφέρει από τη συνοικία Μ, που βρισκόταν έξω από το κυρίως ανακτορικό συγκρότημα.",
-      credit: "Rigorius / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
-      creditUrl: commonsPageUrl("Malia Minoan-site Palace Central-court 20230608 094807.jpg"),
+      caption: "Η συνοικία Μ των Μαλίων, ένας ανασκαμμένος χώρος συνδεδεμένος με εργαστήρια και μεγάλα κτίρια έξω από το κυρίως ανάκτορο.",
+      credit: "Moroder / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2015",
+      creditUrl: commonsPageUrl("The Palace in Malia Crete.jpg"),
     },
     {
       afterParagraphId: "gournia-streets",
-      url: commonsFileUrl("Gournia archaeological site from east.jpg"),
+      url: commonsFileUrl("Gournia, Minoan Bronze Age Village.JPG"),
       resizeMode: "contain",
       caption: "Ανασκαμμένα κατάλοιπα στα Γουρνιά. Οι τοίχοι και τα περάσματα αποκαλύπτουν τον οικιστικό ιστό, όχι μία πλήρη αναπαράσταση των αρχαίων σπιτιών.",
-      credit: "Wikimedia Commons · δημιουργός και άδεια προς επανέλεγχο πριν από τη δημοσίευση",
-      creditUrl: commonsPageUrl("Gournia archaeological site from east.jpg"),
+      credit: "Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2013",
+      creditUrl: commonsPageUrl("Gournia, Minoan Bronze Age Village.JPG"),
     },
   ],
   "aegean-bronze-age": [
