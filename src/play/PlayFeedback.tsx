@@ -23,27 +23,39 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
   useEffect(() => {
     const audio = new FeedbackAudio(), gate = new FeedbackGate();
     let alive = true, motionChanged = false;
+    // Accepted answers can arrive before the device's saved sound setting loads.
+    // Keep one short-lived cue instead of silently losing the first answer.
+    let pendingPreferenceCue: { kind: FeedbackEvent["kind"]; at: number } | null = null;
     void playPreferences.load(AsyncStorage); void audio.start();
     const reduced = AccessibilityInfo.addEventListener("reduceMotionChanged", value => { motionChanged = true; playPreferences.setMotion(value); });
     void AccessibilityInfo.isReduceMotionEnabled().then(value => { if (alive && !motionChanged) playPreferences.setMotion(value); }).catch(() => { if (alive && !motionChanged) playPreferences.setMotion(true); });
     const state = AppState.addEventListener("change", value => {
       foreground.current = value === "active";
-      if (!foreground.current) { audio.stop(); gate.reset(); setToast(null); }
+      if (!foreground.current) { pendingPreferenceCue = null; audio.stop(); gate.reset(); setToast(null); }
     });
-    const unsubscribePrefs = playPreferences.subscribe(() => { const p = playPreferences.getSnapshot(); if (!p.ready || !p.sound) audio.stop(); });
     const allowed = () => { const p = playPreferences.getSnapshot(); return alive && foreground.current && p.ready && p.sound; };
+    const unsubscribePrefs = playPreferences.subscribe(() => {
+      const p = playPreferences.getSnapshot();
+      if (!p.ready) return;
+      if (!p.sound) { pendingPreferenceCue = null; audio.stop(); return; }
+      const pending = pendingPreferenceCue;
+      pendingPreferenceCue = null;
+      // Don't let an old cue play after leaving the app or navigating away.
+      if (pending && alive && foreground.current && Date.now() - pending.at < 2500) audio.play(pending.kind, allowed);
+    });
     const unsubscribePreview = subscribeSoundPreview(() => { if (allowed()) audio.preview(allowed); });
     const unsubscribe = subscribePlayFeedback(incoming => {
       const total = totalRewardXP(mergeRewardLedgers(store.getSnapshot().rewards, dailyStore.getSnapshot().doc.rewards));
       const level = levelProgress(total).level;
       const event: FeedbackEvent = (incoming.xp ?? 0) > 0 && level > levelProgress(Math.max(0, total - incoming.xp!)).level ? { ...incoming, kind: "level-up", level } : incoming;
       if (!alive || !gate.accept(event, store.userId ?? "guest", foreground.current, Date.now())) return;
-      audio.play(event.kind, allowed);
+      if (!playPreferences.getSnapshot().ready) pendingPreferenceCue = { kind: event.kind, at: Date.now() };
+      else audio.play(event.kind, allowed);
       // Completion XP already appears in results. Keep only answer feedback and
       // distinct milestones here; projected answer XP never triggers a level-up.
       if (event.answerXP !== undefined || ["level-up", "mastered"].includes(event.kind)) setToast(event);
     });
-    return () => { alive = false; unsubscribe(); unsubscribePrefs(); unsubscribePreview(); reduced.remove(); state.remove(); audio.dispose(); };
+    return () => { alive = false; pendingPreferenceCue = null; unsubscribe(); unsubscribePrefs(); unsubscribePreview(); reduced.remove(); state.remove(); audio.dispose(); };
   }, [store, dailyStore]);
   useEffect(() => {
     if (!toast) return;
