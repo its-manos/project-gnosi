@@ -31,7 +31,8 @@ export default function LearningDevTools({ canResetLessonProgress, lessonProgres
     );
   }
 
-  return <>      {__DEV__ ? (
+  return <>
+      {__DEV__ ? (
         <View style={styles.devTools}>
           <Text style={styles.devLabel}>ΕΡΓΑΛΕΙΑ ΑΝΑΠΤΥΞΗΣ</Text>
           <Text style={styles.devDescription}>Διαθέσιμο μόνο ως επισκέπτης. Καθαρίζει ολοκληρώσεις, ημιτελείς προσπάθειες και δραστηριότητα μαθημάτων του επισκέπτη, χωρίς να διαγράφει δεδομένα λογαριασμού.</Text>
