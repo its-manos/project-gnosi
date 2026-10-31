@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-world-not-a-country": [
+    {
+      afterParagraphId: "map-shores",
+      url: commonsFileUrl("Greek Colonization Archaic Period.png"),
+      resizeMode: "contain",
+      caption: "Σύγχρονος σχηματικός χάρτης ελληνικών εγκαταστάσεων της αρχαϊκής εποχής. Τα σημεία δεν παριστάνουν ενιαίο κράτος ούτε αποτυπώνουν κάθε κοινότητα· άγγιξε για μεγέθυνση.",
+      credit: "Regaliorum / Wikimedia Commons · CC0 1.0 · αρχική χαρτογραφική απόδοση",
+      creditUrl: commonsPageUrl("Greek Colonization Archaic Period.png"),
+    },
+    {
+      afterParagraphId: "sanctuaries",
+      url: commonsFileUrl("Stadium at Olympia.jpg"),
+      resizeMode: "cover",
+      caption: "Το στάδιο της Ολυμπίας σήμερα. Ο κοινός τόπος αγώνων και λατρείας δεν ήταν πρωτεύουσα ενός ενιαίου ελληνικού κράτους.",
+      credit: "Anna Tziaki / Wikimedia Commons · CC BY-SA 4.0 · Φωτογραφία 2016",
+      creditUrl: commonsPageUrl("Stadium at Olympia.jpg"),
+    },
+  ],
   "ancient-athens": [
     {
       afterParagraphId: "theta-workshop",

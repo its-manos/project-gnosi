@@ -1,5 +1,6 @@
 import type { QuestionMetadata } from "../quiz/types";
 import { worldHistoryLessons } from "./worldHistoryLessons";
+import { greekWorldLessons } from "./greekWorldLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -446,6 +447,7 @@ const originalLessons: Lesson[] = [
 // Keep old catalogue order and all quiz objects stable; place the path in lessonPath.ts.
 export const lessons: Lesson[] = [
   ...originalLessons.map(lesson => ({ ...lesson, ...astronomyRevisions[lesson.id] })),
+  ...greekWorldLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,

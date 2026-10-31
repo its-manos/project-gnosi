@@ -42,7 +42,7 @@ function harness(store){
  const render=harness(store);let app=render();app.openLesson(second.id);assert.equal(app.screen,'home','tap before hydration waits');
  await store.start();app=render();app=render();assert.equal(app.screen,'subcategory','queued locked route cannot bypass gate');
  app.openLesson(first.id);app=render();assert.equal(app.screen,'lesson');
- for(let i=0;i<4;i++){app.answerCheckpoint(i,(first.questions[i].correctIndex+1)%4,first.questions[i].correctIndex);app=render();}
+ for(let i=0;i<first.questions.length;i++){app.answerCheckpoint(i,(first.questions[i].correctIndex+1)%4,first.questions[i].correctIndex);app=render();}
  app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.equal(app.score,0);
  assert.equal(paths.getNextPathLesson(first,data.lessons,app.completedLessonIds).id,second.id,'completion unlocks next even at zero score');
  app.openLesson(third.id);app=render();assert.equal(app.screen,'subcategory','cannot skip a prerequisite');

@@ -47,4 +47,25 @@ assert.ok(!stale.attempts[lesson.id]);
 const completed=parseLearningBackup({...make(attempt),completedIds:[lesson.id]});
 assert.ok(completed.completedIds.includes(lesson.id));
 assert.ok(!lessonQuizMatches(lesson,"q_other"),"Historical changed answers must not count for current mistake review");
+
+const greek=lessons.find(l=>l.id==="greek-world-not-a-country");
+assert.ok(greek,"Ancient Greece second lesson should be published");
+assert.equal(progress.getParagraphCount(greek),15);
+assert.deepEqual(progress.getQuestionPlacements(greek).map(p=>p.afterParagraphNumber),[3,9,12]);
+assert.deepEqual(progress.getQuestionPlacements(greek).map(p=>p.questionId),["greek-world-belonging","greek-world-herodotus-context","greek-world-links"]);
+assert.equal(progress.getVisibleParagraphLimit(greek,{}),3);
+assert.equal(progress.getVisibleParagraphLimit(greek,{0:0}),9);
+assert.equal(progress.getVisibleParagraphLimit(greek,{0:0,1:2}),12);
+assert.equal(progress.getVisibleParagraphLimit(greek,{0:0,1:2,2:0}),15);
+assert.equal(progress.getResumeParagraphNumber(greek,{0:0,1:2}),10);
+assert.ok(greek.requireCurrentAttemptQuiz && greek.questions.every(q=>q.version==="1"&&q.answers.length===4));
+assert.deepEqual(inlineArticleMedia[greek.id].map(f=>f.afterParagraphId),["map-shores","sanctuaries"]);
+assert.ok(!lessonQuizMatches(greek,"q_unrelated"));
+const greekAttempt={checkpointAnswers:{0:1},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
+const greekOld=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[greek.id],attempts:{[greek.id]:greekAttempt}});
+assert.ok(!greekOld.attempts[greek.id],"Never reuse unversioned legacy question indices");
+assert.ok(greekOld.savedIds.includes(greek.id),"Bookmarks survive migration");
+const greekCurrent=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[greek.id],attempts:{[greek.id]:{...greekAttempt,quizKey:quizFingerprint(greek.questions)}}});
+assert.equal(greekCurrent.attempts[greek.id].score,1);
+
 console.log("Flexible editorial placement and backward-compatible progress regression checks passed.");

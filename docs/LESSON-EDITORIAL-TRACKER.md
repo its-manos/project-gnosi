@@ -1,5 +1,5 @@
 # Gnosi — Lesson Editorial Tracker
-_Updated 2026-10-31 · Source of truth: [curriculum](CONTENT-CURRICULUM-v1.md) · Development branch: `content/curriculum-v1`._
+_Updated 2026-11-01 · Source of truth: [curriculum](CONTENT-CURRICULUM-v1.md) · Development branch: `content/curriculum-v1`._
 
 ## Meaning of status
 - **Not started:** only curriculum outline exists (some IDs are not yet assigned).
@@ -68,8 +68,8 @@ Update this tracker **at the start and end** of each editorial session. Record a
 ## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (updated 2026-11-01)
 
 - **v1 plan:** 30 lessons / 5 chapters, detailed ordered IDs, titles and overlap map in [curriculum](CONTENT-CURRICULUM-v1.md#12-finalized-v1-learning-path--ιστορία--αρχαία-ελλάδα-2026-11-01).
-- **Already in app:** 4 original lesson IDs, of which **1** has been newly research-first rewritten. All others are old drafts (not independently approved). The remaining 26 proposed IDs are **Not started**, not yet integrated into the app or published as empty navigation items.
-- **Chapter I:** #1 `ancient-athens` — **Integrated**; #2 `greek-world-not-a-country` — **Not started**; #3 `greek-history-through-evidence` — **Not started**; #4 `greek-chronology` — **Not started**; #5 `greek-geography-seas` — **Not started**.
+- **Already in app:** 4 original stable lesson IDs (one research-first rewritten) **plus 1 new research-first Integrated lesson** = 5 Ancient Greece app lessons. Other 3 originals remain unapproved drafts; **25** planned IDs are still Not started, with no empty navigation items.
+- **Chapter I:** #1 `ancient-athens` — **Integrated**; #2 `greek-world-not-a-country` — **Integrated** («Ένας ελληνικός κόσμος, όχι ένα κράτος»; [research/QA](greek-world-not-a-country-research.md)); #3 `greek-history-through-evidence` — **Not started**; #4 `greek-chronology` — **Not started**; #5 `greek-geography-seas` — **Not started**.
 - **Chapter II:** #6 `aegean-bronze-age`, #7 `minoan-crete`, #8 `mycenaean-palaces`, #10 `palace-collapse`, #11 `geometric-greece` — **Not started**; #9 `linear-b-decipherment` — **Drafted** (existing app lesson).
 - **Chapter III:** #12 `rise-of-polis`, #13 `greek-settlements-networks`, #14 `sparta-society`, #16 `athens-law-courts`, #17 `greek-war-hoplites`, #18 `greek-sanctuaries-games` — **Not started**; #15 `athens-who-voted` — **Drafted** (existing app lesson).
 - **Chapter IV:** #19–24, IDs and titles in curriculum — **Not started**.
@@ -80,5 +80,11 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Unique contribution:** domestic archaeological material and chronological/site interpretation; detailed democracy, Mycenae, Hellenistic technology and archaeological methods deliberately reserved.
 - **Questions/images:** 3 stable questions after paragraphs 3/9/13; modern licensed excavation/Agora photos; source citations in lesson. Cover, inline loading, zoom, cropping and accessibility require device QA.
 - **Validation status:** **Integrated, not Validated/Approved.** GitHub edits and source review completed; **no local npm/TypeScript/device tests executed**. Test script updated but still must be run. Include XP replays, stale attempts, audio and saved progress tests.
-- **Next:** `greek-world-not-a-country` — «Οι Έλληνες χωρίς ένα ελληνικό κράτος» (chapter I lesson 2). Begin only next session; do not repeat House Θ or Agora everyday-life analysis.
-- **Historical progress of research-first reviews:** 1 Integrated; 0 Validated; 0 Approved, for Ancient Greece v1.
+- **Next:** `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;» (chapter I lesson 3). **Not started.** Evidence types, historians and limitations; do not repeat lesson 2 as a general debate on Greek identity.
+- **Historical progress of research-first reviews:** 2 Integrated; 0 Validated; 0 Approved, for Ancient Greece v1.
+
+### Lesson 2 session audit — 2026-11-01
+- **`greek-world-not-a-country`: Integrated, not Validated/Approved.** [Notes with claim-level sources, licences and checks](greek-world-not-a-country-research.md). Retitled «Ένας ελληνικός κόσμος, όχι ένα κράτος»; 15 paragraphs, 3 stable checkpoints after 3/9/12, 1 cover and 2 anchored media.
+- Existing reader, progress, XP, audio, rewards, Supabase and historical lesson quiz records untouched. Path order now inserts lesson 2 immediately after lesson 1, preserving completed/in-progress older lessons through existing access policy.
+- Corrected outdated Node test assumptions in `test-reader-pilot.cjs` and `test-lesson-path.cjs`; extended `test-flexible-editorial.cjs`. Connector-side structural review passed; **no npm/Node/device tests were executable**. Verify all previous lesson-1 issues and lesson-2 loading, quiz unlocking, replay/XP, first-answer audio and progress sync on iOS/Android before advancing status.
+- **Next planned lesson only:** `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;»; no code/content created for lesson 3.

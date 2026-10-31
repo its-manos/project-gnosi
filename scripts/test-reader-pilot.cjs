@@ -35,7 +35,7 @@ function compile(file, imports = {}) {
 const progress = compile('src/utils/lessonProgress.ts');
 const addition = compile('src/data/additionalLessons.ts');
 const expansion = compile('src/data/catalogueExpansion.ts');
-const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts'), './geologyLessons': compile('src/data/geologyLessons.ts'), './perceptionLessons': compile('src/data/perceptionLessons.ts'), './perceptionAttentionLessons': compile('src/data/perceptionAttentionLessons.ts') });
+const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './greekWorldLessons': compile('src/data/greekWorldLessons.ts'), './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts'), './geologyLessons': compile('src/data/geologyLessons.ts'), './perceptionLessons': compile('src/data/perceptionLessons.ts'), './perceptionAttentionLessons': compile('src/data/perceptionAttentionLessons.ts') });
 const media = compile('src/data/articleMedia.ts', { './architectureMedia': compile('src/data/architectureMedia.ts'), './astronomyMedia': compile('src/data/astronomyMedia.ts'), './worldHistoryMedia': compile('src/data/worldHistoryMedia.ts'), './supplementaryMedia': compile('src/data/supplementaryMedia.ts') });
 const theme = compile('src/theme.ts');
 const stubs = Object.fromEntries(['KnowledgeProgress','ZoomableLessonImage','ActionButton','ArticleFigure','InlineQuestionCard','LessonCover','SourceLink','AppHeader','ReportContentButton'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
@@ -65,7 +65,7 @@ assert.equal(Entry(props).type, Reader);
 let tree = render();
 const scroll = nodes(tree).find(n => n.type === 'ScrollView');
 scroll.props.ref.current = { scrollTo: args => scrolls.push(args) };
-assert.ok(byId(tree,'reader-paragraph-2')); assert.ok(!byId(tree,'reader-paragraph-3'));
+assert.ok(byId(tree,'reader-paragraph-3')); assert.ok(!byId(tree,'reader-paragraph-4'));
 assert.ok(!byId(tree,'reader-finish')); assert.ok(byId(tree,'reader-locked'));
 assert.equal(nodes(tree).find(n => n.props?.accessibilityRole === 'progressbar').props.accessibilityValue.now, 0);
 press(tree,'Πηγές άρθρου'); tree=render();
@@ -94,14 +94,14 @@ for(let i=0;i<total;i++) {
   assert.deepEqual(calls.at(-1),['answer',i,choice,q.props.question.correctIndex]);
   props={ ...props, checkpointAnswers: { ...props.checkpointAnswers,[i]:choice } }; tree=render();
   assert.equal(nodes(tree).find(n => n.props?.accessibilityRole === 'progressbar').props.accessibilityValue.now,i+1);
-  if(i<total-1) assert.ok(byId(tree,`reader-paragraph-${(i+1)*2+1}`), 'Any answer unlocks next paragraphs.');
+  if(i<total-1) assert.ok(byId(tree,`reader-paragraph-${progress.getQuestionPlacements(lesson)[i].afterParagraphNumber+1}`), 'Any answer unlocks next paragraphs.');
 }
 assert.ok(byId(tree,'reader-finish')); assert.ok(!byId(tree,'reader-locked'));
 assert.ok(!calls.some(c=>c[0]==='finish'), 'Reading/answering alone never marks completion.');
 nodes(tree).find(n => n.type === 'ActionButton' && n.props.label.startsWith('Ολοκλήρωση')).props.onPress();
 assert.deepEqual(calls.at(-1),['finish']);
 // Continue must work when child paragraph layout fires before parent section layout.
-const paragraph=byId(tree,'reader-paragraph-3');
+const paragraph=byId(tree,'reader-paragraph-4');
 lay(paragraph,66);
 const continuation=nodes(tree).find(n => n.type==='ActionButton' && n.props.label==='Συνέχεια ανάγνωσης ↓');
 continuation.props.onPress();
@@ -111,7 +111,7 @@ assert.equal(scrolls.at(-1).y,808,'Continue keeps the new section heading visibl
 // Resume uses the same position system, once per visit, with no new-answer auto jump.
 reset({0:0}); tree=render();
 nodes(tree).find(n=>n.type==='ScrollView').props.ref.current={scrollTo:args=>scrolls.push(args)};
-const resumeParagraph=byId(tree,'reader-paragraph-3'); lay(resumeParagraph,45);
+const resumeParagraph=byId(tree,'reader-paragraph-4'); lay(resumeParagraph,45);
 const resumeSection=nodes(tree).find(n=>n.props?.onLayout && nodes(n).includes(resumeParagraph) && n!==resumeParagraph && n.type==='View');
 lay(resumeSection,930); assert.equal(scrolls.at(-1).y,918); assert.equal(scrolls.at(-1).animated,false);
 const before=scrolls.length;
@@ -140,14 +140,14 @@ for(const article of data.lessons) {
     if(article.contentNote) {
       assert.ok(nodes(tree).some(n=>n.type==='Text' && n.props.children===article.contentNote));
     }
-    const limit=answered===count ? paragraphs.length : Math.min(paragraphs.length,(answered+1)*2);
+    const limit=progress.getVisibleParagraphLimit(article,props.checkpointAnswers);
     for(let number=1;number<=paragraphs.length;number++) {
       assert.equal(Boolean(byId(tree,`reader-paragraph-${number}`)),number<=limit,article.id+' paragraph '+number);
       if(number<=limit) assert.ok(nodes(byId(tree,`reader-paragraph-${number}`)).some(n=>n.type==='Text' && n.props.children===paragraphs[number-1]));
     }
     assert.equal(Boolean(byId(tree,'reader-finish')),answered===count,article.id+' completion gate');
     const visibleMedia=nodes(tree).filter(n=>n.type==='ArticleFigure').map(n=>n.props.figure);
-    const expectedMedia=(media.inlineArticleMedia[article.id]??[]).filter(f=>f.afterParagraphCount<=limit);
+    const expectedMedia=(media.inlineArticleMedia[article.id]??[]).filter(f=>f.afterParagraphId ? paragraphs.slice(0,limit).some((p,i)=>progress.getParagraphId(p,i+1)===f.afterParagraphId) : f.afterParagraphCount<=limit);
     assert.deepEqual(visibleMedia,Array.from(expectedMedia),article.id+' inline figures');
   }
   figures+=(media.inlineArticleMedia[article.id]??[]).length;

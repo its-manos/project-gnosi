@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: editorial draft · 2026-10-31 · planning only
+Status: curriculum plan with Integrated Ancient Greece lessons 1–2 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -253,7 +253,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 ### Chapter I. Η πόλη πίσω από τα μνημεία
 
 1. `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα» (existing live ID)
-2. `greek-world-not-a-country` — «Οι Έλληνες χωρίς ένα ελληνικό κράτος»
+2. `greek-world-not-a-country` — «Ένας ελληνικός κόσμος, όχι ένα κράτος» (research-first Integrated; QA pending)
 3. `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;»
 4. `greek-chronology` — «Από τα ανάκτορα στις πόλεις: ένας χάρτης του χρόνου»
 5. `greek-geography-seas` — «Η θάλασσα που ένωνε και χώριζε τις κοινότητες»
@@ -306,6 +306,12 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
 
-**Next lesson:** `greek-world-not-a-country` — «Οι Έλληνες χωρίς ένα ελληνικό κράτος» (Chapter I, lesson 2). Opening should not repeat the archaeological household case study. Cover diversity of communities, Greek language/cult association without treating identity as timeless, and the limits of modern nation-state labels. Verify titles and scope after research.
+**Integrated in this branch (2026-11-01):** Lesson 2 `greek-world-not-a-country` — «Ένας ελληνικός κόσμος, όχι ένα κράτος», using a comparative map and a contextual Herodotus passage (not a second household case study). [Research and media/QA record](greek-world-not-a-country-research.md). The 30-lesson planned count is unchanged; only five Ancient Greece lessons currently exist in app code. **Next to research, NOT started:** lesson 3 `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;». Do not claim lesson 1 or 2 as Validated before local/device checks.
 
 **Course-level inspiration to consult:** Yale [Introduction to Ancient Greek History](https://oyc.yale.edu/classics/clcv-205); Met Museum [Greek Art chronological essays](https://www.metmuseum.org/toah/hd/grlg/hd_grlg.htm); Cambridge Mycenaean Epigraphy Group. These inform sequence but are not substitutes for claim-specific sources.
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 2
+- The **planned** curriculum remains **30** lessons in five chapters; **five** Ancient Greece lessons are now in the app (four originals plus lesson 2).
+- Lesson 2 `greek-world-not-a-country` is **Integrated** under final title «Ένας ελληνικός κόσμος, όχι ένα κράτος». See [research/media audit](greek-world-not-a-country-research.md). Article is about diversity of belonging, language, religious connections and the modern nation-state anachronism, not about House Θ or the mechanics of settlement founding.
+- Lesson 1 is still Integrated, not Validated. Lesson 2 is Integrated, not Validated. Device/npm/editorial acceptance remains to be recorded.
+- **Next in line (do not draft now):** lesson 3 `greek-history-through-evidence` — «Ποιος μας αφηγείται την αρχαία ιστορία;».

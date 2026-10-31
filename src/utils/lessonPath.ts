@@ -2,7 +2,7 @@ import type { Lesson } from "../data/lessons";
 
 // Stable editorial order. New lessons are appended until explicitly placed here.
 export const lessonPaths: Record<string, readonly string[]> = {
-  "ancient-greece": ["ancient-athens", "athens-who-voted", "antikythera-gears", "linear-b-decipherment"],
+  "ancient-greece": ["ancient-athens", "greek-world-not-a-country", "athens-who-voted", "antikythera-gears", "linear-b-decipherment"],
   "world-history": ["world-introduction", "world-universe-earth", "world-life", "world-humans", "world-farming", "world-cities-writing", "world-bronze-networks", "world-empires", "pompeii-everyday-life", "world-beliefs", "silk-roads-ideas", "world-medieval-networks", "world-many-centres", "world-mongols-plague", "world-ocean-connections", "world-slavery-capital", "world-ideas-revolutions", "world-industry", "world-imperialism-resistance", "world-world-wars", "world-cold-war-decolonization", "world-connected-present"],
   mythology: ["osiris-afterlife"],
   space: ["astronomy-introduction", "astronomy-sky-motion", "moon-phases-not-shadow", "astronomy-solar-system", "why-mars-is-red", "orbit-continuous-fall", "astronomy-light", "astronomy-stars", "astronomy-galaxies", "astronomy-expanding-universe", "astronomy-exoplanet-evidence"],
