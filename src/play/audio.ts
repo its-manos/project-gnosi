@@ -23,8 +23,9 @@ export class FeedbackAudio {
   private pending: (() => void) | null = null;
   private timer: ReturnType<typeof setTimeout> | undefined;
   start(): Promise<void> {
-    if (!this.alive || this.players.size) return Promise.resolve();
+    if (!this.alive) return Promise.resolve();
     if (this.starting) return this.starting;
+    if (this.players.size) return Promise.resolve();
     this.starting = this.initialize().finally(() => { this.starting = null; });
     return this.starting;
   }
@@ -56,7 +57,7 @@ export class FeedbackAudio {
   }
   stop() {
     this.generation++; this.pending = null; clearTimeout(this.timer);
-    for (const player of this.players.values()) { try { player.pause(); } catch { /* Optional feedback. */ } }
+    for (const player of this.players.values()) { try { if (player.playing) player.pause(); } catch { /* Optional feedback. */ } }
   }
   preview(allowed: () => boolean) {
     // Exercise the same cached-player path used by answers. Rebuild only after
@@ -70,7 +71,8 @@ export class FeedbackAudio {
     const token = this.generation;
     const current = () => this.alive && token === this.generation && allowed();
     const failed = () => { if (current()) reportSoundStatus("error", "Ο ήχος δεν ανταποκρίθηκε. Πάτησε «Δοκιμή ήχου» ξανά."); };
-    const timer = setTimeout(() => { failed(); if (token === this.generation) this.stop(); }, 1500);
+    // Cold Android players can take longer than a warm preview to prepare.
+    const timer = setTimeout(() => { failed(); if (token === this.generation) this.stop(); }, 2500);
     this.timer = timer;
     const attempt = () => {
       if (!current() || this.pending !== attempt) return;
