@@ -5,7 +5,7 @@ _2026-11-01 · content/curriculum-v1 · Integrated, not Validated or Approved_
 - ID `macedon-philip` · Ιστορία → Αρχαία Ελλάδα · Chapter IV · 23/30.
 - Original title: «Η άνοδος της Μακεδονίας»; final: «Φίλιππος Β΄: πώς η Μακεδονία άλλαξε τις ισορροπίες». Emphasizes contingent shifts in power rather than an inevitable unification story.
 - Goal: explain the 359–336 transformation through inherited royal structures, geology/geography, civic agency, resources, recruitment, diplomacy and warfare; analyze limits of available evidence.
-- Narrative architecture: 6 connected sections / 33 stable paragraphs / 1 Greek prose words / 11 min at 185 wpm; 7 checkpoints after 4, 9, 16, 21, 26, 30 and 33.
+- Narrative architecture: 6 connected sections / 33 stable paragraphs / 1851 Greek prose words / 11 min at 185 wpm; 7 checkpoints after 4, 9, 16, 21, 26, 30 and 33.
 - Summary: royal geography and aristocratic networks → 359 succession and adaptive army → contest for northern cities and human costs → Sacred War and contested diplomacy → Chaeronea and varied settlements → Corinthian common peace and the unresolved 336 succession.
 
 ## Source-to-claim map
@@ -33,7 +33,7 @@ _2026-11-01 · content/curriculum-v1 · Integrated, not Validated or Approved_
 - Philip II and chronology 359–338 — Cambridge chronology (2026 online edition). Cambridge University Press. https://www.cambridge.org/core/services/aop-cambridge-core/content/view/AA5F32E13E20CAFF2ACE09749527E515/9781009408981chr_xiv-xvii.pdf/chronology.pdf
 - Archaeological Site of Aigai (Vergina), site 780. UNESCO World Heritage Centre. https://whc.unesco.org/en/list/780
 - First Philippic, Olynthiacs and On the Peace — Demosthenes (4, 1–3, 5); Against the False Embassy — Demosthenes 19 / Aeschines 2 (political speeches). Center for Hellenic Studies, Harvard University (context). https://www-current.chs.harvard.edu/discussion-series-athenian-law-lectures-6/
-- Diodorus Siculus, Library of History, book 16 (later historical narrative). LacusCurtius / University of Chicago. https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/16A*.html
+- Diodorus Siculus, Library of History, book 16 (later historical narrative). LacusCurtius / University of Chicago. https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/
 
 ## Source criticism and interpretive boundaries
 - Distinguish Aigai royal burial contexts and later restored palace from the early fourth-century material landscape. Pella's extant streets often show later phases.

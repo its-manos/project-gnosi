@@ -274,7 +274,7 @@ export const macedonPhilipLessons: Lesson[] = [
       {
         "title": "Diodorus Siculus, Library of History, book 16 (later historical narrative)",
         "publisher": "LacusCurtius / University of Chicago",
-        "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/16A*.html"
+        "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/"
       }
     ],
     "questions": [
