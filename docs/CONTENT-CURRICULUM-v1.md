@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–17 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–18 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -275,7 +275,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 15. `athens-who-voted` — «Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν» (existing live ID; research-first Integrated, QA pending)
 16. `athens-law-courts` — «Αθήνα: από την καταγγελία στην ψήφο» (Integrated; QA pending)
 17. `greek-war-hoplites` — «Πίσω από την ασπίδα: οι οπλίτες των ελληνικών πόλεων» (Integrated; QA pending)
-18. `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις»
+18. `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: τόποι συνάντησης και ανταγωνισμού» (Integrated; QA pending)
 
 ### Chapter IV. Πόλεμος, εξουσία και μεταβολές
 
@@ -302,6 +302,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `greek-history-through-evidence`: historians' sources and their biases; archaeological techniques in depth belong to proposed `archaeology-methods`.
 - `linear-b-decipherment`: revised existing article; Bennett’s sign classification, Kober’s inflectional grids, Ventris’s 1952 predictions, Chadwick’s philology, new PY Ta 641 test and translation limits. Palace administration stays in `mycenaean-palaces`; destruction in `palace-collapse`; alphabetic developments in `geometric-greece`; generic excavation methods in `archaeology-methods`.
 - `athens-who-voted`: rewritten existing live ID; Attica/demes, mutable descent rules, Periclean 451/450 restriction, women’s civic identity, metics and enslaved residents, practical assembly access, evidence limits. Do not equate women’s public religious roles with assembly voting; `athens-law-courts` covers jury selection, litigation and verdict procedures, not another franchise lesson.
+- `greek-sanctuaries-games`: Early Olympia offerings, Elean games and nonuniversal *ekecheiria*, Delphi's sanctuary administration, oracles, dedication displays, Pythian musical contests and inequalities; not a second polis/warfare essay or an early Persian Wars narrative. [Research/media/QA](greek-sanctuaries-games-research.md).
 - `greek-war-hoplites`: Lesson 17, shields, spears and defensive equipment, the Chigi vase and Tyrtaeus, classical descriptions of cohesion and terrain, the debated 'hoplite revolution' and the unequal intersection of military service with political rights. Not another Spartan social-structure lesson or Persian/Peloponnesian War chronology. [Research/rights/QA record](greek-war-hoplites-research.md).
 - `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
@@ -425,3 +426,7 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **Verification:** GitHub branch, catalogue and ordering readback, Commons source/rights and research-page inspection, serialized object structural checks. **Not executed:** npm typecheck, content validator, Node regression scripts (including #14–16, reader, audio/XP, automatic sync), CI, Expo Android/iOS, remote file rendering or live backend. Do not mark prior lessons Validated.
 - **Counts:** **30 planned / five chapters / 18 implemented / 17 Integrated / 1 older Drafted (#30) / 12 Not started / 0 Validated / 0 Approved**.
 - **Next only:** #18 `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις», Chapter III; not authored here. Its following lesson is #19 `persian-wars-greek-world` in Chapter IV.
+
+### Ancient Greece Lesson 18 integration — 2026-11-01
+- **Integrated, not Validated or Approved:** #18 `greek-sanctuaries-games`, «Ολυμπία και Δελφοί: τόποι συνάντησης και ανταγωνισμού». Six sections / 24 stable paragraphs, six unique version-1 reasoning checkpoints after paragraphs 3/8/13/17/21/24, one Commons cover and three licensed inline figures. [Evidence, licenses, QA](greek-sanctuaries-games-research.md).
+- **Progress:** Ancient Greece has 30 planned/five chapters, 19 live, 18 Integrated, one older Drafted (#30), 11 Not started, 0 Validated/Approved. No existing live lesson, quiz, XP/history, audio or Supabase schema edited. No Node/TypeScript/native suite executed here. **Next only:** #19 `persian-wars-greek-world` (Chapter IV), not authored.

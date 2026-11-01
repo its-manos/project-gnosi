@@ -35,7 +35,7 @@ assert.equal(images.length,2);
 assert.deepEqual(images.map(x=>x.afterParagraphId),['hoplite-07','hoplite-10']);
 assert.ok(images.every(x=>x.resizeMode==='contain'&&x.creditUrl.startsWith('https://commons.wikimedia.org/wiki/File:')&&x.url.includes('Special:FilePath/')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(14,18).map(x=>x.id),['athens-who-voted','athens-law-courts','greek-war-hoplites','antikythera-gears']);
+assert.deepEqual(seq.slice(14,19).map(x=>x.id),['athens-who-voted','athens-law-courts','greek-war-hoplites','greek-sanctuaries-games','antikythera-gears']);
 assert.equal(paths.getLessonAccess(lesson,lessons,[]).unlocked,false);
 assert.equal(paths.getLessonAccess(lesson,lessons,['athens-law-courts']).unlocked,true);
 assert.equal(paths.getLessonAccess(lesson,lessons,[lesson.id]).unlocked,true);

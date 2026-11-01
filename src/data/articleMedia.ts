@@ -40,6 +40,32 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-sanctuaries-games": [
+  {
+    "afterParagraphId": "sanctuary-03",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Offerings%20Olympia.JPG?width=1200",
+    "resizeMode": "contain",
+    "caption": "Χάλκινα και πήλινα ζωόμορφα αναθήματα του 9ου–8ου αιώνα π.Χ., από τις στάχτες του βωμού του Δία στην Ολυμπία. Η ταυτότητα των αφιερωτών δεν είναι γνωστή. Άγγιξε για μεγέθυνση.",
+    "credit": "Muriel Pécastaing-Boissière / Wikimedia Commons · CC BY-SA 3.0 · 2009",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Offerings_Olympia.JPG"
+  },
+  {
+    "afterParagraphId": "sanctuary-09",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Sanctuary%20of%20Apollo%20at%20Delphi%20from%20the%20Phaedriades%2001.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Το ιερό του Απόλλωνα και το στάδιο από τις Φαιδριάδες (φωτογραφία 1990). Τα ορατά λείψανα δεν ανήκουν στην ίδια εποχή. Άγγιξε για μεγέθυνση.",
+    "credit": "Mark Landon / Wikimedia Commons · CC BY-SA 4.0 · λήψη 1990, ψηφιοποίηση 2021",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Sanctuary_of_Apollo_at_Delphi_from_the_Phaedriades_01.jpg"
+  },
+  {
+    "afterParagraphId": "sanctuary-14",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Treasury%20of%20the%20Athenians%20at%20Delphi.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Ο θησαυρός των Αθηναίων στους Δελφούς (2011), με σημαντικό τμήμα της σημερινής εμφάνισής του να οφείλεται σε νεότερη αναστήλωση. Άγγιξε για μεγέθυνση.",
+    "credit": "Bernard Gagnon / Wikimedia Commons · CC BY-SA 4.0 · 2011",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Treasury_of_the_Athenians_at_Delphi.jpg"
+  }
+],
   "greek-war-hoplites": [
   {
     "afterParagraphId": "hoplite-07",
