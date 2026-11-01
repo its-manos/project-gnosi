@@ -71,7 +71,7 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Already in app:** 4 original stable lesson IDs (one research-first rewritten) **plus 1 new research-first Integrated lesson** = 5 Ancient Greece app lessons. Other 3 originals remain unapproved drafts; **25** planned IDs are still Not started, with no empty navigation items.
 - **Chapter I:** #1 `ancient-athens` — **Integrated**; #2 `greek-world-not-a-country` — **Integrated** («Ένας ελληνικός κόσμος, όχι ένα κράτος»; [research/QA](greek-world-not-a-country-research.md)); #3 `greek-history-through-evidence` — **Integrated** («Το παρελθόν δεν μιλά με μία φωνή»; [research](greek-history-through-evidence-research.md)); #4 `greek-chronology` — **Not started**; #5 `greek-geography-seas` — **Not started**.
 - **Chapter II:** #6 `aegean-bronze-age`, #7 `minoan-crete`, #8 `mycenaean-palaces`, #10 `palace-collapse`, #11 `geometric-greece` — **Not started**; #9 `linear-b-decipherment` — **Drafted** (existing app lesson).
-- **Chapter III:** #12 `rise-of-polis`, #13 `greek-settlements-networks`, #14 `sparta-society`, #16 `athens-law-courts`, #17 `greek-war-hoplites`, #18 `greek-sanctuaries-games` — **Not started**; #15 `athens-who-voted` — **Drafted** (existing app lesson).
+- **Chapter III:** #12 `rise-of-polis` (**Integrated**, «Πόλις: άνθρωποι, γη και κοινοί κανόνες»; [research and rights](rise-of-polis-research.md)), #13 `greek-settlements-networks`, #14 `sparta-society`, #16 `athens-law-courts`, #17 `greek-war-hoplites`, #18 `greek-sanctuaries-games` — **Not started**; #15 `athens-who-voted` — **Drafted** (existing app lesson).
 - **Chapter IV:** #19–24, IDs and titles in curriculum — **Not started**.
 - **Chapter V:** #25–29, IDs and titles in curriculum — **Not started**; #30 `antikythera-gears` — **Drafted** (existing app lesson).
 
@@ -177,3 +177,9 @@ Update this tracker **at the start and end** of each editorial session. Record a
 ### Ancient Greece 11 integration — 2026-11-01
 - `geometric-greece` «Από τα αγγεία στα γράμματα: οι κοινότητες του Αιγαίου» **Integrated, NOT Validated or Approved**. [Claim-to-source and rights/QA](geometric-greece-research.md). New 13 paragraphs; 4 new v1 anchored questions; 3 licensed images. Static checks only, all Node, typecheck, Android/iOS QA pending. #7–10 QA also pending.
 - 30 planned/5 chapters; 13 in app, 11 Integrated, 2 Drafted, 17 Not started, 0 Validated/Approved. Next only #12 `rise-of-polis` — «Η γέννηση της πόλης-κράτους» (Chapter III).
+
+
+### Ancient Greece 12 integration — 2026-11-01
+- `rise-of-polis` «Πόλις: άνθρωποι, γη και κοινοί κανόνες» — **Integrated, NOT Validated or Approved**. [Research notes, sources, exact media licenses and QA](rise-of-polis-research.md). New 23 stable paragraphs / five version-1 questions anchored after 4/9/14/19/23. Two CC-licensed photographs (one cover, one inline). Source criticism: Dreros law ≠ first rules; Zagora common works ≠ documented democracy; poetic councils ≠ dated constitutional records. Membership and regional diversity considered without anticipating specialist later lessons.
+- **QA:** Connector structural preflight only. No locally executed TypeScript, npm content validator, Node regression scripts, device images/sound/replay/XP or Supabase synchronization checks. Prior lesson 7–11 checks still require reproducible run; status not promoted.
+- **Progress:** 30 planned / five chapters, 14 in app, 12 Integrated, 2 Drafted, 16 Not started, 0 Validated or Approved. Next only #13 `greek-settlements-networks` «Από τη Μασσαλία ως τη Μαύρη Θάλασσα»; no code yet.

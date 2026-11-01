@@ -9,6 +9,7 @@ import { minoanCreteLessons } from "./minoanCreteLessons";
 import { mycenaeanPalacesLessons } from "./mycenaeanPalacesLessons";
 import { palaceCollapseLessons } from "./palaceCollapseLessons";
 import { geometricGreeceLessons } from "./geometricGreeceLessons";
+import { riseOfPolisLessons } from "./riseOfPolisLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -464,6 +465,7 @@ export const lessons: Lesson[] = [
   ...mycenaeanPalacesLessons,
   ...palaceCollapseLessons,
   ...geometricGreeceLessons,
+  ...riseOfPolisLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,

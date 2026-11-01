@@ -269,7 +269,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ### Chapter III. Ο κόσμος των πόλεων
 
-12. `rise-of-polis` — «Η γέννηση της πόλης-κράτους»
+12. `rise-of-polis` — «Πόλις: άνθρωποι, γη και κοινοί κανόνες» (Integrated; QA pending)
 13. `greek-settlements-networks` — «Από τη Μασσαλία ως τη Μαύρη Θάλασσα»
 14. `sparta-society` — «Η Σπάρτη πέρα από τον μύθο του πολεμιστή»
 15. `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;» (existing live ID)
@@ -379,3 +379,10 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ### Ancient Greece 11 audit — 2026-11-01
 - `geometric-greece` «Από τα αγγεία στα γράμματα: οι κοινότητες του Αιγαίου» **Integrated, not Validated/Approved**. See [research and QA](geometric-greece-research.md). 13 stable paragraphs, 4 versioned questions after 3/7/10/13, two inline images; chronology, pottery, burial, Lefkandi, communities, alphabet. No duplicate collapse analysis or polis institutions. Plan 30 lessons / five chapters remains; 13 in app, 11 Integrated, 2 Drafted, 17 Not started, 0 Validated, 0 Approved. Next #12 `rise-of-polis`.
+
+
+### Ancient Greece lesson 12 audit — 2026-11-01
+- #12 `rise-of-polis` — «Πόλις: άνθρωποι, γη και κοινοί κανόνες» is **Integrated only**, pending validation. 23 stable paragraphs, five versioned reasoning questions, Dreros photo cover and Zagora site-landscape inline. [Research, claim-to-source and media-rights ledger](rise-of-polis-research.md).
+- **Coverage boundary:** Defines polis as community, territory and institutions; limits of early inscription and shared-construction evidence; varied regional paths. Leaves overseas Greek settlements/contacts to #13 `greek-settlements-networks`, Sparta/Athenian constitution to #14–16, hoplites to #17, sanctuaries to #18. Does not repeat #11 ceramics/burials/alphabet or #10 palace collapse.
+- **State:** 30 planned / five chapters; 14 implemented, 12 Integrated, 2 Drafted, 16 Not started; 0 Validated / Approved. No npm, TypeScript, Node regression, Android/iOS or Supabase QA run via GitHub connector. Do not count this as validated or modify older status.
+- **Next ONLY:** #13 `greek-settlements-networks` — «Από τη Μασσαλία ως τη Μαύρη Θάλασσα» (Chapter III). Not researched, authored or integrated.
