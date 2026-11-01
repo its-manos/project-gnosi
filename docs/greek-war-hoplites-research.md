@@ -123,3 +123,14 @@ Check other relevant Node test scripts listed in `scripts/`. Record individual f
 **Counts:** Ancient Greece **30 planned / five chapters / 18 in app / 17 Integrated / one older Drafted (#30) / 12 Not started / zero Validated / zero Approved**.
 
 **Next and only next:** Lesson **18/30**, `greek-sanctuaries-games`, planned «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις», Chapter III / «Ο κόσμος των πόλεων». Verify live branch/tracker and QA first; do not assume the next article exists, and do not start its writing during Lesson 17 work.
+
+
+## User-executed QA follow-up — 2026-11-01
+
+**Local output supplied by developer from checkout `f759e71`:** `npm ci` completed; `npm run typecheck` returned no error; `npm run validate:content` passed (109 lessons, 24 subcategories, 13 warnings for lessons with no supplementary inline figures). Dedicated #17 hoplite, #16 court, #15 franchise, #14 Sparta, lesson-path, editorial-compatibility, article-images, XP rewards, answer-sound-route, play-feedback-UI and automatic-sync Node scripts **reported passes**. Reader/native audio and image tests use mocks, not real phone rendering. `test-automatic-sync.cjs` emitted `Could not load local article progress (L04): Unexpected token 'b', "broken" is not valid JSON`, then completed with a passing summary; investigate only if a subsequent run exits nonzero.
+
+**Single actual test failure:** `scripts/test-reader-pilot.cjs` threw `Error: ./greekWarHoplitesLessons` because its hand-built VM import map had not been expanded to match the new production catalogue import. The missing map entry was added **in a test-only commit `2f415666ecd9d236d10e4bebd4e45abbc315042c`**. GitHub readback and static comparison confirmed all explicit catalogue imports now have VM fixtures. **No passing reader-pilot rerun has been reported**; run `node scripts/test-reader-pilot.cjs` after pulling latest.
+
+**Dependency audit:** `npm ci` reported **13 vulnerabilities (1 low, 10 moderate, 2 high)**. Risk and dependency ownership need a separate `npm audit` assessment; do **not** blindly run `npm audit fix --force` on the Expo dependency tree.
+
+**Editorial standing:** #17 and older integrated content remain **Integrated**, not Validated or Approved. TypeScript/content and Node results are user-provided evidence; actual native Android/iOS, remote photo URL delivery, audio on real devices, signed-in Supabase, device offline/resume and XP replay remain pending.
