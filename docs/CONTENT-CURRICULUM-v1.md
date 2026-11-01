@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–18 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–19 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -279,7 +279,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ### Chapter IV. Πόλεμος, εξουσία και μεταβολές
 
-19. `persian-wars-greek-world` — «Οι Περσικοί πόλεμοι μέσα από δύο κόσμους»
+19. `persian-wars-greek-world` — «Περσικοί Πόλεμοι: αυτοκρατορία, πόλεις και επιλογές» (Integrated; QA pending)
 20. `athenian-empire` — «Πώς μια συμμαχία έγινε αθηναϊκή ηγεμονία»
 21. `peloponnesian-war` — «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο»
 22. `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία»
@@ -430,3 +430,13 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 ### Ancient Greece Lesson 18 integration — 2026-11-01
 - **Integrated, not Validated or Approved:** #18 `greek-sanctuaries-games`, «Ολυμπία και Δελφοί: τόποι συνάντησης και ανταγωνισμού». Six sections / 24 stable paragraphs, six unique version-1 reasoning checkpoints after paragraphs 3/8/13/17/21/24, one Commons cover and three licensed inline figures. [Evidence, licenses, QA](greek-sanctuaries-games-research.md).
 - **Progress:** Ancient Greece has 30 planned/five chapters, 19 live, 18 Integrated, one older Drafted (#30), 11 Not started, 0 Validated/Approved. No existing live lesson, quiz, XP/history, audio or Supabase schema edited. No Node/TypeScript/native suite executed here. **Next only:** #19 `persian-wars-greek-world` (Chapter IV), not authored.
+
+
+### Ancient Greece Lesson 19 integration — 2026-11-01
+- **Integrated, NOT Validated/Approved:** #19 `persian-wars-greek-world`, «Περσικοί Πόλεμοι: αυτοκρατορία, πόλεις και επιλογές» (Chapter IV). [Research, sources, rights, uncertainty and QA](persian-wars-greek-world-research.md).
+- Six sections / **25 stable paragraphs**, six fresh version-1 reasoning checkpoints after 4/8/12/17/21/25, Persian-persepolis cover and four contextual licensed/CC0 images. Achaemenid administration, Ionian agency, the 490 and 480–479 campaigns, diverse alliances, geography and logistics, competing source genres and political memory; no simplistic united-nations frame.
+- **Coverage boundary:** #17 arms/tactics, #18 sanctuary organization, #15–16 Athens citizenship/courts, #13 settlement networks remain separate. #20 `athenian-empire` is exclusively for Delian League institutions, tribute, naval power and coercion **after 479**. Do not publish empty #20.
+- **Compatibility:** no edits to Lessons 1–18, older #30, prior quiz/XP/saves/answer history, scoring, sound or Supabase; only new content plus necessary catalogue, image, path, reader fixture and preceding order expectations. New questions cannot inherit #15's old `q_470dac57` or current `q_22487292` histories; `requireCurrentAttemptQuiz: true`.
+- **QA:** connector-based source/file/metadata and structural checks only for #19; new Node test committed **but not executed**. Prior developer-reported local passing #18 baseline is separate and predates #19. Run TypeScript/content, Node suite, Expo iOS/Android and real image/audio/XP/offline/Supabase before marking Validated.
+- **Counts:** 30 planned / five chapters; **20 implemented, 19 Integrated, 1 older Drafted (#30), 10 Not started (#20–29), 0 Validated, 0 Approved**.
+- **Next lesson only, not written:** #20 `athenian-empire`, «Πώς μια συμμαχία έγινε αθηναϊκή ηγεμονία» (Chapter IV). Preserve all previous progression, quiz identities and XP.
