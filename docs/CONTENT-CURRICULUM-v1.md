@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–16 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–17 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -274,7 +274,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 14. `sparta-society` — «Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;» (Integrated; QA pending)
 15. `athens-who-voted` — «Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν» (existing live ID; research-first Integrated, QA pending)
 16. `athens-law-courts` — «Αθήνα: από την καταγγελία στην ψήφο» (Integrated; QA pending)
-17. `greek-war-hoplites` — «Ο οπλίτης και η πόλη»
+17. `greek-war-hoplites` — «Πίσω από την ασπίδα: οι οπλίτες των ελληνικών πόλεων» (Integrated; QA pending)
 18. `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις»
 
 ### Chapter IV. Πόλεμος, εξουσία και μεταβολές
@@ -302,6 +302,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `greek-history-through-evidence`: historians' sources and their biases; archaeological techniques in depth belong to proposed `archaeology-methods`.
 - `linear-b-decipherment`: revised existing article; Bennett’s sign classification, Kober’s inflectional grids, Ventris’s 1952 predictions, Chadwick’s philology, new PY Ta 641 test and translation limits. Palace administration stays in `mycenaean-palaces`; destruction in `palace-collapse`; alphabetic developments in `geometric-greece`; generic excavation methods in `archaeology-methods`.
 - `athens-who-voted`: rewritten existing live ID; Attica/demes, mutable descent rules, Periclean 451/450 restriction, women’s civic identity, metics and enslaved residents, practical assembly access, evidence limits. Do not equate women’s public religious roles with assembly voting; `athens-law-courts` covers jury selection, litigation and verdict procedures, not another franchise lesson.
+- `greek-war-hoplites`: Lesson 17, shields, spears and defensive equipment, the Chigi vase and Tyrtaeus, classical descriptions of cohesion and terrain, the debated 'hoplite revolution' and the unequal intersection of military service with political rights. Not another Spartan social-structure lesson or Persian/Peloponnesian War chronology. [Research/rights/QA record](greek-war-hoplites-research.md).
 - `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
@@ -415,3 +416,12 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 ### Lessons 1–16 prose and overlap review — 2026-11-01
 
 A bounded editorial pass revised introductions and selected paragraph/conclusion wording in the 16 integrated research-first lessons. **No existing titles, stable IDs, questions, checkpoint positions, media anchors, reward history, or source citations were changed.** Cross-lesson boundary: #1 household phases vs #3 evidence methods; #2 identity vs #5 physical voyage constraints vs #13 settlement relations; #4 chronology vs #6–11 archaeological histories; #8 records vs #9 decipherment vs #10 palatial end; #12 polis vs #14 Spartan social categories vs #15 Athenian voting vs #16 court procedures. See [full audit](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). All are **Integrated**, not Validated/Approved; device and npm QA remain open. Lesson 17 and the older Lesson 30 draft were not edited.
+
+
+### Ancient Greece Lesson 17 integration — 2026-11-01
+- **Integrated, not Validated or Approved:** new #17 `greek-war-hoplites`, «Πίσω από την ασπίδα: οι οπλίτες των ελληνικών πόλεων». Six sections, 24 paragraphs with stable IDs, six new version-1 checkpoints after paragraphs 4/8/12/16/20/24, one mixed-provenance museum display cover, two Commons inline figures with checked licence records. [Detailed claim-to-source/rights/QA ledger](greek-war-hoplites-research.md).
+- Distinct focus: material evidence, shield mechanics and variable equipment; Chigi iconography and Tyrtaean exhortation; dated Thucydides and Xenophon accounts and the limits of projecting back to the archaic period; non-hoplite participation; Snodgrass/Hanson vs van Wees/Krentz debate; no deterministic military-service-to-democracy formula.
+- All #1–16 live lessons and old #30 draft, historical quiz fingerprints, completed/saved lesson identities, old XP/events, audio and Supabase storage formats remain untouched. The Lesson 16 Node ordering fixture was adjusted solely to recognize the newly published #17. #18 remains **planned, not live**, and is not an empty path entry.
+- **Verification:** GitHub branch, catalogue and ordering readback, Commons source/rights and research-page inspection, serialized object structural checks. **Not executed:** npm typecheck, content validator, Node regression scripts (including #14–16, reader, audio/XP, automatic sync), CI, Expo Android/iOS, remote file rendering or live backend. Do not mark prior lessons Validated.
+- **Counts:** **30 planned / five chapters / 18 implemented / 17 Integrated / 1 older Drafted (#30) / 12 Not started / 0 Validated / 0 Approved**.
+- **Next only:** #18 `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις», Chapter III; not authored here. Its following lesson is #19 `persian-wars-greek-world` in Chapter IV.
