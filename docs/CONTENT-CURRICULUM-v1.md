@@ -410,3 +410,8 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - Current Ancient Greece tally: **30 planned / five chapters, 17 implemented, 16 Integrated, 1 older Drafted (#30), 13 Not started, 0 Validated, 0 Approved**. Existing live #15 preserved under its original ID; historical incompatible keys `q_470dac57` and `q_22487292` never attach to #16.
 - No local TypeScript, npm/Node or native device tests executed during this GitHub-connector edit. New `scripts/test-athens-law-courts.cjs` and prior #14/#15 tests need local runs. Supabase, audio/XP, remote-media load and crop/zoom require explicit QA.
 - **Next only:** #17 `greek-war-hoplites` — «Ο οπλίτης και η πόλη» (Chapter III), not created in this session. Focus arms, communities and warfare, not judicial procedures.
+
+
+### Lessons 1–16 prose and overlap review — 2026-11-01
+
+A bounded editorial pass revised introductions and selected paragraph/conclusion wording in the 16 integrated research-first lessons. **No existing titles, stable IDs, questions, checkpoint positions, media anchors, reward history, or source citations were changed.** Cross-lesson boundary: #1 household phases vs #3 evidence methods; #2 identity vs #5 physical voyage constraints vs #13 settlement relations; #4 chronology vs #6–11 archaeological histories; #8 records vs #9 decipherment vs #10 palatial end; #12 polis vs #14 Spartan social categories vs #15 Athenian voting vs #16 court procedures. See [full audit](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). All are **Integrated**, not Validated/Approved; device and npm QA remain open. Lesson 17 and the older Lesson 30 draft were not edited.

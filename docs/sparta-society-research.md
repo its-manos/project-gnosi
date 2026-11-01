@@ -44,3 +44,8 @@ All images served by existing Commons `Special:FilePath` with width=1200 as requ
 
 ## Next research-first lesson (NOT written or integrated)
 #15 `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;», Chapter III. **Live Drafted content already exists:** preserve its stable lesson ID, examine historical questions and quiz fingerprints, review XP/completion/bookmarks/restore sync, then research-first rewrite without false aliasing. Avoid duplicating Sparta's specific labour structure; leave #16 `athens-law-courts` for jury selection, courts and legal procedures. Preserve the full 15-section handoff prompt format.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The conclusion centers Spartiates, dependent labour and perioikoi instead of another generic demystification of Sparta. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.

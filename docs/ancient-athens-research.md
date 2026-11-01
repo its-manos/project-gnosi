@@ -33,3 +33,8 @@
 
 ## Next
 `greek-world-not-a-country` — «Οι Έλληνες χωρίς ένα ελληνικό κράτος», Chapter I, position 2/30, outline-only. Explain plural communities, geography and commonalities without translating ancient identities directly into a modern nation-state. Start with a distinct essay or map-based comparison instead of another excavated dwelling. Curriculum and tracker take precedence if editorial order changes.
+
+
+## Prose-only editorial update — 2026-11-01
+
+Conclusion is grounded in the changing House Theta and neighbourhood rather than an all-purpose warning about what archaeology cannot know. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.

@@ -70,3 +70,7 @@ Suggested local checks: `npm ci && npm run typecheck && npm run validate:content
 Keep #6 as regional Aegean material/labour framework, #7 as Crete-specific site-level evidence, #8 as mainland Mycenaean palace authority and administration, #9 as Linear B decipherment, #10 as palatial change and collapse, #11 as postpalatial societies, #4 as chronology, #5 as sailing geography, and world-history Bronze Age examples as comparative rather than repetitive. Curriculum remains 30 planned / five chapters.
 
 **Next lesson NOT started:** #8 `mycenaean-palaces` — «Ποιος διοικούσε τα μυκηναϊκά ανάκτορα;», Chapter II — Πριν από την κλασική Ελλάδα.
+
+## Prose-only editorial update — 2026-11-01
+
+The opening prioritizes the restoration problem at Knossos; the conclusion compares administrative and urban evidence from different Cretan sites. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.

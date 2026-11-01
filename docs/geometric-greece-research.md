@@ -49,3 +49,8 @@ node scripts/test-play-feedback-ui.cjs
 Check on Expo Go Android and iOS: #10→#11 access, four checkpoint positions, resume, old completed lessons and saved progress, replay/no duplicate XP/no zero-XP popup, correct/incorrect first-answer sound, source and zoom availability, variable text sizes, remote-image failure, cloud sync.
 
 Plan remains **30 lessons/5 chapters, 13 in app: 11 Integrated, 2 earlier Drafted, 17 not started, 0 Validated/Approved**. Avoid duplicating #10 palatial causes, #8 palace bookkeeping, #9 Linear B decipherment, #4 overall chronology, #12 polis institutions and #13 overseas settlement survey. **Next only:** #12 `rise-of-polis` — «Η γέννηση της πόλης-κράτους» (Chapter III, Ο κόσμος των πόλεων). Do not research/integrate until next session.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The opening now uses Lefkandi and early writing on vessels as concrete handles; the subsequent paragraph retains the explanation of missing palatial archives. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.

@@ -217,3 +217,8 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - Evidence: scholarly primary/secondary sources and three Commons file-description licences reviewed; GitHub implementation and connector-side structural reading only. New dedicated Node test is **committed but not executed**. npm typecheck, content validation, preceding #14/#15 tests, reader, compatibility, XP/audio, sync and native Android/iOS remain unverified at integration. Do not promote earlier lessons.
 - **Counts:** 30 planned / 5 chapters, **17 live, 16 Integrated, 1 older Drafted, 13 Not started, 0 Validated, 0 Approved**.
 - **Next only, not written:** #17 `greek-war-hoplites` — «Ο οπλίτης και η πόλη»; Chapter III. Before implementation confirm branch status and outstanding QA and preserve #15/#16 progress.
+
+
+### Ancient Greece 1–16: prose edit and cross-lesson audit — 2026-11-01
+
+All 16 integrated lessons received a focused readability and originality-of-voice pass, with no questions, scores or version aliases edited. Stable paragraph IDs, checkpoint anchors, media placement and unrelated lesson objects were left intact. The 16 source/research change summaries, comparison map and before/after examples are in [ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). **Editorial status stays Integrated**. Connector-side static source assertions do not satisfy the still-pending npm type/content suite, Node regressions, Android/iOS visuals, offline resume, image availability, XP/audio and Supabase QA. No lesson 17 or 30 work.

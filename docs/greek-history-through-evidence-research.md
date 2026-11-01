@@ -52,3 +52,8 @@ History is not a direct recording of events. It is a reasoned reconstruction fro
 - Fixed `scripts/test-reader-pilot.cjs` fixture map on `content/curriculum-v1` in commit [`6291b6f`](https://github.com/its-manos/project-gnosi/commit/6291b6f2c91ebb78a4390833f759d52636857efd). **Reader-pilot has not yet been rerun after the fix; do not claim a pass.** This change is test-only, not an app/runtime behavior change.
 - `npm run typecheck` status is **not established by the pasted output**, and is not claimed as passed here. Content validator does not verify actual URLs, image rights, history, or devices. Lessons 1, 2, and 3 remain **Integrated**, not Validated/Approved.
 - Next local check: `git pull origin content/curriculum-v1 && node scripts/test-reader-pilot.cjs`. Device QA remains pending, including images and the native first-answer sound.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The three-question final instruction is replaced by two material examples: a decree and an ostrakon. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.

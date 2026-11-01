@@ -60,3 +60,8 @@
 
 ## Next article — do not implement now
 Lesson **14/30**, stable ID `sparta-society`, planned title **«Η Σπάρτη πέρα από τον μύθο του πολεμιστή»**, Category Ιστορία / Ancient Greece / Chapter III. Research Spartan social groups, helotage, institutions and evidence chronology; be alert to later idealizing images. Do not reuse #13's topic or act as though a colony is the same social institution as Sparta. Pass forward this audit and outstanding tests with the full unchanged-format 1–15 prompt.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The first Pithekoussai paragraph now identifies settlement archaeology before interpreting population origin and mobility. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.

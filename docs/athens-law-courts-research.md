@@ -129,3 +129,8 @@ Report each actual result, not an assumed pass. If `npm ci` was already run on t
 Ancient Greece: **30 planned** / 5 chapters; **17 implemented**, **16 Integrated**, **1 older Drafted** (#30 `antikythera-gears`), **13 Not started**, **0 Validated**, **0 Approved**.
 
 **Next only: #17 `greek-war-hoplites` — «Ο οπλίτης και η πόλη»**, Chapter III / Ο κόσμος των πόλεων. Planned, not live at this session snapshot. Study hoplite equipment, communities, tactical practice, archaeological/iconographic/literary disagreements, historical change and the claims about a “hoplite revolution” with appropriate source criticism; do not retell #15 franchise, #16 courts, or later Persian/Peloponnesian campaigns. Its successor is #18 `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις». The next session must first recheck the GitHub branch and actual test results, preserve all existing IDs and history, then develop **only** #17.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The introduction specifies juries and litigants, the verdict section heading is clearer, and the last paragraph links the law, allotment machinery, speeches and ballots. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.

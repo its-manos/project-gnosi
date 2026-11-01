@@ -63,3 +63,8 @@ New stable lesson ID, unique paragraph IDs, four `version: "1"` question IDs, `r
 Local script sequence: `npm ci && npm run typecheck && npm run validate:content && node scripts/test-aegean-bronze-age.cjs && node scripts/test-flexible-editorial.cjs && node scripts/test-reader-pilot.cjs && node scripts/test-lesson-path.cjs && node scripts/test-editorial-compatibility.cjs && node scripts/test-article-images.cjs && node scripts/test-xp-rewards.cjs && node scripts/test-answer-sound-route.cjs && node scripts/test-play-feedback-ui.cjs`. Also run additional sync/experience scripts available. **Expo Go iOS and Android:** test questions after paragraphs 5/10/15/18, two inline images and cover, zoom/attribution and portrait cropping, saved lesson, font scaling, exit/resume, wrong and right first-answer sounds, zero-XP pop-up suppression, replay without double reward, offline state, signed-in Supabase, old completed/in-progress lessons.
 
 **Next lesson NOT started:** #7 `minoan-crete` «Η Κρήτη των ανακτόρων», Chapter II.
+
+
+## Prose-only editorial update — 2026-11-01
+
+Opening and conclusion distinguish spindle whorls, seals and craft areas as evidence of different aspects of Bronze Age production. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.

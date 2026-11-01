@@ -44,3 +44,8 @@
 - To verify locally: `npm ci && npm run typecheck && npm run validate:content && node scripts/test-flexible-editorial.cjs && node scripts/test-reader-pilot.cjs && node scripts/test-lesson-path.cjs && node scripts/test-editorial-compatibility.cjs && node scripts/test-article-images.cjs && node scripts/test-xp-rewards.cjs && node scripts/test-answer-sound-route.cjs && node scripts/test-play-feedback-ui.cjs`. Test additional audio/XP sync/Supabase suites and device issues from tracker.
 
 **Next, not started:** Chapter I lesson 3 — `greek-history-through-evidence`, «Ποιος μας αφηγείται την αρχαία ιστορία;». The historical source passage in lesson 2 is a short illustration, not the future article's evidence-method narrative.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The final map analogy is replaced by the coexistence of shared sanctuaries, cultural recognition and rivalry among distinct communities. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.

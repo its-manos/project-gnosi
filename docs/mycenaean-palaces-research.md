@@ -58,3 +58,8 @@ Five alternatives sets of four, fixed correct answer indices [0,2,3,1,2], stable
 
 ## Exact next curriculum position
 Lesson 9/30, Chapter II — `linear-b-decipherment`, «Η γραφή που έκρυβε ελληνικά», an existing **Drafted** lesson requiring research-first editorial review, safe quiz compatibility assessment, no writing of lesson 10. Reserve evidence for Ventris/Chadwick and method of decipherment, not new full Pylos palatial administration.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The first Pylos paragraph now describes the tablets as brief accounting entries in direct language. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.

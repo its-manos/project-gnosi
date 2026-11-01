@@ -52,3 +52,8 @@ New `src/data/palaceCollapseLessons.ts`, additive import/spread in `src/data/les
 
 **Curriculum:** 30 planned, 12 published in app (10 research-first Integrated including new lesson 10; 2 pre-existing Drafted); 18 Not started; 0 Validated; 0 Approved.
 **Next lesson:** #11 `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες», Chapter II. Only prepare handoff; do not implement it here.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The opening body paragraph contrasts the Pylos destruction with occupation at Tiryns, clarifying the difference between destroyed buildings and the end of a political system. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.
