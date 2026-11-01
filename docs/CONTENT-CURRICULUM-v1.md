@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–19 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–20 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -280,7 +280,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 ### Chapter IV. Πόλεμος, εξουσία και μεταβολές
 
 19. `persian-wars-greek-world` — «Περσικοί Πόλεμοι: αυτοκρατορία, πόλεις και επιλογές» (Integrated; QA pending)
-20. `athenian-empire` — «Πώς μια συμμαχία έγινε αθηναϊκή ηγεμονία»
+20. `athenian-empire` — «Από τη Δήλο στην αθηναϊκή ηγεμονία» (Integrated; QA pending)
 21. `peloponnesian-war` — «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο»
 22. `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία»
 23. `macedon-philip` — «Η άνοδος της Μακεδονίας»
@@ -303,6 +303,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `linear-b-decipherment`: revised existing article; Bennett’s sign classification, Kober’s inflectional grids, Ventris’s 1952 predictions, Chadwick’s philology, new PY Ta 641 test and translation limits. Palace administration stays in `mycenaean-palaces`; destruction in `palace-collapse`; alphabetic developments in `geometric-greece`; generic excavation methods in `archaeology-methods`.
 - `athens-who-voted`: rewritten existing live ID; Attica/demes, mutable descent rules, Periclean 451/450 restriction, women’s civic identity, metics and enslaved residents, practical assembly access, evidence limits. Do not equate women’s public religious roles with assembly voting; `athens-law-courts` covers jury selection, litigation and verdict procedures, not another franchise lesson.
 - `greek-sanctuaries-games`: Early Olympia offerings, Elean games and nonuniversal *ekecheiria*, Delphi's sanctuary administration, oracles, dedication displays, Pythian musical contests and inequalities; not a second polis/warfare essay or an early Persian Wars narrative. [Research/media/QA](greek-sanctuaries-games-research.md).
+- `athenian-empire`: Lesson 20 covers post-479 Delian League formation, Delos as treasury and meeting place, allied ship-versus-money duties, naval asymmetry, Naxos/Thasos, contested 454 transfer, Athenian tribute-quota lists, Erythrai/Chalkis decrees, plural allied reactions and persisting Persian diplomacy. No battle narratives of Lesson 19 or Peloponnesian War campaigns of Lesson 21. [Research/rights/QA](athenian-empire-research.md).
 - `greek-war-hoplites`: Lesson 17, shields, spears and defensive equipment, the Chigi vase and Tyrtaeus, classical descriptions of cohesion and terrain, the debated 'hoplite revolution' and the unequal intersection of military service with political rights. Not another Spartan social-structure lesson or Persian/Peloponnesian War chronology. [Research/rights/QA record](greek-war-hoplites-research.md).
 - `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
@@ -440,3 +441,12 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **QA:** connector-based source/file/metadata and structural checks only for #19; new Node test committed **but not executed**. Prior developer-reported local passing #18 baseline is separate and predates #19. Run TypeScript/content, Node suite, Expo iOS/Android and real image/audio/XP/offline/Supabase before marking Validated.
 - **Counts:** 30 planned / five chapters; **20 implemented, 19 Integrated, 1 older Drafted (#30), 10 Not started (#20–29), 0 Validated, 0 Approved**.
 - **Next lesson only, not written:** #20 `athenian-empire`, «Πώς μια συμμαχία έγινε αθηναϊκή ηγεμονία» (Chapter IV). Preserve all previous progression, quiz identities and XP.
+
+
+### Ancient Greece Lesson 20 research-first integration — 2026-11-01
+- **Integrated, not Validated or Approved:** new live #20 `athenian-empire`, «Από τη Δήλο στην αθηναϊκή ηγεμονία» (Chapter IV). [Research, contemporary inscription context, image licences, compatibility and outstanding QA](athenian-empire-research.md). Six sections, 26 stable paragraphs, six version-1 reasoned checkpoints after 4/8/13/18/22/26, one attributed cover and two anchored Commons figures.
+- **Distinctive coverage:** how collective post-Persian-War maritime defense acquired asymmetric fleet and payment arrangements; Naxos/Thasos coercion; fragmentary Athenian tribute-quota lists and local decrees; competing later explanations. Does not rewrite Lesson 19's campaigns or anticipate Lesson 21's detailed war.
+- **Compatibility and implementation:** new unique lesson and question identities, `requireCurrentAttemptQuiz: true`, no aliases; previous #1–19 and #30 lesson data/quiz IDs untouched, old `athens-who-voted` fingerprints `q_470dac57` / `q_22487292` stay isolated. Existing XP/saves/answer history/audio/Supabase schema untouched. New catalogue/path registration, contextual media, reader fixture, dedicated Node test and older order-only expectations updated.
+- **QA:** GitHub content and licence-source inspection only; new #20 Node test committed but unexecuted. Local TypeScript/content validation, #19/20 tests, regression suite, CI, Android/iOS remote image and playback, XP/no-zero-popup/replay/offline and Supabase synchronization pending. Previously reported Lesson 18 test passes predate these new lessons. Do not mark prior lessons Validated.
+- **Counts:** 30 planned, 5 chapters; **21 implemented: 20 Integrated (#1–20), 1 older Drafted (#30), 9 Not started (#21–29), 0 Validated, 0 Approved**.
+- **Next only, not written:** planned #21 `peloponnesian-war`, «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο», Chapter IV; following #22 `greek-crises-fourth-century` remains planned.
