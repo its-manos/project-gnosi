@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-war-hoplites": [
+  {
+    "afterParagraphId": "hoplite-07",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Britishmuseumbronzecorinthianhelmet.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Χάλκινο κράνος κορινθιακού τύπου, περ. 500 π.Χ., από την Κόρινθο. Βρετανικό Μουσείο, αρ. 1873,0910.1. Ο τύπος δεν αποδεικνύει την καταγωγή του κατόχου. Άγγιξε για μεγέθυνση.",
+    "credit": "Ealdgyth / Wikimedia Commons · CC BY-SA 3.0 · 2010",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Britishmuseumbronzecorinthianhelmet.jpg"
+  },
+  {
+    "afterParagraphId": "hoplite-10",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Detail%20from%20the%20Chigi-vase%20cropped%20better%20colors.png?width=1200",
+    "resizeMode": "contain",
+    "caption": "Λεπτομέρεια της κορινθιακής όλπης Chigi, περ. 650–640 π.Χ. Στη σύγχρονη ψηφιακή εκδοχή έχει γίνει περικοπή και χρωματική διόρθωση. Η ζωγραφική δεν είναι καταγραφή συγκεκριμένης μάχης. Άγγιξε για μεγέθυνση.",
+    "credit": "Ζωγράφος Chigi · ψηφιακή επεξεργασία / Wikimedia Commons · CC0",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Detail_from_the_Chigi-vase_cropped_better_colors.png"
+  }
+],
   "athens-law-courts": [
     {
       afterParagraphId: "courts-14",

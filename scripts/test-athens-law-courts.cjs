@@ -35,7 +35,7 @@ assert.equal(media.length,2);
 assert.deepEqual(media.map(m=>m.afterParagraphId),['courts-14','courts-21']);
 assert.ok(media.every(m=>m.resizeMode==='contain'&&m.url.startsWith('https://commons.wikimedia.org/wiki/Special:FilePath/')&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(14,17).map(x=>x.id),['athens-who-voted','athens-law-courts','antikythera-gears']);
+assert.deepEqual(seq.slice(14,17).map(x=>x.id),['athens-who-voted','athens-law-courts','greek-war-hoplites']);
 assert.equal(paths.getLessonAccess(l,lessons,[]).unlocked,false);
 assert.equal(paths.getLessonAccess(l,lessons,['athens-who-voted']).unlocked,true);
 assert.equal(paths.getLessonAccess(l,lessons,[l.id]).unlocked,true);
