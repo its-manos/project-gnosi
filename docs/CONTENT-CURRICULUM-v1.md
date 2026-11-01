@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–15 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–16 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -273,7 +273,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 13. `greek-settlements-networks` — «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» (Integrated; QA pending)
 14. `sparta-society` — «Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;» (Integrated; QA pending)
 15. `athens-who-voted` — «Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν» (existing live ID; research-first Integrated, QA pending)
-16. `athens-law-courts` — «Νόμοι, δικαστήρια και κλήρωση στην Αθήνα»
+16. `athens-law-courts` — «Αθήνα: από την καταγγελία στην ψήφο» (Integrated; QA pending)
 17. `greek-war-hoplites` — «Ο οπλίτης και η πόλη»
 18. `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις»
 
@@ -302,6 +302,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `greek-history-through-evidence`: historians' sources and their biases; archaeological techniques in depth belong to proposed `archaeology-methods`.
 - `linear-b-decipherment`: revised existing article; Bennett’s sign classification, Kober’s inflectional grids, Ventris’s 1952 predictions, Chadwick’s philology, new PY Ta 641 test and translation limits. Palace administration stays in `mycenaean-palaces`; destruction in `palace-collapse`; alphabetic developments in `geometric-greece`; generic excavation methods in `archaeology-methods`.
 - `athens-who-voted`: rewritten existing live ID; Attica/demes, mutable descent rules, Periclean 451/450 restriction, women’s civic identity, metics and enslaved residents, practical assembly access, evidence limits. Do not equate women’s public religious roles with assembly voting; `athens-law-courts` covers jury selection, litigation and verdict procedures, not another franchise lesson.
+- `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
@@ -403,3 +404,9 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 ### Lesson 15 research-first integration · 2026-11-01
 - Existing live ID `athens-who-voted` rewritten in place, with six anchored version-1 questions, `requireCurrentAttemptQuiz: true` and **no old quiz aliases**; historical activity, earned XP, completion and saved IDs remain immutable, but old question-index attempts cannot be mapped onto new semantics. [Research, source/rights ledger and outstanding QA](athens-who-voted-research.md).
 - Path remains `sparta-society` → `athens-who-voted` → (planned only) `athens-law-courts`; the latter is not published yet. Ancient Greece: **30 planned / 16 implemented / 15 Integrated / 1 Drafted / 14 Not started / 0 Validated / 0 Approved**. npm/Node, Android/iOS and Supabase live QA still pending unless separately evidenced.
+
+### Ancient Greece Lesson 16 integration — 2026-11-01
+- New `athens-law-courts` — «Αθήνα: από την καταγγελία στην ψήφο», research-first **Integrated**, not Validated/Approved. One new article with 28 anchored paragraphs, six version-1 checkpoints, one licensed cover and two anchored photographs. [Sources, rights, compatibility and QA](athens-law-courts-research.md).
+- Current Ancient Greece tally: **30 planned / five chapters, 17 implemented, 16 Integrated, 1 older Drafted (#30), 13 Not started, 0 Validated, 0 Approved**. Existing live #15 preserved under its original ID; historical incompatible keys `q_470dac57` and `q_22487292` never attach to #16.
+- No local TypeScript, npm/Node or native device tests executed during this GitHub-connector edit. New `scripts/test-athens-law-courts.cjs` and prior #14/#15 tests need local runs. Supabase, audio/XP, remote-media load and crop/zoom require explicit QA.
+- **Next only:** #17 `greek-war-hoplites` — «Ο οπλίτης και η πόλη» (Chapter III), not created in this session. Focus arms, communities and warfare, not judicial procedures.
