@@ -7,6 +7,7 @@ function compile(file,imports={}) {
 }
 const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts'),'./architectureLessons':compile('src/data/architectureLessons.ts'),'./astronomyLessons':compile('src/data/astronomyLessons.ts'),'./worldHistoryLessons':compile('src/data/worldHistoryLessons.ts')});
 const progress=compile('src/utils/lessonProgress.ts');
+const {quizFingerprint}=compile('src/utils/learningActivity.ts');
 const backup=compile('src/utils/learningBackup.ts',{'../data/lessons':data,'./lessonProgress':progress});
 const legacy=compile('src/utils/legacyLearning.ts',{'../data/lessons':data,'./lessonProgress':progress});
 const doc=compile('src/utils/syncDocument.ts',{'../data/lessons':data,'./learningBackup':backup});
@@ -14,7 +15,7 @@ const {LearningStore}=compile('src/state/LearningStore.ts',{'../data/lessons':da
 const [a,b,c]=data.lessons;
 const plain=x=>JSON.parse(JSON.stringify(x));
 const empty=()=>({schemaVersion:1,completedIds:[],savedIds:[],attempts:{}});
-const attempt=(n=1,replay=false)=>({checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),score:99,updatedAt:100,replayOfCompletedLesson:replay});
+const attempt=(n=1,replay=false)=>({checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),quizKey:quizFingerprint(a.questions),score:99,updatedAt:100,replayOfCompletedLesson:replay});
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 const stores=[];
 function disk(site) {const map=new Map([['@gnosi/sync-device-id',site]]);let fail=false;return {map,setFail:v=>{fail=v;},getItem:async k=>map.get(k)??null,setItem:async(k,v)=>{if(fail)throw Error('storage full');map.set(k,v);}};}
@@ -43,6 +44,8 @@ function state(s) {return s.getSnapshot();}
  assert.throws(()=>doc.parseSyncDocument({...plain(seed),clock:-1}));
  assert.throws(()=>doc.parseSyncDocument({...plain(seed),bookmarks:{unknown:{stamp:[0,'x'],value:true}}}));
  assert.throws(()=>doc.parseSyncDocument({...plain(seed),bookmarks:{[a.id]:{stamp:[5,'x'],value:true}}}));
+ // Rewritten lessons reject old unversioned answers; current test attempts must carry a real fingerprint.
+ assert.equal(backup.parseLearningBackup({...empty(),attempts:{[a.id]:{...attempt(),quizKey:undefined}}}).attempts[a.id],undefined);
  const complete=doc.seedSyncBackup({...empty(),completedIds:[a.id]});
  const stale=doc.parseSyncDocument({...plain(complete),clock:5,progress:{[a.id]:{stamp:[5,'x'],value:{completed:false,attempt:attempt()}}}});
  assert.ok(doc.syncBackup(doc.mergeSyncDocuments(complete,stale)).completedIds.includes(a.id));
