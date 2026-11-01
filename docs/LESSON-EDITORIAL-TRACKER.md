@@ -162,3 +162,14 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - KN Fp 13 cover (vintagedept, CC BY 2.0) and PY Ta 641 museum display photograph (Zde, CC BY-SA 4.0); all mobile media, Zoom, Node, TypeScript, XP/audio/replay and Supabase checks pending locally. Path order repaired; #9 immediately follows #8.
 - **30 planned / 5 chapters: 11 implemented (9 Integrated, 2 Drafted), 19 Not started, 0 Validated, 0 Approved.** Previous lessons 1–8 retain their statuses.
 - **Next only:** #10 `palace-collapse` «Μετά την κατάρρευση των ανακτόρων»; not developed.
+
+
+### Lesson 10 session audit — 2026-11-01
+- **Integrated, not Validated/Approved:** #10 `palace-collapse` — «Το τέλος των μυκηναϊκών ανακτόρων δεν ήταν μία στιγμή». [Research, chronology, source ledger, licences and QA](palace-collapse-research.md).
+- **Curriculum:** 30 planned lessons / five chapters; **12** Ancient Greece lessons in app; **10 Integrated, 2 Drafted, 18 Not started, 0 Validated, 0 Approved**. Earlier #1–9 remain Integrated only; no implicit QA promotion.
+- **Narrative:** 27 stable paragraphs / 6 sections / 5 version-1 questions (after 4/9/14/21/27). Regional case comparison Pylos, Mycenae, Tiryns and Thebes. Explicit distinction of archaeological destruction, palatial institutional collapse, local continuity and uncertainty in causal hypotheses. Greek prose, question explanation, sources, photograph credits all in app and research file.
+- **Images:** CC BY-SA 4.0 cover (Koronaios, Tiryns), CC BY-SA 4.0 inline (Zde, Mycenae). Remote Commons 1200 px rendering/crop/zoom/credit remains native-device QA.
+- **Code:** new lesson data, additive catalogue/path entry, contextual media, reader test fixture import, dedicated Node regression script. No edits to sound, XP, reward logic, Supabase, or existing lesson/question semantics. The old Linear B lesson remains #9.
+- **Evidence:** GitHub branch inspection and in-memory ID/anchor checks; **no npm/Node/TS/device runs** during this session. Added `scripts/test-palace-collapse.cjs` but did not execute it. Previous #7–9 dedicated QA still pending. User-reported passes from older builds do not validate new changes.
+- **Next lesson, not yet written:** #11 `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες» (Chapter II). Focus on distinct postpalatial regional communities, material practices, burials, cult places, alphabetic innovation without repeating #10 causation or #4 periodization. Preserve precise actual QA status.
+
