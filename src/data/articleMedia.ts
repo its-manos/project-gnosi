@@ -40,6 +40,58 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "athenian-empire": [
+  {
+    "afterParagraphId": "empire-04",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Plan%20Delos%20Sacred%20Area%20colored.svg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Σύγχρονη σχεδιαστική αποτύπωση του αρχαιολογικού ιερού χώρου της Δήλου, με μνημεία διαφορετικών περιόδων. Δεν είναι σχέδιο του 478 π.Χ. ούτε τόπος ταυτοποιημένης ιδρυτικής συνεδρίασης. Άγγιξε για μεγέθυνση.",
+    "credit": "Tomisti / Wikimedia Commons · CC BY-SA 4.0 · 2016 (ενημέρωση 2024)",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Plan_Delos_Sacred_Area_colored.svg"
+  },
+  {
+    "afterParagraphId": "empire-16",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/EPMA-IGI%283%29273-280-Tribute%20list%202-2.JPG?width=1200",
+    "resizeMode": "contain",
+    "caption": "Δεύτερη μεγάλη ομάδα καταλόγων απαρχών για τα έτη 439/8–432/1 π.Χ., IG I³ 273–280, Επιγραφικό Μουσείο (EM 6857+6648). Το καταγεγραμμένο ένα εξηκοστό δεν αποτελεί πλήρη ισολογισμό της αθηναϊκής πολιτείας. Άγγιξε για μεγέθυνση.",
+    "credit": "Marsyas / Επιγραφικό Μουσείο / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2007",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:EPMA-IGI(3)273-280-Tribute_list_2-2.JPG"
+  }
+],
+  "persian-wars-greek-world": [
+    {
+      "afterParagraphId": "persian-03",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Behistun%20inscription.jpg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Το πολύγλωσσο ανάγλυφο και επιγραφή του Δαρείου Α΄ στο Μπεχιστούν (φωτογραφία 2018). Μαρτυρεί βασιλική ιδεολογία, όχι κάποια από τις ελληνικές μάχες. Άγγιξε για μεγέθυνση.",
+      "credit": "Mahdimanavimvi / Wikimedia Commons · CC BY-SA 4.0 · 2018",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:Behistun_inscription.jpg"
+    },
+    {
+      "afterParagraphId": "persian-11",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/The%20tumulus%20(tomb)%20of%20the%20Athenians%20at%20Marathon.jpg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Ο τύμβος των Αθηναίων στον Μαραθώνα (φωτογραφία 2019): τεκμήριο ταφής και μνημόνευσης, όχι πλήρης χάρτης των κινήσεων του 490 π.Χ. Άγγιξε για μεγέθυνση.",
+      "credit": "George E. Koronaios / Wikimedia Commons · CC0 1.0 · 2019",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:The_tumulus_(tomb)_of_the_Athenians_at_Marathon.jpg"
+    },
+    {
+      "afterParagraphId": "persian-16",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Strait%20of%20Salamis.jpg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Τα στενά της Σαλαμίνας όπως φαίνονται σήμερα (φωτογραφία 2019). Η σύγχρονη ακτογραμμή δεν αποτυπώνει αυτολεξεί τις συνθήκες του 480 π.Χ. Άγγιξε για μεγέθυνση.",
+      "credit": "Jona Lendering / Livius.org / Wikimedia Commons · CC0 1.0 · 2019",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:Strait_of_Salamis.jpg"
+    },
+    {
+      "afterParagraphId": "persian-23",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Serpent%20Column%20Istanbul.jpg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Η χάλκινη Στήλη των Όφεων, σήμερα στην Κωνσταντινούπολη (φωτογραφία 2014). Το πολεμικό ανάθημα στήθηκε αρχικά στους Δελφούς και μεταφέρθηκε αιώνες αργότερα. Άγγιξε για μεγέθυνση.",
+      "credit": "Loriensong / Wikimedia Commons · CC BY-SA 4.0 · 2014",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:Serpent_Column_Istanbul.jpg"
+    }
+  ],
   "greek-sanctuaries-games": [
   {
     "afterParagraphId": "sanctuary-03",
