@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "athens-who-voted": [
+    {
+      "afterParagraphId": "athens-07",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Greece%20(ancient)%20Attica%20Demos%20II-el.svg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Σύγχρονος ελληνόγλωσσος χάρτης πιθανών θέσεων των δήμων της Αττικής, με περιοχές αβέβαιου εντοπισμού. Δεν αποτελεί αρχαία απογραφή κατοίκων. Άγγιξε για μεγέθυνση.",
+      "credit": "Fulvio314 · ελληνική απόδοση Gts-tg / Wikimedia Commons · CC BY-SA 4.0 (2016)",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:Greece_(ancient)_Attica_Demos_II-el.svg"
+    },
+    {
+      "afterParagraphId": "athens-23",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Honorary%20stele%20depicting%20Athena%20and%20the%20Athenian%20Deme%20(4th%20cent.%20B.C.)%20at%20the%20National%20Archaeological%20Museum%20of%20Athens%20on%2022%20July%202018.jpg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Τιμητική στήλη για τον Ευφρώνα (ψηφίσματα 323/322 και 318/317 π.Χ.), με τη θεά Αθηνά και προσωποποίηση του Δήμου. Αποδεικνύει ειδική πολιτογράφηση σε συγκεκριμένο χρόνο, όχι καθολική συμμετοχή. Εθνικό Αρχαιολογικό Μουσείο 1482. Άγγιξε για μεγέθυνση.",
+      "credit": "George E. Koronaios / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2018, επεξεργασία 2021",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:Honorary_stele_depicting_Athena_and_the_Athenian_Deme_(4th_cent._B.C.)_at_the_National_Archaeological_Museum_of_Athens_on_22_July_2018.jpg"
+    }
+  ],
   "sparta-society": [
     {
       "afterParagraphId": "sparta-23",

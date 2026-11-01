@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–14 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–15 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -272,7 +272,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 12. `rise-of-polis` — «Πόλις: άνθρωποι, γη και κοινοί κανόνες» (Integrated; QA pending)
 13. `greek-settlements-networks` — «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» (Integrated; QA pending)
 14. `sparta-society` — «Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;» (Integrated; QA pending)
-15. `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;» (existing live ID)
+15. `athens-who-voted` — «Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν» (existing live ID; research-first Integrated, QA pending)
 16. `athens-law-courts` — «Νόμοι, δικαστήρια και κλήρωση στην Αθήνα»
 17. `greek-war-hoplites` — «Ο οπλίτης και η πόλη»
 18. `greek-sanctuaries-games` — «Ολυμπία και Δελφοί: κοινά ιερά, διαφορετικές πόλεις»
@@ -301,7 +301,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `greek-world-not-a-country`: definitions, dispersed communities, regional diversity; reserve geography specifics for `greek-geography-seas` and polis institutions for `rise-of-polis`.
 - `greek-history-through-evidence`: historians' sources and their biases; archaeological techniques in depth belong to proposed `archaeology-methods`.
 - `linear-b-decipherment`: revised existing article; Bennett’s sign classification, Kober’s inflectional grids, Ventris’s 1952 predictions, Chadwick’s philology, new PY Ta 641 test and translation limits. Palace administration stays in `mycenaean-palaces`; destruction in `palace-collapse`; alphabetic developments in `geometric-greece`; generic excavation methods in `archaeology-methods`.
-- `athens-who-voted`: retain the existing article as the primary home for franchise limits; `athens-law-courts` goes deeper into procedure, not franchise recap.
+- `athens-who-voted`: rewritten existing live ID; Attica/demes, mutable descent rules, Periclean 451/450 restriction, women’s civic identity, metics and enslaved residents, practical assembly access, evidence limits. Do not equate women’s public religious roles with assembly voting; `athens-law-courts` covers jury selection, litigation and verdict procedures, not another franchise lesson.
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
@@ -398,3 +398,8 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - **Overlap map:** #12 explained the general polis; #13 overseas settlement and indigenous agency. #14 specifically examines differential Spartiate/helot/perioikos status, Messenian coercion, property, women, households, syssitia, agoge, mixed offices and retrospective Lycurgan traditions. #15 retains Athenian franchise and voting; #16 retains Athenian courts; #17 tactics, #18 inter-polis sanctuaries. No revision of earlier question IDs or scores.
 - **Totals:** **30 planned / 5 chapters; 16 in app; 14 Integrated; 2 older Drafted; 14 Not started; 0 Validated; 0 Approved.** GitHub connector structural inspection and source-licence page checks only; no local npm, TS, Node execution, CI confirmation, physical Android/iOS, live Commons delivery or Supabase sync. Older lesson QA does not automatically apply to this new build.
 - **Next ONLY:** #15 live Drafted `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;»; inspect existing quiz fingerprints and preserve completed progress in a research-first rewrite. #16 thereafter: `athens-law-courts`.
+
+
+### Lesson 15 research-first integration · 2026-11-01
+- Existing live ID `athens-who-voted` rewritten in place, with six anchored version-1 questions, `requireCurrentAttemptQuiz: true` and **no old quiz aliases**; historical activity, earned XP, completion and saved IDs remain immutable, but old question-index attempts cannot be mapped onto new semantics. [Research, source/rights ledger and outstanding QA](athens-who-voted-research.md).
+- Path remains `sparta-society` → `athens-who-voted` → (planned only) `athens-law-courts`; the latter is not published yet. Ancient Greece: **30 planned / 16 implemented / 15 Integrated / 1 Drafted / 14 Not started / 0 Validated / 0 Approved**. npm/Node, Android/iOS and Supabase live QA still pending unless separately evidenced.

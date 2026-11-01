@@ -21,6 +21,7 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
  const revisedQuizzes={
   'ancient-athens':{count:3,placements:[3,9,13],resume:4},
   'linear-b-decipherment':{count:5,placements:[4,8,13,17,21],resume:5},
+  'athens-who-voted':{count:6,placements:[4,9,13,17,21,25],resume:5},
  };
  let changed=0;
  for(const old of before){
@@ -81,7 +82,7 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
   assert.equal(progress.getInlineQuestionCount(lesson),4);
   assert.equal(progress.getResumeParagraphNumber(lesson,{0:old.questions[0].correctIndex}),3);
  }
- assert.equal(changed,35,'the other 43 legacy lessons retain 35 changed textual quiz fingerprints; Athens and Linear B have separate incompatible versions');
+ assert.equal(changed,34,'the 42 otherwise-compatible legacy lessons retain 34 changed textual quiz fingerprints; Athens, Linear B and the Athens franchise rewrite have incompatible versions');
  // Load real old-format persisted progress through the current store.
  const old=before.find(row=>row.id!=='ancient-athens'),lesson=lessons.find(row=>row.id===old.id),key=activity.quizFingerprint(old.questions);
  const doc={...sync.emptySyncDocument(),clock:1,progress:{[lesson.id]:{stamp:[1,'oldphone'],value:{completed:true,attempt:null}}},activity:{old:event(lesson,key,[1,3])}};
@@ -110,5 +111,5 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
   assert.ok(restarted.getSnapshot().backup.completedIds.includes(revised.id),'old completion survives restart: '+revisedId);
   assert.deepEqual(restarted.getSnapshot().activity.old,legacyEvent,'historical event survives restart: '+revisedId);
  }
- console.log('Editorial checks passed: 43 otherwise-compatible legacy lessons preserve answer slots, quiz aliases and weekly reviews; rewritten Athens and Linear B retain old completion/events without using obsolete mistake indices.');
+ console.log('Editorial checks passed: 42 otherwise-compatible legacy lessons preserve answer slots, quiz aliases and weekly reviews; the Athens opener, Linear B and Athens franchise retain old completion/events without obsolete mistake indices.');
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>stores.forEach(s=>s.stop()));
