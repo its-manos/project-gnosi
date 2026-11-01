@@ -269,3 +269,12 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **Verification:** researched sources and Commons description/license pages; source-level structural preflight of new data. **Not executed:** npm typecheck, validator, Node scripts (including #19–21 dedicated), CI, Expo native Android/iOS, remote media loading/zoom, first-answer audio, reward/replay, offline/resume, Supabase synchronization. These checks are required before marking Validated.
 - **Counts:** 30 planned / 5 chapters; 22 implemented, 21 Integrated (#1–21), 1 older Drafted (#30), 8 Not started (#22–29), 0 Validated / 0 Approved.
 - **Next only, not started:** #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
+
+
+### Ancient Greece Lesson 22 integration — 2026-11-01 (current)
+- **Integrated, not Validated or Approved:** #22 `greek-crises-fourth-century` — «Μετά το 404: συμμαχίες, επεμβάσεις και εύθραυστες ειρήνες» ([research and media audit](greek-crises-fourth-century-research.md)).
+- **Scope:** 404–362, the Thirty/403 reconciliation, Spartan and Persian diplomacy, Corinthian War, King's Peace, 378/7 autonomy inscription RO 22, Theban recovery, Leuctra, Messene and Mantinea; seven checkpoints with new version-1 IDs, three CC BY-SA 4.0 photographs (one cover, two inline).
+- **Compatibility:** Additive definition and order, updated reader import and older order fixtures; no earlier lesson, prior quiz, XP/sound/sync/event data altered. Preserve old/current Lesson 15 fingerprint mismatch.
+- **Evidence:** connected GitHub reading and web source/Commons licence inspection, authoring-time unique ID and placement checks; local npm and Node regression tests, CI, Android/iOS, remote bitmap and Supabase checks **not performed** here. Keep #1–22 Integrated pending reproducible testing and device/editorial approval.
+- **Current counts:** 30 planned / 5 chapters; **23 implemented (22 Integrated, 1 Drafted #30), 7 Not started #23–29, 0 Validated, 0 Approved.** Earlier entries above record their respective session snapshots.
+- **Next only:** #23 `macedon-philip`, «Η άνοδος της Μακεδονίας», Chapter IV, planned and not yet live.

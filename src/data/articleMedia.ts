@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-crises-fourth-century": [
+  {
+    "afterParagraphId": "crisis-23",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cadmea%2C%20Thebes.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Η περιοχή της Καδμείας στη σημερινή Θήβα (φωτογραφία 2016). Ο τόπος συνδέεται με την κατάληψη του 382 και την απελευθέρωση του 379/378 π.Χ., αλλά δεν διασώζει αυτούσια τη φρουρά ή τα γεγονότα εκείνων των ετών. Άγγιξε για μεγέθυνση.",
+    "credit": "Mirjanamimi / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2016",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Cadmea,_Thebes.jpg"
+  },
+  {
+    "afterParagraphId": "crisis-30",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Arcadian%20Gate.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Η Αρκαδική Πύλη της αρχαίας Μεσσήνης, μέρος των ιστορικών οχυρώσεων της πόλης (σύγχρονη φωτογραφία). Το μνημείο δείχνει τον χώρο της νέας κοινότητας μετά το 369 π.Χ., όχι την ίδια την ανακήρυξη της ανεξαρτησίας. Άγγιξε για μεγέθυνση.",
+    "credit": "Charismak / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2017",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Arcadian_Gate.jpg"
+  }
+],
   "peloponnesian-war": [
   {
     "afterParagraphId": "war-12",

@@ -282,7 +282,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 19. `persian-wars-greek-world` — «Περσικοί Πόλεμοι: αυτοκρατορία, πόλεις και επιλογές» (Integrated; QA pending)
 20. `athenian-empire` — «Από τη Δήλο στην αθηναϊκή ηγεμονία» (Integrated; QA pending)
 21. `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση» (Integrated; QA pending)
-22. `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία»
+22. `greek-crises-fourth-century` — «Μετά το 404: συμμαχίες, επεμβάσεις και εύθραυστες ειρήνες» — **Integrated** ([research](greek-crises-fourth-century-research.md)); 404–362 BCE
 23. `macedon-philip` — «Η άνοδος της Μακεδονίας»
 24. `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές»
 
@@ -460,3 +460,11 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **Verification:** researched sources and Commons description/license pages; source-level structural preflight of new data. **Not executed:** npm typecheck, validator, Node scripts (including #19–21 dedicated), CI, Expo native Android/iOS, remote media loading/zoom, first-answer audio, reward/replay, offline/resume, Supabase synchronization. These checks are required before marking Validated.
 - **Counts:** 30 planned / 5 chapters; 22 implemented, 21 Integrated (#1–21), 1 older Drafted (#30), 8 Not started (#22–29), 0 Validated / 0 Approved.
 - **Next only, not started:** #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
+
+
+### Ancient Greece Lesson 22 — research-first integration (2026-11-01)
+- #22 `greek-crises-fourth-century` — «Μετά το 404: συμμαχίες, επεμβάσεις και εύθραυστες ειρήνες» — **Integrated, not Validated or Approved**. Seven thematic sections / 34 stable paragraphs / seven version-1 reasoning checkpoints. [Detailed evidence, rights and outstanding QA](greek-crises-fourth-century-research.md).
+- **Coverage / overlap:** 404–403 violence and qualified amnesty → Spartan allies and Persian satraps → Corinthian War/Cnidus → King's Peace and RO 22 autonomy claims → Cadmea, Leuctra, Messene and Mantinea. Avoids #21 wartime chronology and reserves Macedonian expansion for #23.
+- **Current accounting:** 30 planned / five chapters; **23 in app: 22 Integrated (#1–22), one older Drafted (#30), seven Not started (#23–29), zero Validated/Approved**. Earlier status snapshots above remain historical.
+- **Testing:** connector-side source/structural inspection only; npm, Node, native Expo, image-network and Supabase still need actual execution. Older Lesson 15 quiz keys and all earlier history untouched.
+- **Next planned only:** #23 `macedon-philip` — «Η άνοδος της Μακεδονίας».

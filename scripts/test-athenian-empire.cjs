@@ -30,7 +30,7 @@ const media=inlineArticleMedia[id];assert.equal(media.length,2);
 assert.deepEqual(media.map(m=>m.afterParagraphId),['empire-04','empire-16']);
 assert.ok(media.every(m=>m.resizeMode==='contain'&&m.url.includes('Special:FilePath/')&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(17,22).map(x=>x.id),['greek-sanctuaries-games','persian-wars-greek-world',id,'peloponnesian-war','antikythera-gears']);
+assert.deepEqual(seq.slice(17,23).map(x=>x.id),['greek-sanctuaries-games','persian-wars-greek-world',id,'peloponnesian-war','greek-crises-fourth-century','antikythera-gears']);
 assert.equal(seq.filter(x=>x.id===id).length,1);
 assert.equal(seq.filter(x=>x.id==='peloponnesian-war').length,1,'Lesson 21 is now a single live entry');
 assert.equal(paths.getLessonAccess(l,lessons,[]).unlocked,false);

@@ -18,6 +18,7 @@ import { greekSanctuariesGamesLessons } from "./greekSanctuariesGamesLessons";
 import { persianWarsGreekWorldLessons } from "./persianWarsGreekWorldLessons";
 import { athenianEmpireLessons } from "./athenianEmpireLessons";
 import { peloponnesianWarLessons } from "./peloponnesianWarLessons";
+import { greekCrisesFourthCenturyLessons } from "./greekCrisesFourthCenturyLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -482,6 +483,7 @@ export const lessons: Lesson[] = [
   ...persianWarsGreekWorldLessons,
   ...athenianEmpireLessons,
   ...peloponnesianWarLessons,
+  ...greekCrisesFourthCenturyLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
