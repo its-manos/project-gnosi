@@ -281,7 +281,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 19. `persian-wars-greek-world` — «Περσικοί Πόλεμοι: αυτοκρατορία, πόλεις και επιλογές» (Integrated; QA pending)
 20. `athenian-empire` — «Από τη Δήλο στην αθηναϊκή ηγεμονία» (Integrated; QA pending)
-21. `peloponnesian-war` — «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο»
+21. `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση» (Integrated; QA pending)
 22. `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία»
 23. `macedon-philip` — «Η άνοδος της Μακεδονίας»
 24. `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές»
@@ -450,3 +450,13 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **QA:** GitHub content and licence-source inspection only; new #20 Node test committed but unexecuted. Local TypeScript/content validation, #19/20 tests, regression suite, CI, Android/iOS remote image and playback, XP/no-zero-popup/replay/offline and Supabase synchronization pending. Previously reported Lesson 18 test passes predate these new lessons. Do not mark prior lessons Validated.
 - **Counts:** 30 planned, 5 chapters; **21 implemented: 20 Integrated (#1–20), 1 older Drafted (#30), 9 Not started (#21–29), 0 Validated, 0 Approved**.
 - **Next only, not written:** planned #21 `peloponnesian-war`, «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο», Chapter IV; following #22 `greek-crises-fourth-century` remains planned.
+
+
+### Ancient Greece Lesson 21 research-first integration — 2026-11-01
+- **Integrated, not Validated or Approved:** #21 `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση». [Research, claims, sources, rights, compatibility and QA](peloponnesian-war-research.md).
+- **Coverage:** 431–404, structural and immediate causes, competing Greek city interests, Athenian walls/plague/civilian displacement, Corcyra stasis, Pylos, failed 421 peace, Melos, Sicily, Persian satraps, 411 coup and 404 surrender. #22 reserves post-404 Greek crises.
+- **Implementation:** 7 sections, 35 stable paragraphs, 7 unique version-1 reasoning checkpoints after paragraphs 4/9/14/19/24/29/35; attributed 431 alliance-map cover and two anchored licensed site photographs. Additive data/path/media/reader and prior order-only fixture edits; no modifications to previous lesson quiz data or learning stores.
+- **Compatibility:** all #1–20 and older #30 unchanged; historical #15 fingerprints `q_470dac57` / `q_22487292` remain distinct. No XP/audio/sync logic changed; actual device and automatic-sync evidence pending.
+- **Verification:** researched sources and Commons description/license pages; source-level structural preflight of new data. **Not executed:** npm typecheck, validator, Node scripts (including #19–21 dedicated), CI, Expo native Android/iOS, remote media loading/zoom, first-answer audio, reward/replay, offline/resume, Supabase synchronization. These checks are required before marking Validated.
+- **Counts:** 30 planned / 5 chapters; 22 implemented, 21 Integrated (#1–21), 1 older Drafted (#30), 8 Not started (#22–29), 0 Validated / 0 Approved.
+- **Next only, not started:** #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
