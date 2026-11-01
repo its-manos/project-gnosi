@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "athenian-empire": [
+  {
+    "afterParagraphId": "empire-04",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Plan%20Delos%20Sacred%20Area%20colored.svg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Σύγχρονη σχεδιαστική αποτύπωση του αρχαιολογικού ιερού χώρου της Δήλου, με μνημεία διαφορετικών περιόδων. Δεν είναι σχέδιο του 478 π.Χ. ούτε τόπος ταυτοποιημένης ιδρυτικής συνεδρίασης. Άγγιξε για μεγέθυνση.",
+    "credit": "Tomisti / Wikimedia Commons · CC BY-SA 4.0 · 2016 (ενημέρωση 2024)",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Plan_Delos_Sacred_Area_colored.svg"
+  },
+  {
+    "afterParagraphId": "empire-16",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/EPMA-IGI%283%29273-280-Tribute%20list%202-2.JPG?width=1200",
+    "resizeMode": "contain",
+    "caption": "Δεύτερη μεγάλη ομάδα καταλόγων απαρχών για τα έτη 439/8–432/1 π.Χ., IG I³ 273–280, Επιγραφικό Μουσείο (EM 6857+6648). Το καταγεγραμμένο ένα εξηκοστό δεν αποτελεί πλήρη ισολογισμό της αθηναϊκής πολιτείας. Άγγιξε για μεγέθυνση.",
+    "credit": "Marsyas / Επιγραφικό Μουσείο / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2007",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:EPMA-IGI(3)273-280-Tribute_list_2-2.JPG"
+  }
+],
   "persian-wars-greek-world": [
     {
       "afterParagraphId": "persian-03",
