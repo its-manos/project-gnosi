@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "sparta-society": [
+    {
+      "afterParagraphId": "sparta-23",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Lead%20votive%20figurines%2C%20Sparta%2C%206th%20c%20BC%2C%20UCL%2C%20154813.jpg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Μολύβδινα αφιερώματα του 6ου αιώνα π.Χ. από το ιερό της Ορθίας, σε μουσειακή συλλογή (UCL). Μαρτυρούν λατρευτική προσφορά, όχι τις λεπτομέρειες ύστερων αφηγήσεων για την αγωγή. Άγγιξε για μεγέθυνση.",
+      "credit": "Zde / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2015",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:Lead_votive_figurines%2C_Sparta%2C_6th_c_BC%2C_UCL%2C_154813.jpg"
+    },
+    {
+      "afterParagraphId": "sparta-24",
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/NAMA%20Art%C3%A9mis%20Orthia.jpg?width=1200",
+      "resizeMode": "contain",
+      "caption": "Ελεφαντοστέινο ανάθημα από το ιερό της Ορθίας (περ. 660 π.Χ.), με φτερωτή μορφή και πτηνά. Η ταύτισή της ειδικά με την Άρτεμη συζητείται. Εθνικό Αρχαιολογικό Μουσείο. Άγγιξε για μεγέθυνση.",
+      "credit": "Marsyas / Wikimedia Commons · CC BY-SA 2.5 · φωτογραφία 2005, χρωματική επεξεργασία 2022",
+      "creditUrl": "https://commons.wikimedia.org/wiki/File:NAMA_Art%C3%A9mis_Orthia.jpg"
+    }
+  ],
   "greek-settlements-networks": [
     {
       afterParagraphId: "settle-09",

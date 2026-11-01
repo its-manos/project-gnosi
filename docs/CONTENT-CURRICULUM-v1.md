@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with Integrated Ancient Greece lessons 1–2 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–14 · 2026-11-01 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -271,7 +271,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 12. `rise-of-polis` — «Πόλις: άνθρωποι, γη και κοινοί κανόνες» (Integrated; QA pending)
 13. `greek-settlements-networks` — «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» (Integrated; QA pending)
-14. `sparta-society` — «Η Σπάρτη πέρα από τον μύθο του πολεμιστή»
+14. `sparta-society` — «Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;» (Integrated; QA pending)
 15. `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;» (existing live ID)
 16. `athens-law-courts` — «Νόμοι, δικαστήρια και κλήρωση στην Αθήνα»
 17. `greek-war-hoplites` — «Ο οπλίτης και η πόλη»
@@ -392,3 +392,9 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - **Overlap boundary:** Pithekoussai mixed mobility/trade; Syracuse retrospective Sicel displacement and land; Massalia founder legend/indigenous agency; Berezan material exchange vs settlement vs sixth-century letter. No object by itself proves ethnic/political settlement. Do not repeat #12 polis institutions, #11 Nestor cup, #5 maritime geography, #2 one Greek-world-not-state, or #3 general source method. Reserve Sparta's political and social order for #14.
 - **Current totals:** 30 planned / five chapters; **15 implemented, 13 Integrated, 2 Drafted, 15 Not started, 0 Validated, 0 Approved**. Previous user-reported test passes apply to earlier snapshots only; Lesson 13 npm, TS, Node regressions, Android/iOS and Supabase have not been executed in this GitHub-connector session.
 - **Next only:** #14 `sparta-society` — «Η Σπάρτη πέρα από τον μύθο του πολεμιστή» (Chapter III); do not implement yet.
+
+### Ancient Greece lesson 14 audit — 2026-11-01
+- **`sparta-society`** — «Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;» — **Integrated, NOT Validated or Approved**. New Lesson 14; six sections, 26 anchored paragraphs, six v1 reasoning questions at paragraphs 4/9/13/17/22/26; one CC0 landscape cover and two Commons CC BY-SA archaeological images. [Detailed source and rights report](sparta-society-research.md).
+- **Overlap map:** #12 explained the general polis; #13 overseas settlement and indigenous agency. #14 specifically examines differential Spartiate/helot/perioikos status, Messenian coercion, property, women, households, syssitia, agoge, mixed offices and retrospective Lycurgan traditions. #15 retains Athenian franchise and voting; #16 retains Athenian courts; #17 tactics, #18 inter-polis sanctuaries. No revision of earlier question IDs or scores.
+- **Totals:** **30 planned / 5 chapters; 16 in app; 14 Integrated; 2 older Drafted; 14 Not started; 0 Validated; 0 Approved.** GitHub connector structural inspection and source-licence page checks only; no local npm, TS, Node execution, CI confirmation, physical Android/iOS, live Commons delivery or Supabase sync. Older lesson QA does not automatically apply to this new build.
+- **Next ONLY:** #15 live Drafted `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;»; inspect existing quiz fingerprints and preserve completed progress in a research-first rewrite. #16 thereafter: `athens-law-courts`.

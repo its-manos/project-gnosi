@@ -29,7 +29,7 @@ const sequence=pathUtils.getSubcategoryPath(lessons,'ancient-greece');
 assert.equal(sequence[10].id,'geometric-greece');
 assert.equal(sequence[11].id,'rise-of-polis');
 assert.equal(sequence[12].id,l.id);
-assert.equal(sequence[13].id,'athens-who-voted');
+assert.equal(sequence[13].id,'sparta-society');assert.equal(sequence[14].id,'athens-who-voted');
 assert.equal(pathUtils.getLessonAccess(l,lessons,[]).unlocked,false);
 assert.equal(pathUtils.getLessonAccess(l,lessons,['rise-of-polis']).unlocked,true);
 assert.equal(pathUtils.getLessonAccess(l,lessons,[l.id]).unlocked,true);
