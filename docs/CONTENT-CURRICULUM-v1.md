@@ -270,7 +270,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 ### Chapter III. Ο κόσμος των πόλεων
 
 12. `rise-of-polis` — «Πόλις: άνθρωποι, γη και κοινοί κανόνες» (Integrated; QA pending)
-13. `greek-settlements-networks` — «Από τη Μασσαλία ως τη Μαύρη Θάλασσα»
+13. `greek-settlements-networks` — «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» (Integrated; QA pending)
 14. `sparta-society` — «Η Σπάρτη πέρα από τον μύθο του πολεμιστή»
 15. `athens-who-voted` — «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;» (existing live ID)
 16. `athens-law-courts` — «Νόμοι, δικαστήρια και κλήρωση στην Αθήνα»
@@ -386,3 +386,9 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - **Coverage boundary:** Defines polis as community, territory and institutions; limits of early inscription and shared-construction evidence; varied regional paths. Leaves overseas Greek settlements/contacts to #13 `greek-settlements-networks`, Sparta/Athenian constitution to #14–16, hoplites to #17, sanctuaries to #18. Does not repeat #11 ceramics/burials/alphabet or #10 palace collapse.
 - **State:** 30 planned / five chapters; 14 implemented, 12 Integrated, 2 Drafted, 16 Not started; 0 Validated / Approved. No npm, TypeScript, Node regression, Android/iOS or Supabase QA run via GitHub connector. Do not count this as validated or modify older status.
 - **Next ONLY:** #13 `greek-settlements-networks` — «Από τη Μασσαλία ως τη Μαύρη Θάλασσα» (Chapter III). Not researched, authored or integrated.
+
+### Ancient Greece lesson 13 audit — 2026-11-01
+- #13 `greek-settlements-networks` — «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» — **Integrated, NOT Validated/Approved**. Twenty-five stable paragraphs, five version-1 anchored questions, three Commons-licensed photos (Berezan cover, Ortygia and Berezan excavation inline). [Historical research, claim-to-source, licenses and QA](greek-settlements-networks-research.md).
+- **Overlap boundary:** Pithekoussai mixed mobility/trade; Syracuse retrospective Sicel displacement and land; Massalia founder legend/indigenous agency; Berezan material exchange vs settlement vs sixth-century letter. No object by itself proves ethnic/political settlement. Do not repeat #12 polis institutions, #11 Nestor cup, #5 maritime geography, #2 one Greek-world-not-state, or #3 general source method. Reserve Sparta's political and social order for #14.
+- **Current totals:** 30 planned / five chapters; **15 implemented, 13 Integrated, 2 Drafted, 15 Not started, 0 Validated, 0 Approved**. Previous user-reported test passes apply to earlier snapshots only; Lesson 13 npm, TS, Node regressions, Android/iOS and Supabase have not been executed in this GitHub-connector session.
+- **Next only:** #14 `sparta-society` — «Η Σπάρτη πέρα από τον μύθο του πολεμιστή» (Chapter III); do not implement yet.

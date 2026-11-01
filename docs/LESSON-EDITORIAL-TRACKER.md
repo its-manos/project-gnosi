@@ -65,15 +65,15 @@ The other P0 pilot has **24 curriculum lessons**, with stable IDs assigned only 
 Update this tracker **at the start and end** of each editorial session. Record an actual checked commit SHA, tests and device sign-off once performed.
 
 
-## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (updated 2026-11-01)
+## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (current 2026-11-01)
 
-- **v1 plan:** 30 lessons / 5 chapters, detailed ordered IDs, titles and overlap map in [curriculum](CONTENT-CURRICULUM-v1.md#12-finalized-v1-learning-path--ιστορία--αρχαία-ελλάδα-2026-11-01).
-- **Already in app:** 4 original stable lesson IDs (one research-first rewritten) **plus 1 new research-first Integrated lesson** = 5 Ancient Greece app lessons. Other 3 originals remain unapproved drafts; **25** planned IDs are still Not started, with no empty navigation items.
-- **Chapter I:** #1 `ancient-athens` — **Integrated**; #2 `greek-world-not-a-country` — **Integrated** («Ένας ελληνικός κόσμος, όχι ένα κράτος»; [research/QA](greek-world-not-a-country-research.md)); #3 `greek-history-through-evidence` — **Integrated** («Το παρελθόν δεν μιλά με μία φωνή»; [research](greek-history-through-evidence-research.md)); #4 `greek-chronology` — **Not started**; #5 `greek-geography-seas` — **Not started**.
-- **Chapter II:** #6 `aegean-bronze-age`, #7 `minoan-crete`, #8 `mycenaean-palaces`, #10 `palace-collapse`, #11 `geometric-greece` — **Not started**; #9 `linear-b-decipherment` — **Drafted** (existing app lesson).
-- **Chapter III:** #12 `rise-of-polis` (**Integrated**, «Πόλις: άνθρωποι, γη και κοινοί κανόνες»; [research and rights](rise-of-polis-research.md)), #13 `greek-settlements-networks`, #14 `sparta-society`, #16 `athens-law-courts`, #17 `greek-war-hoplites`, #18 `greek-sanctuaries-games` — **Not started**; #15 `athens-who-voted` — **Drafted** (existing app lesson).
-- **Chapter IV:** #19–24, IDs and titles in curriculum — **Not started**.
-- **Chapter V:** #25–29, IDs and titles in curriculum — **Not started**; #30 `antikythera-gears` — **Drafted** (existing app lesson).
+- **Current summary:** 30 planned lessons / 5 chapters, **15 in app**, **13 Integrated** (research-first #1–13, still unvalidated), **2 Drafted** (#15 `athens-who-voted`, #30 `antikythera-gears`), **15 Not started**, **0 Validated, 0 Approved**. Older numbered session notes below are historical snapshots, not the current total.
+- **Chapter I:** #1–5 `ancient-athens`, `greek-world-not-a-country`, `greek-history-through-evidence`, `greek-chronology`, `greek-geography-seas` — **Integrated**.
+- **Chapter II:** #6–11 `aegean-bronze-age`, `minoan-crete`, `mycenaean-palaces`, `linear-b-decipherment`, `palace-collapse`, `geometric-greece` — **Integrated**.
+- **Chapter III:** #12 `rise-of-polis` — **Integrated**; #13 `greek-settlements-networks` — **Integrated**, «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» ([research](greek-settlements-networks-research.md)); #14 `sparta-society` — **Not started**; #15 `athens-who-voted` — **Drafted**; #16–18 — **Not started**.
+- **Chapter IV:** #19–24 — **Not started**.
+- **Chapter V:** #25–29 — **Not started**; #30 `antikythera-gears` — **Drafted**.
+- **QA nuance:** prior local user-reported passes cover #11/12 content and mock tests, not newly added Lesson 13. Reader-pilot and automatic-sync fixtures had previously failed and were patched with no confirmed successful rerun. Typecheck, new Node, actual Android/iOS and Supabase still pending. See [current curriculum/overlap map](CONTENT-CURRICULUM-v1.md).
 
 ### Current session handoff
 - **Integrated:** `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα», formerly «Μια μέρα στην αρχαία Αθήνα». [Research/media details](ancient-athens-research.md). Narrative: excavated House Θ → Agora → marginalized groups and evidence limits. Opening: monument contrasted with excavated home. Reading estimate: 6 minutes.
@@ -188,3 +188,11 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **User-executed passes reported**: content validator; dedicated polis and geometric lesson scripts; flexible editor; lesson path; editorial compatibility; image rendering (mock native), XP rewards, answer sound route (mock native), feedback UI (mock native). Output does **not** confirm TypeScript, real device or Supabase network tests.
 - **Failed tests diagnosed and fixture-only patches committed**: `test-reader-pilot.cjs` omitted `./riseOfPolisLessons` from mocked imports; `test-automatic-sync.cjs` used an unversioned attempt that the production backup parser deliberately discards for rewritten `ancient-athens`. Fixed test-only in `2bfbf76ea9e87733649ea4e8213a4dfff063462a` (GitHub branch readback confirmed), with a negative compatibility assertion. **No passing rerun reported for these two tests yet.**
 - Lesson 12 and older Integrated lessons remain **Integrated, not Validated/Approved**; do not assume the remaining native/UI/sync QA passed. See [lesson 12 detailed report](rise-of-polis-research.md). Next editorial work remains #13 `greek-settlements-networks`.
+
+### Ancient Greece 13 integration — 2026-11-01
+- #13 `greek-settlements-networks` — «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» — **Integrated, NOT Validated or Approved**. [Claim-to-source, editorial choices, rights and test ledger](greek-settlements-networks-research.md).
+- **25 stable paragraphs, 5 sections, 5 version-1 questions** after paragraphs 5/10/15/20/25. New unique identifiers; `requireCurrentAttemptQuiz: true`, no old quiz alias. Regionally varied migration and local agency shown through Pithekoussai, Syracuse, Massalia, Berezan.
+- **Media:** Cover Berezan site aerial Oleg Marchuk CC BY-SA 4.0, inline Ortygia Andrea Schaffer CC BY 2.0, inline Berezan excavation PhotoDocumentalist CC BY 4.0. Image pages/rights inspected; native thumbnail loading, crop, zoom and credits untested.
+- **Integration:** appended new lesson and path position after #12, updated reader mocked import and #12 dedicated test order, added dedicated Lesson 13 Node test. Other older lesson IDs, question versions, progress/XP/audio/Supabase systems unchanged.
+- **Actual evidence:** scholarly page and Commons rights inspection; connector-based structural assertion during content creation. **Not run:** npm, TypeScript, local Node regression suite, Android/iOS Expo Go or live Supabase. Earlier user-reported #12 QA passes remain historical and limited; no automatic upgrade to Validated.
+- **Counts:** 30 planned / five chapters; 15 app, 13 Integrated, 2 Drafted, 15 Not started, 0 Validated or Approved. **Next only:** #14 `sparta-society` «Η Σπάρτη πέρα από τον μύθο του πολεμιστή».

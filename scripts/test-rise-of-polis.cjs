@@ -19,7 +19,7 @@ assert.equal(l.compatibleQuizKeys,undefined);
 assert.deepEqual(inlineArticleMedia[l.id].map(x=>x.afterParagraphId),['polis-11']);
 assert.ok(inlineArticleMedia[l.id].every(x=>x.creditUrl.includes('commons.wikimedia.org/wiki/File:')&&x.resizeMode==='contain'));
 const seq=pathUtils.getSubcategoryPath(lessons,'ancient-greece');
-assert.equal(seq[10].id,'geometric-greece');assert.equal(seq[11].id,l.id);assert.equal(seq[12].id,'athens-who-voted');
+assert.equal(seq[10].id,'geometric-greece');assert.equal(seq[11].id,l.id);assert.equal(seq[12].id,'greek-settlements-networks');assert.equal(seq[13].id,'athens-who-voted');
 assert.equal(pathUtils.getLessonAccess(l,lessons,[]).unlocked,false);
 assert.equal(pathUtils.getLessonAccess(l,lessons,['geometric-greece']).unlocked,true);
 assert.equal(pathUtils.getLessonAccess(seq[10],lessons,['palace-collapse']).unlocked,true);

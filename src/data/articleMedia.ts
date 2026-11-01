@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-settlements-networks": [
+    {
+      afterParagraphId: "settle-09",
+      url: commonsFileUrl("Ortygia - Syracuse.jpg"),
+      resizeMode: "contain",
+      caption: "Η σημερινή Ορτυγία στις Συρακούσες. Η φωτογραφία δείχνει το φυσικό πλαίσιο της θέσης, όχι τα γεγονότα της αρχαϊκής εγκατάστασης. Άγγιξε για μεγέθυνση.",
+      credit: "Andrea Schaffer / Wikimedia Commons · CC BY 2.0 · φωτογραφία 2017",
+      creditUrl: commonsPageUrl("Ortygia - Syracuse.jpg"),
+    },
+    {
+      afterParagraphId: "settle-18",
+      url: commonsFileUrl("Березань розкопки 2.jpg"),
+      resizeMode: "contain",
+      caption: "Ανασκαφικός χώρος στο νησί Μπερεζάν, Ουκρανία (2018). Ο χώρος μαρτυρεί αρχαιολογική έρευνα· οι χρονολογήσεις χρειάζονται στρωματογραφικά και κινητά ευρήματα. Άγγιξε για μεγέθυνση.",
+      credit: "PhotoDocumentalist / Wikimedia Commons · CC BY 4.0 · φωτογραφία 2018",
+      creditUrl: commonsPageUrl("Березань розкопки 2.jpg"),
+    },
+  ],
   "rise-of-polis": [{ afterParagraphId: "polis-11", url: commonsFileUrl("Zagora, Andros, 224941x.jpg"), resizeMode: "contain", caption: "Το απόκρημνο ακρωτήριο της Ζαγοράς στην Άνδρο. Η γεωμετρική εγκατάσταση βρισκόταν στο πλάτωμα· η φωτογραφία δεν αποκαλύπτει τους αρχαίους θεσμούς. Άγγιξε για μεγέθυνση.", credit: "Zde / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2022", creditUrl: commonsPageUrl("Zagora, Andros, 224941x.jpg") }],
   "geometric-greece": [{ afterParagraphId: "g3", url: commonsFileUrl("Protogeometric amphora BM A1124.jpg"), resizeMode: "contain", caption: "Πρωτογεωμετρικός αμφορέας με ομόκεντρους κύκλους, περ. 975–950 π.Χ. Άγγιξε για μεγέθυνση.", credit: "Marie-Lan Nguyen / Wikimedia Commons · CC BY 2.5", creditUrl: commonsPageUrl("Protogeometric amphora BM A1124.jpg") }, { afterParagraphId: "g12", url: commonsFileUrl("Coupe de Nestor - musée Archéologique de Pithecusae - inscription.jpg"), resizeMode: "contain", caption: "Αποσπασματική επιγραφή στο κύπελλο του Νέστορα, Πιθηκούσσα, περ. 730–720 π.Χ. Άγγιξε για μεγέθυνση.", credit: "Shonagon / Wikimedia Commons · CC0 1.0", creditUrl: commonsPageUrl("Coupe de Nestor - musée Archéologique de Pithecusae - inscription.jpg") }],
   "palace-collapse": [
