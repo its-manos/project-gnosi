@@ -44,3 +44,11 @@
 - #13 `greek-settlements-networks`: Greek overseas settlement, trade, local relations, wider Mediterranean interactions **reserved**.
 - #14–16: Sparta's society, mature Athenian franchise and judicial procedures **reserved**. #17 hoplite warfare and #18 sanctuary/games in depth **reserved**.
 - **Exact next lesson**, not begun: #13/30, Chapter III «Ο κόσμος των πόλεων», `greek-settlements-networks`, planned title «Από τη Μασσαλία ως τη Μαύρη Θάλασσα». Do not research or integrate #13 in this session.
+
+
+## Local test report received 2026-11-01 — fixes pending rerun
+The user provided actual Node output from the lesson-12 checkout. **Passed:** content structure validator; `test-rise-of-polis.cjs`; `test-geometric-greece.cjs`; `test-flexible-editorial.cjs`; `test-lesson-path.cjs`; `test-editorial-compatibility.cjs`; `test-article-images.cjs`; `test-xp-rewards.cjs`; `test-answer-sound-route.cjs`; `test-play-feedback-ui.cjs`. The sound, images, UI and route checks use mocked native facilities where stated; they do not establish device QA. The pasted output does not establish TypeScript status.
+
+**Initially failed:** `test-reader-pilot.cjs` rejected the newly imported `./riseOfPolisLessons` in its manual test module map; `test-automatic-sync.cjs` threw reading `score` of an undefined attempt at line 60 because its synthetic attempt lacked the `quizKey` required for revised `ancient-athens` content. The production backup parser correctly discards such unversioned attempts. No evidence points to a runtime synchronization regression.
+
+**Fix committed:** `2bfbf76ea9e87733649ea4e8213a4dfff063462a`, two test fixtures only. Reader test now registers the lesson module; sync test now derives the real question fingerprint and explicitly asserts that an unversioned attempt is discarded. GitHub branch readback confirmed the two modified files. **Neither repaired test has been rerun or independently passed in this environment.** Rerun `node scripts/test-reader-pilot.cjs && node scripts/test-automatic-sync.cjs`, then the full suite; capture any subsequent failure. Remote media, TypeScript status, native Android/iOS first-answer sound and zoom, replay/XP and real Supabase synchronization remain unverified. Lesson 12 remains **Integrated**.
