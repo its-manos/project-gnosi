@@ -10,6 +10,7 @@ function load(file,overrides={}){
  }});if(!Object.keys(overrides).length)cache.set(file,m.exports);return m.exports;
 }
 const data=load('src/data/lessons.ts'),paths=load('src/utils/lessonPath.ts'),discovery=load('src/utils/readingDiscovery.ts'),{LearningStore}=load('src/state/LearningStore.ts');
+const {quizFingerprint}=load('src/utils/learningActivity.ts');
 const plain=x=>JSON.parse(JSON.stringify(x));
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 function harness(store){
@@ -42,7 +43,7 @@ function harness(store){
  const render=harness(store);let app=render();app.openLesson(second.id);assert.equal(app.screen,'home','tap before hydration waits');
  await store.start();app=render();app=render();assert.equal(app.screen,'subcategory','queued locked route cannot bypass gate');
  app.openLesson(first.id);app=render();assert.equal(app.screen,'lesson');
- for(let i=0;i<4;i++){app.answerCheckpoint(i,(first.questions[i].correctIndex+1)%4,first.questions[i].correctIndex);app=render();}
+ for(let i=0;i<first.questions.length;i++){app.answerCheckpoint(i,(first.questions[i].correctIndex+1)%4,first.questions[i].correctIndex);app=render();}
  app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.equal(app.score,0);
  assert.equal(paths.getNextPathLesson(first,data.lessons,app.completedLessonIds).id,second.id,'completion unlocks next even at zero score');
  app.openLesson(third.id);app=render();assert.equal(app.screen,'subcategory','cannot skip a prerequisite');
@@ -52,7 +53,7 @@ function harness(store){
  const reopened=new LearningStore(null,storage);stores.push(reopened);await reopened.start();
  assert.ok(paths.getLessonAccess(second,data.lessons,reopened.getSnapshot().backup.completedIds).unlocked,'unlock persists offline restart');
  // Emulate an old app's unfinished later lesson; adding a bookmark never does this.
- reopened.answer(third.id,{checkpointAnswers:{0:third.questions[0].correctIndex},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false});await reopened.flushLocal();
+ reopened.answer(third.id,{checkpointAnswers:{0:third.questions[0].correctIndex},quizKey:quizFingerprint(third.questions),score:1,updatedAt:Date.now(),replayOfCompletedLesson:false});await reopened.flushLocal();
  const resumed=harness(reopened);let old=resumed();old.openLesson(third.id);old=resumed();assert.equal(old.screen,'lesson');assert.equal(old.checkpointAnswers[0],third.questions[0].correctIndex);
  assert.ok(!paths.getLessonAccess(fourth,data.lessons,old.completedLessonIds,old.inProgressLessonIds).unlocked,'started predecessor is insufficient');
  const other=new LearningStore('different-account',storage);stores.push(other);await other.start();assert.ok(!paths.getLessonAccess(second,data.lessons,other.getSnapshot().backup.completedIds).unlocked,'unlock cannot leak between accounts');

@@ -17,7 +17,7 @@ import ReportContentButton from "../components/ReportContentButton";
 import { lessonReportTarget } from "../utils/contentReports";
 import { inlineArticleMedia } from "../data/articleMedia";
 import { colors, reading } from "../theme";
-import { getInlineQuestionCount, getParagraphCount, getResumeParagraphNumber } from "../utils/lessonProgress";
+import { getParagraphCount, getParagraphId, getParagraphText, getQuestionPlacements, getResumeParagraphNumber, getVisibleParagraphLimit } from "../utils/lessonProgress";
 
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
@@ -34,12 +34,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const pendingScroll = useRef<number | "finish" | null>(null);
   const restored = useRef(false);
   const paragraphCount = getParagraphCount(lesson);
-  const questionCount = getInlineQuestionCount(lesson);
+  const placements = getQuestionPlacements(lesson);
+  const questionCount = placements.length;
   const answeredCount = Array.from({ length: questionCount }, (_, i) => i)
     .filter(i => checkpointAnswers[i] !== undefined).length;
-  const firstUnanswered = Array.from({ length: questionCount }, (_, i) => i)
-    .find(i => checkpointAnswers[i] === undefined);
-  const visibleLimit = firstUnanswered === undefined ? paragraphCount : (firstUnanswered + 1) * 2;
+  const visibleLimit = getVisibleParagraphLimit(lesson, checkpointAnswers);
   const complete = answeredCount === questionCount;
   const resumeTarget = useRef(getResumeParagraphNumber(lesson, checkpointAnswers));
   const sections = lesson.sections.map((section, index) => ({
@@ -170,15 +169,16 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
             {section.paragraphs.map((paragraph, i) => {
               const number = section.start + i;
               if (number > visibleLimit) return null;
-              const questionIndex = number % 2 === 0 ? number / 2 - 1 : -1;
-              const question = questionIndex >= 0 && questionIndex < questionCount ? lesson.questions[questionIndex] : undefined;
+              const paragraphId = getParagraphId(paragraph, number);
+              const questionIndex = placements.findIndex(p => p.afterParagraphNumber === number);
+              const question = questionIndex >= 0 ? lesson.questions[questionIndex] : undefined;
               const answered = checkpointAnswers[questionIndex] !== undefined;
               return <View key={number} testID={`reader-paragraph-${number}`} onLayout={event => {
                 paragraphPositions.current[number] = { sectionIndex, y: event.nativeEvent.layout.y };
                 flushScroll();
               }}>
-                <Text selectable style={[styles.paragraph, textStyle]}>{paragraph}</Text>
-                {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphCount === number)
+                <Text selectable style={[styles.paragraph, textStyle]}>{getParagraphText(paragraph)}</Text>
+                {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
                 {question ? <View style={styles.checkpoint}>
                   <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={lessonReportTarget(lesson, questionIndex)}

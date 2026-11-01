@@ -1,0 +1,66 @@
+# Athens: citizenship, voting and civic belonging — Lesson 15 research ledger
+Updated 2026-11-01 · Branch `content/curriculum-v1` · Stable ID `athens-who-voted`
+Status **Integrated, not Validated or Approved**; previous title «Ποιοι χωρούσαν στην αθηναϊκή δημοκρατία;»; final title **«Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν»**.
+
+## Objective and title rationale
+Explain distinct ideas of Athenian civic ancestry, deme membership, assembly voting and actual participation. Show free metics, women of citizen families, visiting foreigners and enslaved people without collapsing nonvoters into one legal category. The paired verbs in the title reflect research by Josine Blok: belonging to the polis and using male political entitlements were not identical.
+The prior live Drafted article had eight unanchored string paragraphs, four legacy questions and `compatibleQuizKeys: ["q_470dac57"]`; its first two questions covered direct voting and metics, the third sortition (now intentionally reserved for Lesson 16), the fourth modern comparison. All new six checkpoint semantics and order are incompatible.
+
+## Narrative structure and positions
+1. `athens-01`–`04`: asty, Piraeus, Attic territory and Pnyx; citizen body vs population; assembly eligibility (question 1 after 04).
+2. `athens-05`–`09`: Solonian retrospective stories; Cleisthenic demes and tribes; family, age and scrutiny; Periclean descent restriction and re-enactment (question 2 after 09; map after 07).
+3. `athens-10`–`13`: speak/vote vs offices; boule agenda; work and distance; 411 and 404/403 interruptions (question 3 after 13).
+4. `athens-14`–`17`: women of citizen families, cult and kinship, revised scholarship and other women's differing legal positions (question 4 after 17).
+5. `athens-18`–`21`: resident foreigners, metic restrictions (with chronological uncertainty), enslaved persons, wealth not citizenship (question 5 after 21).
+6. `athens-22`–`25`: partisan sources, the 323/322 and 318/317 Euphron honorific decrees and careful use of maps/inscriptions; conclusion (question 6 after 25; stele after 23).
+
+Approx. 12 minutes including comprehension pauses; no predetermined count was applied. Greek style opens with a historical distinction rather than a fictional scene or question. Overlap: #1 everyday archaeology; #12 polis formation; #14 helots/perioikoi and Spartan institutions; #16 planned courts and technical sortition; global-history slavery survey remains elsewhere.
+
+## Claim-to-source evidence and uncertainties
+- **S1** Citizenship in Classical Athens, Chapter 1: Rethinking Athenian Citizenship. Josine Blok · Cambridge University Press (2017). https://assets.cambridge.org/97805211/91456/excerpt/9780521191456_excerpt.pdf
+- **S2** Democracy and Participation in Athens, Chapter 2: The privileges and opportunities of the citizen. R. K. Sinclair · Cambridge University Press (1988). https://www.cambridge.org/core/books/abs/democracy-and-participation-in-athens/privileges-and-the-opportunities-of-the-citizen/14CA33DF157137C6845754E4555F8FA1
+- **S3** The origin of metic status at Athens. James Watson · Cambridge Classical Journal 56 (2010). https://www.cambridge.org/core/journals/cambridge-classical-journal/article/abs/origin-of-metic-status-at-athens/17287C43A38EC8A9C15A8A26CDCA7016
+- **S4** Women and Family in Athenian Law. Konstantinos Kapparis · Dēmos / Harvard CHS discussion series (2003). https://eclass.uoa.gr/modules/document/file.php/PHIL959/KAPPARIS%20Women%20and%20Family%20in%20Athenian%20Law.pdf
+- **S5** Women and Naturalisation in Fourth-Century Athens: The Case of Archippe. David Whitehead · The Classical Quarterly 36/1 (1986). https://www.cambridge.org/core/journals/classical-quarterly/article/abs/women-and-naturalisation-in-fourthcentury-athens-the-case-of-archippe/368E95937D524D458D2EE1DA099F7E49
+- **S6** Citizenship among the historians. Josine Blok · Citizenship Studies (2022). https://www.tandfonline.com/doi/full/10.1080/13621025.2022.2091245
+- **S7** Αθηναίων Πολιτεία 42 (κείμενο και μετάφραση). Κέντρο Ελληνικής Γλώσσας · Ανθολόγιο αρχαίας ελληνικής γραμματείας. https://www.greek-language.gr/digitalResources/ancient_greek/anthology/literature/browse.html?text_id=331
+- **S8** The Athenian Constitution, sections 26 and 42. Aristotle/Aristotelian school · MIT Internet Classics Archive. https://classics.mit.edu/Aristotle/athenian_const.2.2.html
+- **S9** Demosthenes 57.41, 57.54: Citizenship Evidence in Against Eubulides. Università degli Studi di Milano · Politeia (2025). https://politeia.unimi.it/en/2025/05/08/demosth-57-41-57-54-prove-di-cittadinanza-nella-contro-eubulide-la-funzione-dellengye-e-della-testimonianza-orale-345-a-c/
+- **S10** The Athenian Agora: Excavations and Finds. American School of Classical Studies at Athens. https://www.ascsa.org/excavations/athenian-agora
+- **S11** Pnyx: Official Athens Guide. City of Athens official visitor guide. https://www.thisisathens.org/antiquities/pnyx
+- **S12** Honorary stele: Euphron and citizenship decrees, 323/322 and 318/317 BCE. National Archaeological Museum object 1482 · photographed by George E. Koronaios / Wikimedia Commons. https://commons.wikimedia.org/wiki/File:Honorary_stele_depicting_Athena_and_the_Athenian_Deme_(4th_cent._B.C.)_at_the_National_Archaeological_Museum_of_Athens_on_22_July_2018.jpg
+
+- **Demes, descent, scrutinies:** S1, S2, S7, S8, S9. Cleisthenic reorganization c. 508/507 BCE vs fourth-century `Athenaion Politeia` 42 instructions (18-year-old male registry and scrutiny). The work comes from the Aristotelian circle, and should not be casually treated as Aristotle's own eyewitness record. Demosthenes 57 is an adversarial lawsuit, not an objective census.
+- **451/450 BCE**: S1, S2, S5, S8; earlier parentage requirements and later re-enactment c. 403/402 BCE must be distinguished. Motives of Pericles' proposal and consequences for borderline cases are disputed; neither retroactivity nor single-cause exclusion asserted as settled.
+- **Women and citizen identity:** S1, S4, S6, S9. No female assembly voting, but some female citizens had formal cult roles and genealogical relevance. Nuance in terms *astos/aste* and *polites*; different scholars prioritize political or wider civic definitions. No claim of equal legal capacities.
+- **Metics:** S2, S3, S5; free resident aliens without the franchise, metoikion/prostates/land restrictions attested with period caveats. Watson challenges timeless projection of the metic classification into the entire Classical period. Individual wealth and participation varied.
+- **Pnyx and population:** S10–S11; multiple construction phases and the geographic spread of Attic demes. No invented turnout figures or fixed permanent population percentages.
+- **Enslaved:** S10 and comparative institutional scholarship S1/S3; legal unfreedom and diverse workplaces, with severe bias in preserved written testimony. Not an exhaustive treatment of slavery.
+- **Citizenship award:** S12 and the exact object description on Commons; Euphron relief is **late 4th century**, and documentation of a specific honorific grant must not be generalized to the 5th. No assertion of universal naturalization.
+
+## Image rights ledger and placement
+1. **Cover Pnyx:** GeorgeKokkos, `Pnyx and Bema.jpg`, 13 September 2016, Wikimedia Commons CC BY-SA 4.0, original **2800 × 1863**. https://commons.wikimedia.org/wiki/File:Pnyx_and_Bema.jpg. Width 1200 redirected raster. Caption notes successive archaeological phases; `contain` to show context. Remote thumbnail/crop and credit link require device QA.
+2. **After `athens-07`:** Fulvio314 (original), Gts-tg (Greek adaptation), `Greece (ancient) Attica Demos II-el.svg`, 4 November 2016, Wikimedia Commons CC BY-SA 4.0, **635 × 818 nominal SVG**. https://commons.wikimedia.org/wiki/File:Greece_(ancient)_Attica_Demos_II-el.svg. Modern reconstructed locations based on John S. Traill; white areas uncertain; `contain`, zoom essential for legibility, PNG width redirect still untested on native.
+3. **After `athens-23`:** George E. Koronaios, `Honorary stele depicting Athena and the Athenian Deme (4th cent. B.C.) at the National Archaeological Museum of Athens on 22 July 2018.jpg`, original **5481 × 3654** (current cropped/illuminated revision 2021; earlier 6000×4000), Wikimedia Commons CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Honorary_stele_depicting_Athena_and_the_Athenian_Deme_(4th_cent._B.C.)_at_the_National_Archaeological_Museum_of_Athens_on_22_July_2018.jpg. Athens National Archaeological Museum inv. 1482. `contain`, zoom to inspect relief and Greek lettering; manuscript not a census.
+
+All use explicit creator/licence in UI credit, source URL and captions; share-alike obligations and image transformations should be reviewed at distribution. The images were rights-page inspected, **not fetched/rendered in Expo**.
+
+## Quiz compatibility: evidence-based disposition
+- Before-edit snapshot: `scripts/fixtures/quiz-before-editorial-20261030.json` records four older shipped questions with answer indices **[3,1,1,3]**; the live pre-rewrite lesson still had four questions and historical compatible alias `q_470dac57` for textually updated but semantically ordered versions.
+- New quiz has **six newly identified questions**, version "1", distinct answer keys and placements **4/9/13/17/21/25**. Do **not** retain the old alias: even if individual concepts overlap, indices 2–5 do not refer to the same tasks. `requireCurrentAttemptQuiz: true` protects against unversioned unfinished answers.
+- Older completion IDs, saved IDs, completion events and historical XP remain associated with `athens-who-voted`. The activity sync event stores its original quiz fingerprint and missed indices, and incompatible mistaken answers are shown as changed/unavailable for current-question practice instead of mapping onto new questions.
+- **Known limitation:** legacy incomplete question-index attempts cannot be resumed at the old quiz position in the new text. The app's existing backup/sync parsers drop incompatible in-progress answers while keeping the lesson saved and previously completed. Do not claim preservation of paragraph location across fundamentally rewritten checkpoints. No new backend schema required.
+- The earlier `scripts/test-editorial-compatibility.cjs` expectation of 43 otherwise-compatible lessons / 35 text-changed keys becomes 42 / 34 after assigning this live quiz to the explicit incompatible-rewrite table.
+- Rewards, sound, daily/weekly practice engine, saved ID operations, sync protocol and Lessons 1–14 untouched.
+
+## Validation and acceptance
+Source and Commons metadata inspected; GitHub branch, data model, fixture semantics, ID/order and structural markers reviewed. Dedicated `scripts/test-athens-who-voted.cjs` is included but **not run on local Node** in this editing environment. Likewise no local `npm run typecheck`, `npm run validate:content`, reader/pilot/path/editorial, XP/audio/feedback, automatic-sync tests, CI, real Android/iOS Expo, live remote-image rendering, or Supabase verification is claimed. Lesson 14 `scripts/test-sparta-society.cjs` also still awaits execution. Keep Lessons 1–15 Integrated, **0 Validated/Approved**.
+
+Run `npm ci` if needed, then `npm run typecheck && npm run validate:content` and `node scripts/test-athens-who-voted.cjs`, `node scripts/test-sparta-society.cjs`, `node scripts/test-flexible-editorial.cjs`, `node scripts/test-reader-pilot.cjs`, `node scripts/test-lesson-path.cjs`, `node scripts/test-editorial-compatibility.cjs`, `node scripts/test-article-images.cjs`, `node scripts/test-xp-rewards.cjs`, `node scripts/test-answer-sound-route.cjs`, `node scripts/test-play-feedback-ui.cjs`, `node scripts/test-automatic-sync.cjs`; see scripts for additional relevant suites. QA Android and iOS: restore historic completion/bookmark and old quiz event, verify old XP remains and does not duplicate on replay; old unfinished checkpoint begins fresh; all six questions unlock and explain, correct first-answer sound works, zero-XP popup remains hidden; zoom and credits for three media; offline restart, full-resume, font scaling, warning on exiting, Supabase sync and question-history isolation.
+
+**Next only:** Lesson 16 of 30, `athens-law-courts`, «Νόμοι, δικαστήρια και κλήρωση στην Αθήνα», Chapter III (planned, not currently live). Check actual catalogue and tracker, research-first, avoid repeating franchise history, do not change #15 quiz keys or older completion history.
+
+
+## Prose-only editorial update — 2026-11-01
+
+The introductory borders metaphor was removed to distinguish voting rights from belonging to the citizen community; old and new quiz histories remain incompatible. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.

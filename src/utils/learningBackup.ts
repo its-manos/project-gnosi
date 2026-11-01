@@ -1,9 +1,12 @@
 import { evaluateChoice } from "../quiz/engine";
 import { lessons } from "../data/lessons";
 import { getInlineQuestionCount } from "./lessonProgress";
+import { quizFingerprint } from "./learningActivity";
 
 export type BackupAttempt = {
   checkpointAnswers: Record<number, number>;
+  /** Fingerprint of the question wording, choices and answer keys at time of answering. */
+  quizKey?: string;
   score: number;
   updatedAt: number;
   replayOfCompletedLesson: boolean;
@@ -33,6 +36,11 @@ export function parseLearningBackup(value: unknown): LearningBackup {
     if (!record(raw) || !record(raw.checkpointAnswers) || typeof raw.updatedAt !== "number" || !Number.isFinite(raw.updatedAt) || raw.updatedAt < 0) throw new Error("invalid_backup");
     const replayOfCompletedLesson = raw.replayOfCompletedLesson === true;
     if (completedIds.includes(id) && !replayOfCompletedLesson) continue;
+    // Keep bookmarks and historical completions, but never reuse answers against
+    // materially revised questions. New editorial lessons also reject legacy
+    // unversioned in-progress answers, which cannot be safely mapped.
+    const quizKey = typeof raw.quizKey === "string" ? raw.quizKey : undefined;
+    if ((quizKey && quizKey !== quizFingerprint(lesson.questions)) || (lesson.requireCurrentAttemptQuiz && !quizKey)) continue;
     const checkpointAnswers: Record<number, number> = {};
     let score = 0;
     // Only restore a consecutive, valid sequence, so a corrupt hole cannot skip a gate.
@@ -43,7 +51,7 @@ export function parseLearningBackup(value: unknown): LearningBackup {
       checkpointAnswers[i] = answer;
       if (evaluateChoice(lesson.questions[i], answer).correct) score += 1;
     }
-    if (Object.keys(checkpointAnswers).length) attempts[id] = { checkpointAnswers, score, updatedAt: raw.updatedAt, replayOfCompletedLesson };
+    if (Object.keys(checkpointAnswers).length) attempts[id] = { checkpointAnswers, ...(quizKey ? { quizKey } : {}), score, updatedAt: raw.updatedAt, replayOfCompletedLesson };
   }
   return { schemaVersion: 1, completedIds, savedIds: ids(value.savedIds), attempts };
 }

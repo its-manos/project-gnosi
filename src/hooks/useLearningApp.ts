@@ -9,6 +9,7 @@ import { lessons } from "../data/lessons";
 import type { LearningBackup } from "../utils/learningBackup";
 import { calculateScore } from "../utils/legacyLearning";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
+import { quizFingerprint } from "../utils/learningActivity";
 import { useLearningSession, useLearningSnapshot } from "../state/LearningSession";
 import { lessonReview } from "../utils/lessonReview";
 import { lessonScores } from "../utils/weeklyReview";
@@ -231,6 +232,7 @@ export function useLearningApp() {
     // Store state changes synchronously before React renders, preventing stale double taps.
     store.answer(activeLessonId, {
       checkpointAnswers: nextAnswers,
+      quizKey: quizFingerprint(lesson.questions),
       score: nextScore,
       updatedAt: Date.now(),
       replayOfCompletedLesson: current.attempts[activeLessonId]?.replayOfCompletedLesson ?? current.completedIds.includes(activeLessonId),

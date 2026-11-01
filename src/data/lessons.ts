@@ -1,7 +1,25 @@
 import type { QuestionMetadata } from "../quiz/types";
 import { worldHistoryLessons } from "./worldHistoryLessons";
+import { greekWorldLessons } from "./greekWorldLessons";
+import { greekEvidenceLessons } from "./greekEvidenceLessons";
+import { greekChronologyLessons } from "./greekChronologyLessons";
+import { greekGeographyLessons } from "./greekGeographyLessons";
+import { aegeanBronzeAgeLessons } from "./aegeanBronzeAgeLessons";
+import { minoanCreteLessons } from "./minoanCreteLessons";
+import { mycenaeanPalacesLessons } from "./mycenaeanPalacesLessons";
+import { palaceCollapseLessons } from "./palaceCollapseLessons";
+import { geometricGreeceLessons } from "./geometricGreeceLessons";
+import { riseOfPolisLessons } from "./riseOfPolisLessons";
+import { greekSettlementsLessons } from "./greekSettlementsLessons";
+import { spartaSocietyLessons } from "./spartaSocietyLessons";
+import { athensLawCourtsLessons } from "./athensLawCourtsLessons";
+import { greekWarHoplitesLessons } from "./greekWarHoplitesLessons";
+import { greekSanctuariesGamesLessons } from "./greekSanctuariesGamesLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
+import { geologyLessons } from "./geologyLessons";
+import { perceptionLessons } from "./perceptionLessons";
+import { perceptionAttentionLessons } from "./perceptionAttentionLessons";
 import { catalogueExpansion } from "./catalogueExpansion";
 import { additionalLessons } from "./additionalLessons";
 
@@ -26,10 +44,14 @@ export type LessonQuestion = QuestionMetadata & {
   explanation: string;
 };
 
+export type LessonParagraph = string | { id: string; text: string };
+
 export type LessonSection = {
   title: string;
-  paragraphs: string[];
+  paragraphs: LessonParagraph[];
 };
+
+export type LessonCheckpoint = { questionId: string; afterParagraphId: string };
 
 export type LessonSource = {
   title: string;
@@ -39,6 +61,11 @@ export type LessonSource = {
 
 export type Lesson = {
   coverKind?: "editorial";
+  imageResizeMode?: "cover" | "contain";
+  /** Opt-in for revised lessons: unversioned legacy attempts cannot be trusted. */
+  requireCurrentAttemptQuiz?: boolean;
+  /** Explicit, stable anchor-based checkpoint placement. Omit for legacy pairs. */
+  checkpoints?: LessonCheckpoint[];
   contentNote?: string;
   editorialReviewedAt?: string;
   /** Prior quiz versions with identical objectives, question order and answer keys. */
@@ -214,124 +241,218 @@ export const subcategories: Subcategory[] = [
     description: "Πώς οργανώνονται και εξελίσσονται οι ανθρώπινες κοινωνίες.",
   },
   { id: "architecture", categoryId: "culture", title: "Αρχιτεκτονική", description: "Από την πρώτη παρατήρηση στη σύνθεση: χώρος, φως, κατασκευή και πόλη." },
+  { id: "brain-perception", categoryId: "science", title: "Εγκέφαλος και Ψευδαισθήσεις", description: "Πώς ο εγκέφαλος μετατρέπει το φως σε εμπειρία: όραση, χρώμα, βάθος και μοτίβα." },
+  { id: "geology-hidden-earth", categoryId: "science", title: "Γεωλογία και η κρυμμένη Γη", description: "Πετρώματα, γεωλογικός χρόνος και απολιθώματα: μάθε να διαβάζεις την ιστορία του πλανήτη." },
   { id: "genocide-memory", categoryId: "difficult-history", title: "Γενοκτονίες & μνήμη", description: "Διώξεις, ιστορικά τεκμήρια και η ευθύνη της μνήμης." },
   { id: "colonialism-slavery", categoryId: "difficult-history", title: "Αποικιοκρατία & δουλεία", description: "Καταναγκασμός, οικονομικά συστήματα και κριτική ανάγνωση των πηγών." },
   { id: "power-exclusion", categoryId: "difficult-history", title: "Εξουσία & αποκλεισμός", description: "Λογοκρισία, ψευδοεπιστήμη και ανθρώπινα δικαιώματα." },
 ];
 
 const originalLessons: Lesson[] = [
-        {
-          "id": "ancient-athens",
-          "categoryId": "history",
-          "subcategoryId": "ancient-greece",
-          "title": "Μια μέρα στην αρχαία Αθήνα",
-          "summary": "Κάτω από τον Παρθενώνα υπήρχαν σπίτια, εργαστήρια, πηγάδια και άνθρωποι με πολύ διαφορετικές καθημερινές ζωές.",
-          "readingMinutes": 3,
-          "intro": "Η Αθήνα δεν ξυπνούσε κάθε πρωί κοιτάζοντας τον Παρθενώνα. Κάποιος έπρεπε να φέρει νερό, να ανάψει τη φωτιά, να ανοίξει το εργαστήριο. Αν χαμηλώσουμε το βλέμμα από τα μνημεία στο ύψος του δρόμου, εμφανίζεται μια άλλη πόλη: εκείνη των ανθρώπων που τη συντηρούσαν.",
-          "imageUrl": "https://images.unsplash.com/photo-1684957048838-c7297a798563?auto=format&fit=crop&w=1200&q=80",
-          "imageCaption": "Η Ακρόπολη δεσπόζει πάνω από την Αθήνα, συνδέοντας το σημερινό τοπίο με την αρχαία πόλη.",
-          "imageCredit": "Ermir Hoxhaj / Unsplash",
-          "imageCreditUrl": "https://unsplash.com/fr/photos/une-vue-du-parthenon-au-sommet-dune-colline-e4wkUDrsTCw",
-          "sections": [
-            {
-              "title": "Μια πόλη πίσω από τα μνημεία",
-              "paragraphs": [
-                "Τα μεγάλα δημόσια κτίρια δείχνουν πώς ήθελε μια πόλη να παρουσιάζει τον εαυτό της. Ένα πηγάδι, ένας αποχετευτικός αγωγός ή ένας χώρος εργασίας απαντούν σε πιο πρακτικές ερωτήσεις: από πού ερχόταν το νερό; Πού κατέληγαν τα απόβλητα; Πώς έβγαινε το μεροκάματο;",
-                "Οι άνθρωποι που μοιράζονταν τους δρόμους δεν μοιράζονταν τα ίδια δικαιώματα ή τις ίδιες ευκαιρίες. Πολίτες, μέτοικοι και υποδουλωμένοι άνθρωποι συμμετείχαν στην οικονομική ζωή με πολύ διαφορετικούς όρους. Η εικόνα του ελεύθερου πολίτη που συζητά στην Αγορά δεν περιγράφει ολόκληρο τον πληθυσμό."
-              ]
-            },
-            {
-              "title": "Το σπίτι ως κέντρο εργασίας",
-              "paragraphs": [
-                "Μια αυλή μπορούσε να δίνει φως και αέρα στα δωμάτια γύρω της και να φιλοξενεί δουλειές του σπιτιού. Αγγεία αποθήκευσης, μια εστία και ένα πηγάδι δεν είναι απλώς διακόσμηση μιας ανασκαφής. Είναι ίχνη από ανάγκες που επαναλαμβάνονταν κάθε μέρα.",
-                "Τα σπίτια δεν ήταν όλα ίδια. Κάποια ήταν μικρά και πρακτικά, ενώ πλουσιότερα νοικοκυριά είχαν εσωτερικές αυλές και περισσότερους χώρους. Η κατοικία έδειχνε και τις δυνατότητες μιας οικογένειας."
-              ]
-            },
-            {
-              "title": "Τα παιδιά δεν είχαν μία κοινή εμπειρία",
-              "paragraphs": [
-                "Η ερώτηση «πήγαιναν τα παιδιά σχολείο;» δεν έχει μία απάντηση για όλους. Σε οικογένειες με πόρους, αγόρια μπορούσαν να μάθουν γράμματα, μουσική και γυμναστική κοντά σε δασκάλους. Άλλα παιδιά μάθαιναν μια δουλειά βοηθώντας στο σπίτι ή στο εργαστήριο. Το φύλο, η κοινωνική θέση και η οικονομική δυνατότητα επηρέαζαν τη διαδρομή τους.",
-                "Δεν υπήρχε ένα ενιαίο σχολικό πρόγραμμα για όλα τα παιδιά. Κείμενα και αντικείμενα μάς δίνουν διαφορετικές ενδείξεις, αλλά δεν αποκαλύπτουν κάθε ώρα μιας παιδικής ζωής."
-              ]
-            },
-            {
-              "title": "Αγορά, εμπόριο και λατρεία",
-              "paragraphs": [
-                "Η Αγορά ήταν χώρος εμπορίου, δημόσιας ζωής και συναντήσεων. Οι άνθρωποι έκαναν συναλλαγές, άκουγαν νέα και ασχολούνταν με υποθέσεις της πόλης.",
-                "Η λατρεία των θεών ήταν δεμένη με πολλές πλευρές της ζωής. Αφιερώματα, αγγεία και ιερά μάς δίνουν στοιχεία, όμως χρειάζεται να τα εξετάζουμε μαζί με τον τόπο και την περίοδο όπου βρέθηκαν."
-              ]
-            },
-            {
-              "title": "Πώς διαβάζουμε τα μικρά ίχνη",
-              "paragraphs": [
-                "Κάτω από το Μουσείο της Ακρόπολης σώζεται μια ολόκληρη γειτονιά με δρόμους, σπίτια, πηγάδια, εργαστήρια και λουτρά. Τα κατάλοιπα ανήκουν σε διαφορετικές εποχές. Δεν βλέπουμε ένα καρέ της κλασικής Αθήνας, αλλά διαδοχικές πόλεις που χτίστηκαν η μία πάνω στην άλλη.",
-                "Ένα δωμάτιο μπορεί να άλλαξε χρήση· ένας δρόμος να επισκευάστηκε πολλές φορές. Γι’ αυτό οι αρχαιολόγοι εξετάζουν πού βρέθηκε κάθε αντικείμενο και σε ποιο στρώμα. Το πιο χρήσιμο ερώτημα δεν είναι πάντα «ποιο διάσημο πρόσωπο πέρασε από εδώ;», αλλά «τι χρειάστηκε να κάνουν εδώ χιλιάδες άγνωστοι άνθρωποι;»."
-              ]
-            }
-          ],
-          "sources": [
-            {
-              "title": "The archaeological excavation and its museum",
-              "publisher": "Acropolis Museum",
-              "url": "https://www.theacropolismuseum.gr/en/exhibit-halls/archaeological-excavation"
-            },
-            {
-              "title": "A Morning in Ancient Athens",
-              "publisher": "Acropolis Museum — Digital Museum",
-              "url": "https://www.emfc.gr/en/digital-museum"
-            }
-          ],
-          "questions": [
-            {
-              "question": "Μια ξενάγηση δείχνει μόνο τον Παρθενώνα. Τι χάνει από την εικόνα της Αθήνας;",
-              "answers": [
-                "Τη σειρά με την οποία χτίστηκαν τα δημόσια μνημεία.",
-                "Τον τρόπο με τον οποίο οι ναοί παρουσίαζαν την πόλη.",
-                "Τους χώρους όπου οι κάτοικοι ζούσαν και εργάζονταν.",
-                "Τις τεχνικές κατασκευής των μεγάλων μαρμάρινων κτιρίων."
-              ],
-              "correctIndex": 2,
-              "explanation": "Τα μνημεία είναι ένα μέρος της πόλης. Σπίτια, δρόμοι και εργαστήρια αποκαλύπτουν άλλες πλευρές της καθημερινότητας· δεν δίνουν όμως πλήρη βιογραφία κάθε κατοίκου."
-            },
-            {
-              "question": "Σε μια αυλή βρίσκονται εστία, αγγεία και πηγάδι. Ποια ερμηνεία στηρίζεται καλύτερα σε αυτά;",
-              "answers": [
-                "Το νοικοκυριό είχε την ίδια οικονομική θέση με τα γειτονικά.",
-                "Η αυλή εξυπηρετούσε κυρίως δημόσιες συνελεύσεις.",
-                "Εκεί καλύπτονταν ανάγκες μαγειρέματος, αποθήκευσης και νερού.",
-                "Το σπίτι ανήκε σε τεχνίτη που κατασκεύαζε αγγεία."
-              ],
-              "correctIndex": 2,
-              "explanation": "Ο συνδυασμός των ευρημάτων δείχνει οικιακές λειτουργίες. Ούτε το επάγγελμα του ιδιοκτήτη ούτε η οικονομική ισότητα προκύπτουν από αυτά τα στοιχεία."
-            },
-            {
-              "question": "Δύο παιδιά της ίδιας ηλικίας ζουν στην Αθήνα: το ένα πηγαίνει σε δάσκαλο, το άλλο βοηθά στη δουλειά. Τι εξηγεί καλύτερα τη διαφορά;",
-              "answers": [
-                "Η εργασία αποτελούσε το τελικό στάδιο ενός κοινού σχολείου.",
-                "Η ηλικία αρκούσε για να καθορίσει τη διαδρομή κάθε παιδιού.",
-                "Όλα τα παιδιά ακολουθούσαν κοινό πρόγραμμα με διαφορετικές βάρδιες.",
-                "Η οικογένεια και η κοινωνική θέση επηρέαζαν τις ευκαιρίες τους."
-              ],
-              "correctIndex": 3,
-              "explanation": "Δεν υπήρχε ενιαίο σχολικό πρόγραμμα για όλους. Η ίδια ηλικία δεν σήμαινε ίδιες συνθήκες ζωής ή πρόσβαση στην εκπαίδευση."
-            },
-            {
-              "question": "Κάποιος χαρακτηρίζει την Αγορά «απλώς ένα παζάρι». Ποια παρατήρηση διορθώνει την εικόνα;",
-              "answers": [
-                "Το εμπόριο συνυπήρχε με συναντήσεις και δημόσιες υποθέσεις.",
-                "Οι δημόσιες υποθέσεις γίνονταν κυρίως μέσα στις κατοικίες.",
-                "Τα αφιερώματα αρκούν για να ανασυνθέσουμε κάθε τελετή.",
-                "Η παρουσία εμπορίου απέκλειε τις δημόσιες δραστηριότητες."
-              ],
-              "correctIndex": 0,
-              "explanation": "Η Αγορά είχε πολλές λειτουργίες. Όπως και τα αντικείμενα λατρείας, οι χώροι χρειάζονται ιστορικό πλαίσιο για να ερμηνευτούν σωστά."
-            }
-          ],
-          "compatibleQuizKeys": [
-            "q_e3d86507"
-          ],
-          "editorialReviewedAt": "2026-10-30"
-        },
+  {
+    "id": "ancient-athens",
+    "categoryId": "history",
+    "subcategoryId": "ancient-greece",
+    "title": "Η Αθήνα πίσω από τον Παρθενώνα",
+    "summary": "Ένα σπίτι, μια αυλή και μερικά μικρά ευρήματα αποκαλύπτουν την Αθήνα των ανθρώπων — και τα όρια όσων ξέρουμε γι’ αυτούς.",
+    "readingMinutes": 6,
+    "intro": "Ο Παρθενώνας αφηγείται την ιστορία μιας ισχυρής πόλης. Μια αυλή με φθαρμένες πλάκες, ένας αγωγός νερού και οι τοίχοι ενός σπιτιού αφηγούνται κάτι διαφορετικό: πώς κατοικούσαν, εργάζονταν και συνυπήρχαν άνθρωποι που δεν άφησαν διάσημα ονόματα. Αρκεί να προσέξουμε και τη χρονολογία κάθε ίχνους.",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Athens%20Acropolis%20Museum%20Excavation.jpg?width=1200",
+    "imageCaption": "Κατάλοιπα της αρχαίας γειτονιάς κάτω από το Μουσείο της Ακρόπολης. Οι ορατοί τοίχοι δεν ανήκουν όλοι στην ίδια εποχή.",
+    "imageCredit": "Yair-haklai / Wikimedia Commons · CC BY-SA 4.0 · Φωτογραφία 2024",
+    "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Athens_Acropolis_Museum_Excavation.jpg",
+    "requireCurrentAttemptQuiz": true,
+    "sections": [
+      {
+        "title": "Το σπίτι που δεν έμεινε ίδιο",
+        "paragraphs": [
+          {
+            "id": "theta-built",
+            "text": "Στα τέλη του 5ου αιώνα π.Χ., στη γειτονιά νότια της Ακρόπολης, χτίστηκε μια κατοικία που οι αρχαιολόγοι σήμερα ονομάζουν «Οικία Θ». Δεν ξέρουμε το όνομα της οικογένειας που την κατοίκησε. Ξέρουμε, όμως, κάτι ασυνήθιστο για την ιστορία της: ο χώρος χρησιμοποιήθηκε και ξαναχτίστηκε επί πολλούς αιώνες, έως την ύστερη αρχαιότητα."
+          },
+          {
+            "id": "theta-rooms",
+            "text": "Οι αρχαιότερες φάσεις της κατοικίας περιλάμβαναν μια μικρή εσωτερική αυλή και δωμάτια γύρω της. Ιδιαίτερο ενδιαφέρον έχει ο ανδρώνας, ο χώρος όπου ο οικοδεσπότης μπορούσε να υποδέχεται συνδαιτυμόνες για συμπόσιο. Το δάπεδο και η διαμόρφωση γύρω από τους τοίχους, όπου τοποθετούνταν ανάκλιντρα, φανερώνουν σχεδιασμό για μια συγκεκριμένη κοινωνική δραστηριότητα. Δεν αποδεικνύουν ότι κάθε αθηναϊκό σπίτι είχε αντίστοιχο δωμάτιο."
+          },
+          {
+            "id": "theta-workshop",
+            "text": "Στο πρώτο μισό του 3ου αιώνα π.Χ. η ίδια αυλή απέκτησε λεκάνες σε διαφορετικά ύψη, σωλήνα καθαρού νερού και αποχέτευση. Η ανασκαφική ομάδα θεωρεί πιθανό ότι ο χώρος χρησιμοποιήθηκε για πλύσιμο ή επεξεργασία υφασμάτων. Είναι τεκμηριωμένη η εγκατάσταση· η ακριβής δραστηριότητα παραμένει ερμηνεία. Και αυτή είναι ήδη μια σημαντική ανατροπή: ένα «σπίτι» μπορεί σε άλλη εποχή να λειτουργούσε και ως εργαστήριο."
+          }
+        ]
+      },
+      {
+        "title": "Το νερό, η φωτιά και η εργασία",
+        "paragraphs": [
+          {
+            "id": "water-labor",
+            "text": "Όσο εντυπωσιακός κι αν ήταν ένας ναός, καμία γειτονιά δεν μπορούσε να ζήσει χωρίς νερό. Πηγάδια, δεξαμενές, εστίες, σκεύη και αποχετεύσεις είναι οι ταπεινές εγκαταστάσεις που κάνουν ορατές επαναλαμβανόμενες ανάγκες. Η αρχαιολογία τις μελετά όχι ως διακοσμητικές λεπτομέρειες, αλλά ως μέρος των εργασιών που κρατούσαν ένα νοικοκυριό σε λειτουργία."
+          },
+          {
+            "id": "not-every-home",
+            "text": "Οι δυνατότητες των κατοίκων δεν ήταν ίδιες. Κάποιοι διέθεταν περισσότερους χώρους, καλύτερη πρόσβαση σε υλικά αγαθά ή την εργασία άλλων ανθρώπων. Το μέγεθος ενός σπιτιού, ωστόσο, δεν αρκεί από μόνο του για να ταυτίσουμε τους κατοίκους με μια συγκεκριμένη νομική κατηγορία ή να μαντέψουμε τι ακριβώς έκαναν κάθε μέρα."
+          },
+          {
+            "id": "careful-traces",
+            "text": "Ακόμη και ένα αγγείο χρειάζεται συμφραζόμενα: βρέθηκε σε χώρο μαγειρέματος, μέσα σε απορρίμματα ή ως προσφορά σε τάφο; Ήταν σε χρήση όταν χτίστηκε ο τοίχος δίπλα του ή κατέληξε εκεί αιώνες αργότερα; Χωρίς αυτά τα ερωτήματα, ένα εύρημα μπορεί να γίνει αφορμή για μια ωραία αλλά ατεκμηρίωτη ιστορία."
+          }
+        ]
+      },
+      {
+        "title": "Λίγο πιο πέρα, στην Αγορά",
+        "paragraphs": [
+          {
+            "id": "agora-beyond-market",
+            "text": "Στην Αγορά της κλασικής Αθήνας, εμπόριο, δημόσια διοίκηση και κοινωνική ζωή συναντιούνταν. Δεν ήταν απλώς ένα παζάρι, ούτε μόνο χώρος πολιτικής συζήτησης. Εκεί υπήρχαν κτίρια δημόσιων λειτουργιών, ιερά και καταστήματα· γύρω από την ανοιχτή πλατεία υπήρχαν και κατοικίες."
+          },
+          {
+            "id": "agora-evidence",
+            "text": "Οι ανασκαφές της Αμερικανικής Σχολής Κλασικών Σπουδών έχουν αποκαλύψει σταθμά και μέτρα, δημόσιες επιγραφές, αντικείμενα συνδεδεμένα με τη λειτουργία δικαστηρίων, αλλά και οικιακή κεραμική. Καθένα φανερώνει διαφορετική πλευρά της πόλης: κανόνες στις συναλλαγές, θεσμούς, γεύματα και καθημερινές δουλειές. Η εικόνα προκύπτει από τον συνδυασμό τους, όχι από ένα μοναδικό «μαγικό» αντικείμενο."
+          },
+          {
+            "id": "agora-neighbors",
+            "text": "Στα όρια της Αγοράς σώζονται κατάλοιπα του κτιρίου που ονομάζεται συμβατικά «σπίτι του Σίμωνα του υποδηματοποιού». Η ονομασία μάς βοηθά να εντοπίζουμε τον χώρο, δεν πρέπει όμως να μετατρέπεται σε βέβαιη βιογραφία του ενοίκου. Η ύπαρξη κατοικιών και χώρων δουλειάς δίπλα σε δημόσια κτίρια είναι το ασφαλέστερο μάθημα που δίνει αυτό το τοπίο."
+          }
+        ]
+      },
+      {
+        "title": "Οι ζωές που δεν ακούγονται εξίσου",
+        "paragraphs": [
+          {
+            "id": "status-distinction",
+            "text": "Ο πληθυσμός της Αθήνας δεν αποτελούνταν μόνο από άνδρες πολίτες. Γυναίκες, παιδιά, μέτοικοι —ελεύθεροι κάτοικοι χωρίς αθηναϊκή πολιτεία— και υποδουλωμένοι άνθρωποι κινούνταν στους ίδιους δρόμους και συμμετείχαν στην παραγωγή με άνισους όρους. Η νομική τους θέση επηρέαζε τα δικαιώματα και τις υποχρεώσεις τους, χωρίς να καθορίζει με απλό τρόπο το επάγγελμα ή τον πλούτο καθενός."
+          },
+          {
+            "id": "women-roles",
+            "text": "Οι γραπτές πηγές συχνά στρέφουν την προσοχή μας προς τη δημόσια ζωή των ανδρών. Η υφαντική, η διαχείριση της κατοικίας, η φροντίδα των παιδιών και η μεταφορά νερού ήταν σημαντικές δραστηριότητες, όμως οι εμπειρίες όσων τις έκαναν δεν έχουν διασωθεί με την ίδια πληρότητα. Το να πούμε ότι «οι γυναίκες έμεναν πάντα μέσα» θα ήταν τόσο απλουστευτικό όσο το να θεωρήσουμε πως κάθε γυναίκα ζούσε με τον ίδιο τρόπο."
+          },
+          {
+            "id": "enslaved-labor",
+            "text": "Η εργασία υποδουλωμένων ανθρώπων υπήρχε σε νοικοκυριά και επαγγελματικούς χώρους. Ένας τεχνίτης που εργάζεται σε εργαστήριο δεν αναγνωρίζεται αυτομάτως ως πολίτης, μέτοικος ή δούλος μόνο από τα εργαλεία του. Οι ιστορικοί συνδυάζουν υλικά ευρήματα, επιγραφές και κείμενα — πηγές που συχνά γράφτηκαν από ανθρώπους με περισσότερη εξουσία από εκείνους για τους οποίους μιλούν."
+          },
+          {
+            "id": "questions-not-answers",
+            "text": "Δεν είναι ένδειξη αδυναμίας να παραδεχτούμε ότι δεν μπορούμε να αποδώσουμε όνομα, φύλο ή κοινωνική θέση στον κάτοχο ενός αντικειμένου. Είναι διάκριση ανάμεσα σε αυτό που βρέθηκε και σε αυτό που θα θέλαμε να μάθουμε. Η αρχαιολογία μάς επιτρέπει να διατυπώνουμε καλύτερες ερωτήσεις, όχι να διαβάζουμε τις σκέψεις των νεκρών."
+          }
+        ]
+      },
+      {
+        "title": "Ποια Αθήνα βλέπουμε;",
+        "paragraphs": [
+          {
+            "id": "layers-time",
+            "text": "Η γειτονιά κάτω από το Μουσείο της Ακρόπολης δεν είναι ένα παγωμένο στιγμιότυπο του 5ου αιώνα π.Χ. Τα ερείπιά της εκτείνονται σε πολλούς αιώνες και συχνά τα καλύτερα σωζόμενα κτίσματα είναι μεταγενέστερα, από τα ρωμαϊκά και τα ύστερα αρχαία χρόνια. Αν ενώσουμε πρόχειρα κάθε αυλή, λουτρό και ψηφιδωτό, θα κατασκευάσουμε μια «κλασική Αθήνα» που δεν υπήρξε ποτέ ακριβώς έτσι."
+          },
+          {
+            "id": "last-insight",
+            "text": "Από τα ευρήματα της Οικίας Θ δεν θα μάθουμε τα ονόματα όσων γέμιζαν την αυλή ή χρησιμοποιούσαν τον ανδρώνα. Μπορούμε όμως να παρακολουθήσουμε πώς άλλαζε το σπίτι και μαζί του η γειτονιά, από τους κλασικούς έως τους ύστερους αρχαίους χρόνους. Αυτή η μακρά, καθημερινή ιστορία δεν χωρά στην εικόνα του Παρθενώνα."
+          }
+        ]
+      }
+    ],
+    "checkpoints": [
+      {
+        "questionId": "athens-theta-phases",
+        "afterParagraphId": "theta-workshop"
+      },
+      {
+        "questionId": "athens-agora-evidence",
+        "afterParagraphId": "agora-neighbors"
+      },
+      {
+        "questionId": "athens-social-evidence",
+        "afterParagraphId": "questions-not-answers"
+      }
+    ],
+    "sources": [
+      {
+        "title": "House Θ",
+        "publisher": "Acropolis Museum",
+        "url": "https://www.theacropolismuseum.gr/en/buildings/house-th"
+      },
+      {
+        "title": "The archaeological excavation and its museum",
+        "publisher": "Acropolis Museum",
+        "url": "https://www.theacropolismuseum.gr/en/exhibit-halls/archaeological-excavation"
+      },
+      {
+        "title": "About the Excavations — Athenian Agora",
+        "publisher": "American School of Classical Studies at Athens",
+        "url": "https://www.ascsa.edu.gr/excavations/athenian-agora/about-the-excavations"
+      },
+      {
+        "title": "Women in Classical Greece",
+        "publisher": "Colette Hemingway, The Metropolitan Museum of Art (2004)",
+        "url": "https://www.metmuseum.org/essays/women-in-classical-greece"
+      },
+      {
+        "title": "What Do We Really Know about Athenian Society?",
+        "publisher": "Annales / Cambridge Core (2018)",
+        "url": "https://www.cambridge.org/core/journals/annales-histoire-sciences-sociales-english-edition/article/what-do-we-really-know-about-athenian-society/DF36DF0B855586709F75B8B401E14FC0"
+      },
+      {
+        "title": "Metics",
+        "publisher": "Rebecca Futo Kennedy, Oxford Classical Dictionary (updated 2025)",
+        "url": "https://academic.oup.com/edited-volume/61673/chapter-abstract/549655953"
+      }
+    ],
+    "questions": [
+      {
+        "id": "athens-theta-phases",
+        "version": "2",
+        "conceptIds": [
+          "historical-layers",
+          "archaeological-interpretation"
+        ],
+        "difficulty": "medium",
+        "question": "Στην Οικία Θ βρέθηκαν ίχνη συμποσίου και, από μεταγενέστερη φάση, λεκάνες με σωληνώσεις. Ποιο συμπέρασμα στηρίζεται καλύτερα στα στοιχεία;",
+        "answers": [
+          "Όλες οι εγκαταστάσεις χρησιμοποιούνταν υποχρεωτικά την ίδια ημέρα.",
+          "Ο χώρος άλλαξε χρήση σε διαφορετικές περιόδους, ενώ ο ακριβής τύπος εργαστηρίου δεν είναι βέβαιος.",
+          "Ο αρχικός ιδιοκτήτης διηύθυνε με βεβαιότητα πλυντήριο υφασμάτων.",
+          "Τα παλαιότερα δωμάτια ήταν απαραίτητα μέρη δημόσιου κτιρίου."
+        ],
+        "correctIndex": 1,
+        "explanation": "Η αλλαγή των κατασκευών δείχνει διαφορετικές φάσεις χρήσης. Η πιθανή επεξεργασία υφασμάτων ερμηνεύει τις λεκάνες και τους αγωγούς, αλλά δεν είναι ταυτόσημη με το ίδιο το εύρημα."
+      },
+      {
+        "id": "athens-agora-evidence",
+        "version": "2",
+        "conceptIds": [
+          "agora-functions",
+          "material-evidence"
+        ],
+        "difficulty": "medium",
+        "question": "Ποια ομάδα ευρημάτων δείχνει καλύτερα ότι η Αγορά είχε περισσότερες από μία λειτουργίες;",
+        "answers": [
+          "Μόνο αμφορείς με παρόμοια διακόσμηση.",
+          "Μόνο λείψανα μνημειακών ναών.",
+          "Μόνο μαρτυρίες συγγραφέων για πολιτικές συζητήσεις.",
+          "Δημόσιες επιγραφές, σταθμά συναλλαγών και οικιακή κεραμική από γειτονικά κτίρια."
+        ],
+        "correctIndex": 3,
+        "explanation": "Οι επιγραφές μαρτυρούν διοίκηση, τα σταθμά συναλλαγές και η κεραμική καθημερινές πρακτικές. Ο συνδυασμός διαφορετικών τεκμηρίων αποτυπώνει μια πολυλειτουργική πόλη."
+      },
+      {
+        "id": "athens-social-evidence",
+        "version": "2",
+        "conceptIds": [
+          "social-status",
+          "limits-of-evidence"
+        ],
+        "difficulty": "hard",
+        "question": "Βρέθηκαν εργαλεία σε ένα αθηναϊκό εργαστήριο. Τι μπορούμε να υποστηρίξουμε χωρίς άλλα στοιχεία;",
+        "answers": [
+          "Ότι εκεί γινόταν κάποια μορφή εργασίας, όχι όμως ότι ο τεχνίτης είχε συγκεκριμένη νομική θέση.",
+          "Ότι ο τεχνίτης ήταν πολίτης, αφού εργαζόταν μέσα στην Αθήνα.",
+          "Ότι ο τεχνίτης ήταν μέτοικος, επειδή η εργασία γινόταν σε κατάστημα.",
+          "Ότι η χρήση εργαλείων αποκλείει την παρουσία υποδουλωμένων ανθρώπων."
+        ],
+        "correctIndex": 0,
+        "explanation": "Το εργαλείο τεκμηριώνει δραστηριότητα. Για την ταυτότητα ή τη νομική κατάσταση των εργαζομένων απαιτούνται ανεξάρτητα στοιχεία· πολίτες, μέτοικοι και δούλοι μπορούσαν να εργάζονται σε παρόμοιους χώρους."
+      }
+    ],
+    "editorialReviewedAt": "2026-11-01"
+  },
   ...additionalLessons,
   ...catalogueExpansion,
   ...architectureLessons,
@@ -340,6 +461,24 @@ const originalLessons: Lesson[] = [
 // Keep old catalogue order and all quiz objects stable; place the path in lessonPath.ts.
 export const lessons: Lesson[] = [
   ...originalLessons.map(lesson => ({ ...lesson, ...astronomyRevisions[lesson.id] })),
+  ...greekWorldLessons,
+  ...greekEvidenceLessons,
+  ...greekChronologyLessons,
+  ...greekGeographyLessons,
+  ...aegeanBronzeAgeLessons,
+  ...minoanCreteLessons,
+  ...mycenaeanPalacesLessons,
+  ...palaceCollapseLessons,
+  ...geometricGreeceLessons,
+  ...riseOfPolisLessons,
+  ...greekSettlementsLessons,
+  ...spartaSocietyLessons,
+  ...athensLawCourtsLessons,
+  ...greekWarHoplitesLessons,
+  ...greekSanctuariesGamesLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
+  ...perceptionLessons,
+  ...perceptionAttentionLessons,
+  ...geologyLessons,
 ];

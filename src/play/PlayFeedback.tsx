@@ -51,9 +51,12 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
       if (!alive || !gate.accept(event, store.userId ?? "guest", foreground.current, Date.now())) return;
       if (!playPreferences.getSnapshot().ready) pendingPreferenceCue = { kind: event.kind, at: Date.now() };
       else audio.play(event.kind, allowed);
-      // Completion XP already appears in results. Keep only answer feedback and
-      // distinct milestones here; projected answer XP never triggers a level-up.
-      if (event.answerXP !== undefined || ["level-up", "mastered"].includes(event.kind)) setToast(event);
+      // Show reward popups only when XP was actually earned (or is pending).
+      // A zero-XP answer/replay still plays its sound, but must also dismiss any
+      // previous toast so an old +XP popup is not mistaken for the new answer.
+      const earnedXP = event.answerXP ?? event.xp ?? 0;
+      const showReward = earnedXP > 0 && (event.answerXP !== undefined || event.kind === "level-up" || event.kind === "mastered");
+      setToast(showReward ? event : null);
     });
     return () => { alive = false; pendingPreferenceCue = null; unsubscribe(); unsubscribePrefs(); unsubscribePreview(); reduced.remove(); state.remove(); audio.dispose(); };
   }, [store, dailyStore]);

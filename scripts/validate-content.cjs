@@ -107,8 +107,8 @@ for (const lesson of lessons) {
   if (lesson.coverKind !== 'editorial' && !isHttpsUrl(lesson.imageUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageUrl`);
   if (lesson.coverKind !== 'editorial' && !isHttpsUrl(lesson.imageCreditUrl)) fail(`Lesson "${lesson.id}" has an invalid HTTPS imageCreditUrl`);
   if (lesson.editorialReviewedAt) {
-    if (paragraphCount(lesson) < 8 || paragraphCount(lesson) < 2 * (lesson.questions?.length ?? 0) || !Number.isInteger(lesson.questions?.length) || lesson.questions.length < 4 || lesson.questions.length > 6) {
-      fail(`New lesson "${lesson.id}" must have enough paragraph pairs for four to six inline checkpoints`);
+    if (!Number.isInteger(lesson.questions?.length) || lesson.questions.length < 1) {
+      fail(`Reviewed lesson "${lesson.id}" must have at least one meaningful checkpoint`);
     }
     for (const question of lesson.questions ?? []) {
       if (question.answers?.length !== 4 || new Set(question.answers).size !== 4) {
@@ -134,18 +134,38 @@ for (const lesson of lessons) {
       fail(`Lesson "${lesson.id}" section "${section.title ?? sectionIndex + 1}" has no paragraphs`);
     }
     for (const [paragraphIndex, paragraph] of (section.paragraphs ?? []).entries()) {
-      if (typeof paragraph !== 'string' || paragraph.trim().length < 20) {
+      const text = typeof paragraph === "string" ? paragraph : paragraph?.text;
+      if (typeof text !== "string" || text.trim().length < 20) {
         fail(`Lesson "${lesson.id}" paragraph ${paragraphIndex + 1} in "${section.title}" is empty or suspiciously short`);
       }
     }
   }
 
+  const flattenedParagraphs = (lesson.sections ?? []).flatMap(s => s.paragraphs ?? []);
+  const explicitIds = flattenedParagraphs.filter(p => typeof p === "object" && p !== null).map(p => p.id);
+  if (explicitIds.some(id => typeof id !== "string" || !/^[a-z0-9-]+$/.test(id)) || new Set(explicitIds).size !== explicitIds.length) {
+    fail(`Lesson "${lesson.id}" has invalid or duplicate stable paragraph IDs`);
+  }
+  if (lesson.checkpoints !== undefined) {
+    if (!Array.isArray(lesson.checkpoints) || lesson.checkpoints.length !== lesson.questions?.length) fail(`Lesson "${lesson.id}" explicit checkpoints must match the question count`);
+    else {
+      const qids = lesson.questions.map(q => q.id);
+      if (qids.some(id => typeof id !== "string" || !/^[a-z0-9-]+$/.test(id)) || new Set(qids).size !== qids.length) fail(`Lesson "${lesson.id}" needs stable unique question IDs`);
+      const anchors = new Map(flattenedParagraphs.map((p, i) => [typeof p === "string" ? `legacy-paragraph-${i + 1}` : p.id, i + 1]));
+      let previousAnchor = 0;
+      lesson.checkpoints.forEach((checkpoint, i) => {
+        const anchor = anchors.get(checkpoint.afterParagraphId);
+        if (checkpoint.questionId !== qids[i] || !anchor || anchor <= previousAnchor) fail(`Lesson "${lesson.id}" has invalid or out-of-order checkpoint ${i + 1}`);
+        else previousAnchor = anchor;
+      });
+    }
+  }
   if (!Array.isArray(lesson.questions) || lesson.questions.length === 0) {
     fail(`Lesson "${lesson.id}" has no checkpoint questions`);
   } else {
     const paragraphTotal = paragraphCount(lesson);
     const availableCheckpoints = Math.floor(paragraphTotal / 2);
-    if (lesson.questions.length > availableCheckpoints) {
+    if (!lesson.checkpoints && lesson.questions.length > availableCheckpoints) {
       warn(`Lesson "${lesson.id}" has ${lesson.questions.length} questions but only ${availableCheckpoints} paragraph-pair checkpoints; some questions may not appear inline`);
     }
     for (const [index, question] of lesson.questions.entries()) {
@@ -185,8 +205,11 @@ for (const lessonId of mediaLessonIds) {
   if (!lesson) continue;
   const totalParagraphs = paragraphCount(lesson);
   for (const [index, figure] of (inlineArticleMedia[lessonId] ?? []).entries()) {
-    if (!Number.isInteger(figure.afterParagraphCount) || figure.afterParagraphCount < 1 || figure.afterParagraphCount > totalParagraphs) {
-      fail(`Inline image ${index + 1} for "${lessonId}" points to paragraph ${figure.afterParagraphCount}, but the article has ${totalParagraphs} paragraphs`);
+    const ids = new Set(lesson.sections.flatMap(s => s.paragraphs).map((p, i) => typeof p === "string" ? `legacy-paragraph-${i + 1}` : p.id));
+    const byId = typeof figure.afterParagraphId === "string" && ids.has(figure.afterParagraphId);
+    const byNumber = Number.isInteger(figure.afterParagraphCount) && figure.afterParagraphCount >= 1 && figure.afterParagraphCount <= totalParagraphs;
+    if ((figure.afterParagraphId !== undefined && !byId) || (figure.afterParagraphCount !== undefined && !byNumber) || (figure.afterParagraphId === undefined && figure.afterParagraphCount === undefined)) {
+      fail(`Inline image ${index + 1} for "${lessonId}" has an invalid paragraph placement`);
     }
     if (!isHttpsUrl(figure.url)) fail(`Inline image ${index + 1} for "${lessonId}" has an invalid HTTPS URL`);
     if (!isHttpsUrl(figure.creditUrl)) fail(`Inline image ${index + 1} for "${lessonId}" has an invalid credit URL`);

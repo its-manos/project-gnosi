@@ -2,8 +2,10 @@ import type { Lesson } from "../data/lessons";
 
 // Stable editorial order. New lessons are appended until explicitly placed here.
 export const lessonPaths: Record<string, readonly string[]> = {
-  "ancient-greece": ["ancient-athens", "athens-who-voted", "antikythera-gears", "linear-b-decipherment"],
+  "ancient-greece": ["ancient-athens", "greek-world-not-a-country", "greek-history-through-evidence", "greek-chronology", "greek-geography-seas", "aegean-bronze-age", "minoan-crete", "mycenaean-palaces", "linear-b-decipherment", "palace-collapse", "geometric-greece", "rise-of-polis", "greek-settlements-networks", "sparta-society", "athens-who-voted", "athens-law-courts", "greek-war-hoplites", "greek-sanctuaries-games", "antikythera-gears"],
   "world-history": ["world-introduction", "world-universe-earth", "world-life", "world-humans", "world-farming", "world-cities-writing", "world-bronze-networks", "world-empires", "pompeii-everyday-life", "world-beliefs", "silk-roads-ideas", "world-medieval-networks", "world-many-centres", "world-mongols-plague", "world-ocean-connections", "world-slavery-capital", "world-ideas-revolutions", "world-industry", "world-imperialism-resistance", "world-world-wars", "world-cold-war-decolonization", "world-connected-present"],
+  "brain-perception": ["perception-eyes-not-cameras", "perception-blind-spot", "perception-color-context", "perception-depth-two-eyes", "perception-gestalt-whole", "perception-inattentional-blindness", "perception-expectations", "perception-multitasking", "perception-hidden-whole"],
+  "geology-hidden-earth": ["geology-introduction", "geology-what-is-rock", "geology-rock-cycle", "geology-deep-time", "geology-fossil-evidence"],
   mythology: ["osiris-afterlife"],
   space: ["astronomy-introduction", "astronomy-sky-motion", "moon-phases-not-shadow", "astronomy-solar-system", "why-mars-is-red", "orbit-continuous-fall", "astronomy-light", "astronomy-stars", "astronomy-galaxies", "astronomy-expanding-universe", "astronomy-exoplanet-evidence"],
   "human-body": ["sleep-and-memory", "dna-cell-instructions"],
