@@ -265,7 +265,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 8. `mycenaean-palaces` — «Ποιος διοικούσε τα μυκηναϊκά ανάκτορα;»
 9. `linear-b-decipherment` — «Γραμμική Β: τα μοτίβα που αποκάλυψαν ελληνικά» (existing ID; research-first Integrated, QA pending)
 10. `palace-collapse` — «Μετά την κατάρρευση των ανακτόρων»
-11. `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες»
+11. `geometric-greece` — «Από τα αγγεία στα γράμματα: οι κοινότητες του Αιγαίου» (Integrated; QA pending)
 
 ### Chapter III. Ο κόσμος των πόλεων
 
@@ -376,3 +376,6 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - The dedicated Node test was committed but **not run**. TypeScript, full validators, progress/XP/audio and Android/iOS checks are unexecuted here; retain **Integrated**. The full end-to-end QA list appears in the research file.
 - **Next planned:** #11 `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες». The 30-lesson count and structure are unchanged.
 
+
+### Ancient Greece 11 audit — 2026-11-01
+- `geometric-greece` «Από τα αγγεία στα γράμματα: οι κοινότητες του Αιγαίου» **Integrated, not Validated/Approved**. See [research and QA](geometric-greece-research.md). 13 stable paragraphs, 4 versioned questions after 3/7/10/13, two inline images; chronology, pottery, burial, Lefkandi, communities, alphabet. No duplicate collapse analysis or polis institutions. Plan 30 lessons / five chapters remains; 13 in app, 11 Integrated, 2 Drafted, 17 Not started, 0 Validated, 0 Approved. Next #12 `rise-of-polis`.

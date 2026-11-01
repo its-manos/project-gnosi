@@ -173,3 +173,7 @@ Update this tracker **at the start and end** of each editorial session. Record a
 - **Evidence:** GitHub branch inspection and in-memory ID/anchor checks; **no npm/Node/TS/device runs** during this session. Added `scripts/test-palace-collapse.cjs` but did not execute it. Previous #7–9 dedicated QA still pending. User-reported passes from older builds do not validate new changes.
 - **Next lesson, not yet written:** #11 `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες» (Chapter II). Focus on distinct postpalatial regional communities, material practices, burials, cult places, alphabetic innovation without repeating #10 causation or #4 periodization. Preserve precise actual QA status.
 
+
+### Ancient Greece 11 integration — 2026-11-01
+- `geometric-greece` «Από τα αγγεία στα γράμματα: οι κοινότητες του Αιγαίου» **Integrated, NOT Validated or Approved**. [Claim-to-source and rights/QA](geometric-greece-research.md). New 13 paragraphs; 4 new v1 anchored questions; 3 licensed images. Static checks only, all Node, typecheck, Android/iOS QA pending. #7–10 QA also pending.
+- 30 planned/5 chapters; 13 in app, 11 Integrated, 2 Drafted, 17 Not started, 0 Validated/Approved. Next only #12 `rise-of-polis` — «Η γέννηση της πόλης-κράτους» (Chapter III).
