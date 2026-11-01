@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "athens-law-courts": [
+    {
+      afterParagraphId: "courts-14",
+      url: commonsFileUrl("AGMA Kleroterion 2.jpg"),
+      resizeMode: "contain",
+      caption: "Λίθινο κληρωτήριο από την Αρχαία Αγορά, στο ομώνυμο μουσείο. Οι σειρές υποδοχών συνδέονται με την επιλογή κριτών· η ακριβής διαδικασία ερμηνεύεται μαζί με τα γραπτά τεκμήρια. Άγγιξε για μεγέθυνση.",
+      credit: "Dorieo / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2007, επεξεργασία 2018",
+      creditUrl: commonsPageUrl("AGMA Kleroterion 2.jpg"),
+    },
+    {
+      afterParagraphId: "courts-21",
+      url: commonsFileUrl("Athenian oficial secret ballots - AGMA.jpg"),
+      resizeMode: "contain",
+      caption: "Χάλκινα ψηφοδέλτια με συμπαγή ή διάτρητο άξονα, περίπου 300 π.Χ., Μουσείο Αρχαίας Αγοράς. Χρησίμευαν σε δικαστική ψηφοφορία και δεν είναι όστρακα εξοστρακισμού. Άγγιξε για μεγέθυνση.",
+      credit: "Dorieo / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2007",
+      creditUrl: commonsPageUrl("Athenian oficial secret ballots - AGMA.jpg"),
+    },
+  ],
   "athens-who-voted": [
     {
       "afterParagraphId": "athens-07",
