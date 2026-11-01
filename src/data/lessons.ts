@@ -16,6 +16,7 @@ import { athensLawCourtsLessons } from "./athensLawCourtsLessons";
 import { greekWarHoplitesLessons } from "./greekWarHoplitesLessons";
 import { greekSanctuariesGamesLessons } from "./greekSanctuariesGamesLessons";
 import { persianWarsGreekWorldLessons } from "./persianWarsGreekWorldLessons";
+import { athenianEmpireLessons } from "./athenianEmpireLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -478,6 +479,7 @@ export const lessons: Lesson[] = [
   ...greekWarHoplitesLessons,
   ...greekSanctuariesGamesLessons,
   ...persianWarsGreekWorldLessons,
+  ...athenianEmpireLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
