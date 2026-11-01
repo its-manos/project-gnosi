@@ -40,7 +40,25 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
-  "greek-crises-fourth-century": [
+  "macedon-philip": [
+  {
+    "afterParagraphId": "philip-08",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Ancient%20Pella.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Ο αρχαιολογικός χώρος της Πέλλας (2009). Πολλά σωζόμενα αστικά κατάλοιπα χρονολογούνται σε μεταγενέστερες φάσεις· η φωτογραφία δείχνει τον τόπο, όχι το ανακτορικό περιβάλλον ακριβώς του 359 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Explorer1940 / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2009",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Ancient_Pella.jpg"
+  },
+  {
+    "afterParagraphId": "philip-26",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Lion%20of%20Chaeronea%2C%20September%202022%2011.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Το λιοντάρι της Χαιρώνειας (φωτογραφία 2022), μνημείο που συνδέεται με τους Θηβαίους νεκρούς της μάχης του 338 π.Χ. Η σημερινή εμφάνιση περιλαμβάνει νεότερη αποκατάσταση· δεν είναι σκηνή της μάχης. Άγγιξε για μεγέθυνση.",
+    "credit": "Calistemon / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2022",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Lion_of_Chaeronea,_September_2022_11.jpg"
+  }
+],
+"greek-crises-fourth-century": [
   {
     "afterParagraphId": "crisis-23",
     "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cadmea%2C%20Thebes.jpg?width=1200",
