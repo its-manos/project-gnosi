@@ -366,3 +366,13 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - 21 stable paragraphs / five sections, five version-1 anchored reasoning checkpoints, one credited KN Fp 13 cover and one attributed Pylos inline image. Historical lesson ID and completion/XP activity retained; legacy quiz key is deliberately not aliased to new questions.
 - Repaired Ancient Greece explicit path order (#9 immediately after #8). **30 planned / five chapters, 11 implemented, 9 Integrated, 2 older Drafted, 19 Not started, 0 Validated and 0 Approved.** Connector structural preflight only, npm/Node and native device checks not run.
 - Next ONLY: #10 `palace-collapse` «Μετά την κατάρρευση των ανακτόρων» (Chapter II); not developed here.
+
+
+### Editorial session note — 2026-11-01 / Ancient Greece lesson 10
+- Lesson #10 `palace-collapse` — «Το τέλος των μυκηναϊκών ανακτόρων δεν ήταν μία στιγμή» — **Integrated, NOT Validated/Approved**. Claim-to-source ledger, debated chronology, archaeological regions, image rights and unexecuted checks: [palace-collapse-research.md](palace-collapse-research.md).
+- Ancient Greece v1 remains **30 lessons / five chapters**. In code: **12 lessons**, including **10 research-first Integrated**, **2 older Drafted**, 18 outline-only Not started. No empty entries inserted in app navigation.
+- Differentiated teaching scope: this article compares the end of palatial systems across Pylos, Mycenae, Tiryns, Thebes; distinguishes LH IIIB/IIIC and archive loss from population disappearance; weighs warfare, seismic hypotheses, local climate data, network stress and interpretive limits of Egyptian «Sea Peoples» material. The lecture on palace accounting stays in #8; decipherment stays in #9; Geometric/early Iron Age burial, sanctuaries, pottery and alphabetic forms are reserved for #11.
+- New ID `palace-collapse`, 27 anchored paragraphs / 5 version-1 questions. No prior lesson/quiz version or reward policy modified. Two appropriately credited CC BY-SA 4.0 Commons site photographs; native image/scroll tests remain outstanding.
+- The dedicated Node test was committed but **not run**. TypeScript, full validators, progress/XP/audio and Android/iOS checks are unexecuted here; retain **Integrated**. The full end-to-end QA list appears in the research file.
+- **Next planned:** #11 `geometric-greece` — «Αγγεία, τάφοι και νέες κοινότητες». The 30-lesson count and structure are unchanged.
+
