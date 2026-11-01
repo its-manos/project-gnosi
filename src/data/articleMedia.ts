@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "peloponnesian-war": [
+  {
+    "afterParagraphId": "war-12",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Pylos%20Sphacteria%2020230925%20113521.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Η ανατολική ακτή της Σφακτηρίας στον κόλπο του Ναυαρίνου (σύγχρονη φωτογραφία). Η γεωγραφία βοηθά να κατανοήσουμε τον περιορισμένο χώρο των επιχειρήσεων του 425 π.Χ., όχι να ανασυνθέσουμε ακριβώς κάθε θέση στρατιωτών. Άγγιξε για μεγέθυνση.",
+    "credit": "Rigorius / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Pylos_Sphacteria_20230925_113521.jpg"
+  },
+  {
+    "afterParagraphId": "war-23",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Piazza%20Duomo%2C%20center%20of%20Ortigia%2C%20Syracuse%2C%2012M1791.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Στην Ορτυγία των Συρακουσών, το αρχαίο ιερό της Αθηνάς ενσωματώθηκε αργότερα στον χριστιανικό ναό. Η φωτογραφία του σημερινού χώρου δεν είναι εικόνα της πολιορκίας του 415–413 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Zde / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2012",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Piazza_Duomo,_center_of_Ortigia,_Syracuse,_12M1791.jpg"
+  }
+],
   "athenian-empire": [
   {
     "afterParagraphId": "empire-04",

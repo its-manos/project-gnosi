@@ -259,3 +259,13 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **QA actually executed:** remote branch/file review and media/source inspections, manual content/metadata preflight. **Not executed:** npm TypeScript/content validation, any Node regression (including new Lesson 20), CI, Expo Android/iOS, actual remote image loading and zoom, first-answer sound, XP/no-zero-popup/replay, offline restore, account isolation or Supabase sync. Prior developer-reported tests only apply to pre-#19 baseline.
 - **Progress:** **30 planned / 5 chapters; 21 implemented; 20 Integrated (#1–20); 1 Drafted (#30); 9 Not started (#21–29); 0 Validated; 0 Approved**.
 - **Next lesson only, not integrated:** #21 `peloponnesian-war` — «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο», Chapter IV. After it: planned #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
+
+
+### Ancient Greece Lesson 21 research-first integration — 2026-11-01
+- **Integrated, not Validated or Approved:** #21 `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση». [Research, claims, sources, rights, compatibility and QA](peloponnesian-war-research.md).
+- **Coverage:** 431–404, structural and immediate causes, competing Greek city interests, Athenian walls/plague/civilian displacement, Corcyra stasis, Pylos, failed 421 peace, Melos, Sicily, Persian satraps, 411 coup and 404 surrender. #22 reserves post-404 Greek crises.
+- **Implementation:** 7 sections, 35 stable paragraphs, 7 unique version-1 reasoning checkpoints after paragraphs 4/9/14/19/24/29/35; attributed 431 alliance-map cover and two anchored licensed site photographs. Additive data/path/media/reader and prior order-only fixture edits; no modifications to previous lesson quiz data or learning stores.
+- **Compatibility:** all #1–20 and older #30 unchanged; historical #15 fingerprints `q_470dac57` / `q_22487292` remain distinct. No XP/audio/sync logic changed; actual device and automatic-sync evidence pending.
+- **Verification:** researched sources and Commons description/license pages; source-level structural preflight of new data. **Not executed:** npm typecheck, validator, Node scripts (including #19–21 dedicated), CI, Expo native Android/iOS, remote media loading/zoom, first-answer audio, reward/replay, offline/resume, Supabase synchronization. These checks are required before marking Validated.
+- **Counts:** 30 planned / 5 chapters; 22 implemented, 21 Integrated (#1–21), 1 older Drafted (#30), 8 Not started (#22–29), 0 Validated / 0 Approved.
+- **Next only, not started:** #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
