@@ -51,7 +51,7 @@ const oldKey=quizFingerprint(old.questions);
 assert.equal(oldKey,'q_470dac57');
 const oldActivity={prior:{lessonId:'athens-who-voted',at:Date.parse('2026-10-20T12:00Z'),wasCompleted:true,questionCount:4,correctCount:3,quizKey:oldKey,missedQuestionIndices:[1]}};
 assert.equal(lessonReview(lessons.find(x=>x.id==='athens-who-voted'),oldActivity).status,'changed');
-assert.equal(lessonReview(l,oldActivity).status,'none');
+assert.equal(lessonReview(l,oldActivity).status,'no-result');
 backup=parseLearningBackup({schemaVersion:1,completedIds:['athens-who-voted'],savedIds:['athens-who-voted',l.id],attempts:{'athens-who-voted':{...attempted,quizKey:oldKey}}});
 assert.ok(backup.completedIds.includes('athens-who-voted')&&backup.savedIds.includes('athens-who-voted'));
 console.log('Lesson 16 legal content, checkpoints, media, path and Lesson 15 historical quiz isolation passed (Node only).');
