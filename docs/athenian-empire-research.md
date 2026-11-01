@@ -64,7 +64,7 @@ Explain the contingency of the post-479 BCE maritime alliance and the uneven tra
 ## Quiz and progress compatibility
 
 - Six uniquely named question IDs, all **version `1`**, `difficulty: hard`, 4 distinct options and explanations; checkpoints after **paragraphs 4 / 8 / 13 / 18 / 22 / 26**.
-- Concepts: beginning of league vs empire; ship-versus-money incentives; Naxos/Thasos variation; what the apachē quota list actually records; local decree vs universal empire; continuing Persian diplomacy.
+- Concepts: beginning of league vs empire; ship-versus-money incentives; Naxos/Thasos variation; what the aparchē quota list actually records; local decree vs universal empire; continuing Persian diplomacy.
 - Published for the first time under a previously unused stable ID; `requireCurrentAttemptQuiz: true` and no `compatibleQuizKeys`. Historical Lesson 15 old `q_470dac57` and current `q_22487292` records must remain separate. Existing #1–19 / #30 questions, completed/saved IDs, XP/events, replay behavior, sound routes and Supabase schema not edited. Lesson 21 remains planned-only.
 - App imports, `ancient-greece` order, two image anchors, reader test import fixture and path-only expectations in #17/18/19 test scripts were updated. A dedicated `scripts/test-athenian-empire.cjs` was created to assert newly anchored checkpoints, paths, media, old-quiz isolation, old completion/saved backup and mismatch rejection.
 
