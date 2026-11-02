@@ -47,7 +47,12 @@ export class FeedbackAudio {
         // Configure native muting BEFORE attaching the media source on Android.
         // Volume = 0 immediately before play() was racy and produced a loud
         // burst of all five effects on launch on real devices.
-        const player = createAudioPlayer(android ? null : sources[kind], { downloadFirst: false, keepAudioSessionActive: false });
+        // Keep the playback session active between tiny UI cues. On iOS an
+        // AVAudioSession teardown/re-activation can outlast incorrect.wav (160ms)
+        // and make it seem silent; Android retains its separately guarded mute.
+        const player = createAudioPlayer(android ? null : sources[kind], {
+          downloadFirst: false, keepAudioSessionActive: true,
+        });
         if (android) { player.muted = true; player.volume = 0; }
         else player.volume = .65;
         player.loop = false;
@@ -136,11 +141,21 @@ export class FeedbackAudio {
     this.play("correct", allowed);
   }
   play(kind: FeedbackKind, allowed: () => boolean) {
+    if (this.alive && allowed() && this.failedKinds.has(kind)) {
+      // Recover an errored native player only on another explicit sound
+      // request. Never recreate / autoplay effects during app startup.
+      this.release();
+    }
     this.stop();
     if (!this.alive || !allowed()) return;
     const token = this.generation;
     const current = () => this.alive && token === this.generation && allowed();
-    const failed = () => { if (current()) reportSoundStatus("error", "Ο ήχος δεν ανταποκρίθηκε. Πάτησε «Δοκιμή ήχου» ξανά."); };
+    const failed = () => {
+      if (current()) {
+        this.failedKinds.add(kind);
+        reportSoundStatus("error", `Δεν ακούστηκε ο ήχος «${kind}». Δοκίμασε ξανά.`);
+      }
+    };
     // Cold Android players can take longer than a warm preview to prepare.
     const timer = setTimeout(() => { failed(); if (token === this.generation) this.stop(); }, 2500);
     this.timer = timer;
