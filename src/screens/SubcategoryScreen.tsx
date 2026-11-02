@@ -1,5 +1,5 @@
 import { getReadingState } from "../utils/readingDiscovery";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import AppHeader from "../components/AppHeader";
 import LessonCard from "../components/LessonCard";
@@ -21,26 +21,40 @@ type Props = {
 export default function SubcategoryScreen({ category, subcategory, lessons, onBack, onOpenLesson, completedLessonIds, inProgressLessonIds, progressLoaded }: Props) {
   const path = getSubcategoryPath(lessons, subcategory.id);
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <AppHeader onBack={onBack} />
-      <Text style={styles.eyebrow}>{category.title.toUpperCase()}</Text>
-      <Text style={styles.title}>{subcategory.title}</Text>
-      <Text style={styles.body}>{subcategory.description}</Text>
-      <Text style={styles.sectionTitle}>Μαθήματα</Text>
-      {path.length > 1 ? <Text style={styles.pathHint}>{devLessonsUnlocked() ? "Λειτουργία δοκιμών: όλα τα μαθήματα είναι ξεκλείδωτα." : "Ολοκλήρωσε ένα μάθημα για να ανοίξεις το επόμενο."}</Text> : null}
-      {path.length > 0 ? path.map((lesson, index) => {
+    <FlatList
+      testID="subcategory-lessons-list"
+      data={path}
+      keyExtractor={(lesson) => lesson.id}
+      renderItem={({ item: lesson, index }) => {
         const access = getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds);
-        return <LessonCard key={lesson.id} lesson={lesson} position={index + 1}
+        return <LessonCard lesson={lesson} position={index + 1}
           lockedReason={!progressLoaded ? "Φόρτωση προόδου…" : !access.unlocked ? `Ολοκλήρωσε πρώτα: ${access.prerequisite?.title}` : undefined}
-          readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined} onPress={() => onOpenLesson(lesson.id)} />;
-      }) : (
+          readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined}
+          onPress={() => onOpenLesson(lesson.id)} />;
+      }}
+      ListHeaderComponent={
+        <View>
+          <AppHeader onBack={onBack} />
+          <Text style={styles.eyebrow}>{category.title.toUpperCase()}</Text>
+          <Text style={styles.title}>{subcategory.title}</Text>
+          <Text style={styles.body}>{subcategory.description}</Text>
+          <Text style={styles.sectionTitle}>Μαθήματα</Text>
+          {path.length > 1 ? <Text style={styles.pathHint}>{devLessonsUnlocked() ? "Λειτουργία δοκιμών: όλα τα μαθήματα είναι ξεκλείδωτα." : "Ολοκλήρωσε ένα μάθημα για να ανοίξεις το επόμενο."}</Text> : null}
+        </View>
+      }
+      ListEmptyComponent={
         <View style={styles.empty}>
           <Text style={styles.emptyEmoji}>📚</Text>
           <Text style={styles.emptyTitle}>Νέα μαθήματα έρχονται</Text>
           <Text style={styles.body}>Εξερεύνησε μια άλλη περιοχή μέχρι τότε.</Text>
         </View>
-      )}
-    </ScrollView>
+      }
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      initialNumToRender={4}
+      maxToRenderPerBatch={4}
+      windowSize={5}
+    />
   );
 }
 
