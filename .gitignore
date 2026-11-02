@@ -43,3 +43,6 @@ yarn-error.*
 .env
 .env.*
 !.env.example
+
+# Generated CDN WebP output: upload to object storage, never commit in Expo app
+.image-cdn-build/
