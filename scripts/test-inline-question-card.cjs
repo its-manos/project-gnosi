@@ -35,6 +35,11 @@ function nodes(tree) {
   return [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)];
 }
 const byId = (tree, testID) => nodes(tree).find(n => n.props?.testID === testID);
+const textChildren = children => {
+  if (Array.isArray(children)) return children.map(textChildren).join('');
+  if (typeof children === 'string' || typeof children === 'number') return String(children);
+  return children && typeof children === 'object' ? textChildren(children.props?.children) : '';
+};
 const flatStyles = (n, pressed = false) => {
   const raw = typeof n.props.style === 'function' ? n.props.style({ pressed }) : n.props.style;
   return Object.assign({}, ...[raw].flat(Infinity).filter(Boolean));
@@ -84,15 +89,15 @@ assert.ok(byId(restoredWrong, 'lesson-question-correction'), 'wrong answer expli
 assert.equal(byId(restoredWrong, 'lesson-question-correction').props.children, question.answers[1]);
 wrong.props.onPress();
 assert.equal(events.length, 1, 'restored locked cards do not resubmit');
-assert.ok(nodes(restoredWrong).some(n => n.type === 'Text' && n.props.children === '✦  ΣΕΡΙ 2'),
-  'existing combo feedback is preserved');
+assert.ok(nodes(restoredWrong).some(n => n.type === 'Text' && textChildren(n.props.children) === '✦  ΣΕΡΙ 2'),
+  'existing combo feedback is preserved even when JSX splits children');
 
 const restoredCorrect = Card({ ...props, selectedAnswer: 1 });
 assert.ok(byId(restoredCorrect, 'lesson-question-feedback'));
 assert.equal(byId(restoredCorrect, 'lesson-question-correction'), undefined,
   'no redundant correction after correct answer');
 assert.equal(flatStyles(byId(restoredCorrect, 'lesson-question-option-1')).borderColor, colors.success);
-assert.ok(!nodes(restoredCorrect).some(n => n.type === 'Text' && typeof n.props.children === 'string' && n.props.children.includes('ΣΕΡΙ')),
+assert.ok(!nodes(restoredCorrect).some(n => n.type === 'Text' && textChildren(n.props.children).includes('ΣΕΡΙ')),
   'no streak badge when combo is not greater than one');
 const noReport = Card({ ...props, reportTarget: undefined });
 assert.equal(nodes(noReport).some(n => n.type === 'ReportContentButton'), false);
