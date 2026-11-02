@@ -35,8 +35,21 @@ export type MatchingContent = { pairs: readonly MatchingPair[] };
 export type MultipleSelectQuestion = QuizQuestion & { type: "multiple-select"; content: MultipleSelectContent };
 export type OrderingQuestion = QuizQuestion & { type: "ordering"; content: OrderingContent };
 export type MatchingQuestion = QuizQuestion & { type: "matching"; content: MatchingContent };
+export type MistakeSegment = { id: string; text: string };
+export type SpotMistakeContent = { segments: readonly MistakeSegment[]; incorrectSegmentId: string; correction: string };
+export type SpotMistakeQuestion = QuizQuestion & { type: "spot-the-mistake"; content: SpotMistakeContent };
+/** A single short answer; alternatives are authored explicitly, never fuzzy guessed. */
+export type FillBlankContent = {
+  before: string;
+  after: string;
+  acceptedAnswers: readonly string[];
+  displayAnswer: string;
+  /** Defaults to false. Accent-insensitive grading is suitable for recall, not orthography. */
+  accentSensitive?: boolean;
+};
+export type FillBlankQuestion = QuizQuestion & { type: "fill-in-the-blank"; content: FillBlankContent };
 /** Supported built-in formats; external handlers may extend QuizQuestion. */
-export type BuiltinQuizQuestion = ChoiceQuestion | MultipleSelectQuestion | OrderingQuestion | MatchingQuestion;
+export type BuiltinQuizQuestion = ChoiceQuestion | MultipleSelectQuestion | OrderingQuestion | MatchingQuestion | SpotMistakeQuestion | FillBlankQuestion;
 export type AnswerEvaluation = { valid: boolean; correct: boolean };
 /** New formats provide a handler; progression and persistence stay unchanged. */
 export type QuestionHandler = {
