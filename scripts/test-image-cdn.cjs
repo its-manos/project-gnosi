@@ -43,7 +43,7 @@ const react={useState:initial=>{
 const local=44;
 const {default:ResilientImage}=compile("src/components/ResilientImage.tsx",{
  "react":react,"react/jsx-runtime":{jsx,jsxs:jsx,Fragment:"Fragment"},
- "react-native":native,"../theme":{colors:{surfaceSoft:"x",textMuted:"x",border:"x"}},
+ "react-native":native,"expo-image":{Image:"Image"},"../theme":{colors:{surfaceSoft:"x",textMuted:"x",border:"x"}},
  "../data/bundledLessonImages":{bundledLessonImages:{[original]:local}},
  "../utils/commonsImage":{remoteImageCandidates:uri=>[{uri:uri+"-legacy"}]},
  "../utils/imageCdn":{imageCdnUrl},
@@ -57,12 +57,12 @@ try{
  console.warn=(...x)=>warnings.push(x);
  let tree=render(original,"preview");
  assert.equal(image(tree).props.source.uri,"https://images.example.com/"+key+"-preview.webp");
- assert.equal(image(tree).props.source.cache,"force-cache");
- image(tree).props.onError({nativeEvent:{error:"cdn unavailable"}});
+ assert.equal(image(tree).props.cachePolicy,"disk");
+ image(tree).props.onError({error:"cdn unavailable"});
  tree=render(original,"preview");
  assert.equal(image(tree).props.source,local,"the already packaged asset is the fallback");
  assert.equal(warnings.length,0,"the CDN first failure doesn't show an error");
- image(tree).props.onLoad({nativeEvent:{source:{width:480,height:360}}});
+ image(tree).props.onLoad({source:{width:480,height:360}});
  tree=render(original,"preview");
  assert.equal(walk(tree).filter(n=>typeof n.type==="function").length,0,"success doesn't show placeholder");
  tree=render(original,"full");
