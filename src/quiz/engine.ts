@@ -18,11 +18,13 @@ export function evaluateChoice(content: unknown, answer: unknown): AnswerEvaluat
  * The order in which the user taps options has no bearing on correctness.
  */
 function multipleSelectContent(value: unknown): value is MultipleSelectContent {
-  return object(value) && Array.isArray(value.answers) && value.answers.length >= 2 && value.answers.length <= 100 &&
-    value.answers.every(a => typeof a === "string" && a.trim().length > 0) &&
-    Array.isArray(value.correctIndices) && value.correctIndices.length >= 1 && value.correctIndices.length <= value.answers.length &&
-    value.correctIndices.every(i => Number.isInteger(i) && i >= 0 && i < value.answers.length) &&
-    new Set(value.correctIndices).size === value.correctIndices.length;
+  if (!object(value) || !Array.isArray(value.answers) || !Array.isArray(value.correctIndices)) return false;
+  const answers = value.answers, correctIndices = value.correctIndices;
+  return answers.length >= 2 && answers.length <= 100 &&
+    answers.every(a => typeof a === "string" && a.trim().length > 0) &&
+    correctIndices.length >= 1 && correctIndices.length <= answers.length &&
+    correctIndices.every(i => Number.isInteger(i) && i >= 0 && i < answers.length) &&
+    new Set(correctIndices).size === correctIndices.length;
 }
 export function evaluateMultipleSelect(content: unknown, answer: unknown): AnswerEvaluation {
   if (!multipleSelectContent(content) || !Array.isArray(answer)) return { valid: false, correct: false };
