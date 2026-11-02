@@ -23,6 +23,7 @@ import { macedonPhilipLessons } from "./macedonPhilipLessons";
 import { alexanderConquestsLessons } from "./alexanderConquestsLessons";
 import { greekStageTragedyLessons } from "./greekStageTragedyLessons";
 import { greekPhilosophyInContextLessons } from "./greekPhilosophyInContextLessons";
+import { greekScienceKnowledgeLessons } from "./greekScienceKnowledgeLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -492,6 +493,7 @@ export const lessons: Lesson[] = [
   ...alexanderConquestsLessons,
   ...greekStageTragedyLessons,
   ...greekPhilosophyInContextLessons,
+  ...greekScienceKnowledgeLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
