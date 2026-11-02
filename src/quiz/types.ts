@@ -43,14 +43,13 @@ export type SpotMistakeContent = {
   correction: string;
 };
 export type SpotMistakeQuestion = QuizQuestion & { type: "spot-the-mistake"; content: SpotMistakeContent };
-/** A single short answer; alternatives are authored explicitly, never fuzzy guessed. */
+/** One blank is filled by selecting a word-bank tile; answer is its stable ID. */
+export type FillBlankOption = { id: string; text: string };
 export type FillBlankContent = {
   before: string;
   after: string;
-  acceptedAnswers: readonly string[];
-  displayAnswer: string;
-  /** Defaults to false. Accent-insensitive grading is suitable for recall, not orthography. */
-  accentSensitive?: boolean;
+  options: readonly FillBlankOption[];
+  correctOptionId: string;
 };
 export type FillBlankQuestion = QuizQuestion & { type: "fill-in-the-blank"; content: FillBlankContent };
 /** Supported built-in formats; external handlers may extend QuizQuestion. */
