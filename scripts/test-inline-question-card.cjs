@@ -54,6 +54,7 @@ const SingleChoice = compile('src/components/SingleChoiceQuestionCard.tsx', id =
 }).default;
 const Inline = compile('src/components/InlineQuestionCard.tsx', id => {
   if (id === './SingleChoiceQuestionCard') return { __esModule: true, default: 'SingleChoiceQuestionCard' };
+  if (id === 'react/jsx-runtime') return imports['react/jsx-runtime'];
   throw Error('missing inline dependency: ' + id);
 }).default;
 function nodes(tree) {
