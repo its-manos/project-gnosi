@@ -8,7 +8,7 @@ const {quizFingerprint,lessonQuizMatches}=require(root+'/src/utils/learningActiv
 const {parseLearningBackup}=require(root+'/src/utils/learningBackup.ts');
 const id='greek-philosophy-in-context',l=lessons.find(x=>x.id===id);
 assert.ok(l);assert.equal(lessons.filter(x=>x.id===id).length,1);
-assert.equal(l.title,'Πού γινόταν η φιλοσοφία;'); 
+assert.equal(l.title,'Πού γινόταν η φιλοσοφία;');
 assert.equal(l.categoryId,'history');assert.equal(l.subcategoryId,'ancient-greece');
 assert.equal(l.requireCurrentAttemptQuiz,true);assert.equal(l.compatibleQuizKeys,undefined);
 const ps=l.sections.flatMap(s=>s.paragraphs);
