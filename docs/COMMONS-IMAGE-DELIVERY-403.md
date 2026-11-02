@@ -82,3 +82,12 @@ git push origin content/curriculum-v1
 ```
 
 **Tradeoff:** a larger Android/iOS download in exchange for consistent display, offline availability and no live Wikimedia CDN dependency. This is intentional for Gnosi's static education catalogue. The code changes alone are **not** an Android image fix until the binary assets have been downloaded and committed.
+
+
+## Superseded by controlled image CDN migration (2026-11-02)
+
+The developer's bulk-bundling output shows 3 downloaded and 78 rejected requests, almost all because the former script did not allow the legitimate Wikimedia thumbnail redirect host `thumb.wikimedia.org`. This was a downloader validation error; it does not prove those image URLs were invalid.
+
+**Do not run the old bulk bundler:** the team decided to avoid adding hundreds of images to each app release. On branch `feat/image-cdn-cache`, the old bundler and its npm commands have been retired. New image delivery and publishing are described in [IMAGE-CDN-MIGRATION.md](IMAGE-CDN-MIGRATION.md).
+
+The new pipeline explicitly accepts `thumb.wikimedia.org`, stores optimized image variants outside the native app binary, and only creates app CDN mappings after public-image verification. Account setup, uploads, SDK 58 Expo Image lockfile regeneration, and native Android/iOS QA are still outstanding.
