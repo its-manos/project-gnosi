@@ -1,5 +1,5 @@
 import { contentVersion } from "./engine";
-import type { BuiltinQuizQuestion, MatchingContent, MultipleSelectContent, OrderingContent } from "./types";
+import type { BuiltinQuizQuestion, FillBlankContent, MatchingContent, MultipleSelectContent, OrderingContent, SpotMistakeContent } from "./types";
 
 /** Development-only fixtures. Never selected by production daily/lesson banks. */
 const source = { title: "Encyclopaedia Britannica — Ancient Greece", url: "https://www.britannica.com/place/ancient-Greece" };
@@ -39,6 +39,26 @@ const matchContent: MatchingContent = {
 };
 const matchPrompt = "Αντιστοίχισε τους αθηναϊκούς θεσμούς με τη βασική λειτουργία τους.";
 
+const mistakeContent: SpotMistakeContent = {
+  segments: [
+    { id: "institution", text: "Στην κλασική Αθήνα, η Βουλή των Πεντακοσίων" },
+    { id: "selection", text: "στελεχωνόταν σε μεγάλο βαθμό με κλήρωση," },
+    { id: "responsibility", text: "προετοίμαζε θέματα για την Εκκλησία του Δήμου" },
+    { id: "term", text: "και τα μέλη της υπηρετούσαν ισόβια." },
+  ],
+  incorrectSegmentId: "term",
+  correction: "Τα μέλη της Βουλής υπηρετούσαν για ένα έτος, όχι ισόβια.",
+};
+const mistakePrompt = "Ποια φράση είναι ιστορικά λανθασμένη;";
+const blankContent: FillBlankContent = {
+  before: "Στη δημοκρατική Αθήνα, η συνέλευση των πολιτών ονομαζόταν",
+  after: ".",
+  acceptedAnswers: ["Εκκλησία του Δήμου", "Εκκλησία Δήμου"],
+  displayAnswer: "Εκκλησία του Δήμου",
+  accentSensitive: false,
+};
+const blankPrompt = "Θυμάσαι το όνομα της συνέλευσης των Αθηναίων πολιτών;";
+
 export const previewQuestions: BuiltinQuizQuestion[] = [
   { ...meta("institutions", selectPrompt, selectContent), type: "multiple-select", content: selectContent,
     explanation: "Η Εκκλησία του Δήμου και η Βουλή των Πεντακοσίων ήταν σημαντικοί θεσμοί, αλλά δεν είχαν δικαίωμα συμμετοχής όλοι οι κάτοικοι." },
@@ -46,4 +66,8 @@ export const previewQuestions: BuiltinQuizQuestion[] = [
     explanation: "Η μυκηναϊκή περίοδος προηγείται της γεωμετρικής και της κλασικής εποχής." },
   { ...meta("civic-roles", matchPrompt, matchContent), type: "matching", content: matchContent,
     explanation: "Οι θεσμοί είχαν διαφορετικές ευθύνες και η συμμετοχή στην πολιτική ζωή δεν ήταν ανοιχτή σε κάθε κάτοικο." },
+  { ...meta("identify-error", mistakePrompt, mistakeContent), type: "spot-the-mistake", content: mistakeContent,
+    explanation: "Η βουλευτική θητεία διαρκούσε ένα έτος, ενώ η κλήρωση ήταν σημαντικό στοιχείο της συμμετοχής των πολιτών." },
+  { ...meta("assembly-name", blankPrompt, blankContent), type: "fill-in-the-blank", content: blankContent,
+    explanation: "Η Εκκλησία του Δήμου ήταν η συνέλευση των πολιτών με πολιτικά δικαιώματα. Δεν συμμετείχαν όλοι οι κάτοικοι." },
 ];
