@@ -18,7 +18,7 @@ const imports = {
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': { View: 'View', Text: 'Text', Pressable: 'Pressable', StyleSheet: { create: x => { lessonStyles = x; return x; } } },
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
-  '../theme': { colors, reading },
+  '../theme': { colors },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
   './ReportContentButton': { __esModule: true, default: 'ReportContentButton' },
 };
