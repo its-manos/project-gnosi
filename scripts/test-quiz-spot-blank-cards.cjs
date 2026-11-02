@@ -15,7 +15,7 @@ const nodes = tree => tree && typeof tree === 'object' ?
   [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const id = (tree, name) => nodes(tree).find(item => item.props?.testID === name);
 function mount(file, question) {
-  let states = [], cursor = 0;
+  let states = [], refs = [], cursor = 0, refCursor = 0;
   const react = {
     useState: initial => {
       const position = cursor++;
@@ -23,6 +23,11 @@ function mount(file, question) {
       return [states[position], value => { states[position] = typeof value === 'function' ? value(states[position]) : value; }];
     },
     useEffect: () => {},
+    useRef: initial => {
+      const position = refCursor++;
+      if (!(position in refs)) refs[position] = { current: initial };
+      return refs[position];
+    },
   };
   const imports = {
     react,
@@ -34,13 +39,23 @@ function mount(file, question) {
     '../theme': { colors },
     './QuizReveal': { __esModule: true, default: 'QuizReveal' },
   };
+  const sharedModule = { exports: {} };
+  vm.runInNewContext(transpile('src/components/questionCardStyles.ts'), {
+    module: sharedModule, exports: sharedModule.exports,
+    require: name => {
+      if (name === 'react-native') return imports['react-native'];
+      if (name === '../theme') return imports['../theme'];
+      throw Error('unexpected shared style import ' + name);
+    },
+  });
+  imports['./questionCardStyles'] = sharedModule.exports;
   const module = { exports: {} };
   vm.runInNewContext(transpile(file), { module, exports: module.exports,
     require: name => { if (!(name in imports)) throw Error('unexpected import ' + name); return imports[name]; } });
   const Component = module.exports.default;
   const submitted = [];
   let props = { question, questionNumber: 4, onSubmit: value => submitted.push(value) };
-  return { render: () => { cursor = 0; return Component(props); },
+  return { render: () => { cursor = 0; refCursor = 0; return Component(props); },
     setAnswer: answer => { props = { ...props, answer }; }, submitted };
 }
 const mistakeQuestion = {
@@ -57,13 +72,32 @@ const mistakeQuestion = {
 const spot = mount('src/components/SpotMistakeQuestionCard.tsx', mistakeQuestion);
 let tree = spot.render();
 assert.equal(id(tree, 'spot-mistake-subject').props.children[0], 'Η Βουλή των Πεντακοσίων', 'subject is rendered before options');
-assert.equal(id(tree, 'spot-mistake-option-d').props.accessibilityRole, 'button', 'four standalone choices appear');
+assert.equal(id(tree, 'spot-mistake-option-d').props.accessibilityRole, 'radio', 'four standalone radio choices appear');
+assert.equal(id(tree, 'spot-mistake-confirm').props.disabled, true, 'cannot confirm without selecting a claim');
 assert.equal(id(tree, 'spot-mistake-feedback'), undefined);
 id(tree, 'spot-mistake-option-a').props.onPress();
-assert.deepEqual(JSON.parse(JSON.stringify(spot.submitted)), ['a']);
-assert.equal(id(tree, 'spot-mistake-option-b').props.accessibilityRole, 'button');
+assert.deepEqual(spot.submitted, [], 'tapping a claim must not submit a scored answer');
+tree = spot.render();
+assert.equal(id(tree, 'spot-mistake-option-a').props.accessibilityState.selected, true);
+assert.equal(id(tree, 'spot-mistake-confirm').props.disabled, false);
+id(tree, 'spot-mistake-option-b').props.onPress();
+tree = spot.render();
+assert.equal(id(tree, 'spot-mistake-option-a').props.accessibilityState.selected, false,
+  'changing a draft clears the previous claim');
+assert.equal(id(tree, 'spot-mistake-option-b').props.accessibilityState.selected, true);
+assert.deepEqual(spot.submitted, [], 'changing the selection is still draft-only');
+id(tree, 'spot-mistake-option-a').props.onPress();
+tree = spot.render();
+id(tree, 'spot-mistake-confirm').props.onPress();
+id(tree, 'spot-mistake-confirm').props.onPress();
+assert.deepEqual(JSON.parse(JSON.stringify(spot.submitted)), ['a'],
+  'confirmation submits the stable claim ID once, even on a rapid double tap');
+assert.equal(id(tree, 'spot-mistake-feedback'), undefined, 'reveal waits for the parent-owned answer');
+tree = spot.render();
+assert.equal(id(tree, 'spot-mistake-confirm').props.disabled, true, 'pending confirmation locks the card');
 spot.setAnswer('a');
 tree = spot.render();
+assert.equal(id(tree, 'spot-mistake-confirm'), undefined, 'submitted answer hides confirmation');
 assert.ok(id(tree, 'spot-mistake-feedback'), 'wrong answer reveals correct segment and correction');
 assert.equal(id(tree, 'spot-mistake-option-b').props.disabled, true);
 const spotCorrect = mount('src/components/SpotMistakeQuestionCard.tsx', mistakeQuestion);
@@ -114,4 +148,4 @@ wrongBlank.setAnswer('council');
 tree = wrongBlank.render();
 assert.ok(id(tree, 'fill-blank-feedback'), 'wrong tile reveals the correct authored choice');
 assert.equal(id(tree, 'fill-blank-option-assembly').props.disabled, true);
-console.log('Spot-mistake and word-bank cards passed: complete claim selection, live blank insertion, switchable drafts, confirm, parent ownership, answer feedback and locks.');
+console.log('Spot-mistake and word-bank cards passed: draft selection/change, required confirmation, one-shot scoring, shared card styles, word-bank insertion and locked feedback.');
