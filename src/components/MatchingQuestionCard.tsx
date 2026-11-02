@@ -47,7 +47,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
   return <View style={styles.card} testID="matching-card">
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⇄  ΑΝΤΙΣΤΟΙΧΙΣΗ</Text></View>
-      <Text style={styles.counter}>0{questionNumber}</Text>
+      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text style={[styles.question, readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     <Text style={styles.hint}>Επίλεξε πρώτα μια έννοια και μετά τη σχετική περιγραφή. Μπορείς να αλλάξεις οποιοδήποτε ζευγάρι.</Text>
