@@ -11,6 +11,8 @@ export type Props = {
   onToggleSaved: (lessonId: string) => void;
   checkpointAnswers: Record<number, number>;
   typedCheckpointAnswers?: Record<number, QuizAnswer>;
+  /** Dev-only local article pilots should never report synthetic content. */
+  enableReporting?: boolean;
   onAnswerCheckpoint: (questionIndex: number, answerIndex: number, correctIndex: number, typedValue?: unknown) => void;
   onFinishLesson: () => void;
   onBack: () => void;
