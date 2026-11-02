@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–27 · 2026-11-02 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–28 · 2026-11-02 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -291,7 +291,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία» — **Integrated** ([research, sources, image rights and QA](greek-stage-tragedy-research.md); 30 paragraphs, 7 checkpoints; device/Node QA pending)
 26. `greek-philosophy-in-context` — «Πού γινόταν η φιλοσοφία;» — **Integrated** ([research, sources, media rights and QA](greek-philosophy-in-context-research.md); 30 paragraphs, 7 checkpoints; Node/device/editorial QA pending)
 27. `greek-science-knowledge` — «Πώς ήξεραν ότι είχαν δίκιο;» — **Integrated** ([research, evidence, sources, image rights and QA](greek-science-knowledge-research.md); 24 paragraphs, six anchored reasoning checks; Node/device/editorial QA pending)
-28. `greek-images-sculpture` — «Αγάλματα με χρώματα και ιστορίες»
+28. `greek-images-sculpture` — «Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;» — **Integrated** ([research, evidence and licence QA](greek-images-sculpture-research.md); 28 paragraphs, six checkpoints; device/Node/editorial QA pending)
 29. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ένας κόσμος πολλών βασιλείων»
 30. `antikythera-gears` — «Ένας ουρανός μέσα σε γρανάζια» (existing live ID)
 
@@ -309,6 +309,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `alexander-conquests-context`: #24 succession (336–335), Greek/Theban choices, Achaemenid institutions and local agency, coast and supply 334–332, Gaugamela 331, imperial negotiation and resistance in Central Asia/Indus, Babylon 323 and source criticism. Does not recount Philip’s 359–336 ascent (#23) or prewrite the successors’ kingdoms (#29). [Research/rights/QA](alexander-conquests-context-research.md).
 - `hellenistic-kingdoms-cities`: #29 political and civic transformations after 323; do not project later successor states back into 323.
 - `greek-science-knowledge`: #27 differentiates observed symptoms from physiological causes, Euclidean proof from practical measurement, prediction from physically correct models; Babylonian astronomical records show shared networks. Does not repeat #26 philosophical institutions, #18 sacred sites, #3 general source criticism, #29 successor politics or #30 Antikythera gears. [Research, rights and outstanding QA](greek-science-knowledge-research.md).
+- `greek-images-sculpture`: #28 follows surviving pigment/attachments through manufacture, display and later reception; does not repeat #3 source criticism, #18 shrine networks, #27 knowledge methods, #29 successor politics or #30 engineering. [Research/media/QA](greek-images-sculpture-research.md).
 - `antikythera-gears`: preserve existing article as the technical case study; #27 treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
@@ -511,3 +512,11 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **Current accounting:** **30 planned / 5 chapters; 26 in app (25 Integrated research-first #1–25 + 1 old Drafted #30), 4 Not started #26–29, 0 Validated, 0 Approved.** Older counts above are dated historical handoffs.
 - **Compatibility/verification:** no edits to Lessons 1–24, Lesson 30 draft, historical question fingerprints (including Lesson 15 `q_470dac57` vs `q_22487292`), saved history, XP, bookmarks, sound or sync. Updated only import, path and relevant tests. Connector authoring/readback and static inspection **are not** Node/npm, Android/iOS, network or Supabase passes. Full automated/device and source/rights editorial QA is **pending**; see research record.
 - **Branch discipline:** commits to `content/curriculum-v1`, **not merged** into `main`.
+
+
+### Ancient Greece Lesson 28 — research-first integration (2026-11-02)
+- **Integrated, not Validated/Approved:** `greek-images-sculpture`, «Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;». [Sources, claim ledger, image-rights and QA](greek-images-sculpture-research.md).
+- **28 stable paragraphs, six anchored version-1 reasoning questions, 1,379 narrative words / 8-minute reading estimate (question interaction additional)**, three credited remote archaeological photographs. Manufacture, colour, original viewers, damage, Roman adaptation, museum reception; no catalog of sculptors or universal polychrome claim.
+- **Navigation:** #25 → #26 → #27 → #28 → earlier #30; unpublished #29 still absent. **30 planned, 29 in app = 28 Integrated + 1 Drafted (#30), 1 Not started (#29), 0 Validated, 0 Approved.**
+- **Compatibility:** additive new lesson, path-only older test updates, reader mock import; preserved all old lessons/quiz data, historic #15 fingerprint keys, XP/audio/replay, backups/sync. No migration.
+- **Verification:** repository and source/rights inspection + authoring-time static checks only. Local Node/npm, Android/iOS, media delivery and independent editorial QA pending. Keep #25–27 Integrated.

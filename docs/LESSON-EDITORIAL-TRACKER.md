@@ -351,3 +351,11 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **Tests:** this GitHub connector editing session could not execute any local `npm`, `node`, device, image delivery, Supabase or audio tests; all requested suites and actual iOS/Android validation are pending. Connector-side static consistency and history isolation inspections are not a replacement for execution. Retain **Integrated** status.
 - **Counts:** 30 planned / 5 chapters; **25 Integrated + 1 Drafted = 26 in app; 4 Not started (#26–29); 0 Validated; 0 Approved**.
 - **Next:** #26 `greek-philosophy-in-context`, «Φιλοσοφία στους δρόμους και στις σχολές», Chapter V; follow independent research-first process, preserve ID and quiz compatibility (especially Lesson 15), and test on Android and iOS before promoting statuses.
+
+
+### Ancient Greece Lesson 28 — 2026-11-02
+- **Integrated, not Validated/Approved:** `greek-images-sculpture` «Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;». [Research, bibliography, evidence ledger, image rights and QA record](greek-images-sculpture-research.md).
+- **Article:** 28 anchored paragraphs, 6 sections, 6 new v1 hard questions after paragraphs 5/10/14/19/24/28; 1,379 prose words = 8 min at 180 wpm (+ question interaction). Cover Peplos Kore; inline Riace bronze and Diogenes funerary stele. Ancient pigment traces vs hypotheses clearly distinguished; no modern painted reconstruction passed off as an original.
+- **Delivery:** lesson/data/media/path added, selected predecessor path regression fixtures and reader mock imports updated only. Earlier lessons and #30 unchanged; #15 historical keys `q_470dac57` and `q_22487292`, XP/audio, progress/replay, backup and synchronization untouched.
+- **QA performed:** GitHub source and research/rights inspection, authoring-time static consistency. **Unexecuted:** typecheck, content validator, Node regression (including new Lesson 28 test), Expo Android/iOS, external media, XP/audio, native sync, independent editorial review. Lessons #25, #26 and #27 remain **Integrated** pending individual QA.
+- **Counts:** 30 planned places; **28 Integrated (#1–28), 1 Drafted (#30), 1 Not started (#29), 0 Validated / 0 Approved**. Running path #25 → #26 → #27 → #28 → #30. Next `hellenistic-kingdoms-cities`.
