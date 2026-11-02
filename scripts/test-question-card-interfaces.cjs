@@ -131,11 +131,15 @@ const renderer = compile('src/components/QuizQuestionRenderer.tsx', {
   './AnswerOption': { __esModule: true, default: 'AnswerOption' },
   './OrderingQuestionCard': { __esModule: true, default: 'OrderingQuestionCard' },
   './MatchingQuestionCard': { __esModule: true, default: 'MatchingQuestionCard' },
+  './SpotMistakeQuestionCard': { __esModule: true, default: 'SpotMistakeQuestionCard' },
+  './FillBlankQuestionCard': { __esModule: true, default: 'FillBlankQuestionCard' },
   './MultipleSelectQuestionCard': { __esModule: true, default: 'MultipleSelectQuestionCard' },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
 });
 const r = (question, answer) => renderer({ question, questionNumber: 2, answer, onSubmit: () => {} });
 assert.equal(r(ordering).type, 'OrderingQuestionCard');
+assert.equal(r({ id: 'spot', type: 'spot-the-mistake', content: { segments: [], incorrectSegmentId: 'x', correction: '' } }).type, 'SpotMistakeQuestionCard');
+assert.equal(r({ id: 'fill', type: 'fill-in-the-blank', content: { before: '', after: '', acceptedAnswers: [], displayAnswer: '' } }).type, 'FillBlankQuestionCard');
 assert.equal(r(matching).type, 'MatchingQuestionCard');
 assert.equal(r({ id: 'multi', type: 'multiple-select', content: { answers: ['a', 'b'], correctIndices: [0] } }).type, 'MultipleSelectQuestionCard');
 assert.equal(r({ id: 'choice', type: 'multiple-choice', prompt: 'a', content: { answers: ['a', 'b'], correctIndex: 1 } }).type, 'View');
