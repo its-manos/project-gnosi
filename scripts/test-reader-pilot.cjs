@@ -243,4 +243,8 @@ for(const [index,type,value] of piloted){
  assert.deepEqual(JSON.parse(JSON.stringify(restored.props.answer)),value,'same typed response restored');
 }
 assert.ok(byId(tree,'reader-finish'),'all structured answers unlock the original finish gate');
+props={...props,enableReporting:false}; tree=render();
+assert.equal(nodes(tree).filter(n=>n.type==='ReportContentButton').length,0,
+  'dev pilot never offers real content reporting for synthetic questions');
+
 console.log(`Reader checks passed for ${data.lessons.length} articles: every paragraph/checkpoint boundary, ${notes} content notes, ${figures} inline figures, source retention, text controls, resume, completion, typed-checkpoint pilot and next-lesson routing. Native views mocked.`);
