@@ -141,7 +141,7 @@ export const greekScienceKnowledgeLessons: Lesson[] = [
       },
       {
         "questionId": "science-hippocratic-authorship",
-        "afterParagraphId": "science-08"
+        "afterParagraphId": "science-06"
       },
       {
         "questionId": "science-proof-measure",
@@ -153,7 +153,7 @@ export const greekScienceKnowledgeLessons: Lesson[] = [
       },
       {
         "questionId": "science-prediction-vs-truth",
-        "afterParagraphId": "science-20"
+        "afterParagraphId": "science-18"
       },
       {
         "questionId": "science-eratosthenes-uncertainty",
