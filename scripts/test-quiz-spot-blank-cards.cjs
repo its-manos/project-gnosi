@@ -44,18 +44,24 @@ function mount(file, question) {
     setAnswer: answer => { props = { ...props, answer }; }, submitted };
 }
 const mistakeQuestion = {
-  id: 'mistake', version: '1', type: 'spot-the-mistake', prompt: 'Τι είναι λάθος?',
+  id: 'mistake', version: '1', type: 'spot-the-mistake', prompt: 'Η Βουλή των Πεντακοσίων',
   explanation: 'Η θητεία δεν ήταν ισόβια.', content: {
-    segments: [{ id: 'a', text: 'Η Βουλή' }, { id: 'b', text: 'είχε ισόβια θητεία' },
-      { id: 'c', text: 'στην Αθήνα.' }],
-    incorrectSegmentId: 'b', correction: 'Η θητεία ήταν ετήσια.' },
+    options: [
+      { id: 'a', text: 'Αποτελούνταν από 500 πολίτες.' },
+      { id: 'b', text: 'Τα μέλη της υπηρετούσαν ισόβια.' },
+      { id: 'c', text: 'Προετοίμαζε θέματα για την Εκκλησία του Δήμου.' },
+      { id: 'd', text: 'Τα μέλη επιλέγονταν κυρίως με κλήρωση.' },
+    ],
+    incorrectOptionId: 'b', correction: 'Η θητεία ήταν ετήσια.' },
 };
 const spot = mount('src/components/SpotMistakeQuestionCard.tsx', mistakeQuestion);
 let tree = spot.render();
+assert.equal(id(tree, 'spot-mistake-subject').props.children[0], 'Η Βουλή των Πεντακοσίων', 'subject is rendered before options');
+assert.equal(id(tree, 'spot-mistake-option-d').props.accessibilityRole, 'button', 'four standalone choices appear');
 assert.equal(id(tree, 'spot-mistake-feedback'), undefined);
-id(tree, 'spot-mistake-segment-a').props.onPress();
+id(tree, 'spot-mistake-option-a').props.onPress();
 assert.deepEqual(JSON.parse(JSON.stringify(spot.submitted)), ['a']);
-assert.equal(id(tree, 'spot-mistake-segment-b').props.accessibilityRole, 'button');
+assert.equal(id(tree, 'spot-mistake-option-b').props.accessibilityRole, 'button');
 spot.setAnswer('a');
 tree = spot.render();
 assert.ok(id(tree, 'spot-mistake-feedback'), 'wrong answer reveals correct segment and correction');
