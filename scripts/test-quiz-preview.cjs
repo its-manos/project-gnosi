@@ -21,7 +21,7 @@ const answerFor = q => {
   if (q.type === 'ordering') return [...q.content.correctOrder];
   if (q.type === 'matching') return Object.fromEntries(q.content.pairs.map(pair => [pair.leftId, pair.rightId]));
   if (q.type === 'spot-the-mistake') return q.content.incorrectOptionId;
-  if (q.type === 'fill-in-the-blank') return q.content.displayAnswer;
+  if (q.type === 'fill-in-the-blank') return q.content.correctOptionId;
   throw Error('unexpected type');
 };
 for (const question of questions) {
@@ -38,4 +38,4 @@ const previewFile = fs.readFileSync(path.join(__dirname, '..', 'src/screens/Quiz
 assert.equal(previewFile.includes('useDailyChallenge'), false, 'preview must not use saved daily quiz hook');
 assert.equal(previewFile.includes('useLearningSession'), false, 'preview must not write account progress');
 assert.equal(previewFile.includes('commitRecord'), false, 'preview must not write daily records');
-console.log('Mixed-format dev preview passed: valid sourced fixtures, 3 complete steps, serialization and isolation from daily progress.');
+console.log('Mixed-format dev preview passed: five sourced fixtures, stable tile selection, serialization and isolation from daily progress.');
