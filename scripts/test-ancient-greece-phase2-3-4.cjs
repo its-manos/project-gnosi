@@ -90,6 +90,8 @@ for(const [id,expect] of Object.entries(targets)){
   assert.deepEqual(plain(restoreInteractiveLessonAnswer(l,Number(index),numerics[index],restored.attempts[id].typedCheckpointAnswers[index])),plain(item.value));
  }
  const rewards=quizRewardSummary(l.questions.map((_,i)=>adaptLessonQuestion(l,i)),numerics,'lesson');
- assert.equal(rewards.correct,l.questions.length,'XP fallback grades intended answers');
+ assert.equal(rewards.rows.length,l.questions.length,'XP fallback evaluates every question');
+ assert.ok(rewards.rows.every(row=>row.correct),'XP fallback grades intended answers');
+ assert.equal(rewards.highestCombo,l.questions.length,'a fully correct sequence preserves the combo');
 }
 console.log('Ancient Greece 3–4 Phase 2 Node contract passed: typed answers, v3 key repair, checkpoint IDs, old history, safe restore and numeric XP fallback.');
