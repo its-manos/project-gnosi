@@ -81,10 +81,10 @@ Licence conditions: retain creator, licence, clickable file-page attribution; in
 | Question ID (version 1, hard) | Anchor | Why one answer is justified |
 | --- | --- | --- |
 | `science-sacred-disease` | `science-04` | Well-described symptoms ≠ correct cause; wrong phlegm explanation. |
-| `science-hippocratic-authorship` | `science-08` | «Hippocratic» texts can disagree because the corpus is multiple and contested; attribution does not establish one author. |
+| `science-hippocratic-authorship` | `science-06` | «Hippocratic» texts can disagree because the corpus is multiple and contested; attribution does not establish one author. |
 | `science-proof-measure` | `science-12` | A number of measurements cannot substitute for a general proof from explicit assumptions. |
 | `science-babylonian-transfer` | `science-16` | Mesopotamian observations/parameters were adapted, not invented from nothing in one closed Greek centre. |
-| `science-prediction-vs-truth` | `science-20` | Predictive success is not the same as physical truth of every assumption. |
+| `science-prediction-vs-truth` | `science-18` | Predictive success is not the same as physical truth of every assumption. |
 | `science-eratosthenes-uncertainty` | `science-24` | Quantitative estimates rely on units, measurements, assumptions and later source transmission. |
 
 All six have four plausible unique options, one correct index, explicit `conceptIds`, an explanatory feedback string and `version: "1"`. No existing question ID is intentionally reused; no compatible legacy fingerprint alias is added. Fingerprint isolation remains to be confirmed by Node.
