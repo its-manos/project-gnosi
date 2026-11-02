@@ -20,7 +20,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
   const answered = answer !== undefined;
   const order = answered ? answer : pending;
   const correct = answered && evaluateAnswer(question, answer).correct;
-  const labels = new Map(question.content.items.map(item => [item.id, item.label]));
+  const labels = new Map<string, string>(question.content.items.map(item => [item.id, item.label] as const));
 
   function move(index: number, offset: number) {
     if (answered) return;
