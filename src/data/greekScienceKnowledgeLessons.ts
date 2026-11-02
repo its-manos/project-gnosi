@@ -8,7 +8,7 @@ export const greekScienceKnowledgeLessons: Lesson[] = [
     "subcategoryId": "ancient-greece",
     "title": "Πώς ήξεραν ότι είχαν δίκιο;",
     "summary": "Μια «ιερή» ασθένεια, μια γεωμετρική απόδειξη και πήλινοι αστρονομικοί πίνακες αποκαλύπτουν τη δύναμη και τα όρια της αρχαίας έρευνας.",
-    "readingMinutes": 9,
+    "readingMinutes": 10,
     "intro": "Μια πάθηση ονομαζόταν «ιερή». Ένα αρχαίο ιατρικό κείμενο αμφισβήτησε το όνομα και πρότεινε άλλη αιτία — που αποδείχθηκε και αυτή λανθασμένη. Πώς μπορούσε, λοιπόν, να ξεχωρίσει κάποιος την αξιόπιστη γνώση από μια πειστική ερμηνεία;",
     "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ancient%20medical%20instruments%2C%20AM%20of%20Epidauros%2C%20202600.jpg?width=1200",
     "imageCaption": "Ιατρικά εργαλεία στο Αρχαιολογικό Μουσείο Επιδαύρου, φωτογραφία 2020. Η έκθεση δεν τεκμηριώνει ότι χρησιμοποιήθηκαν από τον συγγραφέα του «Περὶ ἱερῆς νούσου».",
@@ -67,7 +67,7 @@ export const greekScienceKnowledgeLessons: Lesson[] = [
           },
           {
             "id": "science-11",
-            "text": "Ο γεωμέτρης που αποδεικνύει μια γενική σχέση και ο τεχνίτης που χρειάζεται να μετρήσει έναν τοίχο αντιμετωπίζουν διαφορετικά προβλήματα. Στην οικοδόμηση, στις συναλλαγές και στη διανομή γης, οι υπολογισμοί, τα όργανα και οι ανοχές μιας πραγματικής κατασκευής είχαν σημασία. Η θεωρητική απόδειξη δεν αντικαθιστούσε την πρακτική μέτρηση."
+            "text": "Ο γεωμέτρης που αποδεικνύει μια γενική σχέση και ο τεχνίτης που μετρά έναν τοίχο αντιμετωπίζουν διαφορετικά προβλήματα. Ο αιγυπτιακός πάπυρος Ριντ (αντίγραφο περίπου του 1550 π.Χ.) περιέχει λυμένα προβλήματα μερίδων, εμβαδών και όγκων. Μαρτυρεί μαθηματική εργασία πολύ πριν από τον Ευκλείδη, όχι όμως από μόνος του μια αποδεδειγμένη αλυσίδα άμεσης επιρροής προς τα «Στοιχεῖα»."
           },
           {
             "id": "science-12",
@@ -235,6 +235,11 @@ export const greekScienceKnowledgeLessons: Lesson[] = [
         "title": "Surveying Instruments of Greece and Rome: The Basic Elements",
         "publisher": "M. J. T. Lewis · Cambridge University Press (2001), summary",
         "url": "https://www.cambridge.org/core/books/abs/surveying-instruments-of-greece-and-rome/basic-elements/3F00CF1A8D9CA2F87AB787B5A9EB89AE"
+      },
+      {
+        "title": "The Rhind and Moscow Mathematical Papyri",
+        "publisher": "Frank J. Swetz · Mathematical Association of America (2021)",
+        "url": "https://old.maa.org/press/periodicals/convergence/mathematical-treasure-the-rhind-and-moscow-mathematical-papyri"
       }
     ],
     "questions": [
