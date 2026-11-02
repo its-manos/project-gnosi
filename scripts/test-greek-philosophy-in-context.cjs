@@ -27,7 +27,7 @@ assert.ok(l.imageCreditUrl.includes('commons.wikimedia.org/wiki/File:'));
 assert.deepEqual(inlineArticleMedia[id].map(x=>x.afterParagraphId),['phil-09','phil-21']);
 assert.ok(inlineArticleMedia[id].every(x=>x.resizeMode==='contain'&&x.creditUrl.includes('/wiki/File:')&&x.caption.length>95));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(23,29).map(x=>x.id),['alexander-conquests-context','greek-stage-tragedy',id,'greek-science-knowledge','greek-images-sculpture','antikythera-gears']);
+assert.deepEqual(seq.slice(23,30).map(x=>x.id),['alexander-conquests-context','greek-stage-tragedy',id,'greek-science-knowledge','greek-images-sculpture','hellenistic-kingdoms-cities','antikythera-gears']);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='greek-stage-tragedy'),lessons,['greek-stage-tragedy'])?.id,id);
 assert.equal(paths.getNextPathLesson(l,lessons,[id])?.id,'greek-science-knowledge');
 assert.ok(paths.getLessonAccess(l,lessons,['greek-stage-tragedy']).unlocked);

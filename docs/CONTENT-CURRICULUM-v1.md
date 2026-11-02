@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–28 · 2026-11-02 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–29 · 2026-11-02 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -520,3 +520,11 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **Navigation:** #25 → #26 → #27 → #28 → earlier #30; unpublished #29 still absent. **30 planned, 29 in app = 28 Integrated + 1 Drafted (#30), 1 Not started (#29), 0 Validated, 0 Approved.**
 - **Compatibility:** additive new lesson, path-only older test updates, reader mock import; preserved all old lessons/quiz data, historic #15 fingerprint keys, XP/audio/replay, backups/sync. No migration.
 - **Verification:** repository and source/rights inspection + authoring-time static checks only. Local Node/npm, Android/iOS, media delivery and independent editorial QA pending. Keep #25–27 Integrated.
+
+### Ancient Greece Lesson 29 — research-first integration (2026-11-02)
+- **Integrated, NOT Validated or Approved:** `hellenistic-kingdoms-cities`, «Μετά τον Αλέξανδρο: ποιος όριζε τη ζωή μιας πόλης;». [Bibliography, rights, claim-level evidence, QA, full-path handoff](hellenistic-kingdoms-cities-research.md).
+- **Research focus:** Magnesia's letters, Athenian civic decree and two different Egyptian documentary archives test post-323 royal/civic power, social inequalities and local agency; not a military/royal chronology. Six sections, **29 stable paragraphs, 1,672 words (intro included), 9 min at 190 wpm** excluding six version-1 hard checkpoint interactions at 5/10/15/20/25/29.
+- **Media:** Zenon tax-related papyrus cover, Seleucid coin and Museo Egizio Greek/demotic papyrus inline; all credited remote Commons files and no pipeline/style change.
+- **Path:** `greek-stage-tragedy` → `greek-philosophy-in-context` → `greek-science-knowledge` → `greek-images-sculpture` → `hellenistic-kingdoms-cities` → `antikythera-gears`. **30 planned / 30 present / 29 Integrated / 1 Drafted (#30) / 0 Not started / 0 Validated / 0 Approved.**
+- **Compatibility:** Lessons 1–28 and 30 untouched; Lesson 15 historic `q_470dac57` and `q_22487292` untouched, no XP/audio/backup/sync rewrites. Reader mock import, dedicated Node test and five explicit order tests updated only for path positions.
+- **Not run:** npm/Node and native Android/iOS/remote media/Supabase/audio/XP tests; independent historian and Greek copyedit pending. #25–28 remain Integrated; no merge to main.

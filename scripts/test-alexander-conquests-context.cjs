@@ -17,7 +17,7 @@ assert.equal(progress.getVisibleParagraphLimit(lesson,Object.fromEntries(lesson.
 assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['alexander-08','alexander-22']);
 assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&m.url.includes('Special:FilePath')&&m.creditUrl.startsWith('https://commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(21,28).map(l=>l.id),['greek-crises-fourth-century','macedon-philip',id,'greek-stage-tragedy','greek-philosophy-in-context','greek-science-knowledge','antikythera-gears']);
+assert.deepEqual(seq.slice(21,30).map(l=>l.id),['greek-crises-fourth-century','macedon-philip',id,'greek-stage-tragedy','greek-philosophy-in-context','greek-science-knowledge','greek-images-sculpture','hellenistic-kingdoms-cities','antikythera-gears']);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='macedon-philip'),lessons,['macedon-philip'])?.id,id);
 assert.equal(paths.getNextPathLesson(lesson,lessons,[id])?.id,'greek-stage-tragedy');
 assert.ok(paths.getLessonAccess(lesson,lessons,['macedon-philip']).unlocked);

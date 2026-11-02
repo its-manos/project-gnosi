@@ -25,6 +25,7 @@ import { greekStageTragedyLessons } from "./greekStageTragedyLessons";
 import { greekPhilosophyInContextLessons } from "./greekPhilosophyInContextLessons";
 import { greekScienceKnowledgeLessons } from "./greekScienceKnowledgeLessons";
 import { greekImagesSculptureLessons } from "./greekImagesSculptureLessons";
+import { hellenisticKingdomsCitiesLessons } from "./hellenisticKingdomsCitiesLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -496,6 +497,7 @@ export const lessons: Lesson[] = [
   ...greekPhilosophyInContextLessons,
   ...greekScienceKnowledgeLessons,
   ...greekImagesSculptureLessons,
+  ...hellenisticKingdomsCitiesLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,

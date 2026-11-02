@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "hellenistic-kingdoms-cities": [
+    {
+      afterParagraphId: "hellenistic-13",
+      url: commonsFileUrl("Seleucos I Bucephalos coin.jpg"),
+      resizeMode: "contain",
+      caption: "Νόμισμα αποδιδόμενο στον Σέλευκο Α΄ (τέλη 4ου–αρχές 3ου αιώνα π.Χ.), σε φωτογραφία του 2008 στο Βρετανικό Μουσείο. Ακριβής χρονολόγηση και νομισματοκοπείο δεν έχουν επιβεβαιωθεί από ανεξάρτητο νομισματικό κατάλογο. Η κυκλοφορία ενός νομίσματος δεν τεκμηριώνει τις πολιτικές πεποιθήσεις κάθε χρήστη.",
+      credit: "Uploadalt / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2008",
+      creditUrl: commonsPageUrl("Seleucos I Bucephalos coin.jpg"),
+    },
+    {
+      afterParagraphId: "hellenistic-19",
+      url: commonsFileUrl("Papyrus containing the granting of religious services in the temple of Hathor in Demotic and a receipt in Greek - Museo Egizio (Turin) S 6080 p02.jpg"),
+      resizeMode: "contain",
+      caption: "Πάπυρος S.6080 από το Ντέιρ ελ-Μεντίνα (περ. 180–145 π.Χ.), Museo Egizio: κείμενο για υπηρεσίες στον ναό της Άθωρ σε αιγυπτιακή δημοτική γραφή και ελληνική απόδειξη πληρωμής. Πολύ μεταγενέστερος του αρχείου του Ζήνωνα, δεν αποδεικνύει καθολική διγλωσσία. Ψηφιακή εικόνα μουσείου, άγνωστης χρονολογίας λήψης.",
+      credit: "Museo Egizio / Wikimedia Commons · CC0 · ανάρτηση 2025",
+      creditUrl: commonsPageUrl("Papyrus containing the granting of religious services in the temple of Hathor in Demotic and a receipt in Greek - Museo Egizio (Turin) S 6080 p02.jpg"),
+    },
+  ],
   "greek-images-sculpture": [
   {
     "afterParagraphId": "images-13",
