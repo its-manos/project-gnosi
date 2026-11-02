@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { evaluateAnswer } from "../quiz/engine";
 import type { FillBlankQuestion } from "../quiz/types";
 import { colors } from "../theme";
@@ -23,7 +23,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
   const labelStyle = readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined;
 
   function confirm() {
-    if (!answered && ready) onSubmit(draft.trim());
+    if (!answered && ready) { Keyboard.dismiss(); onSubmit(draft.trim()); }
   }
 
   return <View style={styles.card} testID="fill-blank-card">
@@ -35,10 +35,12 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
     <Text style={styles.hint}>Πληκτρολόγησε μια σύντομη απάντηση χωρίς να επιλέξεις από έτοιμες λύσεις.</Text>
     <View style={styles.passage}>
       <Text style={[styles.passageText, labelStyle]}>{question.content.before}</Text>
-      <View style={[styles.blank, answered && (isCorrect ? styles.blankCorrect : styles.blankWrong)]}>
-        <Text style={styles.blankText}>{answered ? answer : "________________"}</Text>
+      <View style={styles.blankLine}>
+        <View style={[styles.blank, answered && (isCorrect ? styles.blankCorrect : styles.blankWrong)]}>
+          <Text style={styles.blankText}>{answered ? answer : "________________"}</Text>
+        </View>
+        {question.content.after.trim() ? <Text style={[styles.passageText, labelStyle]}>{question.content.after}</Text> : null}
       </View>
-      {question.content.after.trim() ? <Text style={[styles.passageText, labelStyle]}>{question.content.after}</Text> : null}
     </View>
     <Text style={styles.inputLabel}>Η ΑΠΑΝΤΗΣΗ ΣΟΥ</Text>
     <TextInput
@@ -90,6 +92,7 @@ const styles = StyleSheet.create({
   passage: { backgroundColor: colors.surfaceRaised, paddingHorizontal: 16, paddingVertical: 18,
     borderRadius: 16, borderWidth: 1, borderColor: colors.border, gap: 12, marginBottom: 22 },
   passageText: { color: colors.text, fontSize: 18, lineHeight: 28, fontWeight: "700" },
+  blankLine: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4 },
   blank: { alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingHorizontal: 12,
     borderBottomWidth: 2, borderBottomColor: colors.accent, backgroundColor: colors.accentSurface, borderRadius: 8 },
   blankText: { color: colors.accentLight, fontSize: 16, fontWeight: "800" },
