@@ -24,7 +24,7 @@ import { getParagraphCount, getParagraphId, getParagraphText, getQuestionPlaceme
 
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
-  onToggleSaved, checkpointAnswers, typedCheckpointAnswers = {}, onAnswerCheckpoint, onFinishLesson, onBack }: Props) {
+  onToggleSaved, checkpointAnswers, typedCheckpointAnswers = {}, enableReporting = true, onAnswerCheckpoint, onFinishLesson, onBack }: Props) {
   const { analytics } = useBetaAnalytics();
   const lastSeenParagraph = useRef(0);
   const [readingSize, setReadingSize] = useState(18);
@@ -88,7 +88,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           </Pressable>
           <Text style={styles.brand}>ΑΝΑΓΝΩΣΗ</Text>
           <View style={styles.tools}>
-            <ReportContentButton target={lessonReportTarget(lesson)} iconOnly />
+            {enableReporting ? <ReportContentButton target={lessonReportTarget(lesson)} iconOnly /> : null}
             <Pressable style={[styles.control, settingsOpen && styles.active]} onPress={() => setSettingsOpen(v => !v)}
               accessibilityRole="button" accessibilityLabel="Ρυθμίσεις ανάγνωσης" accessibilityState={{ expanded: settingsOpen }}>
               <Text style={styles.controlText}>Αα</Text>
@@ -202,8 +202,8 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                           onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex, value);
                         }
                       }} />
-                    <ReportContentButton target={lessonReportTarget(lesson, questionIndex)} />
-                  </> : <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={lessonReportTarget(lesson, questionIndex)}
+                    {enableReporting ? <ReportContentButton target={lessonReportTarget(lesson, questionIndex)} /> : null}
+                  </> : <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={enableReporting ? lessonReportTarget(lesson, questionIndex) : undefined}
                     readingSize={readingSize} onSelectAnswer={(answerIndex, correctIndex) => onAnswerCheckpoint(questionIndex, answerIndex, correctIndex)} />}
                   {answered ? <ActionButton label={number < paragraphCount ? "Συνέχεια ανάγνωσης ↓" : "Στο κλείσιμο του άρθρου ↓"} secondary onPress={() => {
                     restored.current = true;
