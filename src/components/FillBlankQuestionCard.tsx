@@ -156,3 +156,4 @@ const styles = StyleSheet.create({
   solutionLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
   solution: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: "800" },
   explanation: questionCardStyles.feedbackText,
+});
