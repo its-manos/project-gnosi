@@ -243,7 +243,8 @@ const styles = StyleSheet.create({
   note: { backgroundColor: "#292720", padding: 16, borderRadius: 12, marginBottom: 24, gap: 8 },
   noteText: { color: "#D2C8B7" },
   coverBlock: { marginBottom: 20 },
-  cover: { width: "100%", height: 210, borderRadius: 14 },
+  // Keep cover height predictable before the image loads; its crop mode remains per-lesson.
+  cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 14 },
   caption: { color: reading.muted, fontSize: 12, lineHeight: 20, marginTop: 10 },
   creditControl: { minHeight: 44, justifyContent: "center", paddingVertical: 8 },
   readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 26 },
