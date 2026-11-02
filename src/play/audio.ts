@@ -76,8 +76,13 @@ export class FeedbackAudio {
             this.primedKinds.add(kind);
           }
           // No automatic calls to play(): opening the app must be quiet.
-          if (!this.priming.has(kind) && status.playing) reportSoundStatus("playing", "Αναπαραγωγή · έλεγξε την ένταση πολυμέσων και τη σύνδεση Bluetooth.");
-          else if (this.audioReady() && !this.pending && !this.failedKinds.size && getSoundStatus().phase !== "playing") reportSoundStatus("ready", "Ήχοι έτοιμοι · ένταση από τα πολυμέσα της συσκευής.");
+          if (status.didJustFinish && !this.priming.has(kind)) {
+            reportSoundStatus("ready", "Ο ήχος ολοκληρώθηκε.");
+          } else if (!this.priming.has(kind) && status.playing) {
+            reportSoundStatus("playing", `Αναπαραγωγή: ${kind} · έλεγξε την ένταση πολυμέσων και το Bluetooth.`);
+          } else if (this.audioReady() && !this.pending && !this.failedKinds.size && getSoundStatus().phase !== "playing") {
+            reportSoundStatus("ready", "Ήχοι έτοιμοι · ένταση από τα πολυμέσα της συσκευής.");
+          }
           this.pending?.();
         }));
         if (android) player.replace(sources[kind]);
