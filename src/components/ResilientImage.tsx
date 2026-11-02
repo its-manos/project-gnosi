@@ -1,16 +1,15 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import type {
-  ImageResizeMode,
   StyleProp,
   ViewStyle,
 } from "react-native";
+import { Image } from "expo-image";
 import { colors } from "../theme";
 import { bundledLessonImages } from "../data/bundledLessonImages";
 import { remoteImageCandidates } from "../utils/commonsImage";
@@ -21,7 +20,7 @@ type ImageStatus = "loading" | "loaded" | "error";
 type Props = {
   uri?: string | null;
   style?: StyleProp<ViewStyle>;
-  resizeMode?: ImageResizeMode;
+  resizeMode?: "cover" | "contain";
   accessibilityLabel?: string;
   fallbackLabel?: string;
   loadingLabel?: string;
@@ -66,7 +65,7 @@ export function ImageStatusPlaceholder({
 
 /**
  * Keeps the native Image in normal layout (rather than absolute-fill layout),
- * matching the previously working Image component sizing. The wrapper provides
+ * matching the previously working image component sizing. The wrapper provides
  * the same fixed dimensions as callers already pass in `style`.
  */
 export default function ResilientImage({
@@ -93,7 +92,7 @@ export default function ResilientImage({
   // Retain the local asset as a fallback during the migration. Missing CDN
   // entries keep their existing bundled/Commons behavior unchanged.
   const candidates = cdnUri
-    ? [{ uri: cdnUri, cache: "force-cache" as const }, ...(bundledSource ? [bundledSource] : [])]
+    ? [{ uri: cdnUri }, ...(bundledSource ? [bundledSource] : [])]
     : bundledSource ? [bundledSource] : normalizedUri ? remoteImageCandidates(normalizedUri) : [];
   const attempt = lastLoad.uri === loadIdentity ? lastLoad.attempt : 0;
   const source = candidates[attempt] ?? candidates[0];
@@ -113,12 +112,14 @@ export default function ResilientImage({
           key={`${normalizedUri}:${rendition}:${attempt}:${cdnUri ?? ""}`}
           source={source ?? { uri: normalizedUri! }}
           style={styles.image}
-          resizeMode={resizeMode}
+          contentFit={resizeMode}
+          cachePolicy="disk"
+          transition={{ duration: 150, skipOnCacheHit: "all" }}
           accessible={Boolean(accessibilityLabel)}
           accessibilityLabel={accessibilityLabel}
           onLoad={event => {
             setLastLoad({ uri: loadIdentity, status: "loaded", attempt });
-            const source = event?.nativeEvent?.source;
+            const source = event?.source;
             if (source && Number.isFinite(source.width) && Number.isFinite(source.height) && source.width > 0 && source.height > 0) {
               onDimensions?.({ width: source.width, height: source.height });
             }
@@ -133,7 +134,7 @@ export default function ResilientImage({
                 : { uri: loadIdentity, status: "loading", attempt: attempt + 1 });
               return;
             }
-            const reason = event.nativeEvent?.error ?? "Unknown native image error";
+            const reason = event.error ?? "Unknown native image error";
             console.warn(`[ΓΝΩΣΗ] Failed to load image after ${attempt + 1} attempt(s): ${cdnUri ?? normalizedUri}`, reason);
             setLastLoad({ uri: loadIdentity, status: "error", attempt });
           }}
