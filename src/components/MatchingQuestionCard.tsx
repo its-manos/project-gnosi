@@ -50,7 +50,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⇄  ΑΝΤΙΣΤΟΙΧΙΣΗ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
-    <Text style={[styles.question, readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
+    <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     <Text style={styles.hint}>Επίλεξε πρώτα μια έννοια και μετά τη σχετική περιγραφή. Μπορείς να αλλάξεις οποιοδήποτε ζευγάρι.</Text>
     <View style={styles.progressLine}>
       <Text style={styles.progressLabel}>ΣΥΝΔΕΔΕΜΕΝΑ ΖΕΥΓΑΡΙΑ</Text>
