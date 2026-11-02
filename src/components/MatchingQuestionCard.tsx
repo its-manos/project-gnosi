@@ -183,3 +183,4 @@ const styles = StyleSheet.create({
   solutions: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 9 },
   solutionText: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
   feedbackText: questionCardStyles.feedbackText,
+});
