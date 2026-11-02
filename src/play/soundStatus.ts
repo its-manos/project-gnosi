@@ -8,3 +8,15 @@ export function reportSoundStatus(phase: SoundStatus["phase"], message: string) 
 }
 export function requestSoundPreview() { for (const fn of previews) fn(); }
 export const subscribeSoundPreview = (fn: () => void) => { previews.add(fn); return () => { previews.delete(fn); }; };
+
+/** Non-scoring practice cues share the existing guarded native audio player.
+ * This is intentionally separate from rewarded events: no XP, toast or sync. */
+export type PracticeCueKind = "correct" | "incorrect" | "complete";
+const practiceCues = new Set<(kind: PracticeCueKind) => void>();
+export function requestPracticeCue(kind: PracticeCueKind) {
+  for (const listener of practiceCues) { try { listener(kind); } catch { /* Sound never blocks gameplay. */ } }
+}
+export const subscribePracticeCue = (fn: (kind: PracticeCueKind) => void) => {
+  practiceCues.add(fn);
+  return () => { practiceCues.delete(fn); };
+};
