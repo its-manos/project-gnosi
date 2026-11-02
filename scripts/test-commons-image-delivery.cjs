@@ -54,6 +54,7 @@ const { default: ResilientImage } = moduleFrom('src/components/ResilientImage.ts
   react,
   'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' },
   'react-native': native,
+  'expo-image': { Image: 'Image' },
   '../theme': { colors: { accent: '#abc', accentLight: '#def', surfaceSoft: '#123', textMuted: '#456', border: '#789' } },
   '../data/bundledLessonImages': { bundledLessonImages: bundled },
   '../utils/commonsImage': { remoteImageCandidates },
@@ -73,19 +74,19 @@ try {
   let tree = render(commons), img = nodes(tree).find(x => x.type === 'Image');
   assert.equal(img.props.source.uri, expected);
   assert.equal(img.props.accessibilityLabel, undefined);
-  img.props.onError({ nativeEvent: { error: '403' } });
+  img.props.onError({ error: '403' });
   assert.equal(warnings.length, 0, 'first error retries without premature user-facing failure');
   tree = render(commons); img = nodes(tree).find(x => x.type === 'Image');
   assert.ok(img.props.source.uri.includes('Special:Redirect/file/'), 'next render uses alternative endpoint');
-  img.props.onLoad({ nativeEvent: { source: { width: 960, height: 700 } } });
+  img.props.onLoad({ source: { width: 960, height: 700 } });
   tree = render(commons);
   assert.equal(placeholders(tree).length, 0, 'fallback success removes placeholder');
   // Separate failed image, both sources exhausted: visible error state.
   states = [];
   tree = render(commons); img = nodes(tree).find(x => x.type === 'Image');
-  img.props.onError({nativeEvent:{error:'403'}});
+  img.props.onError({error:'403'});
   tree = render(commons); img = nodes(tree).find(x => x.type === 'Image');
-  img.props.onError({nativeEvent:{error:'403'}});
+  img.props.onError({error:'403'});
   tree = render(commons);
   assert.equal(warnings.length, 1, 'warn only after the final attempt');
   const errors = placeholders(tree);
@@ -98,7 +99,7 @@ try {
   tree = render('https://example.org/local.png');
   img = nodes(tree).find(x => x.type === 'Image');
   assert.equal(img.props.source, 99, 'bundled image always wins');
-  img.props.onError({nativeEvent:{error:'bad local asset'}});
+  img.props.onError({error:'bad local asset'});
   tree = render('https://example.org/local.png');
   assert.equal(warnings.length, 2, 'bundled asset fails once, no remote retry');
   // New URL must start fresh instead of inheriting the failed URI state.
