@@ -3,7 +3,9 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
 import { categories, lessons, subcategories, type Lesson } from "../data/lessons";
 import type { QuizAnswer } from "../quiz/types";
-import { adaptInteractiveLessonQuestion } from "../quiz/adapters";
+import { evaluateAnswer } from "../quiz/engine";
+import { requestPracticeCue } from "../play/soundStatus";
+import { adaptInteractiveLessonQuestion, projectInteractiveLessonAnswer } from "../quiz/adapters";
 import { colors } from "../theme";
 import ReaderLessonScreen from "./ReaderLessonScreen";
 
@@ -85,15 +87,23 @@ export default function DevTypedLessonPilotScreen({ onBack }: Props) {
     onAnswerCheckpoint={(index, numeric, _correctIndex, value) => {
       if (answersRef.current[index] !== undefined || value === undefined) return;
       const typed = adaptInteractiveLessonQuestion(pilot, index);
-      if (!typed) return;
+      if (!typed || projectInteractiveLessonAnswer(pilot, index, value) !== numeric) return;
+      const result = evaluateAnswer(typed, value);
+      if (!result.valid) return;
       answersRef.current = { ...answersRef.current, [index]: numeric };
       setCheckpointAnswers(answersRef.current);
       setTypedCheckpointAnswers(previous => ({ ...previous,
         [index]: { questionVersion: typed.version, value },
       }));
+      // The sandbox does not write to LearningStore, so it needs the same
+      // non-rewarded audio path as the five-format quiz preview.
+      requestPracticeCue(result.correct ? "correct" : "incorrect");
     }}
     onFinishLesson={() => {
-      if (Object.keys(answersRef.current).length === 3) setFinished(true);
+      if (Object.keys(answersRef.current).length === 3 && !finished) {
+        setFinished(true);
+        requestPracticeCue("complete");
+      }
     }}
     onBack={onBack}
   />;
