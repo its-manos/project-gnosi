@@ -41,7 +41,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>↕  ΣΩΣΤΗ ΣΕΙΡΑ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
-    <Text style={[styles.question, readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
+    <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     <Text style={styles.hint}>Μετακίνησε τις κάρτες με τα βέλη. Η πρώτη θέση είναι η αρχή της ακολουθίας.</Text>
     <View style={styles.orderList}>
       {order.map((id, index) => {
