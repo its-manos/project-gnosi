@@ -1,10 +1,10 @@
-import { useRef, useState, type ComponentRef } from "react";
+import { useRef, useState, useSyncExternalStore, type ComponentRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
-import { requestPracticeCue } from "../play/soundStatus";
+import { getSoundStatus, requestPracticeCue, subscribeSoundStatus } from "../play/soundStatus";
 import { calculateQuizResults, createQuizSession, evaluateAnswer } from "../quiz/engine";
 import { advancePreview, submitPreviewAnswer } from "../quiz/previewFlow";
 import { previewQuestions } from "../quiz/previewQuestions";
@@ -32,6 +32,7 @@ const titles: Record<string, string> = {
  */
 export default function QuizTypesPreviewScreen({ onBack }: Props) {
   const [session, setSession] = useState<QuizSession>(startSession);
+  const soundStatus = useSyncExternalStore(subscribeSoundStatus, getSoundStatus, getSoundStatus);
   const sessionRef = useRef(session);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const question = session.questions[session.currentIndex] as BuiltinQuizQuestion;
@@ -74,6 +75,17 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
       <View style={styles.sandboxNote}>
         <Text style={styles.sandboxTitle}>Δοκιμαστική λειτουργία</Text>
         <Text style={styles.note}>Χωρίς XP, σερί ή αποθήκευση προόδου. Οι ήχοι ακολουθούν τις ρυθμίσεις της εφαρμογής.</Text>
+      </View>
+      <View style={styles.soundDiagnostic} testID="quiz-audio-diagnostic">
+        <Text style={styles.sandboxTitle}>Έλεγχος ήχων (dev)</Text>
+        <Text style={styles.note}>Δοκίμασε τα δύο αρχεία χωρίς να απαντήσεις σε ερώτηση.</Text>
+        <View style={styles.soundButtons}>
+          <ActionButton label="✓ Σωστή" secondary onPress={() => requestPracticeCue("correct")} />
+          <ActionButton label="× Λάθος" secondary onPress={() => requestPracticeCue("incorrect")} />
+        </View>
+        <Text testID="quiz-audio-diagnostic-status" style={styles.note}>
+          {soundStatus.phase}: {soundStatus.message}
+        </Text>
       </View>
     </View>
     <View style={styles.progress}>
@@ -132,6 +144,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border, gap: 3 },
   sandboxTitle: { color: colors.accentLight, fontSize: 12, fontWeight: "800" },
   note: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
+  soundDiagnostic: { borderWidth: 1, borderColor: colors.border, borderRadius: 14,
+    padding: 13, gap: 8, backgroundColor: colors.surface },
+  soundButtons: { flexDirection: "row", gap: 8, flexWrap: "wrap", justifyContent: "space-between" },
   progress: { gap: 11, marginBottom: 24 },
   progressTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   progressLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 1 },
