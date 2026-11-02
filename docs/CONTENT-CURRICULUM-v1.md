@@ -487,3 +487,9 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **Scope:** contested succession and Greek choices 336–335; Achaemenid institutions and local agency; fleet, food, siegecraft and diplomacy in 334–332; Gaugamela 331, Persian administrative centres, Persepolis, Darius and empire-wide governance; Central Asian and Indus resistance; Hyphasis/return; Babylon 323 and the difference between cuneiform contemporaneous records and later narratives.
 - **Curriculum:** 30 planned / 5 chapters; **25 implemented (24 Integrated, 1 older Drafted #30), 5 Not started #25–29, 0 Validated, 0 Approved**. No rewriting Lessons 1–23 or #30; QA of previous integrations remains pending.
 - **Next only:** planned #25 `greek-stage-tragedy`, «Το θέατρο ως δημόσια εμπειρία», Chapter V, not live and not begun.
+
+
+### Ancient Greece partial editorial proofread — 2026-11-02
+- [Editorial audit for lessons #17–24 and #30](ANCIENT-GREECE-LESSONS-17-24-30-EDITORIAL-AUDIT.md): **#17, #18 and #30 revised after full prose read**; #19–24 have **not** had their full proofreading pass. Covers idiomatic Greek, evidence framing, historical clarification, captions/credits and question issues deferred for a separate task.
+- #17 and #18 remain **Integrated**. Older live #30 retains **Drafted**, 4 legacy quiz questions and existing compatible quiz key; no artificial quiz histories or migrations. Other categories and lessons unchanged.
+- Quiz identities, paragraph/checkpoint structures, saved-progress contracts, XP, audio, sync and DEV unlock-all were not edited. Connector-side structural comparisons passed, but **local npm/Node, Android/iOS and live Supabase QA are not executed**. Retain 0 Validated / 0 Approved until tests and review.
