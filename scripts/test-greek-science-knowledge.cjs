@@ -23,8 +23,8 @@ assert.ok(l.questions.every(x=>x.id.startsWith('science-')&&x.version==='1'&&x.d
   &&x.conceptIds.length>=2&&x.answers.length===4&&new Set(x.answers).size===4
   &&x.correctIndex>=0&&x.correctIndex<4&&x.explanation.length>=120));
 assert.deepEqual(l.checkpoints.map(x=>x.questionId),l.questions.map(x=>x.id));
-assert.deepEqual(l.checkpoints.map(x=>x.afterParagraphId),['science-04','science-08','science-12','science-16','science-20','science-24']);
-assert.deepEqual(progress.getQuestionPlacements(l).map(x=>x.afterParagraphNumber),[4,8,12,16,20,24]);
+assert.deepEqual(l.checkpoints.map(x=>x.afterParagraphId),['science-04','science-06','science-12','science-16','science-18','science-24']);
+assert.deepEqual(progress.getQuestionPlacements(l).map(x=>x.afterParagraphNumber),[4,6,12,16,18,24]);
 assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
 assert.equal(progress.getResumeParagraphNumber(l,{0:l.questions[0].correctIndex}),5);
 assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.map((q,i)=>[i,q.correctIndex]))),24);
