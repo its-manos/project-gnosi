@@ -60,6 +60,7 @@ Avoid changing an existing question's meaning merely to switch formats. For an e
 
 ```bash
 npm run typecheck
+npm run test:typed-lesson-audio
 npm run test:typed-lesson-integration
 node scripts/test-reader-pilot.cjs
 node scripts/test-learning-backup.cjs
@@ -68,6 +69,6 @@ npm run test:question-types
 npm run validate:content
 ```
 
-Then on Android/iOS: unconfirmed answer has no reward or unlock; correct and incorrect confirmations; relaunch and resume after each format; two-account isolation; guest import and cloud sync; repeated confirm does not duplicate XP/sound; previous completed lessons still display; changed-quiz resume safe; no layout clipping at larger reader font sizes.
+Then on Android/iOS: unconfirmed answer has no reward, sound or unlock; correct and incorrect confirmations play their normal sounds in the dev pilot (without XP) and in real lessons (with existing reward rules); relaunch and resume after each format; two-account isolation; guest import and cloud sync; repeated confirm does not duplicate XP/sound; previous completed lessons still display; changed-quiz resume safe; no layout clipping at larger reader font sizes.
 
 Keep this branch separate from `main` and from published Ancient Greece lesson edits until all checks are documented.
