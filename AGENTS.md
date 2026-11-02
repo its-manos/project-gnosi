@@ -1,41 +1,36 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# Repository contributor and agent notes
 
-## Expo has changed — do not trust your training data
+ΓΝΩΣΗ is a React Native / Expo SDK 58 / TypeScript app for Android and iOS. **Read the actual code and package.json before changing architecture or dependencies.** Keep published content, saved progress and supported beta builds compatible.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+## Architecture: use what exists
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+- **index.ts** registers **App.tsx**. The app uses **src/navigation/AppNavigator.tsx** and **src/hooks/useLearningApp.ts** for **custom state-based navigation**, not Expo Router or React Navigation. Do not create **src/app/** routes or introduce a routing library in routine maintenance.
+- Shared view components live in **src/components/**, screens in **src/screens/**, state and persistence in **src/state/**, hooks in **src/hooks/**, Supabase transports in **src/lib/** and content in **src/data/**.
+- Questions and historical compatibility live in **src/quiz/**, XP in **src/gamification/** and knowledge reviews in **src/knowledge/**. Do not bypass the shared scoring/session model.
+- The image pipeline is hybrid: **src/data/bundledLessonImages.ts** maps local Metro assets; **ResilientImage** and **ResolvedCommonsImage** handle remote loading and Android Wikimedia compatibility. Preserve attribution manifests.
 
-## Commands
+## Expo / native work
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+Expo SDKs change often. Before touching Expo, React Native or EAS APIs, check **package.json** and the versioned [Expo SDK 58 documentation](https://docs.expo.dev/versions/v58.0.0/). Expo's documentation index is [llms.txt](https://docs.expo.dev/llms.txt).
 
-```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
-```
+- Use **npm ci** for reproducible installation and **npx expo install PACKAGE** for SDK-compatible native packages.
+- The checked-in **app.json** and **eas.json** configure the Expo project and Android/iOS EAS channels. Treat EAS IDs, fingerprints, plugin settings and package identifiers as release-sensitive.
+- **ios/** and **android/** are generated native folders and are not tracked. Change native configuration through Expo config/plugins, not by inventing manually maintained native files.
+- Expo Go is a development aid. A new native module, native permission or changed fingerprint compatibility requires a new installed build. Do not claim a mock test proves behavior on hardware.
+- Use **npx eas-cli@latest** (not an assumed globally installed EAS CLI) for cloud operations.
 
-Run lint and typecheck before declaring any task done.
+## Validate before proposing changes
 
-## Navigation & Routing
+~~~bash
+npm ci
+npm run typecheck
+npm run validate:content
+npm run beta:check:config
+npx expo-doctor@latest
+for test in scripts/test-*.cjs; do node "$test" || exit 1; done
+git diff --check
+~~~
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+There are 83 Node regression scripts in **scripts/** at this writing. Many mock native code or use PGlite; run real-device checks as appropriate. There is no configured lint or **npm test** script in **package.json**; do not report either as passed without adding/configuring and actually running it.
 
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
-
-## Rules
-
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+Keep historical fixtures, Supabase migrations, quiz revision compatibility, content IDs, image rights metadata and all potentially referenced static assets. Never delete local **.env** files or secrets. Prefer small, reviewable commits and obtain approval before merging into **main**. See **README.md** and **docs/private-beta.md** for the current developer and build workflow.
