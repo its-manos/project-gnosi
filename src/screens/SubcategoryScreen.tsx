@@ -5,6 +5,7 @@ import AppHeader from "../components/AppHeader";
 import LessonCard from "../components/LessonCard";
 import { colors } from "../theme";
 import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
+import { devLessonsUnlocked } from "../utils/devLessonAccess";
 
 type Props = {
   completedLessonIds: string[];
@@ -26,7 +27,7 @@ export default function SubcategoryScreen({ category, subcategory, lessons, onBa
       <Text style={styles.title}>{subcategory.title}</Text>
       <Text style={styles.body}>{subcategory.description}</Text>
       <Text style={styles.sectionTitle}>Μαθήματα</Text>
-      {path.length > 1 ? <Text style={styles.pathHint}>Ολοκλήρωσε ένα μάθημα για να ανοίξεις το επόμενο.</Text> : null}
+      {path.length > 1 ? <Text style={styles.pathHint}>{devLessonsUnlocked() ? "Λειτουργία δοκιμών: όλα τα μαθήματα είναι ξεκλείδωτα." : "Ολοκλήρωσε ένα μάθημα για να ανοίξεις το επόμενο."}</Text> : null}
       {path.length > 0 ? path.map((lesson, index) => {
         const access = getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds);
         return <LessonCard key={lesson.id} lesson={lesson} position={index + 1}

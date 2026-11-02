@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import ActionButton from "./ActionButton";
 import { colors } from "../theme";
-export type LearningDevControls = { canResetLessonProgress: boolean; lessonProgressLoaded: boolean; onResetLessonProgressForDevelopment: () => Promise<void> };
-export default function LearningDevTools({ canResetLessonProgress, lessonProgressLoaded, onResetLessonProgressForDevelopment }: LearningDevControls) {
+export type LearningDevControls = { canResetLessonProgress: boolean; lessonProgressLoaded: boolean; onResetLessonProgressForDevelopment: () => Promise<void>; allLessonsUnlockedForTesting: boolean; onToggleAllLessonsForTesting: () => void };
+export default function LearningDevTools({ canResetLessonProgress, lessonProgressLoaded, onResetLessonProgressForDevelopment, allLessonsUnlockedForTesting, onToggleAllLessonsForTesting }: LearningDevControls) {
   const [isResetting, setIsResetting] = useState(false);
   function confirmResetLessonProgress() {
     if (!__DEV__ || !lessonProgressLoaded || isResetting) return;
@@ -35,7 +35,14 @@ export default function LearningDevTools({ canResetLessonProgress, lessonProgres
       {__DEV__ ? (
         <View style={styles.devTools}>
           <Text style={styles.devLabel}>ΕΡΓΑΛΕΙΑ ΑΝΑΠΤΥΞΗΣ</Text>
-          <Text style={styles.devDescription}>Διαθέσιμο μόνο ως επισκέπτης. Καθαρίζει ολοκληρώσεις, ημιτελείς προσπάθειες και δραστηριότητα μαθημάτων του επισκέπτη, χωρίς να διαγράφει δεδομένα λογαριασμού.</Text>
+          <Text style={styles.devDescription}>Για δοκιμές: μπορείς να ανοίξεις οποιοδήποτε δημοσιευμένο μάθημα χωρίς να ολοκληρώσεις τα προηγούμενα. Δεν αλλάζει ολοκληρώσεις, XP ή συγχρονισμό και απενεργοποιείται όταν επανεκκινήσεις την εφαρμογή.</Text>
+          <ActionButton
+            label={allLessonsUnlockedForTesting ? "Επαναφορά κλειδωμένων μαθημάτων (DEV)" : "Ξεκλείδωμα όλων των μαθημάτων (DEV)"}
+            onPress={onToggleAllLessonsForTesting}
+            secondary
+            disabled={!lessonProgressLoaded}
+          />
+          <Text style={styles.devDescription}>Ο καθαρισμός προόδου παρακάτω διατίθεται μόνο ως επισκέπτης και είναι ανεξάρτητος από το ξεκλείδωμα.</Text>
           <ActionButton
             label={isResetting ? "Γίνεται καθαρισμός…" : "Καθαρισμός προόδου μαθημάτων (DEV)"}
             onPress={confirmResetLessonProgress}

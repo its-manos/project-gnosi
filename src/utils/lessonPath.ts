@@ -1,4 +1,5 @@
 import type { Lesson } from "../data/lessons";
+import { devLessonsUnlocked } from "./devLessonAccess";
 
 // Stable editorial order. New lessons are appended until explicitly placed here.
 export const lessonPaths: Record<string, readonly string[]> = {
@@ -41,7 +42,7 @@ export function getLessonAccess(lesson: Lesson, catalogue: readonly Lesson[], co
   const prerequisite = index > 0 ? path[index - 1] : null;
   // Keep existing completions and unfinished attempts accessible. Bookmarks are
   // not progress. Unlocks derive from the same account-scoped backup.
-  const unlocked = index >= 0 && (!prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id));
+  const unlocked = index >= 0 && (devLessonsUnlocked() || !prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id));
   return { unlocked, prerequisite, position: index + 1, total: path.length };
 }
 
