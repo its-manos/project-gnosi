@@ -8,7 +8,6 @@ import DailyMistakeReview from "../components/DailyMistakeReview";
 import DailyAnswerReview from "../components/DailyAnswerReview";
 import QuizReveal from "../components/QuizReveal";
 import KnowledgeProgress from "../components/KnowledgeProgress";
-import ReportContentButton from "../components/ReportContentButton";
 import { dailyReportTarget } from "../utils/contentReports";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
 import { lessons } from "../data/lessons";
