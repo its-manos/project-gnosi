@@ -17,6 +17,8 @@ const titles: Record<string, string> = {
   "multiple-select": "Πολλαπλή επιλογή",
   ordering: "Βάλε σε σειρά",
   matching: "Αντιστοίχιση",
+  "spot-the-mistake": "Βρες το λάθος",
+  "fill-in-the-blank": "Συμπλήρωσε το κενό",
   "multiple-choice": "Μία επιλογή",
 };
 
@@ -68,7 +70,7 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
     <View style={styles.header}>
       <View style={styles.pill}><Text style={styles.pillText}>✦ ΕΡΓΑΣΤΗΡΙΟ GNOSI</Text></View>
       <Text style={styles.title}>Μάθε με διαφορετικό τρόπο.</Text>
-      <Text style={styles.subtitle}>Τρεις μικρές δοκιμασίες, τρεις τρόποι σκέψης.</Text>
+      <Text style={styles.subtitle}>Πέντε μικρές δοκιμασίες, πέντε τρόποι σκέψης.</Text>
       <View style={styles.sandboxNote}>
         <Text style={styles.sandboxTitle}>Δοκιμαστική λειτουργία</Text>
         <Text style={styles.note}>Χωρίς XP, σερί ή αποθήκευση προόδου. Οι ήχοι ακολουθούν τις ρυθμίσεις της εφαρμογής.</Text>
