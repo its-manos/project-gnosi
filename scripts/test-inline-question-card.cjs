@@ -1,152 +1,145 @@
-/* Inline lesson question card UI contract (native views mocked, no real-device rendering). */
+/* Old lesson checkpoints now share the exact single-choice UI with daily/typed quizzes.
+ * Native React components are mocked; device font and scrolling still need QA.
+ */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
-
 const root = path.join(__dirname, '..');
-const compile = file => ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
+const transpile = file => ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020,
+    jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
 const jsx = (type, props) => ({ type, props: props ?? {} });
-const themeModule = { exports: {} };
-vm.runInNewContext(compile('src/theme.ts'), { module: themeModule, exports: themeModule.exports });
-const { colors } = themeModule.exports;
-let lessonStyles;
+function compile(file, requireFn) {
+  const mod = { exports: {} };
+  vm.runInNewContext(transpile(file), {
+    module: mod, exports: mod.exports, Promise,
+    require: requireFn,
+  });
+  return mod.exports;
+}
+const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', StyleSheet: { create: x => x } };
+const theme = compile('src/theme.ts', () => { throw Error('theme has no imports'); });
+const sharedStyles = compile('src/components/questionCardStyles.ts', id => {
+  if (id === 'react-native') return native;
+  if (id === '../theme') return theme;
+  throw Error(id);
+}).questionCardStyles;
+let states = [], refs = [], stateIndex = 0, refIndex = 0;
+const hooks = {
+  useState: initial => {
+    const i = stateIndex++;
+    if (!(i in states)) states[i] = typeof initial === 'function' ? initial() : initial;
+    return [states[i], value => { states[i] = typeof value === 'function' ? value(states[i]) : value; }];
+  },
+  useRef: initial => {
+    const i = refIndex++;
+    return refs[i] ??= { current: initial };
+  },
+  useEffect: () => {},
+};
 const imports = {
-  'react/jsx-runtime': { jsx, jsxs: jsx },
-  'react-native': { View: 'View', Text: 'Text', Pressable: 'Pressable', StyleSheet: { create: x => { lessonStyles = x; return x; } } },
+  react: hooks, 'react/jsx-runtime': { jsx, jsxs: jsx }, 'react-native': native,
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
-  '../theme': { colors },
+  '../theme': theme,
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
   './ReportContentButton': { __esModule: true, default: 'ReportContentButton' },
+  './questionCardStyles': { questionCardStyles: sharedStyles },
 };
-const mod = { exports: {} };
-vm.runInNewContext(compile('src/components/InlineQuestionCard.tsx'), {
-  module: mod, exports: mod.exports,
-  require: id => {
-    if (!(id in imports)) throw Error('unexpected component import: ' + id);
-    return imports[id];
-  },
-});
-const Card = mod.exports.default;
-
-/** Compare shared surface, spacing, and typography directly with the newer
- * question format, rather than asserting a separate approximation. */
-let referenceStyles;
-const referenceModule = { exports: {} };
-vm.runInNewContext(compile('src/components/MultipleSelectQuestionCard.tsx'), {
-  module: referenceModule, exports: referenceModule.exports,
-  require: id => {
-    if (id === 'react') return { useEffect: () => {}, useState: () => [[], () => {}] };
-    if (id === 'react-native') return {
-      View: 'View', Text: 'Text', Pressable: 'Pressable',
-      StyleSheet: { create: styles => { referenceStyles = styles; return styles; } },
-    };
-    if (id === '../quiz/engine') return { evaluateAnswer: () => ({ correct: true }) };
-    if (id in imports) return imports[id];
-    throw Error('unexpected reference import: ' + id);
-  },
-});
-assert.ok(referenceStyles && lessonStyles, 'both card styles were captured');
-for (const [lesson, reference, fields] of [
-  ['card', 'card', ['backgroundColor', 'borderColor', 'borderWidth', 'borderRadius', 'padding', 'marginTop', 'marginBottom']],
-  ['question', 'question', ['color', 'fontSize', 'lineHeight', 'fontWeight', 'marginBottom']],
-  ['instructions', 'hint', ['color', 'fontSize', 'lineHeight', 'marginBottom']],
-  ['counter', 'counter', ['color', 'fontSize', 'fontWeight']],
-  ['answer', 'answer', ['backgroundColor', 'borderColor', 'borderWidth', 'borderRadius', 'minHeight', 'paddingHorizontal', 'paddingVertical']],
-  ['answerCorrect', 'answerCorrect', ['backgroundColor', 'borderColor']],
-  ['answerWrong', 'answerWrong', ['backgroundColor', 'borderColor']],
-  ['answerText', 'answerText', ['color', 'fontSize', 'lineHeight', 'fontWeight']],
-  ['feedback', 'feedback', ['marginTop', 'padding', 'borderRadius', 'borderWidth']],
-  ['feedbackCorrect', 'feedbackCorrect', ['backgroundColor', 'borderColor']],
-  ['feedbackWrong', 'feedbackWrong', ['backgroundColor', 'borderColor']],
-]) {
-  for (const field of fields) {
-    assert.equal(lessonStyles[lesson][field], referenceStyles[reference][field],
-      `original ${lesson}.${field} must match new question ${reference}.${field}`);
-  }
-}
-
+const SingleChoice = compile('src/components/SingleChoiceQuestionCard.tsx', id => {
+  if (!(id in imports)) throw Error('missing single-choice dependency: ' + id);
+  return imports[id];
+}).default;
+const Inline = compile('src/components/InlineQuestionCard.tsx', id => {
+  if (id === './SingleChoiceQuestionCard') return { __esModule: true, default: 'SingleChoiceQuestionCard' };
+  throw Error('missing inline dependency: ' + id);
+}).default;
 function nodes(tree) {
-  if (tree === null || tree === undefined || typeof tree !== 'object') return [];
+  if (!tree || typeof tree !== 'object') return [];
   return [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)];
 }
 const byId = (tree, testID) => nodes(tree).find(n => n.props?.testID === testID);
-const textChildren = children => {
-  if (Array.isArray(children)) return children.map(textChildren).join('');
-  if (typeof children === 'string' || typeof children === 'number') return String(children);
-  return children && typeof children === 'object' ? textChildren(children.props?.children) : '';
+const flatStyle = node => {
+  const style = typeof node.props.style === 'function' ? node.props.style({ pressed: false }) : node.props.style;
+  return Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
 };
-const flatStyles = (n, pressed = false) => {
-  const raw = typeof n.props.style === 'function' ? n.props.style({ pressed }) : n.props.style;
-  return Object.assign({}, ...[raw].flat(Infinity).filter(Boolean));
-};
-const question = {
-  question: 'Ποιο όργανο συγκέντρωνε τους πολίτες στην αρχαία Αθήνα;',
-  answers: ['Η Βουλή των Πεντακοσίων', 'Η Εκκλησία του Δήμου', 'Ο Άρειος Πάγος', 'Η Ηλιαία'],
-  correctIndex: 1,
-  explanation: 'Στην Εκκλησία του Δήμου συμμετείχαν οι πολίτες που είχαν πολιτικά δικαιώματα.',
-};
-const reportTarget = { itemId: 'ancient-athens', questionIndex: 0 };
-const events = [];
-const props = { question, questionNumber: 2, selectedAnswer: undefined, combo: 0, readingSize: 22,
-  reportTarget, onSelectAnswer: (...args) => events.push(args) };
+const textChildren = value => Array.isArray(value) ? value.map(textChildren).join('') :
+  (typeof value === 'string' || typeof value === 'number') ? String(value) :
+  value && typeof value === 'object' ? textChildren(value.props?.children) : '';
 
-let tree = Card(props);
-assert.ok(byId(tree, 'lesson-question-card'));
-assert.equal(flatStyles(byId(tree, 'lesson-question-card')).backgroundColor, colors.surface,
-  'lesson checkpoints must use exactly the same card background as the newer quiz types');
-assert.equal(flatStyles(byId(tree, 'lesson-question-card')).borderColor, colors.borderStrong);
-assert.equal(byId(tree, 'lesson-question-feedback'), undefined, 'no answer reveal before selection');
-assert.equal(nodes(tree).filter(n => n.type === 'Pressable' && n.props.testID?.startsWith('lesson-question-option-')).length, 4);
-for (let i = 0; i < 4; i++) {
-  const option = byId(tree, `lesson-question-option-${i}`);
-  assert.equal(option.props.disabled, false);
-  assert.equal(option.props.accessibilityRole, 'button');
-  assert.equal(option.props.accessibilityState.selected, false);
-  assert.equal(flatStyles(option).borderColor, colors.border, 'unanswered options use shared question tokens');
-  assert.equal(flatStyles(option).backgroundColor, colors.surfaceRaised);
-}
-assert.equal(nodes(tree).find(n => n.type === 'ReportContentButton').props.target, reportTarget, 'report keeps canonical checkpoint target');
+const question = { id: 'q-example', question: 'Ποιο όργανο συνεδρίαζε στην Αθήνα;',
+  answers: ['Η Βουλή', 'Η Εκκλησία του Δήμου', 'Ο Άρειος Πάγος', 'Η Ηλιαία'],
+  correctIndex: 1, explanation: 'Οι πολίτες συμμετείχαν στην Εκκλησία του Δήμου.' };
+const events = [];
+const target = { itemId: 'ancient-athens', questionIndex: 0 };
+let props = { question, questionNumber: 2, selectedAnswer: undefined, readingSize: 18,
+  reportTarget: target, combo: 0, onSelectAnswer: (...args) => events.push(args) };
+const bridge = () => Inline(props);
+const render = () => { stateIndex = 0; refIndex = 0; return SingleChoice(bridge().props); };
+const resetHooks = () => { states = []; refs = []; };
+resetHooks();
+const wrapper = bridge();
+assert.equal(wrapper.type, 'SingleChoiceQuestionCard');
+assert.equal(wrapper.props.answer, undefined);
+assert.equal(wrapper.props.question, question.question);
+assert.equal(wrapper.props.questionNumber, 2);
+assert.equal(wrapper.props.reportTarget, target);
+assert.equal(wrapper.props.testPrefix, 'lesson-question');
+let tree = render();
+assert.equal(byId(tree, 'lesson-question-card').type, 'View');
+assert.equal(flatStyle(byId(tree, 'lesson-question-card')).backgroundColor, sharedStyles.card.backgroundColor,
+  'legacy card reuses exact shared background');
+assert.equal(flatStyle(byId(tree, 'lesson-question-card')).borderColor, sharedStyles.card.borderColor);
+assert.equal(byId(tree, 'lesson-question-confirm').props.disabled, true);
+assert.equal(nodes(tree).filter(n => n.props?.testID?.startsWith('lesson-question-option-')).length, 4);
+assert.equal(byId(tree, 'lesson-question-feedback'), undefined);
+assert.equal(nodes(tree).find(n => n.type === 'ReportContentButton').props.target, target);
 const header = nodes(tree).find(n => n.type === 'Text' && n.props.accessibilityRole === 'header');
-assert.ok(header, 'question is announced as a header');
-assert.equal(header.props.children, question.question);
-assert.equal(header.props.style[1].fontSize, 22, 'question respects text size setting');
+assert.equal(header.props.style[1], undefined, 'normal reading size must not override shared quiz typography');
+assert.equal(flatStyle(header).fontSize, sharedStyles.question.fontSize);
 
 byId(tree, 'lesson-question-option-0').props.onPress();
-assert.deepEqual(JSON.parse(JSON.stringify(events)), [[0, 1]], 'parent owns existing numeric scoring callback');
-assert.equal(byId(tree, 'lesson-question-feedback'), undefined, 'feedback waits for parent answer state');
-const restoredWrong = Card({ ...props, selectedAnswer: 0, combo: 2 });
-const wrong = byId(restoredWrong, 'lesson-question-option-0');
-const correct = byId(restoredWrong, 'lesson-question-option-1');
-assert.equal(wrong.props.disabled, true, 'answered choices are locked');
-assert.equal(correct.props.disabled, true);
-assert.equal(wrong.props.accessibilityState.selected, true);
-assert.equal(correct.props.accessibilityState.selected, false);
-assert.equal(flatStyles(wrong).borderColor, colors.error);
-assert.equal(flatStyles(correct).borderColor, colors.success);
-assert.ok(byId(restoredWrong, 'lesson-question-feedback'), 'wrong answer shows explanation');
-assert.ok(byId(restoredWrong, 'lesson-question-correction'), 'wrong answer explicitly shows correct choice');
-assert.equal(byId(restoredWrong, 'lesson-question-correction').props.children, question.answers[1]);
-wrong.props.onPress();
-assert.equal(events.length, 1, 'restored locked cards do not resubmit');
-assert.ok(nodes(restoredWrong).some(n => n.type === 'Text' && textChildren(n.props.children) === '✦  ΣΕΡΙ 2'),
-  'existing combo feedback is preserved even when JSX splits children');
+assert.equal(events.length, 0, 'tapping must not score or persist a draft');
+tree = render();
+assert.equal(byId(tree, 'lesson-question-option-0').props.accessibilityState.selected, true);
+assert.equal(flatStyle(byId(tree, 'lesson-question-option-0')).borderColor, theme.colors.accent);
+assert.equal(byId(tree, 'lesson-question-confirm').props.disabled, false);
+byId(tree, 'lesson-question-option-1').props.onPress();
+tree = render();
+assert.equal(byId(tree, 'lesson-question-option-1').props.accessibilityState.selected, true,
+  'the player may change the draft before confirming');
+assert.equal(events.length, 0);
+byId(tree, 'lesson-question-confirm').props.onPress();
+byId(tree, 'lesson-question-confirm').props.onPress();
+assert.deepEqual(JSON.parse(JSON.stringify(events)), [[1, 1]], 'exactly one numeric legacy callback on confirmation');
+tree = render();
+assert.equal(byId(tree, 'lesson-question-confirm').props.disabled, true, 'double submission is locked pending parent state');
+props = { ...props, selectedAnswer: 1, combo: 2 };
+tree = render();
+assert.equal(byId(tree, 'lesson-question-confirm'), undefined);
+assert.equal(byId(tree, 'lesson-question-option-1').props.disabled, true);
+assert.ok(byId(tree, 'lesson-question-feedback'));
+assert.equal(byId(tree, 'lesson-question-correction'), undefined);
+assert.ok(nodes(tree).some(n => n.type === 'Text' && textChildren(n.props.children) === '✦  ΣΕΡΙ 2'),
+  'combo is visible for committed answers');
 
-const restoredCorrect = Card({ ...props, selectedAnswer: 1 });
-assert.ok(byId(restoredCorrect, 'lesson-question-feedback'));
-assert.equal(byId(restoredCorrect, 'lesson-question-correction'), undefined,
-  'no redundant correction after correct answer');
-assert.equal(flatStyles(byId(restoredCorrect, 'lesson-question-option-1')).borderColor, colors.success);
-assert.ok(!nodes(restoredCorrect).some(n => n.type === 'Text' && textChildren(n.props.children).includes('ΣΕΡΙ')),
-  'no streak badge when combo is not greater than one');
-const noReport = Card({ ...props, reportTarget: undefined });
-assert.equal(nodes(noReport).some(n => n.type === 'ReportContentButton'), false);
-
-const source = fs.readFileSync(path.join(root, 'src/components/InlineQuestionCard.tsx'), 'utf8');
+props = { ...props, selectedAnswer: 0 };
+resetHooks();
+tree = render();
+assert.equal(flatStyle(byId(tree, 'lesson-question-option-0')).borderColor, theme.colors.error);
+assert.equal(flatStyle(byId(tree, 'lesson-question-option-1')).borderColor, theme.colors.success);
+assert.equal(byId(tree, 'lesson-question-correction').props.children, question.answers[1]);
+byId(tree, 'lesson-question-option-0').props.onPress();
+assert.equal(events.length, 1, 'restored wrong answer cannot be submitted twice');
+props = { ...props, selectedAnswer: undefined, readingSize: 24 };
+resetHooks();
+tree = render();
+const larger = nodes(tree).find(n => n.type === 'Text' && n.props.accessibilityRole === 'header');
+assert.equal(larger.props.style[1].fontSize, 24, 'reader font controls scale consistently');
+const src = fs.readFileSync(path.join(root, 'src/components/SingleChoiceQuestionCard.tsx'), 'utf8');
 for (const forbidden of ['emitPlayFeedback', 'commitRecord', 'AsyncStorage', 'supabase', 'setCheckpointAnswers']) {
-  assert.equal(source.includes(forbidden), false, `presentational card must not mutate progress: ${forbidden}`);
+  assert.equal(src.includes(forbidden), false, 'UI must not own score or persistence: ' + forbidden);
 }
-console.log('Inline lesson question card passed: answer layout, text scaling, palette, parent scoring, report, locked restore, correct/wrong reveal and streak.');
+console.log('Legacy choice card passed: exact shared styles, draft selection/change, confirmation-only callback, double-tap lock, restored answers, combo, report and text scaling.');
