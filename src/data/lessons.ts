@@ -56,7 +56,10 @@ export type LessonQuestion = QuestionMetadata & {
   /** Format-only enhancement: the canonical answer remains a single numeric option index. */
   presentation?:
     | { type: "spot-the-mistake"; correction: string }
-    | { type: "fill-in-the-blank"; before: string; after: string };
+    | { type: "fill-in-the-blank"; before: string; after: string }
+    | { type: "multiple-select"; correctIndices: number[] }
+    | { type: "ordering"; items: { id: string; label: string }[]; correctOrder: string[] }
+    | { type: "matching"; pairs: { leftId: string; leftLabel: string; rightId: string; rightLabel: string }[] };
 };
 
 export type LessonParagraph = string | { id: string; text: string };
