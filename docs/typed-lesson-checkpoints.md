@@ -54,7 +54,7 @@ Avoid changing an existing question's meaning merely to switch formats. For an e
 - The numeric slot is only a score/weekly-review projection. For rich formats, the original selected set/order/mapping is held in `typedCheckpointAnswers`. Never reconstruct a rich answer from a numeric slot.
 - The older weekly mistake review still uses the canonical multiple-choice question wording/options. Before publishing new types in a lesson, verify the fallback is pedagogically equivalent; full typed weekly-review playback is separate follow-up work.
 - Older installed clients do not understand the new typed sidecar and may discard it when rewriting synchronized progress. Keep rollout gated until supported app versions are in use, or migrate/version the sync protocol before broad release.
-- The current pilot is **in-memory inside Node tests**; it does not alter any actual lesson's question content. Pilot user-facing lessons only after QA and editorial approval.
+- A **development-only, local-state article pilot** is accessible from Daily Quiz → "Δοκίμασε τα νέα είδη ερωτήσεων (dev)" → "Δοκίμασε τα νέα είδη μέσα σε άρθρο (dev)". It uses a temporary copy of the Ancient Athens article with Multiple Select, Ordering and Matching checkpoints, without writing `LearningStore` progress/XP/completion or enabling reports for synthetic content. The production catalogue is unchanged. This is for Android/iOS reader QA only; do not publish these synthetic questions as editorial content.
 
 ## Checks
 
