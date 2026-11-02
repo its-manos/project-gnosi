@@ -17,6 +17,7 @@ import { dailyResultAnalysis, recommendDailyLesson } from "../utils/dailyResults
 import { selectSharedDailyQuestions } from "../utils/sharedDailyChallenge";
 import { dailyXP } from "../utils/knowledgeScoring";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
+import QuizTypesPreviewScreen from "./QuizTypesPreviewScreen";
 import { colors } from "../theme";
 
 type Props={onHome:()=>void;onOpenPreferences:()=>void;preferences:DailyChallengePreferences;preferencesLoaded:boolean;
@@ -27,6 +28,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const {record,rewardSummary,rewardXP,isLoading,currentQuestion,selectedAnswer,correctCount,accountScoped,resultDetails,questionsCompatible=true,startChallenge,answerQuestion,nextQuestion}=useDailyChallenge(preferences,preferencesLoaded);
   const [sourceError,setSourceError]=useState(false),scrollRef=useRef<ComponentRef<typeof ScrollView>>(null),sourceRequest=useRef(0);
   const [review,setReview]=useState<{date:string;mode:'answers'|'mistakes'}|null>(null);
+  const [previewOpen,setPreviewOpen]=useState(false);
   const analysis=dailyResultAnalysis(record,questions,correctCount,resultDetails);
   const recommendation=recommendDailyLesson(analysis.rows,lessons,completedLessonIds,inProgressLessonIds,preferences);
   const reviewing=record.completed&&review?.date===record.dateKey;
@@ -38,8 +40,13 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   async function openSource(url:string){const request=++sourceRequest.current;try{await Linking.openURL(url);if(request===sourceRequest.current)setSourceError(false);}catch{if(request===sourceRequest.current)setSourceError(true);}}
   const misses=analysis.rows.filter(r=>r.correct===false&&r.question);
   const canStart=selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE;
+  // Do not touch any persisted daily quiz record during the development pilot.
+  if (typeof __DEV__ !== "undefined" && __DEV__ && previewOpen) {
+    return <QuizTypesPreviewScreen onBack={() => setPreviewOpen(false)} />;
+  }
   return <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
     <AppHeader onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} />
+    {typeof __DEV__ !== "undefined" && __DEV__ ? <ActionButton label="Δοκίμασε τα νέα είδη ερωτήσεων (dev)" secondary onPress={() => setPreviewOpen(true)} /> : null}
     {accountScoped?<Text style={styles.note}>Η πρόοδός σου συγχρονίζεται στις συσκευές σου.</Text>:null}
     {isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
     :record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
