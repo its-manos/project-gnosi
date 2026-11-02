@@ -158,7 +158,7 @@ for(const article of data.lessons) {
 }
 assert.ok(data.lessons.length>=45); assert.ok(notes>0); assert.ok(figures>0);
 // Completion -> results -> next unlocked lesson uses the existing callback contract.
-const lessonPath=compile('src/utils/lessonPath.ts');
+const lessonPath=compile('src/utils/lessonPath.ts', { './devLessonAccess': compile('src/utils/devLessonAccess.ts') });
 const nextLesson=lessonPath.getNextPathLesson(lesson,data.lessons,[lesson.id]);
 const Results=compile('src/screens/ResultsScreen.tsx',{...imports,'../components/LessonResultChart':{__esModule:true,default:'LessonResultChart'}}).default;
 let destination=null;
