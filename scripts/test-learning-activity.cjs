@@ -21,7 +21,8 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 function disk(device) {const map=new Map([['@gnosi/sync-device-id',device]]), writes=[];let full=false;return{map,writes,setFull:value=>{full=value;},getItem:async key=>map.get(key)??null,setItem:async(key,value)=>{if(full)throw Error('disk full');map.set(key,value);writes.push([key,value]);}};}
 function makeStore(user,d,transport=null){const s=new LearningStore(user,d,transport);stores.push(s);return s;}
 const answers=lesson=>Object.fromEntries(lesson.questions.map((q,i)=>[i,q.correctIndex]));
-const lesson=data.lessons[0], other=data.lessons[1];
+const lesson=data.lessons.find(l=>l.id==='why-mars-is-red'), other=data.lessons[1];
+assert.equal(lesson.questions.length,4,'historical 4-question activity fixture');
 const event=(id,at,replay=false)=>({lessonId:id,at:Date.parse(at),wasCompleted:replay,correctCount:3,questionCount:4,quizKey:'q_test'});
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 (async()=>{
@@ -85,7 +86,9 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
   storage.setFull(true);s.complete(other.id,{id:'failed_write',answers:answers(other)});assert.equal(await s.flushLocal(),false);assert.equal(s.getSnapshot().status,'local-error');storage.setFull(false);await s.retry();assert.equal(s.getSnapshot().status,'local');
 
   // Calendar boundaries use Athens dates, including the 25-hour DST day.
-  const dst={a:event(lesson.id,'2026-10-24T21:30:00Z'),b:event(other.id,'2026-10-25T21:30:00Z'),c:event(data.lessons[2].id,'2026-10-25T22:30:00Z')};
+  const thirdLesson=data.lessons.find(l=>l.id!==lesson.id&&l.id!==other.id);
+  assert.ok(thirdLesson,'DST fixture must use three distinct lesson IDs');
+  const dst={a:event(lesson.id,'2026-10-24T21:30:00Z'),b:event(other.id,'2026-10-25T21:30:00Z'),c:event(thirdLesson.id,'2026-10-25T22:30:00Z')};
   const days=utils.activityBuckets(dst,'2026-10-26','daily');assert.equal(days.find(x=>x.key==='2026-10-25').first,2);assert.equal(days.at(-1).first,1);
   assert.equal(utils.mondayOf('2027-01-01'),'2026-12-28');assert.equal(utils.shiftDateKey('2026-03-29',1),'2026-03-30');
   const weeks=utils.activityBuckets(dst,'2026-10-26','weekly');assert.equal(weeks.length,8);assert.equal(weeks.at(-1).key,'2026-10-26');assert.equal(weeks.at(-2).first,2);

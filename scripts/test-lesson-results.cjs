@@ -12,15 +12,18 @@ function load(file,overrides={}){
 let slots=[],cursor=0;
 const jsx=(type,props)=>({type,props});
 const react={useMemo:fn=>fn(),useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
-const native=Object.fromEntries(['View','Text','Pressable','ScrollView','TextInput'].map(n=>[n,n]));native.StyleSheet={create:x=>x};native.Keyboard={dismiss(){}};
+const native=Object.fromEntries(['View','Text','Pressable','ScrollView','FlatList','TextInput'].map(n=>[n,n]));native.StyleSheet={create:x=>x};native.Keyboard={dismiss(){}};
 const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,...Object.fromEntries(['KnowledgeProgress','ActionButton','AppHeader','LessonResultChart','ReportContentButton','LessonCard','LessonCover'].map(n=>['../components/'+n,{__esModule:true,default:n}]))};
 const {lessons,categories,subcategories}=load('src/data/lessons.ts');
 const {getSubcategoryPath}=load('src/utils/lessonPath.ts');
 const Screen=load('src/screens/ResultsScreen.tsx',stubs).default;
-const [lesson,next,locked]=getSubcategoryPath(lessons,'ancient-greece');
+const [lesson,next,locked]=getSubcategoryPath(lessons,'ancient-greece').slice(3,6);
+assert.deepEqual([lesson.id,next.id,locked.id],['greek-chronology','greek-geography-seas','aegean-bronze-age']);
+assert.equal(lesson.questions.length,4,'results fixture requires an actual four-question lesson');
 const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
 const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(' '):t&&typeof t==='object'?text(t.props?.children):'';
 const action=(tree,label)=>nodes(tree).find(n=>n.type==='ActionButton'&&n.props.label===label);
+const virtualCards=tree=>{const list=nodes(tree).find(n=>n.type==='FlatList');assert.ok(list,'expected a virtualized lesson list');return list.props.data.flatMap((item,index)=>nodes(list.props.renderItem({item,index})).filter(n=>n.type==='LessonCard'));};
 const render=(component,props)=>{cursor=0;return component(props);};
 let home=0,drill=0,replay=0,weekly=0,browse=0;const opened=[];
 const props={lesson,score:4,nextLesson:next,pathProgress:{title:'Αρχαία Ελλάδα',completed:1,total:4},onHome:()=>home++,onReadAgain:()=>replay++,onReviewMistakes:()=>drill++,onWeeklyReview:()=>weekly++,onOpenLesson:id=>opened.push(id),onBrowse:()=>browse++,lessonScores:{best:4,mastered:4,total:4,hasDetails:true},review:{status:'perfect',indices:[],result:{questionCount:4,correctCount:4}}};
@@ -54,11 +57,11 @@ for(const correct of [0,1,3,4]){const graph=Chart({correct,total:4,label:'Αυτ
 // Full-catalogue access rules also apply when only a later lesson was bookmarked.
 const Saved=load('src/screens/SavedLessonsScreen.tsx',stubs).default;
 const base={lessons:[locked],catalogue:lessons,completedLessonIds:[],inProgressLessonIds:[],progressLoaded:true,onBack(){},onOpenLesson(){},onRemoveSavedLesson(){}};
-tree=Saved(base);assert.ok(nodes(tree).find(n=>n.type==='LessonCard').props.lockedReason.includes(next.title));
-tree=Saved({...base,inProgressLessonIds:[locked.id]});assert.equal(nodes(tree).find(n=>n.type==='LessonCard').props.lockedReason,undefined);
+tree=Saved(base);assert.ok(virtualCards(tree).find(n=>n.type==='LessonCard').props.lockedReason.includes(next.title));
+tree=Saved({...base,inProgressLessonIds:[locked.id]});assert.equal(virtualCards(tree).find(n=>n.type==='LessonCard').props.lockedReason,undefined);
 const Sub=load('src/screens/SubcategoryScreen.tsx',stubs).default;
 tree=Sub({...base,lessons:[locked,next,lesson],subcategory:subcategories.find(s=>s.id==='ancient-greece'),category:categories[0]});
-const cards=nodes(tree).filter(n=>n.type==='LessonCard');assert.deepEqual(cards.map(c=>c.props.lesson.id),[lesson.id,next.id,locked.id]);assert.equal(cards[0].props.lockedReason,undefined);assert.ok(cards[1].props.lockedReason);
+const cards=virtualCards(tree);assert.deepEqual(cards.map(c=>c.props.lesson.id),[lesson.id,next.id,locked.id]);assert.equal(cards[0].props.lockedReason,undefined);assert.ok(cards[1].props.lockedReason);
 const Card=load('src/components/LessonCard.tsx',{...stubs,'./LessonCover':{__esModule:true,default:'Cover'}}).default;
 const card=Card({lesson:locked,onPress(){},lockedReason:'Ολοκλήρωσε πρώτα το προηγούμενο μάθημα'});assert.equal(card.props.disabled,true);assert.equal(card.props.accessibilityState.disabled,true);
 console.log('Lesson result UI passed: brief copy, exact score chart, success/low-score priorities, next/home callbacks, persistent mistake practice, collapsed replay/weekly/report options, best-vs-latest, changed/legacy results, final lesson and locked saved/subcategory cards. Native views mocked.');

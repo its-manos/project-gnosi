@@ -15,7 +15,8 @@ function load(file, overrides = {}) {
  if(!Object.keys(overrides).length) cache.set(file,m.exports);return m.exports;
 }
 const {lessons}=load('src/data/lessons.ts'), weekly=load('src/utils/weeklyReview.ts'), activity=load('src/utils/learningActivity.ts'), sync=load('src/utils/syncDocument.ts'), {LearningStore}=load('src/state/LearningStore.ts');
-const lesson=lessons[0], plain=x=>JSON.parse(JSON.stringify(x));
+const lesson=lessons.find(l=>l.id==='why-mars-is-red'), plain=x=>JSON.parse(JSON.stringify(x));
+assert.equal(lesson.questions.length,4,'historical 4-question weekly review fixture');
 const event=(l,missed,at=Date.parse('2026-10-22T12:00:00Z'))=>({lessonId:l.id,at,wasCompleted:false,correctCount:4-missed.length,questionCount:4,quizKey:activity.quizFingerprint(l.questions),missedQuestionIndices:missed});
 const events={old:event(lesson,[1,3])};
 const doc=()=>({...sync.emptySyncDocument(),activity:events});

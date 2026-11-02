@@ -75,7 +75,8 @@ assert.notEqual(adapters.adaptDailyQuestion({ ...original, question: original.qu
 assert.notEqual(adapters.adaptDailyQuestion({ ...original, answers: [...original.answers].reverse() }).version, q[0].version);
 const retained = engine.restoreQuizSession(engine.serializeQuizSession(state));
 assert.equal(retained.questions[0].version, q[0].version, 'snapshot retains its content revision');
-const lesson = lessons[0], normalized = lesson.questions.map((_, i) => adapters.adaptLessonQuestion(lesson, i));
+const lesson = lessons.find(l=>l.id==='why-mars-is-red'), normalized = lesson.questions.map((_, i) => adapters.adaptLessonQuestion(lesson, i));
+assert.equal(lesson.questions.length,4,'legacy adapter fixture retains four answer slots');
 assert.equal(normalized[0].difficultyOrigin, 'legacy-default', 'legacy lesson difficulty is explicitly provisional');
 const edited = { ...lesson, questions: [{ ...lesson.questions[0], id: 'curated-id', difficulty: 'hard', version: 'editorial-2', conceptIds: ['arch:load'], media: { uri: 'bundled-image', alt: 'Διάγραμμα φορτίων' } }, ...lesson.questions.slice(1)] };
 const curated = adapters.adaptLessonQuestion(edited, 0);

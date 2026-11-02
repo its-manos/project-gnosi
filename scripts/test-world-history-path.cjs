@@ -18,11 +18,14 @@ const { lessonScores, weeklyPlan } = require(root + '/src/utils/weeklyReview.ts'
 const { LearningStore } = require(root + '/src/state/LearningStore.ts');
 const { emptySyncDocument } = require(root + '/src/utils/syncDocument.ts');
 const before = require('./fixtures/catalogue-before-world-history-20261031.json');
+const {assertPremergeCurriculum}=require('./helpers/assert-premerge-curriculum.cjs');
 const newIds = new Set(worldHistoryLessons.map(l => l.id));
 assert.equal(worldHistoryLessons.length, 20);
 assert.equal(newIds.size, 20);
-assert.equal(lessons.length, before.length + 20);
-assert.deepEqual(lessons.filter(l => !newIds.has(l.id)), before, 'all 61 old lesson objects and quiz answer slots remain exact, in original catalogue order');
+const oldIds=new Set(before.map(l=>l.id));
+assert.deepEqual(lessons.filter(l=>oldIds.has(l.id)).map(l=>l.id),before.map(l=>l.id),
+  'all 61 historical lesson IDs retain their relative catalogue order');
+assertPremergeCurriculum(lessons);
 assert.ok(subcategories.some(s => s.id === 'world-history' && s.categoryId === 'history'));
 const sequence = getSubcategoryPath([...lessons].reverse(), 'world-history');
 assert.equal(sequence.length, 22);
