@@ -3,6 +3,8 @@ import type { BuiltinQuizQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import AnswerOption from "./AnswerOption";
 import MatchingQuestionCard from "./MatchingQuestionCard";
+import FillBlankQuestionCard from "./FillBlankQuestionCard";
+import SpotMistakeQuestionCard from "./SpotMistakeQuestionCard";
 import MultipleSelectQuestionCard from "./MultipleSelectQuestionCard";
 import OrderingQuestionCard from "./OrderingQuestionCard";
 import QuizReveal from "./QuizReveal";
@@ -29,6 +31,14 @@ export default function QuizQuestionRenderer({ question, questionNumber, answer,
     case "matching":
       return <MatchingQuestionCard key={question.id} question={question} questionNumber={questionNumber}
         readingSize={readingSize} answer={answer && typeof answer === "object" && !Array.isArray(answer) ? answer as Record<string, string> : undefined}
+        onSubmit={value => onSubmit(value)} />;
+    case "spot-the-mistake":
+      return <SpotMistakeQuestionCard key={question.id} question={question} questionNumber={questionNumber}
+        readingSize={readingSize} answer={typeof answer === "string" ? answer : undefined}
+        onSubmit={value => onSubmit(value)} />;
+    case "fill-in-the-blank":
+      return <FillBlankQuestionCard key={question.id} question={question} questionNumber={questionNumber}
+        readingSize={readingSize} answer={typeof answer === "string" ? answer : undefined}
         onSubmit={value => onSubmit(value)} />;
     case "multiple-choice": {
       const selected = typeof answer === "number" ? answer : undefined;
