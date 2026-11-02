@@ -61,6 +61,11 @@ const { default: ResilientImage } = moduleFrom('src/components/ResilientImage.ts
 const nodes = root => root && typeof root === 'object'
   ? [root, ...[root.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const render = uri => {cursor = 0;return ResilientImage({uri,style:{width:300,height:200}})};
+// The JSX mock represents function components as nodes; it does not automatically
+// render them. Expand the placeholder explicitly before asserting native labels.
+const placeholders = tree => nodes(tree)
+  .filter(node => typeof node.type === 'function' && node.type.name === 'ImageStatusPlaceholder')
+  .map(node => node.type(node.props));
 const originalWarn = console.warn;
 try {
   console.warn = (...args) => warnings.push(args);
@@ -73,7 +78,7 @@ try {
   assert.ok(img.props.source.uri.includes('Special:Redirect/file/'), 'next render uses alternative endpoint');
   img.props.onLoad({ nativeEvent: { source: { width: 960, height: 700 } } });
   tree = render(commons);
-  assert.ok(!nodes(tree).some(x => x.props?.accessibilityLabel === 'Η εικόνα δεν είναι διαθέσιμη'), 'fallback success removes placeholder');
+  assert.equal(placeholders(tree).length, 0, 'fallback success removes placeholder');
   // Separate failed image, both sources exhausted: visible error state.
   states = [];
   tree = render(commons); img = nodes(tree).find(x => x.type === 'Image');
@@ -82,7 +87,11 @@ try {
   img.props.onError({nativeEvent:{error:'403'}});
   tree = render(commons);
   assert.equal(warnings.length, 1, 'warn only after the final attempt');
-  assert.ok(nodes(tree).some(x => x.props?.accessibilityLabel === 'Η εικόνα δεν είναι διαθέσιμη'), 'explicit error placeholder');
+  const errors = placeholders(tree);
+  assert.equal(errors.length, 1, 'final failure renders the error placeholder component');
+  assert.equal(errors[0].type, 'View', 'placeholder resolves to a native View');
+  assert.equal(errors[0].props.accessibilityLabel, 'Η εικόνα δεν είναι διαθέσιμη', 'explicit error placeholder');
+  assert.ok(nodes(errors[0]).some(x => x.type === 'Text' && x.props?.children === 'Η εικόνα δεν είναι διαθέσιμη'), 'fallback also displays readable text');
   // Local image MUST never become a network request.
   states = [];
   tree = render('https://example.org/local.png');
