@@ -81,25 +81,26 @@ export default function ResilientImage({
 }: Props) {
   const hasValidUri = typeof uri === "string" && uri.trim().length > 0;
   const normalizedUri = hasValidUri ? uri!.trim() : null;
+  const bundledSource = normalizedUri ? bundledLessonImages[normalizedUri] : undefined;
+  const cdnUri = normalizedUri ? imageCdnUrl(normalizedUri, rendition) : null;
+  const loadIdentity = normalizedUri ? `${normalizedUri}:${rendition}:${cdnUri ?? ""}` : null;
   const [lastLoad, setLastLoad] = useState<{
     uri: string | null;
     status: ImageStatus;
     attempt: number;
-  }>({ uri: normalizedUri, status: hasValidUri ? "loading" : "error", attempt: 0 });
-  const bundledSource = normalizedUri ? bundledLessonImages[normalizedUri] : undefined;
-  const cdnUri = normalizedUri ? imageCdnUrl(normalizedUri, rendition) : null;
+  }>({ uri: loadIdentity, status: hasValidUri ? "loading" : "error", attempt: 0 });
   // CDN is preferred once enabled, even if an old packaged photo exists.
   // Retain the local asset as a fallback during the migration. Missing CDN
   // entries keep their existing bundled/Commons behavior unchanged.
   const candidates = cdnUri
-    ? [{ uri: cdnUri }, ...(bundledSource ? [bundledSource] : [])]
+    ? [{ uri: cdnUri, cache: "force-cache" as const }, ...(bundledSource ? [bundledSource] : [])]
     : bundledSource ? [bundledSource] : normalizedUri ? remoteImageCandidates(normalizedUri) : [];
-  const attempt = lastLoad.uri === normalizedUri ? lastLoad.attempt : 0;
+  const attempt = lastLoad.uri === loadIdentity ? lastLoad.attempt : 0;
   const source = candidates[attempt] ?? candidates[0];
 
   // Derived state ensures a newly supplied URL immediately returns to loading
   // without a useEffect resetting state after a fast image-load event.
-  const status: ImageStatus = lastLoad.uri === normalizedUri
+  const status: ImageStatus = lastLoad.uri === loadIdentity
     ? lastLoad.status
     : hasValidUri
       ? "loading"
@@ -116,7 +117,7 @@ export default function ResilientImage({
           accessible={Boolean(accessibilityLabel)}
           accessibilityLabel={accessibilityLabel}
           onLoad={event => {
-            setLastLoad({ uri: normalizedUri, status: "loaded", attempt });
+            setLastLoad({ uri: loadIdentity, status: "loaded", attempt });
             const source = event?.nativeEvent?.source;
             if (source && Number.isFinite(source.width) && Number.isFinite(source.height) && source.width > 0 && source.height > 0) {
               onDimensions?.({ width: source.width, height: source.height });
@@ -127,14 +128,14 @@ export default function ResilientImage({
               // For CDN entries fall back to the packaged asset (when present).
               // For legacy Commons images use the existing second endpoint.
               // Ignore stale responses if the caller has since changed its URI.
-              setLastLoad(current => current.uri === normalizedUri && current.attempt > attempt
+              setLastLoad(current => current.uri === loadIdentity && current.attempt > attempt
                 ? current
-                : { uri: normalizedUri, status: "loading", attempt: attempt + 1 });
+                : { uri: loadIdentity, status: "loading", attempt: attempt + 1 });
               return;
             }
             const reason = event.nativeEvent?.error ?? "Unknown native image error";
             console.warn(`[ΓΝΩΣΗ] Failed to load image after ${attempt + 1} attempt(s): ${cdnUri ?? normalizedUri}`, reason);
-            setLastLoad({ uri: normalizedUri, status: "error", attempt });
+            setLastLoad({ uri: loadIdentity, status: "error", attempt });
           }}
         />
       ) : null}
