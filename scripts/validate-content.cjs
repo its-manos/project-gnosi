@@ -27,6 +27,9 @@ const root = path.resolve(__dirname, '..');
 const data = require(path.join(root, 'src/data/lessons.ts'));
 const mediaData = require(path.join(root, 'src/data/articleMedia.ts'));
 const { categories, subcategories, lessons } = data;
+const { adaptInteractiveLessonQuestion, projectInteractiveLessonAnswer } =
+  require(path.join(root, 'src/quiz/adapters.ts'));
+const { createQuizSession, evaluateAnswer } = require(path.join(root, 'src/quiz/engine.ts'));
 const inlineArticleMedia = mediaData.inlineArticleMedia ?? {};
 
 const errors = [];
@@ -183,6 +186,27 @@ for (const lesson of lessons) {
         });
       }
       if (!question.explanation?.trim()) fail(`Lesson "${lesson.id}" question ${index + 1} has no explanation`);
+      if (question.presentation) {
+        try {
+          const typed = adaptInteractiveLessonQuestion(lesson, index);
+          if (!typed) throw new Error('invalid_presentation');
+          createQuizSession(`validate:${lesson.id}:${index}`, 'lesson', [typed]);
+          const p = question.presentation;
+          const good = p.type === 'multiple-select' ? [...p.correctIndices] :
+            p.type === 'ordering' ? [...p.correctOrder] :
+            p.type === 'matching' ? Object.fromEntries(p.pairs.map(pair => [pair.leftId, pair.rightId])) :
+            `option-${question.correctIndex}`;
+          const result = evaluateAnswer(typed, good);
+          if (!result.valid || !result.correct ||
+            projectInteractiveLessonAnswer(lesson, index, good) !== question.correctIndex)
+            throw new Error('correct_solution_projection');
+          if (['multiple-select', 'ordering', 'matching'].includes(p.type) && question.answers.length < 2)
+            throw new Error('numeric_fallback_requires_two_choices');
+        } catch (error) {
+          fail(`Lesson "${lesson.id}" checkpoint ${index + 1} has invalid typed presentation: ${String(error.message ?? error)}`);
+        }
+      }
+
     }
   }
 
