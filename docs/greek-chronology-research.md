@@ -63,3 +63,7 @@ All four use `version: "1"`, four alternatives, stable IDs, feedback, `requireCu
 ## Prose-only editorial update — 2026-11-01
 
 The shorter opening separates the temporal periods; the close uses the contrast between palaces, poleis and kingdoms. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.
+
+
+## Depth redesign addendum — 2026-11-02
+The title and 22-paragraph timeline remain, but the organizing question is now how Greek in Mycenaean Linear B archives relates to the much later alphabetic Greek inscriptions, without implying that the *spoken language* disappeared. [Cambridge Companion to the Greek Iron Age, Introduction (2026)](https://www.cambridge.org/core/books/abs/cambridge-companion-to-the-greek-iron-age/introduction/EA37C0A78204DEE46F507AFB826A9E00). Eleven paragraphs reframed; all four questions rewritten as version 2; paragraph IDs and anchors unchanged. Chronological conventions and debates remain qualified. **Integrated; automated/device checks outstanding.** [Current audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md).
