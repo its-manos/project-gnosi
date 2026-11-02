@@ -56,7 +56,8 @@ function mount(file, question) {
   const submitted = [];
   let props = { question, questionNumber: 4, onSubmit: value => submitted.push(value) };
   return { render: () => { cursor = 0; refCursor = 0; return Component(props); },
-    setAnswer: answer => { props = { ...props, answer }; }, submitted };
+    setAnswer: answer => { props = { ...props, answer }; }, submitted,
+    sharedStyles: sharedModule.exports.questionCardStyles };
 }
 const mistakeQuestion = {
   id: 'mistake', version: '1', type: 'spot-the-mistake', prompt: 'Η Βουλή των Πεντακοσίων',
@@ -72,6 +73,17 @@ const mistakeQuestion = {
 const spot = mount('src/components/SpotMistakeQuestionCard.tsx', mistakeQuestion);
 let tree = spot.render();
 assert.equal(id(tree, 'spot-mistake-subject').props.children[0], 'Η Βουλή των Πεντακοσίων', 'subject is rendered before options');
+assert.equal(id(tree, 'spot-mistake-card').props.style.backgroundColor, spot.sharedStyles.card.backgroundColor,
+  'spot-mistake uses the exact shared card background');
+assert.equal(id(tree, 'spot-mistake-card').props.style.borderColor, spot.sharedStyles.card.borderColor);
+assert.equal(id(tree, 'spot-mistake-subject').props.style[0].fontSize, spot.sharedStyles.question.fontSize,
+  'subject heading uses the same default font size as the other quiz cards');
+assert.equal(id(tree, 'spot-mistake-option-a').props.style({ pressed: false })[0].fontSize, undefined,
+  'answer tile is a container, not a custom text style');
+const spotAnswerText = nodes(id(tree, 'spot-mistake-option-a')).find(n =>
+  n.type === 'Text' && n.props.children === mistakeQuestion.content.options[0].text);
+assert.equal(spotAnswerText.props.style[0].fontSize, spot.sharedStyles.answerText.fontSize,
+  'spot-mistake options use the shared answer text typography');
 assert.equal(id(tree, 'spot-mistake-option-d').props.accessibilityRole, 'radio', 'four standalone radio choices appear');
 assert.equal(id(tree, 'spot-mistake-confirm').props.disabled, true, 'cannot confirm without selecting a claim');
 assert.equal(id(tree, 'spot-mistake-feedback'), undefined);
@@ -118,6 +130,8 @@ const blankQuestion = {
 };
 const blank = mount('src/components/FillBlankQuestionCard.tsx', blankQuestion);
 tree = blank.render();
+assert.equal(id(tree, 'fill-blank-card').props.style.backgroundColor, blank.sharedStyles.card.backgroundColor,
+  'fill-blank shares the same outer card surface');
 assert.equal(id(tree, 'fill-blank-confirm').props.disabled, true, 'confirmation requires a selected tile');
 assert.ok(id(tree, 'fill-blank-slot'), 'the empty slot is visible');
 assert.equal(id(tree, 'fill-blank-input'), undefined, 'no keyboard or text field');
