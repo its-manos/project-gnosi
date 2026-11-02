@@ -57,3 +57,7 @@ History is not a direct recording of events. It is a reasoned reconstruction fro
 ## Prose-only editorial update — 2026-11-01
 
 The three-question final instruction is replaced by two material examples: a decree and an ostrakon. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.
+
+
+## Depth redesign addendum — 2026-11-02
+**Current title:** «Τι μπορεί να αποδείξει ένα σπασμένο αγγείο;»; earlier title above is superseded. The question now begins with the c.190 Themistocles ostraka reportedly associated with 14 hands in an older study. **This attribution is an interpretation and has been debated**, not a verified count of actual voters. See [Open University course](https://www.open.edu/openlearn/mod/oucontent/view.php?id=114240&section=9.1); compare the original scholarly discussion of the ostraka and the limits of political conclusions. The group appears unused; no vote total is inferred. Ten paragraphs reframed; three questions now version 2 at the same checkpoints, with preserved IDs and no legacy quiz alias. **Integrated, not Validated/Approved.** [Current audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md).
