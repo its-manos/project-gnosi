@@ -35,8 +35,13 @@ export type MatchingContent = { pairs: readonly MatchingPair[] };
 export type MultipleSelectQuestion = QuizQuestion & { type: "multiple-select"; content: MultipleSelectContent };
 export type OrderingQuestion = QuizQuestion & { type: "ordering"; content: OrderingContent };
 export type MatchingQuestion = QuizQuestion & { type: "matching"; content: MatchingContent };
-export type MistakeSegment = { id: string; text: string };
-export type SpotMistakeContent = { segments: readonly MistakeSegment[]; incorrectSegmentId: string; correction: string };
+/** Each option is one complete factual claim about the subject in question.prompt. */
+export type MistakeOption = { id: string; text: string };
+export type SpotMistakeContent = {
+  options: readonly MistakeOption[];
+  incorrectOptionId: string;
+  correction: string;
+};
 export type SpotMistakeQuestion = QuizQuestion & { type: "spot-the-mistake"; content: SpotMistakeContent };
 /** A single short answer; alternatives are authored explicitly, never fuzzy guessed. */
 export type FillBlankContent = {
