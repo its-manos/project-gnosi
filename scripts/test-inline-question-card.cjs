@@ -12,10 +12,11 @@ const compile = file => ts.transpileModule(fs.readFileSync(path.join(root, file)
 const jsx = (type, props) => ({ type, props: props ?? {} });
 const themeModule = { exports: {} };
 vm.runInNewContext(compile('src/theme.ts'), { module: themeModule, exports: themeModule.exports });
-const { colors, reading } = themeModule.exports;
+const { colors } = themeModule.exports;
+let lessonStyles;
 const imports = {
   'react/jsx-runtime': { jsx, jsxs: jsx },
-  'react-native': { View: 'View', Text: 'Text', Pressable: 'Pressable', StyleSheet: { create: x => x } },
+  'react-native': { View: 'View', Text: 'Text', Pressable: 'Pressable', StyleSheet: { create: x => { lessonStyles = x; return x; } } },
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
   '../theme': { colors, reading },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
@@ -30,6 +31,44 @@ vm.runInNewContext(compile('src/components/InlineQuestionCard.tsx'), {
   },
 });
 const Card = mod.exports.default;
+
+/** Compare shared surface, spacing, and typography directly with the newer
+ * question format, rather than asserting a separate approximation. */
+let referenceStyles;
+const referenceModule = { exports: {} };
+vm.runInNewContext(compile('src/components/MultipleSelectQuestionCard.tsx'), {
+  module: referenceModule, exports: referenceModule.exports,
+  require: id => {
+    if (id === 'react') return { useEffect: () => {}, useState: () => [[], () => {}] };
+    if (id === 'react-native') return {
+      View: 'View', Text: 'Text', Pressable: 'Pressable',
+      StyleSheet: { create: styles => { referenceStyles = styles; return styles; } },
+    };
+    if (id === '../quiz/engine') return { evaluateAnswer: () => ({ correct: true }) };
+    if (id in imports) return imports[id];
+    throw Error('unexpected reference import: ' + id);
+  },
+});
+assert.ok(referenceStyles && lessonStyles, 'both card styles were captured');
+for (const [lesson, reference, fields] of [
+  ['card', 'card', ['backgroundColor', 'borderColor', 'borderWidth', 'borderRadius', 'padding', 'marginTop', 'marginBottom']],
+  ['question', 'question', ['color', 'fontSize', 'lineHeight', 'fontWeight', 'marginBottom']],
+  ['instructions', 'hint', ['color', 'fontSize', 'lineHeight', 'marginBottom']],
+  ['counter', 'counter', ['color', 'fontSize', 'fontWeight']],
+  ['answer', 'answer', ['backgroundColor', 'borderColor', 'borderWidth', 'borderRadius', 'minHeight', 'paddingHorizontal', 'paddingVertical']],
+  ['answerCorrect', 'answerCorrect', ['backgroundColor', 'borderColor']],
+  ['answerWrong', 'answerWrong', ['backgroundColor', 'borderColor']],
+  ['answerText', 'answerText', ['color', 'fontSize', 'lineHeight', 'fontWeight']],
+  ['feedback', 'feedback', ['marginTop', 'padding', 'borderRadius', 'borderWidth']],
+  ['feedbackCorrect', 'feedbackCorrect', ['backgroundColor', 'borderColor']],
+  ['feedbackWrong', 'feedbackWrong', ['backgroundColor', 'borderColor']],
+]) {
+  for (const field of fields) {
+    assert.equal(lessonStyles[lesson][field], referenceStyles[reference][field],
+      `original ${lesson}.${field} must match new question ${reference}.${field}`);
+  }
+}
+
 function nodes(tree) {
   if (tree === null || tree === undefined || typeof tree !== 'object') return [];
   return [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)];
@@ -57,6 +96,9 @@ const props = { question, questionNumber: 2, selectedAnswer: undefined, combo: 0
 
 let tree = Card(props);
 assert.ok(byId(tree, 'lesson-question-card'));
+assert.equal(flatStyles(byId(tree, 'lesson-question-card')).backgroundColor, colors.surface,
+  'lesson checkpoints must use exactly the same card background as the newer quiz types');
+assert.equal(flatStyles(byId(tree, 'lesson-question-card')).borderColor, colors.borderStrong);
 assert.equal(byId(tree, 'lesson-question-feedback'), undefined, 'no answer reveal before selection');
 assert.equal(nodes(tree).filter(n => n.type === 'Pressable' && n.props.testID?.startsWith('lesson-question-option-')).length, 4);
 for (let i = 0; i < 4; i++) {
@@ -64,7 +106,8 @@ for (let i = 0; i < 4; i++) {
   assert.equal(option.props.disabled, false);
   assert.equal(option.props.accessibilityRole, 'button');
   assert.equal(option.props.accessibilityState.selected, false);
-  assert.equal(flatStyles(option).borderColor, reading.border, 'unanswered options use shared reading tokens');
+  assert.equal(flatStyles(option).borderColor, colors.border, 'unanswered options use shared question tokens');
+  assert.equal(flatStyles(option).backgroundColor, colors.surfaceRaised);
 }
 assert.equal(nodes(tree).find(n => n.type === 'ReportContentButton').props.target, reportTarget, 'report keeps canonical checkpoint target');
 const header = nodes(tree).find(n => n.type === 'Text' && n.props.accessibilityRole === 'header');
