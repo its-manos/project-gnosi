@@ -13,7 +13,7 @@ const transpile = (p, jsx = false) => ts.transpileModule(
 const moduleFrom = (p, imports, jsx = false) => {
   const mod = { exports: {} };
   vm.runInNewContext(transpile(p, jsx),
-    { module: mod, exports: mod.exports, require: id => {
+    { module: mod, exports: mod.exports, console, require: id => {
       if (id in imports) return imports[id];
       throw new Error('Unmocked dependency ' + id);
     } });
@@ -33,8 +33,9 @@ assert.ok(svg.every(x => x.uri.includes('width=960')), 'SVG thumbnail requests u
 const regular = 'https://example.org/image.png?width=1200';
 assert.equal(remoteImageCandidates(regular).length, 1);
 assert.equal(remoteImageCandidates(regular)[0].uri, regular, 'third party URLs not rewritten');
-assert.deepEqual(Array.from(remoteImageCandidates('https://commons.wikimedia.org/wiki/Special:FilePath/')), [
-  {uri:'https://commons.wikimedia.org/wiki/Special:FilePath/'}], 'empty file path untouched');
+const empty = remoteImageCandidates('https://commons.wikimedia.org/wiki/Special:FilePath/');
+assert.equal(empty.length, 1);
+assert.equal(empty[0].uri, 'https://commons.wikimedia.org/wiki/Special:FilePath/', 'empty file path untouched');
 const jsx = (type, props) => ({ type, props });
 const native = {
   View: 'View', Text: 'Text', Image: 'Image', ActivityIndicator: 'ActivityIndicator',
