@@ -128,7 +128,7 @@ const renderer = compile('src/components/QuizQuestionRenderer.tsx', {
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': { View: 'View', Text: 'Text', StyleSheet: { create: x => x } },
   '../theme': { colors },
-  './AnswerOption': { __esModule: true, default: 'AnswerOption' },
+  './SingleChoiceQuestionCard': { __esModule: true, default: 'SingleChoiceQuestionCard' },
   './OrderingQuestionCard': { __esModule: true, default: 'OrderingQuestionCard' },
   './MatchingQuestionCard': { __esModule: true, default: 'MatchingQuestionCard' },
   './SpotMistakeQuestionCard': { __esModule: true, default: 'SpotMistakeQuestionCard' },
@@ -142,5 +142,5 @@ assert.equal(r({ id: 'spot', type: 'spot-the-mistake', content: { segments: [], 
 assert.equal(r({ id: 'fill', type: 'fill-in-the-blank', content: { before: '', after: '', acceptedAnswers: [], displayAnswer: '' } }).type, 'FillBlankQuestionCard');
 assert.equal(r(matching).type, 'MatchingQuestionCard');
 assert.equal(r({ id: 'multi', type: 'multiple-select', content: { answers: ['a', 'b'], correctIndices: [0] } }).type, 'MultipleSelectQuestionCard');
-assert.equal(r({ id: 'choice', type: 'multiple-choice', prompt: 'a', content: { answers: ['a', 'b'], correctIndex: 1 } }).type, 'View');
+assert.equal(r({ id: 'choice', type: 'multiple-choice', prompt: 'a', content: { answers: ['a', 'b'], correctIndex: 1 } }).type, 'SingleChoiceQuestionCard');
 console.log('Question card interfaces passed: accessible ordering controls, matching pairs, parent-controlled answers, feedback and type dispatch.');
