@@ -7,7 +7,7 @@
  * No credentials enter Expo, no image files are committed to the app.
  *
  * node scripts/prepare-image-cdn.cjs --status
- * node scripts/prepare-image-cdn.cjs --prepare --limit=4
+ * node scripts/prepare-image-cdn.cjs --prepare --pilot-ancient-greece
  * rclone copy .image-cdn-build/objects r2:gnosi-images --progress
  * node scripts/prepare-image-cdn.cjs --verify --cdn=https://images.example.com
  * node scripts/prepare-image-cdn.cjs --publish --cdn=https://images.example.com
@@ -34,14 +34,19 @@ const args = process.argv.slice(2);
 const flags = args.filter(arg => /^--(status|prepare|verify|publish)$/.test(arg));
 const limitArg = args.find(arg => arg.startsWith("--limit="));
 const cdnArg = args.find(arg => arg.startsWith("--cdn="));
-if (flags.length !== 1 || args.some(arg => !/^--(status|prepare|verify|publish)$/.test(arg)
+const pilotAncientGreece = args.includes("--pilot-ancient-greece");
+if (flags.length !== 1 || args.some(arg => !/^--(status|prepare|verify|publish|pilot-ancient-greece)$/.test(arg)
     && !/^--limit=\d+$/.test(arg) && !/^--cdn=https:\/\/[^?#\s]+$/.test(arg))
     || args.filter(arg => arg.startsWith("--limit=")).length > 1
     || args.filter(arg => arg.startsWith("--cdn=")).length > 1) {
-  console.error("Usage: node scripts/prepare-image-cdn.cjs --status|--prepare|--verify|--publish [--limit=4] [--cdn=https://images.example.com]");
+  console.error("Usage: node scripts/prepare-image-cdn.cjs --status|--prepare|--verify|--publish [--pilot-ancient-greece] [--limit=4] [--cdn=https://images.example.com]");
   process.exit(2);
 }
 const action = flags[0].slice(2);
+if (pilotAncientGreece && action !== "prepare") {
+  console.error("--pilot-ancient-greece may only be used with --prepare");
+  process.exit(2);
+}
 if (limitArg && !["status", "prepare"].includes(action)) {
   console.error("--limit is for staged preparation only. Verification and publishing always cover the full prepared manifest.");
   process.exit(2);
@@ -85,6 +90,23 @@ for (const [lessonId, figures] of Object.entries(inlineArticleMedia)) {
   for (const figure of figures) include(figure.url, figure.credit, figure.creditUrl, lessonId);
 }
 const catalogue = [...byUrl.values()];
+/** Four specific Ancient Greece covers to exercise the Android failure path. */
+const pilotLessonIds = [
+  "ancient-athens",
+  "greek-world-not-a-country",
+  "greek-history-through-evidence",
+  "greek-geography-seas",
+];
+const pilotEntries = pilotLessonIds.map(id => {
+  const lesson = lessons.find(item => item.id === id);
+  if (!lesson || !byUrl.has(lesson.imageUrl)) {
+    throw new Error("Missing Commons pilot cover for lesson " + id);
+  }
+  return byUrl.get(lesson.imageUrl);
+});
+if (new Set(pilotEntries.map(entry => entry.sourceUrl)).size !== pilotEntries.length) {
+  throw new Error("The Ancient Greece pilot must use four distinct cover images");
+}
 console.log("Wikimedia Commons source URLs in lesson catalogue: " + catalogue.length);
 function fileValid(filename) {
   return fs.existsSync(filename) && fs.statSync(filename).size > 100;
@@ -170,8 +192,10 @@ function writtenManifest(entries) {
 async function prepare() {
   const command = converter();
   fs.mkdirSync(objects, { recursive: true });
-  const selection = catalogue.filter(row => !entryReady(row)).slice(0, limit);
-  console.log("Preparing " + selection.length + " images (sequential, rate-friendly)");
+  const selection = (pilotAncientGreece ? pilotEntries : catalogue)
+    .filter(row => !entryReady(row)).slice(0, limit);
+  console.log("Preparing " + selection.length + " images (sequential, rate-friendly)" +
+    (pilotAncientGreece ? " from Ancient Greece pilot covers" : ""));
   const failures = [];
   for (const [index, entry] of selection.entries()) {
     const input = path.join(work, sha(entry.sourceUrl).slice(0,24) + "-original");
