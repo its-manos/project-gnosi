@@ -20,7 +20,7 @@ export default function InlineQuestionCard({
   onSelectAnswer, readingSize, reportTarget,
 }: Props) {
   return <SingleChoiceQuestionCard
-    id={question.id ?? `lesson-q-${questionNumber}`}
+    id={question.id ?? `${reportTarget?.itemId ?? "lesson"}:q${questionNumber}`}
     question={question.question}
     answers={question.answers}
     correctIndex={question.correctIndex}
