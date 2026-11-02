@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ComponentRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
@@ -31,7 +31,7 @@ const titles: Record<string, string> = {
 export default function QuizTypesPreviewScreen({ onBack }: Props) {
   const [session, setSession] = useState<QuizSession>(startSession);
   const sessionRef = useRef(session);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const question = session.questions[session.currentIndex] as BuiltinQuizQuestion;
   const answer = session.answers[question.id]?.value;
   const answered = answer !== undefined;
