@@ -14,15 +14,19 @@ function make(id, type, content) {
     difficulty: 'medium', difficultyOrigin: 'editorial', explanation: 'Επεξήγηση',
     sources: [{ title: 'Britannica', url: 'https://www.britannica.com/place/ancient-Greece' }] };
 }
-const mistake = { segments: [
-  { id: 'a', text: 'Η συνέλευση' }, { id: 'b', text: 'συμμετείχε' },
-  { id: 'c', text: 'στην πολιτική ζωή.' },
-], incorrectSegmentId: 'b', correction: 'Συνεδρίαζε.' };
+const mistake = { options: [
+  { id: 'a', text: 'Η Βουλή αποτελούνταν από πεντακόσιους πολίτες.' },
+  { id: 'b', text: 'Η Βουλή των Πεντακοσίων είχε ισόβια θητεία.' },
+  { id: 'c', text: 'Η Βουλή προετοίμαζε την ημερήσια διάταξη της συνέλευσης.' },
+  { id: 'd', text: 'Τα μέλη της Βουλής επιλέγονταν κυρίως με κλήρωση.' },
+], incorrectOptionId: 'b', correction: 'Τα μέλη υπηρετούσαν για ένα έτος.' };
 const spot = make('spot-demo', 'spot-the-mistake', mistake);
 assert.equal(e.evaluateAnswer(spot, 'b').correct, true);
 assert.deepEqual(JSON.parse(JSON.stringify(e.evaluateAnswer(spot, 'a'))), { valid: true, correct: false });
 assert.equal(e.evaluateAnswer(spot, 'not-in-question').valid, false);
 assert.equal(e.evaluateAnswer(spot, 1).valid, false);
+assert.equal(e.evaluateAnswer(spot, 'd').valid, true, 'all factual choices remain valid submissions');
+assert.equal(e.evaluateAnswer(spot, 'd').correct, false, 'true facts are incorrect selections');
 const blank = { before: 'Η συνέλευση ονομαζόταν', after: '.',
   acceptedAnswers: ['Εκκλησία του Δήμου', 'Εκκλησία Δήμου'], displayAnswer: 'Εκκλησία του Δήμου' };
 const fill = make('fill-demo', 'fill-in-the-blank', blank);
@@ -51,9 +55,12 @@ for (const [index, content] of badBlank.entries()) {
     /invalid_quiz_session/);
 }
 for (const content of [
-  { ...mistake, incorrectSegmentId: 'missing' },
+  { ...mistake, incorrectOptionId: 'missing' },
   { ...mistake, correction: '' },
-  { ...mistake, segments: [mistake.segments[0], mistake.segments[0], mistake.segments[2]] },
+  { ...mistake, options: [mistake.options[0], mistake.options[0], mistake.options[2]] },
+  { ...mistake, options: [mistake.options[0], mistake.options[1]] },
+  { ...mistake, options: [{...mistake.options[0], text: ' '}, mistake.options[1], mistake.options[2]] },
+  { ...mistake, options: mistake.options.map(({id,text}) => ({id,text})).concat([{id:'a',text:'Διπλό αναγνωριστικό επιλογής'}]) },
 ]) assert.throws(() => e.createQuizSession('invalid-spot', 'challenge', [make('bad-spot', 'spot-the-mistake', content)]),
   /invalid_quiz_session/);
 let session = e.createQuizSession('mixed-spot-fill', 'challenge', [spot, fill]);
