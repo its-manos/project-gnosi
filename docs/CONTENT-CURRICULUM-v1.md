@@ -493,3 +493,10 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - [Editorial audit for lessons #17–24 and #30](ANCIENT-GREECE-LESSONS-17-24-30-EDITORIAL-AUDIT.md): **#17, #18 and #30 revised after full prose read**; #19–24 have **not** had their full proofreading pass. Covers idiomatic Greek, evidence framing, historical clarification, captions/credits and question issues deferred for a separate task.
 - #17 and #18 remain **Integrated**. Older live #30 retains **Drafted**, 4 legacy quiz questions and existing compatible quiz key; no artificial quiz histories or migrations. Other categories and lessons unchanged.
 - Quiz identities, paragraph/checkpoint structures, saved-progress contracts, XP, audio, sync and DEV unlock-all were not edited. Connector-side structural comparisons passed, but **local npm/Node, Android/iOS and live Supabase QA are not executed**. Retain 0 Validated / 0 Approved until tests and review.
+
+
+### Ancient Greece opening depth redesign — 2026-11-02
+- Lessons #2–5 have a focused editorial redesign aimed at adult Greek readers: #2 uses divergent Greek diplomatic choices, #3 investigates Themistocles ostraka, #4 contrasts Linear B with later alphabetic Greek, and #5 uses the difficult western Samos landing geography. Their curriculum slots and all 2–5 stable IDs, paragraph/checkpoint placements and media anchors remain unchanged.
+- Lessons #2 and #3 have new titles, recorded in the [depth redesign audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md). The changes reduce generic school-level introductions instead of increasing article word counts arbitrarily.
+- All 14 related assessment questions have new wording and version **2**. Historical v1 attempts are intentionally incompatible; previous lesson completions, saved state and XP/events remain intact. No unrelated lessons or live progression logic changed.
+- **QA pending:** no npm/Node, native Android/iOS or Supabase execution in this session. Preserve **Integrated**, not Validated or Approved, until the new regression and device checks pass.
