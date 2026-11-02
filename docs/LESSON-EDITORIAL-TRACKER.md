@@ -65,15 +65,15 @@ The other P0 pilot has **24 curriculum lessons**, with stable IDs assigned only 
 Update this tracker **at the start and end** of each editorial session. Record an actual checked commit SHA, tests and device sign-off once performed.
 
 
-## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (current 2026-11-01)
+## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (current 2026-11-02)
 
-- **Current summary:** 30 planned lessons / 5 chapters, **21 in app**, **20 Integrated** (research-first #1–20, still unvalidated), **1 Drafted** (#30 `antikythera-gears`), **9 Not started** (#21–29), **0 Validated, 0 Approved**. Older numbered session notes below are historical snapshots, not the current total.
+- **Current summary:** 30 planned lessons / 5 chapters, **25 in app**, **24 Integrated** (research-first #1–24, still unvalidated), **1 Drafted** (#30 `antikythera-gears`), **5 Not started** (#25–29), **0 Validated, 0 Approved**. Older numbered session notes below are historical snapshots, not the current total.
 - **Chapter I:** #1–5 `ancient-athens`, `greek-world-not-a-country`, `greek-history-through-evidence`, `greek-chronology`, `greek-geography-seas` — **Integrated**.
 - **Chapter II:** #6–11 `aegean-bronze-age`, `minoan-crete`, `mycenaean-palaces`, `linear-b-decipherment`, `palace-collapse`, `geometric-greece` — **Integrated**.
 - **Chapter III:** #12 `rise-of-polis` — **Integrated**; #13 `greek-settlements-networks` — **Integrated**, «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» ([research](greek-settlements-networks-research.md)); #14 `sparta-society` — **Integrated** («Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;»; [research](sparta-society-research.md)); #15 `athens-who-voted` — **Integrated** («Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν»; [research](athens-who-voted-research.md)); #16 `athens-law-courts` — **Integrated**, «Αθήνα: από την καταγγελία στην ψήφο» ([research](athens-law-courts-research.md)); #17 `greek-war-hoplites` — **Integrated** ([research](greek-war-hoplites-research.md)); #18 `greek-sanctuaries-games` — **Integrated** ([research](greek-sanctuaries-games-research.md)).
-- **Chapter IV:** #19 `persian-wars-greek-world` — **Integrated** ([research](persian-wars-greek-world-research.md)); #20 `athenian-empire` — **Integrated**, «Από τη Δήλο στην αθηναϊκή ηγεμονία» ([research](athenian-empire-research.md)); #21–24 — **Not started**.
+- **Chapter IV:** #19 `persian-wars-greek-world` — **Integrated** ([research](persian-wars-greek-world-research.md)); #20 `athenian-empire` — **Integrated**, «Από τη Δήλο στην αθηναϊκή ηγεμονία» ([research](athenian-empire-research.md)); #21–24 — **Integrated**, with #24 «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη» ([research](alexander-conquests-context-research.md)); all pending QA.
 - **Chapter V:** #25–29 — **Not started**; #30 `antikythera-gears` — **Drafted**.
-- **QA nuance:** local developer-reported Lesson 18 test checks predate Lessons 19/20. Newly committed #19/#20 Node tests, fresh typecheck/content validation and regression suites have not been executed in these connector-only sessions. Android/iOS, external media, XP/audio/restore and Supabase remain pending. See [current curriculum/overlap map](CONTENT-CURRICULUM-v1.md).
+- **QA nuance:** developer-reported Lesson 18 checks predate Lessons 19–24. New #19–24 Node tests, fresh typecheck/content validation and regression suites have not been executed through this connector-only session. Android/iOS, external media, XP/audio/restore and Supabase remain pending. See [current curriculum/overlap map](CONTENT-CURRICULUM-v1.md).
 
 ### Current session handoff
 - **Integrated:** `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα», formerly «Μια μέρα στην αρχαία Αθήνα». [Research/media details](ancient-athens-research.md). Narrative: excavated House Θ → Agora → marginalized groups and evidence limits. Opening: monument contrasted with excavated home. Reading estimate: 6 minutes.
@@ -259,3 +259,65 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **QA actually executed:** remote branch/file review and media/source inspections, manual content/metadata preflight. **Not executed:** npm TypeScript/content validation, any Node regression (including new Lesson 20), CI, Expo Android/iOS, actual remote image loading and zoom, first-answer sound, XP/no-zero-popup/replay, offline restore, account isolation or Supabase sync. Prior developer-reported tests only apply to pre-#19 baseline.
 - **Progress:** **30 planned / 5 chapters; 21 implemented; 20 Integrated (#1–20); 1 Drafted (#30); 9 Not started (#21–29); 0 Validated; 0 Approved**.
 - **Next lesson only, not integrated:** #21 `peloponnesian-war` — «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο», Chapter IV. After it: planned #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
+
+
+### Ancient Greece Lesson 21 research-first integration — 2026-11-01
+- **Integrated, not Validated or Approved:** #21 `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση». [Research, claims, sources, rights, compatibility and QA](peloponnesian-war-research.md).
+- **Coverage:** 431–404, structural and immediate causes, competing Greek city interests, Athenian walls/plague/civilian displacement, Corcyra stasis, Pylos, failed 421 peace, Melos, Sicily, Persian satraps, 411 coup and 404 surrender. #22 reserves post-404 Greek crises.
+- **Implementation:** 7 sections, 35 stable paragraphs, 7 unique version-1 reasoning checkpoints after paragraphs 4/9/14/19/24/29/35; attributed 431 alliance-map cover and two anchored licensed site photographs. Additive data/path/media/reader and prior order-only fixture edits; no modifications to previous lesson quiz data or learning stores.
+- **Compatibility:** all #1–20 and older #30 unchanged; historical #15 fingerprints `q_470dac57` / `q_22487292` remain distinct. No XP/audio/sync logic changed; actual device and automatic-sync evidence pending.
+- **Verification:** researched sources and Commons description/license pages; source-level structural preflight of new data. **Not executed:** npm typecheck, validator, Node scripts (including #19–21 dedicated), CI, Expo native Android/iOS, remote media loading/zoom, first-answer audio, reward/replay, offline/resume, Supabase synchronization. These checks are required before marking Validated.
+- **Counts:** 30 planned / 5 chapters; 22 implemented, 21 Integrated (#1–21), 1 older Drafted (#30), 8 Not started (#22–29), 0 Validated / 0 Approved.
+- **Next only, not started:** #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
+
+
+### Ancient Greece Lesson 22 integration — 2026-11-01 (current)
+- **Integrated, not Validated or Approved:** #22 `greek-crises-fourth-century` — «Μετά το 404: συμμαχίες, επεμβάσεις και εύθραυστες ειρήνες» ([research and media audit](greek-crises-fourth-century-research.md)).
+- **Scope:** 404–362, the Thirty/403 reconciliation, Spartan and Persian diplomacy, Corinthian War, King's Peace, 378/7 autonomy inscription RO 22, Theban recovery, Leuctra, Messene and Mantinea; seven checkpoints with new version-1 IDs, three CC BY-SA 4.0 photographs (one cover, two inline).
+- **Compatibility:** Additive definition and order, updated reader import and older order fixtures; no earlier lesson, prior quiz, XP/sound/sync/event data altered. Preserve old/current Lesson 15 fingerprint mismatch.
+- **Evidence:** connected GitHub reading and web source/Commons licence inspection, authoring-time unique ID and placement checks; local npm and Node regression tests, CI, Android/iOS, remote bitmap and Supabase checks **not performed** here. Keep #1–22 Integrated pending reproducible testing and device/editorial approval.
+- **Current counts:** 30 planned / 5 chapters; **23 implemented (22 Integrated, 1 Drafted #30), 7 Not started #23–29, 0 Validated, 0 Approved.** Earlier entries above record their respective session snapshots.
+- **Next only:** #23 `macedon-philip`, «Η άνοδος της Μακεδονίας», Chapter IV, planned and not yet live.
+
+
+### Ancient Greece Lesson 23 — research-first integration (2026-11-01)
+- **#23 `macedon-philip`: Integrated, not Validated or Approved.** Final title: «Φίλιππος Β΄: πώς η Μακεδονία άλλαξε τις ισορροπίες». [Research, sources, images and QA](macedon-philip-research.md).
+- **Scope:** Macedonia's geography and decentralized royal networks; 359 succession; army/recruitment/resources; Amphipolis, Olynthus and citizen agency; Third Sacred War, Thessaly and Peace of Philocrates; 338 Chaeronea; Corinthian settlement; Philip's death in 336. Alexander's campaigns remain reserved for #24.
+- **Structure:** 6 sections, 33 stable paragraphs, 7 fresh version-1 reasoning checkpoints after 4/9/16/21/26/30/33; 11-minute estimated prose reading, licensed Aigai cover and Pella/Chaeronea inline images.
+- **Compatibility:** fresh IDs, `requireCurrentAttemptQuiz: true`, no compatible quiz aliases, additive path and fixtures only. Lessons 1–22 and draft #30 untouched; historical Lesson 15 fingerprints `q_470dac57` and `q_22487292` remain different. No rewards, sounds, saved-data, or Supabase schema changes.
+- **Verification:** source and Commons license-page inspection, in-authoring consistency checks for IDs/answers/anchors and branch readback. Node/npm, CI, Expo Android/iOS, media networking, first-answer audio, replay/XP, offline restore and Supabase synchronization remain unexecuted here; do not claim they passed.
+- **Accounting:** 30 planned / 5 chapters; **24 implemented (23 Integrated, 1 Drafted #30), 6 Not started #24–29, 0 Validated, 0 Approved**. Older historical snapshots retained above.
+- **Next only (not begun):** #24 `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές».
+
+
+### Ancient Greece Lesson 24 — research-first integration (2026-11-02)
+- **Integrated, not Validated or Approved:** `alexander-conquests-context`, «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη». [Research, evidence and rights](alexander-conquests-context-research.md).
+- **New content:** 42 stable paragraphs, 8 sections, 9 fresh v1 reasoning checkpoints (after 4/10/15/20/25/30/36/39/42), one Commons cover and two anchored Commons figures; `requireCurrentAttemptQuiz: true`. No historical answer slots reused.
+- **Overlaps reserved:** #23 ends 336 with Philip; #24 covers Alexander’s 336–323 conquests, resistance, administration and retrospective accounts; #29 will cover successor kingdoms and changing cities after 323. #25 is theatre, not a continuation of battle chronology.
+- **Unexecuted checks:** TypeScript, content validator, Node fixtures, CI, Android/iOS, remote image load/zoom, historical progress/replay/XP/sound and Supabase synchronization need local confirmation. Connector-side structural checks do not substitute for those.
+- **Progress:** **30 planned / 25 implemented / 24 Integrated / 1 Drafted (#30) / 5 Not started (#25–29) / 0 Validated / 0 Approved**. Next #25 `greek-stage-tragedy`, planned only.
+
+
+### Editorial proofreading pass — Lessons 17–24 and 30 (2026-11-02)
+- [Full bounded audit](ANCIENT-GREECE-LESSONS-17-24-30-EDITORIAL-AUDIT.md): **3 of 9 completely proofread and revised** — #17 `greek-war-hoplites` (24 paragraphs/6 checkpoints), #18 `greek-sanctuaries-games` (24/6), #30 `antikythera-gears` (10 plain-text paragraphs/4 legacy questions, no explicit checkpoints). **#19–24 outstanding**; sampled introductions, endings and structures are not full audits.
+- Changes are prose-only. All existing questions/answers/quiz versions, anchors, images, credits, title, progression, compatible quiz keys and historical player state were preserved in connector-side structural comparisons. The legacy Antikythera lesson remains **Drafted** despite its older editorial metadata.
+- No Node/npm, CI or native tests ran in this connector session. #17–18 remain **Integrated** (not Validated/Approved); no lesson was promoted. Follow the audit's question backlog and run the local suite before QA sign-off.
+
+
+### Lessons 2–5: depth and assessment redesign — 2026-11-02
+- **Current titles:** #2 `greek-world-not-a-country` — «Έλληνες, αλλά όχι πάντα σύμμαχοι»; #3 `greek-history-through-evidence` — «Τι μπορεί να αποδείξει ένα σπασμένο αγγείο;»; #4 `greek-chronology` and #5 `greek-geography-seas` retain their titles. Earlier titles in historical session notes describe their **older** versions.
+- [Research, before/after rationale, source limits, quiz migration and QA audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md): 41 targeted paragraph rewrites across four lessons, 14 harder four-option questions, all quiz versions **2**. Same stable IDs, checkpoint/paragraph anchors, order, image attachments, scoring engine and XP rules.
+- **Progress compatibility:** completed/saved lessons and historic XP/quiz events are not rewritten; in-progress **v1** answers must not be attached to the new v2 questions. No compatible quiz aliases added. Snapshot fixture and new regression script recorded in audit.
+- **Statuses:** all four remain **Integrated**, not Validated or Approved; connector-side source checks only. Typecheck, content validation, Node regression suites, Android/iOS and live Supabase tests remain to be run after the changes.
+
+
+### Wikimedia Commons image delivery issue — 2026-11-02
+- Android Expo Go reported widespread HTTP 403s for remote Commons thumbnails requested at `width=1200`, which is outside Wikimedia's current standard bucket widths. This is an image-delivery regression, not a content/quiz or native bundle error.
+- The shared image loader now requests 960px Commons thumbnails with a descriptive client User-Agent, retains locally bundled image priority and retries once through Wikimedia's documented alternate redirect endpoint. Lesson IDs, source URLs, captions, credit and licence links remain intact.
+- See [diagnosis, source references and native QA commands](COMMONS-IMAGE-DELIVERY-403.md); run `node scripts/test-commons-image-delivery.cjs` plus existing image/reader regressions. **Device verification pending; do not mark fixed or Approved until images load on phone.**
+
+
+### Android image platform mismatch — 2026-11-02
+- Follow-up device evidence: Wikimedia images displayed on iOS, **but still failed on Android**. Do not label the earlier 960px runtime-redirect solution cross-platform verified.
+- Implemented a new local bundling workflow (`npm run images:commons:status`, `images:commons:bundle`, `images:commons:verify`) to extend the existing checked-in asset lookup to all unbundled Commons lesson images. Static source credit URLs and original metadata remain.
+- The source scripts are committed, **but binary image files have not yet been downloaded/committed** from the developer machine. Android release readiness remains **blocked** until the full bundle is generated, validated and tested on a physical device. See [updated runbook](COMMONS-IMAGE-DELIVERY-403.md).

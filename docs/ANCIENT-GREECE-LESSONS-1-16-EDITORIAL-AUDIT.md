@@ -95,3 +95,7 @@ The pending QA must include Android/iOS rendering, paragraph/resume navigation o
 ## Changed-file scope and remaining priorities
 
 15 existing lesson-definition files (covering 16 lessons; #9 and #15 share `src/data/catalogueExpansion.ts`), 16 lesson-specific research ledgers, `docs/CONTENT-CURRICULUM-v1.md`, `docs/LESSON-EDITORIAL-TRACKER.md`, and this report. No changes to Lesson 17, Lesson 30, rewards, audio, questions, backend or navigation. The priority is to run the listed tests and perform a careful Greek proofread on installed devices before editorial acceptance. Future question-design work belongs in a **separate assessment pass**.
+
+
+## Post-audit addendum — 2026-11-02
+The titles and original-versus-revised examples in this document describe the earlier **2026-11-01 prose-only pass**, when quiz versions were unchanged. Subsequently Lessons **2–5** were substantially reframed with new titles for #2 and #3 and redesigned **version-2** questions. See [the dedicated 2–5 depth redesign audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md) for authoritative current lesson content and question compatibility status. The remaining Lessons 1 and 6–16 were not changed by that follow-up.

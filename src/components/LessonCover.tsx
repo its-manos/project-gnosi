@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import Svg, { Circle, G, Path } from "react-native-svg";
 import { categories, type Lesson } from "../data/lessons";
-import ResilientImage from "./ResilientImage";
+import ResolvedCommonsImage from "./ResolvedCommonsImage";
 
 const palette: Record<string, string> = {
   history: "#746653", science: "#536C88", nature: "#4E7567", technology: "#615D88",
@@ -10,7 +10,7 @@ const palette: Record<string, string> = {
 
 export default function LessonCover({ lesson, style }: { lesson: Lesson; style: StyleProp<ViewStyle> }) {
   if (lesson.coverKind !== "editorial") {
-    return <ResilientImage uri={lesson.imageUrl} style={style} resizeMode={lesson.imageResizeMode ?? "cover"}
+    return <ResolvedCommonsImage uri={lesson.imageUrl} style={style} resizeMode={lesson.imageResizeMode ?? "cover"}
       accessibilityLabel={lesson.imageCaption} fallbackLabel="Η φωτογραφία του άρθρου δεν είναι διαθέσιμη" loadingLabel="Φόρτωση φωτογραφίας…" />;
   }
   const category = categories.find((item) => item.id === lesson.categoryId);

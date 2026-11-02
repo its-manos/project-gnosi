@@ -35,15 +35,16 @@ function compile(file, imports = {}) {
 const progress = compile('src/utils/lessonProgress.ts');
 const addition = compile('src/data/additionalLessons.ts');
 const expansion = compile('src/data/catalogueExpansion.ts');
-const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './greekWorldLessons': compile('src/data/greekWorldLessons.ts'), './greekEvidenceLessons': compile('src/data/greekEvidenceLessons.ts'), './greekChronologyLessons': compile('src/data/greekChronologyLessons.ts'), './greekGeographyLessons': compile('src/data/greekGeographyLessons.ts'), './aegeanBronzeAgeLessons': compile('src/data/aegeanBronzeAgeLessons.ts'), './minoanCreteLessons': compile('src/data/minoanCreteLessons.ts'), './mycenaeanPalacesLessons': compile('src/data/mycenaeanPalacesLessons.ts'), './palaceCollapseLessons': compile('src/data/palaceCollapseLessons.ts'), './geometricGreeceLessons': compile('src/data/geometricGreeceLessons.ts'), './riseOfPolisLessons': compile('src/data/riseOfPolisLessons.ts'), './greekSettlementsLessons': compile('src/data/greekSettlementsLessons.ts'), './spartaSocietyLessons': compile('src/data/spartaSocietyLessons.ts'), './athensLawCourtsLessons': compile('src/data/athensLawCourtsLessons.ts'), './greekWarHoplitesLessons': compile('src/data/greekWarHoplitesLessons.ts'), './greekSanctuariesGamesLessons': compile('src/data/greekSanctuariesGamesLessons.ts'), './persianWarsGreekWorldLessons': compile('src/data/persianWarsGreekWorldLessons.ts'), './athenianEmpireLessons': compile('src/data/athenianEmpireLessons.ts'), './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts'), './geologyLessons': compile('src/data/geologyLessons.ts'), './perceptionLessons': compile('src/data/perceptionLessons.ts'), './perceptionAttentionLessons': compile('src/data/perceptionAttentionLessons.ts') });
+const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './greekWorldLessons': compile('src/data/greekWorldLessons.ts'), './greekEvidenceLessons': compile('src/data/greekEvidenceLessons.ts'), './greekChronologyLessons': compile('src/data/greekChronologyLessons.ts'), './greekGeographyLessons': compile('src/data/greekGeographyLessons.ts'), './aegeanBronzeAgeLessons': compile('src/data/aegeanBronzeAgeLessons.ts'), './minoanCreteLessons': compile('src/data/minoanCreteLessons.ts'), './mycenaeanPalacesLessons': compile('src/data/mycenaeanPalacesLessons.ts'), './palaceCollapseLessons': compile('src/data/palaceCollapseLessons.ts'), './geometricGreeceLessons': compile('src/data/geometricGreeceLessons.ts'), './riseOfPolisLessons': compile('src/data/riseOfPolisLessons.ts'), './greekSettlementsLessons': compile('src/data/greekSettlementsLessons.ts'), './spartaSocietyLessons': compile('src/data/spartaSocietyLessons.ts'), './athensLawCourtsLessons': compile('src/data/athensLawCourtsLessons.ts'), './greekWarHoplitesLessons': compile('src/data/greekWarHoplitesLessons.ts'), './greekSanctuariesGamesLessons': compile('src/data/greekSanctuariesGamesLessons.ts'), './persianWarsGreekWorldLessons': compile('src/data/persianWarsGreekWorldLessons.ts'), './athenianEmpireLessons': compile('src/data/athenianEmpireLessons.ts'), './peloponnesianWarLessons': compile('src/data/peloponnesianWarLessons.ts'), './greekCrisesFourthCenturyLessons': compile('src/data/greekCrisesFourthCenturyLessons.ts'), './macedonPhilipLessons': compile('src/data/macedonPhilipLessons.ts'), './alexanderConquestsLessons': compile('src/data/alexanderConquestsLessons.ts'), './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts'), './geologyLessons': compile('src/data/geologyLessons.ts'), './perceptionLessons': compile('src/data/perceptionLessons.ts'), './perceptionAttentionLessons': compile('src/data/perceptionAttentionLessons.ts') });
 const media = compile('src/data/articleMedia.ts', { './architectureMedia': compile('src/data/architectureMedia.ts'), './astronomyMedia': compile('src/data/astronomyMedia.ts'), './worldHistoryMedia': compile('src/data/worldHistoryMedia.ts'), './supplementaryMedia': compile('src/data/supplementaryMedia.ts') });
 const theme = compile('src/theme.ts');
-const stubs = Object.fromEntries(['KnowledgeProgress','ZoomableLessonImage','ActionButton','ArticleFigure','InlineQuestionCard','LessonCover','SourceLink','AppHeader','ReportContentButton'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
+const stubs = Object.fromEntries(['KnowledgeProgress','ZoomableLessonImage','ActionButton','ArticleFigure','InlineQuestionCard','LessonCover','NextImageWarmup','SourceLink','AppHeader','ReportContentButton'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
 const rewardEngine = compile('src/quiz/engine.ts');
 const rewardRules = compile('src/gamification/rules.ts');
 const rewardLogic = compile('src/gamification/rewards.ts', { '../quiz/engine': rewardEngine, './rules': rewardRules });
 const rewardAdapters = compile('src/quiz/adapters.ts', { './engine': rewardEngine });
-const imports = { '../gamification/rewards': rewardLogic, '../quiz/adapters': rewardAdapters, ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
+const nextFigureWarmup = compile('src/utils/nextFigureWarmup.ts', { '../data/articleMedia': media, './lessonProgress': progress });
+const imports = { '../utils/nextFigureWarmup': nextFigureWarmup, '../gamification/rewards': rewardLogic, '../quiz/adapters': rewardAdapters, ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
 const Reader = compile('src/screens/ReaderLessonScreen.tsx', imports).default;
 const Entry = compile('src/screens/LessonScreen.tsx', { ...imports, './ReaderLessonScreen': { __esModule: true, default: Reader } }).default;
 const lesson = data.lessons.find(l => l.id === 'ancient-athens');
@@ -63,6 +64,12 @@ const lay = (n,y) => n.props.onLayout({ nativeEvent: { layout: { y } } });
 reset();
 assert.equal(Entry(props).type, Reader);
 let tree = render();
+assert.equal(nodes(tree).find(n => n.type === 'NextImageWarmup').props.uri, nextFigureWarmup.nextPendingFigureUrl(lesson, progress.getVisibleParagraphLimit(lesson, props.checkpointAnswers)), 'reader passes only the next unrevealed figure to warmup');
+const coverStyle = nodes(tree).find(n => n.type === 'LessonCover').props.style;
+assert.equal(coverStyle.aspectRatio, 16 / 10, 'reader cover uses responsive framing');
+assert.equal(coverStyle.height, undefined, 'no fixed reader cover height');
+assert.equal(coverStyle.minHeight, 180);
+assert.equal(coverStyle.maxHeight, 330);
 const scroll = nodes(tree).find(n => n.type === 'ScrollView');
 scroll.props.ref.current = { scrollTo: args => scrolls.push(args) };
 assert.ok(byId(tree,'reader-paragraph-3')); assert.ok(!byId(tree,'reader-paragraph-4'));
@@ -158,7 +165,7 @@ for(const article of data.lessons) {
 }
 assert.ok(data.lessons.length>=45); assert.ok(notes>0); assert.ok(figures>0);
 // Completion -> results -> next unlocked lesson uses the existing callback contract.
-const lessonPath=compile('src/utils/lessonPath.ts');
+const lessonPath=compile('src/utils/lessonPath.ts', { './devLessonAccess': compile('src/utils/devLessonAccess.ts') });
 const nextLesson=lessonPath.getNextPathLesson(lesson,data.lessons,[lesson.id]);
 const Results=compile('src/screens/ResultsScreen.tsx',{...imports,'../components/LessonResultChart':{__esModule:true,default:'LessonResultChart'}}).default;
 let destination=null;

@@ -55,3 +55,7 @@ Chapter II, #6 of 30: `aegean-bronze-age`, «Το Αιγαίο πριν από �
 ## Prose-only editorial update — 2026-11-01
 
 The opening now explains actual voyage constraints: wind, anchorage and inland routes, not merely the map's appearance. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.
+
+
+## Depth redesign addendum — 2026-11-02
+Lesson remains geographically focused with the western Samos case moved into the introduction and opening: plausible landing points, dangerous winds and scarce safe anchorages in the 7th–6th centuries BCE. [Michael Loy's peer-reviewed article, Cambridge repository](https://www.repository.cam.ac.uk/items/a77d566a-8db2-4ac8-9575-c63b3ee2a79d). No exact voyage, travel time or hypothetical cargo path is presented as attested. Ten paragraphs revised, four questions version 2, original paragraph/quiz IDs and checkpoint anchors retained. **Integrated; npm/device QA pending.** [Current audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md).

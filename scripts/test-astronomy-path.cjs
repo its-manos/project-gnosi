@@ -12,6 +12,7 @@ const { quizFingerprint } = require(root + '/src/utils/learningActivity.ts');
 const { LearningStore } = require(root + '/src/state/LearningStore.ts');
 const { emptySyncDocument } = require(root + '/src/utils/syncDocument.ts');
 const before = require('./fixtures/catalogue-before-astronomy-20261030.json');
+const {assertPremergeCurriculum}=require('./helpers/assert-premerge-curriculum.cjs');
 const expected = ['astronomy-introduction', 'astronomy-sky-motion', 'moon-phases-not-shadow', 'astronomy-solar-system', 'why-mars-is-red', 'orbit-continuous-fall', 'astronomy-light', 'astronomy-stars', 'astronomy-galaxies', 'astronomy-expanding-universe', 'astronomy-exoplanet-evidence'];
 const sequence = getSubcategoryPath([...lessons].reverse(), 'space');
 assert.deepEqual(sequence.map(l => l.id), expected);
@@ -20,10 +21,15 @@ assert.equal(astronomyLessons.length, 8);
 assert.equal(sequence.reduce((sum, l) => sum + l.questions.length, 0), 49);
 assert.deepEqual(sequence.map(l => l.questions.length), [4, 4, 4, 4, 4, 4, 5, 5, 4, 5, 6]);
 assert.deepEqual(lessons.filter(l => before.some(old => old.id === l.id)).map(l => l.id), before.map(l => l.id), 'old catalogue order remains stable');
-for (const old of before) {
-  const l = lessons.find(l => l.id === old.id);
-  const actual = crypto.createHash('sha256').update(JSON.stringify(old.kind === 'questions' ? l.questions : l)).digest('hex');
-  assert.equal(actual, old.sha256, old.id + ': published astronomy quizzes and every other old lesson remain exact');
+const historicalIds=new Set(before.map(old=>old.id));
+assert.deepEqual(lessons.filter(l=>historicalIds.has(l.id)).map(l=>l.id),before.map(old=>old.id),'historical astronomy-era IDs and order survive editorial changes');
+assertPremergeCurriculum(lessons);
+for(const old of before.filter(old=>old.kind==='questions')){
+  const current=lessons.find(l=>l.id===old.id);
+  if(!current.requireCurrentAttemptQuiz){
+    const hash=crypto.createHash('sha256').update(JSON.stringify(current.questions)).digest('hex');
+    assert.equal(hash,old.sha256,old.id+': unrewritten legacy quiz still matches historical answer slots');
+  }
 }
 for (const update of Object.values(astronomyRevisions)) assert.ok(Object.keys(update).every(k => ['intro', 'summary', 'sections', 'readingMinutes', 'editorialReviewedAt'].includes(k)));
 for (const l of sequence) {

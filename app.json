@@ -48,7 +48,9 @@
           "enableBackgroundPlayback": false,
           "enableBackgroundRecording": false
         }
-      ]
+      ],
+      "expo-image",
+      "expo-asset"
     ]
   }
 }

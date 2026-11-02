@@ -49,3 +49,7 @@
 ## Prose-only editorial update — 2026-11-01
 
 The final map analogy is replaced by the coexistence of shared sanctuaries, cultural recognition and rivalry among distinct communities. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.
+
+
+## Depth redesign addendum — 2026-11-02
+**Current title:** «Έλληνες, αλλά όχι πάντα σύμμαχοι» (the older title above is historical). The lesson now begins with divergent Greek choices in the 480 BCE Persian campaign and uses Herodotus 8.144 as an argument in diplomacy and 7.132 for differentiated Boeotian choices. [Herodotus 7.132](https://lexundria.com/hdt/7.132/mcly). Detailed war sequence stays in #19. Ten paragraphs reframed; 3 questions rewritten as version 2; all original paragraph/question IDs and anchors retained. No old quiz alias. Historical completions preserved, old unfinished answer indices rejected. **Integrated; local tests/device QA pending.** See [redesign audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md).

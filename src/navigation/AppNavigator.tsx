@@ -7,6 +7,7 @@ import { getInlineQuestionCount } from "../utils/lessonProgress";
 import { parseLearningBackup } from "../utils/learningBackup";
 import { getHomeDiscovery } from "../utils/readingDiscovery";
 import { getLessonAccess, getNextPathLesson, getSubcategoryPath } from "../utils/lessonPath";
+import { devLessonsUnlocked, setDevLessonUnlockAll } from "../utils/devLessonAccess";
 import { welcomeLessonCandidates } from "../utils/welcomeLesson";
 import { useAthensDate } from "../hooks/useAthensDate";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -42,6 +43,12 @@ import ProgressScreen from "../screens/ProgressScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
+  const [allLessonsUnlockedForTesting, setAllLessonsUnlockedForTesting] = useState(() => devLessonsUnlocked());
+  function toggleAllLessonsForTesting() {
+    if (!__DEV__) return;
+    setDevLessonUnlockAll(!devLessonsUnlocked());
+    setAllLessonsUnlockedForTesting(devLessonsUnlocked());
+  }
   const { analytics, enabled: usageEnabled } = useBetaAnalytics();
   const discoveryDate = useAthensDate();
   const bookmarks = useSavedLessons();
@@ -287,7 +294,7 @@ export default function AppNavigator() {
       break;
     case "account":
       screenContent = <AccountScreen onBack={() => app.setScreen(accountOrigin)}
-        devControls={{ canResetLessonProgress: app.canResetLessonProgress, lessonProgressLoaded: app.progressLoaded, onResetLessonProgressForDevelopment: app.resetLessonProgressForDevelopment }}
+        devControls={{ canResetLessonProgress: app.canResetLessonProgress, lessonProgressLoaded: app.progressLoaded, onResetLessonProgressForDevelopment: app.resetLessonProgressForDevelopment, allLessonsUnlockedForTesting, onToggleAllLessonsForTesting: toggleAllLessonsForTesting }}
         backupControls={app.progressLoaded && bookmarks.isSavedLessonsLoaded ? {
           deviceBackup: parseLearningBackup({ schemaVersion: 1, completedIds: app.completedLessonIds, savedIds: bookmarks.savedLessonIds, attempts: app.lessonAttempts }),
           onRestoreBackup: async backup => { await Promise.all([app.mergeRestoredProgress(backup), bookmarks.mergeRestoredBookmarks(backup.savedIds)]); },

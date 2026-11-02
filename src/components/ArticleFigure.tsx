@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import type { InlineArticleImage } from "../data/articleMedia";
-import ResilientImage from "./ResilientImage";
+import ResolvedCommonsImage from "./ResolvedCommonsImage";
 import { colors } from "../theme";
 
 type Props = { figure: InlineArticleImage };
@@ -19,10 +19,10 @@ export default function ArticleFigure({ figure }: Props) {
       <View style={styles.imageFrame}>
         {/* Commons FilePath URLs request raster thumbnails even for .svg originals.
             The source filename is not the format of the redirected response. */}
-          <ResilientImage
+          <ResolvedCommonsImage
             uri={figure.url}
             style={styles.image}
-            resizeMode={figure.resizeMode ?? "cover"}
+            resizeMode="contain"
             accessibilityLabel={figure.caption}
             fallbackLabel="Η εικόνα δεν είναι διαθέσιμη"
             loadingLabel="Φόρτωση εικόνας…"
@@ -52,7 +52,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  image: { width: "100%", height: 218 },
+  // Reserve the space before remote images load to avoid changing scroll positions.
+  // Contain preserves the whole photo/diagram, even when its source is portrait.
+  image: { width: "100%", aspectRatio: 4 / 3, minHeight: 210, maxHeight: 340 },
   caption: {
     color: "#B2B6C9",
     fontSize: 12,

@@ -3,6 +3,7 @@ import { getLessonAccess } from "../utils/lessonPath";
 import { getParagraphText } from "../utils/lessonProgress";
 import { useMemo, useState } from "react";
 import {
+  FlatList,
   Keyboard,
   Pressable,
   ScrollView,
@@ -97,113 +98,103 @@ export default function SearchScreen({
   )).map((entry) => entry.lesson), [searchIndex, normalizedQuery, categoryId, status, progressLoaded, completedLessonIds, inProgressLessonIds]);
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <AppHeader onBack={onBack} backLabel="ΑΡΧΙΚΗ" />
-
-      <Text style={styles.title}>Τι θέλεις να μάθεις;</Text>
-
-      <View style={styles.searchBox}>
-        <Text style={styles.searchIcon}>⌕</Text>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="π.χ. αρχαία Ελλάδα, διάστημα…"
-          placeholderTextColor={colors.textMuted}
-          style={styles.input}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-          autoCapitalize="none"
-          autoCorrect={false}
-          accessibilityLabel="Αναζήτηση μαθημάτων"
-          onSubmitEditing={Keyboard.dismiss}
-        />
-        {query.length > 0 && (
-          <Pressable
-            onPress={() => setQuery("")}
-            accessibilityRole="button"
-            accessibilityLabel="Καθαρισμός αναζήτησης"
-            style={styles.clearButton}
-          >
-            <Text style={styles.clearText}>×</Text>
-          </Pressable>
-        )}
-      </View>
-
-      <Text style={styles.filterLabel}>Κατηγορία</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-        {[{ id: null, title: "Όλες" }, ...categories].map((category) => (
-          <Pressable key={category.id ?? "all"} onPress={() => setCategoryId(category.id)} accessibilityRole="button"
-            accessibilityState={{ selected: categoryId === category.id }}
-            style={[styles.chip, categoryId === category.id && styles.activeChip]}>
-            <Text style={styles.chipText}>{category.title}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-      <Text style={styles.filterLabel}>Η ανάγνωσή σου</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-        {([{ id: "all", title: "Όλα" }, { id: "unread", title: "Αδιάβαστα" }, { id: "in-progress", title: "Σε εξέλιξη" }, { id: "completed", title: "Ολοκληρωμένα" }] as const).map((filter) => (
-          <Pressable key={filter.id} onPress={() => setStatus(filter.id)} disabled={!progressLoaded && filter.id !== "all"}
-            accessibilityRole="button" accessibilityState={{ selected: status === filter.id, disabled: !progressLoaded && filter.id !== "all" }}
-            style={[styles.chip, status === filter.id && styles.activeChip]}><Text style={styles.chipText}>{filter.title}</Text></Pressable>
-        ))}
-      </ScrollView>
-      {!progressLoaded ? <Text style={styles.emptyText}>Φόρτωση προόδου ανάγνωσης…</Text> : null}
-
-      <View style={styles.resultsHeader}>
-        <Text style={styles.sectionTitle}>
-          {normalizedQuery || categoryId || status !== "all" ? "Αποτελέσματα" : "Όλα τα μαθήματα"}
-        </Text>
-        <Text style={styles.count}>
-          {results.length} {results.length === 1 ? "μάθημα" : "μαθήματα"}
-        </Text>
-      </View>
-
-      {results.length > 0 ? (
-        results.map((lesson) => {
-          const category = categories.find(
-            (item) => item.id === lesson.categoryId
-          );
-          const subcategory = subcategories.find(
-            (item) => item.id === lesson.subcategoryId
-          );
-          const access = getLessonAccess(lesson, lessons, completedLessonIds, inProgressLessonIds);
-
-          return (
-            <View key={lesson.id} style={styles.resultItem}>
-              <Text style={styles.context}>
-                {[category?.title, subcategory?.title]
-                  .filter(Boolean)
-                  .join("  ·  ")}
-              </Text>
-              <LessonCard
-                lesson={lesson} readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined}
-                lockedReason={!progressLoaded ? "Φόρτωση προόδου…" : !access.unlocked ? `Ολοκλήρωσε πρώτα: ${access.prerequisite?.title}` : undefined}
-                onPress={() => onOpenLesson(lesson.id)}
-              />
-            </View>
-          );
-        })
-      ) : (
+    <FlatList
+      testID="search-results-list"
+      data={results}
+      keyExtractor={(lesson) => lesson.id}
+      renderItem={({ item: lesson }) => {
+        const category = categories.find((entry) => entry.id === lesson.categoryId);
+        const subcategory = subcategories.find((entry) => entry.id === lesson.subcategoryId);
+        const access = getLessonAccess(lesson, lessons, completedLessonIds, inProgressLessonIds);
+        return (
+          <View style={styles.resultItem}>
+            <Text style={styles.context}>
+              {[category?.title, subcategory?.title].filter(Boolean).join("  ·  ")}
+            </Text>
+            <LessonCard
+              lesson={lesson}
+              readingState={progressLoaded ? getReadingState(lesson.id, completedLessonIds, inProgressLessonIds) : undefined}
+              lockedReason={!progressLoaded ? "Φόρτωση προόδου…" : !access.unlocked ? `Ολοκλήρωσε πρώτα: ${access.prerequisite?.title}` : undefined}
+              onPress={() => onOpenLesson(lesson.id)}
+            />
+          </View>
+        );
+      }}
+      ListHeaderComponent={
+        <View>
+          <AppHeader onBack={onBack} backLabel="ΑΡΧΙΚΗ" />
+          <Text style={styles.title}>Τι θέλεις να μάθεις;</Text>
+          <View style={styles.searchBox}>
+            <Text style={styles.searchIcon}>⌕</Text>
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="π.χ. αρχαία Ελλάδα, διάστημα…"
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              autoCapitalize="none"
+              autoCorrect={false}
+              accessibilityLabel="Αναζήτηση μαθημάτων"
+              onSubmitEditing={Keyboard.dismiss}
+            />
+            {query.length > 0 && (
+              <Pressable onPress={() => setQuery("")} accessibilityRole="button"
+                accessibilityLabel="Καθαρισμός αναζήτησης" style={styles.clearButton}>
+                <Text style={styles.clearText}>×</Text>
+              </Pressable>
+            )}
+          </View>
+          <Text style={styles.filterLabel}>Κατηγορία</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+            {[{ id: null, title: "Όλες" }, ...categories].map((category) => (
+              <Pressable key={category.id ?? "all"} onPress={() => setCategoryId(category.id)} accessibilityRole="button"
+                accessibilityState={{ selected: categoryId === category.id }}
+                style={[styles.chip, categoryId === category.id && styles.activeChip]}>
+                <Text style={styles.chipText}>{category.title}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          <Text style={styles.filterLabel}>Η ανάγνωσή σου</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+            {([{ id: "all", title: "Όλα" }, { id: "unread", title: "Αδιάβαστα" }, { id: "in-progress", title: "Σε εξέλιξη" }, { id: "completed", title: "Ολοκληρωμένα" }] as const).map((filter) => (
+              <Pressable key={filter.id} onPress={() => setStatus(filter.id)} disabled={!progressLoaded && filter.id !== "all"}
+                accessibilityRole="button" accessibilityState={{ selected: status === filter.id, disabled: !progressLoaded && filter.id !== "all" }}
+                style={[styles.chip, status === filter.id && styles.activeChip]}><Text style={styles.chipText}>{filter.title}</Text></Pressable>
+            ))}
+          </ScrollView>
+          {!progressLoaded ? <Text style={styles.emptyText}>Φόρτωση προόδου ανάγνωσης…</Text> : null}
+          <View style={styles.resultsHeader}>
+            <Text style={styles.sectionTitle}>
+              {normalizedQuery || categoryId || status !== "all" ? "Αποτελέσματα" : "Όλα τα μαθήματα"}
+            </Text>
+            <Text style={styles.count}>
+              {results.length} {results.length === 1 ? "μάθημα" : "μαθήματα"}
+            </Text>
+          </View>
+        </View>
+      }
+      ListEmptyComponent={
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🔎</Text>
           <Text style={styles.emptyTitle}>Δεν βρέθηκαν μαθήματα</Text>
           <Text style={styles.emptyText}>
             Δοκίμασε μια πιο γενική λέξη ή άλλαξε τα φίλτρα κατηγορίας και ανάγνωσης.
           </Text>
-          <Pressable
-            onPress={() => { setQuery(""); setCategoryId(null); setStatus("all"); }}
-            style={styles.resetButton}
-            accessibilityRole="button"
-          >
+          <Pressable onPress={() => { setQuery(""); setCategoryId(null); setStatus("all"); }}
+            style={styles.resetButton} accessibilityRole="button">
             <Text style={styles.resetLabel}>Εμφάνιση όλων των μαθημάτων</Text>
           </Pressable>
         </View>
-      )}
-    </ScrollView>
+      }
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      initialNumToRender={4}
+      maxToRenderPerBatch={4}
+      windowSize={5}
+    />
   );
 }
 

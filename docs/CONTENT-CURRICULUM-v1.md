@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–20 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–24 · 2026-11-02 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -281,10 +281,10 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 19. `persian-wars-greek-world` — «Περσικοί Πόλεμοι: αυτοκρατορία, πόλεις και επιλογές» (Integrated; QA pending)
 20. `athenian-empire` — «Από τη Δήλο στην αθηναϊκή ηγεμονία» (Integrated; QA pending)
-21. `peloponnesian-war` — «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο»
-22. `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία»
-23. `macedon-philip` — «Η άνοδος της Μακεδονίας»
-24. `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές»
+21. `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση» (Integrated; QA pending)
+22. `greek-crises-fourth-century` — «Μετά το 404: συμμαχίες, επεμβάσεις και εύθραυστες ειρήνες» — **Integrated** ([research](greek-crises-fourth-century-research.md)); 404–362 BCE
+23. `macedon-philip` — «Φίλιππος Β΄: πώς η Μακεδονία άλλαξε τις ισορροπίες» (Integrated; [research](macedon-philip-research.md); QA pending)
+24. `alexander-conquests-context` — «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη» (**Integrated**; [research](alexander-conquests-context-research.md); QA pending)
 
 ### Chapter V. Ιδέες, τέχνη και κληρονομιές
 
@@ -306,6 +306,8 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `athenian-empire`: Lesson 20 covers post-479 Delian League formation, Delos as treasury and meeting place, allied ship-versus-money duties, naval asymmetry, Naxos/Thasos, contested 454 transfer, Athenian tribute-quota lists, Erythrai/Chalkis decrees, plural allied reactions and persisting Persian diplomacy. No battle narratives of Lesson 19 or Peloponnesian War campaigns of Lesson 21. [Research/rights/QA](athenian-empire-research.md).
 - `greek-war-hoplites`: Lesson 17, shields, spears and defensive equipment, the Chigi vase and Tyrtaeus, classical descriptions of cohesion and terrain, the debated 'hoplite revolution' and the unequal intersection of military service with political rights. Not another Spartan social-structure lesson or Persian/Peloponnesian War chronology. [Research/rights/QA record](greek-war-hoplites-research.md).
 - `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
+- `alexander-conquests-context`: #24 succession (336–335), Greek/Theban choices, Achaemenid institutions and local agency, coast and supply 334–332, Gaugamela 331, imperial negotiation and resistance in Central Asia/Indus, Babylon 323 and source criticism. Does not recount Philip’s 359–336 ascent (#23) or prewrite the successors’ kingdoms (#29). [Research/rights/QA](alexander-conquests-context-research.md).
+- `hellenistic-kingdoms-cities`: #29 political and civic transformations after 323; do not project later successor states back into 323.
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
@@ -450,3 +452,51 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **QA:** GitHub content and licence-source inspection only; new #20 Node test committed but unexecuted. Local TypeScript/content validation, #19/20 tests, regression suite, CI, Android/iOS remote image and playback, XP/no-zero-popup/replay/offline and Supabase synchronization pending. Previously reported Lesson 18 test passes predate these new lessons. Do not mark prior lessons Validated.
 - **Counts:** 30 planned, 5 chapters; **21 implemented: 20 Integrated (#1–20), 1 older Drafted (#30), 9 Not started (#21–29), 0 Validated, 0 Approved**.
 - **Next only, not written:** planned #21 `peloponnesian-war`, «Ο πόλεμος που άλλαξε τον ελληνικό κόσμο», Chapter IV; following #22 `greek-crises-fourth-century` remains planned.
+
+
+### Ancient Greece Lesson 21 research-first integration — 2026-11-01
+- **Integrated, not Validated or Approved:** #21 `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση». [Research, claims, sources, rights, compatibility and QA](peloponnesian-war-research.md).
+- **Coverage:** 431–404, structural and immediate causes, competing Greek city interests, Athenian walls/plague/civilian displacement, Corcyra stasis, Pylos, failed 421 peace, Melos, Sicily, Persian satraps, 411 coup and 404 surrender. #22 reserves post-404 Greek crises.
+- **Implementation:** 7 sections, 35 stable paragraphs, 7 unique version-1 reasoning checkpoints after paragraphs 4/9/14/19/24/29/35; attributed 431 alliance-map cover and two anchored licensed site photographs. Additive data/path/media/reader and prior order-only fixture edits; no modifications to previous lesson quiz data or learning stores.
+- **Compatibility:** all #1–20 and older #30 unchanged; historical #15 fingerprints `q_470dac57` / `q_22487292` remain distinct. No XP/audio/sync logic changed; actual device and automatic-sync evidence pending.
+- **Verification:** researched sources and Commons description/license pages; source-level structural preflight of new data. **Not executed:** npm typecheck, validator, Node scripts (including #19–21 dedicated), CI, Expo native Android/iOS, remote media loading/zoom, first-answer audio, reward/replay, offline/resume, Supabase synchronization. These checks are required before marking Validated.
+- **Counts:** 30 planned / 5 chapters; 22 implemented, 21 Integrated (#1–21), 1 older Drafted (#30), 8 Not started (#22–29), 0 Validated / 0 Approved.
+- **Next only, not started:** #22 `greek-crises-fourth-century` — «Μετά την αθηναϊκή ήττα: μια ασταθής ισορροπία».
+
+
+### Ancient Greece Lesson 22 — research-first integration (2026-11-01)
+- #22 `greek-crises-fourth-century` — «Μετά το 404: συμμαχίες, επεμβάσεις και εύθραυστες ειρήνες» — **Integrated, not Validated or Approved**. Seven thematic sections / 34 stable paragraphs / seven version-1 reasoning checkpoints. [Detailed evidence, rights and outstanding QA](greek-crises-fourth-century-research.md).
+- **Coverage / overlap:** 404–403 violence and qualified amnesty → Spartan allies and Persian satraps → Corinthian War/Cnidus → King's Peace and RO 22 autonomy claims → Cadmea, Leuctra, Messene and Mantinea. Avoids #21 wartime chronology and reserves Macedonian expansion for #23.
+- **Current accounting:** 30 planned / five chapters; **23 in app: 22 Integrated (#1–22), one older Drafted (#30), seven Not started (#23–29), zero Validated/Approved**. Earlier status snapshots above remain historical.
+- **Testing:** connector-side source/structural inspection only; npm, Node, native Expo, image-network and Supabase still need actual execution. Older Lesson 15 quiz keys and all earlier history untouched.
+- **Next planned only:** #23 `macedon-philip` — «Η άνοδος της Μακεδονίας».
+
+
+### Ancient Greece Lesson 23 — research-first integration (2026-11-01)
+- **#23 `macedon-philip`: Integrated, not Validated or Approved.** Final title: «Φίλιππος Β΄: πώς η Μακεδονία άλλαξε τις ισορροπίες». [Research, sources, images and QA](macedon-philip-research.md).
+- **Scope:** Macedonia's geography and decentralized royal networks; 359 succession; army/recruitment/resources; Amphipolis, Olynthus and citizen agency; Third Sacred War, Thessaly and Peace of Philocrates; 338 Chaeronea; Corinthian settlement; Philip's death in 336. Alexander's campaigns remain reserved for #24.
+- **Structure:** 6 sections, 33 stable paragraphs, 7 fresh version-1 reasoning checkpoints after 4/9/16/21/26/30/33; 11-minute estimated prose reading, licensed Aigai cover and Pella/Chaeronea inline images.
+- **Compatibility:** fresh IDs, `requireCurrentAttemptQuiz: true`, no compatible quiz aliases, additive path and fixtures only. Lessons 1–22 and draft #30 untouched; historical Lesson 15 fingerprints `q_470dac57` and `q_22487292` remain different. No rewards, sounds, saved-data, or Supabase schema changes.
+- **Verification:** source and Commons license-page inspection, in-authoring consistency checks for IDs/answers/anchors and branch readback. Node/npm, CI, Expo Android/iOS, media networking, first-answer audio, replay/XP, offline restore and Supabase synchronization remain unexecuted here; do not claim they passed.
+- **Accounting:** 30 planned / 5 chapters; **24 implemented (23 Integrated, 1 Drafted #30), 6 Not started #24–29, 0 Validated, 0 Approved**. Older historical snapshots retained above.
+- **Next only (not begun):** #24 `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές».
+
+
+### Ancient Greece Lesson 24 — research-first integration (2026-11-02)
+- **Integrated, not Validated or Approved:** `alexander-conquests-context`, «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη», Chapter IV; [source, media, compatibility and QA ledger](alexander-conquests-context-research.md).
+- **Scope:** contested succession and Greek choices 336–335; Achaemenid institutions and local agency; fleet, food, siegecraft and diplomacy in 334–332; Gaugamela 331, Persian administrative centres, Persepolis, Darius and empire-wide governance; Central Asian and Indus resistance; Hyphasis/return; Babylon 323 and the difference between cuneiform contemporaneous records and later narratives.
+- **Curriculum:** 30 planned / 5 chapters; **25 implemented (24 Integrated, 1 older Drafted #30), 5 Not started #25–29, 0 Validated, 0 Approved**. No rewriting Lessons 1–23 or #30; QA of previous integrations remains pending.
+- **Next only:** planned #25 `greek-stage-tragedy`, «Το θέατρο ως δημόσια εμπειρία», Chapter V, not live and not begun.
+
+
+### Ancient Greece partial editorial proofread — 2026-11-02
+- [Editorial audit for lessons #17–24 and #30](ANCIENT-GREECE-LESSONS-17-24-30-EDITORIAL-AUDIT.md): **#17, #18 and #30 revised after full prose read**; #19–24 have **not** had their full proofreading pass. Covers idiomatic Greek, evidence framing, historical clarification, captions/credits and question issues deferred for a separate task.
+- #17 and #18 remain **Integrated**. Older live #30 retains **Drafted**, 4 legacy quiz questions and existing compatible quiz key; no artificial quiz histories or migrations. Other categories and lessons unchanged.
+- Quiz identities, paragraph/checkpoint structures, saved-progress contracts, XP, audio, sync and DEV unlock-all were not edited. Connector-side structural comparisons passed, but **local npm/Node, Android/iOS and live Supabase QA are not executed**. Retain 0 Validated / 0 Approved until tests and review.
+
+
+### Ancient Greece opening depth redesign — 2026-11-02
+- Lessons #2–5 have a focused editorial redesign aimed at adult Greek readers: #2 uses divergent Greek diplomatic choices, #3 investigates Themistocles ostraka, #4 contrasts Linear B with later alphabetic Greek, and #5 uses the difficult western Samos landing geography. Their curriculum slots and all 2–5 stable IDs, paragraph/checkpoint placements and media anchors remain unchanged.
+- Lessons #2 and #3 have new titles, recorded in the [depth redesign audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md). The changes reduce generic school-level introductions instead of increasing article word counts arbitrarily.
+- All 14 related assessment questions have new wording and version **2**. Historical v1 attempts are intentionally incompatible; previous lesson completions, saved state and XP/events remain intact. No unrelated lessons or live progression logic changed.
+- **QA pending:** no npm/Node, native Android/iOS or Supabase execution in this session. Preserve **Integrated**, not Validated or Approved, until the new regression and device checks pass.

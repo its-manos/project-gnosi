@@ -6,19 +6,23 @@ const path=require('node:path');
 const vm=require('node:vm');
 const ts=require('typescript');
 const root=path.join(__dirname,'..');
+// Load the growing curriculum without a manually maintained import list.
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,f);
 function compile(file,imports={}) {
  const mod={exports:{}};
  const code=ts.transpileModule(fs.readFileSync(path.join(root,file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020}}).outputText;
  vm.runInNewContext(code,{module:mod,exports:mod.exports,console,Intl,require:id=>{if(id in imports)return imports[id];throw Error(id);}});
  return mod.exports;
 }
-const data=compile('src/data/lessons.ts',{'./additionalLessons':compile('src/data/additionalLessons.ts'),'./catalogueExpansion':compile('src/data/catalogueExpansion.ts'),'./architectureLessons':compile('src/data/architectureLessons.ts'),'./astronomyLessons':compile('src/data/astronomyLessons.ts'),'./worldHistoryLessons':compile('src/data/worldHistoryLessons.ts')});
+const data=require(root+'/src/data/lessons.ts');
 const progress=compile('src/utils/lessonProgress.ts');
-const util=compile('src/utils/learningBackup.ts',{'../quiz/engine':compile('src/quiz/engine.ts'),'../data/lessons':data,'./lessonProgress':progress});
+// Use the actual quiz fingerprint so rewritten articles accept this current attempt.
+const activity=compile('src/utils/learningActivity.ts',{'./dailyChallenge':{getAthensDateKey:()=> '2026-10-30'}});
+const util=compile('src/utils/learningBackup.ts',{'../quiz/engine':compile('src/quiz/engine.ts'),'../data/lessons':data,'./lessonProgress':progress,'./learningActivity':activity});
 const plain=x=>JSON.parse(JSON.stringify(x));
 const a=data.lessons[0],b=data.lessons[1],c=data.lessons[2];
 const empty=()=>({schemaVersion:1,completedIds:[],savedIds:[],attempts:{}});
-const attempt=(n,time=100,replay=false)=>({checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),score:999,updatedAt:time,replayOfCompletedLesson:replay});
+const attempt=(n,time=100,replay=false)=>({quizKey:activity.quizFingerprint(a.questions),checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),score:999,updatedAt:time,replayOfCompletedLesson:replay});
 const local={...empty(),completedIds:[b.id],savedIds:[a.id],attempts:{[a.id]:attempt(2)}};
 const cloud={...empty(),completedIds:[c.id],savedIds:[b.id],attempts:{[a.id]:attempt(1,200)}};
 const merged=util.mergeLearningBackups(local,cloud);

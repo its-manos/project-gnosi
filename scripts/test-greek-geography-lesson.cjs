@@ -10,7 +10,7 @@ assert.ok(l); assert.equal(l.requireCurrentAttemptQuiz,true); assert.equal(l.que
 const ids=l.sections.flatMap(s=>s.paragraphs.map(p=>p.id));assert.equal(ids.length,18);assert.equal(new Set(ids).size,ids.length);
 assert.deepEqual(l.checkpoints.map(c=>c.afterParagraphId),['local-geographies','season-not-lock','evidence-versus-possibility','no-geographic-destiny']);
 assert.ok(l.checkpoints.every(c=>ids.includes(c.afterParagraphId)&&l.questions.some(q=>q.id===c.questionId)));
-assert.ok(l.questions.every(q=>q.version==='1'&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>30));
+assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>30), 'approved version-2 question revision preserves four valid choices and explanations');
 assert.deepEqual(lessonPaths['ancient-greece'].slice(0,5),['ancient-athens','greek-world-not-a-country','greek-history-through-evidence','greek-chronology','greek-geography-seas']);
 assert.equal(getSubcategoryPath(lessons,'ancient-greece')[4].id,l.id);
 assert.equal(getLessonAccess(l,lessons,[]).unlocked,false);

@@ -13,7 +13,8 @@ function compile(file,overrides={}){
  if(!Object.keys(overrides).length)cache.set(file,m.exports);return m.exports;
 }
 const data=compile('src/data/lessons.ts'),activity=compile('src/utils/learningActivity.ts'),reviewUtil=compile('src/utils/lessonReview.ts'),{LearningStore}=compile('src/state/LearningStore.ts');
-const lesson=data.lessons[0];
+const lesson=data.lessons.find(l=>l.id==='astronomy-introduction');
+assert.equal(lesson.questions.length,4,'unlocked 4-question mistakes fixture');
 const plain=x=>JSON.parse(JSON.stringify(x));
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 function disk(){const map=new Map([['@gnosi/sync-device-id','phone']]);return{map,getItem:async k=>map.get(k)??null,setItem:async(k,v)=>{map.set(k,v);}};}

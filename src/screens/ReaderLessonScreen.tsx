@@ -12,10 +12,12 @@ import ActionButton from "../components/ActionButton";
 import ArticleFigure from "../components/ArticleFigure";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import LessonCover from "../components/LessonCover";
+import NextImageWarmup from "../components/NextImageWarmup";
 import SourceLink from "../components/SourceLink";
 import ReportContentButton from "../components/ReportContentButton";
 import { lessonReportTarget } from "../utils/contentReports";
 import { inlineArticleMedia } from "../data/articleMedia";
+import { nextPendingFigureUrl } from "../utils/nextFigureWarmup";
 import { colors, reading } from "../theme";
 import { getParagraphCount, getParagraphId, getParagraphText, getQuestionPlacements, getResumeParagraphNumber, getVisibleParagraphLimit } from "../utils/lessonProgress";
 
@@ -39,6 +41,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const answeredCount = Array.from({ length: questionCount }, (_, i) => i)
     .filter(i => checkpointAnswers[i] !== undefined).length;
   const visibleLimit = getVisibleParagraphLimit(lesson, checkpointAnswers);
+  const upcomingFigureUrl = nextPendingFigureUrl(lesson, visibleLimit);
   const complete = answeredCount === questionCount;
   const resumeTarget = useRef(getResumeParagraphNumber(lesson, checkpointAnswers));
   const sections = lesson.sections.map((section, index) => ({
@@ -202,6 +205,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <View style={styles.endSources}><ReaderSources lesson={lesson} /></View>
         </View> : <Text style={styles.locked} testID="reader-locked">Η συνέχεια ανοίγει μετά την παραπάνω ερώτηση. Δεν χρειάζεται να απαντήσεις σωστά για να προχωρήσεις.</Text>}
       </ScrollView>
+      <NextImageWarmup uri={upcomingFigureUrl} />
     </View>
   );
 }
@@ -243,7 +247,8 @@ const styles = StyleSheet.create({
   note: { backgroundColor: "#292720", padding: 16, borderRadius: 12, marginBottom: 24, gap: 8 },
   noteText: { color: "#D2C8B7" },
   coverBlock: { marginBottom: 20 },
-  cover: { width: "100%", height: 210, borderRadius: 14 },
+  // Keep cover height predictable before the image loads; its crop mode remains per-lesson.
+  cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 14 },
   caption: { color: reading.muted, fontSize: 12, lineHeight: 20, marginTop: 10 },
   creditControl: { minHeight: 44, justifyContent: "center", paddingVertical: 8 },
   readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 26 },

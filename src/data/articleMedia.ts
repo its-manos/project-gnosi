@@ -40,6 +40,78 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "alexander-conquests-context": [
+  {
+    "afterParagraphId": "alexander-08",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Persepolis%20stairs%20of%20the%20Apadana%20relief.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Λεπτομέρεια ανάγλυφου της ανατολικής κλίμακας της Απάδανας στην Περσέπολη, με αντιπροσωπεία από τη Λυδία. Το έργο ανήκει στην αχαιμενιδική εποχή, πριν από την εισβολή του Αλεξάνδρου· δείχνει την αυτοκρατορική αναπαράσταση πολλών λαών, όχι γεγονός του 334 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Phillip Maiwald (Nikopol) / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2008",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Persepolis_stairs_of_the_Apadana_relief.jpg"
+  },
+  {
+    "afterParagraphId": "alexander-22",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Persepolis.png?width=1200",
+    "resizeMode": "contain",
+    "caption": "Τα σωζόμενα ερείπια της Περσέπολης σε φωτογραφία του 2023. Το σημερινό τοπίο δεν δείχνει πώς έμοιαζε η πόλη τη στιγμή της κατάληψης και της πυρκαγιάς του 330 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Mitra Zmni / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Persepolis.png"
+  }
+],
+  "macedon-philip": [
+  {
+    "afterParagraphId": "philip-08",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Ancient%20Pella.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Ο αρχαιολογικός χώρος της Πέλλας (2009). Πολλά σωζόμενα αστικά κατάλοιπα χρονολογούνται σε μεταγενέστερες φάσεις· η φωτογραφία δείχνει τον τόπο, όχι το ανακτορικό περιβάλλον ακριβώς του 359 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Explorer1940 / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2009",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Ancient_Pella.jpg"
+  },
+  {
+    "afterParagraphId": "philip-26",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Lion%20of%20Chaeronea%2C%20September%202022%2011.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Το λιοντάρι της Χαιρώνειας (φωτογραφία 2022), μνημείο που συνδέεται με τους Θηβαίους νεκρούς της μάχης του 338 π.Χ. Η σημερινή εμφάνιση περιλαμβάνει νεότερη αποκατάσταση· δεν είναι σκηνή της μάχης. Άγγιξε για μεγέθυνση.",
+    "credit": "Calistemon / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2022",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Lion_of_Chaeronea,_September_2022_11.jpg"
+  }
+],
+"greek-crises-fourth-century": [
+  {
+    "afterParagraphId": "crisis-23",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cadmea%2C%20Thebes.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Η περιοχή της Καδμείας στη σημερινή Θήβα (φωτογραφία 2016). Ο τόπος συνδέεται με την κατάληψη του 382 και την απελευθέρωση του 379/378 π.Χ., αλλά δεν διασώζει αυτούσια τη φρουρά ή τα γεγονότα εκείνων των ετών. Άγγιξε για μεγέθυνση.",
+    "credit": "Mirjanamimi / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2016",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Cadmea,_Thebes.jpg"
+  },
+  {
+    "afterParagraphId": "crisis-30",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Arcadian%20Gate.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Η Αρκαδική Πύλη της αρχαίας Μεσσήνης, μέρος των ιστορικών οχυρώσεων της πόλης (σύγχρονη φωτογραφία). Το μνημείο δείχνει τον χώρο της νέας κοινότητας μετά το 369 π.Χ., όχι την ίδια την ανακήρυξη της ανεξαρτησίας. Άγγιξε για μεγέθυνση.",
+    "credit": "Charismak / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2017",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Arcadian_Gate.jpg"
+  }
+],
+  "peloponnesian-war": [
+  {
+    "afterParagraphId": "war-12",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Pylos%20Sphacteria%2020230925%20113521.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Η ανατολική ακτή της Σφακτηρίας στον κόλπο του Ναυαρίνου (σύγχρονη φωτογραφία). Η γεωγραφία βοηθά να κατανοήσουμε τον περιορισμένο χώρο των επιχειρήσεων του 425 π.Χ., όχι να ανασυνθέσουμε ακριβώς κάθε θέση στρατιωτών. Άγγιξε για μεγέθυνση.",
+    "credit": "Rigorius / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Pylos_Sphacteria_20230925_113521.jpg"
+  },
+  {
+    "afterParagraphId": "war-23",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Piazza%20Duomo%2C%20center%20of%20Ortigia%2C%20Syracuse%2C%2012M1791.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Στην Ορτυγία των Συρακουσών, το αρχαίο ιερό της Αθηνάς ενσωματώθηκε αργότερα στον χριστιανικό ναό. Η φωτογραφία του σημερινού χώρου δεν είναι εικόνα της πολιορκίας του 415–413 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Zde / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2012",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Piazza_Duomo,_center_of_Ortigia,_Syracuse,_12M1791.jpg"
+  }
+],
   "athenian-empire": [
   {
     "afterParagraphId": "empire-04",

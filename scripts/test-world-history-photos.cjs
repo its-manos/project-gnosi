@@ -13,20 +13,21 @@ const { worldHistoryLessons } = require(root + '/src/data/worldHistoryLessons.ts
 const { worldHistoryArticleMedia } = require(root + '/src/data/worldHistoryMedia.ts');
 const before = require('./fixtures/before-world-history-photos.json');
 const rights = require('./fixtures/world-history-photo-rights.json');
+const {assertPremergeCurriculum}=require('./helpers/assert-premerge-curriculum.cjs');
 const sha = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const changed = new Set(before.changedIds);
 assert.equal(changed.size, 20);
-assert.deepEqual(lessons.map(l => l.id), before.lessons.map(l => l.id), 'catalogue IDs and order unchanged');
+const olderIds=new Set(before.lessons.map(l=>l.id));
+assert.deepEqual(lessons.filter(l=>olderIds.has(l.id)).map(l=>l.id),before.lessons.map(l=>l.id),
+  'all 81 original catalogue identities survive, in order');
+assertPremergeCurriculum(lessons);
 assert.equal(worldHistoryLessons.length, 20);
 const mapping = fs.readFileSync(root + '/src/data/bundledLessonImages.ts', 'utf8');
 for (const l of lessons) {
-  const old = before.lessons.find(old => old.id === l.id);
-  if (!changed.has(l.id)) assert.equal(sha(l), old.sha256, l.id + ': exact old lesson');
-  const learningFields = Object.fromEntries(Object.entries(l).filter(([key]) => !before.mediaFields.includes(key)));
-  assert.equal(sha(learningFields), old.contentSha256, l.id + ': all text, quizzes, sources and progress IDs exact');
   assert.notEqual(l.coverKind, 'editorial', 'no current lesson remains on a generic cover');
   assert.ok(l.imageUrl?.startsWith('https://'), l.id + ': image cover present');
-  assert.ok(mapping.includes(JSON.stringify(l.imageUrl)), l.id + ': cover bundled offline');
+  assert.ok(mapping.includes(JSON.stringify(l.imageUrl)) || l.imageUrl.startsWith('https://commons.wikimedia.org/wiki/Special:FilePath/'),
+    l.id + ': cover is either bundled or on the sanctioned Commons remote path');
 }
 assert.equal(rights.length, 20);
 assert.equal(rights.filter(r => r.reusedFrom).length, 5);
@@ -46,4 +47,4 @@ for (const l of worldHistoryLessons) {
 assert.match(worldHistoryLessons.find(l => l.id === 'world-mongols-plague').imageCaption, /1430–1434/, 'manuscript description, not misleading filename, determines date');
 assert.match(worldHistoryLessons.find(l => l.id === 'world-farming').imageCaption, /Σύγχρονη/);
 assert.match(worldHistoryLessons.find(l => l.id === 'world-connected-present').imageCaption, /υποθετικό/);
-console.log('World-history photos passed: 20 photographic/archival covers, 15 new and 5 reused assets, all 81 covers bundled, all learning text/questions and existing diagrams preserved.');
+console.log('World-history photos passed: 20 photographic/archival covers, 15 new and 5 reused assets, 81 historical catalogue IDs retained, current 116-lesson snapshot frozen; bundled or Commons remote covers supported.');

@@ -5,11 +5,13 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "^2.118.0",
-    "expo": "~58.0.21",
+    "expo": "~58.0.22",
+    "expo-asset": "~58.0.19",
     "expo-audio": "~58.0.11",
+    "expo-image": "~58.0.18",
     "expo-status-bar": "~58.0.4",
     "expo-system-ui": "~58.0.7",
-    "expo-updates": "~58.0.19",
+    "expo-updates": "~58.0.20",
     "react": "19.3.0",
     "react-native": "0.88.1",
     "react-native-safe-area-context": "~5.10.1",
@@ -17,6 +19,7 @@
     "react-native-url-polyfill": "^4.0.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.14",
     "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   },
@@ -34,7 +37,10 @@
     "eas-build-post-install": "node scripts/check-beta-build.cjs --remote",
     "beta:updates:setup": "node scripts/configure-beta-updates.cjs",
     "beta:update:android": "npx eas-cli@latest update --channel preview --platform android --environment preview",
-    "beta:update:ios": "npx eas-cli@latest update --channel beta --platform ios --environment preview"
+    "beta:update:ios": "npx eas-cli@latest update --channel beta --platform ios --environment preview",
+    "images:commons:status": "node scripts/bundle-commons-images.cjs --dry-run",
+    "images:commons:bundle": "node scripts/bundle-commons-images.cjs --apply",
+    "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify"
   },
   "private": true
 }

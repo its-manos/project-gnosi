@@ -15,7 +15,7 @@ function compile(file, imports) {
   } });
   return mod.exports;
 }
-const lessonPath = compile('src/utils/lessonPath.ts', {});
+const lessonPath = compile('src/utils/lessonPath.ts', { './devLessonAccess': { devLessonsUnlocked: () => false } });
 const discovery = compile('src/utils/readingDiscovery.ts', { './lessonPath': lessonPath });
 const catalogue = Object.freeze([
   { id: 'a', categoryId: 'one', subcategoryId: 'topic-a' },
@@ -55,9 +55,10 @@ const jsx = (type, props) => ({ type, props });
 const search = compile('src/screens/SearchScreen.tsx', {
   '../utils/readingDiscovery': discovery,
   '../utils/lessonPath': lessonPath,
+  '../utils/lessonProgress': { getParagraphText: paragraph => typeof paragraph === 'string' ? paragraph : paragraph.text },
   react: { useMemo: fn => fn(), useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = initial; return [slots[i], v => { slots[i] = typeof v === 'function' ? v(slots[i]) : v; }]; } },
   'react/jsx-runtime': { jsx, jsxs: jsx },
-  'react-native': { Keyboard: { dismiss() {} }, View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', TextInput: 'Input', StyleSheet: { create: s => s } },
+  'react-native': { Keyboard: { dismiss() {} }, View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', FlatList: 'FlatList', TextInput: 'Input', StyleSheet: { create: s => s } },
   '../components/AppHeader': { __esModule: true, default: 'Header' },
   '../components/LessonCard': { __esModule: true, default: 'Card' },
   '../theme': { colors: {} },
@@ -65,10 +66,23 @@ const search = compile('src/screens/SearchScreen.tsx', {
 const articles = catalogue.map((l, i) => ({ ...l, title: i === 0 ? 'Κόσμος' : 'Δοκιμή', summary: '', intro: '', sections: [], sources: [] }));
 const props = { lessons: articles, categories: [{ id: 'one', title: 'Πρώτη' }, { id: 'two', title: 'Δεύτερη' }], subcategories: [], completedLessonIds: ['a'], inProgressLessonIds: ['c'], progressLoaded: true, onBack() {}, onOpenLesson() {} };
 const render = () => { cursor = 0; return search.default(props); };
-const nodes = t => t && typeof t === 'object' ? [t, ...[t.props?.children].flat(Infinity).flatMap(nodes)] : [];
-const cards = t => nodes(t).filter(n => n.type === 'Card');
+const nodes = t => t && typeof t === 'object'
+  ? [t, ...[t.props?.children, t.props?.ListHeaderComponent, t.props?.ListEmptyComponent].flat(Infinity).flatMap(nodes)] : [];
+const list = tree => {
+  const found = nodes(tree).find(n => n.type === 'FlatList');
+  assert.ok(found, 'search results use a virtualized native list');
+  assert.ok(found.props.initialNumToRender < found.props.data.length || found.props.data.length <= 4,
+    'initial rendering is bounded for longer lists');
+  return found;
+};
+// FlatList deliberately renders items on demand. Invoke its renderItem only
+// to verify results and card actions; the mock must not eagerly mount them.
+const cards = tree => list(tree).props.data.flatMap((lesson, index) =>
+  nodes(list(tree).props.renderItem({ item: lesson, index })).filter(n => n.type === 'Card'));
+
 const press = (t, text) => { const n = nodes(t).find(n => n.type === 'Pressable' && nodes(n).some(x => x.type === 'Text' && x.props.children === text)); assert.ok(n, text); n.props.onPress(); };
 let tree = render(); assert.equal(cards(tree).length, 5);
+assert.deepEqual(Array.from(list(tree).props.data, item => list(tree).props.keyExtractor(item)), ['a','b','c','d','e']);
 press(tree, 'Πρώτη'); tree = render(); assert.equal(cards(tree).length, 3);
 press(tree, 'Σε εξέλιξη'); tree = render(); assert.deepEqual(cards(tree).map(c => c.props.lesson.id), ['c']);
 press(tree, 'Ολοκληρωμένα'); tree = render(); assert.deepEqual(cards(tree).map(c => c.props.lesson.id), ['a']);

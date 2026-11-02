@@ -13,6 +13,7 @@ import type {
 } from "react-native";
 import { colors } from "../theme";
 import { bundledLessonImages } from "../data/bundledLessonImages";
+import { remoteImageCandidates } from "../utils/commonsImage";
 
 type ImageStatus = "loading" | "loaded" | "error";
 
@@ -24,6 +25,8 @@ type Props = {
   fallbackLabel?: string;
   loadingLabel?: string;
   onDimensions?: (size: { width: number; height: number }) => void;
+  /** Suppress logs for optional, invisible cache warmups. */
+  quiet?: boolean;
 };
 
 type PlaceholderProps = {
@@ -74,13 +77,24 @@ export default function ResilientImage({
   fallbackLabel = "Η εικόνα δεν είναι διαθέσιμη",
   loadingLabel = "Φόρτωση εικόνας…",
   onDimensions,
+  quiet = false,
 }: Props) {
   const hasValidUri = typeof uri === "string" && uri.trim().length > 0;
   const normalizedUri = hasValidUri ? uri!.trim() : null;
   const [lastLoad, setLastLoad] = useState<{
     uri: string | null;
     status: ImageStatus;
-  }>({ uri: normalizedUri, status: hasValidUri ? "loading" : "error" });
+    attempt: number;
+  }>({ uri: normalizedUri, status: hasValidUri ? "loading" : "error", attempt: 0 });
+  const bundledSource = normalizedUri ? bundledLessonImages[normalizedUri] : undefined;
+  const candidates = normalizedUri && !bundledSource ? remoteImageCandidates(normalizedUri) : [];
+  const attempt = lastLoad.uri === normalizedUri ? lastLoad.attempt : 0;
+  const remoteSource = candidates[attempt] ?? candidates[0];
+  // Wikimedia filenames are stable. On iOS reuse disk-cached thumbnails even
+  // when their HTTP freshness lifetime expires; Android uses Fresco caching.
+  const imageSource = bundledSource ?? (remoteSource?.uri.startsWith("https://commons.wikimedia.org/")
+    ? { ...remoteSource, cache: "force-cache" as const }
+    : remoteSource) ?? (normalizedUri ? { uri: normalizedUri } : undefined);
 
   // Derived state ensures a newly supplied URL immediately returns to loading
   // without a useEffect resetting state after a fast image-load event.
@@ -94,23 +108,33 @@ export default function ResilientImage({
     <View style={[styles.frame, style]}>
       {hasValidUri ? (
         <Image
-          key={normalizedUri!}
-          source={bundledLessonImages[normalizedUri!] ?? { uri: normalizedUri! }}
+          key={`${normalizedUri}:${bundledSource ? "bundled" : attempt}`}
+          source={imageSource}
           style={styles.image}
           resizeMode={resizeMode}
           accessible={Boolean(accessibilityLabel)}
           accessibilityLabel={accessibilityLabel}
           onLoad={event => {
-            setLastLoad({ uri: normalizedUri, status: "loaded" });
+            setLastLoad({ uri: normalizedUri, status: "loaded", attempt });
             const source = event?.nativeEvent?.source;
             if (source && Number.isFinite(source.width) && Number.isFinite(source.height) && source.width > 0 && source.height > 0) {
               onDimensions?.({ width: source.width, height: source.height });
             }
           }}
           onError={(event) => {
-            const reason = event.nativeEvent?.error ?? "Unknown native image error";
-            console.warn(`[ΓΝΩΣΗ] Failed to load image: ${normalizedUri}`, reason);
-            setLastLoad({ uri: normalizedUri, status: "error" });
+            if (!bundledSource && attempt + 1 < candidates.length) {
+              // Retry once through Commons' documented redirect endpoint.
+              // Ignore stale responses if the caller has since changed its URI.
+              setLastLoad(current => current.uri === normalizedUri && current.attempt > attempt
+                ? current
+                : { uri: normalizedUri, status: "loading", attempt: attempt + 1 });
+              return;
+            }
+            if (!quiet) {
+              const reason = event.nativeEvent?.error ?? "Unknown native image error";
+              console.warn(`[ΓΝΩΣΗ] Failed to load image after ${attempt + 1} attempt(s): ${normalizedUri}`, reason);
+            }
+            setLastLoad({ uri: normalizedUri, status: "error", attempt });
           }}
         />
       ) : null}
