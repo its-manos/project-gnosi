@@ -288,7 +288,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ### Chapter V. Ιδέες, τέχνη και κληρονομιές
 
-25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία»
+25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία» — **Integrated** ([research, sources, image rights and QA](greek-stage-tragedy-research.md); 30 paragraphs, 7 checkpoints; device/Node QA pending)
 26. `greek-philosophy-in-context` — «Φιλοσοφία στους δρόμους και στις σχολές»
 27. `greek-science-knowledge` — «Οι αρχαίοι ερευνητές και τα όρια της γνώσης»
 28. `greek-images-sculpture` — «Αγάλματα με χρώματα και ιστορίες»
@@ -500,3 +500,13 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - Lessons #2 and #3 have new titles, recorded in the [depth redesign audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md). The changes reduce generic school-level introductions instead of increasing article word counts arbitrarily.
 - All 14 related assessment questions have new wording and version **2**. Historical v1 attempts are intentionally incompatible; previous lesson completions, saved state and XP/events remain intact. No unrelated lessons or live progression logic changed.
 - **QA pending:** no npm/Node, native Android/iOS or Supabase execution in this session. Preserve **Integrated**, not Validated or Approved, until the new regression and device checks pass.
+
+### Ancient Greece Lesson 25 — research-first integration (2026-11-02)
+
+- **Integrated, not Validated or Approved:** Chapter V, #25 `greek-stage-tragedy`, «Το θέατρο ως δημόσια εμπειρία». [Research, evidence limits, media rights and QA record](greek-stage-tragedy-research.md).
+- **Unique coverage:** performed civic/religious Dionysian festivals; City Dionysia, Lenaia and demes; the archon, khorēgoi and competitive judging; music, masks, satyr play and chorus; evolving theatre spaces; disputed audience participation; comedy and wartime settings; selective plays and later Aristotelian analysis. Avoids biographies, ancient franchise/courts, general sanctuary festivals and military chronology.
+- **Delivery:** 6 sections, 30 anchored paragraphs, 7 uniquely versioned hard reasoning checkpoints (4/8/12/17/21/25/30), remote Commons cover and two anchored, attributed images; estimated 11-minute reading (questions may extend it). Uses existing article reader, image delivery, XP/audio and progress structures only.
+- **Path sequence:** #24 `alexander-conquests-context` → #25 `greek-stage-tragedy` → temporarily #30 `antikythera-gears` in the running app; planned #26–29 have no lesson objects yet. **Next planned curriculum lesson:** #26 `greek-philosophy-in-context` → «Φιλοσοφία στους δρόμους και στις σχολές».
+- **Current accounting:** **30 planned / 5 chapters; 26 in app (25 Integrated research-first #1–25 + 1 old Drafted #30), 4 Not started #26–29, 0 Validated, 0 Approved.** Older counts above are dated historical handoffs.
+- **Compatibility/verification:** no edits to Lessons 1–24, Lesson 30 draft, historical question fingerprints (including Lesson 15 `q_470dac57` vs `q_22487292`), saved history, XP, bookmarks, sound or sync. Updated only import, path and relevant tests. Connector authoring/readback and static inspection **are not** Node/npm, Android/iOS, network or Supabase passes. Full automated/device and source/rights editorial QA is **pending**; see research record.
+- **Branch discipline:** commits to `content/curriculum-v1`, **not merged** into `main`.
