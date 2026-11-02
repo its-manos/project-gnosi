@@ -60,6 +60,7 @@ export default function DevTypedLessonPilotScreen({ onBack }: Props) {
   const [typedCheckpointAnswers, setTypedCheckpointAnswers] = useState<Record<number, QuizAnswer>>({});
   const answersRef = useRef<Record<number, number>>({});
   const [finished, setFinished] = useState(false);
+  const finishedRef = useRef(false);
 
   if (!pilot) return <View style={styles.result}>
     <Text style={styles.title}>Δεν βρέθηκε το δοκιμαστικό άρθρο.</Text>
@@ -100,7 +101,8 @@ export default function DevTypedLessonPilotScreen({ onBack }: Props) {
       requestPracticeCue(result.correct ? "correct" : "incorrect");
     }}
     onFinishLesson={() => {
-      if (Object.keys(answersRef.current).length === 3 && !finished) {
+      if (Object.keys(answersRef.current).length === 3 && !finishedRef.current) {
+        finishedRef.current = true;
         setFinished(true);
         requestPracticeCue("complete");
       }
