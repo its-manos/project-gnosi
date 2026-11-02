@@ -65,7 +65,7 @@ assert.equal(id(tree, 'spot-mistake-option-b').props.accessibilityRole, 'button'
 spot.setAnswer('a');
 tree = spot.render();
 assert.ok(id(tree, 'spot-mistake-feedback'), 'wrong answer reveals correct segment and correction');
-assert.equal(id(tree, 'spot-mistake-segment-b').props.disabled, true);
+assert.equal(id(tree, 'spot-mistake-option-b').props.disabled, true);
 const spotCorrect = mount('src/components/SpotMistakeQuestionCard.tsx', mistakeQuestion);
 spotCorrect.setAnswer('b');
 assert.ok(id(spotCorrect.render(), 'spot-mistake-feedback'), 'correct response also explains the sentence');
@@ -73,25 +73,45 @@ const blankQuestion = {
   id: 'blank', version: '1', type: 'fill-in-the-blank', prompt: 'Συμπλήρωσε:',
   explanation: 'Η συνέλευση των πολιτών.', content: {
     before: 'Η συνέλευση ονομαζόταν', after: '.',
-    acceptedAnswers: ['Εκκλησία του Δήμου'], displayAnswer: 'Εκκλησία του Δήμου',
+    options: [
+      { id: 'council', text: 'Βουλή των Πεντακοσίων' },
+      { id: 'assembly', text: 'Εκκλησία του Δήμου' },
+      { id: 'court', text: 'Ηλιαία' },
+      { id: 'areopagus', text: 'Άρειος Πάγος' },
+    ],
+    correctOptionId: 'assembly',
   },
 };
 const blank = mount('src/components/FillBlankQuestionCard.tsx', blankQuestion);
 tree = blank.render();
-assert.equal(id(tree, 'fill-blank-confirm').props.disabled, true);
-assert.equal(id(tree, 'fill-blank-input').props.maxLength, 80);
-id(tree, 'fill-blank-input').props.onChangeText('  ΕΚΚΛΗΣΙΑ ΤΟΥ ΔΗΜΟΥ ');
+assert.equal(id(tree, 'fill-blank-confirm').props.disabled, true, 'confirmation requires a selected tile');
+assert.ok(id(tree, 'fill-blank-slot'), 'the empty slot is visible');
+assert.equal(id(tree, 'fill-blank-input'), undefined, 'no keyboard or text field');
+assert.equal(id(tree, 'fill-blank-option-assembly').props.accessibilityRole, 'button');
+assert.equal(id(tree, 'fill-blank-option-assembly').props.accessibilityState.selected, false);
+id(tree, 'fill-blank-option-council').props.onPress();
 tree = blank.render();
+assert.equal(id(tree, 'fill-blank-option-council').props.accessibilityState.selected, true);
 assert.equal(id(tree, 'fill-blank-confirm').props.disabled, false);
+assert.deepEqual(blank.submitted, [], 'tapping a choice alone never scores or plays the accepted-answer cue');
+id(tree, 'fill-blank-option-assembly').props.onPress();
+tree = blank.render();
+assert.equal(id(tree, 'fill-blank-option-council').props.accessibilityState.selected, false, 'a different tile replaces the draft');
+assert.equal(id(tree, 'fill-blank-option-assembly').props.accessibilityState.selected, true);
+assert.ok(nodes(id(tree, 'fill-blank-slot')).some(n => n.props?.children === 'Εκκλησία του Δήμου'),
+  'the chosen phrase is inserted into the sentence');
 id(tree, 'fill-blank-confirm').props.onPress();
-assert.deepEqual(JSON.parse(JSON.stringify(blank.submitted)), ['ΕΚΚΛΗΣΙΑ ΤΟΥ ΔΗΜΟΥ']);
-assert.equal(id(tree, 'fill-blank-feedback'), undefined, 'feedback must wait for confirmed parent answer');
-blank.setAnswer('ΕΚΚΛΗΣΙΑ ΤΟΥ ΔΗΜΟΥ');
+assert.deepEqual(JSON.parse(JSON.stringify(blank.submitted)), ['assembly'], 'submit only the stable choice ID');
+assert.equal(id(tree, 'fill-blank-feedback'), undefined, 'feedback waits for parent-accepted answer');
+blank.setAnswer('assembly');
 tree = blank.render();
 assert.ok(id(tree, 'fill-blank-feedback'));
-assert.equal(id(tree, 'fill-blank-input').props.editable, false);
 assert.equal(id(tree, 'fill-blank-confirm'), undefined);
+assert.equal(id(tree, 'fill-blank-option-assembly').props.disabled, true, 'choices lock after scoring');
+assert.equal(id(tree, 'fill-blank-option-council').props.disabled, true);
 const wrongBlank = mount('src/components/FillBlankQuestionCard.tsx', blankQuestion);
-wrongBlank.setAnswer('Βουλή');
-assert.ok(id(wrongBlank.render(), 'fill-blank-feedback'), 'wrong response reveals authored answer');
-console.log('Spot-mistake and fill-blank cards passed: phrase tap, wrong/correct feedback, text entry, disabled confirmation, parent ownership and locking.');
+wrongBlank.setAnswer('council');
+tree = wrongBlank.render();
+assert.ok(id(tree, 'fill-blank-feedback'), 'wrong tile reveals the correct authored choice');
+assert.equal(id(tree, 'fill-blank-option-assembly').props.disabled, true);
+console.log('Spot-mistake and word-bank cards passed: complete claim selection, live blank insertion, switchable drafts, confirm, parent ownership, answer feedback and locks.');
