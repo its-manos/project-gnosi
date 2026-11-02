@@ -13,13 +13,15 @@ vm.runInNewContext(code('src/quiz/previewQuestions.ts'), {
   require: id => { if (id !== './engine') throw Error(id); return engine; },
 });
 const questions = previewModule.exports.previewQuestions;
-assert.equal(questions.length, 3);
-assert.deepEqual(Array.from(questions, q => q.type), ['multiple-select', 'ordering', 'matching']);
+assert.equal(questions.length, 5);
+assert.deepEqual(Array.from(questions, q => q.type), ['multiple-select', 'ordering', 'matching', 'spot-the-mistake', 'fill-in-the-blank']);
 let session = engine.createQuizSession('preview:quiz-question-types', 'challenge', questions);
 const answerFor = q => {
   if (q.type === 'multiple-select') return [...q.content.correctIndices].reverse();
   if (q.type === 'ordering') return [...q.content.correctOrder];
   if (q.type === 'matching') return Object.fromEntries(q.content.pairs.map(pair => [pair.leftId, pair.rightId]));
+  if (q.type === 'spot-the-mistake') return q.content.incorrectSegmentId;
+  if (q.type === 'fill-in-the-blank') return q.content.displayAnswer;
   throw Error('unexpected type');
 };
 for (const question of questions) {
@@ -31,7 +33,7 @@ for (const question of questions) {
 }
 const completed = engine.restoreQuizSession(engine.serializeQuizSession(session));
 assert.equal(completed.completed, true);
-assert.equal(engine.calculateQuizResults(completed).correctCount, 3);
+assert.equal(engine.calculateQuizResults(completed).correctCount, 5);
 const previewFile = fs.readFileSync(path.join(__dirname, '..', 'src/screens/QuizTypesPreviewScreen.tsx'), 'utf8');
 assert.equal(previewFile.includes('useDailyChallenge'), false, 'preview must not use saved daily quiz hook');
 assert.equal(previewFile.includes('useLearningSession'), false, 'preview must not write account progress');
