@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { LessonQuestion } from "../data/lessons";
 import { AnswerMotion } from "../play/motion";
-import { colors, reading } from "../theme";
+import { colors } from "../theme";
 import type { ReportTarget } from "../utils/contentReports";
 import QuizReveal from "./QuizReveal";
 import ReportContentButton from "./ReportContentButton";
@@ -45,7 +45,7 @@ export default function InlineQuestionCard({
         <View style={styles.badge}>
           <Text style={styles.badgeText}>✦  ΣΤΑΣΗ ΓΝΩΣΗΣ</Text>
         </View>
-        <Text style={styles.counter}>ΕΡΩΤΗΣΗ {String(questionNumber).padStart(2, "0")}</Text>
+        <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
       </View>
 
       <Text accessibilityRole="header" style={[styles.question, questionTextSize]}>
@@ -116,13 +116,13 @@ export default function InlineQuestionCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: reading.surface,
-    borderColor: reading.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.borderStrong,
     borderWidth: 1,
     borderRadius: 22,
     padding: 18,
     marginTop: 12,
-    marginBottom: 24,
+    marginBottom: 22,
   },
   topLine: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
@@ -130,13 +130,13 @@ const styles = StyleSheet.create({
   },
   badge: { backgroundColor: colors.accentSurface, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 },
   badgeText: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
-  counter: { color: reading.muted, fontSize: 11, fontWeight: "800" },
-  question: { color: reading.heading, fontSize: 19, lineHeight: 29, fontWeight: "800", marginBottom: 8 },
-  instructions: { color: reading.muted, fontSize: 12, lineHeight: 19, marginBottom: 18 },
+  counter: { color: colors.textMuted, fontSize: 12, fontWeight: "900" },
+  question: { color: colors.text, fontSize: 19, lineHeight: 28, fontWeight: "800", marginBottom: 9 },
+  instructions: { color: colors.textBody, fontSize: 13, lineHeight: 21, marginBottom: 18 },
   answers: { gap: 10 },
   answer: {
-    minHeight: 62, flexDirection: "row", alignItems: "center", gap: 12,
-    borderWidth: 1, borderColor: reading.border, borderRadius: 14,
+    minHeight: 62, flexDirection: "row", alignItems: "center", gap: 13,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 14,
     backgroundColor: colors.surfaceRaised, paddingHorizontal: 13, paddingVertical: 12,
   },
   answerPressed: { backgroundColor: colors.accentSurface, borderColor: colors.accent },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   letter: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
   letterCorrectText: { color: colors.success },
   letterWrongText: { color: colors.error },
-  answerText: { minWidth: 0, flex: 1, color: reading.heading, fontSize: 15, lineHeight: 23, fontWeight: "600" },
+  answerText: { minWidth: 0, flex: 1, color: colors.text, fontSize: 15, lineHeight: 23, fontWeight: "600" },
   correctIcon: { color: colors.success, fontSize: 20, fontWeight: "900", flexShrink: 0 },
   wrongIcon: { color: colors.error, fontSize: 20, fontWeight: "900", flexShrink: 0 },
   feedback: { marginTop: 18, borderWidth: 1, borderRadius: 16, padding: 16, gap: 9 },
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   badText: { color: colors.error },
   comboBadge: { backgroundColor: colors.accentSurface, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6 },
   comboText: { color: colors.accentLight, fontSize: 10, fontWeight: "900" },
-  correction: { color: reading.heading, fontSize: 15, lineHeight: 24, fontWeight: "800" },
-  explanationLabel: { color: reading.muted, fontSize: 10, letterSpacing: 0.7, fontWeight: "900", marginTop: 2 },
-  feedbackText: { color: reading.text, fontSize: 15, lineHeight: 24 },
+  correction: { color: colors.text, fontSize: 15, lineHeight: 24, fontWeight: "800" },
+  explanationLabel: { color: colors.textMuted, fontSize: 10, letterSpacing: 0.7, fontWeight: "900", marginTop: 2 },
+  feedbackText: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
 });
