@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { evaluateAnswer } from "../quiz/engine";
 import type { OrderingQuestion } from "../quiz/types";
-import { colors, reading } from "../theme";
+import { colors } from "../theme";
 import QuizReveal from "./QuizReveal";
 
 type Props = {
@@ -13,7 +13,7 @@ type Props = {
   readingSize?: number;
 };
 
-/** Move controls also work with screen readers; no drag gesture is required. */
+/** Accessible row reordering; item identity rather than stale position drives every move. */
 export default function OrderingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
   const [pending, setPending] = useState<string[]>(() => question.content.items.map(item => item.id));
   useEffect(() => { setPending(question.content.items.map(item => item.id)); }, [question.id, question.version]);
@@ -21,12 +21,14 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
   const order = answered ? answer : pending;
   const correct = answered && evaluateAnswer(question, answer).correct;
   const labels = new Map<string, string>(question.content.items.map(item => [item.id, item.label] as const));
+  const correctOrder = question.content.correctOrder;
 
-  function move(index: number, offset: number) {
+  function move(id: string, offset: number) {
     if (answered) return;
-    const target = index + offset;
-    if (target < 0 || target >= pending.length) return;
     setPending(previous => {
+      const index = previous.indexOf(id);
+      const target = index + offset;
+      if (index < 0 || target < 0 || target >= previous.length) return previous;
       const next = [...previous];
       [next[index], next[target]] = [next[target], next[index]];
       return next;
@@ -35,59 +37,97 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
 
   return <View style={styles.card} testID="ordering-card">
     <View style={styles.topLine}>
-      <Text style={styles.eyebrow}>ΒΑΛΕ ΣΤΗ ΣΩΣΤΗ ΣΕΙΡΑ</Text>
-      <Text style={styles.counter}>ΕΡΩΤΗΣΗ {questionNumber}</Text>
+      <View style={styles.typeBadge}><Text style={styles.typeLabel}>↕  ΣΩΣΤΗ ΣΕΙΡΑ</Text></View>
+      <Text style={styles.counter}>0{questionNumber}</Text>
     </View>
-    <Text style={[styles.question, readingSize ? { fontSize: readingSize } : undefined]}>{question.prompt}</Text>
-    <Text style={styles.hint}>Χρησιμοποίησε τα βέλη για να αλλάξεις τη σειρά και έπειτα επιβεβαίωσε.</Text>
-    {order.map((id, index) => <View key={id} testID={`ordering-item-${id}`} style={styles.item}>
-      <View style={styles.number}><Text style={styles.numberText}>{index + 1}</Text></View>
-      <Text style={styles.label}>{labels.get(id) ?? id}</Text>
-      {!answered ? <View style={styles.controls}>
-        <Pressable testID={`ordering-up-${id}`} accessibilityRole="button"
-          accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα πάνω`}
-          accessibilityState={{ disabled: index === 0 }}
-          disabled={index === 0} style={[styles.control, index === 0 && styles.disabled]}
-          onPress={() => move(index, -1)}><Text style={styles.arrow}>↑</Text></Pressable>
-        <Pressable testID={`ordering-down-${id}`} accessibilityRole="button"
-          accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα κάτω`}
-          accessibilityState={{ disabled: index === order.length - 1 }}
-          disabled={index === order.length - 1} style={[styles.control, index === order.length - 1 && styles.disabled]}
-          onPress={() => move(index, 1)}><Text style={styles.arrow}>↓</Text></Pressable>
-      </View> : null}
-    </View>)}
-    {!answered ? <Pressable testID="ordering-confirm" accessibilityRole="button" onPress={() => onSubmit([...pending])}
-      style={styles.confirm}><Text style={styles.confirmText}>Επιβεβαίωση σειράς</Text></Pressable> : null}
+    <Text style={[styles.question, readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
+    <Text style={styles.hint}>Μετακίνησε τις κάρτες με τα βέλη. Η πρώτη θέση είναι η αρχή της ακολουθίας.</Text>
+    <View style={styles.orderList}>
+      {order.map((id, index) => {
+        const atCorrectPlace = answered && id === correctOrder[index];
+        return <View key={id} testID={`ordering-item-${id}`}
+          style={[styles.item, atCorrectPlace && styles.itemCorrect, answered && !atCorrectPlace && styles.itemWrong]}>
+          <View style={[styles.number, atCorrectPlace && styles.numberCorrect]}>
+            <Text style={styles.numberText}>{String(index + 1).padStart(2, "0")}</Text>
+          </View>
+          <Text style={styles.label}>{labels.get(id) ?? id}</Text>
+          {!answered ? <View style={styles.controls}>
+            <Pressable testID={`ordering-up-${id}`} accessibilityRole="button"
+              accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα πάνω`}
+              accessibilityState={{ disabled: index === 0 }}
+              disabled={index === 0} style={({ pressed }) => [styles.control, index === 0 && styles.disabled, pressed && styles.pressed]}
+              onPress={() => move(id, -1)}><Text style={styles.arrow}>↑</Text></Pressable>
+            <Pressable testID={`ordering-down-${id}`} accessibilityRole="button"
+              accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα κάτω`}
+              accessibilityState={{ disabled: index === order.length - 1 }}
+              disabled={index === order.length - 1}
+              style={({ pressed }) => [styles.control, index === order.length - 1 && styles.disabled, pressed && styles.pressed]}
+              onPress={() => move(id, 1)}><Text style={styles.arrow}>↓</Text></Pressable>
+          </View> : <Text style={[styles.resultMark, atCorrectPlace ? styles.correctMark : styles.wrongMark]}>
+            {atCorrectPlace ? "✓" : "×"}
+          </Text>}
+        </View>;
+      })}
+    </View>
+    {!answered ? <>
+      <Text style={styles.footHint}>Σκέψου ποιο γεγονός προηγήθηκε και ποιο ακολούθησε.</Text>
+      <Pressable testID="ordering-confirm" accessibilityRole="button" onPress={() => onSubmit([...pending])}
+        style={({ pressed }) => [styles.confirm, pressed && styles.pressed]}>
+        <Text style={styles.confirmText}>Επιβεβαίωση σειράς  →</Text>
+      </Pressable>
+    </> : null}
     {answered ? <QuizReveal><View testID="ordering-feedback" accessibilityLiveRegion="polite"
       style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={styles.feedbackTitle}>{correct ? "Σωστά — συνέχισε!" : "Η σωστή σειρά:"}</Text>
-      {!correct ? <Text style={styles.feedbackText}>{question.content.correctOrder.map(id => labels.get(id)).join(" → ")}</Text> : null}
+      <Text style={[styles.feedbackTitle, correct ? styles.correctTitle : styles.wrongTitle]}>
+        {correct ? "✓  Σωστή ακολουθία!" : "↗  Η σωστή ακολουθία"}
+      </Text>
+      {!correct ? <View style={styles.solutionList}>{correctOrder.map((id, index) =>
+        <Text key={id} style={styles.solutionItem}>{index + 1}. {labels.get(id)}</Text>)}</View> : null}
       <Text style={styles.feedbackText}>{question.explanation}</Text>
     </View></QuizReveal> : null}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 20, marginVertical: 12, borderRadius: 19, borderWidth: 1, borderColor: reading.border, backgroundColor: reading.surface },
-  topLine: { flexDirection: "row", justifyContent: "space-between", gap: 8, marginBottom: 10 },
-  eyebrow: { color: colors.accentLight, fontWeight: "900", fontSize: 10, letterSpacing: 1, flexShrink: 1 },
-  counter: { color: colors.textMuted, fontSize: 10, fontWeight: "800" },
-  question: { color: colors.text, fontSize: 17, lineHeight: 26, fontWeight: "700", marginBottom: 8 },
-  hint: { color: reading.muted, fontSize: 12, lineHeight: 20, marginBottom: 16 },
-  item: { minHeight: 60, flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#242D35",
-    borderColor: "#343A50", borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, marginBottom: 9 },
-  number: { width: 25, alignItems: "center" },
-  numberText: { color: colors.accentLight, fontSize: 14, fontWeight: "900" },
-  label: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 21 },
-  controls: { flexDirection: "row", gap: 4 },
-  control: { minWidth: 44, minHeight: 46, justifyContent: "center", alignItems: "center", borderRadius: 9, backgroundColor: "#343A50" },
-  disabled: { opacity: 0.35 },
-  arrow: { color: colors.text, fontSize: 22, fontWeight: "700" },
-  confirm: { marginTop: 10, minHeight: 48, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: colors.accentLight },
-  confirmText: { color: "#12181D", fontSize: 14, fontWeight: "800" },
-  feedback: { padding: 13, borderRadius: 12, marginTop: 14, gap: 8 },
-  feedbackCorrect: { backgroundColor: "#14352E" },
-  feedbackWrong: { backgroundColor: "#302631" },
-  feedbackTitle: { color: colors.text, fontSize: 14, fontWeight: "800" },
-  feedbackText: { color: reading.text, fontSize: 14, lineHeight: 22 },
+  card: { padding: 18, marginTop: 12, marginBottom: 22, borderRadius: 22, borderWidth: 1,
+    borderColor: colors.borderStrong, backgroundColor: colors.surface },
+  topLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 18 },
+  typeBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: colors.accentSurface },
+  typeLabel: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
+  counter: { color: colors.textMuted, fontSize: 12, fontWeight: "900" },
+  question: { color: colors.text, fontSize: 19, lineHeight: 28, fontWeight: "800", marginBottom: 9 },
+  hint: { color: colors.textBody, fontSize: 13, lineHeight: 21, marginBottom: 18 },
+  orderList: { gap: 10 },
+  item: { minHeight: 69, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1,
+    backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderRadius: 14,
+    paddingHorizontal: 11, paddingVertical: 9 },
+  itemCorrect: { borderColor: colors.success, backgroundColor: colors.successSurface },
+  itemWrong: { borderColor: colors.error, backgroundColor: colors.errorSurface },
+  number: { width: 33, height: 36, borderRadius: 10, backgroundColor: colors.accentSurface, alignItems: "center",
+    justifyContent: "center", flexShrink: 0 },
+  numberCorrect: { backgroundColor: "#205143" },
+  numberText: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
+  label: { flex: 1, minWidth: 0, color: colors.text, fontSize: 15, lineHeight: 22, fontWeight: "700" },
+  controls: { flexDirection: "row", gap: 5 },
+  control: { minWidth: 43, minHeight: 45, alignItems: "center", justifyContent: "center",
+    borderRadius: 10, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.accentSurface },
+  disabled: { opacity: 0.3 },
+  pressed: { opacity: 0.8 },
+  arrow: { color: colors.accentLight, fontSize: 22, fontWeight: "700" },
+  resultMark: { width: 26, textAlign: "center", fontWeight: "900", fontSize: 20 },
+  correctMark: { color: colors.success },
+  wrongMark: { color: colors.error },
+  footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19, marginTop: 13 },
+  confirm: { marginTop: 18, minHeight: 54, padding: 12, backgroundColor: colors.accent,
+    justifyContent: "center", alignItems: "center", borderRadius: 14 },
+  confirmText: { color: colors.background, fontSize: 15, fontWeight: "900" },
+  feedback: { padding: 16, marginTop: 18, borderRadius: 16, borderWidth: 1, gap: 10 },
+  feedbackCorrect: { backgroundColor: colors.successSurface, borderColor: colors.success },
+  feedbackWrong: { backgroundColor: colors.errorSurface, borderColor: colors.error },
+  feedbackTitle: { fontSize: 17, fontWeight: "900" },
+  correctTitle: { color: colors.success },
+  wrongTitle: { color: colors.error },
+  solutionList: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 7 },
+  solutionItem: { color: colors.text, fontSize: 14, lineHeight: 23, fontWeight: "700" },
+  feedbackText: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
 });
