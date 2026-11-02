@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–26 · 2026-11-02 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–27 · 2026-11-02 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -290,7 +290,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία» — **Integrated** ([research, sources, image rights and QA](greek-stage-tragedy-research.md); 30 paragraphs, 7 checkpoints; device/Node QA pending)
 26. `greek-philosophy-in-context` — «Πού γινόταν η φιλοσοφία;» — **Integrated** ([research, sources, media rights and QA](greek-philosophy-in-context-research.md); 30 paragraphs, 7 checkpoints; Node/device/editorial QA pending)
-27. `greek-science-knowledge` — «Οι αρχαίοι ερευνητές και τα όρια της γνώσης»
+27. `greek-science-knowledge` — «Πώς ήξεραν ότι είχαν δίκιο;» — **Integrated** ([research, evidence, sources, image rights and QA](greek-science-knowledge-research.md); 24 paragraphs, six anchored reasoning checks; Node/device/editorial QA pending)
 28. `greek-images-sculpture` — «Αγάλματα με χρώματα και ιστορίες»
 29. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ένας κόσμος πολλών βασιλείων»
 30. `antikythera-gears` — «Ένας ουρανός μέσα σε γρανάζια» (existing live ID)
@@ -308,7 +308,8 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
 - `alexander-conquests-context`: #24 succession (336–335), Greek/Theban choices, Achaemenid institutions and local agency, coast and supply 334–332, Gaugamela 331, imperial negotiation and resistance in Central Asia/Indus, Babylon 323 and source criticism. Does not recount Philip’s 359–336 ascent (#23) or prewrite the successors’ kingdoms (#29). [Research/rights/QA](alexander-conquests-context-research.md).
 - `hellenistic-kingdoms-cities`: #29 political and civic transformations after 323; do not project later successor states back into 323.
-- `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
+- `greek-science-knowledge`: #27 differentiates observed symptoms from physiological causes, Euclidean proof from practical measurement, prediction from physically correct models; Babylonian astronomical records show shared networks. Does not repeat #26 philosophical institutions, #18 sacred sites, #3 general source criticism, #29 successor politics or #30 Antikythera gears. [Research, rights and outstanding QA](greek-science-knowledge-research.md).
+- `antikythera-gears`: preserve existing article as the technical case study; #27 treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
 
