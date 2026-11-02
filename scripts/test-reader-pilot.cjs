@@ -129,10 +129,15 @@ const before=scrolls.length;
 props={...props,checkpointAnswers:{0:0,1:0}}; tree=render();
 nodes(tree).find(n=>n.type==='ScrollView').props.onContentSizeChange(); assert.equal(scrolls.length,before);
 // Shared card keeps explanations visible and disables repeat answers.
-const Card=compile('src/components/InlineQuestionCard.tsx',{'../theme':theme}).default;
+const Card=compile('src/components/InlineQuestionCard.tsx',{
+  './SingleChoiceQuestionCard': { __esModule:true, default:'SingleChoiceQuestionCard' },
+}).default;
 const feedback=Card({question:lesson.questions[0],questionNumber:1,selectedAnswer:0,readingSize:24,onSelectAnswer:()=>{}});
-assert.ok(nodes(feedback).some(n=>n.props?.accessibilityLiveRegion==='polite'));
-assert.ok(nodes(feedback).filter(n=>n.type==='Pressable').every(n=>n.props.disabled));
+assert.equal(feedback.type,'SingleChoiceQuestionCard');
+assert.equal(feedback.props.answer,0,'restored answer stays parent-owned');
+assert.equal(feedback.props.question,lesson.questions[0].question);
+assert.equal(feedback.props.readingSize,24);
+assert.equal(feedback.props.correctIndex,lesson.questions[0].correctIndex);
  // The second pilot lesson also connects the new spot-the-mistake renderer to numeric persistence.
 reset(); const greekWorld=data.lessons.find(l=>l.id==='greek-world-not-a-country');
 props={...props,lesson:greekWorld,category:data.categories.find(c=>c.id===greekWorld.categoryId),subcategory:data.subcategories.find(c=>c.id===greekWorld.subcategoryId)};
