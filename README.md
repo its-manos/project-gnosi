@@ -167,3 +167,5 @@ For iOS distribution, **npm run beta:ios** and the EAS submit workflow require A
 5. Review **git diff --check**, confirm no secrets or generated outputs are staged, and open a PR. Merge only after review and release acceptance.
 
 Known release gates: real Android/iOS image loading and zoom, external-account signup emails, offline/reconnect transitions, cross-device identity isolation and EAS Update on an installed APK.
+
+For the evidence-backed November 2026 cleanup, retained-file decisions and unexecuted checks, see [Repository maintenance audit](docs/repository-maintenance-audit.md).
