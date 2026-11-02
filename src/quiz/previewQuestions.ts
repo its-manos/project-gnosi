@@ -54,9 +54,13 @@ const mistakePrompt = "Η Βουλή των Πεντακοσίων";
 const blankContent: FillBlankContent = {
   before: "Στη δημοκρατική Αθήνα, η συνέλευση των πολιτών ονομαζόταν",
   after: ".",
-  acceptedAnswers: ["Εκκλησία του Δήμου", "Εκκλησία Δήμου"],
-  displayAnswer: "Εκκλησία του Δήμου",
-  accentSensitive: false,
+  options: [
+    { id: "boule", text: "Βουλή των Πεντακοσίων" },
+    { id: "assembly", text: "Εκκλησία του Δήμου" },
+    { id: "areopagus", text: "Άρειος Πάγος" },
+    { id: "heliaia", text: "Ηλιαία" },
+  ],
+  correctOptionId: "assembly",
 };
 const blankPrompt = "Θυμάσαι το όνομα της συνέλευσης των Αθηναίων πολιτών;";
 
