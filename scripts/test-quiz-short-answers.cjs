@@ -4,9 +4,9 @@ const fs = require('node:fs'), path = require('node:path'), vm = require('node:v
 const js = ts.transpileModule(fs.readFileSync(path.join(__dirname, '../src/quiz/engine.ts'), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText;
-const module = { exports: {} };
-vm.runInNewContext(js, { module, exports: module.exports });
-const e = module.exports;
+const engineModule = { exports: {} };
+vm.runInNewContext(js, { module: engineModule, exports: engineModule.exports });
+const e = engineModule.exports;
 function make(id, type, content) {
   const prompt = id + ' question?';
   return { id, type, version: e.contentVersion(prompt, content), prompt, content,
