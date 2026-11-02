@@ -315,3 +315,9 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - Android Expo Go reported widespread HTTP 403s for remote Commons thumbnails requested at `width=1200`, which is outside Wikimedia's current standard bucket widths. This is an image-delivery regression, not a content/quiz or native bundle error.
 - The shared image loader now requests 960px Commons thumbnails with a descriptive client User-Agent, retains locally bundled image priority and retries once through Wikimedia's documented alternate redirect endpoint. Lesson IDs, source URLs, captions, credit and licence links remain intact.
 - See [diagnosis, source references and native QA commands](COMMONS-IMAGE-DELIVERY-403.md); run `node scripts/test-commons-image-delivery.cjs` plus existing image/reader regressions. **Device verification pending; do not mark fixed or Approved until images load on phone.**
+
+
+### Android image platform mismatch — 2026-11-02
+- Follow-up device evidence: Wikimedia images displayed on iOS, **but still failed on Android**. Do not label the earlier 960px runtime-redirect solution cross-platform verified.
+- Implemented a new local bundling workflow (`npm run images:commons:status`, `images:commons:bundle`, `images:commons:verify`) to extend the existing checked-in asset lookup to all unbundled Commons lesson images. Static source credit URLs and original metadata remain.
+- The source scripts are committed, **but binary image files have not yet been downloaded/committed** from the developer machine. Android release readiness remains **blocked** until the full bundle is generated, validated and tested on a physical device. See [updated runbook](COMMONS-IMAGE-DELIVERY-403.md).
