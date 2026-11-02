@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "antikythera-gears": [
+    {
+      afterParagraphId: "antikythera-11",
+      url: commonsFileUrl("NAMA Machine d'Anticythère 2.jpg"),
+      resizeMode: "contain",
+      caption: "Αυθεντικό θραύσμα Β του Μηχανισμού των Αντικυθήρων (πιθανότατα 2ος αιώνας π.Χ.), Εθνικό Αρχαιολογικό Μουσείο, φωτογραφία 2005. Διακρίνονται κατάλοιπα που συνδέονται με την πίσω ημερολογιακή κλίμακα. Οι σημερινές φθορές δεν επιτρέπουν να δούμε απευθείας κάθε αρχικό δείκτη ή γράμμα.",
+      credit: "Marsyas / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2005",
+      creditUrl: commonsPageUrl("NAMA Machine d'Anticythère 2.jpg"),
+    },
+    {
+      afterParagraphId: "antikythera-25",
+      url: commonsFileUrl("NAMA Machine d'Anticythère 5.jpg"),
+      resizeMode: "contain",
+      caption: "ΣΥΓΧΡΟΝΗ ΑΝΑΚΑΤΑΣΚΕΥΗ του Derek de Solla Price με συνεργάτες, παραχωρημένη στο Εθνικό Αρχαιολογικό Μουσείο το 1980· φωτογραφία 2005. Δεν αποτελεί ακέραιο αρχαίο αντικείμενο. Τα μοντέλα μπορούν να αναθεωρηθούν όταν αποκωδικοποιούνται νέα ίχνη.",
+      credit: "Marsyas / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2005",
+      creditUrl: commonsPageUrl("NAMA Machine d'Anticythère 5.jpg"),
+    },
+  ],
   "hellenistic-kingdoms-cities": [
     {
       afterParagraphId: "hellenistic-13",
