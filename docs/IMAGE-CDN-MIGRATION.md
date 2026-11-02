@@ -50,8 +50,8 @@ For Expo SDK 58 the recommended compatible version is approximately 58.0.18. Exp
 ## 2. Set up Cloudflare R2 (manual account steps)
 
 1. Create a bucket (example: gnosi-images).
-2. Under Settings → Public access → Custom Domains, attach a domain you control (for example images.yourdomain.gr). Cloudflare explains that a custom domain enables caching; its r2.dev development URL does not.
-3. Create an object read/write token scoped to that bucket and configure an **rclone S3 remote** with Cloudflare provider and your account endpoint. Keep credentials solely in the developer machine's private rclone config, never in .env, EXPO_PUBLIC variables, GitHub or chat.
+2. Under Settings → Public access → Custom Domains, attach a domain you control (for example images.yourdomain.gr). The domain must be in the same Cloudflare account as the bucket. Cloudflare explains that a custom domain enables caching; its r2.dev development URL does not. **For the four-image pilot only**, an R2 `r2.dev` development URL can be used instead when you do not yet own/configure a custom domain. It is rate-limited, has no edge caching, and must not be used for production.
+3. From R2 Overview → Account Details → API Tokens → Manage, create an **R2 Object Read & Write token scoped only to this bucket**, then configure an **rclone S3 remote** with Cloudflare provider and your account endpoint. Cloudflare requires activating an R2 subscription to create API tokens, even if usage remains within the free tier. Keep credentials solely in the developer machine's private rclone config, never in .env, EXPO_PUBLIC variables, GitHub or chat.
 4. Serve the images publicly with Content-Type image/webp and a suitable cache lifetime.
 
 Documentation:
@@ -65,19 +65,21 @@ On Ubuntu:
 
     sudo apt install imagemagick rclone
     npm run images:cdn:status
-    npm run images:cdn:prepare -- --limit=4
+    npm run images:cdn:prepare -- --pilot-ancient-greece
 
 Confirm ImageMagick has WebP support if conversion fails:
 
     convert -list format | grep -i WEBP
 
-Generated WebP bytes are saved under .image-cdn-build/objects/commons/. This folder is gitignored and not included in Metro.
+The pilot selects exactly four Ancient Greece **cover** images (`ancient-athens`, `greek-world-not-a-country`, `greek-history-through-evidence`, `greek-geography-seas`), not arbitrary catalogue entries. It generates eight WebP objects. Generated WebP bytes are saved under .image-cdn-build/objects/commons/. This folder is gitignored and not included in Metro.
 
 Upload to the configured R2 bucket:
 
+    rclone version
+    rclone config
     rclone copy .image-cdn-build/objects r2:gnosi-images --progress
 
-Validate public objects with your actual custom CDN domain:
+Validate public objects with your actual custom CDN domain (or the Cloudflare-provided r2.dev URL **for this pilot only**). The `rclone` remote named `r2` must point to the same R2 account and bucket. Older rclone versions (pre-1.59) may fail authorization:
 
     npm run images:cdn:verify -- --cdn=https://images.yourdomain.gr
     npm run images:cdn:publish -- --cdn=https://images.yourdomain.gr
@@ -126,3 +128,12 @@ Never commit .image-cdn-build/ or any private credentials. Review Commons licenc
 - Full library uploaded and licensed attribution reviewed.
 - Only then safely remove now-redundant bundled photographs to reduce installation size, retaining the original Gnosi diagrams and required non-Commons art.
 - Merge after native QA, not merely after structural/mock tests.
+
+## Cloudflare dashboard reference (verified 2026-11-02)
+
+- Bucket setup: https://developers.cloudflare.com/r2/get-started/
+- R2 API token: https://developers.cloudflare.com/r2/api/tokens/
+- Public custom domain / temporary development URL: https://developers.cloudflare.com/r2/buckets/public-buckets/
+- Rclone (S3 Cloudflare provider, endpoint, rclone >=1.59): https://developers.cloudflare.com/r2/examples/rclone/
+
+No Cloudflare account or bucket was created through GitHub. The uploader must configure the Cloudflare account manually and should not share token credentials in chat.
