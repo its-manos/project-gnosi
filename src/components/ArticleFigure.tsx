@@ -21,6 +21,7 @@ export default function ArticleFigure({ figure }: Props) {
             The source filename is not the format of the redirected response. */}
           <ResilientImage
             uri={figure.url}
+            rendition="preview"
             style={styles.image}
             resizeMode={figure.resizeMode ?? "cover"}
             accessibilityLabel={figure.caption}
