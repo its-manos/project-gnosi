@@ -31,6 +31,7 @@
     "typecheck": "tsc --noEmit",
     "test:lesson-question-card": "node scripts/test-inline-question-card.cjs",
     "test:typed-lesson-integration": "node scripts/test-typed-lesson-integration.cjs",
+    "test:typed-lesson-audio": "node scripts/test-typed-lesson-audio.cjs",
     "test:question-types": "node scripts/test-quiz-question-types.cjs && node scripts/test-quiz-short-answers.cjs && node scripts/test-multi-select-card.cjs && node scripts/test-question-card-interfaces.cjs && node scripts/test-quiz-spot-blank-cards.cjs && node scripts/test-quiz-preview.cjs && node scripts/test-quiz-practice-audio.cjs",
     "validate:content": "node scripts/validate-content.cjs",
     "beta:check": "node scripts/check-beta-build.cjs",
