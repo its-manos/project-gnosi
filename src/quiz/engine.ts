@@ -1,4 +1,4 @@
-import type { AnswerEvaluation, ChoiceContent, MatchingContent, MultipleSelectContent, OrderingContent, QuestionHandlers, QuestionToken, QuizMode, QuizQuestion, QuizSession, QuizTransition } from "./types";
+import type { AnswerEvaluation, ChoiceContent, FillBlankContent, MatchingContent, MultipleSelectContent, OrderingContent, QuestionHandlers, QuestionToken, QuizMode, QuizQuestion, QuizSession, QuizTransition, SpotMistakeContent } from "./types";
 
 export const LEGACY_QUIZ_POINTS = { lessonCorrect: 1, dailyCorrect: 100 } as const;
 const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -74,11 +74,57 @@ export function evaluateMatching(content: unknown, answer: unknown): AnswerEvalu
   return { valid, correct: valid && content.pairs.every(pair => answer[pair.leftId] === pair.rightId) };
 }
 
+
+/** A mistake is a stable, tappable authored phrase, never an arbitrary text offset. */
+function spotMistakeContent(value: unknown): value is SpotMistakeContent {
+  if (!object(value) || !Array.isArray(value.segments) || value.segments.length < 3 || value.segments.length > 12 ||
+    !value.segments.every(s => object(s) && safeId(s.id) && typeof s.text === "string" &&
+      s.text.trim().length > 0 && s.text.length <= 220)) return false;
+  const ids = value.segments.map(s => s.id);
+  return new Set(ids).size === ids.length &&
+    safeId(value.incorrectSegmentId) && ids.includes(value.incorrectSegmentId) &&
+    typeof value.correction === "string" && value.correction.trim().length > 0 && value.correction.length <= 500;
+}
+export function evaluateSpotMistake(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!spotMistakeContent(content)) return { valid: false, correct: false };
+  const valid = typeof answer === "string" && content.segments.some(s => s.id === answer);
+  return { valid, correct: valid && answer === content.incorrectSegmentId };
+}
+
+/** Collapse harmless Greek typing variations, never apply fuzzy spelling correction. */
+export function normalizeBlankAnswer(value: string, accentSensitive = false): string {
+  let text = value.normalize("NFC").trim().replace(/\\s+/gu, " ").toLocaleLowerCase("el-GR");
+  if (!accentSensitive) text = text.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").normalize("NFC");
+  return text.replace(/ς/g, "σ");
+}
+function validShortAnswer(value: unknown): value is string {
+  return typeof value === "string" && value.length <= 80 && value.trim().length > 0 && !/[\\r\\n]/.test(value);
+}
+function fillBlankContent(value: unknown): value is FillBlankContent {
+  if (!object(value) || typeof value.before !== "string" || typeof value.after !== "string" ||
+    (!value.before.trim() && !value.after.trim()) ||
+    value.before.length > 1000 || value.after.length > 1000 ||
+    !Array.isArray(value.acceptedAnswers) || value.acceptedAnswers.length < 1 || value.acceptedAnswers.length > 12 ||
+    !value.acceptedAnswers.every(validShortAnswer) || !validShortAnswer(value.displayAnswer) ||
+    (value.accentSensitive !== undefined && typeof value.accentSensitive !== "boolean")) return false;
+  const sensitive = value.accentSensitive === true;
+  const normalized = value.acceptedAnswers.map(a => normalizeBlankAnswer(a, sensitive));
+  return new Set(normalized).size === normalized.length &&
+    normalized.includes(normalizeBlankAnswer(value.displayAnswer, sensitive));
+}
+export function evaluateFillBlank(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!fillBlankContent(content) || !validShortAnswer(answer)) return { valid: false, correct: false };
+  const normalized = normalizeBlankAnswer(answer, content.accentSensitive === true);
+  return { valid: true, correct: content.acceptedAnswers.some(a => normalizeBlankAnswer(a, content.accentSensitive === true) === normalized) };
+}
+
 export const DEFAULT_QUESTION_HANDLERS: QuestionHandlers = Object.freeze({
   "multiple-choice": { validateContent: choiceContent, evaluate: evaluateChoice },
   "multiple-select": { validateContent: multipleSelectContent, evaluate: evaluateMultipleSelect },
   ordering: { validateContent: orderingContent, evaluate: evaluateOrdering },
   matching: { validateContent: matchingContent, evaluate: evaluateMatching },
+  "spot-the-mistake": { validateContent: spotMistakeContent, evaluate: evaluateSpotMistake },
+  "fill-in-the-blank": { validateContent: fillBlankContent, evaluate: evaluateFillBlank },
 });
 function handlerFor(type: string, handlers: QuestionHandlers) {
   return own(handlers, type) ? handlers[type] : undefined;
