@@ -5,7 +5,6 @@ import { colors } from "../theme";
 import ActionButton from "./ActionButton";
 import SingleChoiceQuestionCard from "./SingleChoiceQuestionCard";
 import ProgressBar from "./ProgressBar";
-import ReportContentButton from "./ReportContentButton";
 import { dailyReportTarget } from "../utils/contentReports";
 
 type Props = {
