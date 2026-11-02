@@ -27,7 +27,7 @@ function mount(file, question) {
   const imports = {
     react,
     'react/jsx-runtime': { jsx, jsxs: jsx },
-    'react-native': { Pressable: 'Pressable', Text: 'Text', TextInput: 'TextInput', View: 'View',
+    'react-native': { Pressable: 'Pressable', Text: 'Text', TextInput: 'TextInput', Keyboard: { dismiss: () => {} }, View: 'View',
       StyleSheet: { create: x => x } },
     '../play/motion': { AnswerMotion: 'AnswerMotion' },
     '../quiz/engine': engine.exports,
