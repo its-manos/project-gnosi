@@ -406,3 +406,11 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **Quiz:** Lesson 5 v3 ordering, spot-the-mistake, matching, multiple-choice; prior wrong fourth answer key corrected. Lesson 6 v2 spot-the-mistake, matching, multiple-choice, fill-in-the-blank; old keys had no identified mismatch. All quiz IDs preserved, old versions frozen; stale attempts isolated without deleting completed records or past XP.
 - **Source review:** Cambridge/Mariner’s Mirror research on west Samos, the Argolida Ephorate's Lerna record, BSA Dhaskalio evidence, Cycladic Art source pages. Full rationale and QA: [Phase 2 lessons 5–6](ANCIENT-GREECE-PHASE-2-LESSONS-5-6.md).
 - **Release state:** both lessons **Integrated, not Validated / Approved**; connector preflight only until real Node/device proof is recorded. No main merge.
+
+
+### Phase 2 — Lessons 5–6 user-reported local passes; Lessons 7–8 research/quiz revision (2026-11-03)
+- User reports all tests supplied for the 5–6 phase passed locally; this supports their Node/TypeScript/content checks, but not unreported iOS/Android/end-to-end QA. They remain **Integrated**, not formally Approved.
+- **#7 `minoan-crete`** preserves 22 paragraphs, 4/10/15/20 checkpoints and existing credited images; corrects faience material and the location of the heavily reconstructed north entrance bastion, plus a targeted intro revision. Four v2 questions: matching, spot the mistake, single choice, fill the blank.
+- **#8 `mycenaean-palaces`** preserves 25 paragraphs, 4/10/15/20/24 checkpoints and existing media; narrows the interpretation of the PY Ub 1318 tablet and Bendall's Northeastern Building case. Five v2 questions: fill the blank, ordering, spot the mistake, matching, single choice.
+- Original v1 quizzes frozen; stable quiz IDs kept, no old fingerprint alias. Historical completions/bookmarks/XP/events unaffected; unsafe stale unfinished attempts isolated. Dedicated older lesson tests and outdated 2–4 flexible-editorial fixtures updated for the typed checkpoint system.
+- **QA:** only source/editorial preflight in this integration. Lessons #7–8 **Integrated, not Validated or Approved**; details [7–8 audit](ANCIENT-GREECE-PHASE-2-LESSONS-7-8.md). `main` unchanged.

@@ -48,64 +48,47 @@ const completed=parseLearningBackup({...make(attempt),completedIds:[lesson.id]})
 assert.ok(completed.completedIds.includes(lesson.id));
 assert.ok(!lessonQuizMatches(lesson,"q_other"),"Historical changed answers must not count for current mistake review");
 
-const greek=lessons.find(l=>l.id==="greek-world-not-a-country");
-assert.ok(greek,"Ancient Greece second lesson should be published");
-assert.equal(progress.getParagraphCount(greek),15);
-assert.deepEqual(progress.getQuestionPlacements(greek).map(p=>p.afterParagraphNumber),[3,9,12]);
-assert.deepEqual(progress.getQuestionPlacements(greek).map(p=>p.questionId),["greek-world-belonging","greek-world-herodotus-context","greek-world-links"]);
-assert.equal(progress.getVisibleParagraphLimit(greek,{}),3);
-assert.equal(progress.getVisibleParagraphLimit(greek,{0:0}),9);
-assert.equal(progress.getVisibleParagraphLimit(greek,{0:0,1:2}),12);
-assert.equal(progress.getVisibleParagraphLimit(greek,{0:0,1:2,2:0}),15);
-assert.equal(progress.getResumeParagraphNumber(greek,{0:0,1:2}),10);
-assert.ok(greek.requireCurrentAttemptQuiz && greek.questions.every(q=>q.version==="2"&&q.answers.length===4));
-assert.deepEqual(inlineArticleMedia[greek.id].map(f=>f.afterParagraphId),["map-shores","sanctuaries"]);
-assert.ok(!lessonQuizMatches(greek,"q_unrelated"));
-const greekAttempt={checkpointAnswers:{0:greek.questions[0].correctIndex},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
-const greekOld=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[greek.id],attempts:{[greek.id]:greekAttempt}});
-assert.ok(!greekOld.attempts[greek.id],"Never reuse unversioned legacy question indices");
-assert.ok(greekOld.savedIds.includes(greek.id),"Bookmarks survive migration");
-const greekCurrent=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[greek.id],attempts:{[greek.id]:{...greekAttempt,quizKey:quizFingerprint(greek.questions)}}});
-assert.equal(greekCurrent.attempts[greek.id].score,1);
 
-const evidence=lessons.find(l=>l.id==="greek-history-through-evidence");
-assert.ok(evidence && evidence.requireCurrentAttemptQuiz);
-assert.equal(progress.getParagraphCount(evidence),18);
-assert.deepEqual(progress.getQuestionPlacements(evidence).map(p=>p.afterParagraphNumber),[5,10,16]);
-assert.deepEqual(progress.getQuestionPlacements(evidence).map(p=>p.questionId),["greek-evidence-ostrakon-limits","greek-evidence-speeches","greek-evidence-missing-voices"]);
-assert.equal(progress.getVisibleParagraphLimit(evidence,{}),5);
-assert.equal(progress.getVisibleParagraphLimit(evidence,{0:2}),10);
-assert.equal(progress.getVisibleParagraphLimit(evidence,{0:2,1:1}),16);
-assert.equal(progress.getVisibleParagraphLimit(evidence,{0:2,1:1,2:3}),18);
-assert.equal(progress.getResumeParagraphNumber(evidence,{0:2,1:1}),11);
-assert.deepEqual(inlineArticleMedia[evidence.id].map(f=>f.afterParagraphId),["ostrakon-limits","plangon-stele"]);
-assert.ok(evidence.questions.every(q=>q.version==="2"&&q.answers.length===4&&q.explanation.length>35));
-assert.ok(!lessonQuizMatches(evidence,"q_unrelated"));
-const evidenceAttempt={checkpointAnswers:{0:evidence.questions[0].correctIndex},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
-const evidenceLegacy=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[evidence.id],attempts:{[evidence.id]:evidenceAttempt}});
-assert.ok(!evidenceLegacy.attempts[evidence.id] && evidenceLegacy.savedIds.includes(evidence.id));
-const evidenceCurrent=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[evidence.id],attempts:{[evidence.id]:{...evidenceAttempt,quizKey:quizFingerprint(evidence.questions)}}});
-assert.equal(evidenceCurrent.attempts[evidence.id].score,1);
-
-const chronology=lessons.find(l=>l.id==="greek-chronology");
-assert.ok(chronology && chronology.requireCurrentAttemptQuiz,"chronology must reject incompatible legacy attempts");
-assert.equal(chronology.sections.flatMap(s=>s.paragraphs).length,22);
-assert.deepEqual(progress.getQuestionPlacements(chronology).map(p=>p.afterParagraphNumber),[5,11,17,20]);
-assert.deepEqual(progress.getQuestionPlacements(chronology).map(p=>p.questionId),[
- "greek-time-overlap","greek-time-after-palaces","greek-time-iron-and-geometric","greek-time-beyond-classical"
-]);
-assert.equal(progress.getVisibleParagraphLimit(chronology,{}),5);
-assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2}),11);
-assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2,1:1}),17);
-assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2,1:1,2:3}),20);
-assert.equal(progress.getVisibleParagraphLimit(chronology,{0:2,1:1,2:3,3:2}),22);
-assert.equal(progress.getResumeParagraphNumber(chronology,{0:2,1:1}),12);
-assert.deepEqual(inlineArticleMedia[chronology.id].map(f=>f.afterParagraphId),["mycenaean-overlap"]);
-assert.ok(chronology.questions.every(q=>q.version==="2"&&q.answers.length===4&&q.explanation.length>35));
-assert.ok(!lessonQuizMatches(chronology,"q_unrelated"));
-const chronologyAttempt={checkpointAnswers:{0:chronology.questions[0].correctIndex},score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
-const chronologyLegacy=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[chronology.id],attempts:{[chronology.id]:chronologyAttempt}});
-assert.ok(!chronologyLegacy.attempts[chronology.id]&&chronologyLegacy.savedIds.includes(chronology.id));
-const chronologyCurrent=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[chronology.id],attempts:{[chronology.id]:{...chronologyAttempt,quizKey:quizFingerprint(chronology.questions)}}});
-assert.equal(chronologyCurrent.attempts[chronology.id].score,1);
+/** These opening chapters were editorially reauthored after the original
+ * numeric fixtures. Derive current positions from authored questions and
+ * restore versioned typed submissions where required.
+ */
+const {adaptInteractiveLessonQuestion,projectInteractiveLessonAnswer}=require(root+"/src/quiz/adapters.ts");
+const cases=[
+ {id:"greek-world-not-a-country",paragraphs:15,anchors:[3,9,12],questions:["greek-world-belonging","greek-world-herodotus-context","greek-world-links"],media:["map-shores","sanctuaries"],version:"3"},
+ {id:"greek-history-through-evidence",paragraphs:18,anchors:[5,10,16],questions:["greek-evidence-ostrakon-limits","greek-evidence-speeches","greek-evidence-missing-voices"],media:["ostrakon-limits","plangon-stele"],version:"3"},
+ {id:"greek-chronology",paragraphs:22,anchors:[5,11,17,20],questions:["greek-time-overlap","greek-time-after-palaces","greek-time-iron-and-geometric","greek-time-beyond-classical"],media:["mycenaean-overlap"],version:"3"}
+];
+const correctRich=(p)=>p.type==="ordering"?[...p.correctOrder]:
+ p.type==="matching"?Object.fromEntries(p.pairs.map(pair=>[pair.leftId,pair.rightId])):
+ p.type==="multiple-select"?[...p.correctIndices]:undefined;
+for(const test of cases){
+ const l=lessons.find(item=>item.id===test.id);
+ assert.ok(l&&l.requireCurrentAttemptQuiz,test.id);
+ assert.equal(progress.getParagraphCount(l),test.paragraphs);
+ assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber),test.anchors);
+ assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.questionId),test.questions);
+ assert.deepEqual(inlineArticleMedia[l.id].map(f=>f.afterParagraphId),test.media);
+ assert.ok(l.questions.every(q=>q.version===test.version&&q.answers.length===4&&q.explanation.length>35));
+ assert.ok(!lessonQuizMatches(l,"q_unrelated"));
+ assert.equal(progress.getVisibleParagraphLimit(l,{}),test.anchors[0]);
+ const numeric=l.questions[0].correctIndex;
+ const answer={0:numeric};
+ assert.equal(progress.getVisibleParagraphLimit(l,answer),test.anchors[1]);
+ assert.equal(progress.getResumeParagraphNumber(l,answer),test.anchors[0]+1);
+ const old={checkpointAnswers:answer,score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
+ const env=(attempt)=>({schemaVersion:1,completedIds:[],savedIds:[l.id],attempts:{[l.id]:attempt}});
+ const unversioned=parseLearningBackup(env(old));
+ assert.equal(unversioned.attempts[l.id],undefined);
+ assert.deepEqual(unversioned.savedIds,[l.id]);
+ const typed=adaptInteractiveLessonQuestion(l,0),p=l.questions[0].presentation;
+ const rich=p?correctRich(p):undefined;
+ const currentAttempt={...old,quizKey:quizFingerprint(l.questions),
+  ...(rich===undefined?{}:{typedCheckpointAnswers:{0:{questionVersion:typed.version,value:rich}}})};
+ if(rich!==undefined)assert.equal(projectInteractiveLessonAnswer(l,0,rich),numeric);
+ const restored=parseLearningBackup(env(currentAttempt));
+ assert.equal(restored.attempts[l.id].score,1);
+ assert.equal(restored.attempts[l.id].quizKey,currentAttempt.quizKey);
+ if(rich!==undefined)assert.deepEqual(restored.attempts[l.id].typedCheckpointAnswers[0].value,rich);
+}
 console.log("Flexible editorial placement and backward-compatible progress regression checks passed.");

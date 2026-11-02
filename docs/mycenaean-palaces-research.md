@@ -63,3 +63,9 @@ Lesson 9/30, Chapter II — `linear-b-decipherment`, «Η γραφή που έκ
 ## Prose-only editorial update — 2026-11-01
 
 The first Pylos paragraph now describes the tablets as brief accounting entries in direct language. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.
+
+
+### Phase 2 editorial pass — 2026-11-03
+- Maintains the Pylos-centred administrative narrative with 25 paragraphs, unchanged media and checkpoints; precise language edits to the introductory hide-distribution evidence and Northeastern Building debate.
+- The [PY Ub 1318 catalogued object](https://www.searchculture.gr/aggregator/edm/mnam/000150-463254?language=en) supports hide distributions to craftspeople. [Bendall's 2003 AJA abstract](https://ajaonline.org/article/1363/) describes an interpretation of the Northeastern Building as a redistributive/administrative center; the full restricted study was not independently read.
+- Five version-2 questions: fill-in-the-blank/ordering/spot-the-mistake/matching/single-choice. Old v1 keys were correct and are frozen without alias, not 'fixed'. Full [7–8 dossier](ANCIENT-GREECE-PHASE-2-LESSONS-7-8.md). **Integrated, QA outstanding**.

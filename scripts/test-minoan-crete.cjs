@@ -1,4 +1,4 @@
-/* Node-only structural and lesson-progress QA. Device and HTTP testing remain separate. */
+/* Node-only structural and lesson-progress QA (typed question version 2). Device and HTTP testing remain separate. */
 const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path'),ts=require('typescript');
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 const root=path.resolve(__dirname,'..'),{lessons}=require(root+'/src/data/lessons.ts');
@@ -12,8 +12,8 @@ assert.equal(new Set(paragraphs.map(p=>p.id)).size,22);
 assert.deepEqual(progress.getQuestionPlacements(lesson).map(x=>x.afterParagraphNumber),[4,10,15,20]);
 assert.deepEqual(lesson.checkpoints.map(c=>c.questionId),lesson.questions.map(q=>q.id));
 assert.deepEqual(inlineArticleMedia[lesson.id].map(x=>x.afterParagraphId),['mu-district','gournia-streets']);
-assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[2,0,3,1]);
-assert.ok(lesson.questions.every(q=>q.id&&q.version==='1'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>35));
+assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[2,2,1,0]);
+assert.ok(lesson.questions.every(q=>q.id&&q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>35));
 const [a,b,c,d]=lesson.questions.map(q=>q.correctIndex);
 assert.equal(progress.getVisibleParagraphLimit(lesson,{}),4);
 assert.equal(progress.getVisibleParagraphLimit(lesson,{0:a}),10);
