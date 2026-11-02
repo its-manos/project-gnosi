@@ -92,31 +92,23 @@ export function evaluateSpotMistake(content: unknown, answer: unknown): AnswerEv
   return { valid, correct: valid && answer === content.incorrectOptionId };
 }
 
-/** Collapse harmless Greek typing variations, never apply fuzzy spelling correction. */
-export function normalizeBlankAnswer(value: string, accentSensitive = false): string {
-  let text = value.normalize("NFC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("el-GR");
-  if (!accentSensitive) text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFC");
-  return text.replace(/ς/g, "σ");
-}
-function validShortAnswer(value: unknown): value is string {
-  return typeof value === "string" && value.length <= 80 && value.trim().length > 0 && !/[\r\n]/.test(value);
-}
+/** Fill-in-the-blank accepts only a stable, authored word-bank option ID. */
 function fillBlankContent(value: unknown): value is FillBlankContent {
   if (!object(value) || typeof value.before !== "string" || typeof value.after !== "string" ||
     (!value.before.trim() && !value.after.trim()) ||
     value.before.length > 1000 || value.after.length > 1000 ||
-    !Array.isArray(value.acceptedAnswers) || value.acceptedAnswers.length < 1 || value.acceptedAnswers.length > 12 ||
-    !value.acceptedAnswers.every(validShortAnswer) || !validShortAnswer(value.displayAnswer) ||
-    (value.accentSensitive !== undefined && typeof value.accentSensitive !== "boolean")) return false;
-  const sensitive = value.accentSensitive === true;
-  const normalized = value.acceptedAnswers.map(a => normalizeBlankAnswer(a, sensitive));
-  return new Set(normalized).size === normalized.length &&
-    normalized.includes(normalizeBlankAnswer(value.displayAnswer, sensitive));
+    !Array.isArray(value.options) || value.options.length < 2 || value.options.length > 8 ||
+    !value.options.every(option => object(option) && safeId(option.id) &&
+      typeof option.text === "string" && option.text.trim().length > 0 && option.text.length <= 120)) return false;
+  const ids = value.options.map(option => option.id);
+  const labels = value.options.map(option => option.text.trim().toLocaleLowerCase("el-GR"));
+  return new Set(ids).size === ids.length && new Set(labels).size === labels.length &&
+    safeId(value.correctOptionId) && ids.includes(value.correctOptionId);
 }
 export function evaluateFillBlank(content: unknown, answer: unknown): AnswerEvaluation {
-  if (!fillBlankContent(content) || !validShortAnswer(answer)) return { valid: false, correct: false };
-  const normalized = normalizeBlankAnswer(answer, content.accentSensitive === true);
-  return { valid: true, correct: content.acceptedAnswers.some(a => normalizeBlankAnswer(a, content.accentSensitive === true) === normalized) };
+  if (!fillBlankContent(content)) return { valid: false, correct: false };
+  const valid = typeof answer === "string" && content.options.some(option => option.id === answer);
+  return { valid, correct: valid && answer === content.correctOptionId };
 }
 
 export const DEFAULT_QUESTION_HANDLERS: QuestionHandlers = Object.freeze({
