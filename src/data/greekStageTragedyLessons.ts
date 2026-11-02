@@ -247,7 +247,7 @@ export const greekStageTragedyLessons: Lesson[] = [
       {
         "title": "Greek Theatre in Context — contents and chapter topics",
         "publisher": "Eric Dugdale · Cambridge University Press (2008)",
-        "url": "https://www.cambridge.org/core/books/greek-theatre-in-context/"
+        "url": "https://assets.cambridge.org/97805216/89427/frontmatter/9780521689427_frontmatter.pdf"
       },
       {
         "title": "Poetics, 1449a–1450b (ancient interpretive source)",
