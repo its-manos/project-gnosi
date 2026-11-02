@@ -313,7 +313,7 @@ export const alexanderConquestsLessons: Lesson[] = [
       {
         "title": "Diodorus Siculus, Library of History, Book XVII (later narrative)",
         "publisher": "LacusCurtius / University of Chicago",
-        "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/17*.html"
+        "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/home.html"
       }
     ],
     "questions": [

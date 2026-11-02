@@ -43,7 +43,7 @@
 - A Contemporary Account of the Death of Alexander — Astronomical Diary of 323 BCE — Livius.org / Babylonian text in British Museum. https://www.livius.org/sources/content/oriental-varia/a-contemporary-account-of-the-death-of-alexander/
 - Arrian, Anabasis of Alexander, preface — ed. A. G. Roos — Perseus Digital Library, Tufts University. https://beta.perseus.tufts.edu/urn:cts:greekLit:tlg0074.tlg001.perseus-grc2/
 - Alexander’s own coins (2024) — University of Canterbury. https://www.canterbury.ac.nz/about-uc/what-we-do/uc-in-the-community/exhibitions-and-collections/alexander-the-great-exhibition/the-coins-of-alexander-the-great/alexander-s-own-coins.html
-- Diodorus Siculus, Library of History, Book XVII (later narrative) — LacusCurtius / University of Chicago. https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/17*.html
+- Diodorus Siculus, Library of History, Book XVII (later narrative) — LacusCurtius / University of Chicago. https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/home.html
 
 ### Visual rights/provenance ledger
 1. **Cover**: Alexander Sarcophagus 2020.jpg; photograph **Antoloji**, 28 Jan 2020, original 4032×3024 px, **CC BY-SA 4.0**, Wikimedia Commons https://commons.wikimedia.org/wiki/File:Alexander_Sarcophagus_2020.jpg. Object: late-4th-century BCE sarcophagus found at Sidon, Istanbul Archaeology Museums, not Alexander's own grave. Cover `contain`; preserve full object/gallery context, zoom. Greek caption and credit embedded in lesson.
