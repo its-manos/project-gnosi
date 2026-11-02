@@ -71,19 +71,29 @@ function disk(payload=doc(),userId=null){const map=new Map([['@gnosi/sync-device
  let slots=[],cursor=0;
  const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
  const jsx=(type,props)=>({type,props});
- const stubs=Object.fromEntries(['ActionButton','AnswerOption','AppHeader','SyncStatus','ReportContentButton'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
+ const stubs=Object.fromEntries(['ActionButton','SingleChoiceQuestionCard','AppHeader','SyncStatus'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
  const Screen=load('src/screens/WeeklyReviewScreen.tsx',{...stubs,react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{ScrollView:'ScrollView',View:'View',Text:'Text',StyleSheet:{create:x=>x}},'../hooks/useAthensDate':{useAthensDate:()=>load('src/utils/dailyChallenge.ts').getAthensDateKey()},'../state/LearningSession':{useLearningSession:()=>({store:uiStore}),useLearningSnapshot:()=>uiStore.getSnapshot()}}).default;
  const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
  const render=()=>{cursor=0;return Screen({onBack(){}});};
- let tree=render();let choices=nodes(tree).filter(n=>n.type==='AnswerOption');assert.equal(choices.length,4);
+ let tree=render();let choice=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
+ assert.ok(choice,'weekly review renders the shared confirmable card');
+ assert.equal(choice.props.answers.length,4);
  const visible=slots[0].items[0],correctLabel=visible.lesson.questions[visible.questionIndex].answers[visible.lesson.questions[visible.questionIndex].correctIndex];
- assert.equal(nodes(tree).find(n=>n.type==='ReportContentButton').props.target.questionIndex,visible.questionIndex,'weekly reporting points at the canonical question, not its shuffled position');
- choices.find(n=>n.props.label===correctLabel).props.onPress();tree=render();assert.equal(uiStore.getSnapshot().weeklyReviews[visible.id].answerIndex,visible.lesson.questions[visible.questionIndex].correctIndex);
- assert.ok(nodes(tree).filter(n=>n.type==='AnswerOption').every(n=>n.props.locked));nodes(tree).find(n=>n.props?.label==='Συνέχεια').props.onPress();tree=render();
+ assert.equal(choice.props.reportTarget.questionIndex,visible.questionIndex,'weekly reporting points at the canonical question, not its shuffled position');
+ assert.equal(uiStore.getSnapshot().weeklyReviews[visible.id],undefined,'weekly answer is not committed before confirmation');
+ choice.props.onConfirm(choice.props.answers.indexOf(correctLabel));tree=render();
+ assert.equal(uiStore.getSnapshot().weeklyReviews[visible.id].answerIndex,visible.lesson.questions[visible.questionIndex].correctIndex);
+ choice=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
+ assert.equal(choice.props.answer,choice.props.correctIndex,'stored weekly answer maps back to shuffled display index');
+ nodes(tree).find(n=>n.props?.label==='Συνέχεια').props.onPress();tree=render();
  const remaining=slots[0].items[1],wrongLabel=remaining.lesson.questions[remaining.questionIndex].answers[(remaining.lesson.questions[remaining.questionIndex].correctIndex+1)%4];
- nodes(tree).find(n=>n.type==='AnswerOption'&&n.props.label===wrongLabel).props.onPress();tree=render();assert.ok(!nodes(tree).some(n=>n.props?.label==='Δοκίμασε ξανά'),'weekly score cannot be retried');
- nodes(tree).find(n=>n.props?.label==='Δες το αποτέλεσμα').props.onPress();tree=render();assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,0);assert.ok(nodes(tree).some(n=>n.props?.label==='Πίσω στην πρόοδο'));
- now=Date.parse('2026-11-02T10:00:00Z');tree=render();assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,0,'midnight/week rollover blocks stale screen');
+ choice=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
+ choice.props.onConfirm(choice.props.answers.indexOf(wrongLabel));tree=render();
+ assert.equal(uiStore.getSnapshot().weeklyReviews[remaining.id].answerIndex,(remaining.lesson.questions[remaining.questionIndex].correctIndex+1)%4,
+   'confirmed shuffled choice persists original answer index');
+ assert.ok(!nodes(tree).some(n=>n.props?.label==='Δοκίμασε ξανά'),'weekly score cannot be retried');
+ nodes(tree).find(n=>n.props?.label==='Δες το αποτέλεσμα').props.onPress();tree=render();assert.equal(nodes(tree).filter(n=>n.type==='SingleChoiceQuestionCard').length,0);assert.ok(nodes(tree).some(n=>n.props?.label==='Πίσω στην πρόοδο'));
+ now=Date.parse('2026-11-02T10:00:00Z');tree=render();assert.equal(nodes(tree).filter(n=>n.type==='SingleChoiceQuestionCard').length,0,'midnight/week rollover blocks stale screen');
  await store.resetGuestProgress();assert.equal(Object.keys(store.getSnapshot().weeklyReviews).length,0);
  // Athens Monday boundary on the autumn DST weekend, not UTC midnight.
  const sunday=Date.parse('2026-10-25T21:59:59Z'),monday=sunday+1000;
