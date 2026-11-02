@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-images-sculpture": [
+  {
+    "afterParagraphId": "images-13",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Riace%20bronzes%20-%20Statue%20A%20(detail)%20-%20National%20Archaeological%20Museum%20of%20Magna%20Graecia%20in%20Reggio%20Calabria%20-%20Italy%20-%2014%20Aug.%202014.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Λεπτομέρεια από τον χάλκινο πολεμιστή Α του Ριάτσε, έργο περίπου του 5ου αιώνα π.Χ., φωτογραφία 2014. Η επιφάνεια σήμερα έχει μεταβληθεί· η φωτογραφία δεν αναπαράγει το αρχικό χρώμα του κράματος. Άγγιξε για μεγέθυνση.",
+    "credit": "Luca Galli / Wikimedia Commons · CC BY 2.0 · φωτογραφία 2014",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Riace_bronzes_-_Statue_A_(detail)_-_National_Archaeological_Museum_of_Magna_Graecia_in_Reggio_Calabria_-_Italy_-_14_Aug._2014.jpg"
+  },
+  {
+    "afterParagraphId": "images-18",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/7550%20-%20Piraeus%20Arch.%20Museum%2C%20Athens%20-%20Painted%20stele%20-%20Photo%20by%20Giovanni%20Dall'Orto%2C%20Nov%2014%202009.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Επιτύμβια στήλη του Διογένη από την Πύρρα της Λέσβου, μέσα 4ου αιώνα π.Χ., φωτογραφία 2009. Σώζεται γαλάζιο φόντο στην αρχαία επιφάνεια· το τμήμα δεν αναπαριστά ολόκληρη τη χαμένη διακόσμηση. Άγγιξε για μεγέθυνση.",
+    "credit": "Giovanni Dall'Orto / Wikimedia Commons · ελεύθερη εμπορική χρήση με αναφορά δημιουργού · φωτογραφία 2009",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:7550_-_Piraeus_Arch._Museum%2C_Athens_-_Painted_stele_-_Photo_by_Giovanni_Dall'Orto%2C_Nov_14_2009.jpg"
+  }
+],
   "greek-science-knowledge": [
     {
       afterParagraphId: "science-09",
