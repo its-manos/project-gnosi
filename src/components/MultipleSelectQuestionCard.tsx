@@ -33,7 +33,7 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
   return <View style={styles.card} testID="multiple-select-card">
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>☑  ΠΟΛΛΑΠΛΗ ΕΠΙΛΟΓΗ</Text></View>
-      <Text style={styles.counter}>0{questionNumber}</Text>
+      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text style={[styles.question, readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
       {question.prompt}
