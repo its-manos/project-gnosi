@@ -203,4 +203,48 @@ assert.equal(analyticsScrollEvents.at(-1).last_paragraph,2);
 const observedCount=analyticsScrollEvents.length;
 measuredScroll.props.onScroll({nativeEvent:{contentOffset:{y:0},layoutMeasurement:{height:200}}});
 assert.equal(analyticsScrollEvents.length,observedCount,'Scrolling back cannot lower the last-seen paragraph');
-console.log(`Reader checks passed for ${data.lessons.length} articles: every paragraph/checkpoint boundary, ${notes} content notes, ${figures} inline figures, source retention, text controls, resume, completion and next-lesson routing. Native views mocked.`);
+// Three-format lesson pilot on an in-memory copy, preserving published data.
+const typedPilot={ ...lesson, questions: lesson.questions.map(q=>({...q})) };
+assert.ok(typedPilot.questions.length>=3);
+typedPilot.questions[0].presentation={type:'multiple-select',correctIndices:[0,2]};
+typedPilot.questions[1].presentation={type:'ordering',items:[
+  {id:'first',label:'Πρώτη'}, {id:'second',label:'Δεύτερη'}, {id:'third',label:'Τρίτη'}
+],correctOrder:['first','second','third']};
+typedPilot.questions[2].presentation={type:'matching',pairs:[
+  {leftId:'assembly',leftLabel:'Εκκλησία',rightId:'citizens',rightLabel:'Πολίτες'},
+  {leftId:'council',leftLabel:'Βουλή',rightId:'prepare',rightLabel:'Προετοιμασία'}
+]};
+reset();
+props={...props,lesson:typedPilot,typedCheckpointAnswers:{}};
+const piloted=[
+  [0,'multiple-select',[0,2]],
+  [1,'ordering',['third','second','first']],
+  [2,'matching',{assembly:'citizens',council:'prepare'}],
+];
+for(const [index,type,value] of piloted){
+ tree=render();
+ const q=nodes(tree).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
+ assert.ok(q,'the '+type+' checkpoint appears after its paragraph');
+ assert.equal(q.props.question.type,type);
+ assert.equal(q.props.answer,undefined);
+ const beforeCalls=calls.length;
+ q.props.onSubmit(value);
+ const expected=rewardAdapters.projectInteractiveLessonAnswer(typedPilot,index,value);
+ assert.equal(calls.length,beforeCalls+1,'confirmed structured answer submits once');
+ assert.deepEqual(JSON.parse(JSON.stringify(calls.at(-1))),['answer',index,expected,typedPilot.questions[index].correctIndex,value],
+  'typed response and numeric projection reach the existing parent checkpoint callback');
+ const typed=rewardAdapters.adaptInteractiveLessonQuestion(typedPilot,index);
+ props={...props,
+   checkpointAnswers:{...props.checkpointAnswers,[index]:expected},
+   typedCheckpointAnswers:{...props.typedCheckpointAnswers,[index]:{questionVersion:typed.version,value}}
+ };
+ tree=render();
+ const restored=nodes(tree).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
+ assert.deepEqual(JSON.parse(JSON.stringify(restored.props.answer)),value,'same typed response restored');
+}
+assert.ok(byId(tree,'reader-finish'),'all structured answers unlock the original finish gate');
+props={...props,enableReporting:false}; tree=render();
+assert.equal(nodes(tree).filter(n=>n.type==='ReportContentButton').length,0,
+  'dev pilot never offers real content reporting for synthetic questions');
+
+console.log(`Reader checks passed for ${data.lessons.length} articles: every paragraph/checkpoint boundary, ${notes} content notes, ${figures} inline figures, source retention, text controls, resume, completion, typed-checkpoint pilot and next-lesson routing. Native views mocked.`);

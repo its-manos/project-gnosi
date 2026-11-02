@@ -388,6 +388,7 @@ export default function AppNavigator() {
           bookmarksLoaded={bookmarks.isSavedLessonsLoaded}
           onToggleSaved={bookmarks.toggleSavedLesson}
           checkpointAnswers={app.checkpointAnswers}
+          typedCheckpointAnswers={app.typedCheckpointAnswers}
           onAnswerCheckpoint={app.answerCheckpoint}
           onFinishLesson={app.finishInlineLesson}
           onBack={() => navigateTo(app.lessonBackScreen)}
