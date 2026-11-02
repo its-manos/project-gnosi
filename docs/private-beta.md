@@ -1,5 +1,7 @@
 # ΓΝΩΣΗ private beta
 
+> **Maintenance note (2026-11-02):** This guide records the original beta setup and release workflow; some statements about what a particular patch did are historical. The current repository uses **both bundled and remote images**, including an Android-specific Wikimedia thumbnail route. See [README](../README.md) and [Commons image delivery](COMMONS-IMAGE-DELIVERY-403.md) for current implementation details. Verify EAS account, environment and installed-build state before re-running any setup or publishing commands.
+
 The first distribution target is a standalone Android APK. The iPhone profile
 is ready for TestFlight, but the owner does not yet have paid Apple Developer
 membership. Continue iPhone testing with the existing Expo Go setup until that
@@ -126,9 +128,9 @@ Test it yourself before sharing:
 3. Verify later lessons are locked and the first lesson of another path is open.
 4. Close/reopen mid-lesson; also test a completed lesson and saved articles.
 5. Create/sign into an account, sign out, and check account/guest separation.
-6. Test offline reading and progress, then reconnect. Current lesson covers and
-   inline illustrations are bundled JPEG/PNG assets and should load offline;
-   external source/credit links and future unbundled images still need network.
+6. Test offline reading and progress, then reconnect. Bundled lesson images should load offline; remotely sourced Wikimedia
+   covers and inline figures may require network access, and cached remote
+   images are not guaranteed offline. Credit/source links also need network.
 7. Submit one test content report and verify it arrives in the private inbox.
 
 Start with 5–10 testers after those checks pass. Share the actual EAS build link,
@@ -140,7 +142,9 @@ Update. Native changes still require a new build; see the update workflow below.
 
 ## Automatic updates after the one-time APK installation
 
-This patch includes the complete bundled-image fix. Apply it to the working
+The following section was written for an earlier bundled-image patch; the
+current app is hybrid, so do not assume all images are packaged. Apply any
+intended native changes to the working
 project, then run:
 
 ```bash
