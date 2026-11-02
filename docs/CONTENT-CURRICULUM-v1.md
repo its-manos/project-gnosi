@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–23 · 2026-11-01 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–24 · 2026-11-02 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -284,7 +284,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 21. `peloponnesian-war` — «Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση» (Integrated; QA pending)
 22. `greek-crises-fourth-century` — «Μετά το 404: συμμαχίες, επεμβάσεις και εύθραυστες ειρήνες» — **Integrated** ([research](greek-crises-fourth-century-research.md)); 404–362 BCE
 23. `macedon-philip` — «Φίλιππος Β΄: πώς η Μακεδονία άλλαξε τις ισορροπίες» (Integrated; [research](macedon-philip-research.md); QA pending)
-24. `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές»
+24. `alexander-conquests-context` — «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη» (**Integrated**; [research](alexander-conquests-context-research.md); QA pending)
 
 ### Chapter V. Ιδέες, τέχνη και κληρονομιές
 
@@ -306,6 +306,8 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `athenian-empire`: Lesson 20 covers post-479 Delian League formation, Delos as treasury and meeting place, allied ship-versus-money duties, naval asymmetry, Naxos/Thasos, contested 454 transfer, Athenian tribute-quota lists, Erythrai/Chalkis decrees, plural allied reactions and persisting Persian diplomacy. No battle narratives of Lesson 19 or Peloponnesian War campaigns of Lesson 21. [Research/rights/QA](athenian-empire-research.md).
 - `greek-war-hoplites`: Lesson 17, shields, spears and defensive equipment, the Chigi vase and Tyrtaeus, classical descriptions of cohesion and terrain, the debated 'hoplite revolution' and the unequal intersection of military service with political rights. Not another Spartan social-structure lesson or Persian/Peloponnesian War chronology. [Research/rights/QA record](greek-war-hoplites-research.md).
 - `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
+- `alexander-conquests-context`: #24 succession (336–335), Greek/Theban choices, Achaemenid institutions and local agency, coast and supply 334–332, Gaugamela 331, imperial negotiation and resistance in Central Asia/Indus, Babylon 323 and source criticism. Does not recount Philip’s 359–336 ascent (#23) or prewrite the successors’ kingdoms (#29). [Research/rights/QA](alexander-conquests-context-research.md).
+- `hellenistic-kingdoms-cities`: #29 political and civic transformations after 323; do not project later successor states back into 323.
 - `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
@@ -478,3 +480,10 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **Verification:** source and Commons license-page inspection, in-authoring consistency checks for IDs/answers/anchors and branch readback. Node/npm, CI, Expo Android/iOS, media networking, first-answer audio, replay/XP, offline restore and Supabase synchronization remain unexecuted here; do not claim they passed.
 - **Accounting:** 30 planned / 5 chapters; **24 implemented (23 Integrated, 1 Drafted #30), 6 Not started #24–29, 0 Validated, 0 Approved**. Older historical snapshots retained above.
 - **Next only (not begun):** #24 `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές».
+
+
+### Ancient Greece Lesson 24 — research-first integration (2026-11-02)
+- **Integrated, not Validated or Approved:** `alexander-conquests-context`, «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη», Chapter IV; [source, media, compatibility and QA ledger](alexander-conquests-context-research.md).
+- **Scope:** contested succession and Greek choices 336–335; Achaemenid institutions and local agency; fleet, food, siegecraft and diplomacy in 334–332; Gaugamela 331, Persian administrative centres, Persepolis, Darius and empire-wide governance; Central Asian and Indus resistance; Hyphasis/return; Babylon 323 and the difference between cuneiform contemporaneous records and later narratives.
+- **Curriculum:** 30 planned / 5 chapters; **25 implemented (24 Integrated, 1 older Drafted #30), 5 Not started #25–29, 0 Validated, 0 Approved**. No rewriting Lessons 1–23 or #30; QA of previous integrations remains pending.
+- **Next only:** planned #25 `greek-stage-tragedy`, «Το θέατρο ως δημόσια εμπειρία», Chapter V, not live and not begun.

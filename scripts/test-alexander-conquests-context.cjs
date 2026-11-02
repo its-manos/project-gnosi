@@ -1,0 +1,28 @@
+/* Lesson 24 additive content, source/media anchors, quiz history isolation and navigation. Node only, requires npm ci. */
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),ts=require('typescript');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
+const root=path.resolve(__dirname,'..'),{lessons}=require(root+'/src/data/lessons.ts'),{inlineArticleMedia}=require(root+'/src/data/articleMedia.ts');
+const progress=require(root+'/src/utils/lessonProgress.ts'),paths=require(root+'/src/utils/lessonPath.ts');
+const {quizFingerprint,lessonQuizMatches}=require(root+'/src/utils/learningActivity.ts'),{parseLearningBackup}=require(root+'/src/utils/learningBackup.ts');
+const id='alexander-conquests-context',lesson=lessons.find(x=>x.id===id);assert.ok(lesson);
+assert.equal(lessons.filter(x=>x.id===id).length,1);assert.equal(lesson.requireCurrentAttemptQuiz,true);assert.equal(lesson.compatibleQuizKeys,undefined);
+const ps=lesson.sections.flatMap(s=>s.paragraphs);assert.equal(ps.length,42);assert.deepEqual(ps.map(p=>p.id),Array.from({length:42},(_,i)=>'alexander-'+String(i+1).padStart(2,'0')));
+assert.equal(lesson.questions.length,9);assert.equal(new Set(lesson.questions.map(q=>q.id)).size,9);
+assert.ok(lesson.questions.every(q=>q.version==='1'&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>65));
+assert.deepEqual(lesson.checkpoints.map(c=>c.questionId),lesson.questions.map(q=>q.id));
+assert.deepEqual(progress.getQuestionPlacements(lesson).map(p=>p.afterParagraphNumber),[4,10,15,20,25,30,36,39,42]);
+assert.equal(progress.getVisibleParagraphLimit(lesson,{}),4);
+assert.equal(progress.getResumeParagraphNumber(lesson,{0:lesson.questions[0].correctIndex}),5);
+assert.equal(progress.getVisibleParagraphLimit(lesson,Object.fromEntries(lesson.questions.map((q,i)=>[i,q.correctIndex]))),42);
+assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['alexander-08','alexander-22']);
+assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&m.url.includes('Special:FilePath')&&m.creditUrl.startsWith('https://commons.wikimedia.org/wiki/File:')));
+const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
+assert.deepEqual(seq.slice(21,25).map(l=>l.id),['greek-crises-fourth-century','macedon-philip',id,'antikythera-gears']);
+assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='macedon-philip'),lessons,['macedon-philip'])?.id,id);
+assert.equal(paths.getNextPathLesson(lesson,lessons,[id])?.id,'antikythera-gears');
+assert.ok(paths.getLessonAccess(lesson,lessons,['macedon-philip']).unlocked);
+assert.ok(!paths.getLessonAccess(lesson,lessons,['greek-crises-fourth-century']).unlocked);
+for(const oldKey of ['q_470dac57','q_22487292',...['macedon-philip','greek-crises-fourth-century','peloponnesian-war','athenian-empire'].map(id=>quizFingerprint(lessons.find(x=>x.id===id).questions))])assert.equal(lessonQuizMatches(lesson,oldKey),false);
+const saved=parseLearningBackup({schemaVersion:1,completedIds:['athens-who-voted','macedon-philip'],savedIds:[id,'athens-who-voted'],attempts:{}});
+assert.ok(saved.completedIds.includes('athens-who-voted')&&saved.savedIds.includes(id));
+console.log('Alexander III lesson: structure, anchored checkpoints, attributed media, sequential access and legacy quiz isolation passed (Node only).');

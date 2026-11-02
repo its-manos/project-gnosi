@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "alexander-conquests-context": [
+  {
+    "afterParagraphId": "alexander-08",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Persepolis%20stairs%20of%20the%20Apadana%20relief.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Λεπτομέρεια ανάγλυφου της ανατολικής κλίμακας της Απάδανας στην Περσέπολη, με αντιπροσωπεία από τη Λυδία. Το έργο ανήκει στην αχαιμενιδική εποχή, πριν από την εισβολή του Αλεξάνδρου· δείχνει την αυτοκρατορική αναπαράσταση πολλών λαών, όχι γεγονός του 334 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Phillip Maiwald (Nikopol) / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2008",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Persepolis_stairs_of_the_Apadana_relief.jpg"
+  },
+  {
+    "afterParagraphId": "alexander-22",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Persepolis.png?width=1200",
+    "resizeMode": "contain",
+    "caption": "Τα σωζόμενα ερείπια της Περσέπολης σε φωτογραφία του 2023. Το σημερινό τοπίο δεν δείχνει πώς έμοιαζε η πόλη τη στιγμή της κατάληψης και της πυρκαγιάς του 330 π.Χ. Άγγιξε για μεγέθυνση.",
+    "credit": "Mitra Zmni / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Persepolis.png"
+  }
+],
   "macedon-philip": [
   {
     "afterParagraphId": "philip-08",

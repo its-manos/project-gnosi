@@ -65,15 +65,15 @@ The other P0 pilot has **24 curriculum lessons**, with stable IDs assigned only 
 Update this tracker **at the start and end** of each editorial session. Record an actual checked commit SHA, tests and device sign-off once performed.
 
 
-## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (current 2026-11-01)
+## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (current 2026-11-02)
 
-- **Current summary:** 30 planned lessons / 5 chapters, **24 in app**, **23 Integrated** (research-first #1–23, still unvalidated), **1 Drafted** (#30 `antikythera-gears`), **6 Not started** (#24–29), **0 Validated, 0 Approved**. Older numbered session notes below are historical snapshots, not the current total.
+- **Current summary:** 30 planned lessons / 5 chapters, **25 in app**, **24 Integrated** (research-first #1–24, still unvalidated), **1 Drafted** (#30 `antikythera-gears`), **5 Not started** (#25–29), **0 Validated, 0 Approved**. Older numbered session notes below are historical snapshots, not the current total.
 - **Chapter I:** #1–5 `ancient-athens`, `greek-world-not-a-country`, `greek-history-through-evidence`, `greek-chronology`, `greek-geography-seas` — **Integrated**.
 - **Chapter II:** #6–11 `aegean-bronze-age`, `minoan-crete`, `mycenaean-palaces`, `linear-b-decipherment`, `palace-collapse`, `geometric-greece` — **Integrated**.
 - **Chapter III:** #12 `rise-of-polis` — **Integrated**; #13 `greek-settlements-networks` — **Integrated**, «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» ([research](greek-settlements-networks-research.md)); #14 `sparta-society` — **Integrated** («Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;»; [research](sparta-society-research.md)); #15 `athens-who-voted` — **Integrated** («Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν»; [research](athens-who-voted-research.md)); #16 `athens-law-courts` — **Integrated**, «Αθήνα: από την καταγγελία στην ψήφο» ([research](athens-law-courts-research.md)); #17 `greek-war-hoplites` — **Integrated** ([research](greek-war-hoplites-research.md)); #18 `greek-sanctuaries-games` — **Integrated** ([research](greek-sanctuaries-games-research.md)).
-- **Chapter IV:** #19 `persian-wars-greek-world` — **Integrated** ([research](persian-wars-greek-world-research.md)); #20 `athenian-empire` — **Integrated**, «Από τη Δήλο στην αθηναϊκή ηγεμονία» ([research](athenian-empire-research.md)); #21–24 — **Not started**.
+- **Chapter IV:** #19 `persian-wars-greek-world` — **Integrated** ([research](persian-wars-greek-world-research.md)); #20 `athenian-empire` — **Integrated**, «Από τη Δήλο στην αθηναϊκή ηγεμονία» ([research](athenian-empire-research.md)); #21–24 — **Integrated**, with #24 «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη» ([research](alexander-conquests-context-research.md)); all pending QA.
 - **Chapter V:** #25–29 — **Not started**; #30 `antikythera-gears` — **Drafted**.
-- **QA nuance:** local developer-reported Lesson 18 test checks predate Lessons 19/20. Newly committed #19/#20 Node tests, fresh typecheck/content validation and regression suites have not been executed in these connector-only sessions. Android/iOS, external media, XP/audio/restore and Supabase remain pending. See [current curriculum/overlap map](CONTENT-CURRICULUM-v1.md).
+- **QA nuance:** developer-reported Lesson 18 checks predate Lessons 19–24. New #19–24 Node tests, fresh typecheck/content validation and regression suites have not been executed through this connector-only session. Android/iOS, external media, XP/audio/restore and Supabase remain pending. See [current curriculum/overlap map](CONTENT-CURRICULUM-v1.md).
 
 ### Current session handoff
 - **Integrated:** `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα», formerly «Μια μέρα στην αρχαία Αθήνα». [Research/media details](ancient-athens-research.md). Narrative: excavated House Θ → Agora → marginalized groups and evidence limits. Opening: monument contrasted with excavated home. Reading estimate: 6 minutes.
@@ -288,3 +288,11 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **Verification:** source and Commons license-page inspection, in-authoring consistency checks for IDs/answers/anchors and branch readback. Node/npm, CI, Expo Android/iOS, media networking, first-answer audio, replay/XP, offline restore and Supabase synchronization remain unexecuted here; do not claim they passed.
 - **Accounting:** 30 planned / 5 chapters; **24 implemented (23 Integrated, 1 Drafted #30), 6 Not started #24–29, 0 Validated, 0 Approved**. Older historical snapshots retained above.
 - **Next only (not begun):** #24 `alexander-conquests-context` — «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές».
+
+
+### Ancient Greece Lesson 24 — research-first integration (2026-11-02)
+- **Integrated, not Validated or Approved:** `alexander-conquests-context`, «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη». [Research, evidence and rights](alexander-conquests-context-research.md).
+- **New content:** 42 stable paragraphs, 8 sections, 9 fresh v1 reasoning checkpoints (after 4/10/15/20/25/30/36/39/42), one Commons cover and two anchored Commons figures; `requireCurrentAttemptQuiz: true`. No historical answer slots reused.
+- **Overlaps reserved:** #23 ends 336 with Philip; #24 covers Alexander’s 336–323 conquests, resistance, administration and retrospective accounts; #29 will cover successor kingdoms and changing cities after 323. #25 is theatre, not a continuation of battle chronology.
+- **Unexecuted checks:** TypeScript, content validator, Node fixtures, CI, Android/iOS, remote image load/zoom, historical progress/replay/XP/sound and Supabase synchronization need local confirmation. Connector-side structural checks do not substitute for those.
+- **Progress:** **30 planned / 25 implemented / 24 Integrated / 1 Drafted (#30) / 5 Not started (#25–29) / 0 Validated / 0 Approved**. Next #25 `greek-stage-tragedy`, planned only.
