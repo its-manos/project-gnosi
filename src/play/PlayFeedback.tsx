@@ -44,7 +44,12 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
       if (pending && alive && foreground.current && Date.now() - pending.at < 2500) audio.play(pending.kind, allowed);
     });
     const unsubscribePreview = subscribeSoundPreview(() => { if (allowed()) audio.preview(allowed); });
-    const unsubscribePractice = subscribePracticeCue(kind => { if (allowed()) audio.play(kind, allowed); });
+    const unsubscribePractice = subscribePracticeCue(kind => {
+      // Match rewarded answers: a first tap during preference hydration must
+      // not silently lose its cue, and disabled sound must remain silent.
+      if (!playPreferences.getSnapshot().ready) pendingPreferenceCue = { kind, at: Date.now() };
+      else if (allowed()) audio.play(kind, allowed);
+    });
     const unsubscribe = subscribePlayFeedback(incoming => {
       const total = totalRewardXP(mergeRewardLedgers(store.getSnapshot().rewards, dailyStore.getSnapshot().doc.rewards));
       const level = levelProgress(total).level;
