@@ -44,6 +44,16 @@ function mount(file, question) {
     '../quiz/engine': engine, '../theme': { colors, reading },
     './QuizReveal': { __esModule: true, default: 'QuizReveal' },
   };
+  const shared = { exports: {} };
+  vm.runInNewContext(code('src/components/questionCardStyles.ts'), {
+    module: shared, exports: shared.exports,
+    require: name => {
+      if (name === 'react-native') return imports['react-native'];
+      if (name === '../theme') return imports['../theme'];
+      throw Error('unexpected shared style import ' + name);
+    },
+  });
+  imports['./questionCardStyles'] = shared.exports;
   const Card = compile(file, imports);
   const submitted = [];
   let props = { question, questionNumber: 2, onSubmit: value => submitted.push(value) };
