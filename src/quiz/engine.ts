@@ -1,4 +1,4 @@
-import type { AnswerEvaluation, ChoiceContent, QuestionHandlers, QuestionToken, QuizMode, QuizQuestion, QuizSession, QuizTransition } from "./types";
+import type { AnswerEvaluation, ChoiceContent, MatchingContent, MultipleSelectContent, OrderingContent, QuestionHandlers, QuestionToken, QuizMode, QuizQuestion, QuizSession, QuizTransition } from "./types";
 
 export const LEGACY_QUIZ_POINTS = { lessonCorrect: 1, dailyCorrect: 100 } as const;
 const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -13,8 +13,70 @@ export function evaluateChoice(content: unknown, answer: unknown): AnswerEvaluat
   const valid = choiceContent(content) && typeof answer === "number" && Number.isInteger(answer) && answer >= 0 && answer < content.answers.length;
   return { valid, correct: valid && choiceContent(content) && answer === content.correctIndex };
 }
+/**
+ * Multi-select answers are a non-empty set of distinct option indices.
+ * The order in which the user taps options has no bearing on correctness.
+ */
+function multipleSelectContent(value: unknown): value is MultipleSelectContent {
+  return object(value) && Array.isArray(value.answers) && value.answers.length >= 2 && value.answers.length <= 100 &&
+    value.answers.every(a => typeof a === "string" && a.trim().length > 0) &&
+    Array.isArray(value.correctIndices) && value.correctIndices.length >= 1 && value.correctIndices.length <= value.answers.length &&
+    value.correctIndices.every(i => Number.isInteger(i) && i >= 0 && i < value.answers.length) &&
+    new Set(value.correctIndices).size === value.correctIndices.length;
+}
+export function evaluateMultipleSelect(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!multipleSelectContent(content) || !Array.isArray(answer)) return { valid: false, correct: false };
+  const valid = answer.length >= 1 && answer.length <= content.answers.length &&
+    answer.every(i => Number.isInteger(i) && i >= 0 && i < content.answers.length) &&
+    new Set(answer).size === answer.length;
+  return { valid, correct: valid && answer.length === content.correctIndices.length &&
+    answer.every(i => content.correctIndices.includes(i)) };
+}
+
+/** Order is represented by stable item IDs, never display positions or labels. */
+function orderingContent(value: unknown): value is OrderingContent {
+  if (!object(value) || !Array.isArray(value.items) || value.items.length < 2 || value.items.length > 12 ||
+    !value.items.every(item => object(item) && safeId(item.id) && typeof item.label === "string" && item.label.trim())) return false;
+  const ids = value.items.map(item => item.id);
+  return new Set(ids).size === ids.length && Array.isArray(value.correctOrder) &&
+    value.correctOrder.length === ids.length && value.correctOrder.every(id => ids.includes(id)) &&
+    new Set(value.correctOrder).size === ids.length;
+}
+export function evaluateOrdering(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!orderingContent(content) || !Array.isArray(answer)) return { valid: false, correct: false };
+  const ids = content.items.map(item => item.id);
+  const valid = answer.length === ids.length && answer.every(id => typeof id === "string" && ids.includes(id)) &&
+    new Set(answer).size === ids.length;
+  return { valid, correct: valid && answer.every((id, index) => id === content.correctOrder[index]) };
+}
+
+/**
+ * Matching answers map every left ID to one right ID; both sides are bijective.
+ * Correctness is derived from the authored pairs, not persisted answer flags.
+ */
+function matchingContent(value: unknown): value is MatchingContent {
+  if (!object(value) || !Array.isArray(value.pairs) || value.pairs.length < 2 || value.pairs.length > 12 ||
+    !value.pairs.every(pair => object(pair) && safeId(pair.leftId) && safeId(pair.rightId) &&
+      typeof pair.leftLabel === "string" && pair.leftLabel.trim() &&
+      typeof pair.rightLabel === "string" && pair.rightLabel.trim())) return false;
+  return new Set(value.pairs.map(pair => pair.leftId)).size === value.pairs.length &&
+    new Set(value.pairs.map(pair => pair.rightId)).size === value.pairs.length;
+}
+export function evaluateMatching(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!matchingContent(content) || !object(answer)) return { valid: false, correct: false };
+  const left = content.pairs.map(pair => pair.leftId), right = content.pairs.map(pair => pair.rightId);
+  const values = Object.values(answer);
+  const valid = Object.keys(answer).length === left.length && left.every(id => own(answer, id)) &&
+    values.length === right.length && values.every(id => typeof id === "string" && right.includes(id)) &&
+    new Set(values).size === right.length;
+  return { valid, correct: valid && content.pairs.every(pair => answer[pair.leftId] === pair.rightId) };
+}
+
 export const DEFAULT_QUESTION_HANDLERS: QuestionHandlers = Object.freeze({
   "multiple-choice": { validateContent: choiceContent, evaluate: evaluateChoice },
+  "multiple-select": { validateContent: multipleSelectContent, evaluate: evaluateMultipleSelect },
+  ordering: { validateContent: orderingContent, evaluate: evaluateOrdering },
+  matching: { validateContent: matchingContent, evaluate: evaluateMatching },
 });
 function handlerFor(type: string, handlers: QuestionHandlers) {
   return own(handlers, type) ? handlers[type] : undefined;
