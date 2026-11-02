@@ -34,11 +34,10 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
   const selectedId = answered ? answer : pending;
   const isCorrect = answered && evaluateAnswer(question, answer).correct;
   const falseOption = question.content.options.find(option => option.id === question.content.incorrectOptionId);
-  const largeText = readingSize !== undefined && readingSize !== 18;
-  const questionSize = largeText ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined;
-  const optionSize = largeText ? {
-    fontSize: Math.max(14, readingSize! - 1), lineHeight: Math.round(readingSize! * 1.5),
-  } : undefined;
+  const questionSize = readingSize !== undefined && readingSize !== 18
+    ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined;
+  const optionSize = readingSize !== undefined && readingSize !== 18
+    ? { fontSize: Math.max(14, readingSize - 1), lineHeight: Math.round(readingSize * 1.5) } : undefined;
 
   function select(optionId: string) {
     if (answered || submittingRef.current) return;
