@@ -22,7 +22,7 @@ assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.
 assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['war-12','war-23']);
 assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&/Special:FilePath/.test(m.url)&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(19,27).map(x=>x.id),['athenian-empire',id,'greek-crises-fourth-century','macedon-philip','alexander-conquests-context','greek-stage-tragedy','greek-philosophy-in-context','antikythera-gears']);
+assert.deepEqual(seq.slice(19,28).map(x=>x.id),['athenian-empire',id,'greek-crises-fourth-century','macedon-philip','alexander-conquests-context','greek-stage-tragedy','greek-philosophy-in-context','greek-science-knowledge','antikythera-gears']);
 assert.ok(paths.getLessonAccess(l,lessons,['athenian-empire']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['persian-wars-greek-world']).unlocked);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='athenian-empire'),lessons,['athenian-empire'])?.id,id);
