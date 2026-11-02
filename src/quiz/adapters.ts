@@ -24,3 +24,29 @@ export function adaptDailyQuestion(question: GeneralKnowledgeQuestion): ChoiceQu
     sources: (question.sources ?? [{ title: question.sourceTitle, url: question.sourceUrl }]).map(source => ({ ...source })),
     media: question.media ? { ...question.media } : undefined };
 }
+
+/** Lesson reader pilot: reuse the production question cards while preserving
+ * numeric legacy checkpoint answers, storage, scoring and XP. This bridge
+ * intentionally covers only the two single-choice interactive formats.
+ */
+export function adaptInteractiveLessonQuestion(lesson: Lesson, index: number): import("./types").SpotMistakeQuestion | import("./types").FillBlankQuestion | null {
+  const question = lesson.questions[index];
+  if (!question?.presentation) return null;
+  const legacy = adaptLessonQuestion(lesson, index);
+  const options = question.answers.map((text, i) => ({ id: `option-${i}`, text }));
+  if (question.presentation.type === "spot-the-mistake") {
+    return { ...legacy, type: "spot-the-mistake", content: {
+      options, incorrectOptionId: `option-${question.correctIndex}`, correction: question.presentation.correction,
+    } };
+  }
+  return { ...legacy, type: "fill-in-the-blank", content: {
+    before: question.presentation.before, after: question.presentation.after, options,
+    correctOptionId: `option-${question.correctIndex}`,
+  } };
+}
+
+export function interactiveLessonAnswerIndex(question: LessonQuestion, value: unknown): number | null {
+  if (!question.presentation || typeof value !== "string") return null;
+  const index = question.answers.findIndex((_, i) => value === `option-${i}`);
+  return index < 0 ? null : index;
+}

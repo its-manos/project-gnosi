@@ -38,7 +38,7 @@ const expansion = compile('src/data/catalogueExpansion.ts');
 const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './greekWorldLessons': compile('src/data/greekWorldLessons.ts'), './greekEvidenceLessons': compile('src/data/greekEvidenceLessons.ts'), './greekChronologyLessons': compile('src/data/greekChronologyLessons.ts'), './greekGeographyLessons': compile('src/data/greekGeographyLessons.ts'), './aegeanBronzeAgeLessons': compile('src/data/aegeanBronzeAgeLessons.ts'), './minoanCreteLessons': compile('src/data/minoanCreteLessons.ts'), './mycenaeanPalacesLessons': compile('src/data/mycenaeanPalacesLessons.ts'), './palaceCollapseLessons': compile('src/data/palaceCollapseLessons.ts'), './geometricGreeceLessons': compile('src/data/geometricGreeceLessons.ts'), './riseOfPolisLessons': compile('src/data/riseOfPolisLessons.ts'), './greekSettlementsLessons': compile('src/data/greekSettlementsLessons.ts'), './spartaSocietyLessons': compile('src/data/spartaSocietyLessons.ts'), './athensLawCourtsLessons': compile('src/data/athensLawCourtsLessons.ts'), './greekWarHoplitesLessons': compile('src/data/greekWarHoplitesLessons.ts'), './greekSanctuariesGamesLessons': compile('src/data/greekSanctuariesGamesLessons.ts'), './persianWarsGreekWorldLessons': compile('src/data/persianWarsGreekWorldLessons.ts'), './athenianEmpireLessons': compile('src/data/athenianEmpireLessons.ts'), './peloponnesianWarLessons': compile('src/data/peloponnesianWarLessons.ts'), './greekCrisesFourthCenturyLessons': compile('src/data/greekCrisesFourthCenturyLessons.ts'), './macedonPhilipLessons': compile('src/data/macedonPhilipLessons.ts'), './alexanderConquestsLessons': compile('src/data/alexanderConquestsLessons.ts'), './greekStageTragedyLessons': compile('src/data/greekStageTragedyLessons.ts'), './greekPhilosophyInContextLessons': compile('src/data/greekPhilosophyInContextLessons.ts'), './greekScienceKnowledgeLessons': compile('src/data/greekScienceKnowledgeLessons.ts'), './greekImagesSculptureLessons': compile('src/data/greekImagesSculptureLessons.ts'), './hellenisticKingdomsCitiesLessons': compile('src/data/hellenisticKingdomsCitiesLessons.ts'), './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts'), './geologyLessons': compile('src/data/geologyLessons.ts'), './perceptionLessons': compile('src/data/perceptionLessons.ts'), './perceptionAttentionLessons': compile('src/data/perceptionAttentionLessons.ts') });
 const media = compile('src/data/articleMedia.ts', { './architectureMedia': compile('src/data/architectureMedia.ts'), './astronomyMedia': compile('src/data/astronomyMedia.ts'), './worldHistoryMedia': compile('src/data/worldHistoryMedia.ts'), './supplementaryMedia': compile('src/data/supplementaryMedia.ts') });
 const theme = compile('src/theme.ts');
-const stubs = Object.fromEntries(['KnowledgeProgress','ZoomableLessonImage','ActionButton','ArticleFigure','InlineQuestionCard','LessonCover','NextImageWarmup','SourceLink','AppHeader','ReportContentButton'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
+const stubs = Object.fromEntries(['KnowledgeProgress','ZoomableLessonImage','ActionButton','ArticleFigure','InlineQuestionCard','QuizQuestionRenderer','LessonCover','NextImageWarmup','SourceLink','AppHeader','ReportContentButton'].map(name => ['../components/'+name, { __esModule: true, default: name }]));
 const rewardEngine = compile('src/quiz/engine.ts');
 const rewardRules = compile('src/gamification/rules.ts');
 const rewardLogic = compile('src/gamification/rewards.ts', { '../quiz/engine': rewardEngine, './rules': rewardRules });
@@ -83,7 +83,7 @@ press(tree,'Ρυθμίσεις ανάγνωσης'); tree=render();
 for(let i=0;i<6;i++) { press(tree,'Μεγαλύτερο κείμενο άρθρου'); tree=render(); }
 assert.equal(states[0],24);
 assert.equal(nodes(tree).find(n => n.props?.accessibilityLabel === 'Μεγαλύτερο κείμενο άρθρου').props.disabled,true);
-assert.equal(nodes(tree).find(n => n.type === 'InlineQuestionCard').props.readingSize,24);
+assert.equal(nodes(tree).find(n => n.type === 'QuizQuestionRenderer').props.readingSize,24);
 for(let i=0;i<8;i++) { press(tree,'Μικρότερο κείμενο άρθρου'); tree=render(); }
 assert.equal(states[0],16);
 press(tree,'Αποθήκευση άρθρου'); press(tree,'Επιστροφή στα άρθρα');
@@ -92,13 +92,17 @@ props = { ...props, bookmarksLoaded:false }; tree=render();
 assert.equal(nodes(tree).find(n => n.props?.accessibilityLabel === 'Αποθήκευση άρθρου').props.disabled,true);
 const total = progress.getInlineQuestionCount(lesson);
 for(let i=0;i<total;i++) {
-  const q=nodes(tree).filter(n => n.type === 'InlineQuestionCard').at(-1);
+  const q=nodes(tree).filter(n => n.type === 'InlineQuestionCard' || n.type === 'QuizQuestionRenderer').at(-1);
   assert.equal(q.props.questionNumber,i+1);
-  assert.equal(q.props.reportTarget.itemId,lesson.id);
-  assert.equal(q.props.reportTarget.questionIndex,i,'question reporting uses canonical checkpoint index');
-  const choice=i===0 ? (q.props.question.correctIndex+1)%q.props.question.answers.length : q.props.question.correctIndex;
-  q.props.onSelectAnswer(choice,q.props.question.correctIndex);
-  assert.deepEqual(calls.at(-1),['answer',i,choice,q.props.question.correctIndex]);
+  const report= q.type === 'InlineQuestionCard' ? q.props.reportTarget :
+    nodes(tree).filter(n => n.type === 'ReportContentButton').at(-1).props.target;
+  assert.equal(report.itemId,lesson.id);
+  assert.equal(report.questionIndex,i,'question reporting uses canonical checkpoint index');
+  const canonical=lesson.questions[i];
+  const choice=i===0 ? (canonical.correctIndex+1)%canonical.answers.length : canonical.correctIndex;
+  if(q.type === 'QuizQuestionRenderer') q.props.onSubmit('option-'+choice);
+  else q.props.onSelectAnswer(choice,canonical.correctIndex);
+  assert.deepEqual(calls.at(-1),['answer',i,choice,canonical.correctIndex]);
   props={ ...props, checkpointAnswers: { ...props.checkpointAnswers,[i]:choice } }; tree=render();
   assert.equal(nodes(tree).find(n => n.props?.accessibilityRole === 'progressbar').props.accessibilityValue.now,i+1);
   if(i<total-1) assert.ok(byId(tree,`reader-paragraph-${progress.getQuestionPlacements(lesson)[i].afterParagraphNumber+1}`), 'Any answer unlocks next paragraphs.');
@@ -129,6 +133,14 @@ const Card=compile('src/components/InlineQuestionCard.tsx',{'../theme':theme}).d
 const feedback=Card({question:lesson.questions[0],questionNumber:1,selectedAnswer:0,readingSize:24,onSelectAnswer:()=>{}});
 assert.ok(nodes(feedback).some(n=>n.props?.accessibilityLiveRegion==='polite'));
 assert.ok(nodes(feedback).filter(n=>n.type==='Pressable').every(n=>n.props.disabled));
+ // The second pilot lesson also connects the new spot-the-mistake renderer to numeric persistence.
+reset(); const greekWorld=data.lessons.find(l=>l.id==='greek-world-not-a-country');
+props={...props,lesson:greekWorld,category:data.categories.find(c=>c.id===greekWorld.categoryId),subcategory:data.subcategories.find(c=>c.id===greekWorld.subcategoryId)};
+tree=render();
+const worldSpot=nodes(tree).find(n=>n.type==='QuizQuestionRenderer');
+assert.equal(worldSpot.props.question.type,'spot-the-mistake');
+worldSpot.props.onSubmit('option-1');
+assert.deepEqual(calls.at(-1),['answer',0,1,greekWorld.questions[0].correctIndex]);
 // Exercise every real article, including content notes, long titles, media,
 // all checkpoint boundaries and full source lists. No catalogue fixtures are substituted.
 let notes=0, figures=0;

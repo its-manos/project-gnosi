@@ -1,6 +1,6 @@
 import { motionAllowed, playPreferences } from "../play/preferences";
 import { quizRewardSummary } from "../gamification/rewards";
-import { adaptLessonQuestion } from "../quiz/adapters";
+import { adaptInteractiveLessonQuestion, adaptLessonQuestion, interactiveLessonAnswerIndex } from "../quiz/adapters";
 import ZoomableLessonImage from "../components/ZoomableLessonImage";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import { useRef, useState } from "react";
@@ -11,6 +11,7 @@ import type { Props } from "./LessonScreen";
 import ActionButton from "../components/ActionButton";
 import ArticleFigure from "../components/ArticleFigure";
 import InlineQuestionCard from "../components/InlineQuestionCard";
+import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import LessonCover from "../components/LessonCover";
 import NextImageWarmup from "../components/NextImageWarmup";
 import SourceLink from "../components/SourceLink";
@@ -175,6 +176,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               const paragraphId = getParagraphId(paragraph, number);
               const questionIndex = placements.findIndex(p => p.afterParagraphNumber === number);
               const question = questionIndex >= 0 ? lesson.questions[questionIndex] : undefined;
+              const interactiveQuestion = question ? adaptInteractiveLessonQuestion(lesson, questionIndex) : null;
               const answered = checkpointAnswers[questionIndex] !== undefined;
               return <View key={number} testID={`reader-paragraph-${number}`} onLayout={event => {
                 paragraphPositions.current[number] = { sectionIndex, y: event.nativeEvent.layout.y };
@@ -184,8 +186,17 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
                 {question ? <View style={styles.checkpoint}>
-                  <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={lessonReportTarget(lesson, questionIndex)}
-                    readingSize={readingSize} onSelectAnswer={(answerIndex, correctIndex) => onAnswerCheckpoint(questionIndex, answerIndex, correctIndex)} />
+                  {interactiveQuestion ? <>
+                    <QuizQuestionRenderer question={interactiveQuestion} questionNumber={questionIndex + 1}
+                      readingSize={readingSize}
+                      answer={answered ? `option-${checkpointAnswers[questionIndex]}` : undefined}
+                      onSubmit={value => {
+                        const answerIndex = interactiveLessonAnswerIndex(question, value);
+                        if (answerIndex !== null && !answered) onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex);
+                      }} />
+                    <ReportContentButton target={lessonReportTarget(lesson, questionIndex)} />
+                  </> : <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={lessonReportTarget(lesson, questionIndex)}
+                    readingSize={readingSize} onSelectAnswer={(answerIndex, correctIndex) => onAnswerCheckpoint(questionIndex, answerIndex, correctIndex)} />}
                   {answered ? <ActionButton label={number < paragraphCount ? "Συνέχεια ανάγνωσης ↓" : "Στο κλείσιμο του άρθρου ↓"} secondary onPress={() => {
                     restored.current = true;
                     pendingScroll.current = number < paragraphCount ? number + 1 : "finish";

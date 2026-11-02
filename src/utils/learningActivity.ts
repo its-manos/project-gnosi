@@ -56,8 +56,12 @@ export function mergeCompletionEvents(left: CompletionEvents, right: CompletionE
   return parseCompletionEvents(a);
 }
 
-export function quizFingerprint(questions: { question: string; answers: string[]; correctIndex: number }[]): string {
-  const text = JSON.stringify(questions.map(({ question, answers, correctIndex }) => ({ question, answers, correctIndex })));
+export function quizFingerprint(questions: { question: string; answers: string[]; correctIndex: number; presentation?: unknown }[]): string {
+  // Metadata for the two live single-answer formats affects question meaning.
+  // Keep the exact historical hash for every lesson without presentation.
+  const text = JSON.stringify(questions.map(({ question, answers, correctIndex, presentation }) => ({
+    question, answers, correctIndex, ...(presentation === undefined ? {} : { presentation }),
+  })));
   let hash = 2166136261;
   for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 16777619);
   return `q_${(hash >>> 0).toString(16)}`;
