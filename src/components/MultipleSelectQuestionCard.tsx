@@ -36,7 +36,7 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>☑  ΠΟΛΛΑΠΛΗ ΕΠΙΛΟΓΗ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
-    <Text style={[styles.question, readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
+    <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
       {question.prompt}
     </Text>
     <Text style={styles.hint}>Διάλεξε όλες τις απαντήσεις που θεωρείς σωστές.</Text>
@@ -64,7 +64,7 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
               wrongSelection && styles.checkboxWrong]}>
               <Text style={styles.check}>{checked ? "✓" : correctOption ? "✓" : ""}</Text>
             </View>
-            <Text style={[styles.answerText, readingSize ? { fontSize: readingSize - 1, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{label}</Text>
+            <Text style={[styles.answerText, readingSize !== undefined && readingSize !== 18 ? { fontSize: Math.max(14, readingSize - 1), lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{label}</Text>
             {correctOption ? <Text style={styles.statusCorrect}>✓</Text> : null}
             {wrongSelection ? <Text style={styles.statusWrong}>×</Text> : null}
           </Pressable>
