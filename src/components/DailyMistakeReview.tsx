@@ -3,9 +3,8 @@ import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import type { GeneralKnowledgeQuestion } from "../data/questions";
 import { colors } from "../theme";
 import ActionButton from "./ActionButton";
-import AnswerOption from "./AnswerOption";
+import SingleChoiceQuestionCard from "./SingleChoiceQuestionCard";
 import ProgressBar from "./ProgressBar";
-import ReportContentButton from "./ReportContentButton";
 import { dailyReportTarget } from "../utils/contentReports";
 
 type Props = {
@@ -67,26 +66,27 @@ export default function DailyMistakeReview({ questions, onDone, onAdvance }: Pro
       <Text style={styles.eyebrow}>ΕΠΑΝΑΛΗΨΗ ΛΑΘΩΝ · {index + 1} / {questions.length}</Text>
       <Text style={styles.note}>Χωρίς πόντους · η εξάσκηση δεν αποθηκεύεται.</Text>
       <ProgressBar progress={((index + 1) / questions.length) * 100} />
-      <Text style={styles.question}>{question.question}</Text>
-      <ReportContentButton key={question.id} target={dailyReportTarget(question)} />
-      <View style={styles.answers}>
-        {question.answers.map((answer, answerIndex) => (
-          <AnswerOption
-            key={`${question.id}-${answerIndex}`}
-            label={answer}
-            index={answerIndex}
-            selected={selectedAnswer === answerIndex}
-            correct={answerIndex === question.correctIndex}
-            locked={selectedAnswer !== null}
-            onPress={() => {
-              setAttempt((previous) => {
-                if (previous.index !== index || previous.answers[String(index)] !== undefined) return previous;
-                return { ...previous, answers: { ...previous.answers, [String(index)]: answerIndex } };
-              });
-            }}
-          />
-        ))}
-      </View>
+      <SingleChoiceQuestionCard
+        key={question.id}
+        id={question.id}
+        question={question.question}
+        questionNumber={index + 1}
+        answers={question.answers}
+        correctIndex={question.correctIndex}
+        explanation={question.explanation}
+        badgeLabel="ΕΠΑΝΑΛΗΨΗ"
+        showFeedback={false}
+        answer={selectedAnswer === null ? undefined : selectedAnswer}
+        reportTarget={dailyReportTarget(question)}
+        onConfirm={answerIndex => {
+          setAttempt(previous => {
+            if (previous.index !== index || previous.answers[String(index)] !== undefined) return previous;
+            return { ...previous, answers: { ...previous.answers, [String(index)]: answerIndex } };
+          });
+        }}
+        testID="daily-mistake-choice-card"
+        testPrefix="mistake-choice"
+      />
       {selectedAnswer !== null ? (
         <View style={styles.feedback} accessibilityLiveRegion="polite">
           <Text style={styles.feedbackTitle}>

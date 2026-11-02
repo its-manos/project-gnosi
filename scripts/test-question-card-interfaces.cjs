@@ -44,6 +44,16 @@ function mount(file, question) {
     '../quiz/engine': engine, '../theme': { colors, reading },
     './QuizReveal': { __esModule: true, default: 'QuizReveal' },
   };
+  const shared = { exports: {} };
+  vm.runInNewContext(code('src/components/questionCardStyles.ts'), {
+    module: shared, exports: shared.exports,
+    require: name => {
+      if (name === 'react-native') return imports['react-native'];
+      if (name === '../theme') return imports['../theme'];
+      throw Error('unexpected shared style import ' + name);
+    },
+  });
+  imports['./questionCardStyles'] = shared.exports;
   const Card = compile(file, imports);
   const submitted = [];
   let props = { question, questionNumber: 2, onSubmit: value => submitted.push(value) };
@@ -63,6 +73,7 @@ id(tree, 'ordering-down-a').props.onPress();
 tree = o.render();
 assert.equal(treeNodes(id(tree, 'ordering-item-b')).length > 0, true);
 assert.equal(id(tree, 'ordering-up-b').props.disabled, true, 'first item changes after move');
+assert.equal(o.submitted.length, 0, 'ordering arrows edit only a draft, not the scored answer');
 id(tree, 'ordering-confirm').props.onPress();
 assert.deepEqual(JSON.parse(JSON.stringify(o.submitted)), [['b', 'a', 'c']]);
 assert.equal(id(tree, 'ordering-feedback'), undefined, 'feedback requires parent-accepted answer');
@@ -92,6 +103,7 @@ tree = m.render();
 id(tree, 'matching-right-y').props.onPress();
 tree = m.render();
 assert.equal(id(tree, 'matching-confirm').props.disabled, false);
+assert.equal(m.submitted.length, 0, 'pairing all options is still an unsubmitted draft');
 id(tree, 'matching-confirm').props.onPress();
 assert.deepEqual(JSON.parse(JSON.stringify(m.submitted)), [{ a: 'x', b: 'y' }]);
 m.setAnswer({ a: 'x', b: 'y' });
@@ -128,7 +140,7 @@ const renderer = compile('src/components/QuizQuestionRenderer.tsx', {
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': { View: 'View', Text: 'Text', StyleSheet: { create: x => x } },
   '../theme': { colors },
-  './AnswerOption': { __esModule: true, default: 'AnswerOption' },
+  './SingleChoiceQuestionCard': { __esModule: true, default: 'SingleChoiceQuestionCard' },
   './OrderingQuestionCard': { __esModule: true, default: 'OrderingQuestionCard' },
   './MatchingQuestionCard': { __esModule: true, default: 'MatchingQuestionCard' },
   './SpotMistakeQuestionCard': { __esModule: true, default: 'SpotMistakeQuestionCard' },
@@ -142,5 +154,5 @@ assert.equal(r({ id: 'spot', type: 'spot-the-mistake', content: { segments: [], 
 assert.equal(r({ id: 'fill', type: 'fill-in-the-blank', content: { before: '', after: '', acceptedAnswers: [], displayAnswer: '' } }).type, 'FillBlankQuestionCard');
 assert.equal(r(matching).type, 'MatchingQuestionCard');
 assert.equal(r({ id: 'multi', type: 'multiple-select', content: { answers: ['a', 'b'], correctIndices: [0] } }).type, 'MultipleSelectQuestionCard');
-assert.equal(r({ id: 'choice', type: 'multiple-choice', prompt: 'a', content: { answers: ['a', 'b'], correctIndex: 1 } }).type, 'View');
+assert.equal(r({ id: 'choice', type: 'multiple-choice', prompt: 'a', content: { answers: ['a', 'b'], correctIndex: 1 } }).type, 'SingleChoiceQuestionCard');
 console.log('Question card interfaces passed: accessible ordering controls, matching pairs, parent-controlled answers, feedback and type dispatch.');

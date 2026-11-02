@@ -1,13 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
 import type { BuiltinQuizQuestion } from "../quiz/types";
-import { colors } from "../theme";
-import AnswerOption from "./AnswerOption";
+import SingleChoiceQuestionCard from "./SingleChoiceQuestionCard";
 import MatchingQuestionCard from "./MatchingQuestionCard";
 import FillBlankQuestionCard from "./FillBlankQuestionCard";
 import SpotMistakeQuestionCard from "./SpotMistakeQuestionCard";
 import MultipleSelectQuestionCard from "./MultipleSelectQuestionCard";
 import OrderingQuestionCard from "./OrderingQuestionCard";
-import QuizReveal from "./QuizReveal";
 
 type Props = {
   question: BuiltinQuizQuestion;
@@ -40,33 +37,11 @@ export default function QuizQuestionRenderer({ question, questionNumber, answer,
       return <FillBlankQuestionCard key={question.id} question={question} questionNumber={questionNumber}
         readingSize={readingSize} answer={typeof answer === "string" ? answer : undefined}
         onSubmit={value => onSubmit(value)} />;
-    case "multiple-choice": {
-      const selected = typeof answer === "number" ? answer : undefined;
-      return <View style={styles.card} testID="choice-question-card">
-        <Text style={styles.counter}>ΕΡΩΤΗΣΗ {questionNumber}</Text>
-        <Text style={styles.question}>{question.prompt}</Text>
-        <View style={styles.options}>
-          {question.content.answers.map((label, index) =>
-            <AnswerOption key={index} label={label} index={index} selected={selected === index}
-              correct={index === question.content.correctIndex} locked={selected !== undefined}
-              onPress={() => onSubmit(index)} />)}
-        </View>
-        {selected !== undefined ? <QuizReveal><View style={styles.feedback}>
-          <Text style={styles.feedbackTitle}>{selected === question.content.correctIndex ? "Σωστά!" : "Μια νέα γνώση!"}</Text>
-          <Text style={styles.feedbackText}>{question.explanation}</Text>
-        </View></QuizReveal> : null}
-      </View>;
-    }
+    case "multiple-choice":
+      return <SingleChoiceQuestionCard key={question.id}
+        id={question.id} question={question.prompt} answers={question.content.answers}
+        correctIndex={question.content.correctIndex} explanation={question.explanation}
+        questionNumber={questionNumber} answer={typeof answer === "number" ? answer : undefined}
+        readingSize={readingSize} onConfirm={onSubmit} />;
   }
 }
-
-const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface,
-    padding: 18, marginVertical: 12, borderRadius: 19 },
-  counter: { color: colors.accentLight, fontSize: 11, fontWeight: "900" },
-  question: { color: colors.text, fontSize: 18, lineHeight: 27, fontWeight: "700", marginVertical: 16 },
-  options: { gap: 8 },
-  feedback: { backgroundColor: colors.successSurface, marginTop: 12, padding: 12, borderRadius: 12, gap: 5 },
-  feedbackTitle: { color: colors.text, fontWeight: "800" },
-  feedbackText: { color: colors.textBody, lineHeight: 22 },
-});

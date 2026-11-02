@@ -1,14 +1,13 @@
 import { useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
-import AnswerOption from "../components/AnswerOption";
+import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
 import DailyMistakeReview from "../components/DailyMistakeReview";
 import DailyAnswerReview from "../components/DailyAnswerReview";
 import QuizReveal from "../components/QuizReveal";
 import KnowledgeProgress from "../components/KnowledgeProgress";
-import ReportContentButton from "../components/ReportContentButton";
 import { dailyReportTarget } from "../utils/contentReports";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
 import { lessons } from "../data/lessons";
@@ -104,14 +103,22 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       <View style={styles.dots} accessible accessibilityLabel={`${answeredCount} από 7 ερωτήσεις απαντήθηκαν`}>
         {record.questionIds.map((id,i)=>{const q=questions.find(q=>q.id===id),answered=record.answers[i]!==undefined,correct=answered&&record.answers[i]===q?.correctIndex;return <View key={id} style={[styles.dot,answered&&(correct?styles.dotCorrect:styles.dotWrong),i===record.currentIndex&&styles.dotCurrent]}><Text style={styles.dotText}>{answered?(correct?'✓':'×'):i+1}</Text></View>;})}
       </View>
-      <View style={styles.questionCard}>
-        <Text style={styles.eyebrow}>{topicTitle(currentQuestion.categoryId)} · {difficultyTitle(currentQuestion.difficulty)}</Text>
-        <Text style={styles.question}>{currentQuestion.question}</Text>
-      </View>
-      <View style={styles.answers}>
-        {currentQuestion.answers.map((answer,index)=><AnswerOption key={`${currentQuestion.id}-${index}`} label={answer} index={index} selected={selectedAnswer===index} correct={index===currentQuestion.correctIndex} locked={selectedAnswer!==null} onPress={()=>void answerQuestion(index)}/>)}
-        <ReportContentButton key={currentQuestion.id} target={dailyReportTarget(currentQuestion)}/>
-      </View>
+      <SingleChoiceQuestionCard
+        key={`${record.dateKey}:${currentQuestion.id}`}
+        id={`${record.dateKey}:${currentQuestion.id}`}
+        question={currentQuestion.question}
+        questionNumber={record.currentIndex + 1}
+        answers={currentQuestion.answers}
+        correctIndex={currentQuestion.correctIndex}
+        explanation={currentQuestion.explanation}
+        badgeLabel={`${topicTitle(currentQuestion.categoryId)} · ${difficultyTitle(currentQuestion.difficulty)}`}
+        answer={selectedAnswer === null ? undefined : selectedAnswer}
+        onConfirm={index => answerQuestion(index)}
+        showFeedback={false}
+        reportTarget={dailyReportTarget(currentQuestion)}
+        testID="daily-choice-card"
+        testPrefix="daily-choice"
+      />
       {selectedAnswer!==null?<QuizReveal><View style={styles.feedback} accessibilityLiveRegion="polite">
         <Text style={styles.feedbackTitle}>{isCorrect?'Σωστά — το κράτησες!':'Μια νέα γνώση για σήμερα.'}</Text>
         {!isCorrect?<Text style={styles.bodyStrong}>Σωστή απάντηση: {currentQuestion.answers[currentQuestion.correctIndex]}</Text>:null}

@@ -4,6 +4,7 @@ import { evaluateAnswer } from "../quiz/engine";
 import type { OrderingQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import QuizReveal from "./QuizReveal";
+import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: OrderingQuestion;
@@ -40,7 +41,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>↕  ΣΩΣΤΗ ΣΕΙΡΑ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
-    <Text style={[styles.question, readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
+    <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     <Text style={styles.hint}>Μετακίνησε τις κάρτες με τα βέλη. Η πρώτη θέση είναι η αρχή της ακολουθίας.</Text>
     <View style={styles.orderList}>
       {order.map((id, index) => {
@@ -89,14 +90,14 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 18, marginTop: 12, marginBottom: 22, borderRadius: 22, borderWidth: 1,
-    borderColor: colors.borderStrong, backgroundColor: colors.surface },
-  topLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 18 },
-  typeBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: colors.accentSurface },
-  typeLabel: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
-  counter: { color: colors.textMuted, fontSize: 12, fontWeight: "900" },
-  question: { color: colors.text, fontSize: 19, lineHeight: 28, fontWeight: "800", marginBottom: 9 },
-  hint: { color: colors.textBody, fontSize: 13, lineHeight: 21, marginBottom: 18 },
+  ...questionCardStyles,
+  card: questionCardStyles.card,
+  topLine: questionCardStyles.topLine,
+  typeBadge: questionCardStyles.typeBadge,
+  typeLabel: questionCardStyles.typeLabel,
+  counter: questionCardStyles.counter,
+  question: questionCardStyles.question,
+  hint: questionCardStyles.hint,
   orderList: { gap: 10 },
   item: { minHeight: 69, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1,
     backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderRadius: 14,
@@ -112,22 +113,21 @@ const styles = StyleSheet.create({
   control: { minWidth: 43, minHeight: 45, alignItems: "center", justifyContent: "center",
     borderRadius: 10, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.accentSurface },
   disabled: { opacity: 0.3 },
-  pressed: { opacity: 0.8 },
+  pressed: questionCardStyles.pressed,
   arrow: { color: colors.accentLight, fontSize: 22, fontWeight: "700" },
   resultMark: { width: 26, textAlign: "center", fontWeight: "900", fontSize: 20 },
   correctMark: { color: colors.success },
   wrongMark: { color: colors.error },
   footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19, marginTop: 13 },
-  confirm: { marginTop: 18, minHeight: 54, padding: 12, backgroundColor: colors.accent,
-    justifyContent: "center", alignItems: "center", borderRadius: 14 },
-  confirmText: { color: colors.background, fontSize: 15, fontWeight: "900" },
-  feedback: { padding: 16, marginTop: 18, borderRadius: 16, borderWidth: 1, gap: 10 },
-  feedbackCorrect: { backgroundColor: colors.successSurface, borderColor: colors.success },
-  feedbackWrong: { backgroundColor: colors.errorSurface, borderColor: colors.error },
+  confirm: questionCardStyles.confirm,
+  confirmText: questionCardStyles.confirmText,
+  feedback: questionCardStyles.feedback,
+  feedbackCorrect: questionCardStyles.feedbackCorrect,
+  feedbackWrong: questionCardStyles.feedbackWrong,
   feedbackTitle: { fontSize: 17, fontWeight: "900" },
   correctTitle: { color: colors.success },
   wrongTitle: { color: colors.error },
   solutionList: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 7 },
   solutionItem: { color: colors.text, fontSize: 14, lineHeight: 23, fontWeight: "700" },
-  feedbackText: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
+  feedbackText: questionCardStyles.feedbackText,
 });
