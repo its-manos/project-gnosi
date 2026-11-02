@@ -1,6 +1,6 @@
 import type { Lesson, LessonQuestion } from "../data/lessons";
 import type { GeneralKnowledgeQuestion } from "../data/questions";
-import { contentVersion, evaluateAnswer as _evaluateAnswer } from "./engine";
+import { contentVersion, evaluateAnswer } from "./engine";
 import type { ChoiceQuestion } from "./types";
 
 export function adaptLessonQuestion(lesson: Lesson, index: number): ChoiceQuestion {
@@ -78,7 +78,6 @@ export function projectInteractiveLessonAnswer(lesson: Lesson, index: number, va
   if (!question?.presentation) return null;
   const typed = adaptInteractiveLessonQuestion(lesson, index);
   if (!typed) return null;
-  const { evaluateAnswer } = requireEngine();
   const evaluation = evaluateAnswer(typed, value);
   if (!evaluation.valid) return null;
   if (question.presentation.type === "spot-the-mistake" || question.presentation.type === "fill-in-the-blank") {
@@ -102,8 +101,7 @@ export function restoreInteractiveLessonAnswer(
   const question = adaptInteractiveLessonQuestion(lesson, index);
   if (!question) return numeric;
   if (typed?.questionVersion === question.version) {
-    const { evaluateAnswer } = requireEngine();
-    if (evaluateAnswer(question, typed.value).valid &&
+      if (evaluateAnswer(question, typed.value).valid &&
       projectInteractiveLessonAnswer(lesson, index, typed.value) === numeric) return typed.value;
   }
   if (question.type === "spot-the-mistake" || question.type === "fill-in-the-blank")
@@ -111,10 +109,6 @@ export function restoreInteractiveLessonAnswer(
   return undefined;
 }
 
-/** Keep this import statically typed and compatible with Node-only tests. */
-function requireEngine() {
-  return { evaluateAnswer: _evaluateAnswer };
-}
 
 /** Kept for existing pilot/tests that still reference the old helper. */
 export function interactiveLessonAnswerIndex(question: LessonQuestion, value: unknown): number | null {
