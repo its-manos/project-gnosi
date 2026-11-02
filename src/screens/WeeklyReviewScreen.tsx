@@ -5,10 +5,9 @@ import { useAthensDate } from "../hooks/useAthensDate";
 import { shuffledIndices, weeklyPlan } from "../utils/weeklyReview";
 import { mondayOf } from "../utils/learningActivity";
 import ActionButton from "../components/ActionButton";
-import AnswerOption from "../components/AnswerOption";
+import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
-import ReportContentButton from "../components/ReportContentButton";
 import { lessonReportTarget } from "../utils/contentReports";
 import { colors } from "../theme";
 
@@ -22,6 +21,11 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
   const item = items.find(q => q.id === feedbackId) ?? items.find(q => !snapshot.weeklyReviews[q.id]);
   const question = item?.lesson.questions[item.questionIndex];
   const answer = item ? snapshot.weeklyReviews[item.id] : undefined;
+  // Weekly practice already shuffles visible choices. Keep persisted numeric
+  // answer indices in their original order, translating only at the UI edge.
+  const displayOrder = item && question ? shuffledIndices(question.answers.length, item.id) : [];
+  const displayAnswers = displayOrder.map(index => question!.answers[index]);
+  const committedDisplayIndex = answer ? displayOrder.indexOf(answer.answerIndex) : undefined;
   const done = items.filter(q => snapshot.weeklyReviews[q.id]).length;
   const correct = items.filter(q => snapshot.weeklyReviews[q.id]?.answerIndex === q.lesson.questions[q.questionIndex].correctIndex).length;
   const finished = items.length > 0 && !item;
@@ -45,9 +49,22 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
         <Text style={styles.body}>XP ολοκλήρωσης: {snapshot.rewards?.[`review:${initial.week}`] ?? 0}</Text><ActionButton label="Πίσω στην πρόοδο" onPress={onBack} /></View>
       : item && question ? <>
         <Text style={styles.eyebrow}>{done} / {items.length} ΑΠΑΝΤΗΘΗΚΑΝ · {item.lesson.title}</Text>
-        <View style={styles.card}><Text style={styles.heading}>{question.question}</Text></View>
-        <ReportContentButton key={item.id} target={lessonReportTarget(item.lesson, item.questionIndex)} />
-        {shuffledIndices(question.answers.length, item.id).map((originalIndex, displayIndex) => <AnswerOption key={originalIndex} label={question.answers[originalIndex]} index={displayIndex} selected={answer?.answerIndex === originalIndex} correct={question.correctIndex === originalIndex} locked={Boolean(answer)} onPress={() => choose(originalIndex)} />)}
+        <SingleChoiceQuestionCard
+          key={item.id}
+          id={item.id}
+          question={question.question}
+          answers={displayAnswers}
+          correctIndex={displayOrder.indexOf(question.correctIndex)}
+          explanation={question.explanation}
+          questionNumber={done + 1}
+          badgeLabel="ΕΒΔΟΜΑΔΙΑ ΕΠΑΝΑΛΗΨΗ"
+          answer={committedDisplayIndex}
+          onConfirm={displayIndex => choose(displayOrder[displayIndex])}
+          showFeedback={false}
+          reportTarget={lessonReportTarget(item.lesson, item.questionIndex)}
+          testID="weekly-choice-card"
+          testPrefix="weekly-choice"
+        />
         {answer ? <View style={styles.card} accessibilityLiveRegion="polite"><Text style={styles.heading}>{answer.answerIndex === question.correctIndex ? "Το κράτησες στη μνήμη σου!" : "Ας το θυμηθούμε"}</Text><Text style={styles.body}>{question.explanation}</Text><Text style={styles.body}>{answer.answerIndex === question.correctIndex ? "Σωστή ανάκληση! Συνέχισε τις μικρές επαναλήψεις για κατάκτηση." : "Θα έχεις άλλη ευκαιρία σε επόμενη εβδομάδα."}</Text><ActionButton label={done === items.length ? "Δες το αποτέλεσμα" : "Συνέχεια"} onPress={() => setFeedbackId(null)} /></View> : null}
       </> : null}
   </ScrollView>;
