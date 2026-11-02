@@ -5,7 +5,8 @@ import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import { requestPracticeCue } from "../play/soundStatus";
-import { advanceQuizSession, calculateQuizResults, createQuizSession, evaluateAnswer, questionToken, submitQuizAnswer } from "../quiz/engine";
+import { calculateQuizResults, createQuizSession, evaluateAnswer } from "../quiz/engine";
+import { advancePreview, submitPreviewAnswer } from "../quiz/previewFlow";
 import { previewQuestions } from "../quiz/previewQuestions";
 import type { BuiltinQuizQuestion, QuizSession } from "../quiz/types";
 import { colors } from "../theme";
@@ -40,21 +41,18 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
   const answeredCount = Object.keys(session.answers).length;
 
   function submit(value: unknown) {
-    const current = sessionRef.current;
-    const transition = submitQuizAnswer(current, questionToken(current), value);
+    const transition = submitPreviewAnswer(sessionRef.current, value);
     if (!transition.changed) return;
     sessionRef.current = transition.session;
     setSession(transition.session);
-    const acceptedQuestion = current.questions[current.currentIndex];
-    requestPracticeCue(evaluateAnswer(acceptedQuestion, value).correct ? "correct" : "incorrect");
+    if (transition.cue) requestPracticeCue(transition.cue);
   }
   function advance() {
-    const current = sessionRef.current;
-    const transition = advanceQuizSession(current, questionToken(current));
+    const transition = advancePreview(sessionRef.current);
     if (!transition.changed) return;
     sessionRef.current = transition.session;
     setSession(transition.session);
-    if (transition.session.completed) requestPracticeCue("complete");
+    if (transition.cue) requestPracticeCue(transition.cue);
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }
   function restart() {
