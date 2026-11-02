@@ -414,3 +414,11 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **#8 `mycenaean-palaces`** preserves 25 paragraphs, 4/10/15/20/24 checkpoints and existing media; narrows the interpretation of the PY Ub 1318 tablet and Bendall's Northeastern Building case. Five v2 questions: fill the blank, ordering, spot the mistake, matching, single choice.
 - Original v1 quizzes frozen; stable quiz IDs kept, no old fingerprint alias. Historical completions/bookmarks/XP/events unaffected; unsafe stale unfinished attempts isolated. Dedicated older lesson tests and outdated 2–4 flexible-editorial fixtures updated for the typed checkpoint system.
 - **QA:** only source/editorial preflight in this integration. Lessons #7–8 **Integrated, not Validated or Approved**; details [7–8 audit](ANCIENT-GREECE-PHASE-2-LESSONS-7-8.md). `main` unchanged.
+
+
+### Phase 2 — Lessons 7–8 reported local checks passed; Lessons 9–10 revision (2026-11-03)
+- User reports that the provided 7–8 local commands passed, in addition to 1–6. This establishes user-reported Node, TypeScript, validator coverage only; native and final proofread remain independent gates. #7–8 stay **Integrated** until device validation is documented.
+- **#9 `linear-b-decipherment`** retains 21 anchored paragraphs and checkpoints 4/8/13/17/21. Source-reviewed independent test of Ventris values against PY Ta 641, Kober's morphological relationships and pre-existing Bennett classification. New v2: spot, matching, ordering, blank, single choice.
+- **#10 `palace-collapse`** retains 27 paragraphs and checkpoints 4/9/14/21/27. Distinguishes palatial loss from regional settlement, dates, climate and seismic hypotheses without claiming a common culprit. New v2: spot, blank, matching, single choice, single choice.
+- Earlier v1 question versions frozen, no aliases, historical completions/XP/activities/bookmarks preserved, incompatible partial attempts isolated. Updated historical lesson tests and added typed XP/backup regression; no reader/sync/audio implementation changes.
+- **New batch status:** Integrated, **not Validated or Approved**; see [9–10 Phase 2 dossier](ANCIENT-GREECE-PHASE-2-LESSONS-9-10.md). `main` unchanged.

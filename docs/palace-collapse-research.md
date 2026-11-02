@@ -57,3 +57,7 @@ New `src/data/palaceCollapseLessons.ts`, additive import/spread in `src/data/les
 ## Prose-only editorial update — 2026-11-01
 
 The opening body paragraph contrasts the Pylos destruction with occupation at Tiryns, clarifying the difference between destroyed buildings and the end of a political system. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.
+
+
+### Phase 2 editorial/quiz review — 2026-11-03
+Kept the long-form title, original 27 paragraphs and all checkpoints. Opening contrasts Pylos archive survival in a destructive fire with later life in Tiryns. Refined the scholarly debate over Pylos' chronology using the [Austrian Academy 2022 synthesis](https://austriaca.at/?arp=0x003de486) and [PLOS ONE Mavri Trypa full study](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0189447). No single invader, drought or earthquake asserted as proven cause. V2 questions use spot-the-mistake, blank, matching and two single choices. Earlier v1 quiz frozen and not aliased. [Pair audit](ANCIENT-GREECE-PHASE-2-LESSONS-9-10.md). Integrated, not yet locally or natively validated.

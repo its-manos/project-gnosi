@@ -60,3 +60,7 @@ All five questions have **four alternatives, stable IDs, version `1`, explicit c
 ## Prose-only editorial update — 2026-11-01
 
 The ending now concentrates on testing proposed sign values across additional tablets, including the Pylos tripod tablet, instead of an abstract maxim. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.
+
+
+### Phase 2 editorial/quiz review — 2026-11-03
+Kept the research-first title, original 21 paragraphs and all quiz/paragraph IDs. Opening now foregrounds independent testing using the PY Ta 641 tripod tablet discovered in 1952 and checked in 1953, as described in [Chadwick's publisher chapter excerpt](https://www.cambridge.org/core/books/abs/decipherment-of-linear-b/decipherment-and-the-critics/02E5F5DE5204E1DBC5D591D9CD13D1F7). The Kober grid example and last methodological explanation are clearer. V2 questions use spot-the-mistake, matching, ordering, blank and single choice. Old v1 snapshot is frozen without alias. [Pair audit](ANCIENT-GREECE-PHASE-2-LESSONS-9-10.md). Integrated; Node and device tests still pending.
