@@ -75,20 +75,21 @@ export function evaluateMatching(content: unknown, answer: unknown): AnswerEvalu
 }
 
 
-/** A mistake is a stable, tappable authored phrase, never an arbitrary text offset. */
+/** The player picks the *one false statement* from 3–6 complete claims. */
 function spotMistakeContent(value: unknown): value is SpotMistakeContent {
-  if (!object(value) || !Array.isArray(value.segments) || value.segments.length < 3 || value.segments.length > 12 ||
-    !value.segments.every(s => object(s) && safeId(s.id) && typeof s.text === "string" &&
-      s.text.trim().length > 0 && s.text.length <= 220)) return false;
-  const ids = value.segments.map(s => s.id);
+  if (!object(value) || !Array.isArray(value.options) || value.options.length < 3 || value.options.length > 6 ||
+    !value.options.every(option => object(option) && safeId(option.id) &&
+      typeof option.text === "string" && option.text.trim().length >= 10 && option.text.length <= 300)) return false;
+  const ids = value.options.map(option => option.id);
   return new Set(ids).size === ids.length &&
-    safeId(value.incorrectSegmentId) && ids.includes(value.incorrectSegmentId) &&
-    typeof value.correction === "string" && value.correction.trim().length > 0 && value.correction.length <= 500;
+    safeId(value.incorrectOptionId) && ids.includes(value.incorrectOptionId) &&
+    typeof value.correction === "string" && value.correction.trim().length > 0 &&
+    value.correction.length <= 500;
 }
 export function evaluateSpotMistake(content: unknown, answer: unknown): AnswerEvaluation {
   if (!spotMistakeContent(content)) return { valid: false, correct: false };
-  const valid = typeof answer === "string" && content.segments.some(s => s.id === answer);
-  return { valid, correct: valid && answer === content.incorrectSegmentId };
+  const valid = typeof answer === "string" && content.options.some(option => option.id === answer);
+  return { valid, correct: valid && answer === content.incorrectOptionId };
 }
 
 /** Collapse harmless Greek typing variations, never apply fuzzy spelling correction. */
