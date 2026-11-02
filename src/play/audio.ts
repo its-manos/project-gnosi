@@ -47,14 +47,9 @@ export class FeedbackAudio {
         // Configure native muting BEFORE attaching the media source on Android.
         // Volume = 0 immediately before play() was racy and produced a loud
         // burst of all five effects on launch on real devices.
-        // Keep the playback session active between tiny UI cues. On iOS an
-        // AVAudioSession teardown/re-activation can outlast incorrect.wav (160ms)
-        // and make it seem silent; Android retains its separately guarded mute.
-        const player = createAudioPlayer(android ? null : sources[kind], {
-          downloadFirst: false, keepAudioSessionActive: true,
-        });
+        const player = createAudioPlayer(android ? null : sources[kind], { downloadFirst: false, keepAudioSessionActive: false });
         if (android) { player.muted = true; player.volume = 0; }
-        else player.volume = .65;
+        else player.volume = kind === "incorrect" ? .45 : .65;
         player.loop = false;
         this.players.set(kind, player);
         if (player.isLoaded) this.preparedKinds.add(kind);
@@ -67,22 +62,13 @@ export class FeedbackAudio {
             this.finishPrime(kind);
             return;
           }
-          // Short WAVs can be in Android STATE_ENDED (isLoaded=false) even
-          // after a successful seek. The player is already known to have
-          // loaded: native mute=false acknowledgment, not isLoaded, is the
-          // safe signal that the muted warm-up has ended.
-          if (this.priming.get(kind) === "unmuting" && status.mute === false && this.preparedKinds.has(kind)) {
+          if (this.priming.get(kind) === "unmuting" && status.mute === false && status.isLoaded) {
             this.priming.delete(kind);
             this.primedKinds.add(kind);
           }
           // No automatic calls to play(): opening the app must be quiet.
-          if (status.didJustFinish && !this.priming.has(kind)) {
-            reportSoundStatus("ready", "Ο ήχος ολοκληρώθηκε.");
-          } else if (!this.priming.has(kind) && status.playing) {
-            reportSoundStatus("playing", `Αναπαραγωγή: ${kind} · έλεγξε την ένταση πολυμέσων και το Bluetooth.`);
-          } else if (this.audioReady() && !this.pending && !this.failedKinds.size && getSoundStatus().phase !== "playing") {
-            reportSoundStatus("ready", "Ήχοι έτοιμοι · ένταση από τα πολυμέσα της συσκευής.");
-          }
+          if (!this.priming.has(kind) && status.playing) reportSoundStatus("playing", "Αναπαραγωγή · έλεγξε την ένταση πολυμέσων και τη σύνδεση Bluetooth.");
+          else if (this.audioReady() && !this.pending && !this.failedKinds.size && getSoundStatus().phase !== "playing") reportSoundStatus("ready", "Ήχοι έτοιμοι · ένταση από τα πολυμέσα της συσκευής.");
           this.pending?.();
         }));
         if (android) player.replace(sources[kind]);
@@ -122,7 +108,7 @@ export class FeedbackAudio {
     void player.seekTo(0).then(() => {
       if (!this.alive || this.players.get(kind) !== player) return;
       this.priming.set(kind, "unmuting");
-      player.volume = .65;
+      player.volume = kind === "incorrect" ? .45 : .65;
       player.muted = false;
       // The native unmute status callback marks the player primed and releases
       // the queued answer. Do not start the real cue while still muted.
@@ -146,21 +132,11 @@ export class FeedbackAudio {
     this.play("correct", allowed);
   }
   play(kind: FeedbackKind, allowed: () => boolean) {
-    if (this.alive && allowed() && this.failedKinds.has(kind)) {
-      // Recover an errored native player only on another explicit sound
-      // request. Never recreate / autoplay effects during app startup.
-      this.release();
-    }
     this.stop();
     if (!this.alive || !allowed()) return;
     const token = this.generation;
     const current = () => this.alive && token === this.generation && allowed();
-    const failed = () => {
-      if (current()) {
-        this.failedKinds.add(kind);
-        reportSoundStatus("error", `Δεν ακούστηκε ο ήχος «${kind}». Δοκίμασε ξανά.`);
-      }
-    };
+    const failed = () => { if (current()) reportSoundStatus("error", "Ο ήχος δεν ανταποκρίθηκε. Πάτησε «Δοκιμή ήχου» ξανά."); };
     // Cold Android players can take longer than a warm preview to prepare.
     const timer = setTimeout(() => { failed(); if (token === this.generation) this.stop(); }, 2500);
     this.timer = timer;
