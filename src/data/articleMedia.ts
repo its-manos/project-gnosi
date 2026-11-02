@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-philosophy-in-context": [
+    {
+      afterParagraphId: "phil-09",
+      url: commonsFileUrl("The Derveni Papyrus.jpg"),
+      resizeMode: "contain",
+      caption: "Απανθρακωμένα τμήματα του παπύρου των Δερβενίων σε φωτογραφία του 2011. Το υλικό χειρόγραφο χρονολογείται στο δεύτερο μισό του 4ου αιώνα π.Χ., ενώ η σύνθεση του σχολίου πιθανώς είναι παλαιότερη· περιέχει ερμηνεία ορφικού ποιήματος. Άγγιξε για μεγέθυνση.",
+      credit: "Fkitselis / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2011",
+      creditUrl: commonsPageUrl("The Derveni Papyrus.jpg"),
+    },
+    {
+      afterParagraphId: "phil-21",
+      url: commonsFileUrl("Athens Lyceum Archaeological Site 1.jpg"),
+      resizeMode: "contain",
+      caption: "Αρχαιολογικά κατάλοιπα της παλαίστρας του Λυκείου, φωτογραφία 2008. Ο χώρος είχε πολλές οικοδομικές φάσεις· δεν γνωρίζουμε πού ακριβώς δίδασκε ο Αριστοτέλης. Άγγιξε για μεγέθυνση.",
+      credit: "Tomisti / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2008",
+      creditUrl: commonsPageUrl("Athens Lyceum Archaeological Site 1.jpg"),
+    },
+  ],
   "greek-stage-tragedy": [
     {
       afterParagraphId: "stage-10",

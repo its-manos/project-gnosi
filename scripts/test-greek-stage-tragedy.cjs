@@ -52,10 +52,10 @@ assert.ok(images.every(i => i.resizeMode === 'contain' &&
 assert.ok(lesson.imageUrl.includes('Special:FilePath/') && lesson.imageCreditUrl.includes('commons.wikimedia.org/wiki/File:'));
 assert.ok(lesson.sources.length >= 10 && lesson.sources.every(s => s.url.startsWith('https://')));
 const seq = pathing.getSubcategoryPath(lessons, 'ancient-greece');
-assert.deepEqual(seq.slice(23, 26).map(l => l.id),
-  ['alexander-conquests-context', 'greek-stage-tragedy', 'antikythera-gears']);
+assert.deepEqual(seq.slice(23, 27).map(l => l.id),
+  ['alexander-conquests-context', 'greek-stage-tragedy', 'greek-philosophy-in-context', 'antikythera-gears']);
 assert.equal(pathing.getNextPathLesson(lessons.find(l => l.id === 'alexander-conquests-context'), lessons, ['alexander-conquests-context'])?.id, id);
-assert.equal(pathing.getNextPathLesson(lesson, lessons, [id])?.id, 'antikythera-gears');
+assert.equal(pathing.getNextPathLesson(lesson, lessons, [id])?.id, 'greek-philosophy-in-context');
 assert.ok(pathing.getLessonAccess(lesson, lessons, ['alexander-conquests-context']).unlocked);
 assert.ok(!pathing.getLessonAccess(lesson, lessons, ['macedon-philip']).unlocked);
 assert.ok(pathing.getLessonAccess(lesson, lessons, [id]).unlocked);

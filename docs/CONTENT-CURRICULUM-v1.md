@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–24 · 2026-11-02 · not device-validated
+Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–26 · 2026-11-02 · not device-validated
 
 ## 1. Editorial philosophy
 
@@ -289,7 +289,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 ### Chapter V. Ιδέες, τέχνη και κληρονομιές
 
 25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία» — **Integrated** ([research, sources, image rights and QA](greek-stage-tragedy-research.md); 30 paragraphs, 7 checkpoints; device/Node QA pending)
-26. `greek-philosophy-in-context` — «Φιλοσοφία στους δρόμους και στις σχολές»
+26. `greek-philosophy-in-context` — «Πού γινόταν η φιλοσοφία;» — **Integrated** ([research, sources, media rights and QA](greek-philosophy-in-context-research.md); 30 paragraphs, 7 checkpoints; Node/device/editorial QA pending)
 27. `greek-science-knowledge` — «Οι αρχαίοι ερευνητές και τα όρια της γνώσης»
 28. `greek-images-sculpture` — «Αγάλματα με χρώματα και ιστορίες»
 29. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ένας κόσμος πολλών βασιλείων»

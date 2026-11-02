@@ -19,7 +19,7 @@ assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.
 assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['philip-08','philip-26']);
 assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&/Special:FilePath/.test(m.url)&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(21,25).map(x=>x.id),['greek-crises-fourth-century',id,'alexander-conquests-context','antikythera-gears']);
+assert.deepEqual(seq.slice(21,27).map(x=>x.id),['greek-crises-fourth-century',id,'alexander-conquests-context','greek-stage-tragedy','greek-philosophy-in-context','antikythera-gears']);
 assert.ok(paths.getLessonAccess(l,lessons,['greek-crises-fourth-century']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['peloponnesian-war']).unlocked);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='greek-crises-fourth-century'),lessons,['greek-crises-fourth-century'])?.id,id);

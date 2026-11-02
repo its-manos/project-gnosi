@@ -1,5 +1,5 @@
 # Gnosi — Lesson Editorial Tracker
-_Updated 2026-11-01 · Source of truth: [curriculum](CONTENT-CURRICULUM-v1.md) · Development branch: `content/curriculum-v1`._
+_Updated 2026-11-02 · Source of truth: [curriculum](CONTENT-CURRICULUM-v1.md) · Development branch: `content/curriculum-v1`._
 
 ## Meaning of status
 - **Not started:** only curriculum outline exists (some IDs are not yet assigned).
@@ -67,13 +67,23 @@ Update this tracker **at the start and end** of each editorial session. Record a
 
 ## Ιστορία → Αρχαία Ελλάδα — 30-lesson curriculum (current 2026-11-02)
 
-- **Current summary:** 30 planned lessons / 5 chapters, **26 in app**, **25 Integrated** (research-first #1–25, still unvalidated), **1 Drafted** (#30 `antikythera-gears`), **4 Not started** (#26–29), **0 Validated, 0 Approved**. Older numbered session notes below are historical snapshots, not the current total.
+- **Current summary:** 30 planned lessons / 5 chapters, **27 in app**, **26 Integrated** (research-first #1–26, still unvalidated), **1 Drafted** (#30 `antikythera-gears`), **3 Not started** (#27–29), **0 Validated, 0 Approved**. Older numbered session notes below are historical snapshots, not the current total.
 - **Chapter I:** #1–5 `ancient-athens`, `greek-world-not-a-country`, `greek-history-through-evidence`, `greek-chronology`, `greek-geography-seas` — **Integrated**.
 - **Chapter II:** #6–11 `aegean-bronze-age`, `minoan-crete`, `mycenaean-palaces`, `linear-b-decipherment`, `palace-collapse`, `geometric-greece` — **Integrated**.
 - **Chapter III:** #12 `rise-of-polis` — **Integrated**; #13 `greek-settlements-networks` — **Integrated**, «Νέοι οικισμοί, παλιοί γείτονες: πέρα από το Αιγαίο» ([research](greek-settlements-networks-research.md)); #14 `sparta-society` — **Integrated** («Σπάρτη: ποιοι στήριζαν την πόλη των «ομοίων»;»; [research](sparta-society-research.md)); #15 `athens-who-voted` — **Integrated** («Αθήνα: ποιοι αποφάσιζαν, ποιοι ανήκαν»; [research](athens-who-voted-research.md)); #16 `athens-law-courts` — **Integrated**, «Αθήνα: από την καταγγελία στην ψήφο» ([research](athens-law-courts-research.md)); #17 `greek-war-hoplites` — **Integrated** ([research](greek-war-hoplites-research.md)); #18 `greek-sanctuaries-games` — **Integrated** ([research](greek-sanctuaries-games-research.md)).
 - **Chapter IV:** #19 `persian-wars-greek-world` — **Integrated** ([research](persian-wars-greek-world-research.md)); #20 `athenian-empire` — **Integrated**, «Από τη Δήλο στην αθηναϊκή ηγεμονία» ([research](athenian-empire-research.md)); #21–24 — **Integrated**, with #24 «Αλέξανδρος: οι κατακτήσεις και οι άνθρωποι πίσω από τον χάρτη» ([research](alexander-conquests-context-research.md)); all pending QA.
-- **Chapter V:** #25 `greek-stage-tragedy` — **Integrated**, «Το θέατρο ως δημόσια εμπειρία» ([research](greek-stage-tragedy-research.md)); #26–29 — **Not started**; #30 `antikythera-gears` — **Drafted**.
+- **Chapter V:** #25 `greek-stage-tragedy` — **Integrated**, «Το θέατρο ως δημόσια εμπειρία» ([research](greek-stage-tragedy-research.md)); #26 `greek-philosophy-in-context` — **Integrated**, «Πού γινόταν η φιλοσοφία;» ([research](greek-philosophy-in-context-research.md)); #27–29 — **Not started**; #30 `antikythera-gears` — **Drafted**.
 - **QA nuance:** developer-reported Lesson 18 checks predate Lessons 19–24. New #19–24 Node tests, fresh typecheck/content validation and regression suites have not been executed through this connector-only session. Android/iOS, external media, XP/audio/restore and Supabase remain pending. See [current curriculum/overlap map](CONTENT-CURRICULUM-v1.md).
+
+
+### Editorial session — 2026-11-02 / Ancient Greece Lesson 26
+- **Integrated, not Validated/Approved:** `greek-philosophy-in-context`, «Πού γινόταν η φιλοσοφία;». [Research, evidence ledger, bibliography, media and outstanding QA](greek-philosophy-in-context-research.md).
+- Narrative: 30 paragraphs / six editorial sections / seven hard reasoning questions anchored after 4/8/12/16/20/25/30; three CC BY-SA 3.0 credited Commons photographs (cover + two inline). The 1,520-word body plus seven checks supports an ~11-minute reading estimate.
+- Distinctions: sophists and paid teaching; intellectual centres beyond Athens; Socratic problem; Academy and Lyceum *not* modern universities; Aristotle's empirical inquiries and limits; gender/status access and transmitted manuscripts. Sources accessed only to the degree specified in research document.
+- Path now #24 `alexander-conquests-context` → #25 `greek-stage-tragedy` → **#26** → drafted #30 `antikythera-gears`; #27–29 remain unpublished. Lessons #1–25 and #30, quiz fingerprints (including #15 `q_470dac57`/`q_22487292`), saved progress, XP/audio/rewards, backups and synchronization logic unchanged.
+- **30 planned / five chapters, 27 in app (26 Integrated, 1 Drafted), 3 Not started, 0 Validated, 0 Approved.** Lesson 25 is **still Integrated** because its own Node/device/editorial QA is incomplete.
+- Connector-backed source review and static authoring assertions only at this stage; no npm/Node tests or device QA in this environment. Owner must execute new lesson test and requested regressions; confirm Android/iOS image and reader behavior, XP/audio/restore/account sync and historical accuracy prior to any status promotion.
+- **Next not implemented:** #27 `greek-science-knowledge` — «Οι αρχαίοι ερευνητές και τα όρια της γνώσης». Do not add phantom path entries before they exist.
 
 ### Current session handoff
 - **Integrated:** `ancient-athens` — «Η Αθήνα πίσω από τον Παρθενώνα», formerly «Μια μέρα στην αρχαία Αθήνα». [Research/media details](ancient-athens-research.md). Narrative: excavated House Θ → Agora → marginalized groups and evidence limits. Opening: monument contrasted with excavated home. Reading estimate: 6 minutes.
