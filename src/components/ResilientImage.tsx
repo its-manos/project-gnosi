@@ -25,6 +25,8 @@ type Props = {
   fallbackLabel?: string;
   loadingLabel?: string;
   onDimensions?: (size: { width: number; height: number }) => void;
+  /** Suppress logs for optional, invisible cache warmups. */
+  quiet?: boolean;
 };
 
 type PlaceholderProps = {
@@ -75,6 +77,7 @@ export default function ResilientImage({
   fallbackLabel = "Η εικόνα δεν είναι διαθέσιμη",
   loadingLabel = "Φόρτωση εικόνας…",
   onDimensions,
+  quiet = false,
 }: Props) {
   const hasValidUri = typeof uri === "string" && uri.trim().length > 0;
   const normalizedUri = hasValidUri ? uri!.trim() : null;
@@ -87,6 +90,11 @@ export default function ResilientImage({
   const candidates = normalizedUri && !bundledSource ? remoteImageCandidates(normalizedUri) : [];
   const attempt = lastLoad.uri === normalizedUri ? lastLoad.attempt : 0;
   const remoteSource = candidates[attempt] ?? candidates[0];
+  // Wikimedia filenames are stable. On iOS reuse disk-cached thumbnails even
+  // when their HTTP freshness lifetime expires; Android uses Fresco caching.
+  const imageSource = bundledSource ?? (remoteSource?.uri.startsWith("https://commons.wikimedia.org/")
+    ? { ...remoteSource, cache: "force-cache" as const }
+    : remoteSource) ?? (normalizedUri ? { uri: normalizedUri } : undefined);
 
   // Derived state ensures a newly supplied URL immediately returns to loading
   // without a useEffect resetting state after a fast image-load event.
@@ -101,7 +109,7 @@ export default function ResilientImage({
       {hasValidUri ? (
         <Image
           key={`${normalizedUri}:${bundledSource ? "bundled" : attempt}`}
-          source={bundledSource ?? remoteSource ?? { uri: normalizedUri! }}
+          source={imageSource}
           style={styles.image}
           resizeMode={resizeMode}
           accessible={Boolean(accessibilityLabel)}
@@ -122,8 +130,10 @@ export default function ResilientImage({
                 : { uri: normalizedUri, status: "loading", attempt: attempt + 1 });
               return;
             }
-            const reason = event.nativeEvent?.error ?? "Unknown native image error";
-            console.warn(`[ΓΝΩΣΗ] Failed to load image after ${attempt + 1} attempt(s): ${normalizedUri}`, reason);
+            if (!quiet) {
+              const reason = event.nativeEvent?.error ?? "Unknown native image error";
+              console.warn(`[ΓΝΩΣΗ] Failed to load image after ${attempt + 1} attempt(s): ${normalizedUri}`, reason);
+            }
             setLastLoad({ uri: normalizedUri, status: "error", attempt });
           }}
         />

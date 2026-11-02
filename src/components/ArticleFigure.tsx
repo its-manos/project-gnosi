@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import type { InlineArticleImage } from "../data/articleMedia";
-import ResilientImage from "./ResilientImage";
+import ResolvedCommonsImage from "./ResolvedCommonsImage";
 import { colors } from "../theme";
 
 type Props = { figure: InlineArticleImage };
@@ -19,7 +19,7 @@ export default function ArticleFigure({ figure }: Props) {
       <View style={styles.imageFrame}>
         {/* Commons FilePath URLs request raster thumbnails even for .svg originals.
             The source filename is not the format of the redirected response. */}
-          <ResilientImage
+          <ResolvedCommonsImage
             uri={figure.url}
             style={styles.image}
             resizeMode="contain"

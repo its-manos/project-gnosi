@@ -3,7 +3,7 @@ import { Linking, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, 
 import type { GestureResponderEvent } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { containSize, FIT_ZOOM, ImageZoomController, MAX_IMAGE_ZOOM, type Point, type Size } from '../utils/imageZoom';
-import ResilientImage from './ResilientImage';
+import ResolvedCommonsImage from './ResolvedCommonsImage';
 import { colors } from '../theme';
 export type ZoomImage = { uri: string; caption: string; credit: string; creditUrl: string };
 export default function ImageZoomViewer({ image, onClose }: { image: ZoomImage; onClose: () => void }) {
@@ -54,7 +54,7 @@ export default function ImageZoomViewer({ image, onClose }: { image: ZoomImage; 
           accessibilityActions={[{ name: 'increment', label: 'Μεγέθυνση' }, { name: 'decrement', label: 'Σμίκρυνση' }, { name: 'activate', label: 'Επαναφορά' }]}
           onAccessibilityAction={event => { if (!ready) return; if (event.nativeEvent.actionName === 'increment') zoomBy(1.5); else if (event.nativeEvent.actionName === 'decrement') zoomBy(1 / 1.5); else reset(); }}>
           <View pointerEvents="none" style={[styles.imagePosition, { width: ready ? fit.width : '100%', height: ready ? fit.height : '100%', transform: [{ translateX: transform.x }, { translateY: transform.y }, { scale: transform.scale }] }]}>
-            <ResilientImage uri={image.uri} resizeMode="contain" style={styles.image}
+            <ResolvedCommonsImage uri={image.uri} resizeMode="contain" style={styles.image}
               onDimensions={size => {
                 if (size.width === natural.current.width && size.height === natural.current.height) return;
                 natural.current = size; setDimensions(size); configure();

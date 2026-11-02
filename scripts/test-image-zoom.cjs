@@ -23,7 +23,7 @@ function harness(){let slots=[],i=0;return{react:{useState:init=>{const n=i++;if
 const jsx=(type,props)=>({type,props}),nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
 let links=[],closed=0;
 const native={Modal:'Modal',View:'View',Text:'Text',Pressable:'Pressable',ScrollView:'ScrollView',StyleSheet:{create:s=>s},Linking:{openURL:async url=>{links.push(url);}},useWindowDimensions:()=>({width:400,height:800}),PanResponder:{create:handlers=>({panHandlers:handlers})}};
-const h=harness(),Viewer=load('src/components/ImageZoomViewer.tsx',{react:h.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{SafeAreaView:'SafeArea',SafeAreaProvider:'SafeProvider'},'../utils/imageZoom':math,'./ResilientImage':{__esModule:true,default:'Bitmap'},'../theme':{colors:{}}}).default;
+const h=harness(),Viewer=load('src/components/ImageZoomViewer.tsx',{react:h.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{SafeAreaView:'SafeArea',SafeAreaProvider:'SafeProvider'},'../utils/imageZoom':math,'./ResolvedCommonsImage':{__esModule:true,default:'Bitmap'},'../theme':{colors:{}}}).default;
 const image={uri:'offline-plan',caption:'Κάτοψη και τομή',credit:'Δημιουργός · CC BY',creditUrl:'https://example.org/source'};
 const render=()=>h.render(()=>Viewer({image,onClose:()=>{closed++;}})),byLabel=(t,label)=>nodes(t).find(n=>n.props?.accessibilityLabel===label),view=t=>nodes(t).find(n=>n.props?.testID==='image-zoom-viewport');let tree=render();
 assert.equal(byLabel(tree,'Μεγέθυνση εικόνας').props.disabled,true);

@@ -60,7 +60,7 @@ const { default: ResilientImage } = moduleFrom('src/components/ResilientImage.ts
 }, true);
 const nodes = root => root && typeof root === 'object'
   ? [root, ...[root.props?.children].flat(Infinity).flatMap(nodes)] : [];
-const render = uri => {cursor = 0;return ResilientImage({uri,style:{width:300,height:200}})};
+const render = (uri, extra = {}) => {cursor = 0;return ResilientImage({uri,style:{width:300,height:200},...extra})};
 // The JSX mock represents function components as nodes; it does not automatically
 // render them. Expand the placeholder explicitly before asserting native labels.
 const placeholders = tree => nodes(tree)
@@ -71,6 +71,7 @@ try {
   console.warn = (...args) => warnings.push(args);
   let tree = render(commons), img = nodes(tree).find(x => x.type === 'Image');
   assert.equal(img.props.source.uri, expected);
+  assert.equal(img.props.source.cache, 'force-cache', 'Commons uses native iOS cache reuse; Android ignores this iOS-only hint');
   assert.equal(img.props.accessibilityLabel, undefined);
   img.props.onError({ nativeEvent: { error: '403' } });
   assert.equal(warnings.length, 0, 'first error retries without premature user-facing failure');
@@ -104,5 +105,18 @@ try {
   tree = render(commons);
   img = nodes(tree).find(x => x.type === 'Image');
   assert.equal(img.props.source.uri, expected, 'URI changes reset derived attempt index');
+  states = [];
+  tree = render(regular); img = nodes(tree).find(x => x.type === 'Image');
+  assert.equal(img.props.source.cache, undefined, 'other remote hosts retain default HTTP caching');
+  // Optional one-figure warming may fail; do not log warning for invisible images.
+  states = [];
+  const previousWarnings = warnings.length;
+  tree = render(commons, { quiet: true }); img = nodes(tree).find(x => x.type === 'Image');
+  img.props.onError({ nativeEvent: { error: '403' } });
+  tree = render(commons, { quiet: true }); img = nodes(tree).find(x => x.type === 'Image');
+  img.props.onError({ nativeEvent: { error: '403' } });
+  tree = render(commons, { quiet: true });
+  assert.equal(warnings.length, previousWarnings, 'quiet speculative fetch does not log errors');
+  assert.equal(placeholders(tree).length, 1, 'quiet still preserves its error state');
 } finally { console.warn = originalWarn; }
 console.log('Commons image delivery passed: standard 960px buckets, UA, redirect retry, local priority, error placeholders, URI reset (native Image mocked).');

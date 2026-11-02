@@ -24,6 +24,12 @@ const WIKIMEDIA_HEADERS: Record<string, string> = {
 
 /** Returns at most two predictable attempts; never loops or retries blindly. */
 export function remoteImageCandidates(uri: string): RemoteImageCandidate[] {
+  // imageinfo returns a direct Wikimedia thumbnail, now usually hosted on
+  // thumb.wikimedia.org. Identify the app on the native CDN request too.
+  if (uri.startsWith("https://thumb.wikimedia.org/wikipedia/commons/thumb/") ||
+      uri.startsWith("https://upload.wikimedia.org/wikipedia/commons/thumb/")) {
+    return [{ uri, headers: WIKIMEDIA_HEADERS }];
+  }
   if (!uri.startsWith(COMMONS_FILE_PATH)) return [{ uri }];
 
   const tail = uri.slice(COMMONS_FILE_PATH.length);
