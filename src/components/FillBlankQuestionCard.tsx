@@ -5,6 +5,7 @@ import { evaluateAnswer } from "../quiz/engine";
 import type { FillBlankQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import QuizReveal from "./QuizReveal";
+import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: FillBlankQuestion;
@@ -34,7 +35,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
       <View style={styles.badge}><Text style={styles.badgeText}>✎  ΣΥΜΠΛΗΡΩΣΕ ΤΟ ΚΕΝΟ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
-    <Text style={[styles.prompt, sentenceSize]}>{question.prompt}</Text>
+    <Text style={[styles.prompt, readingSize !== undefined && readingSize !== 18 ? sentenceSize : undefined]}>{question.prompt}</Text>
     <Text style={styles.hint}>Διάλεξε μία λέξη ή φράση από τις επιλογές για να ολοκληρώσεις την πρόταση.</Text>
     <View style={styles.passage}>
       <Text style={styles.passageHeading}>Η ΠΡΟΤΑΣΗ</Text>
@@ -103,14 +104,14 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong,
-    borderRadius: 22, padding: 18, marginTop: 12, marginBottom: 22 },
-  topLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 18 },
-  badge: { backgroundColor: colors.accentSurface, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 },
-  badgeText: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
-  counter: { color: colors.textMuted, fontSize: 12, fontWeight: "900" },
-  prompt: { color: colors.text, fontSize: 19, lineHeight: 28, fontWeight: "800", marginBottom: 9 },
-  hint: { color: colors.textBody, fontSize: 13, lineHeight: 21, marginBottom: 17 },
+  ...questionCardStyles,
+  card: questionCardStyles.card,
+  topLine: questionCardStyles.topLine,
+  badge: questionCardStyles.typeBadge,
+  badgeText: questionCardStyles.typeLabel,
+  counter: questionCardStyles.counter,
+  prompt: questionCardStyles.question,
+  hint: questionCardStyles.hint,
   passage: { backgroundColor: colors.surfaceRaised, padding: 16, borderRadius: 16,
     borderWidth: 1, borderColor: colors.border, gap: 11, marginBottom: 23 },
   passageHeading: { color: colors.textMuted, fontSize: 10, letterSpacing: 0.8, fontWeight: "900" },
@@ -127,35 +128,31 @@ const styles = StyleSheet.create({
   wordBankHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 11 },
   inputLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.8 },
   wordBankCounter: { color: colors.accentLight, fontSize: 10, fontWeight: "800" },
-  options: { gap: 10 },
-  option: { minHeight: 59, flexDirection: "row", alignItems: "center", gap: 12,
-    paddingVertical: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: colors.border,
-    backgroundColor: colors.surfaceRaised, borderRadius: 13 },
-  selected: { backgroundColor: colors.accentSurface, borderColor: colors.accent },
-  optionCorrect: { borderColor: colors.success, backgroundColor: colors.successSurface },
-  optionWrong: { borderColor: colors.error, backgroundColor: colors.errorSurface },
-  pressed: { opacity: 0.8 },
+  options: questionCardStyles.answers,
+  option: questionCardStyles.answer,
+  selected: questionCardStyles.selected,
+  optionCorrect: questionCardStyles.answerCorrect,
+  optionWrong: questionCardStyles.answerWrong,
+  pressed: questionCardStyles.pressed,
   optionNumber: { height: 28, width: 28, borderRadius: 8, alignItems: "center", justifyContent: "center",
     flexShrink: 0, backgroundColor: colors.accentSurface },
   numberSelected: { backgroundColor: "#504782" },
   optionNumberText: { color: colors.text, fontWeight: "900", fontSize: 13 },
-  optionText: { flex: 1, minWidth: 0, color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "600" },
+  optionText: questionCardStyles.answerText,
   optionMark: { color: colors.textMuted, fontSize: 18, fontWeight: "900" },
   markCorrect: { color: colors.success },
   markWrong: { color: colors.error },
   footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19, marginTop: 13 },
-  confirm: { backgroundColor: colors.accent, marginTop: 18, borderRadius: 14,
-    minHeight: 54, alignItems: "center", justifyContent: "center", padding: 12 },
-  disabled: { opacity: 0.38 },
-  confirmText: { color: colors.background, fontWeight: "900", fontSize: 15 },
-  feedback: { borderWidth: 1, borderRadius: 16, padding: 16, marginTop: 18, gap: 10 },
-  feedbackCorrect: { borderColor: colors.success, backgroundColor: colors.successSurface },
-  feedbackWrong: { borderColor: colors.error, backgroundColor: colors.errorSurface },
+  confirm: questionCardStyles.confirm,
+  disabled: questionCardStyles.confirmDisabled,
+  confirmText: questionCardStyles.confirmText,
+  feedback: questionCardStyles.feedback,
+  feedbackCorrect: questionCardStyles.feedbackCorrect,
+  feedbackWrong: questionCardStyles.feedbackWrong,
   feedbackTitle: { fontSize: 16, lineHeight: 23, fontWeight: "900" },
   goodText: { color: colors.success },
   badText: { color: colors.error },
   solutionBox: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 6 },
   solutionLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
   solution: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: "800" },
-  explanation: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
-});
+  explanation: questionCardStyles.feedbackText,
