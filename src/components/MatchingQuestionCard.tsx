@@ -4,6 +4,7 @@ import { evaluateAnswer } from "../quiz/engine";
 import type { MatchingQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import QuizReveal from "./QuizReveal";
+import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: MatchingQuestion;
@@ -130,14 +131,14 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 18, marginTop: 12, marginBottom: 22, borderRadius: 22, borderWidth: 1,
-    borderColor: colors.borderStrong, backgroundColor: colors.surface },
-  topLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 18 },
-  typeBadge: { borderRadius: 8, backgroundColor: colors.accentSurface, paddingHorizontal: 10, paddingVertical: 7 },
-  typeLabel: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
-  counter: { color: colors.textMuted, fontSize: 12, fontWeight: "900" },
-  question: { color: colors.text, fontSize: 19, lineHeight: 28, fontWeight: "800", marginBottom: 9 },
-  hint: { color: colors.textBody, fontSize: 13, lineHeight: 21, marginBottom: 17 },
+  ...questionCardStyles,
+  card: questionCardStyles.card,
+  topLine: questionCardStyles.topLine,
+  typeBadge: questionCardStyles.typeBadge,
+  typeLabel: questionCardStyles.typeLabel,
+  counter: questionCardStyles.counter,
+  question: questionCardStyles.question,
+  hint: questionCardStyles.hint,
   progressLine: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   progressLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
   progressCount: { color: colors.accentLight, fontWeight: "900", fontSize: 12 },
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
   available: { borderColor: colors.borderStrong },
   active: { borderColor: colors.accent, backgroundColor: colors.accentSurface },
   linked: { borderColor: "#65648A", backgroundColor: "#24243A" },
-  pressed: { opacity: 0.8 },
+  pressed: questionCardStyles.pressed,
   number: { width: 29, height: 29, alignItems: "center", justifyContent: "center",
     backgroundColor: colors.accentSurface, borderRadius: 9, flexShrink: 0 },
   numberActive: { backgroundColor: "#504782" },
@@ -170,17 +171,15 @@ const styles = StyleSheet.create({
   choiceStatus: { color: colors.textMuted, fontSize: 19, fontWeight: "900" },
   statusActive: { color: colors.accentLight },
   footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
-  confirm: { marginTop: 17, minHeight: 54, borderRadius: 14, backgroundColor: colors.accent,
-    alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
-  disabled: { opacity: 0.38 },
-  confirmText: { color: colors.background, fontSize: 15, fontWeight: "900" },
-  feedback: { marginTop: 18, padding: 16, borderRadius: 16, borderWidth: 1, gap: 10 },
-  feedbackCorrect: { backgroundColor: colors.successSurface, borderColor: colors.success },
-  feedbackWrong: { backgroundColor: colors.errorSurface, borderColor: colors.error },
+  confirm: questionCardStyles.confirm,
+  disabled: questionCardStyles.confirmDisabled,
+  confirmText: questionCardStyles.confirmText,
+  feedback: questionCardStyles.feedback,
+  feedbackCorrect: questionCardStyles.feedbackCorrect,
+  feedbackWrong: questionCardStyles.feedbackWrong,
   feedbackTitle: { fontSize: 17, fontWeight: "900" },
   correctTitle: { color: colors.success },
   wrongTitle: { color: colors.error },
   solutions: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 9 },
   solutionText: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
-  feedbackText: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
-});
+  feedbackText: questionCardStyles.feedbackText,
