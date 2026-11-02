@@ -93,12 +93,12 @@ export function evaluateSpotMistake(content: unknown, answer: unknown): AnswerEv
 
 /** Collapse harmless Greek typing variations, never apply fuzzy spelling correction. */
 export function normalizeBlankAnswer(value: string, accentSensitive = false): string {
-  let text = value.normalize("NFC").trim().replace(/\\s+/gu, " ").toLocaleLowerCase("el-GR");
-  if (!accentSensitive) text = text.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").normalize("NFC");
+  let text = value.normalize("NFC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("el-GR");
+  if (!accentSensitive) text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFC");
   return text.replace(/ς/g, "σ");
 }
 function validShortAnswer(value: unknown): value is string {
-  return typeof value === "string" && value.length <= 80 && value.trim().length > 0 && !/[\\r\\n]/.test(value);
+  return typeof value === "string" && value.length <= 80 && value.trim().length > 0 && !/[\r\n]/.test(value);
 }
 function fillBlankContent(value: unknown): value is FillBlankContent {
   if (!object(value) || typeof value.before !== "string" || typeof value.after !== "string" ||
