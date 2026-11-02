@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     flexShrink: 0, backgroundColor: colors.accentSurface },
   numberSelected: { backgroundColor: "#504782" },
   optionNumberText: { color: colors.text, fontWeight: "900", fontSize: 13 },
-  optionText: { flex: 1, minWidth: 0, color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "650" },
+  optionText: { flex: 1, minWidth: 0, color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "600" },
   optionMark: { color: colors.textMuted, fontSize: 18, fontWeight: "900" },
   markCorrect: { color: colors.success },
   markWrong: { color: colors.error },
