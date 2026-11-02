@@ -68,3 +68,10 @@ Local script sequence: `npm ci && npm run typecheck && npm run validate:content 
 ## Prose-only editorial update — 2026-11-01
 
 Opening and conclusion distinguish spindle whorls, seals and craft areas as evidence of different aspects of Bronze Age production. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.
+
+
+### Phase 2 post-integration editorial review — 2026-11-03
+- Kept the artifact-focused title and 19 paragraphs; made introduction concrete, removed an imprecise citizenship analogy, clarified sealed-storage inference and polished the labor evidence discussion.
+- Four v2 questions now use spot-the-mistake, matching, single-choice and fill-in-the-blank. Previous quiz was internally consistent but reauthored; existing quiz version kept frozen in the pair fixture and not aliased. Original media and anchors untouched.
+- Spot-checked [Lerna official account](https://www.argolisculture.gr/en/list-of-monuments/archaeological-site-of-lerna-house-of-tiles-stone-enclosure/), [BSA Keros project](https://digital.bsa.ac.uk/fieldwork.php?project=1999), [Cycladic Museum raw materials](https://cycladic.gr/en/essay/ylika-tou-kykladikoy-politimoy/). No personal identity inferred from objects or institutional interpretation treated as a known ruler.
+- See [Phase 2 pair dossier](ANCIENT-GREECE-PHASE-2-LESSONS-5-6.md). Integrated only; local QA outstanding.
