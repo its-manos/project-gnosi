@@ -42,20 +42,20 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
   }],
   "greek-stage-tragedy": [
     {
-      afterParagraphId: "stage-14",
-      url: commonsFileUrl("Pronomos vase.jpg"),
-      resizeMode: "contain",
-      caption: "Το αγγείο του Προνόμου, περίπου 400 π.Χ., με μορφές που σχετίζονται με σατυρικό δράμα, αυλητή και προσωπεία. Η αγγειογραφία είναι καλλιτεχνική σύνθεση, όχι φωτογραφική αποτύπωση μιας συγκεκριμένης παράστασης. Άγγιξε για μεγέθυνση.",
-      credit: "Yair-haklai / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
-      creditUrl: commonsPageUrl("Pronomos vase.jpg"),
-    },
-    {
       afterParagraphId: "stage-10",
       url: commonsFileUrl("The Choragic Monument of Lysicrates and the Acropolis of Athens.jpg"),
       resizeMode: "contain",
       caption: "Το χορηγικό μνημείο του Λυσικράτη (335/334 π.Χ.) σε φωτογραφία του 2018. Μαρτυρεί την τιμή του νικητή χορηγού σε εποχή μεταγενέστερη των μεγάλων τραγικών του 5ου αιώνα· δεν καταγράφει τις αντιδράσεις του ακροατηρίου. Άγγιξε για μεγέθυνση.",
       credit: "George E. Koronaios / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2018",
       creditUrl: commonsPageUrl("The Choragic Monument of Lysicrates and the Acropolis of Athens.jpg"),
+    },
+    {
+      afterParagraphId: "stage-14",
+      url: commonsFileUrl("Pronomos vase.jpg"),
+      resizeMode: "contain",
+      caption: "Το αγγείο του Προνόμου, περίπου 400 π.Χ., με μορφές που σχετίζονται με σατυρικό δράμα, αυλητή και προσωπεία. Η αγγειογραφία είναι καλλιτεχνική σύνθεση, όχι φωτογραφική αποτύπωση μιας συγκεκριμένης παράστασης. Άγγιξε για μεγέθυνση.",
+      credit: "Yair-haklai / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+      creditUrl: commonsPageUrl("Pronomos vase.jpg"),
     },
   ],
   "alexander-conquests-context": [
