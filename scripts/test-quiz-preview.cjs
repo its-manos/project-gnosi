@@ -20,7 +20,7 @@ const answerFor = q => {
   if (q.type === 'multiple-select') return [...q.content.correctIndices].reverse();
   if (q.type === 'ordering') return [...q.content.correctOrder];
   if (q.type === 'matching') return Object.fromEntries(q.content.pairs.map(pair => [pair.leftId, pair.rightId]));
-  if (q.type === 'spot-the-mistake') return q.content.incorrectSegmentId;
+  if (q.type === 'spot-the-mistake') return q.content.incorrectOptionId;
   if (q.type === 'fill-in-the-blank') return q.content.displayAnswer;
   throw Error('unexpected type');
 };
