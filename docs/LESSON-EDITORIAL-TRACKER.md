@@ -296,3 +296,9 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - **Overlaps reserved:** #23 ends 336 with Philip; #24 covers Alexander’s 336–323 conquests, resistance, administration and retrospective accounts; #29 will cover successor kingdoms and changing cities after 323. #25 is theatre, not a continuation of battle chronology.
 - **Unexecuted checks:** TypeScript, content validator, Node fixtures, CI, Android/iOS, remote image load/zoom, historical progress/replay/XP/sound and Supabase synchronization need local confirmation. Connector-side structural checks do not substitute for those.
 - **Progress:** **30 planned / 25 implemented / 24 Integrated / 1 Drafted (#30) / 5 Not started (#25–29) / 0 Validated / 0 Approved**. Next #25 `greek-stage-tragedy`, planned only.
+
+
+### Editorial proofreading pass — Lessons 17–24 and 30 (2026-11-02)
+- [Full bounded audit](ANCIENT-GREECE-LESSONS-17-24-30-EDITORIAL-AUDIT.md): **3 of 9 completely proofread and revised** — #17 `greek-war-hoplites` (24 paragraphs/6 checkpoints), #18 `greek-sanctuaries-games` (24/6), #30 `antikythera-gears` (10 plain-text paragraphs/4 legacy questions, no explicit checkpoints). **#19–24 outstanding**; sampled introductions, endings and structures are not full audits.
+- Changes are prose-only. All existing questions/answers/quiz versions, anchors, images, credits, title, progression, compatible quiz keys and historical player state were preserved in connector-side structural comparisons. The legacy Antikythera lesson remains **Drafted** despite its older editorial metadata.
+- No Node/npm, CI or native tests ran in this connector session. #17–18 remain **Integrated** (not Validated/Approved); no lesson was promoted. Follow the audit's question backlog and run the local suite before QA sign-off.
