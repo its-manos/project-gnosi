@@ -34,6 +34,16 @@ const imports = {
   '../theme': { colors, reading },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
 };
+const sharedModule = { exports: {} };
+vm.runInNewContext(transpile('src/components/questionCardStyles.ts', false), {
+  module: sharedModule, exports: sharedModule.exports,
+  require: id => {
+    if (id === 'react-native') return imports['react-native'];
+    if (id === '../theme') return imports['../theme'];
+    throw Error('unexpected shared style import ' + id);
+  },
+});
+imports['./questionCardStyles'] = sharedModule.exports;
 const componentModule = { exports: {} };
 vm.runInNewContext(transpile('src/components/MultipleSelectQuestionCard.tsx', true), {
   module: componentModule, exports: componentModule.exports,
