@@ -130,3 +130,4 @@ const styles = StyleSheet.create({
   solutionList: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 7 },
   solutionItem: { color: colors.text, fontSize: 14, lineHeight: 23, fontWeight: "700" },
   feedbackText: questionCardStyles.feedbackText,
+});
