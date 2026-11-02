@@ -35,9 +35,10 @@
     "beta:updates:setup": "node scripts/configure-beta-updates.cjs",
     "beta:update:android": "npx eas-cli@latest update --channel preview --platform android --environment preview",
     "beta:update:ios": "npx eas-cli@latest update --channel beta --platform ios --environment preview",
-    "images:commons:status": "node scripts/bundle-commons-images.cjs --dry-run",
-    "images:commons:bundle": "node scripts/bundle-commons-images.cjs --apply",
-    "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify"
+    "images:cdn:status": "node scripts/prepare-image-cdn.cjs --status",
+    "images:cdn:prepare": "node scripts/prepare-image-cdn.cjs --prepare",
+    "images:cdn:verify": "node scripts/prepare-image-cdn.cjs --verify",
+    "images:cdn:publish": "node scripts/prepare-image-cdn.cjs --publish"
   },
   "private": true
 }
