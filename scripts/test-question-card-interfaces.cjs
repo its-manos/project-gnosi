@@ -100,6 +100,30 @@ assert.ok(id(tree, 'matching-feedback'));
 assert.equal(id(tree, 'matching-confirm'), undefined);
 assert.equal(id(tree, 'matching-left-a').props.disabled, true);
 
+// Changing an already connected right-hand option must detach its prior
+// owner rather than creating duplicate links or enabling premature scoring.
+const rematch = mount('src/components/MatchingQuestionCard.tsx', matching);
+let retree = rematch.render();
+id(retree, 'matching-left-a').props.onPress();
+retree = rematch.render();
+id(retree, 'matching-right-x').props.onPress();
+retree = rematch.render();
+id(retree, 'matching-left-b').props.onPress();
+retree = rematch.render();
+id(retree, 'matching-right-x').props.onPress();
+retree = rematch.render();
+assert.equal(id(retree, 'matching-confirm').props.disabled, true, 'reassignment detaches previous owner');
+id(retree, 'matching-left-a').props.onPress();
+retree = rematch.render();
+id(retree, 'matching-right-y').props.onPress();
+retree = rematch.render();
+assert.equal(id(retree, 'matching-confirm').props.disabled, false);
+id(retree, 'matching-confirm').props.onPress();
+assert.deepEqual(JSON.parse(JSON.stringify(rematch.submitted)), [{ b: 'x', a: 'y' }]);
+rematch.setAnswer({ b: 'x', a: 'y' });
+retree = rematch.render();
+assert.ok(id(retree, 'matching-feedback'), 'incorrect mapping also shows explanation');
+
 const renderer = compile('src/components/QuizQuestionRenderer.tsx', {
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': { View: 'View', Text: 'Text', StyleSheet: { create: x => x } },
