@@ -4,6 +4,7 @@ import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
+import DevTypedLessonPilotScreen from "./DevTypedLessonPilotScreen";
 import { requestPracticeCue } from "../play/soundStatus";
 import { calculateQuizResults, createQuizSession, evaluateAnswer } from "../quiz/engine";
 import { advancePreview, submitPreviewAnswer } from "../quiz/previewFlow";
@@ -32,6 +33,7 @@ const titles: Record<string, string> = {
  */
 export default function QuizTypesPreviewScreen({ onBack }: Props) {
   const [session, setSession] = useState<QuizSession>(startSession);
+  const [showArticlePilot, setShowArticlePilot] = useState(false);
   const sessionRef = useRef(session);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const question = session.questions[session.currentIndex] as BuiltinQuizQuestion;
@@ -64,9 +66,12 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }
 
+  if (showArticlePilot) return <DevTypedLessonPilotScreen onBack={() => setShowArticlePilot(false)} />;
+
   return <ScrollView ref={scrollRef} testID="quiz-types-preview" contentContainerStyle={styles.content}
     showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
     <AppHeader onBack={onBack} backLabel="ΚΑΘΗΜΕΡΙΝΟ QUIZ" />
+    <ActionButton label="Δοκίμασε τα νέα είδη μέσα σε άρθρο (dev)" secondary onPress={() => setShowArticlePilot(true)} />
     <View style={styles.header}>
       <View style={styles.pill}><Text style={styles.pillText}>✦ ΕΡΓΑΣΤΗΡΙΟ GNOSI</Text></View>
       <Text style={styles.title}>Μάθε με διαφορετικό τρόπο.</Text>
