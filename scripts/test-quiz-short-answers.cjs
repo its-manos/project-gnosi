@@ -1,4 +1,4 @@
-/* Greek short-answer and mistake-spotting security/compatibility contracts. */
+/* Word-bank blank and mistake-spotting engine contracts, including saved session safety. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm'), ts = require('typescript');
 const js = ts.transpileModule(fs.readFileSync(path.join(__dirname, '../src/quiz/engine.ts'), 'utf8'), {
@@ -25,51 +25,59 @@ assert.equal(e.evaluateAnswer(spot, 'b').correct, true);
 assert.deepEqual(JSON.parse(JSON.stringify(e.evaluateAnswer(spot, 'a'))), { valid: true, correct: false });
 assert.equal(e.evaluateAnswer(spot, 'not-in-question').valid, false);
 assert.equal(e.evaluateAnswer(spot, 1).valid, false);
-assert.equal(e.evaluateAnswer(spot, 'd').valid, true, 'all factual choices remain valid submissions');
-assert.equal(e.evaluateAnswer(spot, 'd').correct, false, 'true facts are incorrect selections');
+assert.equal(e.evaluateAnswer(spot, 'd').valid, true, 'true statements are allowed selections');
+assert.equal(e.evaluateAnswer(spot, 'd').correct, false, 'true statements are incorrect answers');
+
 const blank = { before: 'Η συνέλευση ονομαζόταν', after: '.',
-  acceptedAnswers: ['Εκκλησία του Δήμου', 'Εκκλησία Δήμου'], displayAnswer: 'Εκκλησία του Δήμου' };
+  options: [
+    { id: 'council', text: 'Βουλή των Πεντακοσίων' },
+    { id: 'assembly', text: 'Εκκλησία του Δήμου' },
+    { id: 'areopagus', text: 'Άρειος Πάγος' },
+    { id: 'court', text: 'Ηλιαία' },
+  ], correctOptionId: 'assembly' };
 const fill = make('fill-demo', 'fill-in-the-blank', blank);
-for (const answer of ['Εκκλησία του Δήμου', 'εκκλησια του δημου', '  ΕΚΚΛΗΣΙΑ   ΤΟΥ ΔΗΜΟΥ ',
-  'ΕΚΚΛΗΣΊΑ ΤΟΥ ΔΉΜΟΥ', 'Εκκλησία Δήμου']) {
-  assert.equal(e.evaluateAnswer(fill, answer).correct, true, answer);
+assert.deepEqual(JSON.parse(JSON.stringify(e.evaluateAnswer(fill, 'assembly'))), { valid: true, correct: true });
+for (const option of blank.options.filter(o => o.id !== blank.correctOptionId)) {
+  assert.deepEqual(JSON.parse(JSON.stringify(e.evaluateAnswer(fill, option.id))), { valid: true, correct: false });
 }
-assert.equal(e.normalizeBlankAnswer(' ΔΗΜΟΣ '), e.normalizeBlankAnswer('δήμος'), 'final sigma');
-assert.equal(e.evaluateAnswer(fill, 'Βουλή των Πεντακοσίων').correct, false);
-assert.equal(e.evaluateAnswer(fill, 'Εκκλησεια του Δημου').correct, false, 'not fuzzy spelling');
-for (const answer of ['', '    ', '\n', 'x'.repeat(81)]) assert.equal(e.evaluateAnswer(fill, answer).valid, false);
-assert.equal(e.evaluateAnswer(fill, null).valid, false);
-const sensitive = make('accent', 'fill-in-the-blank',
-  { ...blank, acceptedAnswers: ['Δήμος'], displayAnswer: 'Δήμος', accentSensitive: true });
-assert.equal(e.evaluateAnswer(sensitive, 'Δήμος').correct, true);
-assert.equal(e.evaluateAnswer(sensitive, 'δημοσ').correct, false, 'accent-sensitive authoring is possible');
+for (const answer of ['', ' ', 'Εκκλησία του Δήμου', 'ASSEMBLY', 'unknown-id', 1, null, [], {}]) {
+  assert.equal(e.evaluateAnswer(fill, answer).valid, false, 'only exact authored option IDs are accepted: ' + String(answer));
+}
 const badBlank = [
-  { ...blank, acceptedAnswers: ['Δήμος', 'Δημος'], displayAnswer: 'Δήμος' },
-  { ...blank, displayAnswer: 'Αδύνατο' },
-  { ...blank, acceptedAnswers: [] },
-  { ...blank, acceptedAnswers: ['  '] },
-  { ...blank, accentSensitive: 'yes' },
+  { ...blank, correctOptionId: 'missing' },
+  { ...blank, options: [] },
+  { ...blank, options: [blank.options[0]] },
+  { ...blank, options: [...blank.options, blank.options[0]] },
+  { ...blank, options: [{ id: 'x', text: 'Δήμος' }, { id: 'y', text: '  δήμος ' }], correctOptionId: 'x' },
+  { ...blank, options: [{ id: '__proto__', text: 'Απαντήσεις' }, blank.options[1]] },
+  { ...blank, options: [{ id: 'bad', text: '  ' }, blank.options[1]] },
+  { ...blank, before: ' ', after: ' ' },
 ];
 for (const [index, content] of badBlank.entries()) {
   assert.throws(() => e.createQuizSession('invalid-' + index, 'challenge', [make('bad-fill', 'fill-in-the-blank', content)]),
-    /invalid_quiz_session/);
+    /invalid_quiz_session/, 'invalid bank content ' + index);
 }
 for (const content of [
   { ...mistake, incorrectOptionId: 'missing' },
   { ...mistake, correction: '' },
   { ...mistake, options: [mistake.options[0], mistake.options[0], mistake.options[2]] },
   { ...mistake, options: [mistake.options[0], mistake.options[1]] },
-  { ...mistake, options: [{...mistake.options[0], text: ' '}, mistake.options[1], mistake.options[2]] },
-  { ...mistake, options: mistake.options.map(({id,text}) => ({id,text})).concat([{id:'a',text:'Διπλό αναγνωριστικό επιλογής'}]) },
-]) assert.throws(() => e.createQuizSession('invalid-spot', 'challenge', [make('bad-spot', 'spot-the-mistake', content)]),
-  /invalid_quiz_session/);
+  { ...mistake, options: [{ ...mistake.options[0], text: ' ' }, mistake.options[1], mistake.options[2]] },
+]) {
+  assert.throws(() => e.createQuizSession('invalid-spot', 'challenge', [make('bad-spot', 'spot-the-mistake', content)]),
+    /invalid_quiz_session/);
+}
 let session = e.createQuizSession('mixed-spot-fill', 'challenge', [spot, fill]);
 let next = e.submitQuizAnswer(session, e.questionToken(session), 'a');
 assert.equal(next.changed, true);
 assert.equal(e.submitQuizAnswer(next.session, e.questionToken(next.session), 'b').reason, 'duplicate');
 session = e.advanceQuizSession(next.session, e.questionToken(next.session)).session;
-next = e.submitQuizAnswer(session, e.questionToken(session), 'ΕΚΚΛΗΣΙΑ ΤΟΥ ΔΗΜΟΥ');
+assert.equal(e.submitQuizAnswer(session, e.questionToken(session), 'Εκκλησία του Δήμου').reason,
+  'invalid-answer', 'typed text is no longer an accepted submission');
+assert.equal(e.submitQuizAnswer(session, e.questionToken(session), 'unknown-id').reason, 'invalid-answer');
+next = e.submitQuizAnswer(session, e.questionToken(session), 'assembly');
 assert.equal(next.changed, true);
+assert.equal(e.submitQuizAnswer(next.session, e.questionToken(next.session), 'council').reason, 'duplicate');
 session = e.advanceQuizSession(next.session, e.questionToken(next.session)).session;
 const restored = e.restoreQuizSession(e.serializeQuizSession(session));
 const result = e.calculateQuizResults(restored);
@@ -77,6 +85,8 @@ assert.equal(result.correctCount, 1);
 assert.equal(result.answeredCount, 2);
 assert.equal(result.completed, true);
 const tampered = JSON.parse(e.serializeQuizSession(session));
-tampered.answers[fill.id].value = '';
-assert.throws(() => e.parseQuizSession(tampered), /invalid_quiz_session/, 'corrupt blank cannot restore');
-console.log('Short answers passed: Greek accents, case, spaces, final sigma, alternate solutions, strict spelling, content validation, serialization and tamper rejection.');
+tampered.answers[fill.id].value = 'not-a-tile';
+assert.throws(() => e.parseQuizSession(tampered), /invalid_quiz_session/, 'unknown word-bank tile cannot restore');
+const changedBank = make('fill-demo', 'fill-in-the-blank', { ...blank, correctOptionId: 'council' });
+assert.notEqual(changedBank.version, fill.version, 'editing the correct option changes the version fingerprint');
+console.log('Word-bank quiz contracts passed: valid and wrong tiles, invalid IDs, duplicate labels, content revisions, session serialization, tamper rejection and legacy safety.');
