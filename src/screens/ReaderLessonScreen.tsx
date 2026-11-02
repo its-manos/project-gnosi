@@ -1,6 +1,6 @@
 import { motionAllowed, playPreferences } from "../play/preferences";
 import { quizRewardSummary } from "../gamification/rewards";
-import { adaptInteractiveLessonQuestion, adaptLessonQuestion, interactiveLessonAnswerIndex } from "../quiz/adapters";
+import { adaptInteractiveLessonQuestion, adaptLessonQuestion, projectInteractiveLessonAnswer, restoreInteractiveLessonAnswer } from "../quiz/adapters";
 import ZoomableLessonImage from "../components/ZoomableLessonImage";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import { useRef, useState } from "react";
@@ -24,7 +24,7 @@ import { getParagraphCount, getParagraphId, getParagraphText, getQuestionPlaceme
 
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
-  onToggleSaved, checkpointAnswers, onAnswerCheckpoint, onFinishLesson, onBack }: Props) {
+  onToggleSaved, checkpointAnswers, typedCheckpointAnswers = {}, onAnswerCheckpoint, onFinishLesson, onBack }: Props) {
   const { analytics } = useBetaAnalytics();
   const lastSeenParagraph = useRef(0);
   const [readingSize, setReadingSize] = useState(18);
@@ -189,10 +189,18 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                   {interactiveQuestion ? <>
                     <QuizQuestionRenderer question={interactiveQuestion} questionNumber={questionIndex + 1}
                       readingSize={readingSize}
-                      answer={answered ? `option-${checkpointAnswers[questionIndex]}` : undefined}
+                      answer={restoreInteractiveLessonAnswer(lesson, questionIndex, checkpointAnswers[questionIndex], typedCheckpointAnswers[questionIndex])}
                       onSubmit={value => {
-                        const answerIndex = interactiveLessonAnswerIndex(question, value);
-                        if (answerIndex !== null && !answered) onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex);
+                        const answerIndex = projectInteractiveLessonAnswer(lesson, questionIndex, value);
+                        if (answerIndex === null || answered) return;
+                        // Existing two pilot types retain numeric-only compatibility;
+                        // structured formats save the full versioned response as well.
+                        if (interactiveQuestion.type === "spot-the-mistake" ||
+                            interactiveQuestion.type === "fill-in-the-blank") {
+                          onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex);
+                        } else {
+                          onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex, value);
+                        }
                       }} />
                     <ReportContentButton target={lessonReportTarget(lesson, questionIndex)} />
                   </> : <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={lessonReportTarget(lesson, questionIndex)}
