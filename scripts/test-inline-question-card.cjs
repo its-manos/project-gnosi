@@ -143,4 +143,26 @@ const src = fs.readFileSync(path.join(root, 'src/components/SingleChoiceQuestion
 for (const forbidden of ['emitPlayFeedback', 'commitRecord', 'AsyncStorage', 'supabase', 'setCheckpointAnswers']) {
   assert.equal(src.includes(forbidden), false, 'UI must not own score or persistence: ' + forbidden);
 }
+const daily = fs.readFileSync(path.join(root, 'src/screens/DailyChallengeScreen.tsx'), 'utf8');
+const dailyReview = fs.readFileSync(path.join(root, 'src/components/DailyMistakeReview.tsx'), 'utf8');
+const renderer = fs.readFileSync(path.join(root, 'src/components/QuizQuestionRenderer.tsx'), 'utf8');
+const multi = fs.readFileSync(path.join(root, 'src/components/MultipleSelectQuestionCard.tsx'), 'utf8');
+for (const [file, source] of [
+  ['daily challenge', daily], ['daily mistake review', dailyReview],
+  ['typed renderer', renderer], ['multiple select', multi],
+]) {
+  assert.ok(source.includes('SingleChoiceQuestionCard') || source.includes('questionCardStyles'),
+    file + ' must use the shared question UI / style');
+}
+assert.ok(daily.includes('onConfirm={index => answerQuestion(index)}'),
+  'daily quiz writes existing answers only from the confirmation callback');
+assert.ok(!daily.includes('onPress={()=>void answerQuestion(index)'),
+  'daily quiz must not submit an answer when tapping a tile');
+assert.ok(dailyReview.includes('onConfirm={answerIndex =>'),
+  'daily mistake practice needs confirmation too');
+assert.ok(renderer.includes('case "multiple-choice":') && renderer.includes('<SingleChoiceQuestionCard'),
+  'legacy choice renderer uses the same confirmable card');
+assert.ok(multi.includes('...questionCardStyles'),
+  'multiple-select must import the shared font and surface tokens');
+
 console.log('Legacy choice card passed: exact shared styles, draft selection/change, confirmation-only callback, double-tap lock, restored answers, combo, report and text scaling.');
