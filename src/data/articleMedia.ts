@@ -40,6 +40,24 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "greek-science-knowledge": [
+    {
+      afterParagraphId: "science-09",
+      url: commonsFileUrl("P.Penn. Museum inv. E02748 Euclid's Elements 2.5.jpg"),
+      resizeMode: "contain",
+      caption: "Πάπυρος της Οξυρρύγχου (P.Oxy. I 29 / Penn E02748) με κείμενο και διάγραμμα από τα «Στοιχεῖα», Βιβλίο ΙΙ, πρόταση 5. Το αντίγραφο ανήκει στους ρωμαϊκούς χρόνους· η ακριβής χρονολόγησή του αναφέρεται διαφορετικά σε σύγχρονες καταγραφές και δεν είναι αυτόγραφο του Ευκλείδη. Άγγιξε για μεγέθυνση.",
+      credit: "University of Pennsylvania Museum / Wikimedia Commons · CC BY-SA 4.0 (Commons page; source metadata differs) · ψηφιοποίηση 2004",
+      creditUrl: commonsPageUrl("P.Penn. Museum inv. E02748 Euclid's Elements 2.5.jpg"),
+    },
+    {
+      afterParagraphId: "science-14",
+      url: commonsFileUrl("British Museum, Babylon Astronomical Diary, 331-330 BC.jpg"),
+      resizeMode: "contain",
+      caption: "Βαβυλωνιακή πήλινη πινακίδα αστρονομικού ημερολογίου (331–330 π.Χ.), British Museum 1880,0617.496. Το κείμενο συνδυάζει ουράνια και επίγεια γεγονότα· δεν αποδεικνύει από μόνο του τη διαδρομή κάθε δεδομένου προς τους ελληνόφωνους αστρονόμους. Άγγιξε για μεγέθυνση.",
+      credit: "Brigade Piron / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+      creditUrl: commonsPageUrl("British Museum, Babylon Astronomical Diary, 331-330 BC.jpg"),
+    },
+  ],
   "greek-philosophy-in-context": [
     {
       afterParagraphId: "phil-09",
