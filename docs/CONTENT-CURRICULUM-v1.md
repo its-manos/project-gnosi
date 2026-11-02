@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–29 · 2026-11-02 · not device-validated
+Status: Ancient Greece 30/30 research-first Integrated on content/curriculum-v1 · 2026-11-02 · not device-validated or Approved
 
 ## 1. Editorial philosophy
 
@@ -246,7 +246,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ## 12. Finalized v1 learning path — Ιστορία / Αρχαία Ελλάδα (2026-11-01)
 
-**Editorial decision:** 30 lessons in five chapters. These are planned curriculum entries, not 30 published lessons. The four pre-existing article IDs remain unchanged; only `ancient-athens` has received the research-first rewrite in this session. The pilot begins from an accessible archaeological case study, then establishes chronological and geographic foundations before proceeding into Bronze Age, poleis, conflicts and cultural developments. This opening order is thematic, not an assertion that Classical Athens predates Mycenaean Greece.
+**Editorial decision (updated 2026-11-02):** The `content/curriculum-v1` path now contains all 30 research-first Integrated lessons in five chapters; integration does not imply validation or release to `main`. The first 24 stable lesson IDs retain their order. The final six are intentionally reordered from original positions **29, 25, 28, 26, 27, 30**. This preserves the immediate transition from Alexander to the Hellenistic successor kingdoms, before a thematic retrospective on theatre, sculpture, philosophy and knowledge that culminates in the Antikythera mechanism. Chapter V is thematic, **not** a continuation of strict chronological order. All lesson IDs, source texts, question content, saved progress and compatibility metadata remain unchanged by this sequence-only decision.
 
 **Outcome:** By completion, readers can distinguish successive eras, understand the diversity of Greek-speaking communities, interpret evidence critically, explain institutions and social differences, and recognize how trade, warfare, intellectual activity and Hellenistic change reshaped the Mediterranean. Review sequencing when individual lessons are researched; no arbitrary lesson cap.
 
@@ -288,12 +288,14 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ### Chapter V. Ιδέες, τέχνη και κληρονομιές
 
-25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία» — **Integrated** ([research, sources, image rights and QA](greek-stage-tragedy-research.md); 30 paragraphs, 7 checkpoints; device/Node QA pending)
-26. `greek-philosophy-in-context` — «Πού γινόταν η φιλοσοφία;» — **Integrated** ([research, sources, media rights and QA](greek-philosophy-in-context-research.md); 30 paragraphs, 7 checkpoints; Node/device/editorial QA pending)
-27. `greek-science-knowledge` — «Πώς ήξεραν ότι είχαν δίκιο;» — **Integrated** ([research, evidence, sources, image rights and QA](greek-science-knowledge-research.md); 24 paragraphs, six anchored reasoning checks; Node/device/editorial QA pending)
-28. `greek-images-sculpture` — «Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;» — **Integrated** ([research, evidence and licence QA](greek-images-sculpture-research.md); 28 paragraphs, six checkpoints; device/Node/editorial QA pending)
-29. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ένας κόσμος πολλών βασιλείων»
-30. `antikythera-gears` — «Ένας ουρανός μέσα σε γρανάζια» (existing live ID)
+**Sequence note (approved 2026-11-02):** First follow the immediate post-Alexander transformation in #25. Then deliberately return to earlier and overlapping cultural developments; these thematic lessons are not ordered by their earliest historical dates. Conclude with a concrete application of ancient astronomical knowledge.
+
+25. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ποιος όριζε τη ζωή μιας πόλης;» (Integrated; QA pending; former #29)
+26. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία» (Integrated; QA pending; former #25)
+27. `greek-images-sculpture` — «Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;» (Integrated; QA pending; former #28)
+28. `greek-philosophy-in-context` — «Πού γινόταν η φιλοσοφία;» (Integrated; QA pending; former #26)
+29. `greek-science-knowledge` — «Πώς ήξεραν ότι είχαν δίκιο;» (Integrated; QA pending; former #27)
+30. `antikythera-gears` — «Μια μηχανή που υπολόγιζε τον ουρανό» (Integrated; QA pending; unchanged #30)
 
 ### Educational boundaries and overlap map
 
@@ -536,3 +538,10 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - **Historical quiz safety:** shipped four-question fingerprint **`q_7ffb549e`** is documented, historical events and completion/XP preserved but **not** aliased to new incompatible six-question quiz. Removed old `compatibleQuizKeys` alias, set `requireCurrentAttemptQuiz:true`; old unfinished quiz positions deliberately not reused. Original historical fixture remains immutable; regression expectations recognize new incompatible #30. Lesson 15 `q_470dac57` and `q_22487292` unchanged.
 - **Final counts:** **30 planned / 30 present / 30 research-first Integrated / 0 Drafted / 0 Not started / 0 Validated / 0 Approved.** This is code integration, **not** quality acceptance; #25–29 still await their individual QA.
 - **Unexecuted:** npm typecheck/content validator, Node regressions, mock-native tests, real Android/iOS images, first-answer sounds, XP/replay, guest/offline/backup, Supabase synchronization and independent historian/Greek copyedit. No merge into `main`.
+
+
+### Ancient Greece Phase 1 — approved sequence amendment (2026-11-02)
+- **Order only:** original 1–24 unchanged; old slots 29, 25, 28, 26, 27, 30 now occupy 25–30.
+- **Source of truth:** `src/utils/lessonPath.ts` explicit `ancient-greece` array, 30 unique stable IDs. The chapter table above reflects current titles in the app; dated session notes below remain historical snapshots from the original integration order.
+- **No migrations:** no edits to definitions/quiz keys, checkpoint anchors, completion/XP/activity records, saved IDs, attempts, image/media URLs or Supabase schema. Previously completed and in-progress lesson IDs stay accessible through existing rules. Sequential *next lesson* links and prerequisites deliberately follow the new order.
+- **Verification:** updated order-dependent Node test fixtures plus `scripts/test-ancient-greece-order-v2.cjs`; local `npm run typecheck`, `npm run validate:content`, focused tests, Android/iOS, resume/replay/offline and Supabase QA must still be executed before `Validated`/merging to `main`. The GitHub connector cannot run local Node/Expo tests.

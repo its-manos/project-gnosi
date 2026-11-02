@@ -1,4 +1,4 @@
-/* Ancient Greece / Chapter V / Lesson 25 — Node-only additive integration contract. */
+/* Ancient Greece / Chapter V / Lesson 26 — Node-only additive integration contract. */
 /* Run after npm ci. Does not verify image delivery, historian sign-off or native UI. */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -18,7 +18,7 @@ const { quizFingerprint, lessonQuizMatches } = require(root + '/src/utils/learni
 const { parseLearningBackup } = require(root + '/src/utils/learningBackup.ts');
 const id = 'greek-stage-tragedy';
 const lesson = lessons.find(l => l.id === id);
-assert.ok(lesson, 'Lesson 25 must be in exported catalogue exactly once');
+assert.ok(lesson, 'Lesson 26 must be in exported catalogue exactly once');
 assert.equal(lessons.filter(l => l.id === id).length, 1);
 assert.equal(lesson.categoryId, 'history');
 assert.equal(lesson.subcategoryId, 'ancient-greece');
@@ -53,10 +53,10 @@ assert.ok(lesson.imageUrl.includes('Special:FilePath/') && lesson.imageCreditUrl
 assert.ok(lesson.sources.length >= 10 && lesson.sources.every(s => s.url.startsWith('https://')));
 const seq = pathing.getSubcategoryPath(lessons, 'ancient-greece');
 assert.deepEqual(seq.slice(23,30).map(l => l.id),
-  ['alexander-conquests-context', 'greek-stage-tragedy', 'greek-philosophy-in-context','greek-science-knowledge','greek-images-sculpture','hellenistic-kingdoms-cities','antikythera-gears']);
-assert.equal(pathing.getNextPathLesson(lessons.find(l => l.id === 'alexander-conquests-context'), lessons, ['alexander-conquests-context'])?.id, id);
-assert.equal(pathing.getNextPathLesson(lesson, lessons, [id])?.id, 'greek-philosophy-in-context');
-assert.ok(pathing.getLessonAccess(lesson, lessons, ['alexander-conquests-context']).unlocked);
+  ['alexander-conquests-context', 'hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context', 'greek-science-knowledge', 'antikythera-gears']);
+assert.equal(pathing.getNextPathLesson(lessons.find(l => l.id === 'hellenistic-kingdoms-cities'), lessons, ['hellenistic-kingdoms-cities'])?.id, id);
+assert.equal(pathing.getNextPathLesson(lesson, lessons, [id])?.id, 'greek-images-sculpture');
+assert.ok(pathing.getLessonAccess(lesson, lessons, ['hellenistic-kingdoms-cities']).unlocked);
 assert.ok(!pathing.getLessonAccess(lesson, lessons, ['macedon-philip']).unlocked);
 assert.ok(pathing.getLessonAccess(lesson, lessons, [id]).unlocked);
 const fingerprint = quizFingerprint(lesson.questions);

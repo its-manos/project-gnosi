@@ -21,7 +21,7 @@ assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.
 assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['crisis-23','crisis-30']);
 assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&/Special:FilePath/.test(m.url)&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(20,28).map(x=>x.id),['peloponnesian-war',id,'macedon-philip','alexander-conquests-context','greek-stage-tragedy','greek-philosophy-in-context','greek-science-knowledge','antikythera-gears']);
+assert.deepEqual(seq.slice(20,28).map(x=>x.id),['peloponnesian-war', 'greek-crises-fourth-century', 'macedon-philip', 'alexander-conquests-context', 'hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context']);
 assert.ok(paths.getLessonAccess(l,lessons,['peloponnesian-war']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['athenian-empire']).unlocked);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='peloponnesian-war'),lessons,['peloponnesian-war'])?.id,id);

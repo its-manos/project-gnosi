@@ -10,7 +10,7 @@ const progress=require(root+'/src/utils/lessonProgress.ts'),paths=require(root+'
 const {quizFingerprint,lessonQuizMatches}=require(root+'/src/utils/learningActivity.ts');
 const {parseLearningBackup,mergeLearningBackups}=require(root+'/src/utils/learningBackup.ts');
 const id='hellenistic-kingdoms-cities',l=lessons.find(x=>x.id===id);
-assert.ok(l,'Lesson 29 registered');assert.equal(lessons.filter(x=>x.id===id).length,1);
+assert.ok(l,'Lesson 25 registered');assert.equal(lessons.filter(x=>x.id===id).length,1);
 assert.equal(l.categoryId,'history');assert.equal(l.subcategoryId,'ancient-greece');
 assert.equal(l.title,'Μετά τον Αλέξανδρο: ποιος όριζε τη ζωή μιας πόλης;');
 assert.equal(l.requireCurrentAttemptQuiz,true);assert.equal(l.compatibleQuizKeys,undefined);
@@ -40,11 +40,10 @@ assert.ok(inlineArticleMedia[id].every(x=>x.resizeMode==='contain'&&
  x.creditUrl.includes('commons.wikimedia.org/wiki/File:')&&x.caption.length>=110));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
 assert.equal(seq.length,30);
-assert.deepEqual(seq.slice(24).map(x=>x.id),['greek-stage-tragedy','greek-philosophy-in-context',
- 'greek-science-knowledge','greek-images-sculpture',id,'antikythera-gears']);
-assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='greek-images-sculpture'),lessons,['greek-images-sculpture'])?.id,id);
-assert.equal(paths.getNextPathLesson(l,lessons,[id])?.id,'antikythera-gears');
-assert.ok(paths.getLessonAccess(l,lessons,['greek-images-sculpture']).unlocked);
+assert.deepEqual(seq.slice(24).map(x=>x.id),['hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context', 'greek-science-knowledge', 'antikythera-gears']);
+assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='alexander-conquests-context'),lessons,['alexander-conquests-context'])?.id,id);
+assert.equal(paths.getNextPathLesson(l,lessons,[id])?.id,'greek-stage-tragedy');
+assert.ok(paths.getLessonAccess(l,lessons,['alexander-conquests-context']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['greek-science-knowledge']).unlocked);
 assert.ok(paths.getLessonAccess(l,lessons,[id]).unlocked);
 const key=quizFingerprint(l.questions);
@@ -65,4 +64,4 @@ assert.ok(!stale.attempts[id]&&stale.savedIds.includes(id),'stale attempts not a
 const merged=mergeLearningBackups(initial,parseLearningBackup({schemaVersion:1,completedIds:['antikythera-gears'],savedIds:[],attempts:{}}));
 assert.ok(merged.completedIds.includes('athens-who-voted')&&merged.completedIds.includes('antikythera-gears'));
 assert.ok(merged.savedIds.includes(id)&&merged.attempts[id].quizKey===key);
-console.log('Lesson 29 Node-only contract passed: catalogue, 29 anchors, questions, sources/media, path, resume, fingerprints, saved progress and backup merge.');
+console.log('Lesson 25 Node-only contract passed: catalogue, 29 anchors, questions, sources/media, path, resume, fingerprints, saved progress and backup merge.');

@@ -44,10 +44,10 @@ assert.deepEqual(inlineArticleMedia[id].map(x=>x.afterParagraphId),['antikythera
 assert.ok(inlineArticleMedia[id].every(x=>x.resizeMode==='contain'&&x.url.includes('/wiki/Special:FilePath/')&&x.creditUrl.includes('/wiki/File:')&&x.caption.length>=100));
 const seq=pathing.getSubcategoryPath(lessons,'ancient-greece');
 assert.equal(seq.length,30);assert.equal(seq.at(-1).id,id);
-assert.equal(seq.at(-2).id,'hellenistic-kingdoms-cities');
+assert.equal(seq.at(-2).id,'greek-science-knowledge');
 assert.equal(pathing.getNextPathLesson(seq.at(-2),lessons,[seq.at(-2).id])?.id,id);
 assert.equal(pathing.getNextPathLesson(l,lessons,seq.map(x=>x.id)),null);
-assert.ok(pathing.getLessonAccess(l,lessons,['hellenistic-kingdoms-cities']).unlocked);
+assert.ok(pathing.getLessonAccess(l,lessons,['greek-science-knowledge']).unlocked);
 assert.ok(pathing.getLessonAccess(l,lessons,[id]).unlocked,'past completions always remain accessible');
 assert.ok(!pathing.getLessonAccess(l,lessons,['greek-images-sculpture']).unlocked);
 for(const key of [oldKey,'q_470dac57','q_22487292',...['hellenistic-kingdoms-cities','greek-images-sculpture','athens-who-voted'].map(x=>quizFingerprint(lessons.find(y=>y.id===x).questions))]){

@@ -17,9 +17,9 @@ assert.equal(progress.getVisibleParagraphLimit(lesson,Object.fromEntries(lesson.
 assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['alexander-08','alexander-22']);
 assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&m.url.includes('Special:FilePath')&&m.creditUrl.startsWith('https://commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(21,30).map(l=>l.id),['greek-crises-fourth-century','macedon-philip',id,'greek-stage-tragedy','greek-philosophy-in-context','greek-science-knowledge','greek-images-sculpture','hellenistic-kingdoms-cities','antikythera-gears']);
+assert.deepEqual(seq.slice(21,30).map(l=>l.id),['greek-crises-fourth-century', 'macedon-philip', 'alexander-conquests-context', 'hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context', 'greek-science-knowledge', 'antikythera-gears']);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='macedon-philip'),lessons,['macedon-philip'])?.id,id);
-assert.equal(paths.getNextPathLesson(lesson,lessons,[id])?.id,'greek-stage-tragedy');
+assert.equal(paths.getNextPathLesson(lesson,lessons,[id])?.id,'hellenistic-kingdoms-cities');
 assert.ok(paths.getLessonAccess(lesson,lessons,['macedon-philip']).unlocked);
 assert.ok(!paths.getLessonAccess(lesson,lessons,['greek-crises-fourth-century']).unlocked);
 for(const oldKey of ['q_470dac57','q_22487292',...['macedon-philip','greek-crises-fourth-century','peloponnesian-war','athenian-empire'].map(id=>quizFingerprint(lessons.find(x=>x.id===id).questions))])assert.equal(lessonQuizMatches(lesson,oldKey),false);

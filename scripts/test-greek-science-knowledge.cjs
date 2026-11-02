@@ -1,4 +1,4 @@
-/* Ancient Greece / Lesson 27; Node-only contract, not device or editorial validation. */
+/* Ancient Greece / Lesson 29; Node-only contract, not device or editorial validation. */
 const fs=require('node:fs'), path=require('node:path'), assert=require('node:assert/strict'), ts=require('typescript');
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 const root=path.resolve(__dirname,'..');
@@ -8,7 +8,7 @@ const progress=require(root+'/src/utils/lessonProgress.ts'), paths=require(root+
 const {quizFingerprint,lessonQuizMatches}=require(root+'/src/utils/learningActivity.ts');
 const {parseLearningBackup}=require(root+'/src/utils/learningBackup.ts');
 const id='greek-science-knowledge', l=lessons.find(x=>x.id===id);
-assert.ok(l,'Lesson 27 must be registered');
+assert.ok(l,'Lesson 29 must be registered');
 assert.equal(lessons.filter(x=>x.id===id).length,1);
 assert.equal(l.categoryId,'history'); assert.equal(l.subcategoryId,'ancient-greece');
 assert.equal(l.title,'Πώς ήξεραν ότι είχαν δίκιο;');
@@ -36,9 +36,9 @@ assert.deepEqual(inlineArticleMedia[id].map(x=>x.afterParagraphId),['science-09'
 assert.ok(inlineArticleMedia[id].every(x=>x.resizeMode==='contain'&&x.creditUrl.includes('/wiki/File:')&&x.caption.length>=120));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
 assert.equal(seq.length,30);
-assert.deepEqual(seq.slice(24,30).map(x=>x.id),['greek-stage-tragedy','greek-philosophy-in-context',id,'greek-images-sculpture','hellenistic-kingdoms-cities','antikythera-gears']);
+assert.deepEqual(seq.slice(24,30).map(x=>x.id),['hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context', 'greek-science-knowledge', 'antikythera-gears']);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='greek-philosophy-in-context'),lessons,['greek-philosophy-in-context'])?.id,id);
-assert.equal(paths.getNextPathLesson(l,lessons,[id])?.id,'greek-images-sculpture');
+assert.equal(paths.getNextPathLesson(l,lessons,[id])?.id,'antikythera-gears');
 assert.ok(paths.getLessonAccess(l,lessons,['greek-philosophy-in-context']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['greek-stage-tragedy']).unlocked);
 assert.ok(paths.getLessonAccess(l,lessons,[id]).unlocked);
@@ -53,4 +53,4 @@ assert.equal(backup.attempts[id].quizKey,key);
 assert.ok(backup.completedIds.includes('athens-who-voted')&&backup.savedIds.includes(id));
 const stale=parseLearningBackup({schemaVersion:1,completedIds:['greek-philosophy-in-context'],savedIds:[id],attempts:{[id]:{...attempt,quizKey:'q_stale'}}});
 assert.ok(!stale.attempts[id]&&stale.savedIds.includes(id));
-console.log('Lesson 27 Node-only contract passed: identity, anchors, media, path, quiz isolation, progress and backups.');
+console.log('Lesson 29 Node-only contract passed: identity, anchors, media, path, quiz isolation, progress and backups.');

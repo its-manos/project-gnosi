@@ -1,4 +1,4 @@
-/* Ancient Greece / Lesson 28: Node-only contract; not device or editorial sign-off. */
+/* Ancient Greece / Lesson 27: Node-only contract; not device or editorial sign-off. */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),ts=require('typescript');
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 const root=path.resolve(__dirname,'..');
@@ -9,7 +9,7 @@ const paths=require(root+'/src/utils/lessonPath.ts');
 const {quizFingerprint,lessonQuizMatches}=require(root+'/src/utils/learningActivity.ts');
 const {parseLearningBackup,mergeLearningBackups}=require(root+'/src/utils/learningBackup.ts');
 const id='greek-images-sculpture',l=lessons.find(x=>x.id===id);
-assert.ok(l,'Lesson 28 is registered');
+assert.ok(l,'Lesson 27 is registered');
 assert.equal(lessons.filter(x=>x.id===id).length,1);
 assert.equal(l.categoryId,'history');assert.equal(l.subcategoryId,'ancient-greece');
 assert.equal(l.title,'Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;');
@@ -34,10 +34,10 @@ assert.deepEqual(inlineArticleMedia[id].map(x=>x.afterParagraphId),['images-13',
 assert.ok(inlineArticleMedia[id].every(x=>x.resizeMode==='contain'&&x.creditUrl.includes('/wiki/File:')&&x.caption.length>=130));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
 assert.equal(seq.length,30);
-assert.deepEqual(seq.slice(24).map(x=>x.id),['greek-stage-tragedy','greek-philosophy-in-context','greek-science-knowledge',id,'hellenistic-kingdoms-cities','antikythera-gears']);
-assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='greek-science-knowledge'),lessons,['greek-science-knowledge'])?.id,id);
-assert.equal(paths.getNextPathLesson(l,lessons,[id])?.id,'hellenistic-kingdoms-cities');
-assert.ok(paths.getLessonAccess(l,lessons,['greek-science-knowledge']).unlocked);
+assert.deepEqual(seq.slice(24).map(x=>x.id),['hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context', 'greek-science-knowledge', 'antikythera-gears']);
+assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='greek-stage-tragedy'),lessons,['greek-stage-tragedy'])?.id,id);
+assert.equal(paths.getNextPathLesson(l,lessons,[id])?.id,'greek-philosophy-in-context');
+assert.ok(paths.getLessonAccess(l,lessons,['greek-stage-tragedy']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['greek-philosophy-in-context']).unlocked);
 assert.ok(paths.getLessonAccess(l,lessons,[id]).unlocked);
 const key=quizFingerprint(l.questions);
@@ -52,4 +52,4 @@ assert.ok(!stale.attempts[id]&&stale.savedIds.includes(id));
 const merged=mergeLearningBackups(baseline,parseLearningBackup({schemaVersion:1,completedIds:['antikythera-gears'],savedIds:[],attempts:{}}));
 assert.ok(merged.completedIds.includes('athens-who-voted')&&merged.completedIds.includes('antikythera-gears'));
 assert.ok(merged.savedIds.includes(id)&&merged.attempts[id].quizKey===key);
-console.log('Lesson 28 Node-only contract passed: identity, anchors, images, path, fingerprint isolation, backup and merge compatibility.');
+console.log('Lesson 27 Node-only contract passed: identity, anchors, images, path, fingerprint isolation, backup and merge compatibility.');
