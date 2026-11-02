@@ -40,16 +40,17 @@ const matchContent: MatchingContent = {
 const matchPrompt = "Αντιστοίχισε τους αθηναϊκούς θεσμούς με τη βασική λειτουργία τους.";
 
 const mistakeContent: SpotMistakeContent = {
-  segments: [
-    { id: "institution", text: "Στην κλασική Αθήνα, η Βουλή των Πεντακοσίων" },
-    { id: "selection", text: "στελεχωνόταν σε μεγάλο βαθμό με κλήρωση," },
-    { id: "responsibility", text: "προετοίμαζε θέματα για την Εκκλησία του Δήμου" },
-    { id: "term", text: "και τα μέλη της υπηρετούσαν ισόβια." },
+  options: [
+    { id: "membership", text: "Αποτελούνταν από 500 πολίτες, 50 από καθεμιά από τις δέκα φυλές." },
+    { id: "selection", text: "Τα μέλη της επιλέγονταν με κλήρωση και υπηρετούσαν για ένα έτος." },
+    { id: "responsibility", text: "Προετοίμαζε θέματα προς συζήτηση στην Εκκλησία του Δήμου." },
+    { id: "term", text: "Τα μέλη της εκλέγονταν ισόβια, ώστε η σύνθεσή της να παραμένει σταθερή." },
   ],
-  incorrectSegmentId: "term",
-  correction: "Τα μέλη της Βουλής υπηρετούσαν για ένα έτος, όχι ισόβια.",
+  incorrectOptionId: "term",
+  correction: "Η θητεία των μελών ήταν ετήσια, όχι ισόβια. Η επιλογή γινόταν κυρίως με κλήρωση.",
 };
-const mistakePrompt = "Ποια φράση είναι ιστορικά λανθασμένη;";
+const mistakePrompt = "Η Βουλή των Πεντακοσίων";
+
 const blankContent: FillBlankContent = {
   before: "Στη δημοκρατική Αθήνα, η συνέλευση των πολιτών ονομαζόταν",
   after: ".",
