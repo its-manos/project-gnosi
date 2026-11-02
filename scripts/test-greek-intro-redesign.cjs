@@ -12,6 +12,7 @@ const { lessons } = require(root + '/src/data/lessons.ts');
 const { quizFingerprint, lessonQuizMatches } = require(root + '/src/utils/learningActivity.ts');
 const { parseLearningBackup } = require(root + '/src/utils/learningBackup.ts');
 const { getQuestionPlacements, getParagraphCount } = require(root + '/src/utils/lessonProgress.ts');
+const { adaptInteractiveLessonQuestion } = require(root + '/src/quiz/adapters.ts');
 const snapshot = require('./fixtures/ancient-greece-intro-quizzes-before-redesign-20261102.json');
 const expectations = {
   'greek-world-not-a-country': { paragraphs: 15, anchors: [3, 9, 12] },
@@ -26,7 +27,7 @@ for (const [id, expected] of Object.entries(expectations)) {
   assert.equal(getParagraphCount(lesson), expected.paragraphs, id + ' preserved paragraphs');
   assert.deepEqual(getQuestionPlacements(lesson).map(p => p.afterParagraphNumber), expected.anchors, id + ' preserved checkpoint positions');
   assert.deepEqual(lesson.questions.map(q => q.id), original.questions.map(q => q.id), id + ' stable question IDs');
-  assert.ok(lesson.questions.every(q => q.version === (id === 'greek-world-not-a-country' ? '3' : '2') && q.answers.length === 4 && q.explanation.length > 35), id + ' current question schema');
+  assert.ok(lesson.questions.every(q => q.version === (['greek-world-not-a-country','greek-history-through-evidence','greek-chronology'].includes(id) ? '3' : '2') && q.answers.length === 4 && q.explanation.length > 35), id + ' current question schema');
   assert.ok(lesson.requireCurrentAttemptQuiz, id + ' must guard unversioned attempts');
   const before = quizFingerprint(original.questions);
   const after = quizFingerprint(lesson.questions);
@@ -50,10 +51,19 @@ for (const [id, expected] of Object.entries(expectations)) {
   const completed = parseLearningBackup(backup(before, [id]));
   assert.ok(completed.completedIds.includes(id), id + ' historical completion survives');
   assert.ok(completed.savedIds.includes(id), id + ' historical bookmark survives');
-  const current = parseLearningBackup({
-    ...backup(after),
-    attempts: { [id]: { ...attempt(after), checkpointAnswers: { 0: lesson.questions[0].correctIndex } } },
-  });
+  const firstTyped = adaptInteractiveLessonQuestion(lesson, 0);
+  const presentation = lesson.questions[0].presentation;
+  const richValue = !presentation ? undefined :
+    presentation.type === 'ordering' ? [...presentation.correctOrder] :
+    presentation.type === 'matching' ? Object.fromEntries(presentation.pairs.map(p => [p.leftId,p.rightId])) :
+    presentation.type === 'multiple-select' ? [...presentation.correctIndices] : undefined;
+  const currentAttempt = {
+    ...attempt(after),
+    checkpointAnswers: { 0: lesson.questions[0].correctIndex },
+    ...(richValue !== undefined ? { typedCheckpointAnswers: { 0: { questionVersion: firstTyped.version, value: richValue } } } : {}),
+  };
+  const current = parseLearningBackup({ ...backup(after), attempts: { [id]: currentAttempt } });
   assert.equal(current.attempts[id].quizKey, after, id + ' fresh answers restore');
+  if(richValue !== undefined) assert.deepEqual(JSON.parse(JSON.stringify(current.attempts[id].typedCheckpointAnswers[0].value)),richValue);
 }
 console.log('Ancient Greece 2–5 redesign passed: unchanged paragraph/checkpoint identities, versioned quizzes, old-attempt isolation, completed/saved preservation (Node only).');
