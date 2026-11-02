@@ -309,3 +309,9 @@ All 16 integrated lessons received a focused readability and originality-of-voic
 - [Research, before/after rationale, source limits, quiz migration and QA audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md): 41 targeted paragraph rewrites across four lessons, 14 harder four-option questions, all quiz versions **2**. Same stable IDs, checkpoint/paragraph anchors, order, image attachments, scoring engine and XP rules.
 - **Progress compatibility:** completed/saved lessons and historic XP/quiz events are not rewritten; in-progress **v1** answers must not be attached to the new v2 questions. No compatible quiz aliases added. Snapshot fixture and new regression script recorded in audit.
 - **Statuses:** all four remain **Integrated**, not Validated or Approved; connector-side source checks only. Typecheck, content validation, Node regression suites, Android/iOS and live Supabase tests remain to be run after the changes.
+
+
+### Wikimedia Commons image delivery issue — 2026-11-02
+- Android Expo Go reported widespread HTTP 403s for remote Commons thumbnails requested at `width=1200`, which is outside Wikimedia's current standard bucket widths. This is an image-delivery regression, not a content/quiz or native bundle error.
+- The shared image loader now requests 960px Commons thumbnails with a descriptive client User-Agent, retains locally bundled image priority and retries once through Wikimedia's documented alternate redirect endpoint. Lesson IDs, source URLs, captions, credit and licence links remain intact.
+- See [diagnosis, source references and native QA commands](COMMONS-IMAGE-DELIVERY-403.md); run `node scripts/test-commons-image-delivery.cjs` plus existing image/reader regressions. **Device verification pending; do not mark fixed or Approved until images load on phone.**
