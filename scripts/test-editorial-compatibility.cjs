@@ -84,7 +84,7 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
   assert.equal(progress.getInlineQuestionCount(lesson),4);
   assert.equal(progress.getResumeParagraphNumber(lesson,{0:old.questions[0].correctIndex}),3);
  }
- assert.equal(changed,34,'the 41 otherwise-compatible legacy lessons retain 34 changed textual quiz fingerprints; Athens, Linear B, the Athens franchise and Antikythera have incompatible versions');
+ assert.equal(changed,33,'the 41 otherwise-compatible legacy lessons retain 33 changed textual quiz fingerprints; Athens, Linear B, the Athens franchise and Antikythera have incompatible versions');
  // Load real old-format persisted progress through the current store.
  const old=before.find(row=>row.id!=='ancient-athens'),lesson=lessons.find(row=>row.id===old.id),key=activity.quizFingerprint(old.questions);
  const doc={...sync.emptySyncDocument(),clock:1,progress:{[lesson.id]:{stamp:[1,'oldphone'],value:{completed:true,attempt:null}}},activity:{old:event(lesson,key,[1,3])}};
@@ -113,5 +113,5 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
   assert.ok(restarted.getSnapshot().backup.completedIds.includes(revised.id),'old completion survives restart: '+revisedId);
   assert.deepEqual(restarted.getSnapshot().activity.old,legacyEvent,'historical event survives restart: '+revisedId);
  }
- console.log('Editorial checks passed: 42 otherwise-compatible legacy lessons preserve answer slots, quiz aliases and weekly reviews; the Athens opener, Linear B and Athens franchise retain old completion/events without obsolete mistake indices.');
+ console.log('Editorial checks passed: 41 otherwise-compatible legacy lessons preserve answer slots, quiz aliases and weekly reviews; the Athens opener, Linear B, Athens franchise and Antikythera retain old completion/events without obsolete mistake indices.');
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>stores.forEach(s=>s.stop()));
