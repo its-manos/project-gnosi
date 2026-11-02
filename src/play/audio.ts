@@ -49,7 +49,7 @@ export class FeedbackAudio {
         // burst of all five effects on launch on real devices.
         const player = createAudioPlayer(android ? null : sources[kind], { downloadFirst: false, keepAudioSessionActive: false });
         if (android) { player.muted = true; player.volume = 0; }
-        else player.volume = kind === "incorrect" ? .45 : .65;
+        else player.volume = .65;
         player.loop = false;
         this.players.set(kind, player);
         if (player.isLoaded) this.preparedKinds.add(kind);
@@ -62,7 +62,11 @@ export class FeedbackAudio {
             this.finishPrime(kind);
             return;
           }
-          if (this.priming.get(kind) === "unmuting" && status.mute === false && status.isLoaded) {
+          // Short WAVs can be in Android STATE_ENDED (isLoaded=false) even
+          // after a successful seek. The player is already known to have
+          // loaded: native mute=false acknowledgment, not isLoaded, is the
+          // safe signal that the muted warm-up has ended.
+          if (this.priming.get(kind) === "unmuting" && status.mute === false && this.preparedKinds.has(kind)) {
             this.priming.delete(kind);
             this.primedKinds.add(kind);
           }
@@ -108,7 +112,7 @@ export class FeedbackAudio {
     void player.seekTo(0).then(() => {
       if (!this.alive || this.players.get(kind) !== player) return;
       this.priming.set(kind, "unmuting");
-      player.volume = kind === "incorrect" ? .45 : .65;
+      player.volume = .65;
       player.muted = false;
       // The native unmute status callback marks the player primed and releases
       // the queued answer. Do not start the real cue while still muted.
