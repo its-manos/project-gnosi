@@ -18,7 +18,9 @@ const data=require(root+'/src/data/lessons.ts');
 const progress=compile('src/utils/lessonProgress.ts');
 // Use the actual quiz fingerprint so rewritten articles accept this current attempt.
 const activity=compile('src/utils/learningActivity.ts',{'./dailyChallenge':{getAthensDateKey:()=> '2026-10-30'}});
-const util=compile('src/utils/learningBackup.ts',{'../quiz/engine':compile('src/quiz/engine.ts'),'../data/lessons':data,'./lessonProgress':progress,'./learningActivity':activity});
+const quizEngine=compile('src/quiz/engine.ts');
+const adapters=compile('src/quiz/adapters.ts', {'./engine':quizEngine});
+const util=compile('src/utils/learningBackup.ts',{'../quiz/engine':quizEngine,'../quiz/adapters':adapters,'../data/lessons':data,'./lessonProgress':progress,'./learningActivity':activity});
 const plain=x=>JSON.parse(JSON.stringify(x));
 const a=data.lessons[0],b=data.lessons[1],c=data.lessons[2];
 const empty=()=>({schemaVersion:1,completedIds:[],savedIds:[],attempts:{}});
