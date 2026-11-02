@@ -27,6 +27,16 @@ export type QuizQuestion = {
 };
 export type ChoiceContent = { answers: readonly string[]; correctIndex: number };
 export type ChoiceQuestion = QuizQuestion & { type: "multiple-choice"; content: ChoiceContent };
+export type MultipleSelectContent = { answers: readonly string[]; correctIndices: readonly number[] };
+export type OrderingItem = { id: string; label: string };
+export type OrderingContent = { items: readonly OrderingItem[]; correctOrder: readonly string[] };
+export type MatchingPair = { leftId: string; leftLabel: string; rightId: string; rightLabel: string };
+export type MatchingContent = { pairs: readonly MatchingPair[] };
+export type MultipleSelectQuestion = QuizQuestion & { type: "multiple-select"; content: MultipleSelectContent };
+export type OrderingQuestion = QuizQuestion & { type: "ordering"; content: OrderingContent };
+export type MatchingQuestion = QuizQuestion & { type: "matching"; content: MatchingContent };
+/** Supported built-in formats; external handlers may extend QuizQuestion. */
+export type BuiltinQuizQuestion = ChoiceQuestion | MultipleSelectQuestion | OrderingQuestion | MatchingQuestion;
 export type AnswerEvaluation = { valid: boolean; correct: boolean };
 /** New formats provide a handler; progression and persistence stay unchanged. */
 export type QuestionHandler = {
