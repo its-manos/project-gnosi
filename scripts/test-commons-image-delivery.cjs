@@ -57,6 +57,7 @@ const { default: ResilientImage } = moduleFrom('src/components/ResilientImage.ts
   '../theme': { colors: { accent: '#abc', accentLight: '#def', surfaceSoft: '#123', textMuted: '#456', border: '#789' } },
   '../data/bundledLessonImages': { bundledLessonImages: bundled },
   '../utils/commonsImage': { remoteImageCandidates },
+  '../utils/imageCdn': { imageCdnUrl: () => null },
 }, true);
 const nodes = root => root && typeof root === 'object'
   ? [root, ...[root.props?.children].flat(Infinity).flatMap(nodes)] : [];
