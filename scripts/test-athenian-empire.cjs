@@ -24,7 +24,7 @@ assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber
 assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
 assert.equal(progress.getResumeParagraphNumber(l,{0:l.questions[0].correctIndex}),5);
 assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.map((q,i)=>[i,q.correctIndex]))),26);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&Number.isInteger(q.correctIndex)&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>70));
+assert.ok(l.questions.every(q=>q.version===(['empire-foundation-choices','empire-tribute-evidence'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&Number.isInteger(q.correctIndex)&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>70));
 assert.ok(l.sources.length>=12&&l.sources.every(s=>s.url.startsWith('https://')));
 assert.ok(l.imageCredit.includes('CC BY-SA 3.0')&&l.imageCreditUrl.includes('commons.wikimedia.org/wiki/File:'));
 const media=inlineArticleMedia[id];assert.equal(media.length,2);
