@@ -14,7 +14,6 @@ type Props = {
   featuredLesson: Lesson | null;
   progressLoaded: boolean;
   completedCount: number;
-  savedCount: number;
   inProgressLesson: Lesson | null;
   inProgressAnsweredCount: number;
   inProgressQuestionCount: number;
@@ -37,7 +36,7 @@ const shortLabels: Record<string, string> = {
 };
 
 export default function HomeScreen({
-  categories, featuredLesson, progressLoaded, completedCount, savedCount,
+  categories, featuredLesson, progressLoaded, completedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
   onKnowledgeReview, onOpenProfile,
@@ -161,7 +160,6 @@ export default function HomeScreen({
           )}
         </View>
       </View>
-      <Text style={styles.footer}>{savedCount} αποθηκευμένα · Οι κόσμοι μεγαλώνουν με κάθε μάθημα</Text>
     </ScrollView>
   );
 }
@@ -212,6 +210,5 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 5 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 10, lineHeight: 13, textAlign: "center", fontWeight: "700" },
-  footer: { color: colors.textMuted, fontSize: 10, lineHeight: 15, textAlign: "center", marginTop: "auto" },
   pressed: { opacity: 0.76 },
 });
