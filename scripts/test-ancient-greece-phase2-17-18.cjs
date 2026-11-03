@@ -17,8 +17,8 @@ const old=require('./fixtures/ancient-greece-pair-17-18-before-phase2-20261103.j
 const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
- 'greek-war-hoplites':{slot:16,paragraphs:24,anchors:[4,8,12,16,20,24],correct:[2,3,0,2,0,1],types:['spot-the-mistake','matching','fill-in-the-blank','ordering',null,'matching'],version:'2'},
- 'greek-sanctuaries-games':{slot:17,paragraphs:24,anchors:[3,8,13,17,21,24],correct:[0,1,1,3,3,1],types:['fill-in-the-blank','spot-the-mistake','matching',null,'matching',null],version:'2'}
+ 'greek-war-hoplites':{slot:16,paragraphs:24,anchors:[4,8,12,16,20,24],correct:[2,3,0,2,0,1],types:['spot-the-mistake','matching','fill-in-the-blank','ordering','multiple-select','matching'],version:'2'},
+ 'greek-sanctuaries-games':{slot:17,paragraphs:24,anchors:[3,8,13,17,21,24],correct:[0,1,1,3,3,1],types:['fill-in-the-blank','spot-the-mistake','matching',null,'matching','multiple-select'],version:'2'}
 };
 function properAnswer(q){
  switch(q.type){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===expect.version),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['hoplite-service-rights','sanctuary-dedication-message','sanctuary-common-not-unified'].includes(q.id)?'3':expect.version)),'correct quiz version');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);

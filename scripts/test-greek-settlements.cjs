@@ -19,7 +19,7 @@ assert.equal(l.questions.length,5);
 assert.deepEqual(l.checkpoints.map(x=>x.questionId),l.questions.map(x=>x.id));
 assert.deepEqual(progress.getQuestionPlacements(l).map(x=>x.afterParagraphNumber),[5,10,15,20,25]);
 assert.equal(new Set(l.questions.map(x=>x.id)).size,5);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>=50));
+assert.ok(l.questions.every(q=>q.version===(['settlements-massalia-myth','settlements-no-single-model'].includes(q.id)?'3':'2')&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>=50));
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[1,2,0,0,2]);
 assert.ok(l.sources.length>=8 && l.sources.every(s=>s.url.startsWith('https://')));
 assert.ok(l.imageCreditUrl.includes('commons.wikimedia.org/wiki/File:'));
