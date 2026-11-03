@@ -20,7 +20,7 @@ import { lessonReportTarget } from "../utils/contentReports";
 import { inlineArticleMedia } from "../data/articleMedia";
 import { nextPendingFigureUrl } from "../utils/nextFigureWarmup";
 import { colors, reading } from "../theme";
-import { getParagraphCount, getParagraphId, getParagraphText, getQuestionPlacements, getResumeParagraphNumber, getVisibleParagraphLimit } from "../utils/lessonProgress";
+import { getParagraphCount, getParagraphId, getParagraphText, getReadingQuestionPlacements, getReadingResumeParagraphNumber, getReadingVisibleParagraphLimit } from "../utils/lessonProgress";
 
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
@@ -37,14 +37,15 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const pendingScroll = useRef<number | "finish" | null>(null);
   const restored = useRef(false);
   const paragraphCount = getParagraphCount(lesson);
-  const placements = getQuestionPlacements(lesson);
+  const placements = getReadingQuestionPlacements(lesson);
+  const firstPendingQuestionIndex = placements.findIndex(p => checkpointAnswers[p.questionIndex] === undefined);
   const questionCount = placements.length;
   const answeredCount = Array.from({ length: questionCount }, (_, i) => i)
     .filter(i => checkpointAnswers[i] !== undefined).length;
-  const visibleLimit = getVisibleParagraphLimit(lesson, checkpointAnswers);
+  const visibleLimit = getReadingVisibleParagraphLimit(lesson, checkpointAnswers);
   const upcomingFigureUrl = nextPendingFigureUrl(lesson, visibleLimit);
   const complete = answeredCount === questionCount;
-  const resumeTarget = useRef(getResumeParagraphNumber(lesson, checkpointAnswers));
+  const resumeTarget = useRef(getReadingResumeParagraphNumber(lesson, checkpointAnswers));
   const sections = lesson.sections.map((section, index) => ({
     ...section,
     start: 1 + lesson.sections.slice(0, index).reduce((count, previous) => count + previous.paragraphs.length, 0),
@@ -174,10 +175,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               const number = section.start + i;
               if (number > visibleLimit) return null;
               const paragraphId = getParagraphId(paragraph, number);
-              const questionIndex = placements.findIndex(p => p.afterParagraphNumber === number);
-              const question = questionIndex >= 0 ? lesson.questions[questionIndex] : undefined;
-              const interactiveQuestion = question ? adaptInteractiveLessonQuestion(lesson, questionIndex) : null;
-              const answered = checkpointAnswers[questionIndex] !== undefined;
+              // Display checkpoints are grouped by section ending; canonical indices persist.
+              const questionIndices = placements.filter(p => p.afterParagraphNumber === number &&
+                (firstPendingQuestionIndex < 0 || p.questionIndex <= firstPendingQuestionIndex))
+                .map(p => p.questionIndex);
               return <View key={number} testID={`reader-paragraph-${number}`} onLayout={event => {
                 paragraphPositions.current[number] = { sectionIndex, y: event.nativeEvent.layout.y };
                 flushScroll();
@@ -185,7 +186,12 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 <Text selectable style={[styles.paragraph, textStyle]}>{getParagraphText(paragraph)}</Text>
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
-                {question ? <View style={styles.checkpoint}>
+                {questionIndices.map(questionIndex => {
+                const question = lesson.questions[questionIndex];
+                const interactiveQuestion = adaptInteractiveLessonQuestion(lesson, questionIndex);
+                const answered = checkpointAnswers[questionIndex] !== undefined;
+                const anotherAtSameBoundary = placements[questionIndex + 1]?.afterParagraphNumber === number;
+                return <View key={questionIndex} testID={`reader-checkpoint-${questionIndex}`} style={styles.checkpoint}>
                   {interactiveQuestion ? <>
                     <QuizQuestionRenderer question={interactiveQuestion} questionNumber={questionIndex + 1}
                       readingSize={readingSize}
@@ -205,12 +211,13 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                     {enableReporting ? <ReportContentButton target={lessonReportTarget(lesson, questionIndex)} /> : null}
                   </> : <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={enableReporting ? lessonReportTarget(lesson, questionIndex) : undefined}
                     readingSize={readingSize} onSelectAnswer={(answerIndex, correctIndex) => onAnswerCheckpoint(questionIndex, answerIndex, correctIndex)} />}
-                  {answered ? <ActionButton label={number < paragraphCount ? "Συνέχεια ανάγνωσης ↓" : "Στο κλείσιμο του άρθρου ↓"} secondary onPress={() => {
+                  {answered ? anotherAtSameBoundary ? null : <ActionButton label={number < paragraphCount ? "Συνέχεια ανάγνωσης ↓" : "Στο κλείσιμο του άρθρου ↓"} secondary onPress={() => {
                     restored.current = true;
                     pendingScroll.current = number < paragraphCount ? number + 1 : "finish";
                     flushScroll();
                   }} /> : <Text style={styles.small}>Διάλεξε μια απάντηση για να συνεχίσεις.</Text>}
-                </View> : null}
+                </View>;
+              })}
               </View>;
             })}
           </View>
