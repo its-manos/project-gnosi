@@ -18,7 +18,7 @@ const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
  'geometric-greece':{slot:10,paragraphs:13,anchors:[3,7,10,13],correct:[1,2,1,0],types:['ordering','matching','spot-the-mistake','fill-in-the-blank'],version:'2'},
- 'rise-of-polis':{slot:11,paragraphs:23,anchors:[4,9,14,19,23],correct:[2,1,3,0,2],types:['spot-the-mistake','matching',null,'fill-in-the-blank',null],version:'2'}
+ 'rise-of-polis':{slot:11,paragraphs:23,anchors:[4,9,14,19,23],correct:[2,1,3,0,2],types:['spot-the-mistake','matching','multiple-select','fill-in-the-blank',null],version:'2'}
 };
 function properAnswer(q){
  switch(q.type){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===(q.id==='geo-trade-inference'?'3':expect.version)),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['geo-trade-inference','polis-zagora-public-work'].includes(q.id)?'3':expect.version)),'correct quiz version');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);
