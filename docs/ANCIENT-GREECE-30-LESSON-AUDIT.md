@@ -19,7 +19,7 @@
 
 | Priority | Scope | Decision/action before editorial approval |
 |---|---|---|
-| **P0 — Rights** | #29 Euclid papyrus has conflicting upstream image-licence wording; #27 stele uses special commercial permission | Resolve exact rights, document source provenance and licence/grants; review all **88** placements (including #30 NYU archive **noncommercial publication contents**, which are not current Commons assets) |
+| **P0 — Rights** | #29 Euclid papyrus now credited under its primary Penn Museum/OPenn **CC BY-SA 2.0** collection grant (Commons still displays a conflicting 4.0); #27 stele uses special commercial attribution permission | Resolve exact rights, document source provenance and licence/grants; review all **88** placements (including #30 NYU archive **noncommercial publication contents**, which are not current Commons assets) |
 | **P0 — Device and compatibility** | All 30 + legacy #15/#30 fingerprints | Physical Android+iPhone with real signed-in/cloud/offline flows, all question formats, credits, audio, typed resume and XP/sync; then production-like build regression |
 | **P1 — Duration and packaging** | #21–24 and #25–30 especially | User-time reading+checkpoints+feedback with one consistent `readingMinutes` definition; #24 2,539 words/9 checkpoints advertised 13 min versus illustrative 17.9 |
 | **P1 — Assessment** | 135/164 hard-labelled, all #18–30 labelled hard | Test real matching/ordering cards, then rewrite only answer sets with implausible wrong distractors; preserve score versions/old completions |
@@ -91,7 +91,7 @@ Read the current 30 lesson definitions, their question metadata, path ordering a
 |---|---|---|---|
 | AG-01 | High | 135/164 hard-labelled; all of #18–30 hard | Review cognitive tasks and distractors against prerequisites. Calibrate metadata and challenge with player results or timed pilot; do not change labels blindly. |
 | AG-02 | High | Several long lessons; #21–24 show particularly tight stated reading times | Timed on-device narrative + checkpoint + feedback. Define whether `readingMinutes` means reading only or full lesson, then make display consistent. |
-| AG-03 | High | #29 Euclid papyrus Commons page says CC BY-SA 4.0, while source/embedded metadata mentions CC BY-SA 2.0 | Resolve authoritative licence/version and preservation of attribution before final commercial release. References: Commons file and institutional OPenn record below. |
+| AG-03 | High | #29 Commons file box says CC BY-SA 4.0, but Penn Museum's original collection 0016 and EXIF explicitly grant CC BY-SA 2.0 (item prose has version errors) | App credit now uses original **CC BY-SA 2.0** grant; preserve links to the original collection and source image, fulfil 2.0 attribution/ShareAlike obligations, and separately sign off conflicting source wording + Android/iOS display. |
 | AG-04 | Medium | #27 Piraeus painted stele photo uses Commons' custom commercial attribution permission, not a standardized CC grant | Retain original photographer credit and permission record; obtain publication-rights sign-off and validate app link. |
 | AG-05 | High | 88 remotely hosted images, with prior Android Commons availability issues; not tested end-to-end on current iOS/Android builds | Confirm each image loads, zooms, displays caption/credit, handles offline/fallback, and opens its rights page on both platforms. |
 | AG-06 | Medium | 30 research ledgers carry historical evidence and access limits; source entries total 339 | Independent claim-level recheck; distinguish credible source already reviewed from inaccessible paywalled text; find actual contradictory claims before recommending edits. |
@@ -123,12 +123,12 @@ Source pages for current priorities:
 - [Peplos Kore — official Acropolis Museum](https://www.theacropolismuseum.gr/en/node/22292)
 - [Painted stele photo — Commons custom attribution permission](https://commons.wikimedia.org/wiki/File:7550_-_Piraeus_Arch._Museum%2C_Athens_-_Painted_stele_-_Photo_by_Giovanni_Dall%27Orto%2C_Nov_14_2009.jpg)
 - [Euclid papyrus — Commons](https://commons.wikimedia.org/wiki/File:P.Penn._Museum_inv._E02748_Euclid%27s_Elements_2.5.jpg) and [institutional OPenn catalogue](https://openn.library.upenn.edu/Data/0016/html/e2748.html)
-- [Creative Commons BY-SA 4.0 requirements](https://creativecommons.org/licenses/by-sa/4.0/deed.en) and [attribution FAQ](https://creativecommons.org/faq/)
+- [Creative Commons BY-SA 2.0 requirements](https://creativecommons.org/licenses/by-sa/2.0/) and [attribution FAQ](https://creativecommons.org/faq/)
 
 ## Image-rights evidence and external metadata screening
 
-- [Priority rights review: Giovanni Dall'Orto stele and Penn Euclid papyrus](ANCIENT-GREECE-IMAGE-RIGHTS-TRIAGE.md). The former has a documented custom grant permitting commercial use with attribution; the latter remains **blocked by contradictory upstream licence version metadata**. Neither record has final app/device release sign-off.
-- `scripts/audit-ancient-greece-commons-online.cjs`: read-only live Commons API screening for the full image set. Compares in-app licence labels to current Commons metadata and flags absent/mismatched/custom cases, **without interpreting label matches as legal approval**. This script has not been run on the owner's machine yet.
+- [Priority rights review: Giovanni Dall'Orto stele and Penn Euclid papyrus](ANCIENT-GREECE-IMAGE-RIGHTS-TRIAGE.md). The former has a documented custom grant permitting commercial use with attribution. For Penn E02748, the original institution's [OPenn collection 0016](https://openn.library.upenn.edu/html/0016.html) grants **CC BY-SA 2.0**; the app credit has been corrected accordingly. Its catalogue/Commons version disagreement remains a human review flag. Neither record has final app/device release sign-off.
+- `scripts/audit-ancient-greece-commons-online.cjs`: read-only live Commons API screening for the full image set. Compares in-app licence labels to current Commons metadata and flags absent/mismatched/custom cases, **without interpreting label matches as legal approval**. The product owner **ran the live Commons checker successfully on 2026-11-03**: 88 placements, 88 unique Commons files, 81 API label matches, 5 source-page multi-licence cases, 2 human-review flags. Results confirm the tool's metadata comparison, **not** release rights clearance.
 
 ```bash
 node scripts/audit-ancient-greece-commons-online.cjs
@@ -137,7 +137,7 @@ node scripts/audit-ancient-greece-commons-online.cjs --csv > /tmp/gnosi-ancient-
 
 ### Completed direct page comparison: five API false positives
 
-After the product owner's live result of **81 short-label matches + 7 flags**, [direct file-page review](ANCIENT-GREECE-COMMONS-MULTILICENSE-REVIEW.md) confirmed five **different but valid multi-licensed choices** (Persepolis #19, two Athenian tribute photos #20, and two Antikythera photos #30). The in-app credits already reflect options expressly granted on the relevant pages. The revised checker now reports these **separately**, ideally **81 label matches / 5 file-page-checked multi-licences / 2 rights-review flags**, with all **88 UNVERIFIED** for complete downstream release. The two remaining substantive flags are custom commercial permission at #27 (source permission documented) and conflicting upstream Penn image licence metadata at #29 (not resolved). **No media/content data were edited.**
+After the product owner's initial live result of **81 short-label matches + 7 flags**, [direct file-page review](ANCIENT-GREECE-COMMONS-MULTILICENSE-REVIEW.md) confirmed five **different but valid multi-licensed choices** (Persepolis #19, two Athenian tribute photos #20, and two Antikythera photos #30). The in-app credits already reflect options expressly granted on the relevant pages. The product owner's second live run (2026-11-03) **confirmed 81 label matches / 5 file-page-checked multi-licences / 2 human-review flags**. All **88 remain UNVERIFIED** for full release. The two flags are custom permission at #27 (photographer's grant documented) and original-institution-versus-Commons version wording at #29 (original 2.0 grant subsequently identified). The five multi-licence images needed **no** changes; the #29 image credit was subsequently corrected to **CC BY-SA 2.0**. The image URL, caption and all lesson/quiz/progress material remain unchanged.
 
 ## Image-rights ledger (generated, initially all **UNVERIFIED**)
 
