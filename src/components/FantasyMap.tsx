@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import type { ImageSourcePropType } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 type MapRegion = {
@@ -22,8 +21,17 @@ type Props = {
   overview?: boolean;
   minHeight?: number;
   onControlsHeightChange?: (height: number) => void;
-  /** Bundled image for a bespoke world. Omit it to retain the SVG atlas. */
-  backgroundImage?: ImageSourcePropType;
+  /** Transparent interactive overlay above the History screen's full-bleed art. */
+  illustrated?: boolean;
+  /** Exact available map height in SVG coordinates, avoiding natural-height overflow. */
+  fitHeight?: number;
+  /** Map placement relative to the complete artwork-bearing screen viewport. */
+  illustrationMetrics?: {
+    screenWidth: number;
+    screenHeight: number;
+    mapWidth: number;
+    mapTop: number;
+  };
 };
 
 type Point = { x: number; y: number };
@@ -74,28 +82,41 @@ function overviewRows(count: number): number[] {
   return Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
 }
 
-function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, artworkLayout = false): PositionedRegion[] {
+function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, artworkLayout = false,
+  illustrationMetrics?: Props["illustrationMetrics"]): PositionedRegion[] {
   const count = regions.length;
   if (count === 0) return [];
 
-  // The bespoke History illustration uses three fixed destination zones.
-  // Keep labels, bars and tap targets centered over their painted islands
-  // at every map height; the generic SVG maps retain their own layouts.
+  // Unlike the generic SVG map, History's three destinations must follow
+  // the painted islands on the *whole screen*, not positions within the map card.
   if (artworkLayout && !overview && count === 3) {
     const anchors = [
-      { x: 0.255, y: 0.35 },
-      { x: 0.745, y: 0.35 },
-      { x: 0.51, y: 0.665 },
+      { x: 0.255, y: 0.4 },
+      { x: 0.745, y: 0.4 },
+      { x: 0.51, y: 0.69 },
     ];
-    return regions.map((region, index) => ({
-      ...region,
-      cx: MAP_WIDTH * anchors[index].x,
-      cy: mapHeight * anchors[index].y,
-      rx: index === 2 ? 78 : 75,
-      ry: Math.min(70, mapHeight * 0.13),
-      seed: index + 1,
-      fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
-    }));
+    const frameWidth = Math.max(1, illustrationMetrics?.mapWidth ?? MAP_WIDTH);
+    const screenWidth = illustrationMetrics?.screenWidth ?? frameWidth;
+    const screenHeight = illustrationMetrics?.screenHeight ?? mapHeight * frameWidth / MAP_WIDTH;
+    const mapTop = illustrationMetrics?.mapTop ?? 0;
+    const mapLeft = Math.max(0, (screenWidth - frameWidth) / 2);
+    const scale = MAP_WIDTH / frameWidth;
+    return regions.map((region, index) => {
+      const anchor = anchors[index];
+      const ry = Math.min(64, mapHeight * 0.12);
+      const cx = (anchor.x * screenWidth - mapLeft) * scale;
+      const paintedY = (anchor.y * screenHeight - mapTop) * scale;
+      // The top destination should remain tappable below the view controls
+      // even when the safe-area or accessibility text pushes the controls down.
+      const cy = Math.max(ry * 0.82 + 6, Math.min(mapHeight - 31, paintedY));
+      return {
+        ...region, cx, cy,
+        rx: index === 2 ? 78 : 75,
+        ry,
+        seed: index + 1,
+        fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
+      };
+    });
   }
 
   const columns = columnCount(count);
@@ -321,17 +342,21 @@ export default function FantasyMap({
   overview = false,
   minHeight = 0,
   onControlsHeightChange,
-  backgroundImage,
+  illustrated = false,
+  fitHeight,
+  illustrationMetrics,
 }: Props) {
   const [showList, setShowList] = useState(false);
   const columns = columnCount(regions.length);
   const rows = Math.max(1, overview ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
   const naturalHeight = regions.length === 1 ? 198 : overview ? rows * 128 + 32 : rows * 144 + 16;
-  const mapHeight = overview ? naturalHeight : Math.max(naturalHeight, Math.min(960, minHeight));
-  const artworkLayout = Boolean(backgroundImage && !overview && regions.length === 3);
+  const mapHeight = overview ? naturalHeight : fitHeight !== undefined
+    ? Math.max(1, fitHeight)
+    : Math.max(naturalHeight, Math.min(960, minHeight));
+  const artworkLayout = illustrated && !overview && regions.length === 3;
   const positionedRegions = useMemo(
-    () => makeLayout(regions, overview, mapHeight, artworkLayout),
-    [regions, overview, mapHeight, artworkLayout],
+    () => makeLayout(regions, overview, mapHeight, artworkLayout, illustrationMetrics),
+    [regions, overview, mapHeight, artworkLayout, illustrationMetrics],
   );
   // Larger text is practical because the layout uses at most three columns for
   // up to 24 regions. Large catalogues retain a list view for full labels.
@@ -378,12 +403,7 @@ export default function FantasyMap({
           ))}
         </View>
       </View>
-      {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame, { aspectRatio: MAP_WIDTH / mapHeight }]}>
-      {backgroundImage && !overview ? (
-        <Image testID="history-midnight-atlas-art" pointerEvents="none"
-          source={backgroundImage} resizeMode="stretch" style={styles.backgroundArt}
-          accessible={false} />
-      ) : null}
+      {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame, { aspectRatio: MAP_WIDTH / mapHeight }, illustrated && styles.illustratedFrame]}>
       <Svg
         width="100%"
         height="100%"
@@ -409,17 +429,17 @@ export default function FantasyMap({
             <Stop offset="1" stopColor="#DEB766" />
           </LinearGradient>
         </Defs>
-        <Rect width={MAP_WIDTH} height={mapHeight} rx={20} fill="url(#atlas-sea)" fillOpacity={backgroundImage ? 0.03 : 1} />
-        {!backgroundImage && Array.from({ length: 9 }, (_, index) => (
+        <Rect width={MAP_WIDTH} height={mapHeight} rx={20} fill="url(#atlas-sea)" fillOpacity={illustrated ? 0 : 1} />
+        {!illustrated && Array.from({ length: 9 }, (_, index) => (
           <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
             stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
         ))}
-        {!backgroundImage && Array.from({ length: rows * 4 }, (_, index) => (
+        {!illustrated && Array.from({ length: rows * 4 }, (_, index) => (
           <Path key={`parallel-${index}`} d={`M 0 ${index * 40} Q 180 ${index * 40 + 30} 360 ${index * 40}`}
             stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
         ))}
-        {!backgroundImage ? <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15} fill="none" stroke="#89AAA6" strokeOpacity={0.18} /> : null}
-        {!backgroundImage ? <G opacity={0.65}>
+        {!illustrated ? <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15} fill="none" stroke="#89AAA6" strokeOpacity={0.18} /> : null}
+        {!illustrated ? <G opacity={0.65}>
           <Circle cx={326} cy={30} r={13} fill="none" stroke="#C9BB92" strokeWidth={0.6} />
           <Path d="M326 13 L330 30 L326 45 L322 30 Z" fill="#C9BB92" />
           <Path d="M312 30 L326 26 L340 30 L326 34 Z" fill="#799B9D" />
@@ -433,7 +453,7 @@ export default function FantasyMap({
             stroke="#BEB896"
             strokeWidth={1}
             strokeDasharray="2 5"
-            opacity={backgroundImage ? 0 : 0.32}
+            opacity={illustrated ? 0 : 0.32}
           />
         ))}
 
@@ -461,20 +481,20 @@ export default function FantasyMap({
               key={region.id}
               pointerEvents="none"
             >
-              <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={backgroundImage ? 0.12 : 0.6} />
+              <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={illustrated ? 0.12 : 0.6} />
               <Path d={islandPath} fill="none"
                 stroke={region.status === "in-progress" ? "#B1A5FF" : region.fill}
                 strokeWidth={region.status === "in-progress" ? 17 : 13}
-                strokeOpacity={backgroundImage ? 0.12 : region.status === "in-progress" ? 0.25 : 0.09} />
-              <Path d={islandPath} fill="none" stroke="#94C0B7" strokeWidth={6} strokeOpacity={backgroundImage ? 0.04 : 0.13} />
+                strokeOpacity={illustrated ? 0.12 : region.status === "in-progress" ? 0.25 : 0.09} />
+              <Path d={islandPath} fill="none" stroke="#94C0B7" strokeWidth={6} strokeOpacity={illustrated ? 0.04 : 0.13} />
               <Path
                 d={islandPath}
                 fill={`url(#land-${region.seed})`}
-                fillOpacity={backgroundImage ? 0.09 : 0.92}
+                fillOpacity={illustrated ? 0.09 : 0.92}
                 stroke={region.status === "complete" ? "#E5C989"
                   : region.status === "in-progress" ? "#C2B3FF" : "#CFC9A9"}
                 strokeWidth={region.status === "in-progress" ? 2 : 1.35}
-                strokeOpacity={backgroundImage ? 0.42 : region.status === "in-progress" || region.status === "complete" ? 0.95 : 0.62}
+                strokeOpacity={illustrated ? 0.42 : region.status === "in-progress" || region.status === "complete" ? 0.95 : 0.62}
               />
               <Path
                 d={innerPath}
@@ -482,11 +502,11 @@ export default function FantasyMap({
                 stroke="#D7D3B4"
                 strokeWidth={0.7}
                 strokeDasharray="2 4"
-                strokeOpacity={backgroundImage ? 0 : 0.42}
+                strokeOpacity={illustrated ? 0 : 0.42}
               />
 
               {/* Small nearby islets make the landmasses feel like a fantasy atlas. */}
-              {!backgroundImage ? <G><Circle
+              {!illustrated ? <G><Circle
                 cx={region.cx - region.rx * 0.89}
                 cy={region.cy + region.ry * 0.52}
                 r={Math.max(2.1, region.rx * 0.075)}
@@ -507,7 +527,7 @@ export default function FantasyMap({
 
               {/* Other islands keep their original mountain motif; the first
                   bespoke landmark is exclusive to Αρχαία Ελλάδα. */}
-              {!backgroundImage && (overview || region.id !== "ancient-greece") ? (
+              {!illustrated && (overview || region.id !== "ancient-greece") ? (
                 <G>
                   <Path d={`M ${region.cx - 25} ${region.cy - 18} l 10 -14 l 10 14 m -7 -2 l 14 -20 l 16 20`}
                     fill="none" stroke="#EEE5C7" strokeOpacity={0.28} strokeWidth={1.1} strokeLinejoin="round" />
@@ -552,7 +572,7 @@ export default function FantasyMap({
               {/* Preserve the whole island as a touch target, including coasts. */}
               <Path d={smoothClosedPath(makeIslandPoints(region.cx, region.cy, region.rx, region.ry, region.seed))}
                 fill="transparent" />
-              {backgroundImage ? (
+              {illustrated ? (
                 region.status === "complete" ? <SvgText x={region.cx + 30} y={region.cy - 21} textAnchor="middle" fontSize={11} fontWeight="700" fill="#F4D996">✓</SvgText> : null
               ) : isAncientGreeceLandmark ? (
                 <G>
@@ -671,7 +691,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
   },
-  backgroundArt: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
+  illustratedFrame: { borderWidth: 0, borderRadius: 0, backgroundColor: "transparent" },
   mapFrame: {
     width: "100%",
     maxWidth: 520,
