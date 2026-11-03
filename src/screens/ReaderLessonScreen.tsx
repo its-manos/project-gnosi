@@ -37,8 +37,6 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const [activeBoundary, setActiveBoundary] = useState<number | null>(null);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null);
   const openingQuestion = useRef(false);
-  const gateOffsets = useRef<Record<number, number>>({});
-  const viewport = useRef({ top: 0, bottom: 0, measured: false });
   const scrollRef = useRef<ScrollViewInstance>(null);
   const sectionPositions = useRef<Record<number, number>>({});
   const paragraphPositions = useRef<Record<number, { sectionIndex: number; y: number }>>({});
@@ -70,26 +68,14 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   }));
   const textStyle = { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.75) };
 
+  // Opening is intentionally an explicit learner action; scrolling never starts a quiz.
   function openQuestions(boundary: number, questionIndex: number) {
-    if (activeBoundary !== null || openingQuestion.current || checkpointAnswers[questionIndex] !== undefined) return;
+    if (activeBoundary !== null || openingQuestion.current || checkpointAnswers[questionIndex] !== undefined ||
+        firstPending?.questionIndex !== questionIndex || firstPending.afterParagraphNumber !== boundary) return;
     openingQuestion.current = true;
     setActiveBoundary(boundary);
     setActiveQuestionIndex(questionIndex);
     requestPracticeCue("question-open");
-  }
-
-  // The card opens when its section-ending gate actually enters the viewport,
-  // never just because React has rendered a long article below the fold.
-  function maybeOpenQuestions() {
-    if (!viewport.current.measured || activeBoundary !== null || openingQuestion.current || !firstPending) return;
-    const paragraph = paragraphPositions.current[firstPending.afterParagraphNumber];
-    const sectionY = paragraph && sectionPositions.current[paragraph.sectionIndex];
-    const offset = gateOffsets.current[firstPending.afterParagraphNumber];
-    if (sectionY === undefined || offset === undefined) return;
-    const gateY = sectionY + paragraph.y + offset;
-    if (gateY >= viewport.current.top - 24 && gateY <= viewport.current.bottom - 8) {
-      openQuestions(firstPending.afterParagraphNumber, firstPending.questionIndex);
-    }
   }
 
   function advanceQuestion() {
@@ -187,17 +173,9 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
       </View>
       <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={styles.content}
         scrollEnabled={activeBoundary === null}
-        onLayout={event => {
-          viewport.current.bottom = viewport.current.top + event.nativeEvent.layout.height;
-          viewport.current.measured = true;
-          maybeOpenQuestions();
-        }}
-        showsVerticalScrollIndicator={false} onContentSizeChange={() => { flushScroll(); maybeOpenQuestions(); }} scrollEventThrottle={100}
+        showsVerticalScrollIndicator={false} onContentSizeChange={flushScroll} scrollEventThrottle={500}
         onScroll={event => {
-          const top = event.nativeEvent.contentOffset.y;
-          const bottom = top + event.nativeEvent.layoutMeasurement.height;
-          viewport.current = { top, bottom, measured: true };
-          maybeOpenQuestions();
+          const bottom = event.nativeEvent.contentOffset.y + event.nativeEvent.layoutMeasurement.height;
           const seen = Object.entries(paragraphPositions.current).filter(([, pos]) => {
             const sectionY = sectionPositions.current[pos.sectionIndex];
             return sectionY !== undefined && sectionY + pos.y < bottom;
@@ -234,7 +212,6 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <View key={section.title} style={styles.section} onLayout={event => {
             sectionPositions.current[sectionIndex] = event.nativeEvent.layout.y;
             flushScroll();
-            maybeOpenQuestions();
           }}>
             <Text style={styles.sectionNumber}>ΕΝΟΤΗΤΑ {sectionIndex + 1} / {sections.length}</Text>
             <Text accessibilityRole="header" style={styles.sectionTitle}>{section.title}</Text>
@@ -248,21 +225,19 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               return <View key={number} testID={`reader-paragraph-${number}`} onLayout={event => {
                 paragraphPositions.current[number] = { sectionIndex, y: event.nativeEvent.layout.y };
                 flushScroll();
-                maybeOpenQuestions();
               }}>
                 <Text selectable style={[styles.paragraph, textStyle]}>{getParagraphText(paragraph)}</Text>
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
                 {hasGate ? <View testID={`reader-checkpoint-${firstPending.questionIndex}`}
-                  style={styles.checkpoint} onLayout={event => {
-                    gateOffsets.current[number] = event.nativeEvent.layout.y;
-                    maybeOpenQuestions();
-                  }}>
-                  <Text style={styles.gateTitle}>Ώρα για ερωτήσεις</Text>
-                  <Text style={styles.readingHint}>Απάντησε για να συνεχίσεις την ανάγνωση.
-                    {pendingGroup.length > 1 ? ` ${pendingGroup.length} ερωτήσεις σε αυτή την ενότητα.` : ""}
+                  style={styles.checkpoint}>
+                  <Text style={styles.gateTitle}>Έτοιμος να δοκιμάσεις όσα έμαθες;</Text>
+                  <Text style={styles.readingHint}>
+                    Μπορείς να ξαναδιαβάσεις την ενότητα πριν απαντήσεις. Οι ερωτήσεις
+                    θα ανοίξουν μόνο όταν το επιλέξεις.
+                    {pendingGroup.length > 1 ? ` Σε περιμένουν ${pendingGroup.length} ερωτήσεις.` : ""}
                   </Text>
-                  <ActionButton label="Άνοιγμα ερωτήσεων →"
+                  <ActionButton label="Έτοιμος για ερωτήσεις →"
                     onPress={() => openQuestions(number, firstPending.questionIndex)} />
                 </View> : null}
               </View>;
