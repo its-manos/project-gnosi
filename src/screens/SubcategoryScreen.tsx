@@ -45,7 +45,7 @@ export default function SubcategoryScreen({
     ?? path.find(lesson => !completedLessonIds.includes(lesson.id) &&
       getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds).unlocked);
   const mapWidth = Math.max(250, Math.min(410, viewportWidth - 40));
-  const mapHeight = 130 + Math.max(0, path.length - 1) * 139;
+  const mapHeight = 180 + Math.max(0, path.length - 1) * 139;
   const points = path.map((_lesson, index) => pointFor(index, mapWidth));
   const route = points.map((point, index) => {
     if (index === 0) return "M " + point.x + " " + point.y;
