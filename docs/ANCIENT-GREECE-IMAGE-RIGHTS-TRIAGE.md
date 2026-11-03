@@ -27,6 +27,10 @@
 
 Creative Commons **BY-SA 4.0** expressly permits commercial copying and adaptations **subject to attribution and ShareAlike for adaptations**. The [Creative Commons deed](https://creativecommons.org/licenses/by-sa/4.0/) calls for the author's proper credit, licence link and change indication where applicable. Merely placing the shorthand `CC BY-SA 4.0` beside an app image does not necessarily fulfill all conditions. An entire proprietary app is not automatically re-licensed as BY-SA solely because it presents an unmodified CC BY-SA image; distinguish collections, embedded originals and adaptations, and seek counsel if modifications or mobile distribution mechanisms complicate reuse.
 
+## Five API mismatches resolved as multi-licensing (2026-11-03)
+
+[Review of the five exact Commons file pages](ANCIENT-GREECE-COMMONS-MULTILICENSE-REVIEW.md) confirms that every allegedly mismatched image **offers the existing Gnosi-credited licence as an alternative licence grant**. A single `imageinfo.extmetadata.LicenseShortName` is not a complete list of grants. **No app credit or image URL was changed.** These five are separated from the custom Dall'Orto and disputed Penn E02748 cases in the revised checker. The latter is still blocked; none is yet device/release-signed-off.
+
 ## Systematic remaining 86+ record checks
 
 The pre-existing ledger helper already produces **88** rows, initially UNVERIFIED:
@@ -35,7 +39,7 @@ The pre-existing ledger helper already produces **88** rows, initially UNVERIFIE
 node scripts/audit-ancient-greece-image-rights.cjs --csv > /tmp/gnosi-ancient-greece-image-rights.csv
 ```
 
-The new **read-only network checker** queries current Wikimedia Commons image metadata, compares the licence **short label**, and leaves **all** statuses UNVERIFIED:
+The new **read-only network checker** queries current Wikimedia Commons image metadata, compares the licence **short label**, and applies only five **source-page verified, exact-title multi-licence exceptions**; **all** statuses remain UNVERIFIED:
 
 ```bash
 node scripts/audit-ancient-greece-commons-online.cjs
