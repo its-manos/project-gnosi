@@ -9,7 +9,7 @@ assert.equal(lessons.filter(x=>x.id===id).length,1);assert.equal(lesson.requireC
 const ps=lesson.sections.flatMap(s=>s.paragraphs);assert.equal(ps.length,42);assert.deepEqual(ps.map(p=>p.id),Array.from({length:42},(_,i)=>'alexander-'+String(i+1).padStart(2,'0')));
 assert.equal(lesson.questions.length,9);assert.equal(new Set(lesson.questions.map(q=>q.id)).size,9);
 assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[1,2,0,3,1,2,3,0,1]);
-assert.ok(lesson.questions.every(q=>q.version==='2'&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>65));
+assert.ok(lesson.questions.every(q=>q.version===(['alexander-death-source','alexander-323-open-succession'].includes(q.id)?'3':'2')&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>65));
 assert.deepEqual(lesson.checkpoints.map(c=>c.questionId),lesson.questions.map(q=>q.id));
 assert.deepEqual(progress.getQuestionPlacements(lesson).map(p=>p.afterParagraphNumber),[4,10,15,20,25,30,36,39,42]);
 assert.equal(progress.getVisibleParagraphLimit(lesson,{}),4);
