@@ -17,7 +17,7 @@ assert.deepEqual(ps.map(x=>x.id),Array.from({length:30},(_,i)=>'phil-'+String(i+
 assert.ok(ps.every(x=>x.text.length>=155));
 assert.equal(l.questions.length,7);assert.deepEqual(new Set(l.questions.map(q=>q.correctIndex)),new Set([0,1,2,3]));
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[0,1,2,2,1,2,3]);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>=90));
+assert.ok(l.questions.every(q=>q.version===(['phil-paid-teaching','phil-academy-place'].includes(q.id)?'3':'2')&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>=90));
 assert.deepEqual(l.checkpoints.map(x=>x.questionId),l.questions.map(x=>x.id));
 assert.deepEqual(p.getQuestionPlacements(l).map(x=>x.afterParagraphNumber),[4,8,12,16,20,25,30]);
 assert.equal(p.getVisibleParagraphLimit(l,{}),4);
