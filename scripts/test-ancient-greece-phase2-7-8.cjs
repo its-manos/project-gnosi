@@ -17,7 +17,7 @@ const old=require('./fixtures/ancient-greece-pair-7-8-before-phase2-20261103.jso
 const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
- 'minoan-crete':{slot:6,paragraphs:22,anchors:[4,10,15,20],correct:[2,2,1,0],types:['matching','spot-the-mistake',null,'fill-in-the-blank'],version:'2'},
+ 'minoan-crete':{slot:6,paragraphs:22,anchors:[4,10,15,20],correct:[2,2,1,0],types:['matching','spot-the-mistake','multiple-select','fill-in-the-blank'],version:'2'},
  'mycenaean-palaces':{slot:7,paragraphs:25,anchors:[4,10,15,20,24],correct:[0,2,2,1,2],types:['fill-in-the-blank','ordering','spot-the-mistake','matching',null],version:'2'}
 };
 function properAnswer(q){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===expect.version),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['minoan-power-inference','minoan-town-work','mycenae-offices','mycenae-local-models'].includes(q.id)?'3':expect.version)),'correct quiz version');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);
