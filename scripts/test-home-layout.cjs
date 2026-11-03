@@ -101,6 +101,23 @@ assert.equal(actions.at(-1), "category:history");
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
 assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
 assert.equal(nodes(tree).filter(node => node.props?.accessibilityLabel?.includes("Αναζήτηση")).length, 0);
+// Future games are only discoverable previews. No unfinished game can be launched.
+const upcomingGames = nodes(tree).filter(node => node.props?.testID?.startsWith("home-mini-game-"));
+assert.equal(nodes(tree).filter(node => node.props?.testID === "home-mini-games").length, 1);
+assert.equal(upcomingGames.length, 2);
+assert.deepEqual(Array.from(upcomingGames, node => node.props.testID), [
+  "home-mini-game-sudoku", "home-mini-game-hangman",
+]);
+for (const game of upcomingGames) {
+  assert.equal(game.type, "View");
+  assert.equal(game.props.onPress, undefined, "future game cards must not navigate");
+  assert.equal(game.props.accessible, true);
+  assert.equal(game.props.accessibilityState.disabled, true);
+  assert.match(game.props.accessibilityLabel, /σύντομα διαθέσιμο/);
+  assert.equal(game.props.style.minHeight, 62);
+}
+assert.ok(nodes(tree).some(node => node.props?.children === "Μίνι παιχνίδια"));
+assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα").length, 2);
 assert.ok(nodes(tree).some(node => node.props?.children === "1 / 3 ερωτήσεις"),
   "resume card shows question progress beside its heading");
 const centeredGrid = nodes(tree).find(node => node.props?.style?.flexWrap === "wrap"
