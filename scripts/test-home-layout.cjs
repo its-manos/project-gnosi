@@ -64,13 +64,20 @@ const categories = [
   ["culture", "Τέχνες & Πολιτισμός", "🎨"], ["geography", "Γεωγραφία & Κοινωνία", "🌍"],
   ["difficult-history", "Ταμπού της Ιστορίας", "🕯️"],
 ].map(([id, title, emoji]) => ({ id, title, emoji }));
+const subcategories = [
+  { id: "ancient-greece", categoryId: "history", title: "Αρχαία Ελλάδα" },
+  { id: "space", categoryId: "science", title: "Αστρονομία & Διάστημα" },
+];
 const lessons = categories.map((category, index) => ({
   id: String(index), categoryId: category.id, title: "Μάθημα " + index,
-  subcategoryId: "ancient-greece", questions: [], sources: [],
+  subcategoryId: index === 1 ? "space" : "ancient-greece", questions: [], sources: [],
 }));
 const actions = [];
 let profile = { ready: true, profile: { level: 3, earned: 150, required: 600 } };
-let daily = { ready: true, doc: { days: { "2026-11-03": { record: { completed: true } } } } };
+const completeDailyAnswers = Object.fromEntries(Array.from({ length: 7 }, (_, i) => [String(i), i % 4]));
+let daily = { ready: true, doc: { days: { "2026-11-03": {
+  record: { completed: true, started: true, currentIndex: 6, answers: completeDailyAnswers },
+} } } };
 const HistoryWorldIcon = compile("src/components/worldIcons/HistoryWorldIcon.tsx");
 const otherWorlds = compile("src/components/worldIcons/OtherWorldIcons.tsx", {}, true);
 const worldArtwork = {
@@ -85,6 +92,7 @@ const worldArtwork = {
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
+  "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
   "../hooks/useAthensDate": { useAthensDate: () => "2026-11-03" },
   "../state/LearningSession": { useDailySnapshot: () => daily },
@@ -92,7 +100,7 @@ const home = compile("src/screens/HomeScreen.tsx", {
   "../utils/progressStats": { calculateDailyChallengeProgress: () => ({ currentStreak: 2 }) },
 });
 const props = {
-  categories, featuredLesson: lessons[1], progressLoaded: true,
+  categories, subcategories, featuredLesson: lessons[1], progressLoaded: true,
   completedCount: 1, savedCount: 2,
   inProgressLesson: lessons[0], inProgressAnsweredCount: 1, inProgressQuestionCount: 3,
   onResumeLesson: id => actions.push("resume:" + id),
@@ -122,6 +130,17 @@ assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props
 assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("home-category-")).length, 7);
 press("home-category-history");
 assert.equal(actions.at(-1), "category:history");
+const textById = (id, t = tree) => nodes(t).find(node => node.props?.testID === id);
+assert.equal(textById("home-hero-location").props.children, "Ιστορία · Αρχαία Ελλάδα",
+  "continue card shows real category and subcategory titles");
+assert.match(textById("home-primary-action").props.accessibilityLabel, /Ιστορία · Αρχαία Ελλάδα/);
+assert.equal(textById("home-daily-answered").props.children, "7/7",
+  "completed daily quiz shows seven answered questions");
+assert.equal(textById("home-daily-answered").props.style.fontSize, 24,
+  "daily answer count stays prominent without expanding the card");
+assert.equal(textById("home-daily-quiz").props.accessibilityLabel.includes("7 από 7"), true);
+assert.equal(textById("home-daily-quiz").props.style({ pressed: false })[0].minHeight, 96,
+  "daily card keeps its current compact footprint");
 // Every known world renders bespoke local art, with the same viewBox, display
 // scale and 32pt Yoga layout footprint. Each remains inside the original card.
 const HistoryCard = nodes(tree).find(node => node.props?.testID === "home-category-history");
@@ -218,6 +237,31 @@ futureCard.props.onPress();
 assert.equal(actions.at(-1), "category:future-world");
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
 assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
+// The counter is the number of submitted answers, not the current index,
+// correct answers, or a streak. It is scoped to today's Athens daily record.
+daily = { ready: true, doc: { days: { "2026-11-03": {
+  record: { completed: false, started: true, currentIndex: 2, answers: { "0": 2, "1": 0, "2": 1 } },
+} } } };
+tree = home(props);
+assert.equal(textById("home-daily-answered").props.children, "3/7");
+assert.ok(nodes(tree).some(node => node.props?.children === "Συνέχισε σήμερα"));
+assert.match(textById("home-daily-quiz").props.accessibilityLabel, /3 από 7/);
+daily = { ready: true, doc: { days: { "2026-11-02": {
+  record: { completed: true, answers: completeDailyAnswers },
+} } } };
+tree = home(props);
+assert.equal(textById("home-daily-answered").props.children, "0/7",
+  "yesterday's completed quiz does not count towards today's progress");
+assert.ok(nodes(tree).some(node => node.props?.children === "Ξεκίνα σήμερα"));
+daily = { ready: false, doc: { days: {} } };
+tree = home(props);
+assert.equal(textById("home-daily-answered").props.children, "—/7",
+  "unknown loading progress must not appear as zero");
+assert.match(textById("home-daily-quiz").props.accessibilityLabel, /φόρτωση προόδου/);
+daily = { ready: true, doc: { days: { "2026-11-03": {
+  record: { completed: true, started: true, currentIndex: 6, answers: completeDailyAnswers },
+} } } };
+tree = home(props);
 assert.equal(nodes(tree).filter(node => node.props?.accessibilityLabel?.includes("Αναζήτηση")).length, 0);
 // Future games are only discoverable previews. No unfinished game can be launched.
 const upcomingGames = nodes(tree).filter(node => node.props?.testID?.startsWith("home-mini-game-"));
@@ -300,9 +344,14 @@ assert.ok(nodes(bottomTree).some(node => Array.isArray(node.props?.style)
   "navigation preserves safe-area inset while remaining compact");
 
 tree = home({ ...props, inProgressLesson: null });
+assert.equal(textById("home-hero-location", tree).props.children,
+  "Επιστήμη & Διάστημα · Αστρονομία & Διάστημα",
+  "the next-lesson card resolves the featured lesson's own destination");
 press("home-primary-action", tree);
 assert.equal(actions.at(-1), "lesson:1");
 tree = home({ ...props, inProgressLesson: null, featuredLesson: null });
+assert.equal(textById("home-hero-location", tree), undefined,
+  "empty hero should never display a stale category path");
 press("home-primary-action", tree);
 assert.equal(actions.at(-1), "category:history");
 profile = { ready: false, profile: { level: 1, earned: 0, required: 200 } };

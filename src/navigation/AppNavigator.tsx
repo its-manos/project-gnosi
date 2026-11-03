@@ -263,6 +263,7 @@ export default function AppNavigator() {
           onKnowledgeReview={() => openKnowledgeReview("home")}
           onOpenProfile={() => openProfile("home")}
           categories={categories}
+          subcategories={subcategories}
           featuredLesson={discovery.featured}
           progressLoaded={app.progressLoaded}
           completedCount={app.completedLessonIds.length}

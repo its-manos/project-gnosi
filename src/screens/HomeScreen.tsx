@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import type { Category, Lesson } from "../data/lessons";
+import type { Category, Lesson, Subcategory } from "../data/lessons";
+import { DAILY_CHALLENGE_SIZE } from "../data/questions";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { useAthensDate } from "../hooks/useAthensDate";
 import { useDailySnapshot } from "../state/LearningSession";
@@ -16,6 +17,7 @@ import { colors } from "../theme";
 
 type Props = {
   categories: Category[];
+  subcategories: Subcategory[];
   featuredLesson: Lesson | null;
   progressLoaded: boolean;
   completedCount: number;
@@ -59,7 +61,7 @@ const upcomingMiniGames = [
 ] as const;
 
 export default function HomeScreen({
-  categories, featuredLesson, progressLoaded, completedCount,
+  categories, subcategories, featuredLesson, progressLoaded, completedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
   onKnowledgeReview, onOpenProfile,
@@ -81,11 +83,22 @@ export default function HomeScreen({
     () => calculateDailyChallengeProgress(dailyHistory(daily.doc), today).currentStreak,
     [daily.doc, today],
   );
-  const todayCompleted = daily.doc.days[today]?.record.completed === true;
+  const todayRecord = daily.doc.days[today]?.record;
+  const todayCompleted = todayRecord?.completed === true;
+  // The daily quiz stores one answer per completed question, including wrong
+  // answers and the current question before the Next button is pressed.
+  const dailyAnsweredCount = todayRecord ? Object.keys(todayRecord.answers).length : 0;
+  const dailyProgress = daily.ready
+    ? String(dailyAnsweredCount) + "/" + String(DAILY_CHALLENGE_SIZE)
+    : "—/" + String(DAILY_CHALLENGE_SIZE);
   const fraction = profileReady ? Math.max(0, Math.min(1, profile.earned / Math.max(1, profile.required))) : 0;
   const ringLength = 2 * Math.PI * 21;
   const hero = inProgressLesson ?? (progressLoaded ? featuredLesson : null);
   const heroIsResume = Boolean(inProgressLesson);
+  const heroCategory = categories.find(category => category.id === hero?.categoryId);
+  const heroSubcategory = subcategories.find(subcategory =>
+    subcategory.id === hero?.subcategoryId && subcategory.categoryId === hero?.categoryId);
+  const heroLocation = [heroCategory?.title, heroSubcategory?.title].filter(Boolean).join(" · ");
   const progress = inProgressQuestionCount > 0
     ? Math.max(0, Math.min(100, inProgressAnsweredCount / inProgressQuestionCount * 100))
     : 0;
@@ -143,6 +156,7 @@ export default function HomeScreen({
         accessibilityRole="button"
         accessibilityLabel={hero
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
+            + (heroLocation ? ". " + heroLocation : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
         <View style={styles.heroTop}>
           <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
@@ -153,9 +167,11 @@ export default function HomeScreen({
         <Text style={styles.heroTitle} numberOfLines={2}>
           {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
         </Text>
-        {!heroIsResume ? <Text style={styles.heroDescription} numberOfLines={1}>
-          {hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
-        </Text> : null}
+        {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}
+          numberOfLines={1} ellipsizeMode="tail">{heroLocation}</Text>
+          : !heroIsResume ? <Text style={styles.heroDescription} numberOfLines={1}>
+            {hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
+          </Text> : null}
         {heroIsResume && inProgressQuestionCount > 0 ?
           <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]} /></View>
           : null}
@@ -167,11 +183,18 @@ export default function HomeScreen({
 
       <View style={styles.actions}>
         <Pressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, pressed && styles.pressed]}
-          accessibilityRole="button" accessibilityLabel="Καθημερινό quiz, 7 ερωτήσεις"
+          accessibilityRole="button"
+          accessibilityLabel={daily.ready
+            ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
+            : "Καθημερινό quiz, φόρτωση προόδου"}
           onPress={onStartDailyChallenge}>
-          <Text style={styles.actionIcon}>✦</Text>
+          <View style={styles.quizTop}>
+            <Text style={styles.actionIcon}>✦</Text>
+            <Text testID="home-daily-answered" style={styles.quizAnswered}
+              accessible={false} numberOfLines={1} adjustsFontSizeToFit>{dailyProgress}</Text>
+          </View>
           <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
-          <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : "7 ερωτήσεις"}</Text>
+          <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
         </Pressable>
         <Pressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Επανάληψη γνώσεων"
@@ -257,6 +280,8 @@ const styles = StyleSheet.create({
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1, textAlign: "right" },
   heroTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "800" },
   heroDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 16 },
+  heroLocation: { color: colors.accentLight, fontSize: 11, lineHeight: 15,
+    fontWeight: "700" },
   track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginTop: 2 },
   trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.accentLight },
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
@@ -266,6 +291,9 @@ const styles = StyleSheet.create({
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
     padding: 12, justifyContent: "center", gap: 4 },
   quizCard: { backgroundColor: "#242039", borderColor: "#39344F" },
+  quizTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  quizAnswered: { color: colors.accentLight, fontSize: 24, lineHeight: 27,
+    fontWeight: "900", letterSpacing: -0.6, fontVariant: ["tabular-nums"] },
   reviewCard: { backgroundColor: "#19332E", borderColor: "#30554B" },
   actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
   reviewIcon: { color: "#6CE0B6" },
