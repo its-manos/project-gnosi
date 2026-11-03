@@ -64,7 +64,7 @@ const lay = (n,y) => n.props.onLayout({ nativeEvent: { layout: { y } } });
 reset();
 assert.equal(Entry(props).type, Reader);
 let tree = render();
-assert.equal(nodes(tree).find(n => n.type === 'NextImageWarmup').props.uri, nextFigureWarmup.nextPendingFigureUrl(lesson, progress.getVisibleParagraphLimit(lesson, props.checkpointAnswers)), 'reader passes only the next unrevealed figure to warmup');
+assert.equal(nodes(tree).find(n => n.type === 'NextImageWarmup').props.uri, nextFigureWarmup.nextPendingFigureUrl(lesson, progress.getReadingVisibleParagraphLimit(lesson, props.checkpointAnswers)), 'reader passes only the next unrevealed figure to warmup');
 const coverStyle = nodes(tree).find(n => n.type === 'LessonCover').props.style;
 assert.equal(coverStyle.aspectRatio, 16 / 10, 'reader cover uses responsive framing');
 assert.equal(coverStyle.height, undefined, 'no fixed reader cover height');
@@ -146,6 +146,33 @@ const worldSpot=nodes(tree).find(n=>n.type==='QuizQuestionRenderer');
 assert.equal(worldSpot.props.question.type,'spot-the-mistake');
 worldSpot.props.onSubmit('option-1');
 assert.deepEqual(calls.at(-1),['answer',0,1,greekWorld.questions[0].correctIndex]);
+// A section may own two questions. Both are after the same last paragraph,
+ // but only the first pending question can be answered.
+const grouped=data.lessons.find(l=>l.id==='greek-science-knowledge');
+assert.ok(grouped && grouped.questionPlacement==='section-end');
+const display=progress.getReadingQuestionPlacements(grouped);
+assert.equal(display[0].afterParagraphNumber,6);
+assert.equal(display[1].afterParagraphNumber,6);
+reset();
+props={...props,lesson:grouped,category:data.categories.find(c=>c.id===grouped.categoryId),subcategory:data.subcategories.find(s=>s.id===grouped.subcategoryId)};
+tree=render();
+assert.ok(byId(tree,'reader-paragraph-6'));
+assert.ok(!byId(tree,'reader-paragraph-7'));
+assert.ok(byId(tree,'reader-checkpoint-0'));
+assert.ok(!byId(tree,'reader-checkpoint-1'),'later question at the same ending stays locked');
+props={...props,checkpointAnswers:{0:grouped.questions[0].correctIndex}};
+tree=render();
+assert.ok(byId(tree,'reader-checkpoint-1'),'next question in the same section becomes visible');
+assert.ok(!byId(tree,'reader-paragraph-7'),'reading cannot skip the second question');
+assert.equal(progress.getReadingResumeParagraphNumber(grouped,props.checkpointAnswers),6,
+ 'resume returns to the active question at this ending');
+assert.ok(!nodes(byId(tree,'reader-checkpoint-0')).some(n=>n.type==='ActionButton'&&n.props.label==='Συνέχεια ανάγνωσης ↓'),
+ 'no premature continue button between questions sharing a section ending');
+props={...props,checkpointAnswers:{0:grouped.questions[0].correctIndex,1:grouped.questions[1].correctIndex}};
+tree=render();
+assert.ok(byId(tree,'reader-paragraph-7'),'subsequent text unlocks only after both confirmations');
+assert.equal(progress.getReadingResumeParagraphNumber(grouped,props.checkpointAnswers),7);
+
 // Exercise every real article, including content notes, long titles, media,
 // all checkpoint boundaries and full source lists. No catalogue fixtures are substituted.
 let notes=0, figures=0;
@@ -164,7 +191,7 @@ for(const article of data.lessons) {
     if(article.contentNote) {
       assert.ok(nodes(tree).some(n=>n.type==='Text' && n.props.children===article.contentNote));
     }
-    const limit=progress.getVisibleParagraphLimit(article,props.checkpointAnswers);
+    const limit=progress.getReadingVisibleParagraphLimit(article,props.checkpointAnswers);
     for(let number=1;number<=paragraphs.length;number++) {
       assert.equal(Boolean(byId(tree,`reader-paragraph-${number}`)),number<=limit,article.id+' paragraph '+number);
       if(number<=limit) assert.ok(nodes(byId(tree,`reader-paragraph-${number}`)).some(n=>n.type==='Text' && n.props.children===progress.getParagraphText(paragraphs[number-1])));
