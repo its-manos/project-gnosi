@@ -12,10 +12,13 @@ daily quiz.
 1. The learner reads until the current visible checkpoint. The existing
    `getReadingVisibleParagraphLimit` gate still prevents access to subsequent
    paragraphs until that question is confirmed.
-2. When the checkpoint gateway enters the actual viewport, the app opens a
-   **full-screen native modal**. A manual `Άνοιγμα ερωτήσεων` button at that
-   checkpoint is an accessibility and low-scroll fallback. The reader stays
-   mounted behind the modal, with scrolling disabled and its text hidden.
+2. Reaching a checkpoint displays a clear invitation to review the section
+   before answering. The reader **never opens questions automatically** on
+   scrolling, layout or resume. The learner can scroll back and review the
+   section, then taps `Έτοιμος για ερωτήσεις →` to open the **full-screen
+   native modal**. Only that explicit tap starts the first opening sound.
+   The article stays mounted but hidden and its scrolling disabled while
+   the modal is visible.
 3. When several questions share an ending, the header shows `Ερώτηση X / Y`
    and a segmented progress indicator. Answers are collected in the original
    canonical index order, one at a time.
@@ -68,8 +71,12 @@ typed-answer, question-format, editorial, backup and sync regressions.
 Native device verification is still required before merge.
 
 On **Android and iPhone**, test:
-- Scroll to a checkpoint versus opening the article: modal must open only when
-  reached; opening cue once, no automatic sound on app startup.
+- Scroll to and past the checkpoint and reread earlier paragraphs: only the
+  button should appear. No question modal, opening cue, answer write or XP
+  occurs until `Έτοιμος για ερωτήσεις →` is tapped.
+- Tap the button once or rapidly twice: a single modal and one cue. Resume a
+  saved attempt: no automatic modal or cue, and the button opens the next
+  unanswered checkpoint.
 - Sound enabled/disabled, app background/foreground, Android first-play,
   correct/incorrect cues after confirmation, no double-submit/XP.
 - `greek-science-knowledge` questions 1 and 2 at paragraph 6: X/Y indicator,
