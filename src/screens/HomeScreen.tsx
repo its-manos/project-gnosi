@@ -274,11 +274,11 @@ export default function HomeScreen({
 
 const styles = StyleSheet.create({
   viewport: { flex: 1 },
-  // Consume any extra viewport height between the five Home sections rather
-  // than leaving a blank strip above the bottom tabs. The base gap remains a
-  // minimum, and overflowing content keeps its natural size/scroll fallback.
+  // Fill the available viewport by growing the cards and knowledge-world
+  // tiles, not the gaps between sections. Minimum card sizes remain intact;
+  // on genuinely small screens content can overflow and become scrollable.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
   compactContent: { gap: 8, paddingBottom: 5 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
   compactHero: { padding: 12, gap: 5 },
@@ -309,8 +309,8 @@ const styles = StyleSheet.create({
   levelCenter: { alignItems: "center", justifyContent: "center" },
   levelCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 10, fontWeight: "900" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
-  hero: { padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#474160",
-    backgroundColor: "#1B2032", gap: 6 },
+  hero: { flexGrow: 2, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#474160",
+    backgroundColor: "#1B2032", gap: 6, justifyContent: "space-between" },
   heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1, textAlign: "right" },
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2 },
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
-  actions: { flexDirection: "row", gap: 10 },
+  actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
     padding: 12, justifyContent: "center", gap: 4 },
   quizCard: { backgroundColor: "#242039", borderColor: "#39344F" },
@@ -335,20 +335,21 @@ const styles = StyleSheet.create({
   reviewIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  worlds: { gap: 9 },
+  worlds: { gap: 9, flexGrow: 2 },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   worldCount: { color: colors.textMuted, fontSize: 11 },
   // Four equal columns; the last three cards are centered, not stretched across the row.
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 8, rowGap: 8 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
+    alignContent: "stretch", flexGrow: 1, columnGap: 8, rowGap: 8 },
   category: { width: "22.7%", minHeight: 78, backgroundColor: colors.surface,
     borderColor: colors.border, borderWidth: 1, borderRadius: 14,
     alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 4 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
-  miniGames: { gap: 8 },
+  miniGames: { gap: 8, flexGrow: 1 },
   miniGamesHeading: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: "800" },
-  miniGamesRow: { flexDirection: "row", gap: 10 },
+  miniGamesRow: { flexDirection: "row", gap: 10, flexGrow: 1 },
   miniGameCard: { flex: 1, minHeight: 62, paddingHorizontal: 10, paddingVertical: 8,
     flexDirection: "row", alignItems: "center", gap: 9, borderRadius: 14,
     backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },

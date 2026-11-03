@@ -288,14 +288,41 @@ const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.te
 let scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
   "dashboard content fills the usable viewport on taller screens");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
-  "spare height is distributed between Home sections, not beneath mini-games");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
+  "free viewport height grows dashboard cards instead of the margins");
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
 assert.equal(homeSections.length, 5, "all five Home sections share the available height");
 assert.equal(homeSections.at(-1).props.testID, "home-mini-games",
   "mini-games end the dashboard and anchor to the bottom when everything fits");
+
+assert.equal(homeSections[0].props.style.minHeight, 52,
+  "the brand/header stays at its original height");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 2,
+  "Continue is a flexible-height card");
+assert.equal(homeSections[2].props.style.flexGrow, 1,
+  "daily quiz and review cards expand vertically");
+assert.equal(homeSections[3].props.style[0].flexGrow, 2,
+  "knowledge worlds can expand to use spare height");
+assert.equal(homeSections[4].props.style[0].flexGrow, 1,
+  "mini-games expand without moving apart from the other sections");
+const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap");
+assert.ok(flexibleWorldGrid, "knowledge-world cards stay in the existing grid");
+assert.equal(flexibleWorldGrid.props.style[0].flexGrow, 1);
+assert.equal(flexibleWorldGrid.props.style[0].alignContent, "stretch",
+  "both rows of world tiles share any extra height instead of leaving a void");
+assert.equal(flexibleWorldGrid.props.style[0].rowGap, 8,
+  "world-row margins stay fixed");
+const flexibleGamesRow = nodes(homeSections[4]).find(node =>
+  node.props?.style?.flexDirection === "row" && node.props?.style?.flexGrow === 1);
+assert.ok(flexibleGamesRow, "mini-game cards stretch to fill their section");
+assert.equal(flexibleGamesRow.props.style.gap, 10,
+  "mini-game card spacing remains constant");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "space-between",
+  "the Continue button can settle toward the bottom of its growing card");
+
 assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measurements settle");
 assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
 assert.equal(scroll.props.alwaysBounceVertical, false);
@@ -309,8 +336,8 @@ scroll.props.onContentSizeChange(360, 711);
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
   "measured overflow activates tight spacing without dropping sections");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
-  "extra space is shared even after compacting the dashboard");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
+  "tight mode keeps the same fixed section spacing");
 const tightHero = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-primary-action");
 const tightQuiz = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-daily-quiz");
 const tightCategory = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
@@ -329,8 +356,8 @@ scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[1], false,
   "available height growth restores spacious styling");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
-  "spacious mode also distributes free height");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
+  "spacious mode grows cards instead of spreading sections apart");
 assert.equal(scroll.props.scrollEnabled, false);
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
