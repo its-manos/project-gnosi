@@ -490,10 +490,14 @@ export default function FantasyMap({
             reduce the visible white fill of small glyphs on Android. */}
         {positionedRegions.map((region) => {
           const labelLines = wrapTitle(region.title, maxLabelChars);
-          const labelStartY = region.cy - 3;
-          // Put the bar into the space formerly occupied by the numeric count,
-          // clear of the island's lower coastline even with two title lines.
-          const barY = region.cy + (labelLines.length > 1 ? 30 : 23);
+          const isAncientGreeceLandmark = !overview && region.id === "ancient-greece";
+          // The Doric pediment is detailed enough to deserve breathing room;
+          // shift its title down slightly and bring the progress pill nearer.
+          // Other destinations keep their established spacing for now.
+          const labelStartY = region.cy + (isAncientGreeceLandmark ? 1 : -3);
+          const barY = isAncientGreeceLandmark
+            ? region.cy + (labelLines.length > 1 ? 27 : 18)
+            : region.cy + (labelLines.length > 1 ? 30 : 23);
           const barWidth = region.rx * 0.82;
           const barHeight = 5.5;
           const barX = region.cx - barWidth / 2;
@@ -515,7 +519,7 @@ export default function FantasyMap({
               {/* Preserve the whole island as a touch target, including coasts. */}
               <Path d={smoothClosedPath(makeIslandPoints(region.cx, region.cy, region.rx, region.ry, region.seed))}
                 fill="transparent" />
-              {!overview && region.id === "ancient-greece" ? (
+              {isAncientGreeceLandmark ? (
                 <G>
                   <AncientGreekTemple x={region.cx - 26 * (columns >= 3 ? 0.84 : 1)}
                     y={region.cy - (columns >= 3 ? 44 : 51)}
@@ -561,9 +565,9 @@ export default function FantasyMap({
                 <G testID={`atlas-progress-${region.id}`} pointerEvents="none">
                   {/* A soft, dark backing keeps map decorations from running
                       behind the bar. The pale track stays visible at 0%. */}
-                  <Rect x={barX - 5} y={barY - 4}
-                    width={barWidth + 10} height={barHeight + 8} rx={7}
-                    fill="#12232E" opacity={0.64} />
+                  <Rect x={barX - 3} y={barY - 3}
+                    width={barWidth + 6} height={barHeight + 6} rx={6}
+                    fill="#12232E" opacity={0.46} />
                   <Rect testID={`atlas-progress-track-${region.id}`}
                     x={barX} y={barY} width={barWidth} height={barHeight}
                     rx={barHeight / 2} fill="#65717E" fillOpacity={0.76}
@@ -573,7 +577,7 @@ export default function FantasyMap({
                       <Rect x={barX - 2} y={barY - 2}
                         width={fillWidth + 4} height={barHeight + 4}
                         rx={barHeight / 2 + 2}
-                        fill={isComplete ? "#F5D58E" : "#C0B1FF"} opacity={0.2} />
+                        fill={isComplete ? "#F5D58E" : "#C0B1FF"} opacity={0.16} />
                       <Rect testID={`atlas-progress-fill-${region.id}`}
                         x={barX} y={barY} width={fillWidth}
                         height={barHeight} rx={barHeight / 2}
