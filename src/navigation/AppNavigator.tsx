@@ -266,7 +266,6 @@ export default function AppNavigator() {
           featuredLesson={discovery.featured}
           progressLoaded={app.progressLoaded}
           completedCount={app.completedLessonIds.length}
-          savedCount={bookmarks.savedLessonIds.length}
           inProgressLesson={inProgressLesson}
           inProgressAnsweredCount={app.inProgressAnsweredCount}
           inProgressQuestionCount={app.inProgressQuestionCount}
