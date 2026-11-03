@@ -44,6 +44,19 @@ const reviewedMultiLicences=new Map([
   ["File:NAMA Machine d'Anticythère 2.jpg","CC BY-SA 3.0","CC BY 2.5"],
   ["File:NAMA Machine d'Anticythère 5.jpg","CC BY-SA 3.0","CC BY 2.5"],
 ].map(([title,appLicence,apiLicence])=>[norm(title),{appLicence,apiLicence}]));
+// The original rights-holding Penn Museum OPenn repository explicitly licenses
+// ALL its hosted images as CC BY-SA 2.0. This item belongs to collection 0016.
+// The Commons page has a conflicting 4.0 licence box (also an item-level typo).
+// The mismatch is documented but NOT rights-release clearance; the separate
+// UPSTREAM_PENN_RIGHTS_CONFLICT_REVIEW flag intentionally remains.
+const institutionalSourceGrant = {
+  title: norm("File:P.Penn. Museum inv. E02748 Euclid's Elements 2.5.jpg"),
+  appLicence: "CC BY-SA 2.0",
+  apiLicence: "CC BY-SA 4.0",
+  institution: "University of Pennsylvania Museum of Archaeology and Anthropology",
+  collectionLicenceUrl: "https://openn.library.upenn.edu/html/0016.html",
+  licenceUrl: "https://creativecommons.org/licenses/by-sa/2.0/"
+};
 const titles=[...new Set(rows.map(r=>titleFromPage(r.sourcePage)).filter(Boolean))];
 const batchSize=10;
 const batches=[];
@@ -136,6 +149,10 @@ async function main(){
         const alternative=reviewedMultiLicences.get(norm(title));
         if(alternative && alternative.appLicence===expected && alternative.apiLicence===label){
           reviewBasis="ALTERNATE_LICENCE_CONFIRMED_ON_FILE_PAGE_2026-11-03";
+        }else if(norm(title)===institutionalSourceGrant.title &&
+                 expected===institutionalSourceGrant.appLicence &&
+                 label===institutionalSourceGrant.apiLicence){
+          reviewBasis="ORIGINAL_PENN_COLLECTION_GRANT_2_0_DOCUMENTED_2026-11-03";
         }else{
           flags.push("LICENCE_LABEL_DIFFERENCE");
         }
@@ -172,6 +189,8 @@ async function main(){
     console.log("Results: "+JSON.stringify(stats)+"; all statuses remain UNVERIFIED.");
     for(const r of reviewed.filter(r=>r.reviewBasis.startsWith("ALTERNATE_LICENCE_")))
       console.log("  MULTI-LICENCE "+r.lesson+"/"+r.placement+": app "+r.declaredLicence+"; API "+r.commonsLicence+"; original file page offers both");
+    for(const r of reviewed.filter(r=>r.reviewBasis.startsWith("ORIGINAL_PENN_COLLECTION_")))
+      console.log("  PENN ORIGINAL GRANT "+r.lesson+"/"+r.placement+": original OPenn collection "+r.declaredLicence+"; Commons API "+r.commonsLicence+"; still needs manual review");
     for(const r of reviewed.filter(r=>r.flags))
       console.log("  "+r.lesson+"/"+r.placement+": "+r.declaredLicence+" | Commons: "+(r.commonsLicence||"?")+" | "+r.flags);
     console.log("Full details: rerun with --csv or --json.");
