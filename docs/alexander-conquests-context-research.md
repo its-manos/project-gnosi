@@ -65,3 +65,8 @@
 - After commit: compare actual SHA and check CI separately. Do not change editorial status on unrun tests.
 
 **Next planned only:** Lesson 25 `greek-stage-tragedy`, «Το θέατρο ως δημόσια εμπειρία», Chapter V; not researched or published here.
+
+
+## Phase 2 research-first revision, 2026-11-03
+- New opening/updated `alexander-03`, `alexander-19`, `alexander-20`, `alexander-25`, `alexander-36`, `alexander-40`, `alexander-41`. Compare [near-contemporary 331 Babylonian Astronomical Diary](https://www.livius.org/sources/content/oriental-varia/a-contemporary-account-of-the-battle-of-gaugamela/) with later Arrian/Diodorus; [Babylonian 323 diary](https://www.livius.org/sources/content/oriental-varia/a-contemporary-account-of-the-death-of-alexander/) records death but not poison/diagnosis. The cover photo is of the [Alexander Sarcophagus from Sidon](https://www.posenlibrary.com/entry/alexander-great-sarcophagus), *not* the conqueror's grave. No paywalled source or native image URL check claimed.
+- Quiz v2: nine stable IDs, original numeric fallback `[1,2,0,3,1,2,3,0,1]`; spot/matching/blank/matching/matching/spot/ordering/blank/choice. 42 paragraphs, 9 checkpoints, media and source metadata unchanged. Exact former v1 questions frozen without aliases. [Phase 2 report](ANCIENT-GREECE-PHASE-2-LESSONS-23-24.md). Node/native QA outstanding.
