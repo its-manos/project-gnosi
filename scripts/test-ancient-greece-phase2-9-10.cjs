@@ -17,8 +17,8 @@ const old=require('./fixtures/ancient-greece-pair-9-10-before-phase2-20261103.js
 const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
- 'linear-b-decipherment':{slot:8,paragraphs:21,anchors:[4,8,13,17,21],correct:[2,0,2,0,0],types:['spot-the-mistake','matching','ordering','fill-in-the-blank',null],version:'2'},
- 'palace-collapse':{slot:9,paragraphs:27,anchors:[4,9,14,21,27],correct:[2,0,2,0,3],types:['spot-the-mistake','fill-in-the-blank','matching',null,null],version:'2'}
+ 'linear-b-decipherment':{slot:8,paragraphs:21,anchors:[4,8,13,17,21],correct:[2,0,2,0,0],types:['spot-the-mistake','matching','ordering','fill-in-the-blank','multiple-select'],version:'2'},
+ 'palace-collapse':{slot:9,paragraphs:27,anchors:[4,9,14,21,27],correct:[2,0,2,0,3],types:['spot-the-mistake','fill-in-the-blank','matching','multiple-select',null],version:'2'}
 };
 function properAnswer(q){
  switch(q.type){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===expect.version),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['linear-b-tripod-test','linear-b-limits','palace-pylos-archive','palace-evidence-scales'].includes(q.id)?'3':expect.version)),'correct quiz version');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);

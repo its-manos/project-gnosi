@@ -35,3 +35,13 @@ jobs:
       - run: node scripts/test-ancient-greece-phase2-5-6.cjs
       - run: node scripts/test-greek-intro-redesign.cjs
       - run: node scripts/test-greek-geography-lesson.cjs
+      - run: node scripts/test-ancient-greece-chapter2-questions.cjs
+      - run: node scripts/test-ancient-greece-phase2-7-8.cjs
+      - run: node scripts/test-ancient-greece-phase2-9-10.cjs
+      - run: node scripts/test-ancient-greece-phase2-11-12.cjs
+      - run: node scripts/test-aegean-bronze-age.cjs
+      - run: node scripts/test-minoan-crete.cjs
+      - run: node scripts/test-mycenaean-palaces.cjs
+      - run: node scripts/test-linear-b-decipherment.cjs
+      - run: node scripts/test-palace-collapse.cjs
+      - run: node scripts/test-geometric-greece.cjs

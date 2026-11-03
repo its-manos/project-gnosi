@@ -18,7 +18,7 @@ const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
  'greek-geography-seas':{slot:4,paragraphs:18,anchors:[4,9,13,17],correct:[2,1,3,0],types:['ordering','spot-the-mistake','matching','multiple-select'],version:'3'},
- 'aegean-bronze-age':{slot:5,paragraphs:19,anchors:[5,10,15,18],correct:[2,1,0,0],types:['spot-the-mistake','matching',null,'fill-in-the-blank'],version:'2'}
+ 'aegean-bronze-age':{slot:5,paragraphs:19,anchors:[5,10,15,18],correct:[2,1,0,0],types:['spot-the-mistake','matching','multiple-select','fill-in-the-blank'],version:'2'}
 };
 function properAnswer(q){
  switch(q.type){
@@ -47,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===(q.id==='aegean-geography-not-destiny'?'4':expect.version)),'explicit v4 on geography multi-select; stable prior revisions');
+ assert.ok(l.questions.every(q=>q.version===(q.id==='aegean-geography-not-destiny'?'4':q.id==='bronze-exchange-proof'?'3':expect.version)),'explicit v4 on geography multi-select; stable prior revisions');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);

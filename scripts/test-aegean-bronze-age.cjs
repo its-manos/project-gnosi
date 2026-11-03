@@ -14,7 +14,7 @@ assert.equal(new Set(paragraphs.map(p=>p.id)).size,19);
 assert.deepEqual(progress.getQuestionPlacements(lesson).map(x=>x.afterParagraphNumber),[5,10,15,18]);
 assert.deepEqual(lesson.checkpoints.map(c=>c.questionId),lesson.questions.map(q=>q.id));
 assert.deepEqual(inlineArticleMedia[lesson.id].map(x=>x.afterParagraphId),['spindle-evidence','lerna-seals']);
-assert.ok(lesson.questions.every(q=>q.id&&q.version==='1'&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>35));
+assert.ok(lesson.questions.every(q=>q.id&&q.version===(q.id==='bronze-exchange-proof'?'3':'2')&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>35));
 const [a,b,c,d]=lesson.questions.map(q=>q.correctIndex);
 assert.equal(progress.getVisibleParagraphLimit(lesson,{}),5);
 assert.equal(progress.getVisibleParagraphLimit(lesson,{0:a}),10);
