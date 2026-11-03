@@ -91,8 +91,26 @@ const artFrame = nodes(artTree).find(node => node.props?.testID === "knowledge-w
 const artNode = nodes(artFrame).find(node => node.props?.testID === "history-midnight-atlas-art");
 assert.ok(artNode, "locally bundled art is placed behind the existing interactive SVG");
 assert.equal(artNode.props.source, artAsset);
-assert.equal(artNode.props.resizeMode, "cover");
+assert.equal(artNode.props.resizeMode, "stretch",
+  "show the whole Midnight Atlas instead of cropping its top and bottom on shorter screens");
 assert.equal(artNode.props.pointerEvents, "none");
+// Bespoke destinations follow the painted islands as the available map height
+// changes; the artwork and interactive SVG share the same full-size frame.
+for (const height of [380, 540, 720]) {
+  const responsiveArt = map({ ...props, minHeight: height, backgroundImage: artAsset });
+  const responsiveFrame = nodes(responsiveArt).find(node => node.props?.testID === "knowledge-world-map");
+  assert.equal(responsiveFrame.props.style[2].aspectRatio, 360 / height);
+  const ancientBar = nodes(responsiveFrame).find(node => node.props?.testID === "atlas-progress-track-ancient");
+  const worldBar = nodes(responsiveFrame).find(node => node.props?.testID === "atlas-progress-track-world");
+  const mythTitle = nodes(responsiveFrame).find(node => node.type === "text" && node.props?.children === "Μυθολογία");
+  assert.ok(ancientBar && worldBar && mythTitle, "destinations remain readable over the art");
+  assert.ok(Math.abs(ancientBar.props.y - (height * 0.35 + 23)) < 0.1,
+    "Ancient Greece remains aligned with the upper-left painted island");
+  assert.ok(Math.abs(worldBar.props.y - (height * 0.35 + 30)) < 0.1,
+    "World History remains aligned with the upper-right painted island");
+  assert.ok(Math.abs(mythTitle.props.y - (height * 0.665 - 3)) < 0.1,
+    "Mythology remains aligned with the lower painted island");
+}
 assert.equal(nodes(artFrame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 3,
   "all atlas tap targets survive background mode");
 assert.equal(nodes(artTree).filter(node => node.type === "path" &&
