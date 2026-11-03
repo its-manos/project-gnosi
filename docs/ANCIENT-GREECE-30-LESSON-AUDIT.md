@@ -125,6 +125,17 @@ Source pages for current priorities:
 - [Euclid papyrus — Commons](https://commons.wikimedia.org/wiki/File:P.Penn._Museum_inv._E02748_Euclid%27s_Elements_2.5.jpg) and [institutional OPenn catalogue](https://openn.library.upenn.edu/Data/0016/html/e2748.html)
 - [Creative Commons BY-SA 4.0 requirements](https://creativecommons.org/licenses/by-sa/4.0/deed.en) and [attribution FAQ](https://creativecommons.org/faq/)
 
+## Image-rights ledger (generated, initially all **UNVERIFIED**)
+
+Use the read-only `scripts/audit-ancient-greece-image-rights.cjs` helper to export **all 88 placements**, including exact lesson and paragraph anchor, caption, image request URL, credited Commons page, current in-app credit, and a **declared** licence label:
+
+```bash
+node scripts/audit-ancient-greece-image-rights.cjs
+node scripts/audit-ancient-greece-image-rights.cjs --csv > /tmp/gnosi-ancient-greece-image-rights.csv
+```
+
+The resulting CSV has blank reviewer and device-result fields. **Do not mark cleared** simply because the source page exists, the app declares CC, or the thumbnail loads. Confirm original licence and upstream grant, creator/credit, appropriate commercial reuse, ShareAlike/adaptation terms, and Android/iPhone caption/zoom/attribution. The two high-risk entries are flagged. This script was syntax-checked **but not executed with installed modules** in the connector environment.
+
 ## Actual-device acceptance matrix
 
 **Global protocol:** record branch commit/build channel, OS/device versions, guest versus signed-in, network, screenshots/recording, test date and linked bug. Development-unlocked lessons are acceptable for visual QA **but cannot prove normal sequential unlock rules**.
