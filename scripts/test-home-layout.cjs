@@ -92,6 +92,10 @@ const worldArtwork = {
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
+  "../components/HomeMotion": {
+    MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
+    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "View",
+  },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
   "../hooks/useAthensDate": { useAthensDate: () => "2026-11-03" },
