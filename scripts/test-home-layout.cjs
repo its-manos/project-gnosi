@@ -107,6 +107,13 @@ const centeredGrid = nodes(tree).find(node => node.props?.style?.flexWrap === "w
   && node.props?.style?.justifyContent === "center");
 assert.ok(centeredGrid, "knowledge worlds are centered with equal grid gaps");
 assert.equal(centeredGrid.props.style.columnGap, 8);
+const firstWorld = nodes(tree).find(node => node.props?.testID === "home-category-history");
+const cardPercent = Number.parseFloat(firstWorld.props.style({ pressed: false })[0].width) / 100;
+for (const phoneWidth of [320, 360, 393]) {
+  const available = phoneWidth - 32;
+  assert.ok(4 * available * cardPercent + 3 * 8 <= available,
+    "four-column grid must fit at " + phoneWidth + "pt");
+}
 const primaryButton = nodes(tree).find(node => node.props?.style?.minHeight === 44
   && node.props?.style?.backgroundColor === "#A89BFF");
 assert.ok(primaryButton, "primary CTA retains a 44-point tap area");
