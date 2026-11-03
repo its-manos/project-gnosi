@@ -5,6 +5,14 @@
 **Audit work branch:** `audit/ancient-greece-curriculum-30`  
 **Editorial state:** **30 Integrated, 0 Validated, 0 Approved.** No production content, quiz keys, XP, history, account sync or media entries were changed to open this audit. Do not merge to `main` without explicit authorization.
 
+## Substantive chapter-review reports
+
+- [Chapter I — Lessons 1–5: historical spot-checks, actual question formats, repetition and image context](ANCIENT-GREECE-AUDIT-CHAPTER-I.md). Review recorded, **no approvals or content mutations**.
+- [Chapter II — Lessons 6–11: Bronze Age, Mycenaean archives, writing, collapse and postpalatial continuity](ANCIENT-GREECE-AUDIT-CHAPTER-II.md). Review recorded, **no approvals or content mutations**.
+- Chapters III–V (#12–30): **not yet subject to the same independent claim/quiz/semantic pass**, despite prior research-first lesson integration and owner-reported automated tests.
+
+**Progress:** 11/30 lessons have first-pass comparative chapter review; 0/30 independently signed off. Whole-path structural screening completed (30/30). Individual image licences and physical devices remain unverified.
+
 ## Audit rules
 
 1. The authoritative 30-slot order is `src/utils/lessonPath.ts`, not older research-document slot numbering. Chapter divisions: I #1–5; II #6–11; III #12–18; IV #19–24; V #25–30.
