@@ -11,7 +11,7 @@ assert.equal(l.sections.length,6);const ps=l.sections.flatMap(s=>s.paragraphs);a
 assert.deepEqual(ps.map(p=>p.id),Array.from({length:33},(_,i)=>'philip-'+String(i+1).padStart(2,'0')));
 assert.equal(l.questions.length,7);assert.equal(new Set(l.questions.map(q=>q.id)).size,7);
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[2,1,1,3,0,2,3]);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>65));
+assert.ok(l.questions.every(q=>q.version===(['philip-terrain-royal-power','philip-336-open-future'].includes(q.id)?'3':'2')&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>65));
 assert.deepEqual(l.checkpoints.map(c=>c.questionId),l.questions.map(q=>q.id));
 assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber),[4,9,16,21,26,30,33]);
 assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
