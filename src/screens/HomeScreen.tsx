@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   worldCount: { color: colors.textMuted, fontSize: 11 },
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 8, rowGap: 8 },
-  category: { width: "23.3%", minHeight: 78, backgroundColor: colors.surface,
+  category: { width: "22.7%", minHeight: 78, backgroundColor: colors.surface,
     borderColor: colors.border, borderWidth: 1, borderRadius: 14,
     alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 4 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
