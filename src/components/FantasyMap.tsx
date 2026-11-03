@@ -462,7 +462,7 @@ export default function FantasyMap({
               />
 
               {/* Small nearby islets make the landmasses feel like a fantasy atlas. */}
-              {!backgroundImage ? <Circle
+              {!backgroundImage ? <G><Circle
                 cx={region.cx - region.rx * 0.89}
                 cy={region.cy + region.ry * 0.52}
                 r={Math.max(2.1, region.rx * 0.075)}
@@ -479,7 +479,7 @@ export default function FantasyMap({
                 stroke="#CFC9A9"
                 strokeWidth={0.6}
                 strokeOpacity={0.4}
-              /> : null}
+              /></G> : null}
 
               {/* Other islands keep their original mountain motif; the first
                   bespoke landmark is exclusive to Αρχαία Ελλάδα. */}
