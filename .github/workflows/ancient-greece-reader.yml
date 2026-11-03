@@ -27,6 +27,7 @@ jobs:
       - run: node scripts/test-automatic-sync.cjs
       - run: node scripts/test-typed-lesson-integration.cjs
       - run: node scripts/test-typed-lesson-audio.cjs
+      - run: node scripts/test-play-audio.cjs
       - run: node scripts/test-answer-sound-route.cjs
       - run: npm run test:question-types
       - run: node scripts/test-ancient-greece-chapter1-questions.cjs

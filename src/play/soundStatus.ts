@@ -11,7 +11,7 @@ export const subscribeSoundPreview = (fn: () => void) => { previews.add(fn); ret
 
 /** Non-scoring practice cues share the existing guarded native audio player.
  * This is intentionally separate from rewarded events: no XP, toast or sync. */
-export type PracticeCueKind = "correct" | "incorrect" | "complete";
+export type PracticeCueKind = "correct" | "incorrect" | "complete" | "question-open";
 const practiceCues = new Set<(kind: PracticeCueKind) => void>();
 export function requestPracticeCue(kind: PracticeCueKind) {
   for (const listener of practiceCues) { try { listener(kind); } catch { /* Sound never blocks gameplay. */ } }

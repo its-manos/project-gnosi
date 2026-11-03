@@ -8,6 +8,7 @@ const sources = {
   correct: require("../../assets/sounds/correct.wav"), incorrect: require("../../assets/sounds/incorrect.wav"),
   complete: require("../../assets/sounds/complete.wav"), mastered: require("../../assets/sounds/mastered.wav"),
   "level-up": require("../../assets/sounds/level-up.wav"),
+  "question-open": require("../../assets/sounds/question-open.wav"),
 };
 /** One foreground cue at a time. Native status, rather than a 250 ms seek,
  * controls readiness. Packaged resources load directly on Android and iOS. */
@@ -49,7 +50,7 @@ export class FeedbackAudio {
         // burst of all five effects on launch on real devices.
         const player = createAudioPlayer(android ? null : sources[kind], { downloadFirst: false, keepAudioSessionActive: false });
         if (android) { player.muted = true; player.volume = 0; }
-        else player.volume = kind === "incorrect" ? .45 : .65;
+        else player.volume = kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
         player.loop = false;
         this.players.set(kind, player);
         if (player.isLoaded) this.preparedKinds.add(kind);
@@ -108,7 +109,7 @@ export class FeedbackAudio {
     void player.seekTo(0).then(() => {
       if (!this.alive || this.players.get(kind) !== player) return;
       this.priming.set(kind, "unmuting");
-      player.volume = kind === "incorrect" ? .45 : .65;
+      player.volume = kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
       player.muted = false;
       // The native unmute status callback marks the player primed and releases
       // the queued answer. Do not start the real cue while still muted.
