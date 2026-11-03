@@ -1,19 +1,17 @@
-import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
-import KnowledgeMastery from "../components/KnowledgeMastery";
 import { useMemo } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { type Category, type Lesson, type Subcategory } from "../data/lessons";
-import FantasyMap from "../components/FantasyMap";
-import ReadingPick from "../components/ReadingPick";
+import type { Category, Lesson } from "../data/lessons";
+import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
+import { useAthensDate } from "../hooks/useAthensDate";
+import { useDailySnapshot } from "../state/LearningSession";
+import { dailyHistory } from "../utils/dailySyncDocument";
+import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
 
 type Props = {
-  onKnowledgeReview?: () => void;
   categories: Category[];
-  subcategories: Subcategory[];
   featuredLesson: Lesson | null;
-  suggestedLessons: Lesson[];
   progressLoaded: boolean;
   completedCount: number;
   savedCount: number;
@@ -23,130 +21,197 @@ type Props = {
   onResumeLesson: (lessonId: string) => void;
   onOpenCategory: (categoryId: string) => void;
   onOpenLesson: (lessonId: string) => void;
-  onOpenSaved: () => void;
-  onOpenSearch: () => void;
   onStartDailyChallenge: () => void;
-  onOpenDailyPreferences: () => void;
-  onWeeklyReview?: () => void;
+  onKnowledgeReview?: () => void;
   onOpenProfile?: () => void;
 };
 
+const shortLabels: Record<string, string> = {
+  history: "Ιστορία",
+  science: "Επιστήμη",
+  nature: "Φύση",
+  technology: "Τεχνολογία",
+  culture: "Τέχνες",
+  geography: "Γεωγραφία",
+  "difficult-history": "Δύσκολη ιστορία",
+};
+
 export default function HomeScreen({
-  onKnowledgeReview, categories, featuredLesson, suggestedLessons, progressLoaded, completedCount, savedCount,
-  inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount, onResumeLesson,
-  onOpenCategory, onOpenLesson, onOpenSearch, onStartDailyChallenge, onOpenDailyPreferences, onOpenProfile,
+  categories, featuredLesson, progressLoaded, completedCount, savedCount,
+  inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
+  onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
+  onKnowledgeReview, onOpenProfile,
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
-  const xpFraction = profileReady ? Math.min(1, Math.max(0, profile.earned / profile.required)) : 0;
-  const ringLength = 2 * Math.PI * 28;
-  const mapRegions = useMemo(() => categories.map((category) => ({
-    id: category.id, title: category.title, emoji: category.emoji,
-  })), [categories]);
-  const resumeProgress = inProgressQuestionCount > 0
-    ? Math.min(100, Math.max(0, inProgressAnsweredCount / inProgressQuestionCount * 100)) : 0;
+  const daily = useDailySnapshot();
+  const today = useAthensDate();
+  // This existing metric counts completed daily quizzes, not app logins.
+  // A separate login streak requires account-scoped, synchronised visit records.
+  const quizStreak = useMemo(
+    () => calculateDailyChallengeProgress(dailyHistory(daily.doc), today).currentStreak,
+    [daily.doc, today],
+  );
+  const todayCompleted = daily.doc.days[today]?.record.completed === true;
+  const fraction = profileReady ? Math.max(0, Math.min(1, profile.earned / Math.max(1, profile.required))) : 0;
+  const ringLength = 2 * Math.PI * 21;
+  const hero = inProgressLesson ?? (progressLoaded ? featuredLesson : null);
+  const heroIsResume = Boolean(inProgressLesson);
+  const progress = inProgressQuestionCount > 0
+    ? Math.max(0, Math.min(100, inProgressAnsweredCount / inProgressQuestionCount * 100))
+    : 0;
+
+  const startHero = () => {
+    if (inProgressLesson) onResumeLesson(inProgressLesson.id);
+    else if (hero) onOpenLesson(hero.id);
+    else if (categories[0]) onOpenCategory(categories[0].id);
+  };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView testID="home-game-dashboard" style={styles.viewport}
+      contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
-        {onOpenProfile ? <Pressable testID="home-level-profile" style={styles.levelBadge} onPress={onOpenProfile}
-          accessibilityRole="button" accessibilityLabel={profileReady ? `Το προφίλ μου. Επίπεδο ${profile.level}. ${profile.earned} από ${profile.required} XP για το επόμενο επίπεδο.` : "Το προφίλ μου. Φόρτωση επιπέδου."}
-          accessibilityHint="Άνοιξε το προφίλ σου" hitSlop={4}>
-          <Svg width={64} height={64} viewBox="0 0 64 64" style={styles.levelRing} accessible={false} pointerEvents="none">
-            <Circle cx={32} cy={32} r={28} fill="none" stroke={colors.borderStrong} strokeWidth={3.5} />
-            {xpFraction > 0 ? <Circle testID="home-xp-ring" cx={32} cy={32} r={28} fill="none" stroke={colors.accentLight} strokeWidth={3.5}
-              strokeLinecap="round" strokeDasharray={`${ringLength * xpFraction} ${ringLength}`} rotation={-90} origin="32, 32" /> : null}
-          </Svg>
-          <View pointerEvents="none" style={styles.levelCenter}>
-            <Text style={styles.levelCaption} maxFontSizeMultiplier={1.3}>ΕΠ.</Text>
-            <Text testID="home-level" style={styles.levelNumber} numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.3}>{profileReady ? profile.level : "—"}</Text>
+        <View style={styles.headerStats}>
+          <View testID="home-quiz-streak" style={styles.streak} accessible
+            accessibilityLabel={daily.ready ? String(quizStreak) + " συνεχόμενες ημέρες ολοκληρωμένου καθημερινού quiz" : "Φόρτωση σερί καθημερινού quiz"}>
+            <Text style={styles.flame}>🔥</Text>
+            <View>
+              <Text style={styles.streakCount}>{daily.ready ? quizStreak : "—"}</Text>
+              <Text style={styles.streakLabel}>σερί quiz</Text>
+            </View>
           </View>
-        </Pressable> : null}
-      </View>
-
-      <View style={styles.intro}>
-        <Text style={styles.title}>Πού θα ταξιδέψεις;</Text>
-      </View>
-
-      <View testID="home-exploration" style={styles.exploration}>
-        <FantasyMap overview regions={mapRegions} onSelectRegion={onOpenCategory}
-          emptyMessage="Οι πρώτοι κόσμοι γνώσης θα εμφανιστούν εδώ." />
-      </View>
-
-      <View testID="home-secondary-content" style={styles.secondary}>
-        {inProgressLesson ? (
-          <Pressable style={styles.resumeCard} onPress={() => onResumeLesson(inProgressLesson.id)}
-            accessibilityRole="button" accessibilityLabel={`Συνέχισε το μάθημα ${inProgressLesson.title}`}>
-            <Text style={styles.eyebrow}>ΣΥΝΕΧΙΣΕ ΤΟ ΜΑΘΗΜΑ</Text>
-            <Text style={styles.cardTitle}>{inProgressLesson.title}</Text>
-            <Text style={styles.meta}>{inProgressAnsweredCount} από {inProgressQuestionCount} ερωτήσεις · Συνέχεια →</Text>
-            <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${resumeProgress}%` }]} /></View>
-          </Pressable>
-        ) : null}
-
-        <View style={styles.dailyCard}>
-          <Pressable style={styles.dailyMain} onPress={onStartDailyChallenge} accessibilityRole="button"
-            accessibilityLabel="Ξεκίνα την καθημερινή πρόκληση με επτά ερωτήσεις">
-            <Text style={styles.dailyGlyph}>✦</Text>
-            <View style={styles.dailyCopy}><Text style={styles.eyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
-              <Text style={styles.cardTitle}>7 ερωτήσεις γνώσεων</Text><Text style={styles.meta}>Νέα πρόκληση κάθε μέρα</Text></View>
-            <Text style={styles.arrow}>→</Text>
-          </Pressable>
-          <Pressable onPress={onOpenDailyPreferences} style={styles.preferences} accessibilityRole="button"
-            accessibilityLabel="Ρύθμιση ενδιαφερόντων για προτάσεις μαθημάτων">
-            <Text style={styles.preferencesText}>Τα ενδιαφέροντά σου →</Text>
-          </Pressable>
+          {onOpenProfile ? <Pressable testID="home-level-profile" style={styles.levelBadge}
+            onPress={onOpenProfile} accessibilityRole="button"
+            accessibilityLabel={profileReady ? "Το προφίλ μου. Επίπεδο " + profile.level + ". " + profile.earned + " από " + profile.required + " XP για το επόμενο επίπεδο." : "Το προφίλ μου. Φόρτωση επιπέδου."}>
+            <Svg width={50} height={50} viewBox="0 0 50 50" style={styles.levelRing} accessible={false} pointerEvents="none">
+              <Circle cx={25} cy={25} r={21} fill="none" stroke={colors.borderStrong} strokeWidth={3.5} />
+              {fraction > 0 ? <Circle testID="home-xp-ring" cx={25} cy={25} r={21}
+                fill="none" stroke={colors.accentLight} strokeWidth={3.5} strokeLinecap="round"
+                strokeDasharray={String(ringLength * fraction) + " " + String(ringLength)}
+                rotation={-90} origin="25, 25" /> : null}
+            </Svg>
+            <View pointerEvents="none" style={styles.levelCenter}>
+              <Text style={styles.levelCaption}>ΕΠ.</Text>
+              <Text testID="home-level" style={styles.levelNumber} numberOfLines={1}
+                adjustsFontSizeToFit>{profileReady ? profile.level : "—"}</Text>
+            </View>
+          </Pressable> : null}
         </View>
-
-        {onKnowledgeReview ? <KnowledgeMastery compact onOpen={onKnowledgeReview} /> : null}
-        <Text style={styles.sectionTitle}>Μια μικρή ανακάλυψη</Text>
-        {!progressLoaded ? <ActivityIndicator color={colors.accentLight} accessibilityLabel="Φόρτωση προτάσεων ανάγνωσης" />
-          : featuredLesson ? <ReadingPick lesson={featuredLesson} label="Η ΑΝΑΚΑΛΥΨΗ ΤΗΣ ΗΜΕΡΑΣ" featured onPress={() => onOpenLesson(featuredLesson.id)} />
-          : <View style={styles.emptyCard}><Text style={styles.cardTitle}>Διάλεξε την επόμενη διαδρομή σου</Text>
-            <Text style={styles.meta}>Εξερεύνησε τις θεματικές ή ξαναδιάβασε ένα αγαπημένο άρθρο.</Text>
-            <Pressable onPress={onOpenSearch} style={styles.browseButton} accessibilityRole="button"><Text style={styles.preferencesText}>Όλα τα άρθρα →</Text></Pressable>
-          </View>}
-
-        {progressLoaded && suggestedLessons.length > 0 ? <View>
-          <Text style={styles.sectionTitle}>Και μια άλλη οπτική</Text>
-          {suggestedLessons.map((lesson) => <ReadingPick key={lesson.id} lesson={lesson} label="ΜΙΑ ΑΚΟΜΗ ΑΝΑΚΑΛΥΨΗ" onPress={() => onOpenLesson(lesson.id)} />)}
-        </View> : null}
-
-        <Text style={styles.footer}>{completedCount} ολοκληρωμένα · {savedCount} αποθηκευμένα</Text>
       </View>
+
+      <Pressable testID="home-primary-action" style={({ pressed }) => [styles.hero, pressed && styles.pressed]}
+        onPress={startHero} disabled={!progressLoaded}
+        accessibilityRole="button"
+        accessibilityLabel={hero
+          ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
+          : "Εξερεύνησε τους κόσμους γνώσης"}>
+        <View style={styles.heroTop}>
+          <Text style={styles.eyebrow}>{heroIsResume ? "Η ΠΟΡΕΙΑ ΣΟΥ" : "Η ΕΠΟΜΕΝΗ ΑΠΟΣΤΟΛΗ"}</Text>
+          <Text style={styles.heroCount}>{completedCount} ολοκληρωμένα</Text>
+        </View>
+        <Text style={styles.heroTitle} numberOfLines={2}>
+          {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
+        </Text>
+        <Text style={styles.heroDescription} numberOfLines={1}>
+          {heroIsResume ? String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"
+            : hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
+        </Text>
+        {heroIsResume && inProgressQuestionCount > 0 ?
+          <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]} /></View>
+          : null}
+        <View style={styles.heroButton}>
+          <Text style={styles.heroButtonLabel}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
+          <Text style={styles.heroButtonLabel}>→</Text>
+        </View>
+      </Pressable>
+
+      <View style={styles.actions}>
+        <Pressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, pressed && styles.pressed]}
+          accessibilityRole="button" accessibilityLabel="Καθημερινό quiz, 7 ερωτήσεις"
+          onPress={onStartDailyChallenge}>
+          <Text style={styles.actionIcon}>✦</Text>
+          <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
+          <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : "7 ερωτήσεις"}</Text>
+        </Pressable>
+        <Pressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, pressed && styles.pressed]}
+          accessibilityRole="button" accessibilityLabel="Επανάληψη γνώσεων"
+          onPress={onKnowledgeReview} disabled={!onKnowledgeReview}>
+          <Text style={[styles.actionIcon, styles.reviewIcon]}>◎</Text>
+          <Text style={styles.actionTitle}>Επανάληψη</Text>
+          <Text style={styles.actionMeta}>Εξάσκησε τις γνώσεις σου</Text>
+        </Pressable>
+      </View>
+
+      <View testID="home-exploration" style={styles.worlds}>
+        <View style={styles.sectionRow}>
+          <Text style={styles.sectionTitle}>Κόσμοι γνώσης</Text>
+          <Text style={styles.worldCount}>{categories.length} κόσμοι</Text>
+        </View>
+        <View style={styles.categoryGrid}>
+          {categories.map(category =>
+            <Pressable key={category.id} testID={"home-category-" + category.id}
+              accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
+              onPress={() => onOpenCategory(category.id)}
+              style={({ pressed }) => [styles.category, pressed && styles.pressed]}>
+              <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+              <Text style={styles.categoryLabel} numberOfLines={2} adjustsFontSizeToFit>
+                {shortLabels[category.id] ?? category.title}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+      <Text style={styles.footer}>{savedCount} αποθηκευμένα · Οι κόσμοι μεγαλώνουν με κάθε μάθημα</Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 36, width: "100%", maxWidth: 680, alignSelf: "center" },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 },
-  logo: { color: colors.accentLight, fontSize: 22, lineHeight: 30, fontWeight: "900", letterSpacing: 3, flexShrink: 1 },
-  levelBadge: { width: 64, height: 64, alignItems: "center", justifyContent: "center", borderRadius: 32, backgroundColor: colors.surface },
+  viewport: { flex: 1 },
+  content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
+    paddingTop: 4, paddingBottom: 18, gap: 12, flexGrow: 1 },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 54 },
+  logo: { color: colors.accentLight, fontSize: 22, lineHeight: 29, fontWeight: "900", letterSpacing: 3 },
+  headerStats: { flexDirection: "row", alignItems: "center", gap: 12 },
+  streak: { flexDirection: "row", alignItems: "center", gap: 4 },
+  flame: { fontSize: 19 },
+  streakCount: { color: colors.text, fontSize: 17, fontWeight: "900", lineHeight: 20 },
+  streakLabel: { color: colors.textMuted, fontSize: 9, lineHeight: 12 },
+  levelBadge: { width: 50, height: 50, alignItems: "center", justifyContent: "center", borderRadius: 25, backgroundColor: colors.surface },
   levelRing: { position: "absolute", top: 0, left: 0 },
-  levelCenter: { width: 46, alignItems: "center", justifyContent: "center" },
-  levelCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 12, fontWeight: "800", letterSpacing: 1 },
-  levelNumber: { color: colors.accentLight, fontSize: 22, lineHeight: 28, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  intro: { gap: 4, marginBottom: 8 },
-  title: { color: colors.text, fontSize: 25, lineHeight: 32, fontWeight: "700", letterSpacing: -0.4 },
-  subtitle: { color: colors.textMuted, fontSize: 12, lineHeight: 20 },
-  exploration: { marginBottom: 8 },
-  secondary: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 20 },
-  resumeCard: { borderWidth: 1, borderColor: "#514B6A", borderRadius: 18, backgroundColor: colors.surface, padding: 18, gap: 8, marginBottom: 16 },
-  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 16, fontWeight: "800", letterSpacing: 0.7 },
-  cardTitle: { color: colors.text, fontSize: 17, lineHeight: 25, fontWeight: "700" },
-  meta: { color: colors.textMuted, fontSize: 12, lineHeight: 20 },
-  progressTrack: { height: 4, borderRadius: 3, backgroundColor: colors.border, marginTop: 3 },
-  progressFill: { height: "100%", borderRadius: 3, backgroundColor: colors.success },
-  dailyCard: { backgroundColor: "#202431", borderWidth: 1, borderColor: colors.border, borderRadius: 18, overflow: "hidden", marginBottom: 8 },
-  dailyMain: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
-  dailyGlyph: { color: colors.accentLight, fontSize: 28 },
-  dailyCopy: { flex: 1, gap: 4 },
-  arrow: { color: colors.accentLight, fontSize: 24 },
-  preferences: { minHeight: 44, justifyContent: "center", paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.border },
-  preferencesText: { color: colors.accentLight, fontSize: 13, lineHeight: 21, fontWeight: "600" },
-  sectionTitle: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "700", marginTop: 18, marginBottom: 14 },
-  emptyCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 18, gap: 10 },
-  browseButton: { minHeight: 44, justifyContent: "center" },
-  footer: { color: colors.textMuted, fontSize: 12, lineHeight: 20, textAlign: "center", marginTop: 18 },
+  levelCenter: { alignItems: "center", justifyContent: "center" },
+  levelCaption: { color: colors.textMuted, fontSize: 7, lineHeight: 9, fontWeight: "900" },
+  levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 22, fontWeight: "900" },
+  hero: { padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#514B6A", backgroundColor: "#1B2032", gap: 7 },
+  heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 14, fontWeight: "900", letterSpacing: 0.8 },
+  heroCount: { color: colors.textMuted, fontSize: 10 },
+  heroTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "800" },
+  heroDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
+  track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden" },
+  trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.success },
+  heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 8, backgroundColor: colors.accent, borderRadius: 10, minHeight: 37, marginTop: 3 },
+  heroButtonLabel: { color: "#111421", fontSize: 13, fontWeight: "900" },
+  actions: { flexDirection: "row", gap: 10 },
+  actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 105,
+    padding: 13, justifyContent: "center", gap: 5 },
+  quizCard: { backgroundColor: "#242039", borderColor: "#3B3454" },
+  reviewCard: { backgroundColor: "#19332E", borderColor: "#30554B" },
+  actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
+  reviewIcon: { color: "#6CE0B6" },
+  actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
+  actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
+  worlds: { gap: 10 },
+  sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  sectionTitle: { color: colors.text, fontSize: 17, lineHeight: 23, fontWeight: "800" },
+  worldCount: { color: colors.textMuted, fontSize: 11 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 6 },
+  category: { width: "23.3%", minHeight: 78, backgroundColor: colors.surface,
+    borderColor: colors.border, borderWidth: 1, borderRadius: 13,
+    alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 5 },
+  categoryEmoji: { fontSize: 23, lineHeight: 29 },
+  categoryLabel: { color: colors.textBody, fontSize: 10, lineHeight: 13, textAlign: "center", fontWeight: "700" },
+  footer: { color: colors.textMuted, fontSize: 10, lineHeight: 15, textAlign: "center", marginTop: "auto" },
+  pressed: { opacity: 0.76 },
 });
