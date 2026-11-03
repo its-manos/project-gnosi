@@ -1,6 +1,6 @@
 import Svg, { Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 
-type Props = { size?: number };
+type Props = { size?: number; displayScale?: number };
 
 /**
  * A miniature architectural engraving for the whole History knowledge world.
@@ -10,10 +10,11 @@ type Props = { size?: number };
  * Original local vector artwork. Designed for the 32-point Home 2.0 grid;
  * it adds no network requests, asset loading, animation or touch targets.
  */
-export default function HistoryWorldIcon({ size = 32 }: Props) {
+export default function HistoryWorldIcon({ size = 32, displayScale = 1 }: Props) {
   return (
     <Svg testID="home-history-world-illustration" width={size} height={size}
-      viewBox="0 0 52 52" accessible={false} pointerEvents="none">
+      viewBox="0 0 52 52" accessible={false} pointerEvents="none"
+      style={{ transform: [{ scale: displayScale }] }}>
       <Defs>
         <LinearGradient id="history-arch-stone" x1="0%" y1="0%" x2="100%" y2="95%">
           <Stop offset="0%" stopColor="#F0E0C0" />
