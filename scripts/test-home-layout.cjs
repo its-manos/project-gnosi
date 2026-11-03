@@ -15,7 +15,7 @@ const native = {
 };
 const svg = {
   __esModule: true, default: "svg", Circle: "circle", Path: "path",
-  Defs: "defs", G: "g", LinearGradient: "linearGradient",
+  Defs: "defs", G: "g", Ellipse: "ellipse", LinearGradient: "linearGradient",
   Rect: "rect", Stop: "stop", Text: "text",
 };
 let showList = false;
@@ -71,7 +71,9 @@ const lessons = categories.map((category, index) => ({
 const actions = [];
 let profile = { ready: true, profile: { level: 3, earned: 150, required: 600 } };
 let daily = { ready: true, doc: { days: { "2026-11-03": { record: { completed: true } } } } };
+const HistoryWorldIcon = compile("src/components/worldIcons/HistoryWorldIcon.tsx");
 const home = compile("src/screens/HomeScreen.tsx", {
+  "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
   "../hooks/useAthensDate": { useAthensDate: () => "2026-11-03" },
   "../state/LearningSession": { useDailySnapshot: () => daily },
@@ -109,6 +111,25 @@ assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props
 assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("home-category-")).length, 7);
 press("home-category-history");
 assert.equal(actions.at(-1), "category:history");
+// Only History uses the original SVG while the other six cards retain emoji.
+const HistoryCard = nodes(tree).find(node => node.props?.testID === "home-category-history");
+const illustrationNode = nodes(HistoryCard).find(node => node.type === HistoryWorldIcon);
+assert.ok(illustrationNode, "History card uses the original SVG");
+assert.equal(illustrationNode.props.size, 32);
+assert.ok(!nodes(HistoryCard).some(node => node.props?.children === "🏛️"));
+const illustration = HistoryWorldIcon({ size: 32 });
+assert.equal(illustration.type, "svg");
+assert.equal(illustration.props.width, 32);
+assert.equal(illustration.props.height, 32);
+assert.equal(illustration.props.accessible, false);
+assert.equal(illustration.props.pointerEvents, "none");
+assert.ok(nodes(illustration).filter(node => node.type === "path").length >= 15);
+assert.ok(nodes(illustration).filter(node => node.type === "linearGradient").length >= 2);
+for (const category of categories.filter(item => item.id !== "history")) {
+  const card = nodes(tree).find(node => node.props?.testID === "home-category-" + category.id);
+  assert.ok(nodes(card).some(node => node.props?.children === category.emoji),
+    "the six remaining icons are unchanged in this pilot");
+}
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
 assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
 assert.equal(nodes(tree).filter(node => node.props?.accessibilityLabel?.includes("Αναζήτηση")).length, 0);
