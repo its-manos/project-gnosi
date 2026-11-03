@@ -24,7 +24,8 @@ const common = {
   '../play/soundStatus': { requestPracticeCue: kind => openingCues.push(kind) },
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' }, '../state/BetaAnalytics': {useBetaAnalytics: () => ({analytics:{progress:async value => {analyticsScrollEvents.push(value);}}})}, react, './ReportContentButton': { __esModule: true, default: 'ReportContentButton' }, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
-  'react-native-svg': { __esModule: true, default: 'Svg', Path: 'Path' } };
+  'react-native-svg': { __esModule: true, default: 'Svg', Path: 'Path' },
+  'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) } };
 function compile(file, imports = {}) {
   const mod = { exports: {} };
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
