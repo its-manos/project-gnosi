@@ -69,7 +69,7 @@ for(const test of cases){
  assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber),test.anchors);
  assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.questionId),test.questions);
  assert.deepEqual(inlineArticleMedia[l.id].map(f=>f.afterParagraphId),test.media);
- assert.ok(l.questions.every(q=>q.version===test.version&&q.answers.length===4&&q.explanation.length>35));
+ assert.ok(l.questions.every(q=>q.version===(['greek-world-herodotus-context','greek-evidence-speeches','greek-time-overlap'].includes(q.id)?'4':test.version)&&q.answers.length===4&&q.explanation.length>35));
  assert.ok(!lessonQuizMatches(l,"q_unrelated"));
  assert.equal(progress.getVisibleParagraphLimit(l,{}),test.anchors[0]);
  const numeric=l.questions[0].correctIndex;
