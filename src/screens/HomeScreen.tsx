@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import type { Category, Lesson } from "../data/lessons";
@@ -52,6 +52,11 @@ export default function HomeScreen({
   const { height } = useWindowDimensions();
   // Normal-height screens fit all primary actions; smaller screens remain scrollable.
   const compact = height < 790;
+  // Disable dragging entirely when the dashboard fits. Layout measurements
+  // also account for font scaling, safe areas and any contextual status rows.
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1;
   const today = useAthensDate();
   // This existing metric counts completed daily quizzes, not app logins.
   // A separate login streak requires account-scoped, synchronised visit records.
@@ -76,7 +81,16 @@ export default function HomeScreen({
 
   return (
     <ScrollView testID="home-game-dashboard" style={styles.viewport}
-      contentContainerStyle={[styles.content, compact && styles.compactContent]} showsVerticalScrollIndicator={false}>
+      contentContainerStyle={[styles.content, compact && styles.compactContent]}
+      scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false}
+      overScrollMode="never" showsVerticalScrollIndicator={false}
+      onLayout={event => {
+        const nextHeight = event.nativeEvent.layout.height;
+        setViewportHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
+      }}
+      onContentSizeChange={(_width, nextHeight) => {
+        setContentHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
+      }}>
       <View style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.headerStats}>
@@ -196,8 +210,8 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   viewport: { flex: 1 },
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 18, gap: 12, flexGrow: 1 },
-  compactContent: { gap: 9, paddingBottom: 10 },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1 },
+  compactContent: { gap: 9, paddingBottom: 6 },
   compactHero: { padding: 12, gap: 5 },
   compactActionCard: { minHeight: 90, padding: 10 },
   compactCategory: { minHeight: 70 },
