@@ -6,6 +6,10 @@ import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { useAthensDate } from "../hooks/useAthensDate";
 import { useDailySnapshot } from "../state/LearningSession";
 import HistoryWorldIcon from "../components/worldIcons/HistoryWorldIcon";
+import {
+  CultureWorldIcon, DifficultHistoryWorldIcon, GeographyWorldIcon,
+  NatureWorldIcon, ScienceWorldIcon, TechnologyWorldIcon,
+} from "../components/worldIcons/OtherWorldIcons";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
@@ -34,6 +38,18 @@ const shortLabels: Record<string, string> = {
   culture: "Τέχνες",
   geography: "Γεωγραφία",
   "difficult-history": "Δύσκολη ιστορία",
+};
+
+// Locally rendered, purely decorative artwork. All cards retain their
+// existing 32-point layout footprint and 18% visual enlargement.
+const worldIllustrations: Record<string, typeof HistoryWorldIcon> = {
+  history: HistoryWorldIcon,
+  science: ScienceWorldIcon,
+  nature: NatureWorldIcon,
+  technology: TechnologyWorldIcon,
+  culture: CultureWorldIcon,
+  geography: GeographyWorldIcon,
+  "difficult-history": DifficultHistoryWorldIcon,
 };
 
 // Visual previews only. Game routes and persistence arrive in a later phase.
@@ -172,19 +188,22 @@ export default function HomeScreen({
           <Text style={styles.worldCount}>{categories.length} κόσμοι</Text>
         </View>
         <View style={styles.categoryGrid}>
-          {categories.map(category =>
-            <Pressable key={category.id} testID={"home-category-" + category.id}
-              accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
-              onPress={() => onOpenCategory(category.id)}
-              style={({ pressed }) => [styles.category, compact && styles.compactCategory, pressed && styles.pressed]}>
-              {category.id === "history"
-                ? <HistoryWorldIcon size={32} displayScale={1.18} />
-                : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
-              <Text style={styles.categoryLabel} numberOfLines={2} adjustsFontSizeToFit>
-                {shortLabels[category.id] ?? category.title}
-              </Text>
-            </Pressable>
-          )}
+          {categories.map(category => {
+            const WorldIllustration = worldIllustrations[category.id];
+            return (
+              <Pressable key={category.id} testID={"home-category-" + category.id}
+                accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
+                onPress={() => onOpenCategory(category.id)}
+                style={({ pressed }) => [styles.category, compact && styles.compactCategory, pressed && styles.pressed]}>
+                {WorldIllustration
+                  ? <WorldIllustration size={32} displayScale={1.18} />
+                  : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
+                <Text style={styles.categoryLabel} numberOfLines={2} adjustsFontSizeToFit>
+                  {shortLabels[category.id] ?? category.title}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
