@@ -57,7 +57,7 @@ assert.equal(overall.percent, 0);
 
 const jsx = (type, props) => ({ type, props });
 const native = {
-  View: "View", Text: "Text", Pressable: "Pressable",
+  View: "View", Text: "Text", Pressable: "Pressable", Image: "Image",
   StyleSheet: { create: values => values },
 };
 const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
@@ -85,6 +85,22 @@ let tree = map(props);
 let frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
 assert.ok(frame);
 assert.equal(frame.props.style[2].aspectRatio, 360 / 540, "grow map into available screen height");
+const artAsset = 12345;
+const artTree = map({ ...props, backgroundImage: artAsset });
+const artFrame = nodes(artTree).find(node => node.props?.testID === "knowledge-world-map");
+const artNode = nodes(artFrame).find(node => node.props?.testID === "history-midnight-atlas-art");
+assert.ok(artNode, "locally bundled art is placed behind the existing interactive SVG");
+assert.equal(artNode.props.source, artAsset);
+assert.equal(artNode.props.resizeMode, "cover");
+assert.equal(artNode.props.pointerEvents, "none");
+assert.equal(nodes(artFrame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 3,
+  "all atlas tap targets survive background mode");
+assert.equal(nodes(artTree).filter(node => node.type === "path" &&
+  node.props?.strokeDasharray === "2 5").length, 2,
+  "the existing routes remain in the overlay but can be visually suppressed");
+const overviewArt = map({ ...props, overview: true, backgroundImage: artAsset });
+assert.equal(nodes(overviewArt).filter(node => node.props?.testID === "history-midnight-atlas-art").length, 0,
+  "the History-only artwork does not bleed into the home overview map");
 let islands = nodes(tree).filter(node => node.props?.testID?.startsWith("atlas-island-"));
 assert.equal(islands.length, 3);
 // Map view is deliberately minimal: keep the lesson counts in the accessible
