@@ -49,7 +49,7 @@ node scripts/audit-ancient-greece-commons-online.cjs
 node scripts/audit-ancient-greece-commons-online.cjs --csv > /tmp/gnosi-ancient-greece-commons-screen.csv
 ```
 
-The network checker was **syntax-checked**, but a remote GitHub connector does not provide this workstation's outbound Commons access, so it has **not yet run successfully here**. If Commons is blocked, it may flag network failures and exit 1; this is a test limitation, not proof of bad rights. Results should be examined for missing files, short-label mismatches, custom grants and institution conflicts. **An API matching label is not a licence certificate.**
+**Owner run on 2026-11-03:** the live checker completed successfully for **88 unique Commons files**, yielding **81 short-label matches, 5 exact-file multi-licence grants, and 2 human-review flags**. This is metadata screening, not rights clearance. The product owner also reported **PASS on all five Android shared image-viewer first-pass checks** ([manual report](ANCIENT-GREECE-ANDROID-IMAGE-FIRST-PASS.md)); that does **not** certify every individual Android placement and does not cover iPhone. **An API matching label is not a licence certificate.**
 
 ### Human sign-off fields
 
