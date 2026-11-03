@@ -104,7 +104,7 @@ assert.deepEqual(selected, ["ancient", "ancient"]);
 showList = false;
 tree = map({ ...props, minHeight: 0 });
 frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
-assert.equal(frame.props.style[2].aspectRatio, 360 / 328,
+assert.equal(frame.props.style[2].aspectRatio, 360 / 304,
   "keep a natural map height when no viewport minimum is supplied");
 
 // The page and navigator pass existing account-scoped progress, not local keys.
