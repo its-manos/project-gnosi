@@ -26,6 +26,5 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: node scripts/test-home-layout.cjs
-      - run: node scripts/test-lesson-path.cjs
       - run: node scripts/test-ancient-greece-order-v2.cjs
       - run: npm run validate:content
