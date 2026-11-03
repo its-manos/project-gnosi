@@ -22,7 +22,7 @@ assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber
 assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
 assert.equal(progress.getResumeParagraphNumber(l,{0:l.questions[0].correctIndex}),5);
 assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.map((q,i)=>[i,q.correctIndex]))),25);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&Number.isInteger(q.correctIndex)&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>75));
+assert.ok(l.questions.every(q=>q.version===(['persian-ionia-agency','persian-victory-memory'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&Number.isInteger(q.correctIndex)&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>75));
 assert.equal(new Set(l.questions.map(q=>q.id)).size,6);
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[2,3,1,2,0,1]);
 assert.ok(l.sources.length>=16&&l.sources.every(s=>s.url.startsWith('https://')));

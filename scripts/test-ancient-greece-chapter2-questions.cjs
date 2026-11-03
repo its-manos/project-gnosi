@@ -43,7 +43,7 @@ assert.equal(
 );
 assert.equal(
   pathLessons.flatMap(lesson => lesson.questions).filter(question => question.presentation?.type === 'multiple-select').length,
-  6, 'Chapter I (2) plus Chapter II (4)',
+  21, 'Chapters I (2), II (4), III (5), IV (5), V (5)',
 );
 
 for (const [id, editedIds] of Object.entries(expected)) {

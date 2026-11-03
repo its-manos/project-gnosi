@@ -15,7 +15,7 @@ assert.deepEqual(paras.map(p=>p.id),Array.from({length:26},(_,i)=>'sparta-'+Stri
 assert.equal(l.questions.length,6);
 assert.deepEqual(l.checkpoints.map(c=>c.questionId),l.questions.map(q=>q.id));
 assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber),[4,9,13,17,22,26]);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<=3&&q.explanation.length>=65));
+assert.ok(l.questions.every(q=>q.version===(['sparta-perioikoi-property','sparta-women-education'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<=3&&q.explanation.length>=65));
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[1,2,0,0,2,1]);
 assert.equal(new Set(l.questions.map(q=>q.id)).size,6);
 assert.ok(l.sources.length>=11&&l.sources.every(s=>s.url.startsWith('https://')));

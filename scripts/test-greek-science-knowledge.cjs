@@ -20,7 +20,7 @@ assert.ok(p.every(x=>x.text.length>=140));
 assert.equal(l.questions.length,6);
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[0,2,1,3,1,2]);
 assert.equal(new Set(l.questions.map(x=>x.id)).size,6);
-assert.ok(l.questions.every(x=>x.id.startsWith('science-')&&x.version==='2'&&x.difficulty==='hard'
+assert.ok(l.questions.every(x=>x.id.startsWith('science-')&&x.version===(['science-sacred-disease','science-eratosthenes-uncertainty'].includes(x.id)?'3':'2')&&x.difficulty==='hard'
   &&x.conceptIds.length>=2&&x.answers.length===4&&new Set(x.answers).size===4
   &&x.correctIndex>=0&&x.correctIndex<4&&x.explanation.length>=120));
 assert.deepEqual(l.checkpoints.map(x=>x.questionId),l.questions.map(x=>x.id));

@@ -14,7 +14,7 @@ assert.equal(new Set(ids).size,ids.length);
 assert.deepEqual(progress.getQuestionPlacements(l).map(x=>x.afterParagraphNumber),[4,9,14,19,23]);
 assert.deepEqual(l.checkpoints.map(x=>x.questionId),l.questions.map(x=>x.id));
 assert.equal(new Set(l.questions.map(x=>x.id)).size,5);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&!q.id.startsWith('q_')));
+assert.ok(l.questions.every(q=>q.version===(q.id==='polis-zagora-public-work'?'3':'2')&&q.answers.length===4&&q.correctIndex>=0&&q.correctIndex<4&&!q.id.startsWith('q_')));
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[2,1,3,0,2]);
 assert.equal(l.compatibleQuizKeys,undefined);
 assert.deepEqual(inlineArticleMedia[l.id].map(x=>x.afterParagraphId),['polis-11']);

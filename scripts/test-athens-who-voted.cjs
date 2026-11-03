@@ -20,7 +20,7 @@ assert.deepEqual(l.checkpoints.map(x=>x.questionId),l.questions.map(x=>x.id));
 assert.deepEqual(progress.getQuestionPlacements(l).map(x=>x.afterParagraphNumber),[4,9,13,17,21,25]);
 assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
 assert.equal(progress.getResumeParagraphNumber(l,{0:l.questions[0].correctIndex}),5);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>=65));
+assert.ok(l.questions.every(q=>q.version===(['athens-women-civic-roles','athens-inscription-limits'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>=65));
 assert.equal(new Set(l.questions.map(q=>q.id)).size,6);
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[2,1,3,0,2,2]);
 assert.ok(l.sources.length>=11&&l.sources.every(s=>s.url.startsWith('https://')));

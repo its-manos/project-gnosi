@@ -27,7 +27,7 @@ assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
 assert.equal(progress.getVisibleParagraphLimit(l,{0:1}),10);
 assert.equal(progress.getResumeParagraphNumber(l,{0:1}),5);
 assert.equal(progress.getVisibleParagraphLimit(l,{0:1,1:2,2:3,3:2,4:1,5:2}),28);
-assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>90));
+assert.ok(l.questions.every(q=>q.version===(['athens-courts-standing','athens-courts-limits'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>90));
 assert.equal(new Set(l.questions.map(q=>q.id)).size,6);
 assert.deepEqual(l.questions.map(q=>q.correctIndex),[1,2,3,2,1,2]);
 assert.ok(l.sources.length>=10&&l.sources.every(s=>s.url.startsWith('https://')));

@@ -17,8 +17,8 @@ const old=require('./fixtures/ancient-greece-pair-19-20-before-phase2-20261103.j
 const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
- 'persian-wars-greek-world':{slot:18,paragraphs:25,anchors:[4,8,12,17,21,25],correct:[2,3,1,2,0,1],types:['matching',null,'spot-the-mistake','ordering','fill-in-the-blank',null],version:'2'},
- 'athenian-empire':{slot:19,paragraphs:26,anchors:[4,8,13,18,22,26],correct:[1,3,0,2,0,0],types:[null,'matching','ordering','spot-the-mistake','fill-in-the-blank',null],version:'2'}
+ 'persian-wars-greek-world':{slot:18,paragraphs:25,anchors:[4,8,12,17,21,25],correct:[2,3,1,2,0,1],types:['matching','multiple-select','spot-the-mistake','ordering','fill-in-the-blank',null],version:'2'},
+ 'athenian-empire':{slot:19,paragraphs:26,anchors:[4,8,13,18,22,26],correct:[1,3,0,2,0,0],types:['multiple-select','matching','ordering','spot-the-mistake','fill-in-the-blank',null],version:'2'}
 };
 function properAnswer(q){
  switch(q.type){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===expect.version),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['persian-ionia-agency','persian-victory-memory','empire-foundation-choices','empire-tribute-evidence'].includes(q.id)?'3':expect.version)),'correct quiz version');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);
