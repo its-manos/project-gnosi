@@ -45,3 +45,15 @@ jobs:
       - run: node scripts/test-linear-b-decipherment.cjs
       - run: node scripts/test-palace-collapse.cjs
       - run: node scripts/test-geometric-greece.cjs
+      - run: node scripts/test-ancient-greece-chapter3-questions.cjs
+      - run: node scripts/test-ancient-greece-phase2-11-12.cjs
+      - run: node scripts/test-ancient-greece-phase2-13-14.cjs
+      - run: node scripts/test-ancient-greece-phase2-15-16.cjs
+      - run: node scripts/test-ancient-greece-phase2-17-18.cjs
+      - run: node scripts/test-rise-of-polis.cjs
+      - run: node scripts/test-greek-settlements.cjs
+      - run: node scripts/test-sparta-society.cjs
+      - run: node scripts/test-athens-who-voted.cjs
+      - run: node scripts/test-athens-law-courts.cjs
+      - run: node scripts/test-greek-war-hoplites.cjs
+      - run: node scripts/test-greek-sanctuaries-games.cjs
