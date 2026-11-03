@@ -274,8 +274,11 @@ export default function HomeScreen({
 
 const styles = StyleSheet.create({
   viewport: { flex: 1 },
+  // Consume any extra viewport height between the five Home sections rather
+  // than leaving a blank strip above the bottom tabs. The base gap remains a
+  // minimum, and overflowing content keeps its natural size/scroll fallback.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1 },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
   compactContent: { gap: 8, paddingBottom: 5 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
   compactHero: { padding: 12, gap: 5 },

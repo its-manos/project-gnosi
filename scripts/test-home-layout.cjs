@@ -286,6 +286,16 @@ homeScrollState = [0, 0, 0];
 const renderMeasuredHome = () => { homeScrollHookIndex = 0; return home(props); };
 const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-game-dashboard");
 let scroll = scrollNode();
+assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
+  "dashboard content fills the usable viewport on taller screens");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
+  "spare height is distributed between Home sections, not beneath mini-games");
+assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
+  "spacious Home retains comfortable minimum spacing");
+const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
+assert.equal(homeSections.length, 5, "all five Home sections share the available height");
+assert.equal(homeSections.at(-1).props.testID, "home-mini-games",
+  "mini-games end the dashboard and anchor to the bottom when everything fits");
 assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measurements settle");
 assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
 assert.equal(scroll.props.alwaysBounceVertical, false);
@@ -299,6 +309,8 @@ scroll.props.onContentSizeChange(360, 711);
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
   "measured overflow activates tight spacing without dropping sections");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
+  "extra space is shared even after compacting the dashboard");
 const tightHero = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-primary-action");
 const tightQuiz = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-daily-quiz");
 const tightCategory = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
@@ -317,6 +329,8 @@ scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[1], false,
   "available height growth restores spacious styling");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
+  "spacious mode also distributes free height");
 assert.equal(scroll.props.scrollEnabled, false);
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
