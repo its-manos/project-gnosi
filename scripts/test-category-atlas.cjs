@@ -132,6 +132,22 @@ assert.ok(nodes(temple).filter(node => node.type === "path"
 const ancientTitle = detailNodes.find(node => node.type === "text"
   && node.props?.children === "Αρχαία Ελλάδα");
 assert.ok(ancientTitle, "temple must preserve title");
+const ancientTrack = detailNodes.find(node =>
+  node.props?.testID === "atlas-progress-track-ancient-greece");
+const worldTrack = detailNodes.find(node =>
+  node.props?.testID === "atlas-progress-track-world");
+const worldTitle = detailNodes.find(node =>
+  node.type === "text" && node.props?.children === "Παγκόσμια ιστορία");
+assert.ok(ancientTrack && worldTrack && worldTitle);
+assert.equal(ancientTrack.props.y - ancientTitle.props.y, 17,
+  "bring Ancient Greece progress closer to the title");
+assert.equal(worldTrack.props.y - worldTitle.props.y, 26,
+  "leave other island compositions unchanged during the first landmark pilot");
+const ancientBacking = detailNodes.find(node =>
+  node.type === "rect" && node.props?.fill === "#12232E"
+  && node.props?.y === ancientTrack.props.y - 3);
+assert.ok(ancientBacking && ancientBacking.props.opacity === 0.46,
+  "progress capsule should have a restrained translucent backing");
 assert.ok(templeInstances[0].props.y + 36 * templeInstances[0].props.scale
   < ancientTitle.props.y - 6, "temple must not overlap title");
 assert.ok(detailNodes.some(node => node.props?.testID === "atlas-progress-track-ancient-greece"),
