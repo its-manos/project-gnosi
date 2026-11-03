@@ -8,6 +8,7 @@ on:
       - "src/screens/SubcategoryScreen.tsx"
       - "src/screens/CategoryScreen.tsx"
       - "src/components/FantasyMap.tsx"
+      - "src/components/worldIcons/**"
       - "src/utils/categoryAtlas.ts"
       - "src/navigation/AppNavigator.tsx"
       - "src/components/BottomNavigation.tsx"
