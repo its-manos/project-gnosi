@@ -87,6 +87,19 @@ assert.ok(frame);
 assert.equal(frame.props.style[2].aspectRatio, 360 / 540, "grow map into available screen height");
 let islands = nodes(tree).filter(node => node.props?.testID?.startsWith("atlas-island-"));
 assert.equal(islands.length, 3);
+// Map view is deliberately minimal: keep the lesson counts in the accessible
+// labels and List view, but do not draw numeric count text on the islands.
+const mapText = nodes(frame).filter(node => node.type === "text")
+  .map(node => node.props?.children).filter(value => typeof value === "string");
+assert.ok(!mapText.includes("1 / 2") && !mapText.includes("0 / 1"),
+  "map island counts must be hidden");
+const barTracks = nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-progress-track-"));
+const barFills = nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-progress-fill-"));
+assert.equal(barTracks.length, 2, "both started and empty regions show tracks");
+assert.equal(barFills.length, 1, "zero-progress destinations have no colored fill");
+assert.equal(barTracks[0].props.height, 5.5, "progress pill is thicker and easier to see");
+assert.equal(barTracks[0].props.rx, 2.75, "progress pill has fully rounded ends");
+assert.equal(barFills[0].props.fill, "url(#atlas-progress-lavender)");
 // Progress-bearing islands must not draw the lower inset coastline through
 // their tracks. The loading/no-progress island retains the full contour.
 const insetPaths = nodes(tree).filter(node => node.type === "path"
@@ -104,6 +117,9 @@ assert.ok(listToggle, "map/list toggle remains available");
 listToggle.props.onPress();
 tree = map(props);
 assert.ok(nodes(tree).some(node => node.props?.testID === "knowledge-region-list"));
+assert.ok(nodes(tree).some(node => node.type === "Text"
+  && node.props?.children === "1 / 2 μαθήματα"),
+  "List view retains the detailed lesson count");
 assert.equal(nodes(tree).filter(node => node.type === "Pressable"
   && node.props?.accessibilityHint?.includes("Άνοιγμα")).length, 3);
 const firstList = nodes(tree).find(node => node.props?.accessibilityLabel?.startsWith("Αρχαία Ελλάδα"));
@@ -116,6 +132,15 @@ tree = map({ ...props, regions: [{ id: "astro", title: "Αστρονομία & �
 assert.ok(nodes(tree).some(node => node.type === "text"
   && typeof node.props?.children === "string" && node.props.children.includes("&")),
   "island labels must preserve ampersands from catalogue titles");
+
+// Completed regions keep their golden visual status on the new gradient bar.
+tree = map({ ...props, regions: [{ ...regionData[0], status: "complete",
+  completedLessons: 2 }] });
+const completedBar = nodes(tree).find(node =>
+  node.props?.testID === "atlas-progress-fill-ancient");
+assert.ok(completedBar);
+assert.equal(completedBar.props.fill, "url(#atlas-progress-gold)");
+assert.equal(completedBar.props.height, 5.5);
 
 // Five-destination layouts keep illustrated landmasses within the atlas frame.
 const five = [
