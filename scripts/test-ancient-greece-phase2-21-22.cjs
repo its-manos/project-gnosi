@@ -17,8 +17,8 @@ const old=require('./fixtures/ancient-greece-pair-21-22-before-phase2-20261103.j
 const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
- 'peloponnesian-war':{slot:20,paragraphs:35,anchors:[4,9,14,19,24,29,35],correct:[1,0,2,3,1,0,2],types:['spot-the-mistake','matching','ordering','fill-in-the-blank','matching','spot-the-mistake',null],version:'2'},
- 'greek-crises-fourth-century':{slot:21,paragraphs:34,anchors:[4,9,15,20,25,30,34],correct:[1,2,3,0,1,2,3],types:['spot-the-mistake','fill-in-the-blank','matching','ordering','matching','spot-the-mistake',null],version:'2'}
+ 'peloponnesian-war':{slot:20,paragraphs:35,anchors:[4,9,14,19,24,29,35],correct:[1,0,2,3,1,0,2],types:['spot-the-mistake','matching','ordering','fill-in-the-blank','matching','spot-the-mistake','multiple-select'],version:'2'},
+ 'greek-crises-fourth-century':{slot:21,paragraphs:34,anchors:[4,9,15,20,25,30,34],correct:[1,2,3,0,1,2,3],types:['spot-the-mistake','fill-in-the-blank','matching','ordering','matching','spot-the-mistake','multiple-select'],version:'2'}
 };
 function properAnswer(q){
  switch(q.type){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===expect.version),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['war-melos-source','war-404-not-end','crisis-amnesty-limits','crisis-mantinea-boundary'].includes(q.id)?'3':expect.version)),'correct quiz version');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);
