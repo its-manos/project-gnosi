@@ -45,7 +45,7 @@ function harness(store){
  app.openLesson(first.id);app=render();assert.equal(app.screen,'lesson');
  // Path unlocking is independent of typed question UI. Seed a fully answered
  // (incorrect) attempt; richer question submissions are covered by quiz tests.
- const wrongAnswers=Object.fromEntries(first.questions.map((q,i)=>[i,(q.correctIndex+1)%4]));
+ const wrongAnswers=Object.fromEntries(first.questions.map((q,i)=>[i,(q.correctIndex+1)%q.answers.length]));
  store.answer(first.id,{checkpointAnswers:wrongAnswers,quizKey:quizFingerprint(first.questions),score:0,updatedAt:Date.now(),replayOfCompletedLesson:false});
  app=render();app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.equal(app.score,0);
  assert.equal(paths.getNextPathLesson(first,data.lessons,app.completedLessonIds).id,second.id,'completion unlocks next even at zero score');
