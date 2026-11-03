@@ -425,7 +425,7 @@ assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
 // preserves touch handling, respects reduced motion and does not repeat.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
 const dailyHighlightSource = homeMotionSource.slice(homeMotionSource.indexOf("export function MotionQuizGlow"));
-assert.match(dailyHighlightSource, /\.\.\.StyleSheet\.absoluteFillObject/,
+assert.match(dailyHighlightSource, /\.\.\.StyleSheet\.absoluteFill/,
   "highlight follows the card perimeter");
 assert.match(dailyHighlightSource, /borderRadius: 16/,
   "highlight matches the quiz card radius");
