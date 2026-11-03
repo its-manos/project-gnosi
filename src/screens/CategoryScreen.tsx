@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AccessibilityInfo, Animated, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import type { ImageSourcePropType } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import { colors } from "../theme";
@@ -15,6 +16,12 @@ type Props = {
   onBack: () => void;
   onOpenSubcategory: (subcategoryId: string, categoryId: string) => void;
 };
+
+// The map component supports a bundled visual layer while preserving native
+// labels, taps and progress. The image is deliberately opt-in until the
+// approved artwork is committed to assets/maps/history-midnight-atlas.webp.
+// This avoids a broken Metro require in the review branch.
+const HISTORY_ATLAS_IMAGE: ImageSourcePropType | undefined = undefined;
 
 const REGION_COLORS = [
   "#7867AA", "#487C79", "#A08051", "#577C9C", "#9B6D86", "#658A75",
@@ -151,6 +158,8 @@ export default function CategoryScreen({
       <Animated.View style={[styles.atlasArea, { opacity: entrance, transform: [{ scale: zoom }] }]}>
         <FantasyMap
           regions={mapRegions}
+          backgroundImage={category.id === "history" && mapRegions.length === 3
+            ? HISTORY_ATLAS_IMAGE : undefined}
           minHeight={minMapHeight}
           onControlsHeightChange={next => {
             setControlsHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
