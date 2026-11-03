@@ -6,6 +6,7 @@ const {lessons}=require(root+'/src/data/lessons.ts'),{inlineArticleMedia}=requir
 const progress=require(root+'/src/utils/lessonProgress.ts'),paths=require(root+'/src/utils/lessonPath.ts');
 const {quizFingerprint,lessonQuizMatches}=require(root+'/src/utils/learningActivity.ts');
 const {parseLearningBackup}=require(root+'/src/utils/learningBackup.ts');
+const {adaptInteractiveLessonQuestion,restoreInteractiveLessonAnswer}=require(root+'/src/quiz/adapters.ts');
 const {lessonReview}=require(root+'/src/utils/lessonReview.ts');
 const old=require('./fixtures/quiz-before-editorial-20261030.json').find(x=>x.id==='athens-who-voted');
 const l=lessons.find(x=>x.id==='athens-who-voted');
@@ -40,6 +41,21 @@ let backup=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[l.id],
 assert.deepEqual(backup.savedIds,[l.id]);assert.ok(!backup.attempts[l.id],'legacy attempt questions may not be reinterpreted');
 backup=parseLearningBackup({schemaVersion:1,completedIds:[l.id],savedIds:[l.id],attempts:{[l.id]:past}});
 assert.deepEqual(backup.completedIds,[l.id]);assert.deepEqual(backup.savedIds,[l.id]);
-backup=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[l.id],attempts:{[l.id]:{...past,quizKey:currentKey,checkpointAnswers:{0:l.questions[0].correctIndex}}}});
+// The first Phase 2 question uses matching. A numeric projection alone must
+// never unlock it: the actual pair choices are needed to restore the attempt.
+const numericOnly={...past,quizKey:currentKey,checkpointAnswers:{0:l.questions[0].correctIndex}};
+backup=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[l.id],attempts:{[l.id]:numericOnly}});
+assert.ok(!backup.attempts[l.id],'numeric-only matching answer must not unlock an un-restorable question');
+assert.deepEqual(backup.savedIds,[l.id],'discarded attempt must keep bookmark');
+const first=adaptInteractiveLessonQuestion(l,0);
+assert.ok(first&&first.type==='matching');
+const matchingAnswer=Object.fromEntries(first.content.pairs.map(p=>[p.leftId,p.rightId]));
+const typedFirst={questionVersion:first.version,value:matchingAnswer};
+const currentAttempt={...numericOnly,typedCheckpointAnswers:{0:typedFirst}};
+backup=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[l.id],attempts:{[l.id]:currentAttempt}});
 assert.equal(backup.attempts[l.id].quizKey,currentKey);
+assert.deepEqual(backup.attempts[l.id].typedCheckpointAnswers[0],typedFirst);
+assert.deepEqual(restoreInteractiveLessonAnswer(l,0,l.questions[0].correctIndex,backup.attempts[l.id].typedCheckpointAnswers[0]),matchingAnswer);
+backup=parseLearningBackup({schemaVersion:1,completedIds:[],savedIds:[l.id],attempts:{[l.id]:{...currentAttempt,typedCheckpointAnswers:{0:{...typedFirst,questionVersion:'obsolete'}}}}});
+assert.ok(!backup.attempts[l.id],'wrong typed question version cannot restore the checkpoint');
 console.log('Lesson 15 citizenship content, anchors, media, access and historical quiz separation passed (Node only).');
