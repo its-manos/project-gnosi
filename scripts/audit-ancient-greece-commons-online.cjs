@@ -32,6 +32,18 @@ function titleFromPage(url){
   }catch{return null;}
 }
 const norm=t=>String(t||"").replace(/_/g," ").normalize("NFC").replace(/\s+/g," ").toLowerCase().trim();
+// These exact file pages were reviewed on 2026-11-03. Commons API exposes
+// only ONE short licence label, even when its file page offers several grants.
+// Do NOT broaden these exceptions by photographer, category or licence alone.
+// If a page's current API licence changes, this exception stops matching and
+// the case is re-screened. This does not grant release approval.
+const reviewedMultiLicences=new Map([
+  ["File:Persepolis-Darius palace-stairs relief.jpg","CC BY-SA 2.5","CC BY-SA 3.0"],
+  ["File:EPMA-IGI(3)259-272-Tribute list-1.JPG","CC BY-SA 3.0","CC BY 2.5"],
+  ["File:EPMA-IGI(3)273-280-Tribute list 2-2.JPG","CC BY-SA 3.0","CC BY 2.5"],
+  ["File:NAMA Machine d'Anticythère 2.jpg","CC BY-SA 3.0","CC BY 2.5"],
+  ["File:NAMA Machine d'Anticythère 5.jpg","CC BY-SA 3.0","CC BY 2.5"],
+].map(([title,appLicence,apiLicence])=>[norm(title),{appLicence,apiLicence}]));
 const titles=[...new Set(rows.map(r=>titleFromPage(r.sourcePage)).filter(Boolean))];
 const batchSize=10;
 const batches=[];
@@ -102,6 +114,7 @@ async function main(){
     const c=title?fetched.get(title):null;
     const flags=[];
     let label="";
+    let reviewBasis="API_METADATA_ONLY";
     if(!title)flags.push("SOURCE_NOT_COMMONS_FILE_PAGE");
     else if(!c||c.error)flags.push("COMMONS_LOOKUP_ERROR:"+String(c?.error||"unknown"));
     else{
@@ -120,7 +133,12 @@ async function main(){
         if(!/CC0|CC ZERO|PUBLIC DOMAIN/i.test(label))flags.push("DECLARED_CC0_LABEL_NOT_CONFIRMED");
       }else if(expected==="UNKNOWN")flags.push("UNKNOWN_IN_APP_LICENCE");
       else if(simplified(expected)!==simplified(label)){
-        flags.push("LICENCE_LABEL_DIFFERENCE");
+        const alternative=reviewedMultiLicences.get(norm(title));
+        if(alternative && alternative.appLicence===expected && alternative.apiLicence===label){
+          reviewBasis="ALTERNATE_LICENCE_CONFIRMED_ON_FILE_PAGE_2026-11-03";
+        }else{
+          flags.push("LICENCE_LABEL_DIFFERENCE");
+        }
       }
     }
     if(/UPSTREAM LICENCE-VERSION CONFLICT/.test(r.notes))
@@ -130,12 +148,13 @@ async function main(){
       declaredLicence:r.declaredLicence,commonsLicence:label,
       commonsLicenceUrl:c?.commonsLicenceUrl||"",commonsArtist:c?.commonsArtist||"",
       commonsAttribution:c?.commonsAttribution||"",appCredit:r.appCredit,
-      flags:flags.join(" | "),status:"UNVERIFIED"
+      reviewBasis,flags:flags.join(" | "),status:"UNVERIFIED"
     };
   });
   const stats={};
   for(const r of reviewed){
-    const k=r.flags?"FLAGGED_FOR_HUMAN_REVIEW":"LABEL_MATCH_ONLY";
+    const k=r.flags?"FLAGGED_FOR_HUMAN_REVIEW":
+      r.reviewBasis.startsWith("ALTERNATE_LICENCE_")?"MULTI_LICENCE_PAGE_CHECKED":"LABEL_MATCH_ONLY";
     stats[k]=(stats[k]||0)+1;
   }
   const failed=reviewed.filter(r=>r.flags.includes("COMMONS_LOOKUP_ERROR")||r.flags.includes("SOURCE_NOT_COMMONS_FILE_PAGE"));
@@ -151,6 +170,8 @@ async function main(){
   }else{
     console.log("Commons online screening: "+reviewed.length+" placements, "+titles.length+" unique file titles.");
     console.log("Results: "+JSON.stringify(stats)+"; all statuses remain UNVERIFIED.");
+    for(const r of reviewed.filter(r=>r.reviewBasis.startsWith("ALTERNATE_LICENCE_")))
+      console.log("  MULTI-LICENCE "+r.lesson+"/"+r.placement+": app "+r.declaredLicence+"; API "+r.commonsLicence+"; original file page offers both");
     for(const r of reviewed.filter(r=>r.flags))
       console.log("  "+r.lesson+"/"+r.placement+": "+r.declaredLicence+" | Commons: "+(r.commonsLicence||"?")+" | "+r.flags);
     console.log("Full details: rerun with --csv or --json.");
