@@ -27,7 +27,7 @@ for (const [id, expected] of Object.entries(expectations)) {
   assert.equal(getParagraphCount(lesson), expected.paragraphs, id + ' preserved paragraphs');
   assert.deepEqual(getQuestionPlacements(lesson).map(p => p.afterParagraphNumber), expected.anchors, id + ' preserved checkpoint positions');
   assert.deepEqual(lesson.questions.map(q => q.id), original.questions.map(q => q.id), id + ' stable question IDs');
-  assert.ok(lesson.questions.every(q => q.version === (['greek-world-not-a-country','greek-history-through-evidence','greek-chronology','greek-geography-seas'].includes(id) ? '3' : '2') && q.answers.length === 4 && q.explanation.length > 35), id + ' current question schema');
+  assert.ok(lesson.questions.every(q => q.version === (['greek-world-herodotus-context','greek-evidence-speeches','greek-time-overlap','aegean-geography-not-destiny'].includes(q.id) ? '4' : '3') && q.answers.length === 4 && q.explanation.length > 35), id + ' current question schema');
   assert.ok(lesson.requireCurrentAttemptQuiz, id + ' must guard unversioned attempts');
   const before = quizFingerprint(original.questions);
   const after = quizFingerprint(lesson.questions);
