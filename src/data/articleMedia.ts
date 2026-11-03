@@ -100,7 +100,7 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
       url: commonsFileUrl("P.Penn. Museum inv. E02748 Euclid's Elements 2.5.jpg"),
       resizeMode: "contain",
       caption: "Πάπυρος της Οξυρρύγχου (P.Oxy. I 29 / Penn E02748) με κείμενο και διάγραμμα από τα «Στοιχεῖα», Βιβλίο ΙΙ, πρόταση 5. Το αντίγραφο ανήκει στους ρωμαϊκούς χρόνους· η ακριβής χρονολόγησή του αναφέρεται διαφορετικά σε σύγχρονες καταγραφές και δεν είναι αυτόγραφο του Ευκλείδη. Άγγιξε για μεγέθυνση.",
-      credit: "University of Pennsylvania Museum / Wikimedia Commons · CC BY-SA 4.0 (Commons page; source metadata differs) · ψηφιοποίηση 2004",
+      credit: "University of Pennsylvania Museum / OPenn / Wikimedia Commons · CC BY-SA 2.0 (άδεια αρχικής συλλογής) · ψηφιοποίηση 2004",
       creditUrl: commonsPageUrl("P.Penn. Museum inv. E02748 Euclid's Elements 2.5.jpg"),
     },
     {
