@@ -150,6 +150,10 @@ node scripts/audit-ancient-greece-image-rights.cjs --csv > /tmp/gnosi-ancient-gr
 
 The resulting CSV has blank reviewer and device-result fields. **Do not mark cleared** simply because the source page exists, the app declares CC, or the thumbnail loads. Confirm original licence and upstream grant, creator/credit, appropriate commercial reuse, ShareAlike/adaptation terms, and Android/iPhone caption/zoom/attribution. The two high-risk entries are flagged. This script was syntax-checked **but not executed with installed modules** in the connector environment.
 
+### Android image viewer — first-pass owner test (2026-11-03)
+
+**PASS (owner-reported):** image loading, pinch-to-zoom/double-tap, caption readability, photographer/licence credit presentation, and source-link opening. Evidence: [Android manual five-check report](ANCIENT-GREECE-ANDROID-IMAGE-FIRST-PASS.md). These are category-level results; the owner did not supply a per-placement list, screenshots, device/OS or build identifier. **This is not sign-off for all 88 Android image placements**, source/licence legal compliance or any iPhone behavior. Both full 88-image device matrices and the whole lesson/quiz/regression QA remain pending; 0 lessons independently Validated/Approved.
+
 ## Actual-device acceptance matrix
 
 **Global protocol:** record branch commit/build channel, OS/device versions, guest versus signed-in, network, screenshots/recording, test date and linked bug. Development-unlocked lessons are acceptable for visual QA **but cannot prove normal sequential unlock rules**.
