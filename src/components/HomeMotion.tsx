@@ -30,25 +30,38 @@ export function MotionView({ entranceDelay = 0, ...props }: ViewProps & { entran
 
 type MotionPressableProps = PressableProps & { entranceDelay?: number; pressScale?: number };
 export function MotionPressable({
-  entranceDelay = 0, pressScale = 0.974, style, onPressIn, onPressOut, disabled, ...props
+  entranceDelay, pressScale = 0.974, style, onPressIn, onPressOut, disabled, ...props
 }: MotionPressableProps) {
   const reduced = useReducedMotion();
+  const shouldEnter = !reduced && entranceDelay !== undefined;
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const entranceOpacity = useSharedValue(shouldEnter ? 0 : 1);
+  const entranceRise = useSharedValue(shouldEnter ? ENTRANCE_RISE : 0);
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
+    transform: [{ translateY: entranceRise.value }, { scale: scale.value }],
+    opacity: entranceOpacity.value * opacity.value,
   }));
-  const entering = useMemo(() => reduced ? undefined : entrance(entranceDelay), [reduced, entranceDelay]);
-  useEffect(() => () => {
-    cancelAnimation(scale);
-    cancelAnimation(opacity);
-  }, [scale, opacity]);
+  useEffect(() => {
+    if (reduced || entranceDelay === undefined) {
+      entranceOpacity.value = 1;
+      entranceRise.value = 0;
+    } else {
+      entranceOpacity.value = withDelay(entranceDelay, withTiming(1, { duration: 320, easing: ease }));
+      entranceRise.value = withDelay(entranceDelay, withTiming(0, { duration: 320, easing: ease }));
+    }
+    return () => {
+      cancelAnimation(scale);
+      cancelAnimation(opacity);
+      cancelAnimation(entranceOpacity);
+      cancelAnimation(entranceRise);
+    };
+  }, [entranceDelay, reduced, scale, opacity, entranceOpacity, entranceRise]);
 
   // The old pressed opacity was only a fallback. Reanimated now owns the
   // interaction, while the original unpressed layout styles stay unchanged.
   const baseStyle = typeof style === "function" ? style({ pressed: false }) : style;
-  return <AnimatedPressable {...props} disabled={disabled} entering={entering}
+  return <AnimatedPressable {...props} disabled={disabled}
     style={[baseStyle, animatedStyle]}
     onPressIn={event => {
       if (!reduced && !disabled) {
