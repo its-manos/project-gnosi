@@ -125,6 +125,16 @@ Source pages for current priorities:
 - [Euclid papyrus — Commons](https://commons.wikimedia.org/wiki/File:P.Penn._Museum_inv._E02748_Euclid%27s_Elements_2.5.jpg) and [institutional OPenn catalogue](https://openn.library.upenn.edu/Data/0016/html/e2748.html)
 - [Creative Commons BY-SA 4.0 requirements](https://creativecommons.org/licenses/by-sa/4.0/deed.en) and [attribution FAQ](https://creativecommons.org/faq/)
 
+## Image-rights evidence and external metadata screening
+
+- [Priority rights review: Giovanni Dall'Orto stele and Penn Euclid papyrus](ANCIENT-GREECE-IMAGE-RIGHTS-TRIAGE.md). The former has a documented custom grant permitting commercial use with attribution; the latter remains **blocked by contradictory upstream licence version metadata**. Neither record has final app/device release sign-off.
+- `scripts/audit-ancient-greece-commons-online.cjs`: read-only live Commons API screening for the full image set. Compares in-app licence labels to current Commons metadata and flags absent/mismatched/custom cases, **without interpreting label matches as legal approval**. This script has not been run on the owner's machine yet.
+
+```bash
+node scripts/audit-ancient-greece-commons-online.cjs
+node scripts/audit-ancient-greece-commons-online.cjs --csv > /tmp/gnosi-ancient-greece-commons-screen.csv
+```
+
 ## Image-rights ledger (generated, initially all **UNVERIFIED**)
 
 Use the read-only `scripts/audit-ancient-greece-image-rights.cjs` helper to export **all 88 placements**, including exact lesson and paragraph anchor, caption, image request URL, credited Commons page, current in-app credit, and a **declared** licence label:
