@@ -83,3 +83,8 @@ Explain the contingency of the post-479 BCE maritime alliance and the uneven tra
 - #21 `peloponnesian-war`: later outbreak, competing explanations, phases, noncombatants, 404 aftermath and source critique; **not written this session**.
 - #15/16 citizenship/courts, #17 hoplite equipment and #18 sanctuaries: explicitly not re-taught.
 - Ancient Greece curriculum still **30 planned / 5 chapters; 21 implemented, 20 research-first Integrated, 1 older Drafted #30, 9 Not started #21–29, 0 Validated, 0 Approved**.
+
+
+## Phase 2 editorial and typed-question update — 2026-11-03
+- Updated intro and `empire-04`, `empire-08`, `empire-16`, `empire-19`, `empire-26`. [Thucydides 1.99](https://beta.perseus.tufts.edu/urn%3Acts%3AgreekLit%3Atlg0003.tlg001.1st1K-eng1/chapter%3A1.99/) explains the ship-to-money incentive as a retrospective source; [AIO tribute list IG I³ 259](https://www.atticinscriptions.com/inscription/IGI3/259) preserves a one-sixtieth dedication, not a budget; [Erythrai IG I³ 14](https://www.atticinscriptions.com/inscription/IGI3/14) is a local intervention reconstructed from old copies, not an empire-wide uniform law.
+- Quiz v2 stable IDs, 26 paragraphs, six anchors preserved; types choice/matching/ordering/spot/blank/choice; numeric keys `[1,3,0,2,0,0]`. Old v1 frozen, no compatibility alias. All source/media credits retained. [Phase 2 report](ANCIENT-GREECE-PHASE-2-LESSONS-19-20.md). **Integrated, QA pending**.

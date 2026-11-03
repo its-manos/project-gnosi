@@ -122,3 +122,8 @@ Also execute dedicated #14–16 tests and any other app tests found by listing `
 - **#20 `athenian-empire`** (planned, not live): Delian League institutions, tribute, changing naval obligations, coercion and Athenian power after 479 BCE. Do not prewrite it.
 - #21 Peloponnesian War: later breakdown, allies and conflict; not teleological in #19.
 **Next exact title (planned):** «Πώς μια συμμαχία έγινε αθηναϊκή ηγεμονία». No Lesson 20 article created in this session.
+
+
+## Phase 2 editorial and typed-question update — 2026-11-03
+- Improved intro and `persian-03`, `persian-08`, `persian-11`, `persian-17`, `persian-21`; Behistun is royal self-presentation, Persepolis tablets administrative documents, Herodotus a later historian and Aeschylus' *Persians* a 472 BCE Athenian tragedy, not an archived Persian court record. Marathon mound cannot fix all battle movements; Ionians had different political positions across 499–480; Persian state power remained after the 479 victories. See [Chicago Persepolis archive](https://persepolis.uchicago.edu/), [Behistun](https://www.livius.org/articles/place/behistun/), [Herodotus 6.117](https://www.perseus.tufts.edu/hopper/text?doc=Hdt.%206.117) and retained research sources.
+- Quiz v2 stable IDs, 25 paragraphs and six anchors unmodified; types matching/choice/spot/ordering/fill/choice; numeric fallbacks `[2,3,1,2,0,1]`. Original v1 frozen, historical quizzes not aliased. [Phase 2 report](ANCIENT-GREECE-PHASE-2-LESSONS-19-20.md). **Integrated, QA pending**.
