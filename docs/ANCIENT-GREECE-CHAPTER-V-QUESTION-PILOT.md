@@ -15,7 +15,7 @@ Reviewed all **38 scored questions** in lessons #25–30. Revised exactly **12**
 | 27 | greek-images-sculpture | `images-peplos-traces`; `images-pigment-method-limit` **multi** (2,0) | `q_2e30a084` | `q_41c8ba87` |
 | 28 | greek-philosophy-in-context | `phil-paid-teaching`; `phil-academy-place` | `q_c47687e6` | `q_31c6a510` |
 | 29 | greek-science-knowledge | `science-sacred-disease`; `science-eratosthenes-uncertainty` **multi** (2,0) | `q_5bbf7ce2` | `q_bc722720` |
-| 30 | antikythera-gears | `antikythera-saros-visibility`; `antikythera-workshop-claims` **multi** (0,2) | `q_051bf6b4` (actual short rendering: `q_51bf6b4`) | `q_8638613a` |
+| 30 | antikythera-gears | `antikythera-saros-visibility`; `antikythera-workshop-claims` **multi** (0,2) | `q_51bf6b4` | `q_8638613a` |
 
 Correct-indices arrays start with the unchanged numeric `correctIndex` to preserve the existing XP projection. **User selection order does not matter.**
 
