@@ -1,14 +1,13 @@
 import { useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
-import AnswerOption from "../components/AnswerOption";
+import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
 import DailyMistakeReview from "../components/DailyMistakeReview";
 import DailyAnswerReview from "../components/DailyAnswerReview";
 import QuizReveal from "../components/QuizReveal";
 import KnowledgeProgress from "../components/KnowledgeProgress";
-import ReportContentButton from "../components/ReportContentButton";
 import { dailyReportTarget } from "../utils/contentReports";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
 import { lessons } from "../data/lessons";
@@ -17,6 +16,7 @@ import { dailyResultAnalysis, recommendDailyLesson } from "../utils/dailyResults
 import { selectSharedDailyQuestions } from "../utils/sharedDailyChallenge";
 import { dailyXP } from "../utils/knowledgeScoring";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
+import QuizTypesPreviewScreen from "./QuizTypesPreviewScreen";
 import { colors } from "../theme";
 
 type Props={onHome:()=>void;onOpenPreferences:()=>void;preferences:DailyChallengePreferences;preferencesLoaded:boolean;
@@ -27,6 +27,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const {record,rewardSummary,rewardXP,isLoading,currentQuestion,selectedAnswer,correctCount,accountScoped,resultDetails,questionsCompatible=true,startChallenge,answerQuestion,nextQuestion}=useDailyChallenge(preferences,preferencesLoaded);
   const [sourceError,setSourceError]=useState(false),scrollRef=useRef<ComponentRef<typeof ScrollView>>(null),sourceRequest=useRef(0);
   const [review,setReview]=useState<{date:string;mode:'answers'|'mistakes'}|null>(null);
+  const [previewOpen,setPreviewOpen]=useState(false);
   const analysis=dailyResultAnalysis(record,questions,correctCount,resultDetails);
   const recommendation=recommendDailyLesson(analysis.rows,lessons,completedLessonIds,inProgressLessonIds,preferences);
   const reviewing=record.completed&&review?.date===record.dateKey;
@@ -38,8 +39,13 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   async function openSource(url:string){const request=++sourceRequest.current;try{await Linking.openURL(url);if(request===sourceRequest.current)setSourceError(false);}catch{if(request===sourceRequest.current)setSourceError(true);}}
   const misses=analysis.rows.filter(r=>r.correct===false&&r.question);
   const canStart=selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE;
+  // Do not touch any persisted daily quiz record during the development pilot.
+  if (typeof __DEV__ !== "undefined" && __DEV__ && previewOpen) {
+    return <QuizTypesPreviewScreen onBack={() => setPreviewOpen(false)} />;
+  }
   return <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
     <AppHeader onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} />
+    {typeof __DEV__ !== "undefined" && __DEV__ ? <ActionButton label="Δοκίμασε τα νέα είδη ερωτήσεων (dev)" secondary onPress={() => setPreviewOpen(true)} /> : null}
     {accountScoped?<Text style={styles.note}>Η πρόοδός σου συγχρονίζεται στις συσκευές σου.</Text>:null}
     {isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
     :record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
@@ -97,14 +103,22 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       <View style={styles.dots} accessible accessibilityLabel={`${answeredCount} από 7 ερωτήσεις απαντήθηκαν`}>
         {record.questionIds.map((id,i)=>{const q=questions.find(q=>q.id===id),answered=record.answers[i]!==undefined,correct=answered&&record.answers[i]===q?.correctIndex;return <View key={id} style={[styles.dot,answered&&(correct?styles.dotCorrect:styles.dotWrong),i===record.currentIndex&&styles.dotCurrent]}><Text style={styles.dotText}>{answered?(correct?'✓':'×'):i+1}</Text></View>;})}
       </View>
-      <View style={styles.questionCard}>
-        <Text style={styles.eyebrow}>{topicTitle(currentQuestion.categoryId)} · {difficultyTitle(currentQuestion.difficulty)}</Text>
-        <Text style={styles.question}>{currentQuestion.question}</Text>
-      </View>
-      <View style={styles.answers}>
-        {currentQuestion.answers.map((answer,index)=><AnswerOption key={`${currentQuestion.id}-${index}`} label={answer} index={index} selected={selectedAnswer===index} correct={index===currentQuestion.correctIndex} locked={selectedAnswer!==null} onPress={()=>void answerQuestion(index)}/>)}
-        <ReportContentButton key={currentQuestion.id} target={dailyReportTarget(currentQuestion)}/>
-      </View>
+      <SingleChoiceQuestionCard
+        key={`${record.dateKey}:${currentQuestion.id}`}
+        id={`${record.dateKey}:${currentQuestion.id}`}
+        question={currentQuestion.question}
+        questionNumber={record.currentIndex + 1}
+        answers={currentQuestion.answers}
+        correctIndex={currentQuestion.correctIndex}
+        explanation={currentQuestion.explanation}
+        badgeLabel={`${topicTitle(currentQuestion.categoryId)} · ${difficultyTitle(currentQuestion.difficulty)}`}
+        answer={selectedAnswer === null ? undefined : selectedAnswer}
+        onConfirm={index => answerQuestion(index)}
+        showFeedback={false}
+        reportTarget={dailyReportTarget(currentQuestion)}
+        testID="daily-choice-card"
+        testPrefix="daily-choice"
+      />
       {selectedAnswer!==null?<QuizReveal><View style={styles.feedback} accessibilityLiveRegion="polite">
         <Text style={styles.feedbackTitle}>{isCorrect?'Σωστά — το κράτησες!':'Μια νέα γνώση για σήμερα.'}</Text>
         {!isCorrect?<Text style={styles.bodyStrong}>Σωστή απάντηση: {currentQuestion.answers[currentQuestion.correctIndex]}</Text>:null}

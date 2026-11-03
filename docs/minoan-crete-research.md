@@ -74,3 +74,9 @@ Keep #6 as regional Aegean material/labour framework, #7 as Crete-specific site-
 ## Prose-only editorial update — 2026-11-01
 
 The opening prioritizes the restoration problem at Knossos; the conclusion compares administrative and urban evidence from different Cretan sites. Existing historical claims, references, image licence records and named uncertainties were not independently superseded in this pass. Stable lesson, paragraph and checkpoint IDs, question wording, media anchors, completion and XP rules remain unchanged. No factual correction is claimed. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm tests and native Android/iOS QA remain pending; status **Integrated**, not Validated/Approved.
+
+
+### Phase 2 editorial pass — 2026-11-03
+- Preserved the narrative of Malia, Quartier Mu, Gournia, Zakros and Knossos; intro now invites the reader to distinguish original Bronze Age remains from modern reconstructions. All 22 paragraphs, media and checkpoints are stable.
+- **Factual corrections:** the Heraklion Museum identifies the Snake Goddess statuettes as [painted faience](https://ca.heraklionmuseum.gr/ca/pawtucket/index.php/Detail/objects/408), not clay figurines; the [Ashmolean's Knossos reconstruction evidence](https://ashmolean.web.ox.ac.uk/article/rebuilding-the-palace-of-minos-at-knossos) specifically discusses the north entrance bastion. [École française d'Athènes](https://www.efa.gr/malia-le-quartier-mu-2/?lang=en) documents Quartier Mu c. 300m west of the palace.
+- Quiz rewritten as four version-2 questions: matching/spot-the-mistake/multiple-choice/fill-in-the-blank. No previous v1 answer-key mismatch identified. Original quizzes are frozen rather than aliased. Full [7–8 dossier](ANCIENT-GREECE-PHASE-2-LESSONS-7-8.md). **Integrated, QA outstanding**.

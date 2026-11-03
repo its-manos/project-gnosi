@@ -67,3 +67,8 @@ The shorter opening separates the temporal periods; the close uses the contrast 
 
 ## Depth redesign addendum — 2026-11-02
 The title and 22-paragraph timeline remain, but the organizing question is now how Greek in Mycenaean Linear B archives relates to the much later alphabetic Greek inscriptions, without implying that the *spoken language* disappeared. [Cambridge Companion to the Greek Iron Age, Introduction (2026)](https://www.cambridge.org/core/books/abs/cambridge-companion-to-the-greek-iron-age/introduction/EA37C0A78204DEE46F507AFB826A9E00). Eleven paragraphs reframed; all four questions rewritten as version 2; paragraph IDs and anchors unchanged. Chronological conventions and debates remain qualified. **Integrated; automated/device checks outstanding.** [Current audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md).
+
+
+### Phase 2 pair review — 2026-11-03
+- Title retained; three small Greek prose edits to avoid subjective language, an ungrounded comparison and an abrupt chronology recap. Source chronology spot-checked against the [Met timeline](https://www.metmuseum.org/toah/ht/04/eusb.html); broad boundaries remain explicitly conventional.
+- Fourth quiz v2 key fixed by reauthoring to v3. Format sequence: spot-the-mistake / fill-in-the-blank / ordering / single-choice. All old lesson/paragraph/question IDs, media positions and checkpoints remain. Historic activity preserved, stale v2 attempts intentionally isolated. See [pair dossier](ANCIENT-GREECE-PHASE-2-LESSONS-3-4.md). Status Integrated, QA pending.

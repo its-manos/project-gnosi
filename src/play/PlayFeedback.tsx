@@ -11,7 +11,7 @@ import { FeedbackAudio } from "./audio";
 import { FeedbackGate, subscribePlayFeedback, type FeedbackEvent } from "./events";
 import { playPreferences } from "./preferences";
 import { usePlayMotion } from "./motion";
-import { subscribeSoundPreview } from "./soundStatus";
+import { subscribePracticeCue, subscribeSoundPreview } from "./soundStatus";
 
 /** Mounted inside the existing account-keyed boundary. Nothing is replayed from
  * persisted data, even when a historical completion or level is restored. */
@@ -44,6 +44,12 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
       if (pending && alive && foreground.current && Date.now() - pending.at < 2500) audio.play(pending.kind, allowed);
     });
     const unsubscribePreview = subscribeSoundPreview(() => { if (allowed()) audio.preview(allowed); });
+    const unsubscribePractice = subscribePracticeCue(kind => {
+      // Match rewarded answers: a first tap during preference hydration must
+      // not silently lose its cue, and disabled sound must remain silent.
+      if (!playPreferences.getSnapshot().ready) pendingPreferenceCue = { kind, at: Date.now() };
+      else if (allowed()) audio.play(kind, allowed);
+    });
     const unsubscribe = subscribePlayFeedback(incoming => {
       const total = totalRewardXP(mergeRewardLedgers(store.getSnapshot().rewards, dailyStore.getSnapshot().doc.rewards));
       const level = levelProgress(total).level;
@@ -58,7 +64,7 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
       const showReward = earnedXP > 0 && (event.answerXP !== undefined || event.kind === "level-up" || event.kind === "mastered");
       setToast(showReward ? event : null);
     });
-    return () => { alive = false; pendingPreferenceCue = null; unsubscribe(); unsubscribePrefs(); unsubscribePreview(); reduced.remove(); state.remove(); audio.dispose(); };
+    return () => { alive = false; pendingPreferenceCue = null; unsubscribe(); unsubscribePrefs(); unsubscribePreview(); unsubscribePractice(); reduced.remove(); state.remove(); audio.dispose(); };
   }, [store, dailyStore]);
   useEffect(() => {
     if (!toast) return;

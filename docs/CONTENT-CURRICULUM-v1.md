@@ -1,5 +1,5 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
-Status: curriculum plan with research-first Integrated Ancient Greece lessons 1–24 · 2026-11-02 · not device-validated
+Status: Ancient Greece 30/30 research-first Integrated on content/curriculum-v1 · 2026-11-02 · not device-validated or Approved
 
 ## 1. Editorial philosophy
 
@@ -246,7 +246,7 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ## 12. Finalized v1 learning path — Ιστορία / Αρχαία Ελλάδα (2026-11-01)
 
-**Editorial decision:** 30 lessons in five chapters. These are planned curriculum entries, not 30 published lessons. The four pre-existing article IDs remain unchanged; only `ancient-athens` has received the research-first rewrite in this session. The pilot begins from an accessible archaeological case study, then establishes chronological and geographic foundations before proceeding into Bronze Age, poleis, conflicts and cultural developments. This opening order is thematic, not an assertion that Classical Athens predates Mycenaean Greece.
+**Editorial decision (updated 2026-11-02):** The `content/curriculum-v1` path now contains all 30 research-first Integrated lessons in five chapters; integration does not imply validation or release to `main`. The first 24 stable lesson IDs retain their order. The final six are intentionally reordered from original positions **29, 25, 28, 26, 27, 30**. This preserves the immediate transition from Alexander to the Hellenistic successor kingdoms, before a thematic retrospective on theatre, sculpture, philosophy and knowledge that culminates in the Antikythera mechanism. Chapter V is thematic, **not** a continuation of strict chronological order. All lesson IDs, source texts, question content, saved progress and compatibility metadata remain unchanged by this sequence-only decision.
 
 **Outcome:** By completion, readers can distinguish successive eras, understand the diversity of Greek-speaking communities, interpret evidence critically, explain institutions and social differences, and recognize how trade, warfare, intellectual activity and Hellenistic change reshaped the Mediterranean. Review sequencing when individual lessons are researched; no arbitrary lesson cap.
 
@@ -288,12 +288,14 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 
 ### Chapter V. Ιδέες, τέχνη και κληρονομιές
 
-25. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία»
-26. `greek-philosophy-in-context` — «Φιλοσοφία στους δρόμους και στις σχολές»
-27. `greek-science-knowledge` — «Οι αρχαίοι ερευνητές και τα όρια της γνώσης»
-28. `greek-images-sculpture` — «Αγάλματα με χρώματα και ιστορίες»
-29. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ένας κόσμος πολλών βασιλείων»
-30. `antikythera-gears` — «Ένας ουρανός μέσα σε γρανάζια» (existing live ID)
+**Sequence note (approved 2026-11-02):** First follow the immediate post-Alexander transformation in #25. Then deliberately return to earlier and overlapping cultural developments; these thematic lessons are not ordered by their earliest historical dates. Conclude with a concrete application of ancient astronomical knowledge.
+
+25. `hellenistic-kingdoms-cities` — «Μετά τον Αλέξανδρο: ποιος όριζε τη ζωή μιας πόλης;» (Integrated; QA pending; former #29)
+26. `greek-stage-tragedy` — «Το θέατρο ως δημόσια εμπειρία» (Integrated; QA pending; former #25)
+27. `greek-images-sculpture` — «Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;» (Integrated; QA pending; former #28)
+28. `greek-philosophy-in-context` — «Πού γινόταν η φιλοσοφία;» (Integrated; QA pending; former #26)
+29. `greek-science-knowledge` — «Πώς ήξεραν ότι είχαν δίκιο;» (Integrated; QA pending; former #27)
+30. `antikythera-gears` — «Μια μηχανή που υπολόγιζε τον ουρανό» (Integrated; QA pending; unchanged #30)
 
 ### Educational boundaries and overlap map
 
@@ -308,7 +310,9 @@ Reference curricula guide sequencing only; all new Gnosi articles require indepe
 - `athens-law-courts`: new #16 research-first study of the dated Draconian republication (409/8), post-403/2 laws/decrees distinction, types of legal action and access, magistrates, fourth-century citizen juries, sortition equipment, speech/evidence and ballots. Apply source criticism to orators and archaeological objects; avoid re-teaching #15 civic franchise or prewriting #17 hoplite warfare. [Research and media ledger](athens-law-courts-research.md).
 - `alexander-conquests-context`: #24 succession (336–335), Greek/Theban choices, Achaemenid institutions and local agency, coast and supply 334–332, Gaugamela 331, imperial negotiation and resistance in Central Asia/Indus, Babylon 323 and source criticism. Does not recount Philip’s 359–336 ascent (#23) or prewrite the successors’ kingdoms (#29). [Research/rights/QA](alexander-conquests-context-research.md).
 - `hellenistic-kingdoms-cities`: #29 political and civic transformations after 323; do not project later successor states back into 323.
-- `antikythera-gears`: preserve existing article as the technical case study; `greek-science-knowledge` treats broader traditions without re-explaining gears.
+- `greek-science-knowledge`: #27 differentiates observed symptoms from physiological causes, Euclidean proof from practical measurement, prediction from physically correct models; Babylonian astronomical records show shared networks. Does not repeat #26 philosophical institutions, #18 sacred sites, #3 general source criticism, #29 successor politics or #30 Antikythera gears. [Research, rights and outstanding QA](greek-science-knowledge-research.md).
+- `greek-images-sculpture`: #28 follows surviving pigment/attachments through manufacture, display and later reception; does not repeat #3 source criticism, #18 shrine networks, #27 knowledge methods, #29 successor politics or #30 engineering. [Research/media/QA](greek-images-sculpture-research.md).
+- `antikythera-gears`: preserve existing article as the technical case study; #27 treats broader traditions without re-explaining gears.
 - `world-history`: provides global and comparative framing. Avoid reusing whole narratives about world empires, Mediterranean networks or major developments already covered there.
 - `mythology`: myth is studied as tradition, interpretation and ritual; never replace historical evidence with mythology. `difficult-history`: slavery, coercion and exclusion must be accurately acknowledged, but the detailed specialist treatment belongs in its own paths.
 
@@ -500,3 +504,44 @@ A bounded editorial pass revised introductions and selected paragraph/conclusion
 - Lessons #2 and #3 have new titles, recorded in the [depth redesign audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md). The changes reduce generic school-level introductions instead of increasing article word counts arbitrarily.
 - All 14 related assessment questions have new wording and version **2**. Historical v1 attempts are intentionally incompatible; previous lesson completions, saved state and XP/events remain intact. No unrelated lessons or live progression logic changed.
 - **QA pending:** no npm/Node, native Android/iOS or Supabase execution in this session. Preserve **Integrated**, not Validated or Approved, until the new regression and device checks pass.
+
+### Ancient Greece Lesson 25 — research-first integration (2026-11-02)
+
+- **Integrated, not Validated or Approved:** Chapter V, #25 `greek-stage-tragedy`, «Το θέατρο ως δημόσια εμπειρία». [Research, evidence limits, media rights and QA record](greek-stage-tragedy-research.md).
+- **Unique coverage:** performed civic/religious Dionysian festivals; City Dionysia, Lenaia and demes; the archon, khorēgoi and competitive judging; music, masks, satyr play and chorus; evolving theatre spaces; disputed audience participation; comedy and wartime settings; selective plays and later Aristotelian analysis. Avoids biographies, ancient franchise/courts, general sanctuary festivals and military chronology.
+- **Delivery:** 6 sections, 30 anchored paragraphs, 7 uniquely versioned hard reasoning checkpoints (4/8/12/17/21/25/30), remote Commons cover and two anchored, attributed images; estimated 11-minute reading (questions may extend it). Uses existing article reader, image delivery, XP/audio and progress structures only.
+- **Path sequence:** #24 `alexander-conquests-context` → #25 `greek-stage-tragedy` → temporarily #30 `antikythera-gears` in the running app; planned #26–29 have no lesson objects yet. **Next planned curriculum lesson:** #26 `greek-philosophy-in-context` → «Φιλοσοφία στους δρόμους και στις σχολές».
+- **Current accounting:** **30 planned / 5 chapters; 26 in app (25 Integrated research-first #1–25 + 1 old Drafted #30), 4 Not started #26–29, 0 Validated, 0 Approved.** Older counts above are dated historical handoffs.
+- **Compatibility/verification:** no edits to Lessons 1–24, Lesson 30 draft, historical question fingerprints (including Lesson 15 `q_470dac57` vs `q_22487292`), saved history, XP, bookmarks, sound or sync. Updated only import, path and relevant tests. Connector authoring/readback and static inspection **are not** Node/npm, Android/iOS, network or Supabase passes. Full automated/device and source/rights editorial QA is **pending**; see research record.
+- **Branch discipline:** commits to `content/curriculum-v1`, **not merged** into `main`.
+
+
+### Ancient Greece Lesson 28 — research-first integration (2026-11-02)
+- **Integrated, not Validated/Approved:** `greek-images-sculpture`, «Τι έβλεπαν μπροστά σε ένα αρχαίο άγαλμα;». [Sources, claim ledger, image-rights and QA](greek-images-sculpture-research.md).
+- **28 stable paragraphs, six anchored version-1 reasoning questions, 1,379 narrative words / 8-minute reading estimate (question interaction additional)**, three credited remote archaeological photographs. Manufacture, colour, original viewers, damage, Roman adaptation, museum reception; no catalog of sculptors or universal polychrome claim.
+- **Navigation:** #25 → #26 → #27 → #28 → earlier #30; unpublished #29 still absent. **30 planned, 29 in app = 28 Integrated + 1 Drafted (#30), 1 Not started (#29), 0 Validated, 0 Approved.**
+- **Compatibility:** additive new lesson, path-only older test updates, reader mock import; preserved all old lessons/quiz data, historic #15 fingerprint keys, XP/audio/replay, backups/sync. No migration.
+- **Verification:** repository and source/rights inspection + authoring-time static checks only. Local Node/npm, Android/iOS, media delivery and independent editorial QA pending. Keep #25–27 Integrated.
+
+### Ancient Greece Lesson 29 — research-first integration (2026-11-02)
+- **Integrated, NOT Validated or Approved:** `hellenistic-kingdoms-cities`, «Μετά τον Αλέξανδρο: ποιος όριζε τη ζωή μιας πόλης;». [Bibliography, rights, claim-level evidence, QA, full-path handoff](hellenistic-kingdoms-cities-research.md).
+- **Research focus:** Magnesia's letters, Athenian civic decree and two different Egyptian documentary archives test post-323 royal/civic power, social inequalities and local agency; not a military/royal chronology. Six sections, **29 stable paragraphs, 1,672 words (intro included), 9 min at 190 wpm** excluding six version-1 hard checkpoint interactions at 5/10/15/20/25/29.
+- **Media:** Zenon tax-related papyrus cover, Seleucid coin and Museo Egizio Greek/demotic papyrus inline; all credited remote Commons files and no pipeline/style change.
+- **Path:** `greek-stage-tragedy` → `greek-philosophy-in-context` → `greek-science-knowledge` → `greek-images-sculpture` → `hellenistic-kingdoms-cities` → `antikythera-gears`. **30 planned / 30 present / 29 Integrated / 1 Drafted (#30) / 0 Not started / 0 Validated / 0 Approved.**
+- **Compatibility:** Lessons 1–28 and 30 untouched; Lesson 15 historic `q_470dac57` and `q_22487292` untouched, no XP/audio/backup/sync rewrites. Reader mock import, dedicated Node test and five explicit order tests updated only for path positions.
+- **Not run:** npm/Node and native Android/iOS/remote media/Supabase/audio/XP tests; independent historian and Greek copyedit pending. #25–28 remain Integrated; no merge to main.
+
+### Ancient Greece Lesson 30 — research-first upgrade (2026-11-02)
+- **Integrated, not Validated or Approved:** existing `antikythera-gears` (previous older Drafted) rewritten in its **original catalogue position**, now «Μια μηχανή που υπολόγιζε τον ουρανό». [Research-first evidence, literature, rights, quiz compatibility and QA dossier](antikythera-gears-research.md).
+- **Narrative:** 27 stable paragraphs across six analytical sections, **1,391 Greek narrative words (including introduction) = 8 min at 190 wpm**. Surviving bronze fragments, 1902 identification, gearing ratios, 19-year Metonic calendar, 223-month Saros eclipse cycle, 4-year games dial, 2005 X-ray CT, 2021 hypothetical planetary model and creator/ownership limits. Six new version-2 hard reasoning questions after paragraphs 4/9/14/19/24/27.
+- **Media:** original cover kept and accurately captioned; two anchored Commons photographs of an authentic fragment and an explicitly labeled **modern Price reconstruction** added without local bundle/dependency or loader changes.
+- **Historical quiz safety:** shipped four-question fingerprint **`q_7ffb549e`** is documented, historical events and completion/XP preserved but **not** aliased to new incompatible six-question quiz. Removed old `compatibleQuizKeys` alias, set `requireCurrentAttemptQuiz:true`; old unfinished quiz positions deliberately not reused. Original historical fixture remains immutable; regression expectations recognize new incompatible #30. Lesson 15 `q_470dac57` and `q_22487292` unchanged.
+- **Final counts:** **30 planned / 30 present / 30 research-first Integrated / 0 Drafted / 0 Not started / 0 Validated / 0 Approved.** This is code integration, **not** quality acceptance; #25–29 still await their individual QA.
+- **Unexecuted:** npm typecheck/content validator, Node regressions, mock-native tests, real Android/iOS images, first-answer sounds, XP/replay, guest/offline/backup, Supabase synchronization and independent historian/Greek copyedit. No merge into `main`.
+
+
+### Ancient Greece Phase 1 — approved sequence amendment (2026-11-02)
+- **Order only:** original 1–24 unchanged; old slots 29, 25, 28, 26, 27, 30 now occupy 25–30.
+- **Source of truth:** `src/utils/lessonPath.ts` explicit `ancient-greece` array, 30 unique stable IDs. The chapter table above reflects current titles in the app; dated session notes below remain historical snapshots from the original integration order.
+- **No migrations:** no edits to definitions/quiz keys, checkpoint anchors, completion/XP/activity records, saved IDs, attempts, image/media URLs or Supabase schema. Previously completed and in-progress lesson IDs stay accessible through existing rules. Sequential *next lesson* links and prerequisites deliberately follow the new order.
+- **Verification:** updated order-dependent Node test fixtures plus `scripts/test-ancient-greece-order-v2.cjs`; local `npm run typecheck`, `npm run validate:content`, focused tests, Android/iOS, resume/replay/offline and Supabase QA must still be executed before `Validated`/merging to `main`. The GitHub connector cannot run local Node/Expo tests.

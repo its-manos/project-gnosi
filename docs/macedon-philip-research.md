@@ -73,3 +73,8 @@ _2026-11-01 · content/curriculum-v1 · Integrated, not Validated or Approved_
 - **Dependencies:** historical npm ci reported 13 audit findings (1 low/10 moderate/2 high); treat separately. No force-fix.
 - **Status:** Integrated, not Validated or Approved. No past lesson status promotion without evidence.
 - **Next only:** Lesson 24 `alexander-conquests-context`, «Ο Αλέξανδρος, οι εκστρατείες και οι πηγές»; recheck live repo first; no Lesson 24 writing or integration in this session.
+
+
+## Phase 2 research-first revision, 2026-11-03
+- New opening/updated `philip-06`, `philip-09`, `philip-15`, `philip-21`, `philip-30`, `philip-33`. Distinguish early dynastic contingency, sarissa vs entire army, archaeological destruction vs rhetoric, and 346 Phocian two-vote transfer. Consult [AIO IG II² 236, original 338/7 treaty fragments](https://www.atticinscriptions.com/inscription/IGII2/236), [Harris Oxford public abstract](https://academic.oup.com/book/47008/chapter-abstract/422641016), and [Yale historical chronology](https://oyc.yale.edu/sites/default/files/files/13twilightofthepolis_1.pdf). Full restricted scholarship not claimed accessed.
+- Quiz v2: seven stable question IDs, original numeric `[2,1,1,3,0,2,3]`, types spot/matching/matching/fill/spot/matching/choice. 33 original paragraph IDs, sections, anchors, sources and media untouched. v1 frozen without aliases; Node/native QA outstanding. [Phase 2 report](ANCIENT-GREECE-PHASE-2-LESSONS-23-24.md).

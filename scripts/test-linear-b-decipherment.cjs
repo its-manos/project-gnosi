@@ -13,8 +13,8 @@ assert.equal(paragraphs.length,21);
 assert.equal(new Set(paragraphs.map(p=>p.id)).size,21);
 assert.deepEqual(progress.getQuestionPlacements(lesson).map(p=>p.afterParagraphNumber),[4,8,13,17,21]);
 assert.deepEqual(lesson.checkpoints.map(c=>c.questionId),lesson.questions.map(q=>q.id));
-assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[1,0,2,3,0]);
-assert.ok(lesson.questions.every(q=>q.id&&q.version==='1'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>30));
+assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[2,0,2,0,0]);
+assert.ok(lesson.questions.every(q=>q.id&&q.version===(['linear-b-tripod-test','linear-b-limits'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>30));
 assert.deepEqual(inlineArticleMedia[lesson.id].map(m=>m.afterParagraphId),['pylos-test-1953']);
 const a=lesson.questions.map(q=>q.correctIndex);
 for(let i=0;i<=a.length;i++){

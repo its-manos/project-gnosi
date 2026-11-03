@@ -13,7 +13,8 @@ assert.equal(l.compatibleQuizKeys,undefined);assert.equal(l.sections.length,7);
 const ps=l.sections.flatMap(s=>s.paragraphs);assert.equal(ps.length,35);
 assert.deepEqual(ps.map(p=>p.id),Array.from({length:35},(_,i)=>'war-'+String(i+1).padStart(2,'0')));
 assert.equal(l.questions.length,7);assert.equal(new Set(l.questions.map(q=>q.id)).size,7);
-assert.ok(l.questions.every(q=>q.version==='1'&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>70));
+assert.deepEqual(l.questions.map(q=>q.correctIndex),[1,0,2,3,1,0,2]);
+assert.ok(l.questions.every(q=>q.version===(['war-melos-source','war-404-not-end'].includes(q.id)?'3':'2')&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>70));
 assert.deepEqual(l.checkpoints.map(c=>c.questionId),l.questions.map(q=>q.id));
 assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber),[4,9,14,19,24,29,35]);
 assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
@@ -22,7 +23,7 @@ assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.
 assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['war-12','war-23']);
 assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&/Special:FilePath/.test(m.url)&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(19,25).map(x=>x.id),['athenian-empire',id,'greek-crises-fourth-century','macedon-philip','alexander-conquests-context','antikythera-gears']);
+assert.deepEqual(seq.slice(19,28).map(x=>x.id),['athenian-empire', 'peloponnesian-war', 'greek-crises-fourth-century', 'macedon-philip', 'alexander-conquests-context', 'hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context']);
 assert.ok(paths.getLessonAccess(l,lessons,['athenian-empire']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['persian-wars-greek-world']).unlocked);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='athenian-empire'),lessons,['athenian-empire'])?.id,id);

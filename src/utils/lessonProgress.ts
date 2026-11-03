@@ -55,3 +55,53 @@ export function getResumeParagraphNumber(lesson: Lesson, checkpointAnswers: Reco
   const next = placements[answered - 1].afterParagraphNumber + 1;
   return Math.min(next, getParagraphCount(lesson));
 }
+
+/**
+ * Display-only placement of checkpoints. Published paragraph anchors are kept
+ * intact for editorial history and image positioning. Opted-in lessons reveal
+ * their questions after the last paragraph of the containing section.
+ *
+ * Several questions may share a section ending. The reader presents them in
+ * canonical question order; none of the saved answer slots are renumbered.
+ */
+export function getReadingQuestionPlacements(lesson: Lesson): QuestionPlacement[] {
+  const authored = getQuestionPlacements(lesson);
+  if (lesson.questionPlacement !== "section-end") return authored;
+  const paragraphs = lesson.sections.flatMap(section => section.paragraphs);
+  const endByParagraph = new Map<number, number>();
+  let count = 0;
+  for (const section of lesson.sections) {
+    const start = count + 1;
+    count += section.paragraphs.length;
+    for (let number = start; number <= count; number++) endByParagraph.set(number, count);
+  }
+  return authored.map(placement => {
+    const end = endByParagraph.get(placement.afterParagraphNumber);
+    if (end === undefined || end === placement.afterParagraphNumber) return placement;
+    return {
+      ...placement,
+      afterParagraphNumber: end,
+      afterParagraphId: getParagraphId(paragraphs[end - 1], end),
+    };
+  });
+}
+
+/** The reading gate follows displayed checkpoints, not their authored anchors. */
+export function getReadingVisibleParagraphLimit(lesson: Lesson, checkpointAnswers: Record<number, number>): number {
+  const next = getReadingQuestionPlacements(lesson).find(p => checkpointAnswers[p.questionIndex] === undefined);
+  return next ? next.afterParagraphNumber : getParagraphCount(lesson);
+}
+
+/**
+ * Resume at the first pending question when it shares the already answered
+ * question's section ending; otherwise resume at the next paragraph as before.
+ */
+export function getReadingResumeParagraphNumber(lesson: Lesson, checkpointAnswers: Record<number, number>): number | null {
+  const placements = getReadingQuestionPlacements(lesson);
+  let answered = 0;
+  while (answered < placements.length && checkpointAnswers[placements[answered].questionIndex] !== undefined) answered++;
+  if (answered === 0) return null;
+  const previousEnd = placements[answered - 1].afterParagraphNumber;
+  if (answered < placements.length && placements[answered].afterParagraphNumber === previousEnd) return previousEnd;
+  return Math.min(previousEnd + 1, getParagraphCount(lesson));
+}

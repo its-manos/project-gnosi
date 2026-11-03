@@ -1,4 +1,5 @@
 import type { Category, Lesson, Subcategory } from "../data/lessons";
+import type { QuizAnswer } from "../quiz/types";
 import ReaderLessonScreen from "./ReaderLessonScreen";
 
 export type Props = {
@@ -9,7 +10,10 @@ export type Props = {
   bookmarksLoaded: boolean;
   onToggleSaved: (lessonId: string) => void;
   checkpointAnswers: Record<number, number>;
-  onAnswerCheckpoint: (questionIndex: number, answerIndex: number, correctIndex: number) => void;
+  typedCheckpointAnswers?: Record<number, QuizAnswer>;
+  /** Dev-only local article pilots should never report synthetic content. */
+  enableReporting?: boolean;
+  onAnswerCheckpoint: (questionIndex: number, answerIndex: number, correctIndex: number, typedValue?: unknown) => void;
   onFinishLesson: () => void;
   onBack: () => void;
 };

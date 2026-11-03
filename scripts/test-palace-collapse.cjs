@@ -14,10 +14,10 @@ const paragraphs=lesson.sections.flatMap(s=>s.paragraphs);
 assert.equal(paragraphs.length,27);
 assert.equal(new Set(paragraphs.map(p=>p.id)).size,27);
 assert.equal(lesson.questions.length,5);
-assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[1,3,2,0,3]);
+assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[2,0,2,0,3]);
 assert.deepEqual(lesson.checkpoints.map(c=>c.questionId),lesson.questions.map(q=>q.id));
 assert.deepEqual(progress.getQuestionPlacements(lesson).map(x=>x.afterParagraphNumber),[4,9,14,21,27]);
-assert.ok(lesson.questions.every(q=>q.id&&q.version==='1'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>35));
+assert.ok(lesson.questions.every(q=>q.id&&q.version===(['palace-pylos-archive','palace-evidence-scales'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>35));
 assert.deepEqual(inlineArticleMedia[lesson.id].map(f=>f.afterParagraphId),['mycenae-after']);
 const answers=lesson.questions.map(q=>q.correctIndex);
 for(let i=0;i<=answers.length;i++){

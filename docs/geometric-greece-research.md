@@ -54,3 +54,9 @@ Plan remains **30 lessons/5 chapters, 13 in app: 11 Integrated, 2 earlier Drafte
 ## Prose-only editorial update — 2026-11-01
 
 The opening now uses Lefkandi and early writing on vessels as concrete handles; the subsequent paragraph retains the explanation of missing palatial archives. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.
+
+
+## Phase 2 editorial review — 2026-11-03
+- New intro frames the Lefkandi Toumba burials alongside the return of alphabetic writing, without suggesting a single evolutionary timeline. Paragraphs `g3`, `g6`, `g7`, `g12` clarified for archaeological dating, the older Cypriot bronze urn and why lavish burials cannot prove formal royal titles.
+- Cross-checked [British School at Athens Lefkandi](https://www.bsa.ac.uk/2019/01/24/lefkandi-textile-on-display-in-the-national-archaeological-museum/), [National Archaeological Museum on Lefkandi krater](https://www.namuseum.gr/en/hidden_museum/the-urn-krater-of-the-lefkandi-lord/), [Oxford early writing chapter](https://doi.org/10.1093/oso/9780198908746.003.0005); no claim of a fully read paywalled monograph. No new images.
+- Quiz reauthored as v2, correct `[1,2,1,0]` for ordering, matching, spot-the-mistake, fill-in-the-blank. V1 snapshot preserved; original IDs/anchors/media retained. See [Phase 2 pair 11–12](ANCIENT-GREECE-PHASE-2-LESSONS-11-12.md). Integrated only; local and device tests pending.

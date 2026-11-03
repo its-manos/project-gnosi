@@ -1,6 +1,6 @@
 import { emitPlayFeedback } from "../play/events";
 import { hasReward, quizRewardSummary } from "../gamification/rewards";
-import { adaptLessonQuestion } from "../quiz/adapters";
+import { adaptLessonQuestion, adaptInteractiveLessonQuestion, projectInteractiveLessonAnswer } from "../quiz/adapters";
 import { advanceQuizSession, calculateQuizResults, createQuizSession, evaluateChoice, submitQuizAnswer } from "../quiz/engine";
 import { legacyAnswerSlots, restoreLegacySession } from "../quiz/compatibility";
 import type { QuizSession } from "../quiz/types";
@@ -214,7 +214,8 @@ export function useLearningApp() {
   function answerCheckpoint(
     checkpointIndex: number,
     answerIndex: number,
-    correctIndex: number
+    correctIndex: number,
+    typedValue?: unknown,
   ) {
     if (renderRun !== completionRun.current) return;
     const lesson = lessons.find(item => item.id === activeLessonId);
@@ -224,14 +225,27 @@ export function useLearningApp() {
     const normalized = lesson.questions.slice(0, getInlineQuestionCount(lesson)).map((_, i) => adaptLessonQuestion(lesson, i));
     const question = normalized[checkpointIndex];
     if (!question) return;
+    const interactive = adaptInteractiveLessonQuestion(lesson, checkpointIndex);
+    if (interactive && interactive.type !== "multiple-choice") {
+      const isRich = ["multiple-select", "ordering", "matching"].includes(interactive.type);
+      if ((isRich && typedValue === undefined) ||
+        (typedValue !== undefined &&
+          projectInteractiveLessonAnswer(lesson, checkpointIndex, typedValue) !== answerIndex)) return;
+    } else if (typedValue !== undefined) return;
     const session = restoreLegacySession(`inline:${lesson.id}`, "lesson", normalized, previous);
     const transition = submitQuizAnswer(session, { id: question.id, version: question.version }, answerIndex);
     if (!transition.changed) return;
     const nextAnswers = legacyAnswerSlots(transition.session);
     const nextScore = calculateQuizResults(transition.session).correctCount;
     // Store state changes synchronously before React renders, preventing stale double taps.
+    const previousTyped = current.attempts[activeLessonId]?.typedCheckpointAnswers ?? {};
+    const typedCheckpointAnswers = typedValue !== undefined && interactive
+      ? { ...previousTyped, [checkpointIndex]: { questionVersion: interactive.version,
+          value: JSON.parse(JSON.stringify(typedValue)) } }
+      : previousTyped;
     store.answer(activeLessonId, {
       checkpointAnswers: nextAnswers,
+      ...(Object.keys(typedCheckpointAnswers).length ? { typedCheckpointAnswers } : {}),
       quizKey: quizFingerprint(lesson.questions),
       score: nextScore,
       updatedAt: Date.now(),
@@ -339,6 +353,7 @@ export function useLearningApp() {
     questionIndex,
     selectedAnswer,
     checkpointAnswers,
+    typedCheckpointAnswers: lessonAttempts[activeLessonId]?.typedCheckpointAnswers ?? {},
     score,
     earnedXP,
     combo: quizRewardSummary(activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)), checkpointAnswers, "lesson").combo,

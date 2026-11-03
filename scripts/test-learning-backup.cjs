@@ -18,11 +18,15 @@ const data=require(root+'/src/data/lessons.ts');
 const progress=compile('src/utils/lessonProgress.ts');
 // Use the actual quiz fingerprint so rewritten articles accept this current attempt.
 const activity=compile('src/utils/learningActivity.ts',{'./dailyChallenge':{getAthensDateKey:()=> '2026-10-30'}});
-const util=compile('src/utils/learningBackup.ts',{'../quiz/engine':compile('src/quiz/engine.ts'),'../data/lessons':data,'./lessonProgress':progress,'./learningActivity':activity});
+const quizEngine=compile('src/quiz/engine.ts');
+const adapters=compile('src/quiz/adapters.ts', {'./engine':quizEngine});
+const util=compile('src/utils/learningBackup.ts',{'../quiz/engine':quizEngine,'../quiz/adapters':adapters,'../data/lessons':data,'./lessonProgress':progress,'./learningActivity':activity});
 const plain=x=>JSON.parse(JSON.stringify(x));
 const a=data.lessons[0],b=data.lessons[1],c=data.lessons[2];
 const empty=()=>({schemaVersion:1,completedIds:[],savedIds:[],attempts:{}});
-const attempt=(n,time=100,replay=false)=>({quizKey:activity.quizFingerprint(a.questions),checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),score:999,updatedAt:time,replayOfCompletedLesson:replay});
+const attempt=(n,time=100,replay=false)=>({quizKey:activity.quizFingerprint(a.questions),checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),
+ ...(n>1?{typedCheckpointAnswers:{1:{questionVersion:adapters.adaptInteractiveLessonQuestion(a,1).version,value:[...a.questions[1].presentation.correctIndices]}}}:{}),
+ score:999,updatedAt:time,replayOfCompletedLesson:replay});
 const local={...empty(),completedIds:[b.id],savedIds:[a.id],attempts:{[a.id]:attempt(2)}};
 const cloud={...empty(),completedIds:[c.id],savedIds:[b.id],attempts:{[a.id]:attempt(1,200)}};
 const merged=util.mergeLearningBackups(local,cloud);

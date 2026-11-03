@@ -21,7 +21,7 @@ try {
   }
   assert.equal(paths.getNextPathLesson(first,lessons,[])?.id,paths.getSubcategoryPath(lessons,'ancient-greece')[1].id);
   // Unlocking is not a simulated completion, and read-only discovery can see later lessons.
-  assert.equal(paths.getLessonAccess(last,lessons,[]).prerequisite?.id,'alexander-conquests-context');
+  assert.equal(paths.getLessonAccess(last,lessons,[]).prerequisite?.id,'greek-science-knowledge');
   const picks=getHomeDiscovery(lessons,[],[],'2026-11-02');
   assert.ok(picks.featured&&paths.getLessonAccess(picks.featured,lessons,[]).unlocked);
   setDevLessonUnlockAll(false);

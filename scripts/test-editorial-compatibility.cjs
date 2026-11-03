@@ -17,11 +17,12 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
 (async()=>{
  assert.ok(lessons.length >= before.length);assert.equal(categories.length,7);assert.ok(subcategories.length >= 21);
  assert.deepEqual(lessons.filter(l=>before.some(old=>old.id===l.id)).map(l=>l.id),before.map(l=>l.id),'all existing catalogue IDs and their relative ordering survive additions');
- // Two shipped quizzes were substantially rewritten: retain the old activity, not its answer indices.
+ // Several shipped quizzes were substantially rewritten: retain historical activity, not old question indices.
  const revisedQuizzes={
   'ancient-athens':{count:3,placements:[3,9,13],resume:4},
   'linear-b-decipherment':{count:5,placements:[4,8,13,17,21],resume:5},
   'athens-who-voted':{count:6,placements:[4,9,13,17,21,25],resume:5},
+  'antikythera-gears':{count:6,placements:[4,9,14,19,24,27],resume:5},
  };
  let changed=0;
  for(const old of before){
@@ -40,6 +41,7 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
    assert.notEqual(oldKey,activity.quizFingerprint(lesson.questions));
    assert.equal(activity.lessonQuizMatches(lesson,oldKey),false,'incompatible old quiz must not be aliased');
    if(old.id==='linear-b-decipherment')assert.ok(!lesson.compatibleQuizKeys?.includes(oldKey),'removed Linear B alias must stay removed');
+   if(old.id==='antikythera-gears'){assert.equal(oldKey,'q_7ffb549e');assert.equal(lesson.compatibleQuizKeys,undefined,'removed Antikythera legacy quiz alias');}
    const legacy={old:event(lesson,oldKey,[1,3])};
    assert.equal(lessonReview(lesson,legacy).status,'changed');
    assert.deepEqual(lessonReview(lesson,legacy).indices,[]);
@@ -82,7 +84,7 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
   assert.equal(progress.getInlineQuestionCount(lesson),4);
   assert.equal(progress.getResumeParagraphNumber(lesson,{0:old.questions[0].correctIndex}),3);
  }
- assert.equal(changed,34,'the 42 otherwise-compatible legacy lessons retain 34 changed textual quiz fingerprints; Athens, Linear B and the Athens franchise rewrite have incompatible versions');
+ assert.equal(changed,33,'the 41 otherwise-compatible legacy lessons retain 33 changed textual quiz fingerprints; Athens, Linear B, the Athens franchise and Antikythera have incompatible versions');
  // Load real old-format persisted progress through the current store.
  const old=before.find(row=>row.id!=='ancient-athens'),lesson=lessons.find(row=>row.id===old.id),key=activity.quizFingerprint(old.questions);
  const doc={...sync.emptySyncDocument(),clock:1,progress:{[lesson.id]:{stamp:[1,'oldphone'],value:{completed:true,attempt:null}}},activity:{old:event(lesson,key,[1,3])}};
@@ -111,5 +113,5 @@ const event=(l,key,missed,time=at)=>({lessonId:l.id,at:time,wasCompleted:false,q
   assert.ok(restarted.getSnapshot().backup.completedIds.includes(revised.id),'old completion survives restart: '+revisedId);
   assert.deepEqual(restarted.getSnapshot().activity.old,legacyEvent,'historical event survives restart: '+revisedId);
  }
- console.log('Editorial checks passed: 42 otherwise-compatible legacy lessons preserve answer slots, quiz aliases and weekly reviews; the Athens opener, Linear B and Athens franchise retain old completion/events without obsolete mistake indices.');
+ console.log('Editorial checks passed: 41 otherwise-compatible legacy lessons preserve answer slots, quiz aliases and weekly reviews; the Athens opener, Linear B, Athens franchise and Antikythera retain old completion/events without obsolete mistake indices.');
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>stores.forEach(s=>s.stop()));

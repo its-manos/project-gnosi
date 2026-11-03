@@ -21,6 +21,11 @@ import { peloponnesianWarLessons } from "./peloponnesianWarLessons";
 import { greekCrisesFourthCenturyLessons } from "./greekCrisesFourthCenturyLessons";
 import { macedonPhilipLessons } from "./macedonPhilipLessons";
 import { alexanderConquestsLessons } from "./alexanderConquestsLessons";
+import { greekStageTragedyLessons } from "./greekStageTragedyLessons";
+import { greekPhilosophyInContextLessons } from "./greekPhilosophyInContextLessons";
+import { greekScienceKnowledgeLessons } from "./greekScienceKnowledgeLessons";
+import { greekImagesSculptureLessons } from "./greekImagesSculptureLessons";
+import { hellenisticKingdomsCitiesLessons } from "./hellenisticKingdomsCitiesLessons";
 import { astronomyLessons, astronomyRevisions } from "./astronomyLessons";
 import { architectureLessons } from "./architectureLessons";
 import { geologyLessons } from "./geologyLessons";
@@ -48,6 +53,14 @@ export type LessonQuestion = QuestionMetadata & {
   answers: string[];
   correctIndex: number;
   explanation: string;
+  /** Optional structured presentation. Legacy numeric answers are retained for
+   * scoring/reviews; rich submissions are stored separately by question version. */
+  presentation?:
+    | { type: "spot-the-mistake"; correction: string }
+    | { type: "fill-in-the-blank"; before: string; after: string }
+    | { type: "multiple-select"; correctIndices: number[] }
+    | { type: "ordering"; items: { id: string; label: string }[]; correctOrder: string[] }
+    | { type: "matching"; pairs: { leftId: string; leftLabel: string; rightId: string; rightLabel: string }[] };
 };
 
 export type LessonParagraph = string | { id: string; text: string };
@@ -72,6 +85,8 @@ export type Lesson = {
   requireCurrentAttemptQuiz?: boolean;
   /** Explicit, stable anchor-based checkpoint placement. Omit for legacy pairs. */
   checkpoints?: LessonCheckpoint[];
+  /** Reader-only display rule; authored checkpoints, IDs and quiz keys stay unchanged. */
+  questionPlacement?: "section-end";
   contentNote?: string;
   editorialReviewedAt?: string;
   /** Prior quiz versions with identical objectives, question order and answer keys. */
@@ -282,7 +297,7 @@ const originalLessons: Lesson[] = [
           },
           {
             "id": "theta-workshop",
-            "text": "Στο πρώτο μισό του 3ου αιώνα π.Χ. η ίδια αυλή απέκτησε λεκάνες σε διαφορετικά ύψη, σωλήνα καθαρού νερού και αποχέτευση. Η ανασκαφική ομάδα θεωρεί πιθανό ότι ο χώρος χρησιμοποιήθηκε για πλύσιμο ή επεξεργασία υφασμάτων. Είναι τεκμηριωμένη η εγκατάσταση· η ακριβής δραστηριότητα παραμένει ερμηνεία. Και αυτή είναι ήδη μια σημαντική ανατροπή: ένα «σπίτι» μπορεί σε άλλη εποχή να λειτουργούσε και ως εργαστήριο."
+            "text": "Στο πρώτο μισό του 3ου αιώνα π.Χ. η ίδια αυλή απέκτησε λεκάνες σε διαφορετικά ύψη, σωλήνα καθαρού νερού και αποχέτευση. Η ανασκαφική ομάδα θεωρεί πιθανό ότι ο χώρος χρησιμοποιήθηκε για πλύσιμο ή επεξεργασία υφασμάτων. Είναι τεκμηριωμένη η εγκατάσταση· η ακριβής δραστηριότητα παραμένει ερμηνεία. Οι μετατροπές του χώρου δείχνουν ότι η ίδια αυλή εξυπηρετούσε διαφορετικές ανάγκες σε διαφορετικές εποχές."
           }
         ]
       },
@@ -325,7 +340,7 @@ const originalLessons: Lesson[] = [
         "paragraphs": [
           {
             "id": "status-distinction",
-            "text": "Ο πληθυσμός της Αθήνας δεν αποτελούνταν μόνο από άνδρες πολίτες. Γυναίκες, παιδιά, μέτοικοι —ελεύθεροι κάτοικοι χωρίς αθηναϊκή πολιτεία— και υποδουλωμένοι άνθρωποι κινούνταν στους ίδιους δρόμους και συμμετείχαν στην παραγωγή με άνισους όρους. Η νομική τους θέση επηρέαζε τα δικαιώματα και τις υποχρεώσεις τους, χωρίς να καθορίζει με απλό τρόπο το επάγγελμα ή τον πλούτο καθενός."
+            "text": "Ο πληθυσμός της Αθήνας δεν αποτελούνταν μόνο από άνδρες πολίτες. Γυναίκες, παιδιά, μέτοικοι —ελεύθεροι κάτοικοι χωρίς τα δικαιώματα του Αθηναίου πολίτη— και υποδουλωμένοι άνθρωποι κινούνταν στους ίδιους δρόμους και συμμετείχαν στην παραγωγή με άνισους όρους. Η νομική τους θέση επηρέαζε τα δικαιώματα και τις υποχρεώσεις τους, χωρίς να καθορίζει με απλό τρόπο το επάγγελμα ή τον πλούτο καθενός."
           },
           {
             "id": "women-roles",
@@ -337,7 +352,7 @@ const originalLessons: Lesson[] = [
           },
           {
             "id": "questions-not-answers",
-            "text": "Δεν είναι ένδειξη αδυναμίας να παραδεχτούμε ότι δεν μπορούμε να αποδώσουμε όνομα, φύλο ή κοινωνική θέση στον κάτοχο ενός αντικειμένου. Είναι διάκριση ανάμεσα σε αυτό που βρέθηκε και σε αυτό που θα θέλαμε να μάθουμε. Η αρχαιολογία μάς επιτρέπει να διατυπώνουμε καλύτερες ερωτήσεις, όχι να διαβάζουμε τις σκέψεις των νεκρών."
+            "text": "Ένα αγγείο ή ένα εργαλείο δεν μας λέει από μόνο του το όνομα, το φύλο ή την κοινωνική θέση του κατόχου του. Χρειάζεται να ξεχωρίζουμε τα ευρήματα από όσα συμπεραίνουμε γι’ αυτά. Η αρχαιολογία μάς επιτρέπει να διατυπώνουμε καλύτερες ερωτήσεις, όχι να διαβάζουμε τις σκέψεις των νεκρών."
           }
         ]
       },
@@ -404,60 +419,77 @@ const originalLessons: Lesson[] = [
     "questions": [
       {
         "id": "athens-theta-phases",
-        "version": "2",
+        "version": "3",
         "conceptIds": [
           "historical-layers",
           "archaeological-interpretation"
         ],
         "difficulty": "medium",
-        "question": "Στην Οικία Θ βρέθηκαν ίχνη συμποσίου και, από μεταγενέστερη φάση, λεκάνες με σωληνώσεις. Ποιο συμπέρασμα στηρίζεται καλύτερα στα στοιχεία;",
+        "question": "Συμπλήρωσε το συμπέρασμα για τις μετατροπές της Οικίας Θ.",
         "answers": [
-          "Όλες οι εγκαταστάσεις χρησιμοποιούνταν υποχρεωτικά την ίδια ημέρα.",
-          "Ο χώρος άλλαξε χρήση σε διαφορετικές περιόδους, ενώ ο ακριβής τύπος εργαστηρίου δεν είναι βέβαιος.",
-          "Ο αρχικός ιδιοκτήτης διηύθυνε με βεβαιότητα πλυντήριο υφασμάτων.",
-          "Τα παλαιότερα δωμάτια ήταν απαραίτητα μέρη δημόσιου κτιρίου."
+          "διαφορετικές χρήσεις του χώρου σε διαφορετικές εποχές",
+          "την ακριβή ιδιότητα των αρχικών ενοίκων",
+          "ότι το εργαστήριο υπήρχε από την ίδρυση του σπιτιού",
+          "μόνο τη διακόσμηση της αρχικής κατοικίας"
         ],
-        "correctIndex": 1,
-        "explanation": "Η αλλαγή των κατασκευών δείχνει διαφορετικές φάσεις χρήσης. Η πιθανή επεξεργασία υφασμάτων ερμηνεύει τις λεκάνες και τους αγωγούς, αλλά δεν είναι ταυτόσημη με το ίδιο το εύρημα."
+        "correctIndex": 0,
+        "explanation": "Ο ανδρώνας και οι μεταγενέστερες λεκάνες ανήκουν σε διαφορετικές φάσεις. Οι εγκαταστάσεις είναι ευρήματα, ενώ η ειδική χρήση τους ως χώρου επεξεργασίας υφασμάτων παραμένει ερμηνεία.",
+        "presentation": {
+          "type": "fill-in-the-blank",
+          "before": "Οι μετατροπές της αυλής μαρτυρούν ",
+          "after": "."
+        }
       },
       {
         "id": "athens-agora-evidence",
-        "version": "2",
+        "version": "4",
         "conceptIds": [
           "agora-functions",
           "material-evidence"
         ],
         "difficulty": "medium",
-        "question": "Ποια ομάδα ευρημάτων δείχνει καλύτερα ότι η Αγορά είχε περισσότερες από μία λειτουργίες;",
+        "question": "Μια έκθεση για την αθηναϊκή Αγορά θέλει να τεκμηριώσει διαφορετικές χρήσεις του χώρου. Ποια ευρήματα στηρίζουν αυτή την εικόνα; Επίλεξε όλες τις σωστές απαντήσεις.",
         "answers": [
-          "Μόνο αμφορείς με παρόμοια διακόσμηση.",
-          "Μόνο λείψανα μνημειακών ναών.",
-          "Μόνο μαρτυρίες συγγραφέων για πολιτικές συζητήσεις.",
-          "Δημόσιες επιγραφές, σταθμά συναλλαγών και οικιακή κεραμική από γειτονικά κτίρια."
+          "Σταθμά και μέτρα από την περιοχή, ως ενδείξεις πρακτικών συναλλαγών.",
+          "Δημόσιες επιγραφές, ως στοιχεία για αποφάσεις και κανόνες της πόλης.",
+          "Οικιακή κεραμική από κατοικίες δίπλα στην πλατεία, ως ένδειξη καθημερινής ζωής στη γειτονιά.",
+          "Δημόσιες επιγραφές, ως άμεση καταγραφή του ημερήσιου όγκου εμπορίου στην Αγορά."
         ],
-        "correctIndex": 3,
-        "explanation": "Οι επιγραφές μαρτυρούν διοίκηση, τα σταθμά συναλλαγές και η κεραμική καθημερινές πρακτικές. Ο συνδυασμός διαφορετικών τεκμηρίων αποτυπώνει μια πολυλειτουργική πόλη."
+        "correctIndex": 0,
+        "explanation": "Τα σταθμά συνδέονται με συναλλαγές, οι δημόσιες επιγραφές με θεσμούς και οι κατοικίες γύρω από την πλατεία με την καθημερινότητα. Οι επιγραφές δεν αποτελούν από μόνες τους στατιστικό αρχείο του ημερήσιου όγκου εμπορίου. Χρειάζεται να διακρίνουμε το είδος της πληροφορίας που δίνει κάθε τεκμήριο.",
+        "presentation": {
+          "type": "multiple-select",
+          "correctIndices": [
+            0,
+            1,
+            2
+          ]
+        }
       },
       {
         "id": "athens-social-evidence",
-        "version": "2",
+        "version": "3",
         "conceptIds": [
           "social-status",
           "limits-of-evidence"
         ],
         "difficulty": "hard",
-        "question": "Βρέθηκαν εργαλεία σε ένα αθηναϊκό εργαστήριο. Τι μπορούμε να υποστηρίξουμε χωρίς άλλα στοιχεία;",
+        "question": "Εργασία και κοινωνική θέση στην αρχαία Αθήνα",
         "answers": [
-          "Ότι εκεί γινόταν κάποια μορφή εργασίας, όχι όμως ότι ο τεχνίτης είχε συγκεκριμένη νομική θέση.",
-          "Ότι ο τεχνίτης ήταν πολίτης, αφού εργαζόταν μέσα στην Αθήνα.",
-          "Ότι ο τεχνίτης ήταν μέτοικος, επειδή η εργασία γινόταν σε κατάστημα.",
-          "Ότι η χρήση εργαλείων αποκλείει την παρουσία υποδουλωμένων ανθρώπων."
+          "Οι μέτοικοι μπορούσαν να εργάζονται σε αθηναϊκά εργαστήρια χωρίς να είναι Αθηναίοι πολίτες.",
+          "Ένα εργαστήριο μπορούσε να απασχολεί ανθρώπους με διαφορετική νομική θέση.",
+          "Τα εργαλεία ενός τεχνίτη αρκούν για να αποδείξουν ότι ήταν Αθηναίος πολίτης.",
+          "Οι γραπτές πηγές δεν φωτίζουν εξίσου τις εμπειρίες κάθε κοινωνικής ομάδας."
         ],
-        "correctIndex": 0,
-        "explanation": "Το εργαλείο τεκμηριώνει δραστηριότητα. Για την ταυτότητα ή τη νομική κατάσταση των εργαζομένων απαιτούνται ανεξάρτητα στοιχεία· πολίτες, μέτοικοι και δούλοι μπορούσαν να εργάζονται σε παρόμοιους χώρους."
+        "correctIndex": 2,
+        "explanation": "Τα εργαλεία μαρτυρούν εργασιακή δραστηριότητα, όχι νομική ιδιότητα. Για να γνωρίσουμε ποιος εργαζόταν σε έναν χώρο χρειάζονται πρόσθετα, ανεξάρτητα τεκμήρια.",
+        "presentation": {
+          "type": "spot-the-mistake",
+          "correction": "Ο εξοπλισμός ενός εργαστηρίου δεν αποδεικνύει αν ο τεχνίτης ήταν πολίτης, μέτοικος ή υποδουλωμένος."
+        }
       }
     ],
-    "editorialReviewedAt": "2026-11-01"
+    "editorialReviewedAt": "2026-11-02"
   },
   ...additionalLessons,
   ...catalogueExpansion,
@@ -488,9 +520,16 @@ export const lessons: Lesson[] = [
   ...greekCrisesFourthCenturyLessons,
   ...macedonPhilipLessons,
   ...alexanderConquestsLessons,
+  ...greekStageTragedyLessons,
+  ...greekPhilosophyInContextLessons,
+  ...greekScienceKnowledgeLessons,
+  ...greekImagesSculptureLessons,
+  ...hellenisticKingdomsCitiesLessons,
   ...astronomyLessons,
   ...worldHistoryLessons,
   ...perceptionLessons,
   ...perceptionAttentionLessons,
   ...geologyLessons,
-];
+].map(lesson => lesson.subcategoryId === "ancient-greece"
+  ? { ...lesson, questionPlacement: "section-end" as const }
+  : lesson);

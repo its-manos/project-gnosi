@@ -61,3 +61,9 @@ The three-question final instruction is replaced by two material examples: a dec
 
 ## Depth redesign addendum — 2026-11-02
 **Current title:** «Τι μπορεί να αποδείξει ένα σπασμένο αγγείο;»; earlier title above is superseded. The question now begins with the c.190 Themistocles ostraka reportedly associated with 14 hands in an older study. **This attribution is an interpretation and has been debated**, not a verified count of actual voters. See [Open University course](https://www.open.edu/openlearn/mod/oucontent/view.php?id=114240&section=9.1); compare the original scholarly discussion of the ostraka and the limits of political conclusions. The group appears unused; no vote total is inferred. Ten paragraphs reframed; three questions now version 2 at the same checkpoints, with preserved IDs and no legacy quiz alias. **Integrated, not Validated/Approved.** [Current audit](ANCIENT-GREECE-INTRO-LESSONS-2-5-DEPTH-REDESIGN.md).
+
+
+### Phase 2 pair review — 2026-11-03
+- Current title retained: «Τι μπορεί να αποδείξει ένα σπασμένο αγγείο;». Clarified the disputed count of distinct hands among the ca. 190 Themistocles ostraka, using the accessible [BMCR review](https://bmcr.brynmawr.edu/2011/2011.11.02/) rather than treating the old 14-hand interpretation as settled. The original object, credited media and paragraph anchors remain.
+- Thucydides 1.22 [full accessible Perseus translation](https://beta.perseus.tufts.edu/urn:cts:greekLit:tlg0003.tlg001.perseus-eng6/chapter:1.22/) supports the distinction between an author's reconstructed speeches and verbatim quotations.
+- Three question keys in the preceding version were inconsistent with the answer texts; all are reauthored as v3. New ordering/spot-the-mistake/matching; meaningful numeric fallbacks, typed answer sidecar, no old alias, historical completions retained. See [pair dossier](ANCIENT-GREECE-PHASE-2-LESSONS-3-4.md). Status Integrated, QA pending.

@@ -40,6 +40,114 @@ export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
     credit: "Cmglee / Wikimedia Commons · CC BY-SA 3.0",
     creditUrl: commonsPageUrl("Human photoreceptor distribution.svg"),
   }],
+  "antikythera-gears": [
+    {
+      afterParagraphId: "antikythera-11",
+      url: commonsFileUrl("NAMA Machine d'Anticythère 2.jpg"),
+      resizeMode: "contain",
+      caption: "Αυθεντικό θραύσμα Β του Μηχανισμού των Αντικυθήρων (πιθανότατα 2ος αιώνας π.Χ.), Εθνικό Αρχαιολογικό Μουσείο, φωτογραφία 2005. Διακρίνονται κατάλοιπα που συνδέονται με την πίσω ημερολογιακή κλίμακα. Οι σημερινές φθορές δεν επιτρέπουν να δούμε απευθείας κάθε αρχικό δείκτη ή γράμμα.",
+      credit: "Marsyas / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2005",
+      creditUrl: commonsPageUrl("NAMA Machine d'Anticythère 2.jpg"),
+    },
+    {
+      afterParagraphId: "antikythera-25",
+      url: commonsFileUrl("NAMA Machine d'Anticythère 5.jpg"),
+      resizeMode: "contain",
+      caption: "ΣΥΓΧΡΟΝΗ ΑΝΑΚΑΤΑΣΚΕΥΗ του Derek de Solla Price με συνεργάτες, παραχωρημένη στο Εθνικό Αρχαιολογικό Μουσείο το 1980· φωτογραφία 2005. Δεν αποτελεί ακέραιο αρχαίο αντικείμενο. Τα μοντέλα μπορούν να αναθεωρηθούν όταν αποκωδικοποιούνται νέα ίχνη.",
+      credit: "Marsyas / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2005",
+      creditUrl: commonsPageUrl("NAMA Machine d'Anticythère 5.jpg"),
+    },
+  ],
+  "hellenistic-kingdoms-cities": [
+    {
+      afterParagraphId: "hellenistic-13",
+      url: commonsFileUrl("Seleucos I Bucephalos coin.jpg"),
+      resizeMode: "contain",
+      caption: "Νόμισμα αποδιδόμενο στον Σέλευκο Α΄ (τέλη 4ου–αρχές 3ου αιώνα π.Χ.), σε φωτογραφία του 2008 στο Βρετανικό Μουσείο. Ακριβής χρονολόγηση και νομισματοκοπείο δεν έχουν επιβεβαιωθεί από ανεξάρτητο νομισματικό κατάλογο. Η κυκλοφορία ενός νομίσματος δεν τεκμηριώνει τις πολιτικές πεποιθήσεις κάθε χρήστη.",
+      credit: "Uploadalt / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2008",
+      creditUrl: commonsPageUrl("Seleucos I Bucephalos coin.jpg"),
+    },
+    {
+      afterParagraphId: "hellenistic-19",
+      url: commonsFileUrl("Papyrus containing the granting of religious services in the temple of Hathor in Demotic and a receipt in Greek - Museo Egizio (Turin) S 6080 p02.jpg"),
+      resizeMode: "contain",
+      caption: "Πάπυρος S.6080 από το Ντέιρ ελ-Μεντίνα (περ. 180–145 π.Χ.), Museo Egizio: κείμενο για υπηρεσίες στον ναό της Άθωρ σε αιγυπτιακή δημοτική γραφή και ελληνική απόδειξη πληρωμής. Πολύ μεταγενέστερος του αρχείου του Ζήνωνα, δεν αποδεικνύει καθολική διγλωσσία. Ψηφιακή εικόνα μουσείου, άγνωστης χρονολογίας λήψης.",
+      credit: "Museo Egizio / Wikimedia Commons · CC0 · ανάρτηση 2025",
+      creditUrl: commonsPageUrl("Papyrus containing the granting of religious services in the temple of Hathor in Demotic and a receipt in Greek - Museo Egizio (Turin) S 6080 p02.jpg"),
+    },
+  ],
+  "greek-images-sculpture": [
+  {
+    "afterParagraphId": "images-13",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Riace%20bronzes%20-%20Statue%20A%20(detail)%20-%20National%20Archaeological%20Museum%20of%20Magna%20Graecia%20in%20Reggio%20Calabria%20-%20Italy%20-%2014%20Aug.%202014.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Λεπτομέρεια από τον χάλκινο πολεμιστή Α του Ριάτσε, έργο περίπου του 5ου αιώνα π.Χ., φωτογραφία 2014. Η επιφάνεια σήμερα έχει μεταβληθεί· η φωτογραφία δεν αναπαράγει το αρχικό χρώμα του κράματος. Άγγιξε για μεγέθυνση.",
+    "credit": "Luca Galli / Wikimedia Commons · CC BY 2.0 · φωτογραφία 2014",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:Riace_bronzes_-_Statue_A_(detail)_-_National_Archaeological_Museum_of_Magna_Graecia_in_Reggio_Calabria_-_Italy_-_14_Aug._2014.jpg"
+  },
+  {
+    "afterParagraphId": "images-18",
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/7550%20-%20Piraeus%20Arch.%20Museum%2C%20Athens%20-%20Painted%20stele%20-%20Photo%20by%20Giovanni%20Dall'Orto%2C%20Nov%2014%202009.jpg?width=1200",
+    "resizeMode": "contain",
+    "caption": "Επιτύμβια στήλη του Διογένη από την Πύρρα της Λέσβου, μέσα 4ου αιώνα π.Χ., φωτογραφία 2009. Σώζεται γαλάζιο φόντο στην αρχαία επιφάνεια· το τμήμα δεν αναπαριστά ολόκληρη τη χαμένη διακόσμηση. Άγγιξε για μεγέθυνση.",
+    "credit": "Giovanni Dall'Orto / Wikimedia Commons · ελεύθερη εμπορική χρήση με αναφορά δημιουργού · φωτογραφία 2009",
+    "creditUrl": "https://commons.wikimedia.org/wiki/File:7550_-_Piraeus_Arch._Museum%2C_Athens_-_Painted_stele_-_Photo_by_Giovanni_Dall'Orto%2C_Nov_14_2009.jpg"
+  }
+],
+  "greek-science-knowledge": [
+    {
+      afterParagraphId: "science-09",
+      url: commonsFileUrl("P.Penn. Museum inv. E02748 Euclid's Elements 2.5.jpg"),
+      resizeMode: "contain",
+      caption: "Πάπυρος της Οξυρρύγχου (P.Oxy. I 29 / Penn E02748) με κείμενο και διάγραμμα από τα «Στοιχεῖα», Βιβλίο ΙΙ, πρόταση 5. Το αντίγραφο ανήκει στους ρωμαϊκούς χρόνους· η ακριβής χρονολόγησή του αναφέρεται διαφορετικά σε σύγχρονες καταγραφές και δεν είναι αυτόγραφο του Ευκλείδη. Άγγιξε για μεγέθυνση.",
+      credit: "University of Pennsylvania Museum / OPenn / Wikimedia Commons · CC BY-SA 2.0 (άδεια αρχικής συλλογής) · ψηφιοποίηση 2004",
+      creditUrl: commonsPageUrl("P.Penn. Museum inv. E02748 Euclid's Elements 2.5.jpg"),
+    },
+    {
+      afterParagraphId: "science-14",
+      url: commonsFileUrl("British Museum, Babylon Astronomical Diary, 331-330 BC.jpg"),
+      resizeMode: "contain",
+      caption: "Βαβυλωνιακή πήλινη πινακίδα αστρονομικού ημερολογίου (331–330 π.Χ.), British Museum 1880,0617.496. Το κείμενο συνδυάζει ουράνια και επίγεια γεγονότα· δεν αποδεικνύει από μόνο του τη διαδρομή κάθε δεδομένου προς τους ελληνόφωνους αστρονόμους. Άγγιξε για μεγέθυνση.",
+      credit: "Brigade Piron / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+      creditUrl: commonsPageUrl("British Museum, Babylon Astronomical Diary, 331-330 BC.jpg"),
+    },
+  ],
+  "greek-philosophy-in-context": [
+    {
+      afterParagraphId: "phil-09",
+      url: commonsFileUrl("The Derveni Papyrus.jpg"),
+      resizeMode: "contain",
+      caption: "Απανθρακωμένα τμήματα του παπύρου των Δερβενίων σε φωτογραφία του 2011. Το υλικό χειρόγραφο χρονολογείται στο δεύτερο μισό του 4ου αιώνα π.Χ., ενώ η σύνθεση του σχολίου πιθανώς είναι παλαιότερη· περιέχει ερμηνεία ορφικού ποιήματος. Άγγιξε για μεγέθυνση.",
+      credit: "Fkitselis / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2011",
+      creditUrl: commonsPageUrl("The Derveni Papyrus.jpg"),
+    },
+    {
+      afterParagraphId: "phil-21",
+      url: commonsFileUrl("Athens Lyceum Archaeological Site 1.jpg"),
+      resizeMode: "contain",
+      caption: "Αρχαιολογικά κατάλοιπα της παλαίστρας του Λυκείου, φωτογραφία 2008. Ο χώρος είχε πολλές οικοδομικές φάσεις· δεν γνωρίζουμε πού ακριβώς δίδασκε ο Αριστοτέλης. Άγγιξε για μεγέθυνση.",
+      credit: "Tomisti / Wikimedia Commons · CC BY-SA 3.0 · φωτογραφία 2008",
+      creditUrl: commonsPageUrl("Athens Lyceum Archaeological Site 1.jpg"),
+    },
+  ],
+  "greek-stage-tragedy": [
+    {
+      afterParagraphId: "stage-10",
+      url: commonsFileUrl("The Choragic Monument of Lysicrates and the Acropolis of Athens.jpg"),
+      resizeMode: "contain",
+      caption: "Το χορηγικό μνημείο του Λυσικράτη (335/334 π.Χ.) σε φωτογραφία του 2018. Μαρτυρεί την τιμή του νικητή χορηγού σε εποχή μεταγενέστερη των μεγάλων τραγικών του 5ου αιώνα· δεν καταγράφει τις αντιδράσεις του ακροατηρίου. Άγγιξε για μεγέθυνση.",
+      credit: "George E. Koronaios / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2018",
+      creditUrl: commonsPageUrl("The Choragic Monument of Lysicrates and the Acropolis of Athens.jpg"),
+    },
+    {
+      afterParagraphId: "stage-14",
+      url: commonsFileUrl("Pronomos vase.jpg"),
+      resizeMode: "contain",
+      caption: "Το αγγείο του Προνόμου, περίπου 400 π.Χ., με μορφές που σχετίζονται με σατυρικό δράμα, αυλητή και προσωπεία. Η αγγειογραφία είναι καλλιτεχνική σύνθεση, όχι φωτογραφική αποτύπωση μιας συγκεκριμένης παράστασης. Άγγιξε για μεγέθυνση.",
+      credit: "Yair-haklai / Wikimedia Commons · CC BY-SA 4.0 · φωτογραφία 2023",
+      creditUrl: commonsPageUrl("Pronomos vase.jpg"),
+    },
+  ],
   "alexander-conquests-context": [
   {
     "afterParagraphId": "alexander-08",

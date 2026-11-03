@@ -1,10 +1,14 @@
 import { evaluateChoice } from "../quiz/engine";
+import { adaptInteractiveLessonQuestion, projectInteractiveLessonAnswer } from "../quiz/adapters";
+import type { QuizAnswer } from "../quiz/types";
 import { lessons } from "../data/lessons";
 import { getInlineQuestionCount } from "./lessonProgress";
 import { quizFingerprint } from "./learningActivity";
 
 export type BackupAttempt = {
   checkpointAnswers: Record<number, number>;
+  /** Typed response by historic checkpoint index; versioned to reject stale data. */
+  typedCheckpointAnswers?: Record<number, QuizAnswer>;
   /** Fingerprint of the question wording, choices and answer keys at time of answering. */
   quizKey?: string;
   score: number;
@@ -42,16 +46,36 @@ export function parseLearningBackup(value: unknown): LearningBackup {
     const quizKey = typeof raw.quizKey === "string" ? raw.quizKey : undefined;
     if ((quizKey && quizKey !== quizFingerprint(lesson.questions)) || (lesson.requireCurrentAttemptQuiz && !quizKey)) continue;
     const checkpointAnswers: Record<number, number> = {};
+    const typedCheckpointAnswers: NonNullable<BackupAttempt["typedCheckpointAnswers"]> = {};
+    const storedTyped = raw.typedCheckpointAnswers;
+    if (storedTyped !== undefined && !record(storedTyped)) throw new Error("invalid_backup");
     let score = 0;
     // Only restore a consecutive, valid sequence, so a corrupt hole cannot skip a gate.
     for (let i = 0; i < getInlineQuestionCount(lesson); i += 1) {
       const answer = raw.checkpointAnswers[i];
       if (answer === undefined) break;
       if (typeof answer !== "number" || !evaluateChoice(lesson.questions[i], answer).valid) throw new Error("invalid_backup");
+      const presentation = lesson.questions[i].presentation;
+      const item = storedTyped && (storedTyped as Record<string, unknown>)[String(i)];
+      if (presentation && (presentation.type === "multiple-select" || presentation.type === "ordering" ||
+        presentation.type === "matching") && item === undefined) {
+        // A legacy client may have saved only the numeric projection. It has
+        // no full typed answer to restore, so do not unlock using a guess.
+        break;
+      }
+      if (item !== undefined) {
+        if (!record(item) || typeof item.questionVersion !== "string" || !Object.prototype.hasOwnProperty.call(item, "value")) throw new Error("invalid_backup");
+        const typed = adaptInteractiveLessonQuestion(lesson, i);
+        if (!typed || typed.version !== item.questionVersion ||
+          projectInteractiveLessonAnswer(lesson, i, item.value) !== answer) break;
+        typedCheckpointAnswers[i] = { questionVersion: typed.version, value: JSON.parse(JSON.stringify(item.value)) };
+      }
       checkpointAnswers[i] = answer;
       if (evaluateChoice(lesson.questions[i], answer).correct) score += 1;
     }
-    if (Object.keys(checkpointAnswers).length) attempts[id] = { checkpointAnswers, ...(quizKey ? { quizKey } : {}), score, updatedAt: raw.updatedAt, replayOfCompletedLesson };
+    if (Object.keys(checkpointAnswers).length) attempts[id] = { checkpointAnswers,
+      ...(Object.keys(typedCheckpointAnswers).length ? { typedCheckpointAnswers } : {}),
+      ...(quizKey ? { quizKey } : {}), score, updatedAt: raw.updatedAt, replayOfCompletedLesson };
   }
   return { schemaVersion: 1, completedIds, savedIds: ids(value.savedIds), attempts };
 }

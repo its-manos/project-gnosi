@@ -13,9 +13,12 @@ const legacy=compile('src/utils/legacyLearning.ts',{'../data/lessons':data,'./le
 const doc=compile('src/utils/syncDocument.ts',{'../data/lessons':data,'./learningBackup':backup});
 const {LearningStore}=compile('src/state/LearningStore.ts',{'../data/lessons':data,'../utils/learningBackup':backup,'../utils/legacyLearning':legacy,'../utils/syncDocument':doc});
 const [a,b,c]=data.lessons;
+const typedAdapter=compile('src/quiz/adapters.ts',{'./engine':compile('src/quiz/engine.ts')});
 const plain=x=>JSON.parse(JSON.stringify(x));
 const empty=()=>({schemaVersion:1,completedIds:[],savedIds:[],attempts:{}});
-const attempt=(n=1,replay=false)=>({checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),quizKey:quizFingerprint(a.questions),score:99,updatedAt:100,replayOfCompletedLesson:replay});
+const attempt=(n=1,replay=false)=>({checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),
+ ...(n>1?{typedCheckpointAnswers:{1:{questionVersion:typedAdapter.adaptInteractiveLessonQuestion(a,1).version,value:[...a.questions[1].presentation.correctIndices]}}}:{}),
+ quizKey:quizFingerprint(a.questions),score:99,updatedAt:100,replayOfCompletedLesson:replay});
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 const stores=[];
 function disk(site) {const map=new Map([['@gnosi/sync-device-id',site]]);let fail=false;return {map,setFail:v=>{fail=v;},getItem:async k=>map.get(k)??null,setItem:async(k,v)=>{if(fail)throw Error('storage full');map.set(k,v);}};}
@@ -93,13 +96,14 @@ function state(s) {return s.getSnapshot();}
   const m=compile(file,{react,'../data/lessons':data,'../utils/legacyLearning':legacy,'../utils/lessonProgress':progress,'../state/LearningSession':session});const invoke=Object.values(m)[0];
   return ()=>{cursor=0;const result=invoke();const run=effects;effects=[];for(const e of run)e();return result;};
  }
+ const pilotTyped=i=>a.questions[i].presentation?.type==='multiple-select'?[...a.questions[i].presentation.correctIndices]:undefined;
  const hookStore=store(null,disk('hook'));await boot(hookStore);const render=harness('src/hooks/useLearningApp.ts',hookStore);let app=render();app.openLesson(a.id);app=render();app.answerCheckpoint(0,a.questions[0].correctIndex,a.questions[0].correctIndex);app=render();assert.equal(Object.keys(app.lessonAttempts[a.id].checkpointAnswers).length,1);
  const savedRender=harness('src/hooks/useSavedLessons.ts',hookStore);let saved=savedRender();saved.toggleSavedLesson(a.id);saved=savedRender();assert.ok(saved.savedLessonIds.includes(a.id));saved.toggleSavedLesson(a.id);assert.ok(!state(hookStore).backup.savedIds.includes(a.id));
- for(let i=1;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex);app=render();}
+ for(let i=1;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex,pilotTyped(i));app=render();}
  app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.ok(app.completedLessonIds.includes(a.id));assert.equal(app.lessonAttempts[a.id],undefined);
  assert.equal(Object.keys(hookStore.getSnapshot().activity).length,1);
  app.finishInlineLesson();await flush();assert.equal(Object.keys(hookStore.getSnapshot().activity).length,1,'Repeated finish does not duplicate the completion run.');
- app.restartLesson();app=render();for(let i=0;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex);app=render();}
+ app.restartLesson();app=render();for(let i=0;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex,pilotTyped(i));app=render();}
  app.finishInlineLesson();await flush();app=render();assert.equal(Object.keys(hookStore.getSnapshot().activity).length,2);assert.equal(Object.values(hookStore.getSnapshot().activity).filter(event=>event.wasCompleted).length,1);
  app.startQuiz();app=render();for(let i=0;i<a.questions.length;i++){app.chooseAnswer(a.questions[i].correctIndex,a.questions[i].correctIndex);app=render();app.nextQuestion(a.questions.length);app=render();}await flush();app=render();assert.equal(app.screen,'results');assert.equal(Object.keys(hookStore.getSnapshot().activity).length,3,'Standalone quiz captures all answers too.');
  await app.mergeRestoredProgress({...empty(),completedIds:[b.id]});app=render();assert.ok(app.completedLessonIds.includes(b.id));await app.resetLessonProgressForDevelopment();assert.equal(state(hookStore).backup.completedIds.length,0);

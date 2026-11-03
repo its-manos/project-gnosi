@@ -10,7 +10,8 @@ assert.equal(l.requireCurrentAttemptQuiz,true);assert.equal(l.compatibleQuizKeys
 assert.equal(l.sections.length,6);const ps=l.sections.flatMap(s=>s.paragraphs);assert.equal(ps.length,33);
 assert.deepEqual(ps.map(p=>p.id),Array.from({length:33},(_,i)=>'philip-'+String(i+1).padStart(2,'0')));
 assert.equal(l.questions.length,7);assert.equal(new Set(l.questions.map(q=>q.id)).size,7);
-assert.ok(l.questions.every(q=>q.version==='1'&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>65));
+assert.deepEqual(l.questions.map(q=>q.correctIndex),[2,1,1,3,0,2,3]);
+assert.ok(l.questions.every(q=>q.version===(['philip-terrain-royal-power','philip-336-open-future'].includes(q.id)?'3':'2')&&q.difficulty==='hard'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>65));
 assert.deepEqual(l.checkpoints.map(c=>c.questionId),l.questions.map(q=>q.id));
 assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber),[4,9,16,21,26,30,33]);
 assert.equal(progress.getVisibleParagraphLimit(l,{}),4);
@@ -19,7 +20,7 @@ assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.
 assert.deepEqual(inlineArticleMedia[id].map(m=>m.afterParagraphId),['philip-08','philip-26']);
 assert.ok(inlineArticleMedia[id].every(m=>m.resizeMode==='contain'&&/Special:FilePath/.test(m.url)&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(21,25).map(x=>x.id),['greek-crises-fourth-century',id,'alexander-conquests-context','antikythera-gears']);
+assert.deepEqual(seq.slice(21,28).map(x=>x.id),['greek-crises-fourth-century', 'macedon-philip', 'alexander-conquests-context', 'hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context']);
 assert.ok(paths.getLessonAccess(l,lessons,['greek-crises-fourth-century']).unlocked);
 assert.ok(!paths.getLessonAccess(l,lessons,['peloponnesian-war']).unlocked);
 assert.equal(paths.getNextPathLesson(lessons.find(x=>x.id==='greek-crises-fourth-century'),lessons,['greek-crises-fourth-century'])?.id,id);

@@ -18,15 +18,16 @@ assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber
 assert.equal(progress.getVisibleParagraphLimit(l,{}),3);
 assert.equal(progress.getResumeParagraphNumber(l,{0:l.questions[0].correctIndex}),4);
 assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.map((q,i)=>[i,q.correctIndex]))),24);
-assert.ok(l.questions.every(q=>q.version==='1'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>75));
+assert.ok(l.questions.every(q=>q.version===(['sanctuary-dedication-message','sanctuary-common-not-unified'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>75));
 assert.equal(new Set(l.questions.map(q=>q.id)).size,6);
+assert.deepEqual(l.questions.map(q=>q.correctIndex),[0,1,1,3,3,1]);
 assert.ok(l.sources.length>=14&&l.sources.every(s=>s.url.startsWith('https://')));
 assert.ok(l.imageCredit.includes('CC BY 2.0')&&l.imageCreditUrl.includes('commons.wikimedia.org/wiki/File:'));
 const media=inlineArticleMedia[l.id];assert.equal(media.length,3);
 assert.deepEqual(media.map(m=>m.afterParagraphId),['sanctuary-03','sanctuary-09','sanctuary-14']);
 assert.ok(media.every(m=>m.resizeMode==='contain'&&m.url.includes('Special:FilePath/')&&m.creditUrl.includes('commons.wikimedia.org/wiki/File:')));
 const seq=paths.getSubcategoryPath(lessons,'ancient-greece');
-assert.deepEqual(seq.slice(16,25).map(x=>x.id),['greek-war-hoplites','greek-sanctuaries-games','persian-wars-greek-world','athenian-empire','peloponnesian-war','greek-crises-fourth-century','macedon-philip','alexander-conquests-context','antikythera-gears']);
+assert.deepEqual(seq.slice(16,28).map(x=>x.id),['greek-war-hoplites', 'greek-sanctuaries-games', 'persian-wars-greek-world', 'athenian-empire', 'peloponnesian-war', 'greek-crises-fourth-century', 'macedon-philip', 'alexander-conquests-context', 'hellenistic-kingdoms-cities', 'greek-stage-tragedy', 'greek-images-sculpture', 'greek-philosophy-in-context']);
 assert.equal(paths.getLessonAccess(l,lessons,[]).unlocked,false);
 assert.equal(paths.getLessonAccess(l,lessons,['greek-war-hoplites']).unlocked,true);
 assert.equal(paths.getLessonAccess(l,lessons,[l.id]).unlocked,true);

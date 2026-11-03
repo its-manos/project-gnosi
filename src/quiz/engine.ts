@@ -1,4 +1,4 @@
-import type { AnswerEvaluation, ChoiceContent, QuestionHandlers, QuestionToken, QuizMode, QuizQuestion, QuizSession, QuizTransition } from "./types";
+import type { AnswerEvaluation, ChoiceContent, FillBlankContent, MatchingContent, MultipleSelectContent, OrderingContent, QuestionHandlers, QuestionToken, QuizMode, QuizQuestion, QuizSession, QuizTransition, SpotMistakeContent } from "./types";
 
 export const LEGACY_QUIZ_POINTS = { lessonCorrect: 1, dailyCorrect: 100 } as const;
 const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -13,8 +13,111 @@ export function evaluateChoice(content: unknown, answer: unknown): AnswerEvaluat
   const valid = choiceContent(content) && typeof answer === "number" && Number.isInteger(answer) && answer >= 0 && answer < content.answers.length;
   return { valid, correct: valid && choiceContent(content) && answer === content.correctIndex };
 }
+/**
+ * Multi-select answers are a non-empty set of distinct option indices.
+ * The order in which the user taps options has no bearing on correctness.
+ */
+function multipleSelectContent(value: unknown): value is MultipleSelectContent {
+  if (!object(value) || !Array.isArray(value.answers) || !Array.isArray(value.correctIndices)) return false;
+  const answers = value.answers, correctIndices = value.correctIndices;
+  return answers.length >= 2 && answers.length <= 100 &&
+    answers.every(a => typeof a === "string" && a.trim().length > 0) &&
+    correctIndices.length >= 1 && correctIndices.length <= answers.length &&
+    correctIndices.every(i => Number.isInteger(i) && i >= 0 && i < answers.length) &&
+    new Set(correctIndices).size === correctIndices.length;
+}
+export function evaluateMultipleSelect(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!multipleSelectContent(content) || !Array.isArray(answer)) return { valid: false, correct: false };
+  const valid = answer.length >= 1 && answer.length <= content.answers.length &&
+    answer.every(i => Number.isInteger(i) && i >= 0 && i < content.answers.length) &&
+    new Set(answer).size === answer.length;
+  return { valid, correct: valid && answer.length === content.correctIndices.length &&
+    answer.every(i => content.correctIndices.includes(i)) };
+}
+
+/** Order is represented by stable item IDs, never display positions or labels. */
+function orderingContent(value: unknown): value is OrderingContent {
+  if (!object(value) || !Array.isArray(value.items) || value.items.length < 2 || value.items.length > 12 ||
+    !value.items.every(item => object(item) && safeId(item.id) && typeof item.label === "string" && item.label.trim())) return false;
+  const ids = value.items.map(item => item.id);
+  return new Set(ids).size === ids.length && Array.isArray(value.correctOrder) &&
+    value.correctOrder.length === ids.length && value.correctOrder.every(id => ids.includes(id)) &&
+    new Set(value.correctOrder).size === ids.length;
+}
+export function evaluateOrdering(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!orderingContent(content) || !Array.isArray(answer)) return { valid: false, correct: false };
+  const ids = content.items.map(item => item.id);
+  const valid = answer.length === ids.length && answer.every(id => typeof id === "string" && ids.includes(id)) &&
+    new Set(answer).size === ids.length;
+  return { valid, correct: valid && answer.every((id, index) => id === content.correctOrder[index]) };
+}
+
+/**
+ * Matching answers map every left ID to one right ID; both sides are bijective.
+ * Correctness is derived from the authored pairs, not persisted answer flags.
+ */
+function matchingContent(value: unknown): value is MatchingContent {
+  if (!object(value) || !Array.isArray(value.pairs) || value.pairs.length < 2 || value.pairs.length > 12 ||
+    !value.pairs.every(pair => object(pair) && safeId(pair.leftId) && safeId(pair.rightId) &&
+      typeof pair.leftLabel === "string" && pair.leftLabel.trim() &&
+      typeof pair.rightLabel === "string" && pair.rightLabel.trim())) return false;
+  return new Set(value.pairs.map(pair => pair.leftId)).size === value.pairs.length &&
+    new Set(value.pairs.map(pair => pair.rightId)).size === value.pairs.length;
+}
+export function evaluateMatching(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!matchingContent(content) || !object(answer)) return { valid: false, correct: false };
+  const left = content.pairs.map(pair => pair.leftId), right = content.pairs.map(pair => pair.rightId);
+  const values = Object.values(answer);
+  const valid = Object.keys(answer).length === left.length && left.every(id => own(answer, id)) &&
+    values.length === right.length && values.every(id => typeof id === "string" && right.includes(id)) &&
+    new Set(values).size === right.length;
+  return { valid, correct: valid && content.pairs.every(pair => answer[pair.leftId] === pair.rightId) };
+}
+
+
+/** The player picks the *one false statement* from 3–6 complete claims. */
+function spotMistakeContent(value: unknown): value is SpotMistakeContent {
+  if (!object(value) || !Array.isArray(value.options) || value.options.length < 3 || value.options.length > 6 ||
+    !value.options.every(option => object(option) && safeId(option.id) &&
+      typeof option.text === "string" && option.text.trim().length >= 10 && option.text.length <= 300)) return false;
+  const ids = value.options.map(option => option.id);
+  return new Set(ids).size === ids.length &&
+    safeId(value.incorrectOptionId) && ids.includes(value.incorrectOptionId) &&
+    typeof value.correction === "string" && value.correction.trim().length > 0 &&
+    value.correction.length <= 500;
+}
+export function evaluateSpotMistake(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!spotMistakeContent(content)) return { valid: false, correct: false };
+  const valid = typeof answer === "string" && content.options.some(option => option.id === answer);
+  return { valid, correct: valid && answer === content.incorrectOptionId };
+}
+
+/** Fill-in-the-blank accepts only a stable, authored word-bank option ID. */
+function fillBlankContent(value: unknown): value is FillBlankContent {
+  if (!object(value) || typeof value.before !== "string" || typeof value.after !== "string" ||
+    (!value.before.trim() && !value.after.trim()) ||
+    value.before.length > 1000 || value.after.length > 1000 ||
+    !Array.isArray(value.options) || value.options.length < 2 || value.options.length > 8 ||
+    !value.options.every(option => object(option) && safeId(option.id) &&
+      typeof option.text === "string" && option.text.trim().length > 0 && option.text.length <= 120)) return false;
+  const ids = value.options.map(option => option.id);
+  const labels = value.options.map(option => option.text.trim().toLocaleLowerCase("el-GR"));
+  return new Set(ids).size === ids.length && new Set(labels).size === labels.length &&
+    safeId(value.correctOptionId) && ids.includes(value.correctOptionId);
+}
+export function evaluateFillBlank(content: unknown, answer: unknown): AnswerEvaluation {
+  if (!fillBlankContent(content)) return { valid: false, correct: false };
+  const valid = typeof answer === "string" && content.options.some(option => option.id === answer);
+  return { valid, correct: valid && answer === content.correctOptionId };
+}
+
 export const DEFAULT_QUESTION_HANDLERS: QuestionHandlers = Object.freeze({
   "multiple-choice": { validateContent: choiceContent, evaluate: evaluateChoice },
+  "multiple-select": { validateContent: multipleSelectContent, evaluate: evaluateMultipleSelect },
+  ordering: { validateContent: orderingContent, evaluate: evaluateOrdering },
+  matching: { validateContent: matchingContent, evaluate: evaluateMatching },
+  "spot-the-mistake": { validateContent: spotMistakeContent, evaluate: evaluateSpotMistake },
+  "fill-in-the-blank": { validateContent: fillBlankContent, evaluate: evaluateFillBlank },
 });
 function handlerFor(type: string, handlers: QuestionHandlers) {
   return own(handlers, type) ? handlers[type] : undefined;
