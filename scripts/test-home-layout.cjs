@@ -101,6 +101,34 @@ assert.equal(actions.at(-1), "category:history");
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
 assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
 assert.equal(nodes(tree).filter(node => node.props?.accessibilityLabel?.includes("Αναζήτηση")).length, 0);
+assert.ok(nodes(tree).some(node => node.props?.children === "1 / 3 ερωτήσεις"),
+  "resume card shows question progress beside its heading");
+const centeredGrid = nodes(tree).find(node => node.props?.style?.flexWrap === "wrap"
+  && node.props?.style?.justifyContent === "center");
+assert.ok(centeredGrid, "knowledge worlds are centered with equal grid gaps");
+assert.equal(centeredGrid.props.style.columnGap, 8);
+const primaryButton = nodes(tree).find(node => node.props?.style?.minHeight === 44
+  && node.props?.style?.backgroundColor === "#A89BFF");
+assert.ok(primaryButton, "primary CTA retains a 44-point tap area");
+const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
+  && node.props.style[0]?.backgroundColor === "#B1A5FF"
+  && node.props.style[1]?.width?.endsWith("%"));
+assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
+
+// The compact bottom navigation preserves all three destinations.
+const bottomNav = compile("src/components/BottomNavigation.tsx", {
+  "react-native-safe-area-context": { useSafeAreaInsets: () => ({ bottom: 34 }) },
+});
+const bottomTree = bottomNav({ currentScreen: "home", onNavigate: destination => actions.push("nav:" + destination) });
+const tabs = nodes(bottomTree).filter(node => node.props?.accessibilityRole === "tab");
+assert.equal(tabs.length, 3);
+assert.equal(tabs[0].props.accessibilityState.selected, true);
+assert.equal(tabs[1].props.accessibilityState.selected, false);
+tabs[1].props.onPress();
+assert.equal(actions.at(-1), "nav:progress");
+assert.ok(nodes(bottomTree).some(node => Array.isArray(node.props?.style)
+  && node.props.style[0]?.minHeight === 60 && node.props.style[1]?.paddingBottom === 34),
+  "navigation preserves safe-area inset while remaining compact");
 
 tree = home({ ...props, inProgressLesson: null });
 press("home-primary-action", tree);
