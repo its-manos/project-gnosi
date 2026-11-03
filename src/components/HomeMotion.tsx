@@ -195,6 +195,6 @@ const styles = StyleSheet.create({
   shimmer: { position: "absolute", top: -8, bottom: -8, left: 0,
     width: 35, backgroundColor: "#FFFFFF", opacity: 0.12, transform: [{ skewX: "-16deg" }] },
   // Overlay the 16pt-radius card's own boundary, never its content.
-  quizGlow: { ...StyleSheet.absoluteFillObject,
+  quizGlow: { ...StyleSheet.absoluteFill,
     borderRadius: 16, borderWidth: 2, borderColor: "#C7B6FF" },
 });
