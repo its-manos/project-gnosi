@@ -57,3 +57,13 @@ jobs:
       - run: node scripts/test-athens-law-courts.cjs
       - run: node scripts/test-greek-war-hoplites.cjs
       - run: node scripts/test-greek-sanctuaries-games.cjs
+      - run: node scripts/test-ancient-greece-chapter4-questions.cjs
+      - run: node scripts/test-ancient-greece-phase2-19-20.cjs
+      - run: node scripts/test-ancient-greece-phase2-21-22.cjs
+      - run: node scripts/test-ancient-greece-phase2-23-24.cjs
+      - run: node scripts/test-persian-wars-greek-world.cjs
+      - run: node scripts/test-athenian-empire.cjs
+      - run: node scripts/test-peloponnesian-war.cjs
+      - run: node scripts/test-greek-crises-fourth-century.cjs
+      - run: node scripts/test-macedon-philip.cjs
+      - run: node scripts/test-alexander-conquests-context.cjs
