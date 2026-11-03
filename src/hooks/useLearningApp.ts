@@ -31,7 +31,7 @@ export type AppScreen =
   | "account"
   | "progress"
   | "saved"
-  | "search";
+;
 
 
 export function useLearningApp() {
