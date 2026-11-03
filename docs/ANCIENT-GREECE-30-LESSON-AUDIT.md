@@ -135,6 +135,10 @@ node scripts/audit-ancient-greece-commons-online.cjs
 node scripts/audit-ancient-greece-commons-online.cjs --csv > /tmp/gnosi-ancient-greece-commons-screen.csv
 ```
 
+### Completed direct page comparison: five API false positives
+
+After the product owner's live result of **81 short-label matches + 7 flags**, [direct file-page review](ANCIENT-GREECE-COMMONS-MULTILICENSE-REVIEW.md) confirmed five **different but valid multi-licensed choices** (Persepolis #19, two Athenian tribute photos #20, and two Antikythera photos #30). The in-app credits already reflect options expressly granted on the relevant pages. The revised checker now reports these **separately**, ideally **81 label matches / 5 file-page-checked multi-licences / 2 rights-review flags**, with all **88 UNVERIFIED** for complete downstream release. The two remaining substantive flags are custom commercial permission at #27 (source permission documented) and conflicting upstream Penn image licence metadata at #29 (not resolved). **No media/content data were edited.**
+
 ## Image-rights ledger (generated, initially all **UNVERIFIED**)
 
 Use the read-only `scripts/audit-ancient-greece-image-rights.cjs` helper to export **all 88 placements**, including exact lesson and paragraph anchor, caption, image request URL, credited Commons page, current in-app credit, and a **declared** licence label:
