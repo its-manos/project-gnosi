@@ -18,8 +18,9 @@ assert.deepEqual(progress.getQuestionPlacements(l).map(p=>p.afterParagraphNumber
 assert.equal(progress.getVisibleParagraphLimit(l,{}),3);
 assert.equal(progress.getResumeParagraphNumber(l,{0:l.questions[0].correctIndex}),4);
 assert.equal(progress.getVisibleParagraphLimit(l,Object.fromEntries(l.questions.map((q,i)=>[i,q.correctIndex]))),24);
-assert.ok(l.questions.every(q=>q.version==='1'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>75));
+assert.ok(l.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>75));
 assert.equal(new Set(l.questions.map(q=>q.id)).size,6);
+assert.deepEqual(l.questions.map(q=>q.correctIndex),[0,1,1,3,3,1]);
 assert.ok(l.sources.length>=14&&l.sources.every(s=>s.url.startsWith('https://')));
 assert.ok(l.imageCredit.includes('CC BY 2.0')&&l.imageCreditUrl.includes('commons.wikimedia.org/wiki/File:'));
 const media=inlineArticleMedia[l.id];assert.equal(media.length,3);

@@ -25,8 +25,9 @@ assert.deepEqual(progress.getQuestionPlacements(lesson).map(p=>p.afterParagraphN
 assert.equal(progress.getVisibleParagraphLimit(lesson,{}),4);
 assert.equal(progress.getResumeParagraphNumber(lesson,{0:lesson.questions[0].correctIndex}),5);
 assert.equal(progress.getVisibleParagraphLimit(lesson,Object.fromEntries(lesson.questions.map((q,i)=>[i,q.correctIndex]))),24);
-assert.ok(lesson.questions.every(q=>q.version==='1'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>70));
+assert.ok(lesson.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>70));
 assert.equal(new Set(lesson.questions.map(q=>q.id)).size,6);
+assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[2,3,0,2,0,1]);
 assert.ok(lesson.sources.length>=12&&lesson.sources.every(s=>s.url.startsWith('https://')));
 assert.ok(lesson.imageCredit.includes('CC BY-SA 4.0')&&lesson.imageUrl.includes('Special:FilePath/'));
 assert.equal(lesson.imageResizeMode,'contain');
