@@ -92,6 +92,10 @@ const worldArtwork = {
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
+  "../components/HomeMotion": {
+    MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
+    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
+  },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
   "../hooks/useAthensDate": { useAthensDate: () => "2026-11-03" },
@@ -134,6 +138,8 @@ const textById = (id, t = tree) => nodes(t).find(node => node.props?.testID === 
 assert.equal(textById("home-hero-location").props.children, "Ιστορία · Αρχαία Ελλάδα",
   "continue card shows real category and subcategory titles");
 assert.match(textById("home-primary-action").props.accessibilityLabel, /Ιστορία · Αρχαία Ελλάδα/);
+assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
+  "completed daily quiz does not pulse");
 assert.equal(textById("home-daily-answered").props.children, "7/7",
   "completed daily quiz shows seven answered questions");
 assert.equal(textById("home-daily-answered").props.style.fontSize, 24,
@@ -244,17 +250,23 @@ daily = { ready: true, doc: { days: { "2026-11-03": {
 } } } };
 tree = home(props);
 assert.equal(textById("home-daily-answered").props.children, "3/7");
+assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, true,
+  "unfinished daily quiz highlights");
 assert.ok(nodes(tree).some(node => node.props?.children === "Συνέχισε σήμερα"));
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /3 από 7/);
 daily = { ready: true, doc: { days: { "2026-11-02": {
   record: { completed: true, answers: completeDailyAnswers },
 } } } };
 tree = home(props);
+assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, true,
+  "today can highlight even if yesterday was completed");
 assert.equal(textById("home-daily-answered").props.children, "0/7",
   "yesterday's completed quiz does not count towards today's progress");
 assert.ok(nodes(tree).some(node => node.props?.children === "Ξεκίνα σήμερα"));
 daily = { ready: false, doc: { days: {} } };
 tree = home(props);
+assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
+  "loading state must not highlight");
 assert.equal(textById("home-daily-answered").props.children, "—/7",
   "unknown loading progress must not appear as zero");
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /φόρτωση προόδου/);
@@ -408,6 +420,21 @@ const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
   && node.props.style[0]?.backgroundColor === "#B1A5FF"
   && node.props.style[1]?.width?.endsWith("%"));
 assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
+
+// The Daily Quiz highlight stays inside its original 16pt card,
+// preserves touch handling, respects reduced motion and does not repeat.
+const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
+const dailyHighlightSource = homeMotionSource.slice(homeMotionSource.indexOf("export function MotionQuizGlow"));
+assert.match(dailyHighlightSource, /\.\.\.StyleSheet\.absoluteFill/,
+  "highlight follows the card perimeter");
+assert.match(dailyHighlightSource, /borderRadius: 16/,
+  "highlight matches the quiz card radius");
+assert.match(dailyHighlightSource, /pointerEvents="none"/,
+  "highlight cannot intercept taps");
+assert.match(dailyHighlightSource, /if \(reduced \|\| !active\) return null/,
+  "completed quizzes and reduced motion suppress the pulse");
+assert.doesNotMatch(dailyHighlightSource, /withRepeat\(/,
+  "Daily Quiz highlight must not pulse indefinitely");
 
 // The compact bottom navigation preserves all three destinations.
 const bottomNav = compile("src/components/BottomNavigation.tsx", {

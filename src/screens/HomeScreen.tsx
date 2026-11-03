@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { DAILY_CHALLENGE_SIZE } from "../data/questions";
@@ -14,6 +14,7 @@ import {
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
+import { MotionCounter, MotionIcon, MotionPressable, MotionQuizGlow, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
 
 type Props = {
   categories: Category[];
@@ -140,7 +141,7 @@ export default function HomeScreen({
           setExtraDensity(density + 1);
         }
       }}>
-      <View style={styles.topBar}>
+      <MotionView entranceDelay={0} style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.headerStats}>
           <View testID="home-quiz-streak" style={styles.streak} accessible
@@ -151,12 +152,12 @@ export default function HomeScreen({
               <Text style={styles.streakLabel}>σερί quiz</Text>
             </View>
           </View>
-          {onOpenProfile ? <Pressable testID="home-level-profile" style={styles.levelBadge}
+          {onOpenProfile ? <MotionPressable entranceDelay={0} testID="home-level-profile" style={styles.levelBadge}
             onPress={onOpenProfile} accessibilityRole="button"
             accessibilityLabel={profileReady ? "Το προφίλ μου. Επίπεδο " + profile.level + ". " + profile.earned + " από " + profile.required + " XP για το επόμενο επίπεδο." : "Το προφίλ μου. Φόρτωση επιπέδου."}>
             <Svg width={50} height={50} viewBox="0 0 50 50" style={styles.levelRing} accessible={false} pointerEvents="none">
               <Circle cx={25} cy={25} r={21} fill="none" stroke={colors.borderStrong} strokeWidth={3.5} />
-              {fraction > 0 ? <Circle testID="home-xp-ring" cx={25} cy={25} r={21}
+              {fraction > 0 ? <MotionXpCircle progress={fraction} circumference={ringLength} testID="home-xp-ring" cx={25} cy={25} r={21}
                 fill="none" stroke={colors.accentLight} strokeWidth={3.5} strokeLinecap="round"
                 strokeDasharray={String(ringLength * fraction) + " " + String(ringLength)}
                 rotation={-90} origin="25, 25" /> : null}
@@ -166,11 +167,11 @@ export default function HomeScreen({
               <Text testID="home-level" style={styles.levelNumber} numberOfLines={1}
                 adjustsFontSizeToFit>{profileReady ? profile.level : "—"}</Text>
             </View>
-          </Pressable> : null}
+          </MotionPressable> : null}
         </View>
-      </View>
+      </MotionView>
 
-      <Pressable testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
@@ -195,61 +196,63 @@ export default function HomeScreen({
           <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]} /></View>
           : null}
         <View style={styles.heroButton}>
+          <MotionShimmer />
           <Text style={styles.heroButtonLabel}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
           <Text style={styles.heroButtonLabel}>→</Text>
         </View>
-      </Pressable>
+      </MotionPressable>
 
-      <View style={styles.actions}>
-        <Pressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
+      <MotionView entranceDelay={130} style={styles.actions}>
+        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
             : "Καθημερινό quiz, φόρτωση προόδου"}
           onPress={onStartDailyChallenge}>
+          <MotionQuizGlow active={daily.ready && !todayCompleted} />
           <View style={styles.quizTop}>
             <Text style={styles.actionIcon}>✦</Text>
-            <Text testID="home-daily-answered" style={styles.quizAnswered}
-              accessible={false} numberOfLines={1} adjustsFontSizeToFit>{dailyProgress}</Text>
+            <MotionCounter progressKey={today + "-" + dailyProgress} testID="home-daily-answered" style={styles.quizAnswered}
+              accessible={false} numberOfLines={1} adjustsFontSizeToFit>{dailyProgress}</MotionCounter>
           </View>
           <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
           <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
-        </Pressable>
-        <Pressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
+        </MotionPressable>
+        <MotionPressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Επανάληψη γνώσεων"
           onPress={onKnowledgeReview} disabled={!onKnowledgeReview}>
           <Text style={[styles.actionIcon, styles.reviewIcon]}>◎</Text>
           <Text style={styles.actionTitle}>Επανάληψη</Text>
           <Text style={styles.actionMeta}>Εξάσκησε τις γνώσεις σου</Text>
-        </Pressable>
-      </View>
+        </MotionPressable>
+      </MotionView>
 
-      <View testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
+      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
         <View style={styles.sectionRow}>
           <Text style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
           <Text style={styles.worldCount}>{categories.length} κόσμοι</Text>
         </View>
         <View style={[styles.categoryGrid, tight && styles.tightCategoryGrid]}>
-          {categories.map(category => {
+          {categories.map((category, index) => {
             const WorldIllustration = worldIllustrations[category.id];
             return (
-              <Pressable key={category.id} testID={"home-category-" + category.id}
+              <MotionPressable key={category.id} testID={"home-category-" + category.id}
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
                 onPress={() => onOpenCategory(category.id)}
                 style={({ pressed }) => [styles.category, compact && styles.compactCategory, tight && styles.tightCategory, pressed && styles.pressed]}>
                 {WorldIllustration
-                  ? <WorldIllustration size={32} displayScale={1.18} />
+                  ? <MotionIcon index={index}><WorldIllustration size={32} displayScale={1.18} /></MotionIcon>
                   : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
                 <Text style={[styles.categoryLabel, tight && styles.tightCategoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
                   {shortLabels[category.id] ?? category.title}
                 </Text>
-              </Pressable>
+              </MotionPressable>
             );
           })}
         </View>
-      </View>
+      </MotionView>
 
-      <View testID="home-mini-games" style={[styles.miniGames, tight && styles.tightMiniGames]}>
+      <MotionView entranceDelay={250} testID="home-mini-games" style={[styles.miniGames, tight && styles.tightMiniGames]}>
         <Text style={[styles.miniGamesHeading, tight && styles.tightMiniGamesHeading]}>Μίνι παιχνίδια</Text>
         <View style={styles.miniGamesRow}>
           {upcomingMiniGames.map(game =>
@@ -267,7 +270,7 @@ export default function HomeScreen({
             </View>
           )}
         </View>
-      </View>
+      </MotionView>
     </ScrollView>
   );
 }
@@ -321,7 +324,7 @@ const styles = StyleSheet.create({
   track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginTop: 2 },
   trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.accentLight },
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2 },
+    gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2, overflow: "hidden" },
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
   actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
