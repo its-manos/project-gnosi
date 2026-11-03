@@ -37,7 +37,7 @@ const react = {
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
 
-function compile(file, extra = {}) {
+function compile(file, extra = {}, returnModule = false) {
   const mod = { exports: {} };
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
@@ -55,7 +55,7 @@ function compile(file, extra = {}) {
     module: mod, exports: mod.exports,
     require: id => { if (id in imports) return imports[id]; throw Error("Missing stub " + id); },
   });
-  return mod.exports.default;
+  return returnModule ? mod.exports : mod.exports.default;
 }
 
 const categories = [
@@ -72,8 +72,19 @@ const actions = [];
 let profile = { ready: true, profile: { level: 3, earned: 150, required: 600 } };
 let daily = { ready: true, doc: { days: { "2026-11-03": { record: { completed: true } } } } };
 const HistoryWorldIcon = compile("src/components/worldIcons/HistoryWorldIcon.tsx");
+const otherWorlds = compile("src/components/worldIcons/OtherWorldIcons.tsx", {}, true);
+const worldArtwork = {
+  history: HistoryWorldIcon,
+  science: otherWorlds.ScienceWorldIcon,
+  nature: otherWorlds.NatureWorldIcon,
+  technology: otherWorlds.TechnologyWorldIcon,
+  culture: otherWorlds.CultureWorldIcon,
+  geography: otherWorlds.GeographyWorldIcon,
+  "difficult-history": otherWorlds.DifficultHistoryWorldIcon,
+};
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
+  "../components/worldIcons/OtherWorldIcons": otherWorlds,
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
   "../hooks/useAthensDate": { useAthensDate: () => "2026-11-03" },
   "../state/LearningSession": { useDailySnapshot: () => daily },
@@ -111,34 +122,45 @@ assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props
 assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("home-category-")).length, 7);
 press("home-category-history");
 assert.equal(actions.at(-1), "category:history");
-// Only History uses the original SVG while the other six cards retain emoji.
+// Every known world renders bespoke local art, with the same viewBox, display
+// scale and 32pt Yoga layout footprint. Each remains inside the original card.
 const HistoryCard = nodes(tree).find(node => node.props?.testID === "home-category-history");
-const illustrationNode = nodes(HistoryCard).find(node => node.type === HistoryWorldIcon);
-assert.ok(illustrationNode, "History card uses the original SVG");
-assert.equal(illustrationNode.props.size, 32);
-assert.equal(illustrationNode.props.displayScale, 1.18,
-  "History is enlarged visually without claiming more card layout space");
-assert.ok(!nodes(HistoryCard).some(node => node.props?.children === "🏛️"));
-const illustration = HistoryWorldIcon({ size: 32 });
-assert.equal(illustration.type, "svg");
-assert.equal(illustration.props.width, 32);
-assert.equal(illustration.props.height, 32);
-assert.equal(illustration.props.accessible, false);
-assert.equal(illustration.props.pointerEvents, "none");
-assert.equal(illustration.props.style.transform[0].scale, 1,
-  "default SVG preserves intrinsic size when no visual scale is requested");
-const enlargedIllustration = HistoryWorldIcon({ size: 32, displayScale: 1.18 });
-assert.equal(enlargedIllustration.props.width, 32);
-assert.equal(enlargedIllustration.props.height, 32);
-assert.equal(enlargedIllustration.props.style.transform[0].scale, 1.18,
-  "larger rendering keeps original Yoga layout dimensions");
-assert.ok(nodes(illustration).filter(node => node.type === "path").length >= 15);
-assert.ok(nodes(illustration).filter(node => node.type === "linearGradient").length >= 2);
-for (const category of categories.filter(item => item.id !== "history")) {
+assert.equal(Object.keys(worldArtwork).length, 7);
+for (const category of categories) {
   const card = nodes(tree).find(node => node.props?.testID === "home-category-" + category.id);
-  assert.ok(nodes(card).some(node => node.props?.children === category.emoji),
-    "the six remaining icons are unchanged in this pilot");
+  assert.equal(card.props.accessibilityRole, "button");
+  assert.match(card.props.accessibilityLabel, /Άνοιξε τη θεματική/);
+  assert.equal(card.props.style({ pressed: false })[0].minHeight, 78);
+  assert.ok(!nodes(card).some(node => node.props?.children === category.emoji),
+    "custom art replaces emoji for " + category.id);
+  const illustrationType = worldArtwork[category.id];
+  assert.equal(typeof illustrationType, "function", "component exists for " + category.id);
+  const illustrationNode = nodes(card).find(node => node.type === illustrationType);
+  assert.ok(illustrationNode, "card uses bespoke art for " + category.id);
+  assert.equal(illustrationNode.props.size, 32);
+  assert.equal(illustrationNode.props.displayScale, 1.18);
+  const illustration = illustrationType({ size: 32, displayScale: 1.18 });
+  assert.equal(illustration.type, "svg");
+  assert.equal(illustration.props.width, 32);
+  assert.equal(illustration.props.height, 32);
+  assert.equal(illustration.props.viewBox, "0 0 52 52");
+  assert.equal(illustration.props.accessible, false, "illustration is decorative");
+  assert.equal(illustration.props.pointerEvents, "none", "card owns touch");
+  assert.equal(illustration.props.style.transform[0].scale, 1.18);
+  assert.ok(nodes(illustration).filter(node => node.type === "path").length >= 5,
+    "custom engraving includes layered paths for " + category.id);
+  assert.ok(nodes(illustration).filter(node => node.type === "linearGradient").length >= 2,
+    "artwork includes shaded materials for " + category.id);
+  card.props.onPress();
+  assert.equal(actions.at(-1), "category:" + category.id, "category navigation unchanged");
 }
+const futureCategory = { id: "future-world", title: "Νέος κόσμος", emoji: "🌟" };
+const futureTree = home({ ...props, categories: [...categories, futureCategory] });
+const futureCard = nodes(futureTree).find(node => node.props?.testID === "home-category-future-world");
+assert.ok(nodes(futureCard).some(node => node.props?.children === "🌟"),
+  "new/unknown categories safely fall back to their emoji");
+futureCard.props.onPress();
+assert.equal(actions.at(-1), "category:future-world");
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
 assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
 assert.equal(nodes(tree).filter(node => node.props?.accessibilityLabel?.includes("Αναζήτηση")).length, 0);
