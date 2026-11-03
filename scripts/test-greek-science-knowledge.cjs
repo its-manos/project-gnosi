@@ -18,8 +18,9 @@ assert.equal(l.sections.length,4); assert.equal(p.length,24);
 assert.deepEqual(p.map(x=>x.id),Array.from({length:24},(_,i)=>'science-'+String(i+1).padStart(2,'0')));
 assert.ok(p.every(x=>x.text.length>=140));
 assert.equal(l.questions.length,6);
+assert.deepEqual(l.questions.map(q=>q.correctIndex),[0,2,1,3,1,2]);
 assert.equal(new Set(l.questions.map(x=>x.id)).size,6);
-assert.ok(l.questions.every(x=>x.id.startsWith('science-')&&x.version==='1'&&x.difficulty==='hard'
+assert.ok(l.questions.every(x=>x.id.startsWith('science-')&&x.version==='2'&&x.difficulty==='hard'
   &&x.conceptIds.length>=2&&x.answers.length===4&&new Set(x.answers).size===4
   &&x.correctIndex>=0&&x.correctIndex<4&&x.explanation.length>=120));
 assert.deepEqual(l.checkpoints.map(x=>x.questionId),l.questions.map(x=>x.id));
