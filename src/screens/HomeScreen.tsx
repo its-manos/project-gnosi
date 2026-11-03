@@ -35,6 +35,12 @@ const shortLabels: Record<string, string> = {
   "difficult-history": "Δύσκολη ιστορία",
 };
 
+// Visual previews only. Game routes and persistence arrive in a later phase.
+const upcomingMiniGames = [
+  { id: "sudoku", title: "Sudoku", symbol: "▦" },
+  { id: "hangman", title: "Κρεμάλα", symbol: "Α _" },
+] as const;
+
 export default function HomeScreen({
   categories, featuredLesson, progressLoaded, completedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
@@ -164,6 +170,25 @@ export default function HomeScreen({
           )}
         </View>
       </View>
+
+      <View testID="home-mini-games" style={styles.miniGames}>
+        <Text style={styles.miniGamesHeading}>Μίνι παιχνίδια</Text>
+        <View style={styles.miniGamesRow}>
+          {upcomingMiniGames.map(game =>
+            <View key={game.id} testID={"home-mini-game-" + game.id} style={styles.miniGameCard}
+              accessible accessibilityLabel={game.title + ", σύντομα διαθέσιμο"}
+              accessibilityState={{ disabled: true }}>
+              <View style={styles.miniGameIcon} accessible={false}>
+                <Text style={styles.miniGameSymbol}>{game.symbol}</Text>
+              </View>
+              <View style={styles.miniGameCopy}>
+                <Text style={styles.miniGameTitle} numberOfLines={1} adjustsFontSizeToFit>{game.title}</Text>
+                <Text style={styles.miniGameSoon}>Σύντομα</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -221,5 +246,17 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 4 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
+  miniGames: { gap: 8 },
+  miniGamesHeading: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: "800" },
+  miniGamesRow: { flexDirection: "row", gap: 10 },
+  miniGameCard: { flex: 1, minHeight: 62, paddingHorizontal: 10, paddingVertical: 8,
+    flexDirection: "row", alignItems: "center", gap: 9, borderRadius: 14,
+    backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+  miniGameIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center",
+    justifyContent: "center", backgroundColor: colors.accentSurface },
+  miniGameSymbol: { color: colors.accentLight, fontSize: 18, lineHeight: 23, fontWeight: "800" },
+  miniGameCopy: { flex: 1, gap: 1 },
+  miniGameTitle: { color: colors.text, fontSize: 13, lineHeight: 18, fontWeight: "800" },
+  miniGameSoon: { color: colors.textMuted, fontSize: 10, lineHeight: 14 },
   pressed: { opacity: 0.76 },
 });
