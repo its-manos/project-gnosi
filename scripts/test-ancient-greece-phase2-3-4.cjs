@@ -46,7 +46,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version==='3'),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['greek-evidence-speeches','greek-time-overlap'].includes(q.id)?'4':'3')),'pilot v4 on the one revised item; v3 elsewhere');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);
@@ -94,4 +94,4 @@ for(const [id,expect] of Object.entries(targets)){
  assert.ok(rewards.rows.every(row=>row.correct),'XP fallback grades intended answers');
  assert.equal(rewards.highestCombo,l.questions.length,'a fully correct sequence preserves the combo');
 }
-console.log('Ancient Greece 3–4 Phase 2 Node contract passed: typed answers, v3 key repair, checkpoint IDs, old history, safe restore and numeric XP fallback.');
+console.log('Ancient Greece 3–4 Phase 2 Node contract passed: typed answers, v3/v4 key repair, checkpoint IDs, old history, safe restore and numeric XP fallback.');
