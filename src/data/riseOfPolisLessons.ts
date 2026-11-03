@@ -277,8 +277,8 @@ export const riseOfPolisLessons: Lesson[] = [
       "presentation": {
         "type": "multiple-select",
         "correctIndices": [
-          1,
-          3
+          3,
+          1
         ]
       }
     },
