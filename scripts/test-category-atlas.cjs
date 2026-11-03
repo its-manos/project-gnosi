@@ -112,6 +112,37 @@ assert.equal(islands[0].props.accessibilityRole, "button");
 assert.match(islands[0].props.accessibilityLabel, /1 από 2/);
 islands[0].props.onPress();
 assert.deepEqual(selected, ["ancient"]);
+// The first bespoke landmark belongs only to the catalogue's real
+// ancient-greece ID, and must never interfere with labels or touch targets.
+const ancientRegion = { ...regionData[0], id: "ancient-greece",
+  title: "Αρχαία Ελλάδα" };
+const detailMap = map({ ...props, regions: [ancientRegion, regionData[1]] });
+const detailNodes = nodes(detailMap);
+const templeInstances = detailNodes.filter(node =>
+  typeof node.type === "function" && node.type.name === "AncientGreekTemple");
+assert.equal(templeInstances.length, 1,
+  "only ancient-greece receives the bespoke architectural landmark");
+const temple = templeInstances[0].type(templeInstances[0].props);
+assert.equal(temple.props.testID, "atlas-landmark-ancient-greece");
+assert.equal(temple.props.pointerEvents, "none",
+  "decoration must not capture island taps");
+assert.ok(nodes(temple).filter(node => node.type === "path"
+  && node.props?.fill === "#F0DFC1").length >= 6,
+  "temple has individually detailed Doric columns, not a generic glyph");
+const ancientTitle = detailNodes.find(node => node.type === "text"
+  && node.props?.children === "Αρχαία Ελλάδα");
+assert.ok(ancientTitle, "temple must preserve title");
+assert.ok(templeInstances[0].props.y + 36 * templeInstances[0].props.scale
+  < ancientTitle.props.y - 6, "temple must not overlap title");
+assert.ok(detailNodes.some(node => node.props?.testID === "atlas-progress-track-ancient-greece"),
+  "temple must not remove progress bar");
+assert.ok(detailNodes.some(node => node.props?.testID === "atlas-island-ancient-greece"),
+  "temple must not remove accessible island navigation");
+const noTempleMap = map({ ...props, regions: regionData });
+assert.equal(nodes(noTempleMap).filter(node =>
+  typeof node.type === "function" && node.type.name === "AncientGreekTemple").length, 0,
+  "other regions retain their existing mountain and symbol treatment");
+
 const listToggle = nodes(tree).find(node => node.props?.testID === "atlas-list-toggle");
 assert.ok(listToggle, "map/list toggle remains available");
 listToggle.props.onPress();
