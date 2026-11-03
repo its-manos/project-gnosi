@@ -5,6 +5,7 @@ import type { Category, Lesson } from "../data/lessons";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { useAthensDate } from "../hooks/useAthensDate";
 import { useDailySnapshot } from "../state/LearningSession";
+import HistoryWorldIcon from "../components/worldIcons/HistoryWorldIcon";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
@@ -176,7 +177,9 @@ export default function HomeScreen({
               accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
               onPress={() => onOpenCategory(category.id)}
               style={({ pressed }) => [styles.category, compact && styles.compactCategory, pressed && styles.pressed]}>
-              <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+              {category.id === "history"
+                ? <HistoryWorldIcon size={32} />
+                : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
               <Text style={styles.categoryLabel} numberOfLines={2} adjustsFontSizeToFit>
                 {shortLabels[category.id] ?? category.title}
               </Text>
