@@ -65,3 +65,8 @@ Lesson **14/30**, stable ID `sparta-society`, planned title **«Η Σπάρτη 
 ## Prose-only editorial update — 2026-11-01
 
 The first Pithekoussai paragraph now identifies settlement archaeology before interpreting population origin and mobility. Existing claim-to-source notes, uncertainties, credited images and source URLs remain in force; this pass introduces no independently asserted factual correction. Existing lesson ID, paragraph IDs/order, question wording, checkpoint positions, quiz-version history, XP and progress semantics were deliberately left unchanged. See [cross-lesson editorial report](ANCIENT-GREECE-LESSONS-1-16-EDITORIAL-AUDIT.md). Node/npm and native Android/iOS QA are pending; status **Integrated**, not Validated/Approved.
+
+
+## Phase 2 editorial/quiz pass — 2026-11-03
+- 25 existing paragraphs, five checkpoint locations, same question IDs and unchanged credited media/sources. Opening redesigned as a contrast across Ischia, Syracuse and Massalia; #4 clarifies strontium interpretation; #7 clarifies Thucydides as later literary testimony; #19 specifies the twice-folded fragmentary Berezan letter from 2017. Source verification: [iScience mobility in Pithekoussai](https://doi.org/10.1016/j.isci.2025.111927), [Thucydides 6.3.2](https://beta.perseus.tufts.edu/urn:cts:greekLit:tlg0003.tlg001.perseus-eng6:6.3.2), [Hyperboreus Berezan letter](https://bop.unibe.ch/Hyperboreus/article/view/12085).
+- V2 question formats: matching, spot-the-mistake, fill-in-the-blank, ordering **evidence analysis**, single choice. No forced claim of exact event chronology. Original v1 quiz frozen, no stale alias. [Phase 2 13–14 report](ANCIENT-GREECE-PHASE-2-LESSONS-13-14.md). **Integrated, QA pending**.
