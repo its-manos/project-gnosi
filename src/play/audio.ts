@@ -109,7 +109,7 @@ export class FeedbackAudio {
     void player.seekTo(0).then(() => {
       if (!this.alive || this.players.get(kind) !== player) return;
       this.priming.set(kind, "unmuting");
-      player.volume = kind === "incorrect" ? .45 : .65;
+      player.volume = kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
       player.muted = false;
       // The native unmute status callback marks the player primed and releases
       // the queued answer. Do not start the real cue while still muted.
