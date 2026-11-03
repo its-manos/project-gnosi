@@ -17,7 +17,7 @@ const old=require('./fixtures/ancient-greece-pair-5-6-before-phase2-20261103.jso
 const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
- 'greek-geography-seas':{slot:4,paragraphs:18,anchors:[4,9,13,17],correct:[2,1,3,0],types:['ordering','spot-the-mistake','matching',null],version:'3'},
+ 'greek-geography-seas':{slot:4,paragraphs:18,anchors:[4,9,13,17],correct:[2,1,3,0],types:['ordering','spot-the-mistake','matching','multiple-select'],version:'3'},
  'aegean-bronze-age':{slot:5,paragraphs:19,anchors:[5,10,15,18],correct:[2,1,0,0],types:['spot-the-mistake','matching',null,'fill-in-the-blank'],version:'2'}
 };
 function properAnswer(q){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===expect.version),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(q.id==='aegean-geography-not-destiny'?'4':expect.version)),'explicit v4 on geography multi-select; stable prior revisions');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);
@@ -95,4 +96,4 @@ for(const [id,expect] of Object.entries(targets)){
  assert.ok(rewards.rows.every(row=>row.correct),'XP fallback grades intended answers');
  assert.equal(rewards.highestCombo,l.questions.length,'a fully correct sequence preserves the combo');
 }
-console.log('Ancient Greece 5–6 Phase 2 Node contract passed: typed answers, v3/v2 key repair, stable checkpoint IDs, old history, safe restore and numeric XP fallback.');
+console.log('Ancient Greece 5–6 Phase 2 Node contract passed: typed answers, v4/v3/v2 key repair, stable checkpoint IDs, old history, safe restore and numeric XP fallback.');
