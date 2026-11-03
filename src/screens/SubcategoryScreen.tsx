@@ -104,7 +104,7 @@ export default function SubcategoryScreen({
         <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
             <Path d={route} fill="none" stroke={colors.borderStrong} strokeWidth={8} strokeLinecap="round" />
-            <Path d={route} fill="none" stroke="#7365A9" strokeWidth={3} strokeLinecap="round" strokeDasharray="5 9" />
+            <Path d={route} fill="none" stroke="#8478B8" strokeWidth={3} strokeLinecap="round" strokeDasharray="5 9" />
           </Svg>
           {path.map((lesson, index) => {
             const point = points[index] ?? pointFor(index, mapWidth);
@@ -153,9 +153,9 @@ const styles = StyleSheet.create({
   progressHeader: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
   progressText: { color: colors.textBody, fontSize: 11, fontWeight: "700" },
   progressTrack: { height: 6, borderRadius: 5, backgroundColor: colors.border, overflow: "hidden" },
-  progressFill: { height: "100%", backgroundColor: colors.success, borderRadius: 5 },
+  progressFill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 5 },
   continueCard: { flexDirection: "row", alignItems: "center", padding: 13, gap: 12,
-    backgroundColor: "#242039", borderColor: "#514B6A", borderWidth: 1, borderRadius: 16 },
+    backgroundColor: "#1B2032", borderColor: "#474160", borderWidth: 1, borderRadius: 16 },
   continueCopy: { flex: 1, gap: 5 },
   continueEyebrow: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
   continueTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "800" },
@@ -167,14 +167,14 @@ const styles = StyleSheet.create({
   map: { alignSelf: "center", position: "relative", marginTop: 6 },
   pathSvg: { position: "absolute", top: 0, left: 0 },
   stopPosition: { width: 144, position: "absolute", alignItems: "center" },
-  chapterBadge: { color: "#D4C6FF", fontSize: 10, fontWeight: "900", textAlign: "center",
+  chapterBadge: { color: colors.accentLight, fontSize: 10, fontWeight: "900", textAlign: "center",
     lineHeight: 14, marginTop: -18, marginBottom: 4, backgroundColor: "#25233A",
     borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
   nodePressable: { width: 144, alignItems: "center" },
   node: { width: 65, height: 65, borderRadius: 33, alignSelf: "center",
     borderWidth: 3, borderColor: "#746B94", backgroundColor: "#292A43",
     alignItems: "center", justifyContent: "center" },
-  nodeActive: { borderColor: colors.accentLight, backgroundColor: "#453D70", borderWidth: 4 },
+  nodeActive: { borderColor: colors.accentLight, backgroundColor: "#3C3560", borderWidth: 4 },
   nodeDone: { borderColor: colors.success, backgroundColor: colors.successSurface },
   nodeLocked: { borderColor: colors.borderStrong, backgroundColor: "#202535" },
   nodeNumber: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "900" },
