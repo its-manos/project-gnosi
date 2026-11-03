@@ -69,13 +69,21 @@ export default function HomeScreen({
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
   const { height } = useWindowDimensions();
-  // Normal-height screens fit all primary actions; smaller screens remain scrollable.
-  const compact = height < 790;
-  // Disable dragging entirely when the dashboard fits. Layout measurements
-  // also account for font scaling, safe areas and any contextual status rows.
+  // The available Home viewport excludes the top safe area and bottom tabs.
+  // Window height alone made some iPhones use the spacious layout and scroll
+  // by a few points after the lesson breadcrumb was added.
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1;
+  const [extraDensity, setExtraDensity] = useState(0);
+  const availableHeight = viewportHeight || Math.max(0, height - 130);
+  const baseDensity = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
+  const density = Math.max(baseDensity, extraDensity);
+  const compact = density >= 1;
+  const tight = density >= 2;
+  // A genuine overflow first switches to a denser layout. Scrolling remains
+  // available only when the most compact layout cannot fit the content (e.g.
+  // accessibility text, small landscape viewports, unusually tall headings).
+  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1 && tight;
   const today = useAthensDate();
   // This existing metric counts completed daily quizzes, not app logins.
   // A separate login streak requires account-scoped, synchronised visit records.
@@ -111,15 +119,26 @@ export default function HomeScreen({
 
   return (
     <ScrollView testID="home-game-dashboard" style={styles.viewport}
-      contentContainerStyle={[styles.content, compact && styles.compactContent]}
+      contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent]}
       scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false}
       overScrollMode="never" showsVerticalScrollIndicator={false}
       onLayout={event => {
         const nextHeight = event.nativeEvent.layout.height;
-        setViewportHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
+        if (Math.abs(viewportHeight - nextHeight) >= 1) {
+          setViewportHeight(nextHeight);
+          // Re-evaluate density after a resize, rotation or navigation change.
+          setExtraDensity(0);
+          if (contentHeight > nextHeight + 1) {
+            const nextBase = nextHeight < 610 ? 2 : nextHeight < 740 ? 1 : 0;
+            if (nextBase < 2) setExtraDensity(nextBase + 1);
+          }
+        }
       }}
       onContentSizeChange={(_width, nextHeight) => {
         setContentHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
+        if (viewportHeight > 0 && nextHeight > viewportHeight + 1 && density < 2) {
+          setExtraDensity(density + 1);
+        }
       }}>
       <View style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
@@ -151,7 +170,7 @@ export default function HomeScreen({
         </View>
       </View>
 
-      <Pressable testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, pressed && styles.pressed]}
+      <Pressable testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
@@ -164,7 +183,7 @@ export default function HomeScreen({
             ? String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"
             : completedCount + " ολοκληρωμένα"}</Text>
         </View>
-        <Text style={styles.heroTitle} numberOfLines={2}>
+        <Text style={[styles.heroTitle, tight && styles.tightHeroTitle]} numberOfLines={2}>
           {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
         </Text>
         {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}
@@ -182,7 +201,7 @@ export default function HomeScreen({
       </Pressable>
 
       <View style={styles.actions}>
-        <Pressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, pressed && styles.pressed]}
+        <Pressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
@@ -196,7 +215,7 @@ export default function HomeScreen({
           <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
           <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
         </Pressable>
-        <Pressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, pressed && styles.pressed]}
+        <Pressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Επανάληψη γνώσεων"
           onPress={onKnowledgeReview} disabled={!onKnowledgeReview}>
           <Text style={[styles.actionIcon, styles.reviewIcon]}>◎</Text>
@@ -205,23 +224,23 @@ export default function HomeScreen({
         </Pressable>
       </View>
 
-      <View testID="home-exploration" style={styles.worlds}>
+      <View testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
         <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Κόσμοι γνώσης</Text>
+          <Text style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
           <Text style={styles.worldCount}>{categories.length} κόσμοι</Text>
         </View>
-        <View style={styles.categoryGrid}>
+        <View style={[styles.categoryGrid, tight && styles.tightCategoryGrid]}>
           {categories.map(category => {
             const WorldIllustration = worldIllustrations[category.id];
             return (
               <Pressable key={category.id} testID={"home-category-" + category.id}
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
                 onPress={() => onOpenCategory(category.id)}
-                style={({ pressed }) => [styles.category, compact && styles.compactCategory, pressed && styles.pressed]}>
+                style={({ pressed }) => [styles.category, compact && styles.compactCategory, tight && styles.tightCategory, pressed && styles.pressed]}>
                 {WorldIllustration
                   ? <WorldIllustration size={32} displayScale={1.18} />
                   : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
-                <Text style={styles.categoryLabel} numberOfLines={2} adjustsFontSizeToFit>
+                <Text style={[styles.categoryLabel, tight && styles.tightCategoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
                   {shortLabels[category.id] ?? category.title}
                 </Text>
               </Pressable>
@@ -230,14 +249,15 @@ export default function HomeScreen({
         </View>
       </View>
 
-      <View testID="home-mini-games" style={styles.miniGames}>
-        <Text style={styles.miniGamesHeading}>Μίνι παιχνίδια</Text>
+      <View testID="home-mini-games" style={[styles.miniGames, tight && styles.tightMiniGames]}>
+        <Text style={[styles.miniGamesHeading, tight && styles.tightMiniGamesHeading]}>Μίνι παιχνίδια</Text>
         <View style={styles.miniGamesRow}>
           {upcomingMiniGames.map(game =>
-            <View key={game.id} testID={"home-mini-game-" + game.id} style={styles.miniGameCard}
+            <View key={game.id} testID={"home-mini-game-" + game.id}
+              style={[styles.miniGameCard, tight && styles.tightMiniGameCard]}
               accessible accessibilityLabel={game.title + ", σύντομα διαθέσιμο"}
               accessibilityState={{ disabled: true }}>
-              <View style={styles.miniGameIcon} accessible={false}>
+              <View style={[styles.miniGameIcon, tight && styles.tightMiniGameIcon]} accessible={false}>
                 <Text style={styles.miniGameSymbol}>{game.symbol}</Text>
               </View>
               <View style={styles.miniGameCopy}>
@@ -256,10 +276,23 @@ const styles = StyleSheet.create({
   viewport: { flex: 1 },
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
     paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1 },
-  compactContent: { gap: 9, paddingBottom: 6 },
+  compactContent: { gap: 8, paddingBottom: 5 },
+  tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
   compactHero: { padding: 12, gap: 5 },
+  tightHero: { padding: 10, gap: 4 },
+  tightHeroTitle: { fontSize: 18, lineHeight: 23 },
   compactActionCard: { minHeight: 90, padding: 10 },
+  tightActionCard: { minHeight: 80, padding: 8, gap: 2 },
   compactCategory: { minHeight: 70 },
+  tightCategory: { minHeight: 67, paddingVertical: 4, gap: 2 },
+  tightCategoryLabel: { fontSize: 10, lineHeight: 12 },
+  tightWorlds: { gap: 6 },
+  tightSectionTitle: { fontSize: 16, lineHeight: 20 },
+  tightCategoryGrid: { rowGap: 6 },
+  tightMiniGames: { gap: 5 },
+  tightMiniGamesHeading: { fontSize: 14, lineHeight: 19 },
+  tightMiniGameCard: { minHeight: 56, paddingVertical: 6 },
+  tightMiniGameIcon: { width: 32, height: 32 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
   logo: { color: colors.accentLight, fontSize: 21, lineHeight: 27, fontWeight: "900", letterSpacing: 2.4 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },

@@ -276,14 +276,13 @@ for (const game of upcomingGames) {
   assert.equal(game.props.accessible, true);
   assert.equal(game.props.accessibilityState.disabled, true);
   assert.match(game.props.accessibilityLabel, /σύντομα διαθέσιμο/);
-  assert.equal(game.props.style.minHeight, 62);
+  assert.equal(game.props.style[0].minHeight, 62);
 }
 assert.ok(nodes(tree).some(node => node.props?.children === "Μίνι παιχνίδια"));
 assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα").length, 2);
 
-// No scrolling or elastic pull on a fitted one-screen dashboard.
-// A genuinely taller dashboard must still scroll on small devices or with larger text.
-homeScrollState = [0, 0];
+// Responsive density follows the available Home height after safe areas and tabs.
+homeScrollState = [0, 0, 0];
 const renderMeasuredHome = () => { homeScrollHookIndex = 0; return home(props); };
 const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-game-dashboard");
 let scroll = scrollNode();
@@ -291,26 +290,67 @@ assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measur
 assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
 assert.equal(scroll.props.alwaysBounceVertical, false);
 assert.equal(scroll.props.overScrollMode, "never", "disable Android overscroll glow");
+scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
+scroll = scrollNode();
+assert.equal(scroll.props.contentContainerStyle[1].gap, 8,
+  "shorter usable viewport activates compact layout even with a tall window");
+assert.equal(scroll.props.contentContainerStyle[2], false);
+scroll.props.onContentSizeChange(360, 711);
+scroll = scrollNode();
+assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
+  "measured overflow activates tight spacing without dropping sections");
+const tightHero = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-primary-action");
+const tightQuiz = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-daily-quiz");
+const tightCategory = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
+const tightMiniGame = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-mini-game-sudoku");
+assert.equal(tightHero.props.style({ pressed: false })[2].padding, 10);
+assert.equal(tightQuiz.props.style({ pressed: false })[3].minHeight, 80);
+assert.equal(tightCategory.props.style({ pressed: false })[2].minHeight, 67);
+assert.equal(tightMiniGame.props.style[1].minHeight, 56);
+assert.equal(nodes(tightCategory).find(node => node.type === HistoryWorldIcon).props.size, 32);
+assert.ok(nodes(tightHero).some(node => node.props?.style?.minHeight === 44),
+  "primary CTA retains its 44pt tap target");
+scroll.props.onContentSizeChange(360, 701);
+scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, false, "fitted tight content cannot be scrolled");
+scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
+scroll = scrollNode();
+assert.equal(scroll.props.contentContainerStyle[1], false,
+  "available height growth restores spacious styling");
+assert.equal(scroll.props.scrollEnabled, false);
+// Small landscape screens and large accessibility text must never be clipped.
+scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
+scroll.props.onContentSizeChange(360, 680);
+scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, true, "genuine overflow remains scrollable");
+scroll.props.onContentSizeChange(360, 554);
+scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, false, "drag turns off when content fits again");
+
+// Preserve the one-point measurement tolerance and resize behavior.
+homeScrollState = [0, 0, 0];
+scroll = scrollNode();
 scroll.props.onLayout({ nativeEvent: { layout: { height: 600 } } });
 scroll.props.onContentSizeChange(360, 596);
 scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, false, "no movement when content fits");
+assert.equal(scroll.props.scrollEnabled, false);
 scroll.props.onContentSizeChange(360, 601);
 scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "ignore subpixel measurement mismatch");
 scroll.props.onContentSizeChange(360, 620);
 scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, true, "enable scrolling for genuine overflow");
+assert.equal(scroll.props.scrollEnabled, true);
 scroll.props.onLayout({ nativeEvent: { layout: { height: 660 } } });
 scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, false, "recalculate scroll availability when the viewport grows");
+assert.equal(scroll.props.scrollEnabled, false, "recalculate overflow after viewport resize");
 homeScrollState = null;
 assert.ok(nodes(tree).some(node => node.props?.children === "1 / 3 ερωτήσεις"),
   "resume card shows question progress beside its heading");
-const centeredGrid = nodes(tree).find(node => node.props?.style?.flexWrap === "wrap"
-  && node.props?.style?.justifyContent === "center");
+const centeredGrid = nodes(tree).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap"
+  && node.props.style[0]?.justifyContent === "center");
 assert.ok(centeredGrid, "knowledge worlds are centered with equal grid gaps");
-assert.equal(centeredGrid.props.style.columnGap, 8);
+assert.equal(centeredGrid.props.style[0].columnGap, 8);
 assert.equal(HistoryCard.props.style({ pressed: false })[0].minHeight, 78,
   "History card dimensions remain unchanged on normal screens");
 const firstWorld = nodes(tree).find(node => node.props?.testID === "home-category-history");
