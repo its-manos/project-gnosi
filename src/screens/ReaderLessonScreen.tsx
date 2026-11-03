@@ -4,7 +4,8 @@ import { adaptInteractiveLessonQuestion, adaptLessonQuestion, projectInteractive
 import ZoomableLessonImage from "../components/ZoomableLessonImage";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import { useRef, useState } from "react";
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { requestPracticeCue } from "../play/soundStatus";
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import type { Props } from "./LessonScreen";
@@ -30,6 +31,12 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const [readingSize, setReadingSize] = useState(18);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  // This is presentation state only; canonical answers and lesson progress stay parent-owned.
+  const [activeBoundary, setActiveBoundary] = useState<number | null>(null);
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null);
+  const openingQuestion = useRef(false);
+  const gateOffsets = useRef<Record<number, number>>({});
+  const viewport = useRef({ top: 0, bottom: 0, measured: false });
   const scrollRef = useRef<ScrollViewInstance>(null);
   const sectionPositions = useRef<Record<number, number>>({});
   const paragraphPositions = useRef<Record<number, { sectionIndex: number; y: number }>>({});
@@ -42,6 +49,15 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const questionCount = placements.length;
   const answeredCount = Array.from({ length: questionCount }, (_, i) => i)
     .filter(i => checkpointAnswers[i] !== undefined).length;
+  const firstPending = firstPendingQuestionIndex < 0 ? null : placements[firstPendingQuestionIndex];
+  const pendingGroup = firstPending === null ? [] : placements
+    .filter(p => p.afterParagraphNumber === firstPending.afterParagraphNumber)
+    .map(p => p.questionIndex);
+  const activeGroup = activeBoundary === null ? [] : placements
+    .filter(p => p.afterParagraphNumber === activeBoundary)
+    .map(p => p.questionIndex);
+  const activePosition = activeQuestionIndex === null ? -1 : activeGroup.indexOf(activeQuestionIndex);
+  const activeAnswered = activeQuestionIndex !== null && checkpointAnswers[activeQuestionIndex] !== undefined;
   const visibleLimit = getReadingVisibleParagraphLimit(lesson, checkpointAnswers);
   const upcomingFigureUrl = nextPendingFigureUrl(lesson, visibleLimit);
   const complete = answeredCount === questionCount;
@@ -51,6 +67,45 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
     start: 1 + lesson.sections.slice(0, index).reduce((count, previous) => count + previous.paragraphs.length, 0),
   }));
   const textStyle = { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.75) };
+
+  function openQuestions(boundary: number, questionIndex: number) {
+    if (activeBoundary !== null || openingQuestion.current || checkpointAnswers[questionIndex] !== undefined) return;
+    openingQuestion.current = true;
+    setActiveBoundary(boundary);
+    setActiveQuestionIndex(questionIndex);
+    requestPracticeCue("question-open");
+  }
+
+  // The card opens when its section-ending gate actually enters the viewport,
+  // never just because React has rendered a long article below the fold.
+  function maybeOpenQuestions() {
+    if (!viewport.current.measured || activeBoundary !== null || openingQuestion.current || !firstPending) return;
+    const paragraph = paragraphPositions.current[firstPending.afterParagraphNumber];
+    const sectionY = paragraph && sectionPositions.current[paragraph.sectionIndex];
+    const offset = gateOffsets.current[firstPending.afterParagraphNumber];
+    if (sectionY === undefined || offset === undefined) return;
+    const gateY = sectionY + paragraph.y + offset;
+    if (gateY >= viewport.current.top - 24 && gateY <= viewport.current.bottom - 8) {
+      openQuestions(firstPending.afterParagraphNumber, firstPending.questionIndex);
+    }
+  }
+
+  function advanceQuestion() {
+    if (activeBoundary === null || activeQuestionIndex === null || !activeAnswered) return;
+    const next = activeGroup.find(i => i > activeQuestionIndex && checkpointAnswers[i] === undefined);
+    if (next !== undefined) {
+      setActiveQuestionIndex(next);
+      requestPracticeCue("question-open");
+      return;
+    }
+    const boundary = activeBoundary;
+    openingQuestion.current = false;
+    setActiveQuestionIndex(null);
+    setActiveBoundary(null);
+    restored.current = true;
+    pendingScroll.current = boundary < paragraphCount ? boundary + 1 : "finish";
+    requestAnimationFrame(flushScroll);
+  }
 
   function paragraphY(number: number) {
     const position = paragraphPositions.current[number];
@@ -129,9 +184,18 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
         </View>
       </View>
       <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false} onContentSizeChange={flushScroll} scrollEventThrottle={500}
+        scrollEnabled={activeBoundary === null}
+        onLayout={event => {
+          viewport.current.bottom = viewport.current.top + event.nativeEvent.layout.height;
+          viewport.current.measured = true;
+          maybeOpenQuestions();
+        }}
+        showsVerticalScrollIndicator={false} onContentSizeChange={() => { flushScroll(); maybeOpenQuestions(); }} scrollEventThrottle={100}
         onScroll={event => {
-          const bottom = event.nativeEvent.contentOffset.y + event.nativeEvent.layoutMeasurement.height;
+          const top = event.nativeEvent.contentOffset.y;
+          const bottom = top + event.nativeEvent.layoutMeasurement.height;
+          viewport.current = { top, bottom, measured: true };
+          maybeOpenQuestions();
           const seen = Object.entries(paragraphPositions.current).filter(([, pos]) => {
             const sectionY = sectionPositions.current[pos.sectionIndex];
             return sectionY !== undefined && sectionY + pos.y < bottom;
@@ -168,6 +232,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <View key={section.title} style={styles.section} onLayout={event => {
             sectionPositions.current[sectionIndex] = event.nativeEvent.layout.y;
             flushScroll();
+            maybeOpenQuestions();
           }}>
             <Text style={styles.sectionNumber}>ΕΝΟΤΗΤΑ {sectionIndex + 1} / {sections.length}</Text>
             <Text accessibilityRole="header" style={styles.sectionTitle}>{section.title}</Text>
@@ -175,49 +240,29 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               const number = section.start + i;
               if (number > visibleLimit) return null;
               const paragraphId = getParagraphId(paragraph, number);
-              // Display checkpoints are grouped by section ending; canonical indices persist.
-              const questionIndices = placements.filter(p => p.afterParagraphNumber === number &&
-                (firstPendingQuestionIndex < 0 || p.questionIndex <= firstPendingQuestionIndex))
-                .map(p => p.questionIndex);
+              // Only a checkpoint gate lives in the article. Questions and feedback
+              // render exclusively inside the full-screen Modal below.
+              const hasGate = firstPending?.afterParagraphNumber === number;
               return <View key={number} testID={`reader-paragraph-${number}`} onLayout={event => {
                 paragraphPositions.current[number] = { sectionIndex, y: event.nativeEvent.layout.y };
                 flushScroll();
+                maybeOpenQuestions();
               }}>
                 <Text selectable style={[styles.paragraph, textStyle]}>{getParagraphText(paragraph)}</Text>
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
-                {questionIndices.map(questionIndex => {
-                const question = lesson.questions[questionIndex];
-                const interactiveQuestion = adaptInteractiveLessonQuestion(lesson, questionIndex);
-                const answered = checkpointAnswers[questionIndex] !== undefined;
-                const anotherAtSameBoundary = placements[questionIndex + 1]?.afterParagraphNumber === number;
-                return <View key={questionIndex} testID={`reader-checkpoint-${questionIndex}`} style={styles.checkpoint}>
-                  {interactiveQuestion ? <>
-                    <QuizQuestionRenderer question={interactiveQuestion} questionNumber={questionIndex + 1}
-                      readingSize={readingSize}
-                      answer={restoreInteractiveLessonAnswer(lesson, questionIndex, checkpointAnswers[questionIndex], typedCheckpointAnswers[questionIndex])}
-                      onSubmit={value => {
-                        const answerIndex = projectInteractiveLessonAnswer(lesson, questionIndex, value);
-                        if (answerIndex === null || answered) return;
-                        // Existing two pilot types retain numeric-only compatibility;
-                        // structured formats save the full versioned response as well.
-                        if (interactiveQuestion.type === "spot-the-mistake" ||
-                            interactiveQuestion.type === "fill-in-the-blank") {
-                          onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex);
-                        } else {
-                          onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex, value);
-                        }
-                      }} />
-                    {enableReporting ? <ReportContentButton target={lessonReportTarget(lesson, questionIndex)} /> : null}
-                  </> : <InlineQuestionCard combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1).map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo} question={question} questionNumber={questionIndex + 1} selectedAnswer={checkpointAnswers[questionIndex]} reportTarget={enableReporting ? lessonReportTarget(lesson, questionIndex) : undefined}
-                    readingSize={readingSize} onSelectAnswer={(answerIndex, correctIndex) => onAnswerCheckpoint(questionIndex, answerIndex, correctIndex)} />}
-                  {answered ? anotherAtSameBoundary ? null : <ActionButton label={number < paragraphCount ? "Συνέχεια ανάγνωσης ↓" : "Στο κλείσιμο του άρθρου ↓"} secondary onPress={() => {
-                    restored.current = true;
-                    pendingScroll.current = number < paragraphCount ? number + 1 : "finish";
-                    flushScroll();
-                  }} /> : <Text style={styles.small}>Διάλεξε μια απάντηση για να συνεχίσεις.</Text>}
-                </View>;
-              })}
+                {hasGate ? <View testID={`reader-checkpoint-${firstPending.questionIndex}`}
+                  style={styles.checkpoint} onLayout={event => {
+                    gateOffsets.current[number] = event.nativeEvent.layout.y;
+                    maybeOpenQuestions();
+                  }}>
+                  <Text style={styles.gateTitle}>Ώρα για ερωτήσεις</Text>
+                  <Text style={styles.readingHint}>Απάντησε για να συνεχίσεις την ανάγνωση.
+                    {pendingGroup.length > 1 ? ` ${pendingGroup.length} ερωτήσεις σε αυτή την ενότητα.` : ""}
+                  </Text>
+                  <ActionButton label="Άνοιγμα ερωτήσεων →"
+                    onPress={() => openQuestions(number, firstPending.questionIndex)} />
+                </View> : null}
               </View>;
             })}
           </View>
@@ -232,6 +277,69 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
         </View> : <Text style={styles.locked} testID="reader-locked">Η συνέχεια ανοίγει μετά την παραπάνω ερώτηση. Δεν χρειάζεται να απαντήσεις σωστά για να προχωρήσεις.</Text>}
       </ScrollView>
       <NextImageWarmup uri={upcomingFigureUrl} />
+      {activeBoundary !== null && activeQuestionIndex !== null && activePosition >= 0 ? <Modal
+        visible animationType="slide" presentationStyle="fullScreen"
+        onRequestClose={onBack}>
+        <View style={styles.quizScreen} testID="reader-question-screen">
+          <View style={styles.quizTopbar}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Έξοδος από το μάθημα"
+              onPress={onBack} style={styles.control}>
+              <Text style={styles.quizExit}>‹ Έξοδος</Text>
+            </Pressable>
+            <Text style={styles.quizBrand}>ΕΛΕΓΧΟΣ ΓΝΩΣΕΩΝ</Text>
+            <Text style={styles.quizCount} accessibilityLiveRegion="polite">
+              {activeGroup.length > 1 ? `Ερώτηση ${activePosition + 1} / ${activeGroup.length}` : "Ερώτηση"}
+            </Text>
+          </View>
+          {activeGroup.length > 1 ? <View style={styles.quizSteps} accessibilityRole="progressbar"
+            accessibilityLabel="Πρόοδος ερωτήσεων ενότητας"
+            accessibilityValue={{ min: 0, max: activeGroup.length, now: activePosition + 1 }}>
+            {activeGroup.map((index, position) => <View key={index}
+              style={[styles.quizStep, position <= activePosition && styles.quizStepActive]} />)}
+          </View> : null}
+          <ScrollView key={`${lesson.id}:${activeQuestionIndex}`} contentContainerStyle={styles.quizContent}
+            keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <View testID={`reader-modal-question-${activeQuestionIndex}`}>
+              {(() => {
+                const questionIndex = activeQuestionIndex;
+                const question = lesson.questions[questionIndex];
+                const interactive = adaptInteractiveLessonQuestion(lesson, questionIndex);
+                const answered = checkpointAnswers[questionIndex] !== undefined;
+                return interactive ? <>
+                  <QuizQuestionRenderer question={interactive} questionNumber={questionIndex + 1}
+                    readingSize={readingSize}
+                    answer={restoreInteractiveLessonAnswer(lesson, questionIndex, checkpointAnswers[questionIndex], typedCheckpointAnswers[questionIndex])}
+                    onSubmit={value => {
+                      const answerIndex = projectInteractiveLessonAnswer(lesson, questionIndex, value);
+                      if (answerIndex === null || answered || activeQuestionIndex !== questionIndex) return;
+                      if (interactive.type === "spot-the-mistake" || interactive.type === "fill-in-the-blank") {
+                        onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex);
+                      } else {
+                        onAnswerCheckpoint(questionIndex, answerIndex, question.correctIndex, value);
+                      }
+                    }} />
+                  {enableReporting ? <ReportContentButton target={lessonReportTarget(lesson, questionIndex)} /> : null}
+                </> : <InlineQuestionCard
+                  combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1)
+                    .map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo}
+                  question={question} questionNumber={questionIndex + 1}
+                  selectedAnswer={checkpointAnswers[questionIndex]}
+                  reportTarget={enableReporting ? lessonReportTarget(lesson, questionIndex) : undefined}
+                  readingSize={readingSize}
+                  onSelectAnswer={(answerIndex, correctIndex) => {
+                    if (!answered && activeQuestionIndex === questionIndex) {
+                      onAnswerCheckpoint(questionIndex, answerIndex, correctIndex);
+                    }
+                  }} />;
+              })()}
+            </View>
+            {activeAnswered ? <ActionButton
+              label={activeGroup.some(i => i > activeQuestionIndex && checkpointAnswers[i] === undefined)
+                ? "Επόμενη ερώτηση →" : "Συνέχεια ανάγνωσης →"}
+              onPress={advanceQuestion} /> : null}
+          </ScrollView>
+        </View>
+      </Modal> : null}
     </View>
   );
 }
@@ -282,7 +390,18 @@ const styles = StyleSheet.create({
   sectionNumber: { color: "#C7B899", fontSize: 10, lineHeight: 18, letterSpacing: 1, marginBottom: 8 },
   sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "600", marginBottom: 22 },
   paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 24 },
-  checkpoint: { marginBottom: 28 },
+  checkpoint: { marginBottom: 28, borderWidth: 1, borderColor: reading.border, backgroundColor: reading.surface, borderRadius: 16, padding: 18 },
+  gateTitle: { color: reading.heading, fontSize: 19, lineHeight: 28, fontWeight: "700" },
+  quizScreen: { flex: 1, backgroundColor: colors.background },
+  quizTopbar: { paddingHorizontal: 14, paddingTop: 16, paddingBottom: 12, flexDirection: "row", flexWrap: "wrap",
+    justifyContent: "space-between", alignItems: "center", gap: 6, borderBottomWidth: 1, borderColor: colors.border },
+  quizExit: { color: colors.text, fontSize: 15, fontWeight: "700" },
+  quizBrand: { color: colors.accentLight, fontSize: 10, letterSpacing: 0.8, fontWeight: "800" },
+  quizCount: { color: colors.textMuted, fontSize: 12, fontWeight: "700" },
+  quizSteps: { flexDirection: "row", gap: 5, marginHorizontal: 22, marginTop: 14 },
+  quizStep: { height: 4, borderRadius: 3, backgroundColor: colors.border, flex: 1 },
+  quizStepActive: { backgroundColor: colors.accent },
+  quizContent: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 64, width: "100%", maxWidth: 640, alignSelf: "center" },
   finish: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 26, gap: 10 },
   finishBody: { color: reading.text, marginTop: 8, marginBottom: 8 },
   endSources: { marginTop: 28 },
