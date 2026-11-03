@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
   },
-  backgroundArt: { ...StyleSheet.absoluteFillObject },
+  backgroundArt: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
   mapFrame: {
     width: "100%",
     maxWidth: 520,
