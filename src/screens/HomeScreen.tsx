@@ -178,7 +178,7 @@ export default function HomeScreen({
               onPress={() => onOpenCategory(category.id)}
               style={({ pressed }) => [styles.category, compact && styles.compactCategory, pressed && styles.pressed]}>
               {category.id === "history"
-                ? <HistoryWorldIcon size={32} />
+                ? <HistoryWorldIcon size={32} displayScale={1.18} />
                 : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
               <Text style={styles.categoryLabel} numberOfLines={2} adjustsFontSizeToFit>
                 {shortLabels[category.id] ?? category.title}
