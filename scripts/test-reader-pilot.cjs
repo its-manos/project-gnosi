@@ -100,10 +100,18 @@ for(let i=0;i<total;i++) {
   assert.equal(report.questionIndex,i,'question reporting uses canonical checkpoint index');
   const canonical=lesson.questions[i];
   const choice=i===0 ? (canonical.correctIndex+1)%canonical.answers.length : canonical.correctIndex;
-  if(q.type === 'QuizQuestionRenderer') q.props.onSubmit('option-'+choice);
+  const multiple = canonical.presentation?.type === 'multiple-select';
+  const typedValue = multiple ? [...canonical.presentation.correctIndices] : undefined;
+  if(q.type === 'QuizQuestionRenderer') q.props.onSubmit(multiple ? typedValue : 'option-'+choice);
   else q.props.onSelectAnswer(choice,canonical.correctIndex);
-  assert.deepEqual(calls.at(-1),['answer',i,choice,canonical.correctIndex]);
-  props={ ...props, checkpointAnswers: { ...props.checkpointAnswers,[i]:choice } }; tree=render();
+  assert.deepEqual(calls.at(-1),multiple
+    ? ['answer',i,choice,canonical.correctIndex,typedValue]
+    : ['answer',i,choice,canonical.correctIndex]);
+  props={ ...props, checkpointAnswers: { ...props.checkpointAnswers,[i]:choice },
+    ...(multiple ? {typedCheckpointAnswers:{
+      ...(props.typedCheckpointAnswers??{}),
+      [i]:{questionVersion:q.props.question.version,value:typedValue},
+    }} : {}) }; tree=render();
   assert.equal(nodes(tree).find(n => n.props?.accessibilityRole === 'progressbar').props.accessibilityValue.now,i+1);
   if(i<total-1) assert.ok(byId(tree,`reader-paragraph-${progress.getQuestionPlacements(lesson)[i].afterParagraphNumber+1}`), 'Any answer unlocks next paragraphs.');
 }
