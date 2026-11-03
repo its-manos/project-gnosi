@@ -1,0 +1,36 @@
+name: Refresh Home motion npm lockfile (temporary)
+on:
+  push:
+    branches: [feat/home-motion-polish]
+    paths:
+      - ".github/workflows/home-motion-lock-refresh.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/home-motion-polish
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Regenerate full npm dependency tree
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit lockfile to feature branch
+        run: |
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile already aligned"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(home): regenerate complete npm lockfile"
+          git push origin HEAD:feat/home-motion-polish
