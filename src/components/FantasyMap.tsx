@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import type { ImageSourcePropType } from "react-native";
 import Svg, { Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 type MapRegion = {
@@ -21,6 +22,8 @@ type Props = {
   overview?: boolean;
   minHeight?: number;
   onControlsHeightChange?: (height: number) => void;
+  /** Bundled image for a bespoke world. Omit it to retain the SVG atlas. */
+  backgroundImage?: ImageSourcePropType;
 };
 
 type Point = { x: number; y: number };
@@ -298,6 +301,7 @@ export default function FantasyMap({
   overview = false,
   minHeight = 0,
   onControlsHeightChange,
+  backgroundImage,
 }: Props) {
   const [showList, setShowList] = useState(false);
   const columns = columnCount(regions.length);
@@ -351,6 +355,11 @@ export default function FantasyMap({
         </View>
       </View>
       {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame, { aspectRatio: MAP_WIDTH / mapHeight }]}>
+      {backgroundImage && !overview ? (
+        <Image testID="history-midnight-atlas-art" pointerEvents="none"
+          source={backgroundImage} resizeMode="cover" style={styles.backgroundArt}
+          accessible={false} />
+      ) : null}
       <Svg
         width="100%"
         height="100%"
@@ -376,22 +385,22 @@ export default function FantasyMap({
             <Stop offset="1" stopColor="#DEB766" />
           </LinearGradient>
         </Defs>
-        <Rect width={MAP_WIDTH} height={mapHeight} rx={20} fill="url(#atlas-sea)" />
-        {Array.from({ length: 9 }, (_, index) => (
+        <Rect width={MAP_WIDTH} height={mapHeight} rx={20} fill="url(#atlas-sea)" fillOpacity={backgroundImage ? 0.03 : 1} />
+        {!backgroundImage && Array.from({ length: 9 }, (_, index) => (
           <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
             stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
         ))}
-        {Array.from({ length: rows * 4 }, (_, index) => (
+        {!backgroundImage && Array.from({ length: rows * 4 }, (_, index) => (
           <Path key={`parallel-${index}`} d={`M 0 ${index * 40} Q 180 ${index * 40 + 30} 360 ${index * 40}`}
             stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
         ))}
-        <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15} fill="none" stroke="#89AAA6" strokeOpacity={0.18} />
-        <G opacity={0.65}>
+        {!backgroundImage ? <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15} fill="none" stroke="#89AAA6" strokeOpacity={0.18} /> : null}
+        {!backgroundImage ? <G opacity={0.65}>
           <Circle cx={326} cy={30} r={13} fill="none" stroke="#C9BB92" strokeWidth={0.6} />
           <Path d="M326 13 L330 30 L326 45 L322 30 Z" fill="#C9BB92" />
           <Path d="M312 30 L326 26 L340 30 L326 34 Z" fill="#799B9D" />
           <SvgText x={305} y={23} fill="#C9BB92" fontSize={7}>Β</SvgText>
-        </G>
+        </G> : null}
         {connectorPaths.map((connector) => (
           <Path
             key={connector.key}
@@ -400,7 +409,7 @@ export default function FantasyMap({
             stroke="#BEB896"
             strokeWidth={1}
             strokeDasharray="2 5"
-            opacity={0.32}
+            opacity={backgroundImage ? 0 : 0.32}
           />
         ))}
 
@@ -428,20 +437,20 @@ export default function FantasyMap({
               key={region.id}
               pointerEvents="none"
             >
-              <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={0.6} />
+              <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={backgroundImage ? 0.12 : 0.6} />
               <Path d={islandPath} fill="none"
                 stroke={region.status === "in-progress" ? "#B1A5FF" : region.fill}
                 strokeWidth={region.status === "in-progress" ? 17 : 13}
-                strokeOpacity={region.status === "in-progress" ? 0.25 : 0.09} />
-              <Path d={islandPath} fill="none" stroke="#94C0B7" strokeWidth={6} strokeOpacity={0.13} />
+                strokeOpacity={backgroundImage ? 0.12 : region.status === "in-progress" ? 0.25 : 0.09} />
+              <Path d={islandPath} fill="none" stroke="#94C0B7" strokeWidth={6} strokeOpacity={backgroundImage ? 0.04 : 0.13} />
               <Path
                 d={islandPath}
                 fill={`url(#land-${region.seed})`}
-                fillOpacity={0.92}
+                fillOpacity={backgroundImage ? 0.09 : 0.92}
                 stroke={region.status === "complete" ? "#E5C989"
                   : region.status === "in-progress" ? "#C2B3FF" : "#CFC9A9"}
                 strokeWidth={region.status === "in-progress" ? 2 : 1.35}
-                strokeOpacity={region.status === "in-progress" || region.status === "complete" ? 0.95 : 0.62}
+                strokeOpacity={backgroundImage ? 0.42 : region.status === "in-progress" || region.status === "complete" ? 0.95 : 0.62}
               />
               <Path
                 d={innerPath}
@@ -449,11 +458,11 @@ export default function FantasyMap({
                 stroke="#D7D3B4"
                 strokeWidth={0.7}
                 strokeDasharray="2 4"
-                strokeOpacity={0.42}
+                strokeOpacity={backgroundImage ? 0 : 0.42}
               />
 
               {/* Small nearby islets make the landmasses feel like a fantasy atlas. */}
-              <Circle
+              {!backgroundImage ? <Circle
                 cx={region.cx - region.rx * 0.89}
                 cy={region.cy + region.ry * 0.52}
                 r={Math.max(2.1, region.rx * 0.075)}
@@ -470,11 +479,11 @@ export default function FantasyMap({
                 stroke="#CFC9A9"
                 strokeWidth={0.6}
                 strokeOpacity={0.4}
-              />
+              /> : null}
 
               {/* Other islands keep their original mountain motif; the first
                   bespoke landmark is exclusive to Αρχαία Ελλάδα. */}
-              {(overview || region.id !== "ancient-greece") ? (
+              {!backgroundImage && (overview || region.id !== "ancient-greece") ? (
                 <G>
                   <Path d={`M ${region.cx - 25} ${region.cy - 18} l 10 -14 l 10 14 m -7 -2 l 14 -20 l 16 20`}
                     fill="none" stroke="#EEE5C7" strokeOpacity={0.28} strokeWidth={1.1} strokeLinejoin="round" />
@@ -519,7 +528,9 @@ export default function FantasyMap({
               {/* Preserve the whole island as a touch target, including coasts. */}
               <Path d={smoothClosedPath(makeIslandPoints(region.cx, region.cy, region.rx, region.ry, region.seed))}
                 fill="transparent" />
-              {isAncientGreeceLandmark ? (
+              {backgroundImage ? (
+                region.status === "complete" ? <SvgText x={region.cx + 30} y={region.cy - 21} textAnchor="middle" fontSize={11} fontWeight="700" fill="#F4D996">✓</SvgText> : null
+              ) : isAncientGreeceLandmark ? (
                 <G>
                   <AncientGreekTemple x={region.cx - 26 * (columns >= 3 ? 0.84 : 1)}
                     y={region.cy - (columns >= 3 ? 44 : 51)}
@@ -636,6 +647,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
   },
+  backgroundArt: { ...StyleSheet.absoluteFillObject },
   mapFrame: {
     width: "100%",
     maxWidth: 520,
