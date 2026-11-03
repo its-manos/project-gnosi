@@ -200,6 +200,75 @@ function upperIslandContour(points: Point[]): string {
   return path;
 }
 
+/**
+ * An original, local SVG engraving inspired by a classical Doric temple.
+ * Small architectural details (pediment, triglyphs, fluting, capitals,
+ * stylobate and stone highlights) keep it legible without looking cartoonish.
+ * It is decorative artwork, not a new island interaction or image request.
+ */
+function AncientGreekTemple({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
+  const columns = [8, 15.2, 22.4, 29.6, 36.8, 44];
+  return (
+    <G testID="atlas-landmark-ancient-greece"
+      pointerEvents="none"
+      transform={`translate(${x} ${y}) scale(${scale})`}
+      opacity={0.94}>
+      {/* A grounded stone silhouette and three stepped foundation courses. */}
+      <Path d="M4 33 L48 33 L51 36 L1 36 Z" fill="#132B36" opacity={0.5} />
+      <Rect x={4.5} y={30.6} width={43} height={1.8} rx={0.3} fill="#D8C9A9" opacity={0.65} />
+      <Rect x={2.7} y={32.6} width={46.6} height={1.5} rx={0.25} fill="#F2DFC0" opacity={0.72} />
+      <Rect x={0.7} y={34.6} width={50.6} height={1.3} rx={0.25} fill="#B9A886" opacity={0.65} />
+      <Path d="M5 30 L47 30" stroke="#FFF2D6" strokeWidth={0.5} opacity={0.65} />
+
+      {/* Six Doric columns with individual flutes, bases and capitals. */}
+      {columns.map((left, index) => (
+        <G key={`doric-column-${index}`}>
+          <Path d={`M ${left + 0.3} 19 L ${left + 3.2} 19 L ${left + 3.6} 30.2 L ${left} 30.2 Z`}
+            fill="#F0DFC1" fillOpacity={0.69}
+            stroke="#F9E9CE" strokeWidth={0.45} strokeOpacity={0.65} />
+          <Path d={`M ${left + 1.1} 19.4 L ${left + 0.9} 29.7 M ${left + 2.15} 19.4 L ${left + 2.3} 29.7`}
+            stroke="#7B796F" strokeWidth={0.43} opacity={0.72} />
+          <Path d={`M ${left - 0.4} 18.4 L ${left + 3.9} 18.4 L ${left + 3.3} 19.3 L ${left + 0.2} 19.3 Z`}
+            fill="#E8D3AB" stroke="#FAEACD" strokeWidth={0.32} />
+          <Path d={`M ${left - 0.45} 17.4 L ${left + 3.95} 17.4`}
+            stroke="#FFF0D5" strokeWidth={0.85} />
+          <Rect x={left - 0.4} y={29.9} width={4.4} height={0.65}
+            fill="#F5E3C2" opacity={0.82} />
+        </G>
+      ))}
+
+      {/* Entablature with small triglyph and metope rhythm. */}
+      <Rect x={5} y={13.4} width={42} height={4.2}
+        fill="#CDBB98" fillOpacity={0.72} stroke="#FAE9C8" strokeWidth={0.5} />
+      {[8.4, 15.7, 23, 30.3, 37.6, 44.1].map((left, index) => (
+        <G key={`triglyph-${index}`} opacity={0.72}>
+          <Path d={`M ${left} 14.2 V 16.9 M ${left + 0.7} 14.2 V 16.9 M ${left + 1.4} 14.2 V 16.9`}
+            fill="none" stroke="#5D615C" strokeWidth={0.48} />
+        </G>
+      ))}
+      <Path d="M3.1 12.6 H48.9 M4.8 17.8 H47.2"
+        stroke="#FFF0D2" strokeWidth={1.1} opacity={0.86} />
+
+      {/* The pitched pediment has a tympanum and carved inner cornice. */}
+      <Path d="M2.5 12.3 L26 1.8 L49.5 12.3 Z"
+        fill="#D3C19F" fillOpacity={0.58} stroke="#FFE6BB"
+        strokeOpacity={0.96} strokeWidth={1.15} strokeLinejoin="round" />
+      <Path d="M8.6 10.9 L26 4.3 L43.4 10.9 Z"
+        fill="#2B3A42" fillOpacity={0.51} stroke="#E5D2AD"
+        strokeWidth={0.6} strokeOpacity={0.77} />
+      <Path d="M13 9.8 L26 5.8 L39 9.8"
+        fill="none" stroke="#F9E4BF" strokeWidth={0.5} opacity={0.57} />
+      <Path d="M25.4 6.8 L24.4 8.9 L26 8.3 L27.8 8.9 L26.6 6.8 Z"
+        fill="#EBD4AB" opacity={0.79} />
+      {/* Fine acroteria and a few weathered joints, not cartoon outlines. */}
+      <Path d="M25.9 1.7 L25.9 0 M2.5 12.3 L1.2 11.4 M49.5 12.3 L50.8 11.4"
+        fill="none" stroke="#EEDDC0" strokeWidth={0.7} opacity={0.74} />
+      <Path d="M10.6 14.3 L11.1 16 M40.6 14.4 L40.2 16.5 M19 33 L23 33"
+        stroke="#534E52" strokeWidth={0.45} opacity={0.37} />
+    </G>
+  );
+}
+
 function wrapTitle(title: string, maxCharacters: number): string[] {
   // Display the actual catalogue title: removing '&' silently changes it.
   const cleaned = title.replace(/\s+/g, " ").trim();
@@ -403,11 +472,16 @@ export default function FantasyMap({
                 strokeOpacity={0.4}
               />
 
-              {/* Terrain is drawn before the foreground label layer. */}
-              <Path d={`M ${region.cx - 25} ${region.cy - 18} l 10 -14 l 10 14 m -7 -2 l 14 -20 l 16 20`}
-                fill="none" stroke="#EEE5C7" strokeOpacity={0.28} strokeWidth={1.1} strokeLinejoin="round" />
-              <Path d={`M ${region.cx - 20} ${region.cy - 18} l 5 -7 l 5 7 m 9 -8 l 3 -5 l 5 6`}
-                fill="none" stroke="#EEE5C7" strokeOpacity={0.3} strokeWidth={0.8} />
+              {/* Other islands keep their original mountain motif; the first
+                  bespoke landmark is exclusive to Αρχαία Ελλάδα. */}
+              {(overview || region.id !== "ancient-greece") ? (
+                <G>
+                  <Path d={`M ${region.cx - 25} ${region.cy - 18} l 10 -14 l 10 14 m -7 -2 l 14 -20 l 16 20`}
+                    fill="none" stroke="#EEE5C7" strokeOpacity={0.28} strokeWidth={1.1} strokeLinejoin="round" />
+                  <Path d={`M ${region.cx - 20} ${region.cy - 18} l 5 -7 l 5 7 m 9 -8 l 3 -5 l 5 6`}
+                    fill="none" stroke="#EEE5C7" strokeOpacity={0.3} strokeWidth={0.8} />
+                </G>
+              ) : null}
             </G>
           );
         })}
@@ -441,15 +515,28 @@ export default function FantasyMap({
               {/* Preserve the whole island as a touch target, including coasts. */}
               <Path d={smoothClosedPath(makeIslandPoints(region.cx, region.cy, region.rx, region.ry, region.seed))}
                 fill="transparent" />
-              <SvgText
-                x={region.cx}
-                y={region.cy - 22}
-                fontSize={columns >= 4 ? 12 : 20}
-                textAnchor="middle"
-                fill="#FFFFFF"
-              >
-                {region.status === "complete" ? "✓" : region.emoji ?? "✦"}
-              </SvgText>
+              {!overview && region.id === "ancient-greece" ? (
+                <G>
+                  <AncientGreekTemple x={region.cx - 26 * (columns >= 3 ? 0.84 : 1)}
+                    y={region.cy - (columns >= 3 ? 44 : 51)}
+                    scale={columns >= 3 ? 0.84 : 1} />
+                  {region.status === "complete" ? (
+                    <SvgText x={region.cx + 31} y={region.cy - 23}
+                      textAnchor="middle" fontSize={11} fontWeight="700"
+                      fill="#F4D996">✓</SvgText>
+                  ) : null}
+                </G>
+              ) : (
+                <SvgText
+                  x={region.cx}
+                  y={region.cy - 22}
+                  fontSize={columns >= 4 ? 12 : 20}
+                  textAnchor="middle"
+                  fill="#FFFFFF"
+                >
+                  {region.status === "complete" ? "✓" : region.emoji ?? "✦"}
+                </SvgText>
+              )}
 
               {labelLines.map((line, index) => (
                 <SvgText
