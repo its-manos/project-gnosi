@@ -32,9 +32,10 @@ assert.deepEqual(paragraphs.map(p => p.id),
   Array.from({ length: 30 }, (_, i) => 'stage-' + String(i + 1).padStart(2, '0')));
 assert.ok(paragraphs.every(p => p.text.length > 120));
 assert.equal(lesson.questions.length, 7);
+assert.deepEqual(lesson.questions.map(q => q.correctIndex), [2,0,3,1,2,3,1]);
 assert.equal(new Set(lesson.questions.map(q => q.id)).size, 7);
 assert.ok(lesson.questions.every(q => q.id.startsWith('stage-') &&
-  q.version === '1' && q.difficulty === 'hard' &&
+  q.version === '2' && q.difficulty === 'hard' &&
   q.answers.length === 4 && new Set(q.answers).size === 4 &&
   q.correctIndex >= 0 && q.correctIndex < 4 && q.explanation.length >= 80));
 assert.deepEqual(lesson.checkpoints.map(c => c.questionId), lesson.questions.map(q => q.id));

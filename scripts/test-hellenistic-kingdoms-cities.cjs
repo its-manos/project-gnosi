@@ -19,9 +19,10 @@ assert.equal(l.sections.length,6);assert.equal(ps.length,29);
 assert.deepEqual(ps.map(p=>p.id),Array.from({length:29},(_,i)=>'hellenistic-'+String(i+1).padStart(2,'0')));
 assert.ok(ps.every(p=>p.text.length>=140&&p.text.trim()));
 const words=[l.intro,...ps.map(p=>p.text)].join(' ').trim().split(/\s+/u).length;
-assert.equal(words,1672);assert.equal(l.readingMinutes,Math.ceil(words/190));
+assert.equal(words,1713);assert.equal(l.readingMinutes,Math.ceil(words/190));
 assert.equal(l.questions.length,6);assert.equal(new Set(l.questions.map(q=>q.id)).size,6);
-assert.ok(l.questions.every(q=>q.id.startsWith('hellenistic-')&&q.version==='1'&&q.difficulty==='hard'&&
+assert.deepEqual(l.questions.map(q=>q.correctIndex),[1,0,2,3,0,1]);
+assert.ok(l.questions.every(q=>q.id.startsWith('hellenistic-')&&q.version==='2'&&q.difficulty==='hard'&&
  q.conceptIds.length===2&&q.answers.length===4&&new Set(q.answers).size===4&&
  Number.isInteger(q.correctIndex)&&q.correctIndex>=0&&q.correctIndex<4&&q.explanation.length>=95));
 assert.deepEqual(l.checkpoints.map(c=>c.questionId),l.questions.map(q=>q.id));

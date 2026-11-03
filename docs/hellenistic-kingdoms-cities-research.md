@@ -179,3 +179,8 @@ node scripts/test-hellenistic-kingdoms-cities.cjs
 6. Review #30 as **Drafted**, not automatically quality-comparable to research-first entries. Propose a research-first upgrade only as separately authorized work preserving its existing identity/progress contracts.
 
 **No merge to main. No statuses promoted merely because the lesson is present.**
+
+
+## Phase 2 research-led typed quiz refresh — 2026-11-03, **current app slot 25**
+- The live path slot 25 (rather than older editorial position 29) is `hellenistic-kingdoms-cities`. Reworked opening and `hellenistic-02`, `hellenistic-07`, `hellenistic-09`, `hellenistic-16`, `hellenistic-19`, `hellenistic-27`, `hellenistic-29`. Distinguish 3rd-century Zenon administration, the 208/7 Magnesia diplomatic exchange and a younger 2nd-century Greek/demotic museum document. Primary documents: [Antiochos III RC 31](https://www.attalus.org/docs/rc/s31.html), [Attalos I RC 34](https://attalus.org/docs/rc/s34.html), [Athenian council decree 208/7 I Magnesia 37](https://atticinscriptions.com/inscription/IMagnesia/37). The last reveals that the surviving copy was inscribed on Magnesia's portico, not a surviving original Athenian wall. Do not infer fulfilment of promises or general independence from public letters.
+- Six questions v2, original stable IDs and numeric slots `[1,0,2,3,0,1]`; spot/matching/ordering/fill/matching/choice. v1 snapshot frozen, no incompatible aliases. Body now **1,713 words** at 190 wpm → `readingMinutes: 10` (before 9). Source/media rights unchanged, no live availability or device QA claim. [Phase 2 dossier](ANCIENT-GREECE-PHASE-2-LESSONS-25-26.md). **Integrated; local/native QA pending**.
