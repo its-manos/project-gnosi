@@ -66,3 +66,8 @@ _2026-11-01 · content/curriculum-v1 · Integrated, not Validated or Approved_
 
 ## Next only
 - Lesson 23/30 `macedon-philip` — «Η άνοδος της Μακεδονίας», Chapter IV; planned/unpublished. Begin from unresolved 362 interstate coalitions and Macedonian political context; do not retell 403/386/371 or claim inevitability.
+
+
+## Phase 2 research and new quiz review — 2026-11-03
+- New introduction distinguishes the 404 defeat, 403 reconciliation and 378/7 autonomy pledge. Clarified `crisis-08` legal amnesty vs erased memory; `crisis-20` exceptions for Lemnos, Imbros and Skyros in King's Peace; `crisis-23` exact no-garrison/no-governor/no-tribute promises attested by [AIO RO 22, 378/7](https://www.atticinscriptions.com/inscription/RO/22); `crisis-27` Leuctra tactical reconstruction caution; `crisis-32` Xenophon's Mantinea literary conclusion. Compare [Second Athenian Confederacy OCD abstract](https://academic.oup.com/edited-volume/61673/chapter-abstract/550498220), [Leuctra OCD abstract](https://academic.oup.com/edited-volume/61673/chapter-abstract/549654654), [Wiley Leuctra abstract](https://doi.org/10.1002/9781444338232.wbeow360). Do not claim entire restricted studies read.
+- Seven stable IDs, 34 paragraphs and anchors unchanged. Quiz v2: spot, fill, matching, ordering, matching, spot, classic; **numeric answer positions unchanged** `[1,2,3,0,1,2,3]`, preserving conventional fallback semantics. Previous v1 frozen; no alias. [Batch documentation](ANCIENT-GREECE-PHASE-2-LESSONS-21-22.md). Integrated, Node/native QA pending.
