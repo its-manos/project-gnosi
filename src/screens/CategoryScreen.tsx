@@ -116,7 +116,7 @@ export default function CategoryScreen({
         <>
           <Image testID="history-midnight-atlas-screen-background"
             source={HISTORY_ATLAS_IMAGE} resizeMode="stretch"
-            style={StyleSheet.absoluteFillObject} pointerEvents="none"
+            style={styles.screenBackground} pointerEvents="none"
             accessible={false} />
           <View pointerEvents="none" style={styles.historyHeaderShade} />
         </>
@@ -194,6 +194,7 @@ export default function CategoryScreen({
 
 const styles = StyleSheet.create({
   screenRoot: { flex: 1, minHeight: 0, overflow: "hidden", backgroundColor: colors.background },
+  screenBackground: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   historyHeaderShade: { position: "absolute", top: 0, left: 0, right: 0,
     height: 172, backgroundColor: "rgba(6, 12, 22, 0.24)" },
   historyViewport: { backgroundColor: "transparent" },
