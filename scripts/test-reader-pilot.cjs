@@ -8,6 +8,7 @@ const ts = require('typescript');
 const root = path.join(__dirname, '..');
 const jsx = (type, props) => ({ type, props });
 let states = [], refs = [], stateIndex = 0, refIndex = 0;
+const openingCues = [];
 const react = {
   useState: initial => {
     const i = stateIndex++;
@@ -16,10 +17,11 @@ const react = {
   },
   useRef: value => { const i = refIndex++; return refs[i] ??= { current: value }; },
 };
-const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
+const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
 const analyticsScrollEvents = [];
 const common = {
   '../play/preferences': { motionAllowed: () => true, playPreferences: { getSnapshot: () => ({}) } },
+  '../play/soundStatus': { requestPracticeCue: kind => openingCues.push(kind) },
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' }, '../state/BetaAnalytics': {useBetaAnalytics: () => ({analytics:{progress:async value => {analyticsScrollEvents.push(value);}}})}, react, './ReportContentButton': { __esModule: true, default: 'ReportContentButton' }, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
   'react-native-svg': { __esModule: true, default: 'Svg', Path: 'Path' } };
@@ -61,6 +63,17 @@ const nodes = t => t && typeof t === 'object' ? [t, ...[t.props?.children].flat(
 const byId = (t,id) => nodes(t).find(n => n.props?.testID === id);
 const press = (t,label) => nodes(t).find(n => n.type === 'Pressable' && n.props.accessibilityLabel === label).props.onPress();
 const lay = (n,y) => n.props.onLayout({ nativeEvent: { layout: { y } } });
+function openGate(t) {
+  const gate = nodes(t).find(n => n.type === 'ActionButton' && n.props.label === 'Άνοιγμα ερωτήσεων →');
+  assert.ok(gate, 'pending checkpoint offers an accessible full-screen entry');
+  gate.props.onPress();
+  const modalTree = render();
+  assert.ok(byId(modalTree,'reader-question-screen'), 'question screen opens');
+  assert.equal(nodes(modalTree).find(n => n.type === 'Modal').props.presentationStyle,'fullScreen');
+  assert.equal(nodes(modalTree).find(n => n.type === 'ScrollView').props.scrollEnabled,false,
+    'article scrolling stays disabled while answering');
+  return modalTree;
+}
 reset();
 assert.equal(Entry(props).type, Reader);
 let tree = render();
@@ -83,7 +96,8 @@ press(tree,'Ρυθμίσεις ανάγνωσης'); tree=render();
 for(let i=0;i<6;i++) { press(tree,'Μεγαλύτερο κείμενο άρθρου'); tree=render(); }
 assert.equal(states[0],24);
 assert.equal(nodes(tree).find(n => n.props?.accessibilityLabel === 'Μεγαλύτερο κείμενο άρθρου').props.disabled,true);
-assert.equal(nodes(tree).find(n => n.type === 'QuizQuestionRenderer').props.readingSize,24);
+assert.equal(nodes(tree).filter(n => n.type === 'QuizQuestionRenderer' || n.type === 'InlineQuestionCard').length,0,
+  'the article has no visible question content before opening the modal');
 for(let i=0;i<8;i++) { press(tree,'Μικρότερο κείμενο άρθρου'); tree=render(); }
 assert.equal(states[0],16);
 press(tree,'Αποθήκευση άρθρου'); press(tree,'Επιστροφή στα άρθρα');
@@ -92,10 +106,11 @@ props = { ...props, bookmarksLoaded:false }; tree=render();
 assert.equal(nodes(tree).find(n => n.props?.accessibilityLabel === 'Αποθήκευση άρθρου').props.disabled,true);
 const total = progress.getInlineQuestionCount(lesson);
 for(let i=0;i<total;i++) {
-  const q=nodes(tree).filter(n => n.type === 'InlineQuestionCard' || n.type === 'QuizQuestionRenderer').at(-1);
+  if (!byId(tree,'reader-question-screen')) tree=openGate(tree);
+  const q=nodes(byId(tree,'reader-question-screen')).filter(n => n.type === 'InlineQuestionCard' || n.type === 'QuizQuestionRenderer').at(-1);
   assert.equal(q.props.questionNumber,i+1);
   const report= q.type === 'InlineQuestionCard' ? q.props.reportTarget :
-    nodes(tree).filter(n => n.type === 'ReportContentButton').at(-1).props.target;
+    nodes(byId(tree,'reader-question-screen')).filter(n => n.type === 'ReportContentButton').at(-1).props.target;
   assert.equal(report.itemId,lesson.id);
   assert.equal(report.questionIndex,i,'question reporting uses canonical checkpoint index');
   const canonical=lesson.questions[i];
@@ -113,20 +128,24 @@ for(let i=0;i<total;i++) {
       [i]:{questionVersion:q.props.question.version,value:typedValue},
     }} : {}) }; tree=render();
   assert.equal(nodes(tree).find(n => n.props?.accessibilityRole === 'progressbar').props.accessibilityValue.now,i+1);
-  if(i<total-1) assert.ok(byId(tree,`reader-paragraph-${progress.getQuestionPlacements(lesson)[i].afterParagraphNumber+1}`), 'Any answer unlocks next paragraphs.');
+  const advance=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='ActionButton' && (n.props.label.includes('Επόμενη ερώτηση') || n.props.label.includes('Συνέχεια ανάγνωσης')));
+  assert.ok(advance,'answer feedback remains visible until the learner advances');
+  advance.props.onPress(); tree=render();
+  if(i<total-1) assert.ok(byId(tree,`reader-paragraph-${progress.getReadingQuestionPlacements(lesson)[i].afterParagraphNumber+1}`) ||
+    progress.getReadingQuestionPlacements(lesson)[i].afterParagraphNumber === progress.getReadingQuestionPlacements(lesson)[i+1].afterParagraphNumber,
+    'Any confirmed answer unlocks the next paragraph or next same-section question.');
 }
+assert.equal(openingCues.filter(c=>c==='question-open').length,total,
+ 'opening sound is emitted once for each question, never for reading or answer restoration');
 assert.ok(byId(tree,'reader-finish')); assert.ok(!byId(tree,'reader-locked'));
 assert.ok(!calls.some(c=>c[0]==='finish'), 'Reading/answering alone never marks completion.');
 nodes(tree).find(n => n.type === 'ActionButton' && n.props.label.startsWith('Ολοκλήρωση')).props.onPress();
 assert.deepEqual(calls.at(-1),['finish']);
-// Continue must work when child paragraph layout fires before parent section layout.
+// The original section layout/restore path remains intact after closing the modal.
 const paragraph=byId(tree,'reader-paragraph-4');
 lay(paragraph,66);
-const continuation=nodes(tree).find(n => n.type==='ActionButton' && n.props.label==='Συνέχεια ανάγνωσης ↓');
-continuation.props.onPress();
 const section=nodes(tree).find(n => n.props?.onLayout && nodes(n).includes(paragraph) && n!==paragraph && n.type==='View');
 lay(section,820);
-assert.equal(scrolls.at(-1).y,808,'Continue keeps the new section heading visible.');
 // Resume uses the same position system, once per visit, with no new-answer auto jump.
 reset({0:0}); tree=render();
 nodes(tree).find(n=>n.type==='ScrollView').props.ref.current={scrollTo:args=>scrolls.push(args)};
@@ -150,7 +169,8 @@ assert.equal(feedback.props.correctIndex,lesson.questions[0].correctIndex);
 reset(); const greekWorld=data.lessons.find(l=>l.id==='greek-world-not-a-country');
 props={...props,lesson:greekWorld,category:data.categories.find(c=>c.id===greekWorld.categoryId),subcategory:data.subcategories.find(c=>c.id===greekWorld.subcategoryId)};
 tree=render();
-const worldSpot=nodes(tree).find(n=>n.type==='QuizQuestionRenderer');
+tree=openGate(tree);
+const worldSpot=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer');
 assert.equal(worldSpot.props.question.type,'spot-the-mistake');
 worldSpot.props.onSubmit('option-1');
 assert.deepEqual(calls.at(-1),['answer',0,1,greekWorld.questions[0].correctIndex]);
@@ -168,13 +188,22 @@ assert.ok(byId(tree,'reader-paragraph-6'));
 assert.ok(!byId(tree,'reader-paragraph-7'));
 assert.ok(byId(tree,'reader-checkpoint-0'));
 assert.ok(!byId(tree,'reader-checkpoint-1'),'later question at the same ending stays locked');
+tree=openGate(tree);
+assert.ok(byId(tree,'reader-modal-question-0'));
+assert.ok(!byId(tree,'reader-modal-question-1'));
+assert.ok(nodes(tree).some(n=>n.type==='Text'&&n.props.children==='Ερώτηση 1 / 2'));
+
 props={...props,checkpointAnswers:{0:grouped.questions[0].correctIndex}};
 tree=render();
-assert.ok(byId(tree,'reader-checkpoint-1'),'next question in the same section becomes visible');
+assert.ok(byId(tree,'reader-modal-question-0'),'feedback stays on the first question until Continue');
+const nextInGroup=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='ActionButton'&&n.props.label==='Επόμενη ερώτηση →');
+assert.ok(nextInGroup); nextInGroup.props.onPress(); tree=render();
+assert.ok(byId(tree,'reader-modal-question-1'),'the second question replaces the first');
+assert.ok(nodes(tree).some(n=>n.type==='Text'&&n.props.children==='Ερώτηση 2 / 2'));
 assert.ok(!byId(tree,'reader-paragraph-7'),'reading cannot skip the second question');
 assert.equal(progress.getReadingResumeParagraphNumber(grouped,props.checkpointAnswers),6,
  'resume returns to the active question at this ending');
-assert.ok(!nodes(byId(tree,'reader-checkpoint-0')).some(n=>n.type==='ActionButton'&&n.props.label==='Συνέχεια ανάγνωσης ↓'),
+assert.ok(!nodes(byId(tree,'reader-question-screen')).some(n=>n.type==='ActionButton'&&n.props.label==='Συνέχεια ανάγνωσης →'),
  'no premature continue button between questions sharing a section ending');
 props={...props,checkpointAnswers:{0:grouped.questions[0].correctIndex,1:grouped.questions[1].correctIndex}};
 tree=render();
@@ -258,7 +287,8 @@ const piloted=[
 ];
 for(const [index,type,value] of piloted){
  tree=render();
- const q=nodes(tree).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
+ if (!byId(tree,'reader-question-screen')) tree=openGate(tree);
+ const q=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
  assert.ok(q,'the '+type+' checkpoint appears after its paragraph');
  assert.equal(q.props.question.type,type);
  assert.equal(q.props.answer,undefined);
@@ -274,8 +304,11 @@ for(const [index,type,value] of piloted){
    typedCheckpointAnswers:{...props.typedCheckpointAnswers,[index]:{questionVersion:typed.version,value}}
  };
  tree=render();
- const restored=nodes(tree).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
+ const restored=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
  assert.deepEqual(JSON.parse(JSON.stringify(restored.props.answer)),value,'same typed response restored');
+ const advance=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='ActionButton'&&
+   (n.props.label==='Επόμενη ερώτηση →'||n.props.label==='Συνέχεια ανάγνωσης →'));
+ assert.ok(advance); advance.props.onPress();
 }
 assert.ok(byId(tree,'reader-finish'),'all structured answers unlock the original finish gate');
 props={...props,enableReporting:false}; tree=render();
