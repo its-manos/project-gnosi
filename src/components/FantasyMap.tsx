@@ -207,7 +207,7 @@ export default function FantasyMap({
   const [showList, setShowList] = useState(false);
   const columns = columnCount(regions.length);
   const rows = Math.max(1, overview ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
-  const naturalHeight = regions.length === 1 ? 198 : overview ? rows * 128 + 32 : rows * 150 + 28;
+  const naturalHeight = regions.length === 1 ? 198 : overview ? rows * 128 + 32 : rows * 144 + 16;
   const mapHeight = overview ? naturalHeight : Math.max(naturalHeight, Math.min(960, minHeight));
   const positionedRegions = useMemo(() => makeLayout(regions, overview, mapHeight), [regions, overview, mapHeight]);
   // Larger text is practical because the layout uses at most three columns for
