@@ -19,9 +19,20 @@ const svg = {
   Rect: "rect", Stop: "stop", Text: "text",
 };
 let showList = false;
+let homeScrollState = null;
+let homeScrollHookIndex = 0;
 const react = {
   useMemo: fn => fn(),
-  useState: () => [showList, value => { showList = typeof value === "function" ? value(showList) : value; }],
+  useState: initial => {
+    if (homeScrollState !== null) {
+      const index = homeScrollHookIndex++;
+      const value = homeScrollState[index] ?? initial;
+      return [value, next => {
+        homeScrollState[index] = typeof next === "function" ? next(homeScrollState[index]) : next;
+      }];
+    }
+    return [showList, value => { showList = typeof value === "function" ? value(showList) : value; }];
+  },
 };
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
@@ -118,6 +129,31 @@ for (const game of upcomingGames) {
 }
 assert.ok(nodes(tree).some(node => node.props?.children === "Μίνι παιχνίδια"));
 assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα").length, 2);
+
+// No scrolling or elastic pull on a fitted one-screen dashboard.
+// A genuinely taller dashboard must still scroll on small devices or with larger text.
+homeScrollState = [0, 0];
+const renderMeasuredHome = () => { homeScrollHookIndex = 0; return home(props); };
+const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-game-dashboard");
+let scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measurements settle");
+assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
+assert.equal(scroll.props.alwaysBounceVertical, false);
+assert.equal(scroll.props.overScrollMode, "never", "disable Android overscroll glow");
+scroll.props.onLayout({ nativeEvent: { layout: { height: 600 } } });
+scroll.props.onContentSizeChange(360, 596);
+scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, false, "no movement when content fits");
+scroll.props.onContentSizeChange(360, 601);
+scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, false, "ignore subpixel measurement mismatch");
+scroll.props.onContentSizeChange(360, 620);
+scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, true, "enable scrolling for genuine overflow");
+scroll.props.onLayout({ nativeEvent: { layout: { height: 660 } } });
+scroll = scrollNode();
+assert.equal(scroll.props.scrollEnabled, false, "recalculate scroll availability when the viewport grows");
+homeScrollState = null;
 assert.ok(nodes(tree).some(node => node.props?.children === "1 / 3 ερωτήσεις"),
   "resume card shows question progress beside its heading");
 const centeredGrid = nodes(tree).find(node => node.props?.style?.flexWrap === "wrap"
