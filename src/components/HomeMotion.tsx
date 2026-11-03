@@ -158,34 +158,43 @@ export function MotionShimmer() {
   </View>;
 }
 
-/** One subtle glow when the day's quiz is available; not an infinite pulse. */
+/**
+ * Highlight the actual quiz card perimeter, not an un-clipped bright oval
+ * behind its counter. A single UI-thread pulse settles to a faint outline
+ * while today's quiz is unfinished. No layout or hit area changes.
+ */
 export function MotionQuizGlow({ active }: { active: boolean }) {
   const reduced = useReducedMotion();
   const glow = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: glow.value * 0.15,
-    transform: [{ scale: 0.9 + glow.value * 0.22 }],
+    opacity: glow.value,
   }));
   useEffect(() => {
+    cancelAnimation(glow);
     if (reduced || !active) {
-      cancelAnimation(glow);
       glow.value = 0;
       return;
     }
-    glow.value = withDelay(850, withSequence(
-      withTiming(1, { duration: 450 }),
-      withTiming(0, { duration: 750 }),
+    glow.value = withDelay(650, withSequence(
+      withTiming(0.68, { duration: 450, easing: ease }),
+      withTiming(0.2, { duration: 700, easing: ease }),
     ));
     return () => cancelAnimation(glow);
   }, [active, reduced, glow]);
   if (reduced || !active) return null;
-  return <Animated.View pointerEvents="none" accessible={false} style={[styles.quizGlow, animatedStyle]} />;
+  return <Animated.View
+    testID="home-daily-quiz-highlight"
+    pointerEvents="none"
+    accessible={false}
+    style={[styles.quizGlow, animatedStyle]}
+  />;
 }
 
 const styles = StyleSheet.create({
   iconBox: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
   shimmer: { position: "absolute", top: -8, bottom: -8, left: 0,
     width: 35, backgroundColor: "#FFFFFF", opacity: 0.12, transform: [{ skewX: "-16deg" }] },
-  quizGlow: { position: "absolute", right: 20, top: 10,
-    width: 40, height: 22, borderRadius: 20, backgroundColor: "#C7B6FF" },
+  // Overlay the 16pt-radius card's own boundary, never its content.
+  quizGlow: { ...StyleSheet.absoluteFillObject,
+    borderRadius: 16, borderWidth: 2, borderColor: "#C7B6FF" },
 });
