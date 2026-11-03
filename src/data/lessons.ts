@@ -85,6 +85,8 @@ export type Lesson = {
   requireCurrentAttemptQuiz?: boolean;
   /** Explicit, stable anchor-based checkpoint placement. Omit for legacy pairs. */
   checkpoints?: LessonCheckpoint[];
+  /** Reader-only display rule; authored checkpoints, IDs and quiz keys stay unchanged. */
+  questionPlacement?: "section-end";
   contentNote?: string;
   editorialReviewedAt?: string;
   /** Prior quiz versions with identical objectives, question order and answer keys. */
@@ -520,4 +522,6 @@ export const lessons: Lesson[] = [
   ...perceptionLessons,
   ...perceptionAttentionLessons,
   ...geologyLessons,
-];
+].map(lesson => lesson.subcategoryId === "ancient-greece"
+  ? { ...lesson, questionPlacement: "section-end" as const }
+  : lesson);
