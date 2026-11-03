@@ -11,7 +11,7 @@ assert.deepEqual(progress.getQuestionPlacements(lesson).map(p=>p.afterParagraphN
 assert.deepEqual(lesson.checkpoints.map(c=>c.questionId),lesson.questions.map(q=>q.id));
 assert.deepEqual(inlineArticleMedia[lesson.id].map(m=>m.afterParagraphId),['hides-tablet','tiryns-gate']);
 assert.deepEqual(lesson.questions.map(q=>q.correctIndex),[0,2,2,1,2]);
-assert.ok(lesson.questions.every(q=>q.version==='2'&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>35));
+assert.ok(lesson.questions.every(q=>q.version===(['mycenae-offices','mycenae-local-models'].includes(q.id)?'3':'2')&&q.answers.length===4&&new Set(q.answers).size===4&&q.explanation.length>35));
 const a=lesson.questions.map(q=>q.correctIndex);
 assert.equal(progress.getVisibleParagraphLimit(lesson,{}),4);
 assert.equal(progress.getVisibleParagraphLimit(lesson,{0:a[0]}),10);
