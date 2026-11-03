@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AccessibilityInfo, Animated, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { ImageSourcePropType } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
@@ -88,22 +88,41 @@ export default function CategoryScreen({
     [subcategories, lessons, completedLessonIds, inProgressLessonIds, progressLoaded],
   );
 
-  // Size the atlas against *measured* safe-area content and controls, not a
-  // guessed header allowance. This prevents the few-pixel overscroll on normal
-  // screens while still allowing scrolling when large text needs extra room.
+  const isHistoryAtlas = category.id === "history" && mapRegions.length === 3;
+  // Size the overlay to the *remaining* viewport after measured header and
+  // map/list controls. The image itself fills the screen independently.
   const frameWidth = Math.max(1, Math.min(520, windowWidth - 28));
   const chromeMeasured = viewportHeight > 0 && navHeight > 0 && headingHeight > 0 && controlsHeight > 0;
-  // navBar (10), heading (6), viewControls (3 + 8) margins;
-  // content (4 + 12) padding; 4px tolerance for frame borders/rounding.
-  const chromeSpacing = 10 + 6 + 3 + 8 + 4 + 12 + 4;
+  // Insets: content padding (4 + 12), nav gap (10), heading gap (6),
+  // control margins (3 + 8), plus 8px rounding/safe-area tolerance.
+  const chromeSpacing = 4 + 12 + 10 + 6 + 3 + 8 + 8;
   const usableMapPixels = chromeMeasured
     ? Math.max(0, viewportHeight - navHeight - headingHeight - controlsHeight - chromeSpacing)
     : 0;
   const minMapHeight = Math.floor(usableMapPixels * 360 / frameWidth);
+  const fittedMapHeight = chromeMeasured ? Math.max(1, minMapHeight) : undefined;
+  // Position the SVG tap targets relative to the full-screen artwork, not to
+  // the now-transparent map region (which starts below the screen header).
+  const mapTop = 4 + navHeight + 10 + headingHeight + 6 + 3 + controlsHeight + 8;
+  const illustrationMetrics = useMemo(() => ({
+    screenWidth: windowWidth, screenHeight: viewportHeight,
+    mapWidth: frameWidth, mapTop,
+  }), [windowWidth, viewportHeight, frameWidth, mapTop]);
   const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 3;
 
   return (
-    <ScrollView testID="category-atlas-screen" style={styles.viewport}
+    <View style={styles.screenRoot}>
+      {isHistoryAtlas ? (
+        <>
+          <Image testID="history-midnight-atlas-screen-background"
+            source={HISTORY_ATLAS_IMAGE} resizeMode="stretch"
+            style={StyleSheet.absoluteFillObject} pointerEvents="none"
+            accessible={false} />
+          <View pointerEvents="none" style={styles.historyHeaderShade} />
+        </>
+      ) : null}
+    <ScrollView testID="category-atlas-screen"
+      style={[styles.viewport, isHistoryAtlas && styles.historyViewport]}
       contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
       scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false} overScrollMode="never"
       onLayout={event => {
@@ -157,8 +176,9 @@ export default function CategoryScreen({
       <Animated.View style={[styles.atlasArea, { opacity: entrance, transform: [{ scale: zoom }] }]}>
         <FantasyMap
           regions={mapRegions}
-          backgroundImage={category.id === "history" && mapRegions.length === 3
-            ? HISTORY_ATLAS_IMAGE : undefined}
+          illustrated={isHistoryAtlas}
+          fitHeight={isHistoryAtlas ? fittedMapHeight : undefined}
+          illustrationMetrics={isHistoryAtlas ? illustrationMetrics : undefined}
           minHeight={minMapHeight}
           onControlsHeightChange={next => {
             setControlsHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
@@ -168,10 +188,15 @@ export default function CategoryScreen({
         />
       </Animated.View>
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screenRoot: { flex: 1, minHeight: 0, overflow: "hidden", backgroundColor: colors.background },
+  historyHeaderShade: { position: "absolute", top: 0, left: 0, right: 0,
+    height: 172, backgroundColor: "rgba(6, 12, 22, 0.24)" },
+  historyViewport: { backgroundColor: "transparent" },
   viewport: { flex: 1, backgroundColor: colors.background },
   content: {
     width: "100%", maxWidth: 560, alignSelf: "center",
