@@ -5,13 +5,28 @@
 **Audit work branch:** `audit/ancient-greece-curriculum-30`  
 **Editorial state:** **30 Integrated, 0 Validated, 0 Approved.** No production content, quiz keys, XP, history, account sync or media entries were changed to open this audit. Do not merge to `main` without explicit authorization.
 
-## Substantive chapter-review reports
+## Substantive chapter-review reports — first comparative pass complete
 
-- [Chapter I — Lessons 1–5: historical spot-checks, actual question formats, repetition and image context](ANCIENT-GREECE-AUDIT-CHAPTER-I.md). Review recorded, **no approvals or content mutations**.
-- [Chapter II — Lessons 6–11: Bronze Age, Mycenaean archives, writing, collapse and postpalatial continuity](ANCIENT-GREECE-AUDIT-CHAPTER-II.md). Review recorded, **no approvals or content mutations**.
-- Chapters III–V (#12–30): **not yet subject to the same independent claim/quiz/semantic pass**, despite prior research-first lesson integration and owner-reported automated tests.
+- [Chapter I (#1–5) — everyday Athens, identity, evidence, chronology and geography](ANCIENT-GREECE-AUDIT-CHAPTER-I.md).
+- [Chapter II (#6–11) — Bronze Age, palaces, Linear B, collapse and Geometric cultures](ANCIENT-GREECE-AUDIT-CHAPTER-II.md).
+- [Chapter III (#12–18) — polis, settlements, Sparta, democracy, justice, warfare and sanctuaries](ANCIENT-GREECE-AUDIT-CHAPTER-III.md).
+- [Chapter IV (#19–24) — Persian wars, Athenian empire, the Peloponnesian War, crisis, Philip and Alexander](ANCIENT-GREECE-AUDIT-CHAPTER-IV.md).
+- [Chapter V (#25–30) — Hellenistic states, tragedy, sculpture, philosophy, science and Antikythera](ANCIENT-GREECE-AUDIT-CHAPTER-V.md).
 
-**Progress:** 11/30 lessons have first-pass comparative chapter review; 0/30 independently signed off. Whole-path structural screening completed (30/30). Individual image licences and physical devices remain unverified.
+**Status as of 2026-11-03:** **30/30 first-pass cross-lesson reviews completed**, all **164 question objects** examined for assessment shape and plausible difficulty concerns, and multiple **selected** archaeological/institutional/epigraphic claims spot-checked against direct sources. The audit has **not** revalidated every statement of the 43,312 words, every question key against scholarship, all 88 image licences, remote URLs or physical Android/iPhone behavior. **0/30 independently signed off, 0/30 Validated, 0/30 Approved**. Local diagnostic was executed successfully and its output supplied by the product owner; other native/full regression checks remain separate.
+
+### Cross-curriculum priority synthesis
+
+| Priority | Scope | Decision/action before editorial approval |
+|---|---|---|
+| **P0 — Rights** | #29 Euclid papyrus has conflicting upstream image-licence wording; #27 stele uses special commercial permission | Resolve exact rights, document source provenance and licence/grants; review all **88** placements (including #30 NYU archive **noncommercial publication contents**, which are not current Commons assets) |
+| **P0 — Device and compatibility** | All 30 + legacy #15/#30 fingerprints | Physical Android+iPhone with real signed-in/cloud/offline flows, all question formats, credits, audio, typed resume and XP/sync; then production-like build regression |
+| **P1 — Duration and packaging** | #21–24 and #25–30 especially | User-time reading+checkpoints+feedback with one consistent `readingMinutes` definition; #24 2,539 words/9 checkpoints advertised 13 min versus illustrative 17.9 |
+| **P1 — Assessment** | 135/164 hard-labelled, all #18–30 labelled hard | Test real matching/ordering cards, then rewrite only answer sets with implausible wrong distractors; preserve score versions/old completions |
+| **P2 — Semantic overlap** | #4/#10/#11 archive gap, #2/#12/#18 common Greek civic identity, #24/#25 successor states | Remove repetitions **without** deleting meaningful prerequisite retrieval or local historical evidence; explicitly reference prior lessons |
+| **P2 — Complete scholarly sign-off** | 43,312 narrative words and 164 checks, 339 lesson source entries | Per-claim traceability to actually accessible text; review disputed causality/chronology and all graded explanations. Current reports include bounded **spot checks only** |
+
+**Do not call the first-pass reports an external historian certification or a full rights/device audit.** Findings are candidates for verified corrective edits; the release gates below remain in force. Lesson files and production systems have not been changed.
 
 ## Audit rules
 
