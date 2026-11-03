@@ -109,7 +109,7 @@ function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number):
     const horizontalDrift = Math.cos((index + 1) * 1.63) * cellWidth * 0.055;
     const rowSize = Math.min(columns, count - row * columns);
     const rowOffset = (columns - rowSize) * cellWidth / 2;
-    const cx = count === 1
+    const proposedCx = count === 1
       ? MAP_WIDTH / 2
       : cellWidth * (column + 0.5) + rowOffset + shift + horizontalDrift;
     const verticalDrift = Math.sin((column + 1) * 1.91 + row * 1.47) * 4;
@@ -121,6 +121,11 @@ function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number):
     const ry = count === 1 ? 69
       : Math.min(70, cellWidth * (columns >= 4 ? 0.36 : 0.38))
         * (0.97 + stableNoise(index + 5) * 0.06);
+    // Irregular shorelines and their soft glow extend outside the nominal
+    // island radius. Leave a safe margin inside the atlas frame.
+    const edgeClearance = rx * 1.14 + 11;
+    const cx = Math.min(MAP_WIDTH - edgeClearance,
+      Math.max(edgeClearance, proposedCx));
 
     return {
       ...region,
@@ -196,7 +201,8 @@ function upperIslandContour(points: Point[]): string {
 }
 
 function wrapTitle(title: string, maxCharacters: number): string[] {
-  const cleaned = title.replace(/\s*&\s*/g, " ");
+  // Display the actual catalogue title: removing '&' silently changes it.
+  const cleaned = title.replace(/\s+/g, " ").trim();
   const words = cleaned.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let line = "";
@@ -457,7 +463,7 @@ export default function FantasyMap({
                 <G>
                   <Rect x={region.cx - region.rx * 0.42} y={barY}
                     width={region.rx * 0.84} height={3.5} rx={2}
-                    fill="#101B29" opacity={0.9} />
+                    fill="#344250" opacity={0.95} />
                   <Rect x={region.cx - region.rx * 0.42} y={barY}
                     width={region.rx * 0.84 * Math.max(0, Math.min(1,
                       (region.completedLessons ?? 0) / region.totalLessons))}
