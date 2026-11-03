@@ -20,6 +20,7 @@ type Props = {
   emptyMessage?: string;
   overview?: boolean;
   minHeight?: number;
+  onControlsHeightChange?: (height: number) => void;
 };
 
 type Point = { x: number; y: number };
@@ -176,6 +177,24 @@ function smoothClosedPath(points: Point[]) {
   return `${path} Z`;
 }
 
+// Keep decorative island contours above the progress area. The full closed
+// contour intersects the lower progress tracks on compact destinations.
+function upperIslandContour(points: Point[]): string {
+  const upper = [...points.slice(Math.ceil(points.length / 2)), points[0]];
+  if (upper.length < 2) return "";
+  const fmt = (point: Point) => `${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+  let path = `M ${fmt(upper[0])}`;
+  for (let i = 1; i < upper.length - 1; i++) {
+    const mid = {
+      x: (upper[i].x + upper[i + 1].x) / 2,
+      y: (upper[i].y + upper[i + 1].y) / 2,
+    };
+    path += ` Q ${fmt(upper[i])} ${fmt(mid)}`;
+  }
+  path += ` Q ${fmt(upper[upper.length - 2])} ${fmt(upper[upper.length - 1])}`;
+  return path;
+}
+
 function wrapTitle(title: string, maxCharacters: number): string[] {
   const cleaned = title.replace(/\s*&\s*/g, " ");
   const words = cleaned.split(/\s+/).filter(Boolean);
@@ -203,6 +222,7 @@ export default function FantasyMap({
   emptyMessage = "Νέες περιοχές θα εμφανιστούν εδώ.",
   overview = false,
   minHeight = 0,
+  onControlsHeightChange,
 }: Props) {
   const [showList, setShowList] = useState(false);
   const columns = columnCount(regions.length);
@@ -237,7 +257,8 @@ export default function FantasyMap({
 
   return (
     <View style={styles.container}>
-      <View style={[styles.viewControls, overview && styles.overviewControls]}>
+      <View style={[styles.viewControls, overview && styles.overviewControls]}
+        onLayout={event => onControlsHeightChange?.(event.nativeEvent.layout.height)}>
         <Text style={overview ? styles.overviewLabel : styles.mapEyebrow}>
           {overview ? "Θεματικές" : regions.length + " ΠΕΡΙΟΧΕΣ"}
         </Text>
@@ -309,15 +330,16 @@ export default function FantasyMap({
             region.seed,
           );
           const islandPath = smoothClosedPath(points);
-          const innerPath = smoothClosedPath(
-            makeIslandPoints(
-              region.cx,
-              region.cy,
-              region.rx * 0.79,
-              region.ry * 0.77,
-              region.seed + 0.42,
-            ),
+          const innerPoints = makeIslandPoints(
+            region.cx,
+            region.cy,
+            region.rx * 0.79,
+            region.ry * 0.77,
+            region.seed + 0.42,
           );
+          const innerPath = region.progressLoaded && region.totalLessons
+            ? upperIslandContour(innerPoints)
+            : smoothClosedPath(innerPoints);
           return (
             <G
               key={region.id}
