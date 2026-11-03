@@ -298,6 +298,14 @@ export default function FantasyMap({
               <Stop offset="0" stopColor={region.fill} /><Stop offset="1" stopColor="#253B40" />
             </LinearGradient>
           ))}
+          <LinearGradient id="atlas-progress-lavender" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor="#DFD2FF" />
+            <Stop offset="1" stopColor="#A38DFF" />
+          </LinearGradient>
+          <LinearGradient id="atlas-progress-gold" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor="#FFE9AD" />
+            <Stop offset="1" stopColor="#DEB766" />
+          </LinearGradient>
         </Defs>
         <Rect width={MAP_WIDTH} height={mapHeight} rx={20} fill="url(#atlas-sea)" />
         {Array.from({ length: 9 }, (_, index) => (
@@ -409,8 +417,18 @@ export default function FantasyMap({
         {positionedRegions.map((region) => {
           const labelLines = wrapTitle(region.title, maxLabelChars);
           const labelStartY = region.cy - 3;
-          const detailY = labelStartY + labelLines.length * (labelFontSize + 2) + 3;
-          const barY = region.cy + 43;
+          // Put the bar into the space formerly occupied by the numeric count,
+          // clear of the island's lower coastline even with two title lines.
+          const barY = region.cy + (labelLines.length > 1 ? 30 : 23);
+          const barWidth = region.rx * 0.82;
+          const barHeight = 5.5;
+          const barX = region.cx - barWidth / 2;
+          const canShowProgress = region.progressLoaded && (region.totalLessons ?? 0) > 0;
+          const progressRatio = canShowProgress
+            ? Math.max(0, Math.min(1, (region.completedLessons ?? 0) / (region.totalLessons ?? 1)))
+            : 0;
+          const fillWidth = barWidth * progressRatio;
+          const isComplete = region.status === "complete";
 
           return (
             <G key={`label-${region.id}`} opacity={1} fillOpacity={1} stroke="none"
@@ -447,28 +465,34 @@ export default function FantasyMap({
                 </SvgText>
               ))}
 
-              {region.detail ? (
-                <SvgText
-                  x={region.cx}
-                  y={detailY}
-                  fontSize={columns >= 5 ? 7.2 : columns === 4 ? 7.8 : 9}
-                  fontWeight="600"
-                  textAnchor="middle"
-                  fill="#F0E9D6"
-                >
-                  {region.detail}
-                </SvgText>
+              {region.status === "coming-soon" ? (
+                <SvgText x={region.cx} y={barY + 4}
+                  fontSize={9} fontWeight="600" textAnchor="middle"
+                  fill="#EFE6D2">Σύντομα</SvgText>
               ) : null}
-              {region.progressLoaded && region.totalLessons ? (
-                <G>
-                  <Rect x={region.cx - region.rx * 0.42} y={barY}
-                    width={region.rx * 0.84} height={3.5} rx={2}
-                    fill="#344250" opacity={0.95} />
-                  <Rect x={region.cx - region.rx * 0.42} y={barY}
-                    width={region.rx * 0.84 * Math.max(0, Math.min(1,
-                      (region.completedLessons ?? 0) / region.totalLessons))}
-                    height={3.5} rx={2}
-                    fill={region.status === "complete" ? "#E5C989" : "#B1A5FF"} />
+              {canShowProgress ? (
+                <G testID={`atlas-progress-${region.id}`} pointerEvents="none">
+                  {/* A soft, dark backing keeps map decorations from running
+                      behind the bar. The pale track stays visible at 0%. */}
+                  <Rect x={barX - 5} y={barY - 4}
+                    width={barWidth + 10} height={barHeight + 8} rx={7}
+                    fill="#12232E" opacity={0.64} />
+                  <Rect testID={`atlas-progress-track-${region.id}`}
+                    x={barX} y={barY} width={barWidth} height={barHeight}
+                    rx={barHeight / 2} fill="#65717E" fillOpacity={0.76}
+                    stroke="#E2E7E5" strokeOpacity={0.32} strokeWidth={0.65} />
+                  {progressRatio > 0 ? (
+                    <G>
+                      <Rect x={barX - 2} y={barY - 2}
+                        width={fillWidth + 4} height={barHeight + 4}
+                        rx={barHeight / 2 + 2}
+                        fill={isComplete ? "#F5D58E" : "#C0B1FF"} opacity={0.2} />
+                      <Rect testID={`atlas-progress-fill-${region.id}`}
+                        x={barX} y={barY} width={fillWidth}
+                        height={barHeight} rx={barHeight / 2}
+                        fill={isComplete ? "url(#atlas-progress-gold)" : "url(#atlas-progress-lavender)"} />
+                    </G>
+                  ) : null}
                 </G>
               ) : null}
             </G>
