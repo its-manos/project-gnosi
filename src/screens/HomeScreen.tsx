@@ -44,7 +44,8 @@ export default function HomeScreen({
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
   const { height } = useWindowDimensions();
-  const compact = height < 750;
+  // Normal-height screens fit all primary actions; smaller screens remain scrollable.
+  const compact = height < 790;
   const today = useAthensDate();
   // This existing metric counts completed daily quizzes, not app logins.
   // A separate login streak requires account-scoped, synchronised visit records.
@@ -107,16 +108,17 @@ export default function HomeScreen({
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
           : "Εξερεύνησε τους κόσμους γνώσης"}>
         <View style={styles.heroTop}>
-          <Text style={styles.eyebrow}>{heroIsResume ? "Η ΠΟΡΕΙΑ ΣΟΥ" : "Η ΕΠΟΜΕΝΗ ΑΠΟΣΤΟΛΗ"}</Text>
-          <Text style={styles.heroCount}>{completedCount} ολοκληρωμένα</Text>
+          <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
+          <Text style={styles.heroCount}>{heroIsResume
+            ? String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"
+            : completedCount + " ολοκληρωμένα"}</Text>
         </View>
         <Text style={styles.heroTitle} numberOfLines={2}>
           {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
         </Text>
-        <Text style={styles.heroDescription} numberOfLines={1}>
-          {heroIsResume ? String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"
-            : hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
-        </Text>
+        {!heroIsResume ? <Text style={styles.heroDescription} numberOfLines={1}>
+          {hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
+        </Text> : null}
         {heroIsResume && inProgressQuestionCount > 0 ?
           <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]} /></View>
           : null}
@@ -169,52 +171,55 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   viewport: { flex: 1 },
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 4, paddingBottom: 18, gap: 12, flexGrow: 1 },
-  compactContent: { gap: 8, paddingBottom: 8 },
+    paddingTop: 6, paddingBottom: 18, gap: 12, flexGrow: 1 },
+  compactContent: { gap: 9, paddingBottom: 10 },
   compactHero: { padding: 12, gap: 5 },
-  compactActionCard: { minHeight: 92, padding: 10 },
-  compactCategory: { minHeight: 68 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 54 },
-  logo: { color: colors.accentLight, fontSize: 22, lineHeight: 29, fontWeight: "900", letterSpacing: 3 },
-  headerStats: { flexDirection: "row", alignItems: "center", gap: 12 },
-  streak: { flexDirection: "row", alignItems: "center", gap: 4 },
-  flame: { fontSize: 19 },
+  compactActionCard: { minHeight: 90, padding: 10 },
+  compactCategory: { minHeight: 70 },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
+  logo: { color: colors.accentLight, fontSize: 21, lineHeight: 27, fontWeight: "900", letterSpacing: 2.4 },
+  headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
+  streak: { flexDirection: "row", alignItems: "center", gap: 5 },
+  flame: { fontSize: 19, lineHeight: 24 },
   streakCount: { color: colors.text, fontSize: 17, fontWeight: "900", lineHeight: 20 },
-  streakLabel: { color: colors.textMuted, fontSize: 9, lineHeight: 12 },
-  levelBadge: { width: 50, height: 50, alignItems: "center", justifyContent: "center", borderRadius: 25, backgroundColor: colors.surface },
+  streakLabel: { color: colors.textMuted, fontSize: 10, lineHeight: 13 },
+  levelBadge: { width: 50, height: 50, alignItems: "center", justifyContent: "center",
+    borderRadius: 25, backgroundColor: colors.surface },
   levelRing: { position: "absolute", top: 0, left: 0 },
   levelCenter: { alignItems: "center", justifyContent: "center" },
-  levelCaption: { color: colors.textMuted, fontSize: 7, lineHeight: 9, fontWeight: "900" },
-  levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 22, fontWeight: "900" },
-  hero: { padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#514B6A", backgroundColor: "#1B2032", gap: 7 },
+  levelCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 10, fontWeight: "900" },
+  levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
+  hero: { padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#474160",
+    backgroundColor: "#1B2032", gap: 6 },
   heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
-  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 14, fontWeight: "900", letterSpacing: 0.8 },
-  heroCount: { color: colors.textMuted, fontSize: 10 },
+  eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
+  heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1, textAlign: "right" },
   heroTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "800" },
-  heroDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
-  track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden" },
-  trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.success },
+  heroDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 16 },
+  track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginTop: 2 },
+  trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.accentLight },
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 8, backgroundColor: colors.accent, borderRadius: 10, minHeight: 37, marginTop: 3 },
-  heroButtonLabel: { color: "#111421", fontSize: 13, fontWeight: "900" },
+    gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2 },
+  heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
   actions: { flexDirection: "row", gap: 10 },
-  actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 105,
-    padding: 13, justifyContent: "center", gap: 5 },
-  quizCard: { backgroundColor: "#242039", borderColor: "#3B3454" },
+  actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
+    padding: 12, justifyContent: "center", gap: 4 },
+  quizCard: { backgroundColor: "#242039", borderColor: "#39344F" },
   reviewCard: { backgroundColor: "#19332E", borderColor: "#30554B" },
   actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
   reviewIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  worlds: { gap: 10 },
+  worlds: { gap: 9 },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  sectionTitle: { color: colors.text, fontSize: 17, lineHeight: 23, fontWeight: "800" },
+  sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   worldCount: { color: colors.textMuted, fontSize: 11 },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 6 },
+  // Four equal columns; the last three cards are centered, not stretched across the row.
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 8, rowGap: 8 },
   category: { width: "23.3%", minHeight: 78, backgroundColor: colors.surface,
-    borderColor: colors.border, borderWidth: 1, borderRadius: 13,
-    alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 5 },
+    borderColor: colors.border, borderWidth: 1, borderRadius: 14,
+    alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 4 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
-  categoryLabel: { color: colors.textBody, fontSize: 10, lineHeight: 13, textAlign: "center", fontWeight: "700" },
+  categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
   pressed: { opacity: 0.76 },
 });
