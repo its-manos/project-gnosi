@@ -353,8 +353,8 @@ export const greekSettlementsLessons: Lesson[] = [
       "presentation": {
         "type": "multiple-select",
         "correctIndices": [
-          0,
-          2
+          2,
+          0
         ]
       }
     }
