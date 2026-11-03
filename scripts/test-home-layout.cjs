@@ -1,116 +1,159 @@
-/* global __dirname */
-// Headless component checks. These do not replace device layout testing.
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
-const assert = require('node:assert/strict');
-const ts = require('typescript');
-const root = path.join(__dirname, '..');
+/* Headless contracts for the compact Home dashboard and subcategory adventure map.
+ * These checks do not replace native Android/iOS layout testing. */
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const assert = require("node:assert/strict");
+const ts = require("typescript");
+
+const root = path.join(__dirname, "..");
 const jsx = (type, props) => ({ type, props });
-const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', ActivityIndicator: 'Spinner', StyleSheet: { create: styles => styles } };
-const svg = { __esModule: true, default: 'svg', Circle: 'circle', Defs: 'defs', G: 'g', LinearGradient: 'linearGradient', Path: 'path', Rect: 'rect', Stop: 'stop', Text: 'text' };
+const native = {
+  View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
+  ActivityIndicator: "Spinner", useWindowDimensions: () => ({ width: 360, height: 740 }),
+  StyleSheet: { create: value => value },
+};
+const svg = {
+  __esModule: true, default: "svg", Circle: "circle", Path: "path",
+  Defs: "defs", G: "g", LinearGradient: "linearGradient",
+  Rect: "rect", Stop: "stop", Text: "text",
+};
 let showList = false;
-const react = { useMemo: fn => fn(), useState: () => [showList, value => { showList = typeof value === 'function' ? value(showList) : value; }] };
+const react = {
+  useMemo: fn => fn(),
+  useState: () => [showList, value => { showList = typeof value === "function" ? value(showList) : value; }],
+};
+const nodes = tree => tree && typeof tree === "object"
+  ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
+
 function compile(file, extra = {}) {
   const mod = { exports: {} };
-  const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
+  const code = ts.transpileModule(fs.readFileSync(path.join(root, file), "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
-  const imports = { react, 'react/jsx-runtime': { jsx, jsxs: jsx }, 'react-native': native, 'react-native-svg': svg, ...extra };
-  vm.runInNewContext(code, { module: mod, exports: mod.exports, require: id => { if (id in imports) return imports[id]; throw Error(id); } });
+  const imports = {
+    react, "react/jsx-runtime": { jsx, jsxs: jsx },
+    "react-native": native, "react-native-svg": svg,
+    "../theme": { colors: {
+      accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E",
+      textMuted: "#ABB0C1", success: "#3CC69A", successSurface: "#17372F",
+    } },
+    ...extra,
+  };
+  vm.runInNewContext(code, {
+    module: mod, exports: mod.exports,
+    require: id => { if (id in imports) return imports[id]; throw Error("Missing stub " + id); },
+  });
   return mod.exports.default;
 }
-const categories = [
-  ['history','Ιστορία','🏛️'], ['science','Επιστήμη & Διάστημα','🚀'], ['nature','Φύση & Ζώα','🌿'],
-  ['technology','Τεχνολογία','⚡'], ['culture','Τέχνες & Πολιτισμός','🎨'], ['geography','Γεωγραφία & Κοινωνία','🌍'], ['difficult-history','Ταμπού της Ιστορίας','🕯️'],
-].map(([id, title, emoji]) => ({ id, title, emoji }));
-const lessons = categories.map((c,i) => ({ id: String(i), categoryId: c.id, title: 'Άρθρο '+i }));
-let player = { ready: true, profile: { level: 3, earned: 150, required: 600 } };
-const home = compile('src/screens/HomeScreen.tsx', {
-  '../hooks/useKnowledgeProfile': { useKnowledgeProfile: () => player },
-  '../components/KnowledgeMastery': { __esModule: true, default: 'KnowledgeMastery' },
-  '../components/WeeklyReviewCard': { __esModule: true, default: 'WeeklyReviewCard' },
-  '../data/lessons': { lessons }, '../theme': { colors: {} },
-  '../components/FantasyMap': { __esModule: true, default: 'FantasyMap' },
-  '../components/ReadingPick': { __esModule: true, default: 'ReadingPick' },
-});
-const nodes = t => t && typeof t === 'object' ? [t, ...[t.props?.children].flat(Infinity).flatMap(nodes)] : [];
-const selected = [];
-const props = { categories, featuredLesson: lessons[1], suggestedLessons: lessons.slice(2,4), progressLoaded: true, completedCount: 1, savedCount: 1, inProgressLesson: lessons[0], inProgressAnsweredCount: 1, inProgressQuestionCount: 3, onOpenProfile: () => selected.push('profile'), onKnowledgeReview: () => selected.push('knowledge'), onOpenCategory: id => selected.push(id), onResumeLesson: id => selected.push(id), onStartDailyChallenge: () => selected.push('daily'), onOpenDailyPreferences: () => selected.push('preferences'), onOpenSearch: () => selected.push('search'), onOpenSaved: () => selected.push('saved'), onOpenLesson: id => selected.push(id) };
-let tree = home(props);
-nodes(tree).find(n => n.type === 'KnowledgeMastery').props.onOpen();
-assert.equal(selected.pop(), 'knowledge');
-const direct = tree.props.children;
-const exploration = direct.findIndex(n => n?.props?.testID === 'home-exploration');
-const secondary = direct.findIndex(n => n?.props?.testID === 'home-secondary-content');
-assert.ok(exploration >= 0 && exploration < secondary, 'Exploration must precede all reading/challenge cards.');
-assert.ok(!nodes(direct[exploration]).some(n => n.type === 'ReadingPick'));
-assert.equal(nodes(direct[secondary]).filter(n => n.type === 'ReadingPick').length, 3);
-const press = label => nodes(tree).find(n => n.type === 'Pressable' && n.props.accessibilityLabel === label).props.onPress();
-const badge = nodes(tree).find(n => n.props.testID === 'home-level-profile');
-assert.ok(badge.props.accessibilityLabel.includes('Επίπεδο 3'));assert.ok(badge.props.accessibilityLabel.includes('150 από 600 XP'));badge.props.onPress();
-assert.ok(!nodes(tree).some(n => n.props.accessibilityLabel === 'Αναζήτηση μαθημάτων' || n.props.accessibilityLabel === 'Αποθηκευμένα μαθήματα: 1'));
-const ring = nodes(tree).find(n => n.props.testID === 'home-xp-ring');assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(' ')[0]) - 2 * Math.PI * 28 * .25) < 1e-9);
-press('Συνέχισε το μάθημα Άρθρο 0');assert.deepEqual(selected, ['profile', '0']);
-player = { ready: true, profile: { level: 4, earned: 0, required: 800 } };let updated = home(props);assert.equal(nodes(updated).find(n=>n.props.testID==='home-level').props.children,4);assert.ok(!nodes(updated).some(n=>n.props.testID==='home-xp-ring'),'exact level-up resets ring without a zero-progress dot');
-player = { ready: false, profile: { level: 1, earned: 0, required: 200 } };updated=home(props);assert.equal(nodes(updated).find(n=>n.props.testID==='home-level').props.children,'—');assert.ok(!nodes(updated).some(n=>n.props.testID==='home-xp-ring'));
-player = { ready: true, profile: { level: 12, earned: 4800, required: 4800 } };updated=home(props);assert.ok(Math.abs(Number(nodes(updated).find(n=>n.props.testID==='home-xp-ring').props.strokeDasharray.split(' ')[0])-2*Math.PI*28)<1e-9);
 
-const mapProps = nodes(tree).find(n => n.type === 'FantasyMap').props;
-assert.equal(mapProps.overview, true);
-assert.ok(mapProps.regions.every(region => region.detail === undefined), 'Home map labels omit per-category article counts in both map and list views.');
-const map = compile('src/components/FantasyMap.tsx');
-let mapTree = map(mapProps);
-const world = nodes(mapTree).find(n => n.type === 'svg');
-assert.equal(world.props.viewBox, '0 0 360 416', 'Seven-category overview uses three rows.');
-const targets = nodes(mapTree).filter(n => n.type === 'g' && n.props.onPress);
-assert.equal(targets.length, 7); targets[6].props.onPress(); assert.equal(selected.at(-1), 'difficult-history');
-// Foreground labels must follow ALL terrain, not just their own island.
-const svgChildren = [world.props.children].flat(Infinity).filter(n => n && typeof n === 'object');
-const terrain = svgChildren.filter(n => n.type === 'g' && n.props.pointerEvents === 'none');
-assert.equal(terrain.length, 7);
-assert.ok(svgChildren.indexOf(terrain.at(-1)) < svgChildren.indexOf(targets[0]));
-for (const [index, target] of targets.entries()) {
-  assert.equal(target.props.opacity, 1);
-  assert.equal(target.props.fillOpacity, 1);
-  assert.equal(target.props.stroke, 'none');
-  const hitArea = nodes(target).find(n => n.type === 'path');
-  assert.equal(hitArea.props.fill, 'transparent');
-  assert.ok(hitArea.props.d.endsWith(' Z'), 'Whole island remains tappable.');
-  const labels = nodes(target).filter(n => n.type === 'text');
-  assert.ok(labels.length >= 2);
-  for (const label of labels) {
-    assert.equal(label.props.stroke, undefined, 'Small glyphs must not have a dark outline.');
-    assert.equal(label.props.opacity, undefined, 'Labels inherit full opacity.');
-  }
+const categories = [
+  ["history", "Ιστορία", "🏛️"], ["science", "Επιστήμη & Διάστημα", "🚀"],
+  ["nature", "Φύση & Ζώα", "🌿"], ["technology", "Τεχνολογία", "⚡"],
+  ["culture", "Τέχνες & Πολιτισμός", "🎨"], ["geography", "Γεωγραφία & Κοινωνία", "🌍"],
+  ["difficult-history", "Ταμπού της Ιστορίας", "🕯️"],
+].map(([id, title, emoji]) => ({ id, title, emoji }));
+const lessons = categories.map((category, index) => ({
+  id: String(index), categoryId: category.id, title: "Μάθημα " + index,
+  subcategoryId: "ancient-greece", questions: [], sources: [],
+}));
+const actions = [];
+let profile = { ready: true, profile: { level: 3, earned: 150, required: 600 } };
+let daily = { ready: true, doc: { days: { "2026-11-03": { record: { completed: true } } } } };
+const home = compile("src/screens/HomeScreen.tsx", {
+  "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
+  "../hooks/useAthensDate": { useAthensDate: () => "2026-11-03" },
+  "../state/LearningSession": { useDailySnapshot: () => daily },
+  "../utils/dailySyncDocument": { dailyHistory: () => ["today", "yesterday"] },
+  "../utils/progressStats": { calculateDailyChallengeProgress: () => ({ currentStreak: 2 }) },
+});
+const props = {
+  categories, featuredLesson: lessons[1], progressLoaded: true,
+  completedCount: 1, savedCount: 2,
+  inProgressLesson: lessons[0], inProgressAnsweredCount: 1, inProgressQuestionCount: 3,
+  onResumeLesson: id => actions.push("resume:" + id),
+  onOpenLesson: id => actions.push("lesson:" + id),
+  onOpenCategory: id => actions.push("category:" + id),
+  onStartDailyChallenge: () => actions.push("daily"),
+  onKnowledgeReview: () => actions.push("review"),
+  onOpenProfile: () => actions.push("profile"),
+};
+let tree = home(props);
+assert.ok(nodes(tree).some(node => node.props?.testID === "home-game-dashboard"));
+assert.ok(!nodes(tree).some(node => node.type === "FantasyMap" || node.props?.children === "Πού θα ταξιδέψεις;"));
+const press = (id, value = tree) => {
+  const target = nodes(value).find(node => node.props?.testID === id);
+  assert.ok(target, id + " must exist");
   target.props.onPress();
-  assert.equal(selected.at(-1), categories[index].id);
-}
-nodes(mapTree).find(n => n.props?.accessibilityLabel === 'Προβολή ως λίστα').props.onPress();
-mapTree = map(mapProps); assert.ok(!nodes(mapTree).some(n => n.type === 'svg'));
-assert.equal(nodes(mapTree).filter(n => n.props?.accessibilityHint).length, 7);
-nodes(mapTree).find(n => n.props?.accessibilityLabel === 'Προβολή χάρτη').props.onPress();
-assert.ok(nodes(map(mapProps)).some(n => n.type === 'svg'));
-const detailed = map({ ...mapProps, overview: false });
-assert.equal(nodes(detailed).find(n => n.type === 'svg').props.viewBox, '0 0 360 600', 'Detailed map remains unchanged.');
-const withDetails = map({ ...mapProps, regions: [{ id: 'one', title: 'Μία περιοχή', detail: '5 μαθήματα' }] });
-const detailLabel = nodes(withDetails).find(n => n.type === 'text' && n.props.children === '5 μαθήματα');
-assert.ok(detailLabel);
-assert.equal(detailLabel.props.opacity, undefined);
-tree = home({ ...props, progressLoaded: false, inProgressLesson: null });
-assert.ok(nodes(tree).some(n => n.type === 'FantasyMap'), 'Progress loading must never hide exploration.');
-console.log('Home layout checks passed: exploration first, secondary content retained, actions, compact seven-category map, list exclusivity, category selection, detailed map fallback and loading state. Mocked native views.');
-// Optional exact SVG export for visual inspection (no screenshot of native views).
-if (process.env.GNOSI_MAP_PREVIEW) {
-  const escape = s => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
-  const attrs = { strokeWidth:'stroke-width',strokeOpacity:'stroke-opacity',fillOpacity:'fill-opacity',strokeDasharray:'stroke-dasharray',textAnchor:'text-anchor',fontSize:'font-size',fontWeight:'font-weight',stopColor:'stop-color',strokeLinejoin:'stroke-linejoin' };
-  function xml(node) {
-    if (node == null || typeof node === 'boolean') return '';
-    if (Array.isArray(node)) return node.map(xml).join('');
-    if (typeof node !== 'object') return escape(node);
-    const properties = Object.entries(node.props).filter(([k,v]) => k !== 'children' && k !== 'accessible' && !k.startsWith('accessibility') && typeof v !== 'function').map(([k,v]) => `${attrs[k]||k}="${escape(v)}"`).join(' ');
-    return `<${node.type} ${properties}>${xml(node.props.children)}</${node.type}>`;
-  }
-  world.props.width=360;world.props.height=416;world.props.xmlns='http://www.w3.org/2000/svg';
-  fs.writeFileSync(process.env.GNOSI_MAP_PREVIEW, xml(world));
-}
+  return target;
+};
+press("home-primary-action");
+press("home-daily-quiz");
+press("home-knowledge-review");
+press("home-level-profile");
+assert.deepEqual(actions, ["resume:0", "daily", "review", "profile"]);
+const ring = nodes(tree).find(node => node.props?.testID === "home-xp-ring");
+assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(" ")[0]) - 2 * Math.PI * 21 * .25) < 0.01);
+assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props.children, 3);
+assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("home-category-")).length, 7);
+press("home-category-history");
+assert.equal(actions.at(-1), "category:history");
+assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
+assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
+assert.equal(nodes(tree).filter(node => node.props?.accessibilityLabel?.includes("Αναζήτηση")).length, 0);
+
+tree = home({ ...props, inProgressLesson: null });
+press("home-primary-action", tree);
+assert.equal(actions.at(-1), "lesson:1");
+tree = home({ ...props, inProgressLesson: null, featuredLesson: null });
+press("home-primary-action", tree);
+assert.equal(actions.at(-1), "category:history");
+profile = { ready: false, profile: { level: 1, earned: 0, required: 200 } };
+tree = home(props);
+assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props.children, "—");
+assert.ok(!nodes(tree).some(node => node.props?.testID === "home-xp-ring"));
+
+// Keep the detailed islands accessible on CategoryScreen even though Home is now compact.
+const categorySource = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
+assert.match(categorySource, /<FantasyMap/);
+const map = compile("src/components/FantasyMap.tsx");
+const mapProps = { regions: categories.map(category => ({ id: category.id, title: category.title, emoji: category.emoji })), overview: true, onSelectRegion: id => actions.push(id) };
+const mapTree = map(mapProps);
+assert.ok(nodes(mapTree).some(node => node.type === "svg"));
+assert.equal(nodes(mapTree).filter(node => node.type === "g" && node.props?.onPress).length, 7);
+
+// Each subcategory has an accessible, ordered series of checkpoints.
+const path = Array.from({ length: 30 }, (_v, index) => ({
+  id: "anc-" + index, subcategoryId: "ancient-greece", title: "Ενότητα " + (index + 1),
+}));
+const access = (lesson, catalogue, completed, inProgress) => {
+  const index = catalogue.findIndex(item => item.id === lesson.id);
+  const prerequisite = index > 0 ? catalogue[index - 1] : null;
+  return { prerequisite, unlocked: !prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id) };
+};
+const adventure = compile("src/screens/SubcategoryScreen.tsx", {
+  "../components/AppHeader": { __esModule: true, default: "AppHeader" },
+  "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
+  "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
+});
+const adventureProps = {
+  category: categories[0], subcategory: { id: "ancient-greece", title: "Αρχαία Ελλάδα", description: "Ιστορικό ταξίδι" },
+  lessons: path, completedLessonIds: [], inProgressLessonIds: [], progressLoaded: true,
+  onBack: () => actions.push("back"), onOpenLesson: id => actions.push("open:" + id),
+};
+tree = adventure(adventureProps);
+assert.ok(nodes(tree).some(node => node.props?.testID === "subcategory-adventure-path"));
+assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("adventure-node-")).length, 30);
+assert.equal(nodes(tree).filter(node => node.props?.children?.startsWith?.("ΚΕΦΑΛΑΙΟ ")).length, 5);
+const first = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0");
+const second = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1");
+assert.equal(first.props.disabled, false);
+assert.equal(second.props.disabled, true);
+first.props.onPress();
+assert.equal(actions.at(-1), "open:anc-0");
+tree = adventure({ ...adventureProps, completedLessonIds: ["anc-0"] });
+assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1").props.disabled, false);
+assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-2").props.disabled, true);
+tree = adventure({ ...adventureProps, progressLoaded: false });
+assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0").props.disabled, true);
+console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
