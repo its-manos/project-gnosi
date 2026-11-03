@@ -74,9 +74,29 @@ function overviewRows(count: number): number[] {
   return Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
 }
 
-function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number): PositionedRegion[] {
+function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, artworkLayout = false): PositionedRegion[] {
   const count = regions.length;
   if (count === 0) return [];
+
+  // The bespoke History illustration uses three fixed destination zones.
+  // Keep labels, bars and tap targets centered over their painted islands
+  // at every map height; the generic SVG maps retain their own layouts.
+  if (artworkLayout && !overview && count === 3) {
+    const anchors = [
+      { x: 0.255, y: 0.35 },
+      { x: 0.745, y: 0.35 },
+      { x: 0.51, y: 0.665 },
+    ];
+    return regions.map((region, index) => ({
+      ...region,
+      cx: MAP_WIDTH * anchors[index].x,
+      cy: mapHeight * anchors[index].y,
+      rx: index === 2 ? 78 : 75,
+      ry: Math.min(70, mapHeight * 0.13),
+      seed: index + 1,
+      fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
+    }));
+  }
 
   const columns = columnCount(count);
   const cellWidth = MAP_WIDTH / columns;
@@ -308,7 +328,11 @@ export default function FantasyMap({
   const rows = Math.max(1, overview ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
   const naturalHeight = regions.length === 1 ? 198 : overview ? rows * 128 + 32 : rows * 144 + 16;
   const mapHeight = overview ? naturalHeight : Math.max(naturalHeight, Math.min(960, minHeight));
-  const positionedRegions = useMemo(() => makeLayout(regions, overview, mapHeight), [regions, overview, mapHeight]);
+  const artworkLayout = Boolean(backgroundImage && !overview && regions.length === 3);
+  const positionedRegions = useMemo(
+    () => makeLayout(regions, overview, mapHeight, artworkLayout),
+    [regions, overview, mapHeight, artworkLayout],
+  );
   // Larger text is practical because the layout uses at most three columns for
   // up to 24 regions. Large catalogues retain a list view for full labels.
   const labelFontSize = overview ? 12.5 : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
@@ -357,7 +381,7 @@ export default function FantasyMap({
       {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame, { aspectRatio: MAP_WIDTH / mapHeight }]}>
       {backgroundImage && !overview ? (
         <Image testID="history-midnight-atlas-art" pointerEvents="none"
-          source={backgroundImage} resizeMode="cover" style={styles.backgroundArt}
+          source={backgroundImage} resizeMode="stretch" style={styles.backgroundArt}
           accessible={false} />
       ) : null}
       <Svg
