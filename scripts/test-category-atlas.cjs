@@ -137,7 +137,7 @@ const ancientTrack = detailNodes.find(node =>
 const worldTrack = detailNodes.find(node =>
   node.props?.testID === "atlas-progress-track-world");
 const worldTitle = detailNodes.find(node =>
-  node.type === "text" && node.props?.children === "Παγκόσμια ιστορία");
+  node.type === "text" && node.props?.children === "Παγκόσμια");
 assert.ok(ancientTrack && worldTrack && worldTitle);
 assert.equal(ancientTrack.props.y - ancientTitle.props.y, 17,
   "bring Ancient Greece progress closer to the title");
