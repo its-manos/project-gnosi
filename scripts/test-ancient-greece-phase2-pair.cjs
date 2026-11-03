@@ -18,7 +18,7 @@ const frozenWithoutPresentation=[{question:'x',answers:['a','b'],correctIndex:0}
 assert.equal(quizFingerprint(frozenWithoutPresentation),quizFingerprint([{...frozenWithoutPresentation[0],presentation:undefined}]));
 assert.notEqual(quizFingerprint(frozenWithoutPresentation),quizFingerprint([{...frozenWithoutPresentation[0],presentation:{type:'fill-in-the-blank',before:'x',after:''}}]));
 const expected={
-  'ancient-athens':{kinds:['fill-in-the-blank',null,'spot-the-mistake'],anchors:[3,9,13],correct:[0,3,2]},
+  'ancient-athens':{kinds:['fill-in-the-blank','multiple-select','spot-the-mistake'],anchors:[3,9,13],correct:[0,0,2]},
   'greek-world-not-a-country':{kinds:['spot-the-mistake',null,'fill-in-the-blank'],anchors:[3,9,12],correct:[1,0,0]},
 };
 assert.deepEqual(Array.from(lessonPaths['ancient-greece'].slice(0,2)),Object.keys(expected));
@@ -32,7 +32,7 @@ for(const [id,check] of Object.entries(expected)){
  assert.deepEqual(l.questions.map(q=>q.id),old.questions.map(q=>q.id),'stable question identity');
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),check.anchors,'unchanged checkpoint anchors');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),check.correct,'revised independently-checked keys');
- assert.ok(l.questions.every(q=>q.version==='3'),'new assessment versions');
+ assert.ok(l.questions.every(q=>q.version===(['athens-agora-evidence','greek-world-herodotus-context'].includes(q.id)?'4':'3')),'explicit v4 pilot revisions keep v3 on other cards');
  const oldKey=quizFingerprint(old.questions),newKey=quizFingerprint(l.questions);
  assert.notEqual(oldKey,newKey,'incompatible prior quiz');
  assert.equal(lessonQuizMatches(l,oldKey),false);
@@ -51,6 +51,12 @@ for(const [id,check] of Object.entries(expected)){
   assert.ok(evaluateChoice(choice.content,q.correctIndex).correct,'reward route uses canonical index');
   assert.ok(!evaluateChoice(choice.content,(q.correctIndex+1)%q.answers.length).correct);
   if(!kind){assert.equal(inter,null);continue;}
+  if(kind==='multiple-select'){
+   assert.deepEqual(inter.content.correctIndices,[0,1,2],'Agora requires three distinct justified selections');
+   assert.ok(evaluateAnswer(inter,[0,1,2]).correct);
+   assert.ok(evaluateAnswer(inter,[0,1]).valid&&!evaluateAnswer(inter,[0,1]).correct);
+   continue;
+  }
   assert.ok(inter&&inter.content.options.length===4,'four selectable choices');
   for(let option=0;option<4;option++){
    const selected='option-'+option;
@@ -69,4 +75,4 @@ for(const [id,check] of Object.entries(expected)){
 }
 assert.deepEqual(past.lessons['greek-world-not-a-country'].questions.map(q=>q.correctIndex),[1,2,0],
   'preserve exact erroneous v2 historical keys for compatibility audit');
-console.log('Ancient Greece Phase 2 pair Node contract passed: v3 answers, legacy scores, typed cards, unchanged anchors and old history.');
+console.log('Ancient Greece Phase 2 pair Node contract passed: v3/v4 answers, legacy scores, typed cards, unchanged anchors and old history.');
