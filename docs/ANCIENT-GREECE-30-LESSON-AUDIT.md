@@ -152,7 +152,7 @@ The resulting CSV has blank reviewer and device-result fields. **Do not mark cle
 
 ### Android image viewer — first-pass owner test (2026-11-03)
 
-**PASS (owner-reported):** image loading, pinch-to-zoom/double-tap, caption readability, photographer/licence credit presentation, and source-link opening. Evidence: [Android manual five-check report](ANCIENT-GREECE-ANDROID-IMAGE-FIRST-PASS.md). These are category-level results; the owner did not supply a per-placement list, screenshots, device/OS or build identifier. **This is not sign-off for all 88 Android image placements**, source/licence legal compliance or any iPhone behavior. Both full 88-image device matrices and the whole lesson/quiz/regression QA remain pending; 0 lessons independently Validated/Approved.
+**PASS (owner-reported):** image loading, pinch-to-zoom/double-tap, caption readability, photographer/licence credit presentation, and source-link opening. Evidence: [Android manual five-check report](ANCIENT-GREECE-ANDROID-IMAGE-FIRST-PASS.md). These are category-level results; the owner did not supply a per-placement list, screenshots, device/OS or build identifier. **This is not sign-off for all 88 Android image placements** or source/licence legal compliance. The owner subsequently confirmed **all five equivalent iPhone checks PASS** ([iPhone report](ANCIENT-GREECE-IOS-IMAGE-FIRST-PASS.md)), again without a per-placement log. Both **full 88-image device matrices** and whole lesson/quiz/regression QA remain pending; 0 lessons independently Validated/Approved.
 
 ## Actual-device acceptance matrix
 
