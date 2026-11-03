@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { requestPracticeCue } from "../play/soundStatus";
 import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ScrollViewInstance } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import type { Props } from "./LessonScreen";
 import ActionButton from "../components/ActionButton";
@@ -27,6 +28,7 @@ import { getParagraphCount, getParagraphId, getParagraphText, getReadingQuestion
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
   onToggleSaved, checkpointAnswers, typedCheckpointAnswers = {}, enableReporting = true, onAnswerCheckpoint, onFinishLesson, onBack }: Props) {
   const { analytics } = useBetaAnalytics();
+  const safeArea = useSafeAreaInsets();
   const lastSeenParagraph = useRef(0);
   const [readingSize, setReadingSize] = useState(18);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -279,8 +281,9 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
       <NextImageWarmup uri={upcomingFigureUrl} />
       {activeBoundary !== null && activeQuestionIndex !== null && activePosition >= 0 ? <Modal
         visible animationType="slide" presentationStyle="fullScreen"
-        onRequestClose={onBack}>
-        <View style={styles.quizScreen} testID="reader-question-screen">
+        statusBarTranslucent navigationBarTranslucent onRequestClose={onBack}>
+        <View style={[styles.quizScreen, { paddingTop: safeArea.top, paddingBottom: safeArea.bottom }]}
+          testID="reader-question-screen">
           <View style={styles.quizTopbar}>
             <Pressable accessibilityRole="button" accessibilityLabel="Έξοδος από το μάθημα"
               onPress={onBack} style={styles.control}>
