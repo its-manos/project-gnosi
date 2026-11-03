@@ -17,8 +17,8 @@ const old=require('./fixtures/ancient-greece-pair-25-26-before-phase2-20261103.j
 const plain=x=>JSON.parse(JSON.stringify(x));
 const list=getSubcategoryPath(lessons,'ancient-greece');
 const targets={
- 'hellenistic-kingdoms-cities':{slot:24,paragraphs:29,anchors:[5,10,15,20,25,29],correct:[1,0,2,3,0,1],types:['spot-the-mistake','matching','ordering','fill-in-the-blank','matching',null],version:'2'},
- 'greek-stage-tragedy':{slot:25,paragraphs:30,anchors:[4,8,12,17,21,25,30],correct:[2,0,3,1,2,3,1],types:['spot-the-mistake','matching','fill-in-the-blank','ordering','matching','spot-the-mistake',null],version:'2'}
+ 'hellenistic-kingdoms-cities':{slot:24,paragraphs:29,anchors:[5,10,15,20,25,29],correct:[1,0,2,3,0,1],types:['spot-the-mistake','matching','ordering','fill-in-the-blank','matching','multiple-select'],version:'2'},
+ 'greek-stage-tragedy':{slot:25,paragraphs:30,anchors:[4,8,12,17,21,25,30],correct:[2,0,3,1,2,3,1],types:['spot-the-mistake','matching','fill-in-the-blank','ordering','matching','multiple-select',null],version:'2'}
 };
 function properAnswer(q){
  switch(q.type){
@@ -32,6 +32,7 @@ function properAnswer(q){
 }
 function wrongAnswer(q,correct){
  switch(q.type){
+ case 'multiple-select':return correct.slice(0,1);
  case 'ordering':return [...correct].reverse();
  case 'matching':{let pairs=q.content.pairs;return Object.fromEntries(pairs.map((p,i)=>[p.leftId,pairs[(i+1)%pairs.length].rightId]));}
  case 'spot-the-mistake':return q.content.options.find(p=>p.id!==q.content.incorrectOptionId).id;
@@ -46,7 +47,7 @@ for(const [id,expect] of Object.entries(targets)){
  assert.deepEqual(getQuestionPlacements(l).map(p=>p.afterParagraphNumber),expect.anchors,'stable anchors '+id);
  assert.deepEqual(l.questions.map(q=>q.id),former.questions.map(q=>q.id),'unchanged question IDs');
  assert.deepEqual(l.questions.map(q=>q.correctIndex),expect.correct);
- assert.ok(l.questions.every(q=>q.version===expect.version),'correct quiz version');
+ assert.ok(l.questions.every(q=>q.version===(['hellenistic-succession','hellenistic-source-triangle','stage-festival-frame','stage-audience-unknown'].includes(q.id)?'3':expect.version)),'correct quiz version');
  assert.deepEqual(l.questions.map(q=>q.presentation?.type??null),expect.types);
  assert.equal(l.requireCurrentAttemptQuiz,true,'no unversioned stale resume');
  const oldKey=quizFingerprint(former.questions),newKey=quizFingerprint(l.questions);

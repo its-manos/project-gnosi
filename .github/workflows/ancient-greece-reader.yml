@@ -67,3 +67,13 @@ jobs:
       - run: node scripts/test-greek-crises-fourth-century.cjs
       - run: node scripts/test-macedon-philip.cjs
       - run: node scripts/test-alexander-conquests-context.cjs
+      - run: node scripts/test-ancient-greece-chapter5-questions.cjs
+      - run: node scripts/test-ancient-greece-phase2-25-26.cjs
+      - run: node scripts/test-ancient-greece-phase2-27-28.cjs
+      - run: node scripts/test-ancient-greece-phase2-29-30.cjs
+      - run: node scripts/test-hellenistic-kingdoms-cities.cjs
+      - run: node scripts/test-greek-stage-tragedy.cjs
+      - run: node scripts/test-greek-images-sculpture.cjs
+      - run: node scripts/test-greek-philosophy-in-context.cjs
+      - run: node scripts/test-greek-science-knowledge.cjs
+      - run: node scripts/test-antikythera-gears.cjs
