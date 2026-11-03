@@ -46,7 +46,7 @@ for (const [i,id] of ids.entries()) {
     const reviewNotes = [];
     if(id==="greek-science-knowledge" && image.kind!=="cover" &&
        /E02748|P\.Penn/i.test(image.url+" "+image.creditUrl)) {
-      reviewNotes.push("UPSTREAM LICENCE-VERSION CONFLICT: compare Commons and OPenn E02748");
+      reviewNotes.push("UPSTREAM LICENCE-VERSION CONFLICT: Penn Museum OPenn repository grants CC BY-SA 2.0; Commons file labels 4.0; item text mixes versions; confirm credit/display");
     }
     if(id==="greek-images-sculpture" && declaredLicence==="special-commercial-permission-declared") {
       reviewNotes.push("CUSTOM RIGHTS GRANT: retain original permission page and full credit");
