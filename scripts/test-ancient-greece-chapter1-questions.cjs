@@ -36,8 +36,8 @@ assert.equal(pathLessons.reduce((sum, lesson) => sum + lesson.questions.length, 
 assert.deepEqual(pathLessons.slice(0, 5).map(lesson => lesson.id), Object.keys(expected));
 assert.deepEqual(lessonPaths['ancient-greece'].slice(0, 5), Object.keys(expected));
 assert.equal(
-  pathLessons.flatMap(lesson => lesson.questions).filter(question => question.presentation?.type === 'multiple-select').length,
-  2, 'pilot introduces exactly two genuine multi-select cards',
+  pathLessons.slice(0, 5).flatMap(lesson => lesson.questions).filter(question => question.presentation?.type === 'multiple-select').length,
+  2, 'Chapter I remains at two genuine multi-select cards',
 );
 
 for (const [id, editedId] of Object.entries(expected)) {
