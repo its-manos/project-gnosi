@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import type { Category, Lesson } from "../data/lessons";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
@@ -43,6 +43,8 @@ export default function HomeScreen({
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
+  const { height } = useWindowDimensions();
+  const compact = height < 750;
   const today = useAthensDate();
   // This existing metric counts completed daily quizzes, not app logins.
   // A separate login streak requires account-scoped, synchronised visit records.
@@ -67,7 +69,7 @@ export default function HomeScreen({
 
   return (
     <ScrollView testID="home-game-dashboard" style={styles.viewport}
-      contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      contentContainerStyle={[styles.content, compact && styles.compactContent]} showsVerticalScrollIndicator={false}>
       <View style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.headerStats}>
@@ -98,7 +100,7 @@ export default function HomeScreen({
         </View>
       </View>
 
-      <Pressable testID="home-primary-action" style={({ pressed }) => [styles.hero, pressed && styles.pressed]}
+      <Pressable testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
@@ -125,14 +127,14 @@ export default function HomeScreen({
       </Pressable>
 
       <View style={styles.actions}>
-        <Pressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, pressed && styles.pressed]}
+        <Pressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Καθημερινό quiz, 7 ερωτήσεις"
           onPress={onStartDailyChallenge}>
           <Text style={styles.actionIcon}>✦</Text>
           <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
           <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : "7 ερωτήσεις"}</Text>
         </Pressable>
-        <Pressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, pressed && styles.pressed]}
+        <Pressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Επανάληψη γνώσεων"
           onPress={onKnowledgeReview} disabled={!onKnowledgeReview}>
           <Text style={[styles.actionIcon, styles.reviewIcon]}>◎</Text>
@@ -151,7 +153,7 @@ export default function HomeScreen({
             <Pressable key={category.id} testID={"home-category-" + category.id}
               accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
               onPress={() => onOpenCategory(category.id)}
-              style={({ pressed }) => [styles.category, pressed && styles.pressed]}>
+              style={({ pressed }) => [styles.category, compact && styles.compactCategory, pressed && styles.pressed]}>
               <Text style={styles.categoryEmoji}>{category.emoji}</Text>
               <Text style={styles.categoryLabel} numberOfLines={2} adjustsFontSizeToFit>
                 {shortLabels[category.id] ?? category.title}
@@ -168,6 +170,10 @@ const styles = StyleSheet.create({
   viewport: { flex: 1 },
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
     paddingTop: 4, paddingBottom: 18, gap: 12, flexGrow: 1 },
+  compactContent: { gap: 8, paddingBottom: 8 },
+  compactHero: { padding: 12, gap: 5 },
+  compactActionCard: { minHeight: 92, padding: 10 },
+  compactCategory: { minHeight: 68 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 54 },
   logo: { color: colors.accentLight, fontSize: 22, lineHeight: 29, fontWeight: "900", letterSpacing: 3 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 12 },
