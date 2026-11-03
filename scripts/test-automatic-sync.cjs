@@ -13,9 +13,12 @@ const legacy=compile('src/utils/legacyLearning.ts',{'../data/lessons':data,'./le
 const doc=compile('src/utils/syncDocument.ts',{'../data/lessons':data,'./learningBackup':backup});
 const {LearningStore}=compile('src/state/LearningStore.ts',{'../data/lessons':data,'../utils/learningBackup':backup,'../utils/legacyLearning':legacy,'../utils/syncDocument':doc});
 const [a,b,c]=data.lessons;
+const typedAdapter=compile('src/quiz/adapters.ts',{'./engine':compile('src/quiz/engine.ts')});
 const plain=x=>JSON.parse(JSON.stringify(x));
 const empty=()=>({schemaVersion:1,completedIds:[],savedIds:[],attempts:{}});
-const attempt=(n=1,replay=false)=>({checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),quizKey:quizFingerprint(a.questions),score:99,updatedAt:100,replayOfCompletedLesson:replay});
+const attempt=(n=1,replay=false)=>({checkpointAnswers:Object.fromEntries(Array.from({length:n},(_,i)=>[i,a.questions[i].correctIndex])),
+ ...(n>1?{typedCheckpointAnswers:{1:{questionVersion:typedAdapter.adaptInteractiveLessonQuestion(a,1).version,value:[...a.questions[1].presentation.correctIndices]}}}:{}),
+ quizKey:quizFingerprint(a.questions),score:99,updatedAt:100,replayOfCompletedLesson:replay});
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 const stores=[];
 function disk(site) {const map=new Map([['@gnosi/sync-device-id',site]]);let fail=false;return {map,setFail:v=>{fail=v;},getItem:async k=>map.get(k)??null,setItem:async(k,v)=>{if(fail)throw Error('storage full');map.set(k,v);}};}
