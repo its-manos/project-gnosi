@@ -1,11 +1,11 @@
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Stop } from "react-native-svg";
 
 type Props = { size?: number; displayScale?: number };
 
 /**
- * A weathered stone sarcophagus with a sculpted narrative frieze.
- * The recessed relief, heavy lid, and side face make it recognizable
- * at Home's 32pt footprint without changing the parent card.
+ * A miniature weathered Egyptian limestone pyramid. Two distinct stone faces,
+ * fitted courses and irregular masonry convey real volume at the Home 32pt size.
+ * Purely decorative artwork: its enclosing card retains all interaction.
  */
 export default function HistoryWorldIcon({ size = 32, displayScale = 1 }: Props) {
   return (
@@ -13,77 +13,86 @@ export default function HistoryWorldIcon({ size = 32, displayScale = 1 }: Props)
       viewBox="0 0 52 52" accessible={false} pointerEvents="none"
       style={{ transform: [{ scale: displayScale }] }}>
       <Defs>
-        <LinearGradient id="history-sarcophagus-lid" x1="5%" y1="0%" x2="95%" y2="100%">
-          <Stop offset="0%" stopColor="#F0E2C7" />
-          <Stop offset="48%" stopColor="#BEAE93" />
-          <Stop offset="100%" stopColor="#716C65" />
+        <LinearGradient id="history-pyramid-sunlit" x1="8%" y1="2%" x2="92%" y2="95%">
+          <Stop offset="0%" stopColor="#F5E7CB" />
+          <Stop offset="44%" stopColor="#D5BE98" />
+          <Stop offset="100%" stopColor="#9D8770" />
         </LinearGradient>
-        <LinearGradient id="history-sarcophagus-front" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#DFCEB2" />
-          <Stop offset="48%" stopColor="#AB9C88" />
-          <Stop offset="100%" stopColor="#706C64" />
+        <LinearGradient id="history-pyramid-shaded" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#C6B296" />
+          <Stop offset="54%" stopColor="#958370" />
+          <Stop offset="100%" stopColor="#5D5E59" />
         </LinearGradient>
-        <LinearGradient id="history-sarcophagus-side" x1="0%" y1="0%" x2="100%" y2="90%">
-          <Stop offset="0%" stopColor="#958A79" />
-          <Stop offset="100%" stopColor="#504F4C" />
+        <LinearGradient id="history-pyramid-stone" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#EEDABA" />
+          <Stop offset="100%" stopColor="#98836D" />
         </LinearGradient>
-        <LinearGradient id="history-sarcophagus-relief" x1="0%" y1="0%" x2="60%" y2="100%">
-          <Stop offset="0%" stopColor="#F3E4C8" />
-          <Stop offset="100%" stopColor="#A79782" />
+        <LinearGradient id="history-pyramid-sand" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#C8A67A" />
+          <Stop offset="100%" stopColor="#806A60" />
         </LinearGradient>
       </Defs>
-      <Ellipse cx={25.6} cy={45.8} rx={22.4} ry={3.1} fill="#071018" opacity={0.38} />
-      {/* The coffin has a visible right-hand side, not just a flat tablet. */}
-      <Path d="M43.1 20.5 L48.1 16.9 V39.8 L43.1 44 Z"
-        fill="url(#history-sarcophagus-side)" stroke="#C7B49A" strokeWidth={0.7} />
-      <Path d="M6.4 20.7 L43.2 20.7 V43.6 L6.4 43.6 Z"
-        fill="url(#history-sarcophagus-front)" stroke="#F4DDBB" strokeWidth={0.84} />
-      <Rect x={8.7} y={24.1} width={32.5} height={16.3} rx={0.7}
-        fill="#887D6D" stroke="#E5D1B1" strokeWidth={0.68} />
-      <Rect x={10} y={25.5} width={29.8} height={13.4} rx={0.35}
-        fill="#A99B85" stroke="#554E49" strokeWidth={0.42} />
-      {/* Three small, genuinely carved figures; relief depth comes from paired highlights/shadows. */}
-      <G fill="url(#history-sarcophagus-relief)" stroke="#6E675D" strokeWidth={0.43} strokeLinejoin="round">
-        <Path d="M13.5 35.9 L13.9 30.4 L16.1 28.7 L18.2 30.5 L18.5 35.9 L20 37.5 H12 Z" />
-        <Path d="M22.5 36.5 L22.3 31.5 L24.4 28.8 L27.1 30.8 L28.7 36.4 L30 37.3 H21.1 Z" />
-        <Path d="M32.3 36 L32.4 30.5 L34.4 28.8 L36.8 30.8 L37.3 36.4 L38.6 37.4 H30.9 Z" />
-      </G>
-      <G fill="#E9D9BC" stroke="#766D60" strokeWidth={0.5}>
-        <Circle cx={16} cy={28.5} r={1.45} />
-        <Circle cx={24.6} cy={28.8} r={1.5} />
-        <Circle cx={34.4} cy={28.7} r={1.4} />
-      </G>
-      <Path d="M15.9 30.7 V35.2 M24.7 31.2 L23.8 35.8 M34.5 31.1 L35.5 35.7
-               M12.4 37 H19.5 M21 37.2 H29.5 M31 37.2 H38.4"
-        stroke="#FFF0D4" strokeWidth={0.6} opacity={0.68} fill="none" />
-      <Path d="M11.1 26.3 H38.5 M11.1 39.2 H38.5"
-        stroke="#F1DFC0" strokeWidth={0.5} opacity={0.63} />
-      {/* Lid overhang and raised end blocks are a sarcophagus-specific silhouette. */}
-      <Path d="M4.9 19.7 L10.6 12.6 L42 12.6 L48.7 19.7 L43.6 22.4 H7.1 Z"
-        fill="url(#history-sarcophagus-lid)" stroke="#F4DFC1" strokeWidth={0.83}
+
+      {/* The broad base and sharp apex must read as a pyramid even at 32pt. */}
+      <Ellipse cx={27} cy={44.2} rx={23.2} ry={3.25} fill="#0B111B" opacity={0.35} />
+      <Path d="M27 4.8 L48 40.8 L30.5 44.2 Z"
+        fill="url(#history-pyramid-shaded)" stroke="#B8A88F" strokeWidth={0.82}
         strokeLinejoin="round" />
-      <Path d="M10.6 12.6 L8.1 9.5 L13.8 9.1 L15.5 12.6 M36.6 12.6 L38.8 9.1 L44 9.6 L42 12.6"
-        fill="#C5B397" stroke="#F1DEC0" strokeWidth={0.7} />
-      <Path d="M7 19.7 H47.8 M11.3 15.2 H41.2 M10.4 17.7 H43.8"
-        stroke="#FFF1D6" strokeWidth={0.56} fill="none" opacity={0.72} />
-      <Path d="M15.1 15.1 Q18.7 13.1 22.3 15.1 Q26 17.2 29.7 15.1 Q33.5 13.1 37.8 15.1"
-        stroke="#7D756A" strokeWidth={0.66} fill="none" opacity={0.65} />
-      <Path d="M43.6 22.4 L48.7 19.7 M43.2 40 L47.6 36.4 M6.6 22.8 H43"
-        stroke="#716B60" strokeWidth={0.6} opacity={0.73} />
-      {/* Fine cracks, pits and uneven mineral deposits convey age without noise. */}
-      <Path d="M7.8 27.6 L9 29.1 L8.4 32.5 M40.8 32 L39.4 33.6 L40.7 35.7
-               M17 20.1 L18.4 21.4 L18.1 23.3 M33.3 17.2 L34.7 18"
-        fill="none" stroke="#5B5D58" strokeWidth={0.5} opacity={0.5} />
-      <G fill="#F9ECD3" opacity={0.5}>
-        <Circle cx={8.7} cy={35.1} r={0.48} />
-        <Circle cx={39.9} cy={27.6} r={0.52} />
-        <Circle cx={29.9} cy={21.3} r={0.35} />
-        <Circle cx={11.7} cy={16.8} r={0.4} />
+      <Path d="M27 4.8 L30.5 44.2 L5.2 42.2 Z"
+        fill="url(#history-pyramid-sunlit)" stroke="#F4DEC0" strokeWidth={0.85}
+        strokeLinejoin="round" />
+      <Path d="M27 4.8 L30.5 44.2"
+        stroke="#F4D7AC" strokeWidth={0.6} opacity={0.8} />
+
+      {/* Slightly uneven, stacked courses define ancient cut limestone. */}
+      <G fill="none" stroke="#786F62" strokeWidth={0.62} opacity={0.66}>
+        <Path d="M22.4 12.8 L27.7 12.9 L31.9 13.2" />
+        <Path d="M19.6 17.7 L28.1 17.9 L34.6 18.1" />
+        <Path d="M16.8 22.5 L28.5 22.8 L37.4 23" />
+        <Path d="M14 27.3 L28.9 27.7 L40.2 27.8" />
+        <Path d="M11 32.3 L29.4 32.7 L43.1 32.8" />
+        <Path d="M8.2 37.1 L29.9 37.5 L45.8 37.4" />
+        <Path d="M5.9 41 L30.3 41.5 L48 40.8" />
       </G>
-      <Path d="M5.2 43.3 H43.8 L49.1 40.3 L49.2 43.2 L43.8 46 H5.2 Z"
-        fill="#786F63" stroke="#CBB79A" strokeWidth={0.65} />
-      <Path d="M6 43.4 H43.5 M43.8 43.4 L48.8 40.6"
-        fill="none" stroke="#F2DEBD" strokeWidth={0.62} opacity={0.78} />
+      <G fill="none" stroke="#FFF0D3" strokeWidth={0.46} opacity={0.7}>
+        <Path d="M22.9 12.2 L27.6 12.4 M20 17.1 L27.9 17.3" />
+        <Path d="M17.2 21.9 L28.4 22.2 M14.3 26.7 L28.8 27.1" />
+        <Path d="M11.4 31.7 L29.3 32.1 M8.5 36.5 L29.8 36.9" />
+      </G>
+      {/* Alternating block joints, with most texture concentrated on lit face. */}
+      <G stroke="#827462" strokeWidth={0.62} opacity={0.66} fill="none">
+        <Path d="M25.7 12.9 L25.7 17.8 M22.1 17.8 L22.1 22.6
+                 M26.3 22.7 L26.3 27.6 M18.3 22.5 L18.3 27.4
+                 M16.3 27.3 L16.3 32.4 M23.8 27.5 L23.8 32.5
+                 M12.8 32.4 L12.8 37.1 M20.1 32.5 L20.1 37.3
+                 M26.8 32.7 L26.8 37.5 M10.4 37.3 L10.4 41.4
+                 M16.1 37.2 L16.1 41.6 M23.5 37.4 L23.5 43.5" />
+      </G>
+      <G stroke="#5C5D56" strokeWidth={0.55} opacity={0.57} fill="none">
+        <Path d="M30.5 18 L33.1 17.9 M32.6 22.9 L32.6 27.7
+                 M35.2 27.8 L35.2 32.7 M39.5 32.7 L39.5 37.4
+                 M34.3 37.6 L34.3 42.8 M42.7 37.4 L42.7 41.7" />
+      </G>
+      {/* Edge chips, mineral specks and hairline fractures keep it weathered. */}
+      <Path d="M16.8 22.6 L17.6 24.1 L16.9 26.1 M23.4 32.7
+               L24.3 34.2 L23.6 35.4 M40.1 27.8 L39.5 29.7"
+        fill="none" stroke="#685F57" strokeWidth={0.48} opacity={0.68} />
+      <Path d="M7.4 40.5 L9.2 39.9 L11.1 40.5 M19.5 42.7 L21.3 42.1 L23.3 42.9"
+        fill="none" stroke="url(#history-pyramid-stone)" strokeWidth={1.05} opacity={0.83} />
+      <G fill="#F8E7C6" opacity={0.68}>
+        <Circle cx={23.5} cy={19.9} r={0.48} />
+        <Circle cx={12.3} cy={34.2} r={0.54} />
+        <Circle cx={26.9} cy={39.3} r={0.38} />
+        <Circle cx={35.1} cy={30.2} r={0.42} />
+        <Circle cx={40} cy={37} r={0.4} />
+      </G>
+      {/* Low desert ridge gives scale without introducing another subject. */}
+      <Path d="M2.4 46.3 C9.9 44.3 14.5 45.2 19.7 46
+               C27.5 47.1 36.8 44.2 49.6 45.6 L50.3 47.8
+               C33.3 46.6 14.1 49.5 2.4 47.7 Z"
+        fill="url(#history-pyramid-sand)" opacity={0.76} />
+      <Path d="M4.3 46.4 Q13 45.3 20.4 46.6 M33.8 46.2 Q41.4 44.8 48.1 46"
+        stroke="#F0D2A4" strokeWidth={0.55} opacity={0.73} fill="none" />
     </Svg>
   );
 }

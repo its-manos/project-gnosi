@@ -160,15 +160,14 @@ const drawn = id => nodes(worldArtwork[id]({ size: 32, displayScale: 1.18 }));
 const gradientIds = id => drawn(id).filter(node => node.type === "linearGradient")
   .map(node => node.props.id);
 const historyArt = drawn("history");
-assert.ok(gradientIds("history").includes("history-sarcophagus-front"),
-  "History uses layered stone material");
-assert.ok(gradientIds("history").includes("history-sarcophagus-relief"),
-  "History includes recessed sculpted relief");
-assert.ok(historyArt.filter(node => node.type === "circle").length >= 7,
-  "sarcophagus includes carved figures and surface weathering");
-assert.ok(historyArt.filter(node => node.type === "path").length >= 12,
-  "sarcophagus remains a three-dimensional decorated chest");
-
+assert.ok(gradientIds("history").includes("history-pyramid-sunlit"), "limestone gradient present");
+assert.ok(gradientIds("history").includes("history-pyramid-shaded"), "shadow gradient present");
+assert.ok(historyArt.some(node => node.type === "path" && node.props.fill === "url(#history-pyramid-sunlit)"
+  && node.props.d.includes("27 4.8")), "sunlit triangle reaches pyramid apex");
+assert.ok(historyArt.some(node => node.type === "path" && node.props.fill === "url(#history-pyramid-shaded)"
+  && node.props.d.includes("27 4.8")), "shaded triangle reaches pyramid apex");
+assert.ok(historyArt.filter(node => node.type === "circle").length >= 5, "mineral weathering remains");
+assert.ok(historyArt.filter(node => node.type === "path").length >= 18, "pyramid masonry is detailed");
 const mothArt = drawn("nature");
 assert.ok(mothArt.some(node => node.type === "g"
   && node.props.transform === "translate(52 0) scale(-1 1)"),
