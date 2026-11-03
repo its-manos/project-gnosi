@@ -5,6 +5,7 @@ const root=path.resolve(__dirname,'..');
 const {lessons}=require(root+'/src/data/lessons.ts'),{inlineArticleMedia}=require(root+'/src/data/articleMedia.ts');
 const progress=require(root+'/src/utils/lessonProgress.ts'),paths=require(root+'/src/utils/lessonPath.ts');
 const {quizFingerprint,lessonQuizMatches}=require(root+'/src/utils/learningActivity.ts');
+const {adaptInteractiveLessonQuestion}=require(root+'/src/quiz/adapters.ts');
 const {parseLearningBackup}=require(root+'/src/utils/learningBackup.ts'),{lessonReview}=require(root+'/src/utils/lessonReview.ts');
 const id='athenian-empire',l=lessons.find(x=>x.id===id);
 assert.ok(l,'Lesson 20 must be published exactly once');
@@ -43,7 +44,9 @@ for(const old of ['q_470dac57','q_22487292',...['athens-law-courts','greek-war-h
 const historical={prior:{lessonId:'athens-who-voted',at:Date.parse('2026-10-20T12:00Z'),wasCompleted:true,questionCount:4,correctCount:3,quizKey:'q_470dac57',missedQuestionIndices:[1]}};
 assert.equal(lessonReview(l,historical).status,'no-result');
 assert.equal(lessonReview(lessons.find(x=>x.id==='athens-who-voted'),historical).status,'changed');
-const attempt={checkpointAnswers:{0:l.questions[0].correctIndex},quizKey:key,score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
+const first=adaptInteractiveLessonQuestion(l,0);
+assert.equal(first.type,'multiple-select');
+const attempt={checkpointAnswers:{0:l.questions[0].correctIndex},typedCheckpointAnswers:{0:{questionVersion:first.version,value:[...first.content.correctIndices]}},quizKey:key,score:1,updatedAt:Date.now(),replayOfCompletedLesson:false};
 const backup=parseLearningBackup({schemaVersion:1,completedIds:['persian-wars-greek-world','athens-who-voted'],savedIds:['athens-who-voted',id],attempts:{[id]:attempt}});
 assert.equal(backup.attempts[id].quizKey,key);
 assert.ok(backup.completedIds.includes('athens-who-voted')&&backup.savedIds.includes('athens-who-voted'));
