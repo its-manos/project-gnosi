@@ -40,7 +40,7 @@ export default function SubcategoryScreen({
   const { width: viewportWidth } = useWindowDimensions();
   const path = useMemo(() => getSubcategoryPath(lessons, subcategory.id), [lessons, subcategory.id]);
   const completed = path.filter(lesson => completedLessonIds.includes(lesson.id)).length;
-  const nextLesson = path.find(lesson => inProgressLessonIds.includes(lesson.id) &&
+  const nextLesson = path.find(lesson => !completedLessonIds.includes(lesson.id) && inProgressLessonIds.includes(lesson.id) &&
     getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds).unlocked)
     ?? path.find(lesson => !completedLessonIds.includes(lesson.id) &&
       getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds).unlocked);
@@ -49,7 +49,7 @@ export default function SubcategoryScreen({
   const points = path.map((_lesson, index) => pointFor(index, mapWidth));
   const route = points.map((point, index) => {
     if (index === 0) return "M " + point.x + " " + point.y;
-    const previous = points[index - 1];
+    const previous = points[index - 1] ?? point;
     return "C " + previous.x + " " + (previous.y + 55) + " " +
       point.x + " " + (point.y - 55) + " " + point.x + " " + point.y;
   }).join(" ");
@@ -107,7 +107,7 @@ export default function SubcategoryScreen({
             <Path d={route} fill="none" stroke="#7365A9" strokeWidth={3} strokeLinecap="round" strokeDasharray="5 9" />
           </Svg>
           {path.map((lesson, index) => {
-            const point = points[index];
+            const point = points[index] ?? pointFor(index, mapWidth);
             const access = getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds);
             const done = completedLessonIds.includes(lesson.id);
             const started = inProgressLessonIds.includes(lesson.id) && !done;
@@ -117,7 +117,7 @@ export default function SubcategoryScreen({
             return (
               <View key={lesson.id} style={[styles.stopPosition, { left: point.x - 72, top: point.y - 42 }]}>
                 {chapter ? <Text style={styles.chapterBadge}>{chapter}</Text> : null}
-                <Pressable testID={"adventure-node-" + lesson.id}
+                <Pressable testID={"adventure-node-" + lesson.id} style={styles.nodePressable}
                   onPress={() => onOpenLesson(lesson.id)} disabled={disabled}
                   accessibilityRole="button" accessibilityState={{ disabled }}
                   accessibilityLabel={lesson.title + (done ? ", ολοκληρωμένο" : started ? ", σε εξέλιξη"
@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
   chapterBadge: { color: "#D4C6FF", fontSize: 10, fontWeight: "900", textAlign: "center",
     lineHeight: 14, marginTop: -18, marginBottom: 4, backgroundColor: "#25233A",
     borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
+  nodePressable: { width: 144, alignItems: "center" },
   node: { width: 65, height: 65, borderRadius: 33, alignSelf: "center",
     borderWidth: 3, borderColor: "#746B94", backgroundColor: "#292A43",
     alignItems: "center", justifyContent: "center" },
