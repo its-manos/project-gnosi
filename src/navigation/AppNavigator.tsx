@@ -334,6 +334,9 @@ export default function AppNavigator() {
           category={activeCategory}
           subcategories={categorySubcategories}
           lessons={lessons}
+          completedLessonIds={app.completedLessonIds}
+          inProgressLessonIds={app.inProgressLessonIds}
+          progressLoaded={app.progressLoaded}
           onBack={() => navigateTo("home")}
           onOpenSubcategory={app.openSubcategory}
         />
