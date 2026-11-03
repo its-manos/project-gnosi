@@ -29,3 +29,9 @@ jobs:
       - run: node scripts/test-typed-lesson-audio.cjs
       - run: node scripts/test-answer-sound-route.cjs
       - run: npm run test:question-types
+      - run: node scripts/test-ancient-greece-chapter1-questions.cjs
+      - run: node scripts/test-ancient-greece-phase2-pair.cjs
+      - run: node scripts/test-ancient-greece-phase2-3-4.cjs
+      - run: node scripts/test-ancient-greece-phase2-5-6.cjs
+      - run: node scripts/test-greek-intro-redesign.cjs
+      - run: node scripts/test-greek-geography-lesson.cjs
