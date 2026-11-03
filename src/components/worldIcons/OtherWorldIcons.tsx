@@ -78,60 +78,80 @@ export function ScienceWorldIcon({ size = 32, displayScale = 1 }: WorldIconProps
   );
 }
 
-/** Nature & animals: a branching fern and a small copper-toned moth. */
+/** Nature & wildlife: an engraved, bilaterally symmetric hawk moth. */
 export function NatureWorldIcon({ size = 32, displayScale = 1 }: WorldIconProps) {
+  // Drawing one wing pair and mirroring it keeps the pattern truly symmetric.
+  const leftWing = (
+    <G>
+      <Path d="M24.5 18.4 C21.7 11.4 15.7 6.5 9.8 7.3
+               C4.7 8 2.6 13.1 3.4 19.5 C4.3 25.4 11.4 29 23.2 30.4 Z"
+        fill="url(#nature-moth-forewing)" stroke="#E9D4AE" strokeWidth={0.9} />
+      <Path d="M23.4 26.9 C16 25 10.1 27.4 8.2 32.1
+               C7.7 37 13.2 44.1 19.4 44.2 C23.4 42.1 25 36.5 25.1 29.6 Z"
+        fill="url(#nature-moth-hindwing)" stroke="#E7D0AA" strokeWidth={0.83} />
+      {/* Wing margins and scalloping echo biological field-guide engravings. */}
+      <Path d="M5.4 13 Q10 11.5 14 15.1 Q18.1 18.5 23.8 21.5
+               M5.5 20.9 Q13.7 22.3 23.5 27.9
+               M9.6 31.1 Q15 31.1 23.9 32.5
+               M12.8 39.4 Q18.1 38.8 23 35.6"
+        fill="none" stroke="#F5E5C8" strokeWidth={0.7} opacity={0.8} />
+      <Path d="M7.5 10.1 C13.1 9.2 18 14.7 21.3 20.7
+               M6.2 17.7 C12.5 17.7 19 23 22.6 27.1
+               M10.1 35.2 C15.9 34.1 21.6 36.4 23.8 38.5"
+        fill="none" stroke="#5B7069" strokeWidth={1.2} opacity={0.72} />
+      <Path d="M9.2 15.1 Q13 12.9 17.7 18.2 Q14.5 21.3 10.3 19.1 Z"
+        fill="#BC8D62" opacity={0.78} />
+      <Path d="M10.4 24.1 Q15.4 23.4 20.5 28.1 Q15.6 29.6 10.4 26.2 Z"
+        fill="#8EA68C" opacity={0.8} />
+      <Path d="M11.3 31.2 Q16.8 30.9 20.8 34 Q17.1 37.7 13.5 35.4 Z"
+        fill="#BC8C65" opacity={0.85} />
+      <Ellipse cx={11.7} cy={17.1} rx={3.2} ry={2.55} transform="rotate(27 11.7 17.1)"
+        fill="#4E675F" stroke="#E3C69B" strokeWidth={0.85} />
+      <Ellipse cx={11.8} cy={17.1} rx={1.4} ry={1.12}
+        fill="#C5BDA0" stroke="#F3E7C9" strokeWidth={0.42} />
+      <Ellipse cx={16} cy={34.7} rx={2.4} ry={1.8} transform="rotate(25 16 34.7)"
+        fill="#6D7969" stroke="#E6CA9E" strokeWidth={0.56} />
+      <G fill="#F7E9C9" opacity={0.85}>
+        <Circle cx={7.5} cy={14} r={0.57} />
+        <Circle cx={9} cy={23.8} r={0.52} />
+        <Circle cx={13.6} cy={27.3} r={0.4} />
+        <Circle cx={12.6} cy={37.9} r={0.5} />
+        <Circle cx={18.5} cy={39.4} r={0.43} />
+      </G>
+    </G>
+  );
   return (
     <Svg {...canvas(size, displayScale)} testID="home-world-art-nature">
       <Defs>
-        <LinearGradient id="nature-leaf" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#A8CBA5" />
-          <Stop offset="55%" stopColor="#548F79" />
-          <Stop offset="100%" stopColor="#2E6059" />
+        <LinearGradient id="nature-moth-forewing" x1="5%" y1="0%" x2="95%" y2="100%">
+          <Stop offset="0%" stopColor="#E2D1AD" />
+          <Stop offset="46%" stopColor="#A9A48D" />
+          <Stop offset="100%" stopColor="#536E6A" />
         </LinearGradient>
-        <LinearGradient id="nature-moth" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#F1DFC3" />
-          <Stop offset="55%" stopColor="#BEA482" />
-          <Stop offset="100%" stopColor="#816D68" />
+        <LinearGradient id="nature-moth-hindwing" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#CFA77F" />
+          <Stop offset="54%" stopColor="#937E6B" />
+          <Stop offset="100%" stopColor="#596F66" />
+        </LinearGradient>
+        <LinearGradient id="nature-moth-body" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#F3E2BB" />
+          <Stop offset="52%" stopColor="#AE9475" />
+          <Stop offset="100%" stopColor="#534F4D" />
         </LinearGradient>
       </Defs>
-      {/* One coherent, curved leaf spine keeps the fern legible at icon size. */}
-      <Path d="M21.2 43.4 C24.5 36.4 25.2 25.4 26.7 10.3"
-        stroke="#C6DBAC" strokeWidth={1.36} fill="none" strokeLinecap="round" />
-      <Path d="M25.8 13.5 Q17 9.4 15.9 5.6 Q24.5 6.7 26.5 11.2 Z"
-        fill="url(#nature-leaf)" stroke="#C5D9B5" strokeWidth={0.65} />
-      <Path d="M24.8 19 Q15.4 16.5 11.3 11.1 Q20 10.8 25.1 16.2 Z"
-        fill="url(#nature-leaf)" stroke="#BED9AB" strokeWidth={0.68} />
-      <Path d="M24.4 24.7 Q14.1 23.4 8.1 18.1 Q17.8 16.7 24.6 22 Z"
-        fill="url(#nature-leaf)" stroke="#C8DCB5" strokeWidth={0.66} />
-      <Path d="M24 30.8 Q13.4 30.7 6.7 25.4 Q17.8 24.6 24.4 28 Z"
-        fill="url(#nature-leaf)" stroke="#B2D2A9" strokeWidth={0.68} />
-      <Path d="M23.5 36.6 Q14.7 36.9 9.5 33.9 Q17.4 32.1 23.8 33.8 Z"
-        fill="url(#nature-leaf)" stroke="#BED3A6" strokeWidth={0.65} />
-      <Path d="M26.2 16.9 Q32 10.3 34.2 9.5 Q33.9 17.4 25.5 20.7 Z"
-        fill="#629C7D" stroke="#B7D7AA" strokeWidth={0.65} />
-      <Path d="M25.2 23 Q34.2 16.1 37.6 16.2 Q36 24 24.8 26.6 Z"
-        fill="#4D8874" stroke="#BBCE9D" strokeWidth={0.65} />
-      <Path d="M24.5 28.8 Q33.4 23 39.1 23.2 Q35.3 30.3 24.1 32 Z"
-        fill="#4E8877" stroke="#B4CEAC" strokeWidth={0.67} />
-      <Path d="M23.6 34.5 Q31.8 30.8 37.2 31.5 Q32.6 37.2 22.9 38.1 Z"
-        fill="#3C796B" stroke="#A9C79D" strokeWidth={0.62} />
-      {/* Short vein engravings carry the same handcrafted detail as the temple. */}
-      <Path d="M25 18 L15.9 13.3 M24.4 24 L12.5 20.1 M23.9 30.1 L11.6 27.7
-               M25.3 23.6 L34.1 18.7 M24.6 29.3 L35.1 25.9 M23.6 35.2 L32.5 33.1"
-        stroke="#D5E9BA" strokeWidth={0.52} opacity={0.75} fill="none" />
-      {/* A delicate moth silhouette signals wildlife, not just botany. */}
-      <Path d="M37.6 10.6 C35.1 8.2 34.8 4.8 36 3.5 C40.1 4 42.6 6.6 41 11.9 Z"
-        fill="url(#nature-moth)" stroke="#F1DEBC" strokeWidth={0.63} />
-      <Path d="M39.8 11.4 Q44.7 7.6 47.4 10.5 Q47.2 15.6 40.3 14.9 Z"
-        fill="#B9A88A" stroke="#F1DEBC" strokeWidth={0.65} />
-      <Path d="M38.6 11.7 Q34.5 12.1 35.1 16.2 Q39.2 17.6 40 13.5 Z"
-        fill="#9A816B" stroke="#E2C9A5" strokeWidth={0.5} />
-      <Path d="M39.5 8.5 Q41.3 5 43.2 5.1 M39.5 9.2 Q38.2 6.6 37.5 6.5"
-        stroke="#E6D3AC" strokeWidth={0.52} fill="none" />
-      <Path d="M39 10.3 L40 16.4" stroke="#624F4F" strokeWidth={0.9} strokeLinecap="round" />
-      <Circle cx={37.8} cy={8.3} r={0.95} fill="#E7D4B6" opacity={0.85} />
-      <Path d="M18.2 43.8 Q25.2 42 30 44.5"
-        stroke="#C5AA84" strokeWidth={0.85} fill="none" opacity={0.64} />
+      {leftWing}
+      <G transform="translate(52 0) scale(-1 1)">{leftWing}</G>
+      {/* Antennae, velvet thorax and tapered, segmented abdomen. */}
+      <Path d="M25 14.1 Q21.2 6.9 19.6 5.9 M27 14.1 Q30.8 6.9 32.4 5.9"
+        stroke="#DFC69F" strokeWidth={1.15} strokeLinecap="round" fill="none" />
+      <Circle cx={26} cy={14.8} r={3} fill="#C8AD88" stroke="#F5E1BD" strokeWidth={0.6} />
+      <Path d="M22.8 18.9 Q26 15.2 29.2 18.9 L29.3 28 Q28.5 37.5 26 42.8
+               Q23.5 37.5 22.7 28 Z"
+        fill="url(#nature-moth-body)" stroke="#EEDBBC" strokeWidth={0.82} />
+      <Path d="M26 19.4 V41.1 M23.3 26.5 Q26 28 28.7 26.5
+               M23.6 30.9 Q26 32.5 28.4 30.9 M24.2 35.2 Q26 36.7 27.8 35.2"
+        fill="none" stroke="#5F6258" strokeWidth={0.72} opacity={0.7} />
+      <Path d="M24.1 20.3 Q26 18.1 27.9 20.3" stroke="#FAEAC9" strokeWidth={0.7} fill="none" />
     </Svg>
   );
 }
@@ -203,69 +223,83 @@ export function TechnologyWorldIcon({ size = 32, displayScale = 1 }: WorldIconPr
   );
 }
 
-/** Arts & culture: a carved marble bust and a gold-ferruled paintbrush. */
+/** Arts & culture: an original moonlit seascape in a gilded picture frame. */
 export function CultureWorldIcon({ size = 32, displayScale = 1 }: WorldIconProps) {
   return (
     <Svg {...canvas(size, displayScale)} testID="home-world-art-culture">
       <Defs>
-        <LinearGradient id="culture-marble" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#F7E8D9" />
-          <Stop offset="49%" stopColor="#C6BED0" />
-          <Stop offset="100%" stopColor="#857E9F" />
+        <LinearGradient id="culture-night-sky" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#132F55" />
+          <Stop offset="55%" stopColor="#285775" />
+          <Stop offset="100%" stopColor="#526477" />
         </LinearGradient>
-        <LinearGradient id="culture-cloth" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#C4B7CB" />
-          <Stop offset="65%" stopColor="#7E788E" />
-          <Stop offset="100%" stopColor="#565471" />
+        <LinearGradient id="culture-night-sea" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#516F87" />
+          <Stop offset="100%" stopColor="#162E42" />
         </LinearGradient>
-        <LinearGradient id="culture-brass" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#FFE4BC" />
-          <Stop offset="100%" stopColor="#B58963" />
+        <LinearGradient id="culture-frame-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#F3D6A0" />
+          <Stop offset="45%" stopColor="#B78C59" />
+          <Stop offset="100%" stopColor="#5F4B42" />
+        </LinearGradient>
+        <LinearGradient id="culture-moon-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#FFF3CA" />
+          <Stop offset="100%" stopColor="#F0C883" />
         </LinearGradient>
       </Defs>
-      {/* A sculpted profile has face, hairline, neck and a draped torso. */}
-      <Path d="M17.9 36 C17.1 32.9 18.2 29.4 21.9 27.7 L21.9 24.9
-               C18.9 23.7 17.9 20.8 17.9 16.3
-               C17.9 10 22.4 6.5 28.1 7
-               C34.3 7.7 36.5 13.1 35 18.6
-               C34.7 20.2 34.4 21.2 33.1 22.2
-               C30.9 23.5 29.7 25.2 29.8 27.3
-               C34.2 29.4 37.2 31.6 38.1 36.8 Z"
-        fill="url(#culture-marble)" stroke="#FFEAD9" strokeWidth={0.8} />
-      <Path d="M16.4 37.2 C17.1 32.3 21.1 29.9 23 28.5
-               C25.2 31.2 28.6 31.9 32.2 29.1
-               C36.5 31.4 39 33.5 40.1 37.2 Z"
-        fill="url(#culture-cloth)" stroke="#EBDBD3" strokeWidth={0.68} />
-      <Path d="M22.5 29.4 Q27.1 33.9 32.7 29.4 M20.4 34.5 L24 37.2 M33 33.2 L29.8 37.1"
-        stroke="#E8DAD7" strokeWidth={0.64} strokeOpacity={0.67} fill="none" />
-      {/* Uneven curls, brow, temple and nose highlight. */}
-      <Path d="M18.4 18.3 C17.8 13.1 21.2 7.3 25.7 6.3
-               C30.8 5.1 36.3 9.4 35.6 15.3
-               C34.7 13.7 33.1 13.7 32.4 11.3
-               C28.4 15 23.7 13.4 21.3 17.3 Z"
-        fill="#9A8F9F" stroke="#E5D9DD" strokeWidth={0.64} />
-      <Path d="M20 11.9 Q23 7.9 26.6 9.7 M26 8.5 Q30.6 8.6 32.1 12.7
-               M20.1 15.1 L19 19.2 M34.2 14.7 Q34.9 17.2 34 19.4"
-        fill="none" stroke="#F0E4E4" strokeWidth={0.68} opacity={0.65} />
-      <Path d="M29.3 17.7 L32.2 17.3 M31.3 19.2 L33.2 21.5 L31 21.7 M29.8 23.4 Q31.9 24.2 33 23.3"
-        stroke="#7D7689" strokeWidth={0.57} fill="none" strokeLinecap="round" />
-      <Circle cx={30.8} cy={17.9} r={0.42} fill="#716E81" />
-      {/* Museum pedestal and small carved inscriptions. */}
-      <Path d="M15 37.3 H41.5 L43.1 40.5 H13.4 Z"
-        fill="#A69BA5" stroke="#F1E2D5" strokeWidth={0.7} />
-      <Rect x={13.2} y={40.5} width={30} height={3.1} rx={0.4}
-        fill="#8C8398" stroke="#E6D6D7" strokeWidth={0.75} />
-      <Rect x={10.8} y={43.7} width={34} height={2.4} rx={0.35}
-        fill="#5D5974" stroke="#C9B9B7" strokeWidth={0.63} />
-      <Path d="M18 42 H38" stroke="#EDE1DC" strokeWidth={0.46} opacity={0.7} />
-      {/* Brush held diagonally beside the sculpture; warm pigment at its tip. */}
-      <Path d="M6.8 36.1 L14.4 24.4 L16.4 25.8 L9.2 37.8 Z"
-        fill="#A46E59" stroke="#FFE4B4" strokeWidth={0.6} />
-      <Path d="M13.4 23.1 L16.4 25.3 L18.1 22.8 L15.4 20.8 Z"
-        fill="url(#culture-brass)" stroke="#FFF0C8" strokeWidth={0.52} />
-      <Path d="M15.6 21.1 Q15 17.9 18 15.4 Q20.1 18.8 18.1 22.2 Z"
-        fill="#946183" stroke="#D5A5B5" strokeWidth={0.48} />
-      <Path d="M7.8 35.9 L13.9 26.7" stroke="#E2AE87" strokeWidth={0.5} opacity={0.69} />
+      {/* Carved wood-and-gilt bevel around an actual painted canvas. */}
+      <Path d="M4.4 3.8 H47.6 V48.2 H4.4 Z" fill="#493E42"
+        stroke="#D1AF7F" strokeWidth={0.9} />
+      <Path d="M5.6 4.9 H46.4 L42.2 9.3 H9.8 Z"
+        fill="url(#culture-frame-gold)" stroke="#F5DCB1" strokeWidth={0.58} />
+      <Path d="M5.6 4.9 L9.8 9.3 V42.7 L5.6 47.1 Z"
+        fill="#D3AF7B" stroke="#FFE4B5" strokeWidth={0.52} />
+      <Path d="M46.4 4.9 L42.2 9.3 V42.7 L46.4 47.1 Z"
+        fill="#78604B" stroke="#C7A171" strokeWidth={0.52} />
+      <Path d="M5.6 47.1 L9.8 42.7 H42.2 L46.4 47.1 Z"
+        fill="#916D4F" stroke="#DDB886" strokeWidth={0.5} />
+      <Rect x={9.4} y={9} width={33.2} height={34.1}
+        fill="url(#culture-night-sky)" stroke="#F3D4A1" strokeWidth={0.75} />
+      {/* Flowing cloud shapes are original strokes rather than a reproduction. */}
+      <Path d="M10.1 17.2 C17 11 20.8 17.5 27.2 14.4
+               C31.4 12.4 35.6 11.1 41.8 13.8"
+        stroke="#8BB4BE" strokeWidth={2.7} fill="none" opacity={0.65}
+        strokeLinecap="round" />
+      <Path d="M10.4 21.4 C18.6 14.6 22.5 25.9 29.2 20.2
+               C34.6 15.9 38.3 18.9 41.6 21.2"
+        stroke="#C2C3A5" strokeWidth={1.25} fill="none" opacity={0.72}
+        strokeLinecap="round" />
+      <Path d="M12.4 25 C16.2 21.3 20.5 22.4 22.9 25.3
+               C25.2 28.1 20 30.7 17.9 27.9
+               C16.7 26.2 18.8 24.8 20.1 26"
+        stroke="#DBD1A6" strokeWidth={1.2} fill="none" strokeLinecap="round" />
+      <Path d="M28.4 28.4 C33.4 23.9 36.4 26 41.2 25.5
+               M11.2 32.9 Q21.2 27.6 28.8 32.6"
+        stroke="#9EC3BD" strokeWidth={1.35} fill="none" opacity={0.78}
+        strokeLinecap="round" />
+      {/* Crescent moon and constellations, deliberately distinct in composition. */}
+      <Circle cx={34.2} cy={15.8} r={4.1} fill="url(#culture-moon-glow)" opacity={0.97} />
+      <Path d="M33.5 11.4 C31.8 15.1 34 19.3 37.7 19.6
+               C34.6 21.3 30.3 19.1 30.1 15.6 C29.9 13.1 31.1 11.6 33.5 11.4 Z"
+        fill="#F6D8A1" opacity={0.76} />
+      <G fill="#F9E8B6">
+        <Circle cx={15.5} cy={13.8} r={1.3} />
+        <Circle cx={25.6} cy={11.6} r={0.92} />
+        <Circle cx={39.2} cy={24.5} r={0.8} />
+      </G>
+      <Path d="M15.5 11 V16.6 M12.8 13.8 H18.2 M25.6 9.7 V13.5
+               M23.7 11.6 H27.5 M39.2 23 V26"
+        stroke="#F6DDA7" strokeWidth={0.52} opacity={0.8} />
+      {/* Dark shore and distant water keep the picture a unique seascape. */}
+      <Path d="M9.9 35.4 Q18.6 32 24 35.2 Q31.9 33.3 42.1 35.4
+               V42.4 H9.9 Z" fill="url(#culture-night-sea)" />
+      <Path d="M9.9 38.2 L15 34.1 L20 37.3 L23 36.1 L29.2 40.2 L42.1 38.3 V42.4 H9.9 Z"
+        fill="#1A3446" opacity={0.9} />
+      <Path d="M11.1 36.3 Q18.8 34.7 24.1 36.1 M29 36.8 Q35 35 41 36.5
+               M26.6 39.4 L36.8 39.1"
+        fill="none" stroke="#E1BD82" strokeWidth={0.53} opacity={0.62} />
+      <Path d="M7.5 6.7 H44.3 M7.3 45.4 H44.3"
+        stroke="#FFE4B5" strokeWidth={0.57} opacity={0.62} />
     </Svg>
   );
 }
@@ -332,68 +366,66 @@ export function GeographyWorldIcon({ size = 32, displayScale = 1 }: WorldIconPro
   );
 }
 
-/** Difficult history: an archival lantern illuminating documented testimony. */
+/** Difficult history: a sealed archival case file with a discreet red stamp. */
 export function DifficultHistoryWorldIcon({ size = 32, displayScale = 1 }: WorldIconProps) {
   return (
     <Svg {...canvas(size, displayScale)} testID="home-world-art-difficult-history">
       <Defs>
-        <LinearGradient id="difficult-history-copper" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#E6D1AE" />
-          <Stop offset="53%" stopColor="#AD8E78" />
-          <Stop offset="100%" stopColor="#635C65" />
+        <LinearGradient id="difficult-history-folder" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#AD9780" />
+          <Stop offset="53%" stopColor="#82776B" />
+          <Stop offset="100%" stopColor="#4E5358" />
         </LinearGradient>
-        <LinearGradient id="difficult-history-glass" x1="0%" y1="0%" x2="80%" y2="100%">
-          <Stop offset="0%" stopColor="#F8DCA0" stopOpacity={0.83} />
-          <Stop offset="54%" stopColor="#C0A77A" stopOpacity={0.55} />
-          <Stop offset="100%" stopColor="#625C60" stopOpacity={0.88} />
+        <LinearGradient id="difficult-history-paper" x1="0%" y1="0%" x2="95%" y2="100%">
+          <Stop offset="0%" stopColor="#F0E5CF" />
+          <Stop offset="100%" stopColor="#B9AD9B" />
         </LinearGradient>
-        <LinearGradient id="difficult-history-paper" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#F0E5CD" />
-          <Stop offset="100%" stopColor="#BCA98F" />
+        <LinearGradient id="difficult-history-flap" x1="0%" y1="0%" x2="100%" y2="90%">
+          <Stop offset="0%" stopColor="#C5AD8D" />
+          <Stop offset="100%" stopColor="#746859" />
         </LinearGradient>
       </Defs>
-      {/* Closed book and evidence notes keep the theme human and respectful. */}
-      <Path d="M8 35.9 Q16.4 33.6 25.2 37.3 L25.2 45
-               Q16.5 42.3 8 44.6 Z"
-        fill="url(#difficult-history-paper)" stroke="#F5E6CC" strokeWidth={0.72} />
-      <Path d="M25.2 37.3 Q34.2 33.6 43.3 35.9 V44.6
-               Q34.5 42.4 25.2 45 Z"
-        fill="#B3A58F" stroke="#EBDCC3" strokeWidth={0.72} />
-      <Path d="M7 37 V46.7 Q16.7 44.1 25.2 47.1 Q35 44.3 44.6 46.7 V37"
-        stroke="#A7866C" strokeWidth={1.13} fill="none" strokeLinejoin="round" />
-      <Path d="M11.3 39.2 L19.1 40.6 M10.7 41.8 L20.9 43.2
-               M30.4 40.3 L40.3 38.9 M30.1 43.3 L40 41.6"
-        stroke="#766E66" strokeWidth={0.59} strokeOpacity={0.69} fill="none" />
-      {/* Lantern: modest warm light, not flames or sensational symbolism. */}
-      <Path d="M21.7 14.7 C21.7 12.5 23.5 10.5 26 10.5
-               C28.5 10.5 30.3 12.5 30.3 14.7"
-        fill="none" stroke="#D9BD93" strokeWidth={1.65} strokeLinecap="round" />
-      <Path d="M23.8 10.5 V8.3 C23.8 5.3 28.2 5.3 28.2 8.3 V10.5"
-        stroke="#C7A889" strokeWidth={1.2} fill="none" />
-      <Path d="M20.5 16.5 L23.2 12.9 H28.8 L31.5 16.5 Z"
-        fill="url(#difficult-history-copper)" stroke="#FFE4BD" strokeWidth={0.75} />
-      <Path d="M22 16.9 H30 L31.7 32.7 H20.3 Z"
-        fill="url(#difficult-history-glass)" stroke="#E0C5A2" strokeWidth={1.2} />
-      <Path d="M23.5 17.7 L22.3 31.5 M28.5 17.7 L29.7 31.5"
-        stroke="#FFF0C6" strokeWidth={0.57} opacity={0.69} />
-      <Path d="M20.6 17 H31.4 M20.9 30.9 H31.1"
-        stroke="#6D5B61" strokeWidth={0.75} />
-      <Path d="M25.9 19.6 V28.1 M22.8 25.7 Q25.8 21.3 29.3 25.7"
-        fill="none" stroke="#F2D79D" strokeWidth={0.64} opacity={0.83} />
-      <Path d="M26 19.4 Q28.9 23.2 27.3 26.5 Q26.3 28 24.7 26.7
-               Q23.3 24.4 26 19.4 Z"
-        fill="#F5D493" stroke="#FFF1C7" strokeWidth={0.52} opacity={0.8} />
-      <Path d="M19.6 32.8 H32.4 L34.1 35.1 H17.9 Z"
-        fill="url(#difficult-history-copper)" stroke="#E6D0A9" strokeWidth={0.75} />
-      <Rect x={19.5} y={35.1} width={13} height={1.5} rx={0.25}
-        fill="#8B7770" stroke="#DECBAA" strokeWidth={0.5} />
-      {/* Faint archival seal; deliberate, low-contrast engraved detail. */}
-      <Circle cx={37.5} cy={30} r={3.3} fill="none" stroke="#B9A38B"
-        strokeWidth={0.72} strokeOpacity={0.5} />
-      <Path d="M36.1 30.1 L37.4 31.2 L39.4 28.9"
-        stroke="#B9A38B" strokeWidth={0.72} fill="none" opacity={0.65} />
-      <Path d="M14.1 12.5 L12.4 10.7 M38.5 12.5 L40.2 10.7"
-        stroke="#D5BB97" strokeWidth={0.62} opacity={0.5} />
+      <Ellipse cx={26} cy={46.4} rx={21.8} ry={2.1} fill="#0A111C" opacity={0.35} />
+      {/* Tucked case notes peek out above the folder: typed lines and a seal. */}
+      <Path d="M17.5 6.7 L40.4 5.9 L41.3 30.7 L18.2 31.5 Z"
+        fill="#7E746A" stroke="#CBBDA9" strokeWidth={0.5} />
+      <Path d="M15.2 8.4 L38.2 7.1 L39.5 30.9 L16.9 32.3 Z"
+        fill="url(#difficult-history-paper)" stroke="#F6E6C9" strokeWidth={0.72} />
+      <Path d="M19.1 12.1 L32.3 11.4 M19.4 15 L35.4 14.1
+               M19.8 18.1 L35.8 17.2 M20.1 21.1 L32.1 20.4
+               M20.5 24.1 L35.2 23.3"
+        fill="none" stroke="#766F69" strokeWidth={0.7} opacity={0.65} />
+      <Rect x={20.3} y={26} width={9.5} height={1.25} rx={0.2}
+        fill="#7E7772" opacity={0.43} transform="rotate(-3 20.3 26)" />
+      <Circle cx={35} cy={26.1} r={2.2} fill="none" stroke="#85766A"
+        strokeWidth={0.65} opacity={0.57} />
+      {/* Heavy manila folder, projecting tab, folded corner, and layered shadow. */}
+      <Path d="M4.1 15.9 H15.9 L19.8 19.9 H47.2 V42.9 H4.1 Z"
+        fill="url(#difficult-history-folder)" stroke="#E2C7A6" strokeWidth={0.92} />
+      <Path d="M4.5 16.8 H15.5 L18.5 20.7 H45.6"
+        fill="none" stroke="#F3DFC0" strokeWidth={0.65} opacity={0.72} />
+      <Path d="M3.7 25.3 L47.8 22.6 L46.2 45.4 H6.2 Z"
+        fill="url(#difficult-history-flap)" stroke="#E6D0AD" strokeWidth={0.87}
+        strokeLinejoin="round" />
+      <Path d="M4.8 26.6 L46.4 24.4 M7.5 44.1 H45.1"
+        fill="none" stroke="#F2DFC0" strokeWidth={0.55} opacity={0.69} />
+      <Path d="M44.4 24.6 L46.4 24.4 L45.1 30.5 L41.8 28.8 Z"
+        fill="#6E6256" opacity={0.7} />
+      {/* Stamped classification mark: muted oxide red, not a bright alert badge. */}
+      <G transform="rotate(-11 31 34)" opacity={0.84}>
+        <Rect x={23.9} y={29.6} width={18.1} height={8.7} rx={0.4}
+          fill="none" stroke="#A45E59" strokeWidth={1.18} />
+        <Rect x={25.1} y={30.8} width={15.7} height={6.3}
+          fill="none" stroke="#A45E59" strokeWidth={0.47} />
+        <Path d="M26.5 34 H39.5 M28.1 32.5 L29.1 35.5 M31 32.5 V35.5
+                 M33.3 32.5 L34.2 35.5 M36.1 32.5 L38.1 35.5"
+          fill="none" stroke="#9E5550" strokeWidth={0.85} strokeLinecap="round" />
+      </G>
+      <Path d="M10.4 33.7 L18.3 33.2 M10.8 36.4 L18.1 36
+               M11.3 39.2 L16.5 39"
+        stroke="#514F4C" strokeWidth={0.67} opacity={0.55} />
+      <Path d="M6.9 28.7 L7.5 31.2 L6.9 32.8 M43 41.6 L44.7 42.4"
+        stroke="#4C4A49" strokeWidth={0.48} opacity={0.5} fill="none" />
     </Svg>
   );
 }

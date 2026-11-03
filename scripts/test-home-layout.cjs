@@ -154,6 +154,62 @@ for (const category of categories) {
   card.props.onPress();
   assert.equal(actions.at(-1), "category:" + category.id, "category navigation unchanged");
 }
+// Icon-specific regressions: geometry, textures and motifs must remain distinct.
+// All seven still share the layout, navigation and accessibility tests above.
+const drawn = id => nodes(worldArtwork[id]({ size: 32, displayScale: 1.18 }));
+const gradientIds = id => drawn(id).filter(node => node.type === "linearGradient")
+  .map(node => node.props.id);
+const historyArt = drawn("history");
+assert.ok(gradientIds("history").includes("history-sarcophagus-front"),
+  "History uses layered stone material");
+assert.ok(gradientIds("history").includes("history-sarcophagus-relief"),
+  "History includes recessed sculpted relief");
+assert.ok(historyArt.filter(node => node.type === "circle").length >= 7,
+  "sarcophagus includes carved figures and surface weathering");
+assert.ok(historyArt.filter(node => node.type === "path").length >= 12,
+  "sarcophagus remains a three-dimensional decorated chest");
+
+const mothArt = drawn("nature");
+assert.ok(mothArt.some(node => node.type === "g"
+  && node.props.transform === "translate(52 0) scale(-1 1)"),
+  "nature wings are geometrically mirrored around the body");
+assert.ok(gradientIds("nature").includes("nature-moth-forewing"));
+assert.ok(gradientIds("nature").includes("nature-moth-hindwing"));
+assert.ok(mothArt.filter(node => node.type === "ellipse").length >= 4,
+  "moth has paired, engraved eyespots");
+assert.ok(mothArt.filter(node => node.type === "path").length >= 16,
+  "moth has detailed naturalistic wing patterns");
+
+const painting = drawn("culture");
+assert.ok(gradientIds("culture").includes("culture-night-sky"),
+  "the Arts icon depicts an original night sky");
+assert.ok(gradientIds("culture").includes("culture-frame-gold"),
+  "the painting keeps a gilded perspective frame");
+assert.ok(painting.filter(node => node.type === "circle").length >= 4,
+  "moon and constellation stars are present");
+assert.ok(painting.filter(node => node.type === "path").length >= 12,
+  "painting has its own sky, seascape and wood bevel geometry");
+
+const archive = drawn("difficult-history");
+assert.ok(gradientIds("difficult-history").includes("difficult-history-folder"));
+assert.ok(gradientIds("difficult-history").includes("difficult-history-paper"));
+assert.ok(archive.some(node => node.type === "g"
+  && node.props.transform === "rotate(-11 31 34)"),
+  "classification stamp remains angled on archival folder");
+assert.ok(archive.some(node => node.type === "rect"
+  && node.props.stroke === "#A45E59"),
+  "classification stamp remains a muted oxide red");
+assert.ok(archive.filter(node => node.type === "path").length >= 11,
+  "document layers and folded folder remain dimensional");
+
+// These three landmarks are deliberately out of scope for the redesign.
+for (const [id, material] of [
+  ["science", "science-brass"], ["technology", "technology-chip"],
+  ["geography", "geography-sea"],
+]) {
+  assert.ok(gradientIds(id).includes(material), id + " retains its existing identity");
+}
+
 const futureCategory = { id: "future-world", title: "Νέος κόσμος", emoji: "🌟" };
 const futureTree = home({ ...props, categories: [...categories, futureCategory] });
 const futureCard = nodes(futureTree).find(node => node.props?.testID === "home-category-future-world");
