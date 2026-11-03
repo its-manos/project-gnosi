@@ -87,6 +87,14 @@ assert.ok(frame);
 assert.equal(frame.props.style[2].aspectRatio, 360 / 540, "grow map into available screen height");
 let islands = nodes(tree).filter(node => node.props?.testID?.startsWith("atlas-island-"));
 assert.equal(islands.length, 3);
+// Progress-bearing islands must not draw the lower inset coastline through
+// their tracks. The loading/no-progress island retains the full contour.
+const insetPaths = nodes(tree).filter(node => node.type === "path"
+  && node.props?.strokeDasharray === "2 4");
+assert.equal(insetPaths.length, 3);
+assert.ok(!insetPaths[0].props.d.endsWith(" Z"), "progress island has open upper contour");
+assert.ok(!insetPaths[1].props.d.endsWith(" Z"), "progress island has open upper contour");
+assert.ok(insetPaths[2].props.d.endsWith(" Z"), "unstarted island keeps closed inset");
 assert.equal(islands[0].props.accessibilityRole, "button");
 assert.match(islands[0].props.accessibilityLabel, /1 από 2/);
 islands[0].props.onPress();
@@ -114,6 +122,9 @@ assert.match(screen, /<FantasyMap/);
 assert.match(screen, /getAtlasRegionProgress/);
 assert.match(screen, /getAtlasCategoryProgress/);
 assert.match(screen, /scrollEnabled={canScroll}/);
+assert.match(screen, /chromeMeasured/, "map height uses measured viewport chrome");
+assert.match(screen, /onControlsHeightChange=/);
+assert.doesNotMatch(screen, /\{category\.description\}/, "remove redundant category description");
 assert.match(screen, /reduceMotionChanged/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?completedLessonIds={app\.completedLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?inProgressLessonIds={app\.inProgressLessonIds}/);
