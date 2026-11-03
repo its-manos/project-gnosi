@@ -110,6 +110,31 @@ const firstList = nodes(tree).find(node => node.props?.accessibilityLabel?.start
 firstList.props.onPress();
 assert.deepEqual(selected, ["ancient", "ancient"]);
 showList = false;
+// Preserve title punctuation on island labels, including '&'.
+tree = map({ ...props, regions: [{ id: "astro", title: "Αστρονομία & Διάστημα",
+  status: "new", progressLoaded: true, totalLessons: 11, completedLessons: 0 }] });
+assert.ok(nodes(tree).some(node => node.type === "text"
+  && typeof node.props?.children === "string" && node.props.children.includes("&")),
+  "island labels must preserve ampersands from catalogue titles");
+
+// Five-destination layouts keep illustrated landmasses within the atlas frame.
+const five = [
+  ...regionData,
+  { id: "brain", title: "Εγκέφαλος και Ψευδαισθήσεις", progressLoaded: true,
+    totalLessons: 9, completedLessons: 6, status: "in-progress" },
+  { id: "earth", title: "Γεωλογία και η κρυμμένη Γη", progressLoaded: true,
+    totalLessons: 5, completedLessons: 1, status: "in-progress" },
+];
+tree = map({ ...props, regions: five });
+const filledLand = nodes(tree).filter(node => node.type === "path"
+  && typeof node.props?.fill === "string" && node.props.fill.startsWith("url(#land-"));
+assert.equal(filledLand.length, 5);
+for (const pathNode of filledLand) {
+  const coords = [...pathNode.props.d.matchAll(/(-?\\d+(?:\\.\\d+)?) (-?\\d+(?:\\.\\d+)?)/g)];
+  const xs = coords.map(match => Number(match[1]));
+  assert.ok(Math.min(...xs) >= 9 && Math.max(...xs) <= 351,
+    "island coastline must leave room for glow inside map frame");
+}
 tree = map({ ...props, minHeight: 0 });
 frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
 assert.equal(frame.props.style[2].aspectRatio, 360 / 304,
