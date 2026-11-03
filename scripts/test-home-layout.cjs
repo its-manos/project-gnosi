@@ -116,6 +116,8 @@ const HistoryCard = nodes(tree).find(node => node.props?.testID === "home-catego
 const illustrationNode = nodes(HistoryCard).find(node => node.type === HistoryWorldIcon);
 assert.ok(illustrationNode, "History card uses the original SVG");
 assert.equal(illustrationNode.props.size, 32);
+assert.equal(illustrationNode.props.displayScale, 1.18,
+  "History is enlarged visually without claiming more card layout space");
 assert.ok(!nodes(HistoryCard).some(node => node.props?.children === "🏛️"));
 const illustration = HistoryWorldIcon({ size: 32 });
 assert.equal(illustration.type, "svg");
@@ -123,6 +125,13 @@ assert.equal(illustration.props.width, 32);
 assert.equal(illustration.props.height, 32);
 assert.equal(illustration.props.accessible, false);
 assert.equal(illustration.props.pointerEvents, "none");
+assert.equal(illustration.props.style.transform[0].scale, 1,
+  "default SVG preserves intrinsic size when no visual scale is requested");
+const enlargedIllustration = HistoryWorldIcon({ size: 32, displayScale: 1.18 });
+assert.equal(enlargedIllustration.props.width, 32);
+assert.equal(enlargedIllustration.props.height, 32);
+assert.equal(enlargedIllustration.props.style.transform[0].scale, 1.18,
+  "larger rendering keeps original Yoga layout dimensions");
 assert.ok(nodes(illustration).filter(node => node.type === "path").length >= 15);
 assert.ok(nodes(illustration).filter(node => node.type === "linearGradient").length >= 2);
 for (const category of categories.filter(item => item.id !== "history")) {
@@ -181,6 +190,8 @@ const centeredGrid = nodes(tree).find(node => node.props?.style?.flexWrap === "w
   && node.props?.style?.justifyContent === "center");
 assert.ok(centeredGrid, "knowledge worlds are centered with equal grid gaps");
 assert.equal(centeredGrid.props.style.columnGap, 8);
+assert.equal(HistoryCard.props.style({ pressed: false })[0].minHeight, 78,
+  "History card dimensions remain unchanged on normal screens");
 const firstWorld = nodes(tree).find(node => node.props?.testID === "home-category-history");
 const cardPercent = Number.parseFloat(firstWorld.props.style({ pressed: false })[0].width) / 100;
 for (const phoneWidth of [320, 360, 393]) {
