@@ -8,6 +8,10 @@ type MapRegion = {
   emoji?: string;
   detail?: string;
   color?: string;
+  totalLessons?: number;
+  completedLessons?: number;
+  progressLoaded?: boolean;
+  status?: "loading" | "coming-soon" | "new" | "in-progress" | "complete";
 };
 
 type Props = {
@@ -15,6 +19,7 @@ type Props = {
   onSelectRegion: (id: string) => void;
   emptyMessage?: string;
   overview?: boolean;
+  minHeight?: number;
 };
 
 type Point = { x: number; y: number };
@@ -29,7 +34,6 @@ type PositionedRegion = MapRegion & {
 
 const MAP_WIDTH = 360;
 const ROW_GAP = 146;
-const TOP_PADDING = 76;
 
 const LAND_COLORS = [
   "#716287",
@@ -66,12 +70,18 @@ function overviewRows(count: number): number[] {
   return Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
 }
 
-function makeLayout(regions: MapRegion[], overview: boolean): PositionedRegion[] {
+function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number): PositionedRegion[] {
   const count = regions.length;
   if (count === 0) return [];
 
   const columns = columnCount(count);
   const cellWidth = MAP_WIDTH / columns;
+  const totalRows = Math.ceil(count / columns);
+  // Anchor islands to the available canvas, rather than leaving a short map
+  // floating above an empty viewport. Row spacing stays safe for long titles.
+  const edgeMargin = totalRows <= 1 ? mapHeight / 2
+    : Math.max(78, Math.min(138, (mapHeight - (totalRows - 1) * 140) / 2));
+  const rowStep = totalRows <= 1 ? 0 : (mapHeight - edgeMargin * 2) / (totalRows - 1);
 
   const rowSizes = overviewRows(count);
   return regions.map((region, index) => {
@@ -101,17 +111,15 @@ function makeLayout(regions: MapRegion[], overview: boolean): PositionedRegion[]
     const cx = count === 1
       ? MAP_WIDTH / 2
       : cellWidth * (column + 0.5) + rowOffset + shift + horizontalDrift;
-    const verticalDrift = Math.sin((column + 1) * 1.91 + row * 1.47) * 18;
-    const cy = count === 1
-      ? 82
-      : TOP_PADDING + row * ROW_GAP + verticalDrift + (noise - 0.5) * 7;
+    const verticalDrift = Math.sin((column + 1) * 1.91 + row * 1.47) * 4;
+    const cy = totalRows === 1 ? mapHeight / 2
+      : edgeMargin + row * rowStep + verticalDrift;
 
-    const rx = count === 1
-      ? 73
-      : Math.min(76, cellWidth * (columns >= 4 ? 0.34 : 0.36)) * (0.91 + noise * 0.13);
-    const ry = count === 1
-      ? 59
-      : Math.min(52, cellWidth * 0.43) * (0.91 + stableNoise(index + 5) * 0.15);
+    const rx = count === 1 ? 80
+      : Math.min(82, cellWidth * (columns >= 4 ? 0.34 : 0.42)) * (0.97 + noise * 0.06);
+    const ry = count === 1 ? 69
+      : Math.min(70, cellWidth * (columns >= 4 ? 0.36 : 0.38))
+        * (0.97 + stableNoise(index + 5) * 0.06);
 
     return {
       ...region,
@@ -194,12 +202,14 @@ export default function FantasyMap({
   onSelectRegion,
   emptyMessage = "Νέες περιοχές θα εμφανιστούν εδώ.",
   overview = false,
+  minHeight = 0,
 }: Props) {
   const [showList, setShowList] = useState(false);
-  const positionedRegions = useMemo(() => makeLayout(regions, overview), [regions, overview]);
   const columns = columnCount(regions.length);
   const rows = Math.max(1, overview ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
-  const mapHeight = regions.length === 1 ? 168 : overview ? rows * 128 + 32 : rows * ROW_GAP + 16;
+  const naturalHeight = regions.length === 1 ? 198 : overview ? rows * 128 + 32 : rows * 150 + 28;
+  const mapHeight = overview ? naturalHeight : Math.max(naturalHeight, Math.min(960, minHeight));
+  const positionedRegions = useMemo(() => makeLayout(regions, overview, mapHeight), [regions, overview, mapHeight]);
   // Larger text is practical because the layout uses at most three columns for
   // up to 24 regions. Large catalogues retain a list view for full labels.
   const labelFontSize = overview ? 12.5 : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
@@ -228,16 +238,21 @@ export default function FantasyMap({
   return (
     <View style={styles.container}>
       <View style={[styles.viewControls, overview && styles.overviewControls]}>
-        {overview ? <Text style={styles.overviewLabel}>Θεματικές</Text> : null}
-        {([{ label: "Χάρτης", list: false }, { label: "Λίστα", list: true }] as const).map((mode) => (
-          <Pressable key={mode.label} accessibilityRole="button"
-            accessibilityLabel={mode.list ? "Προβολή ως λίστα" : "Προβολή χάρτη"}
-            accessibilityState={{ selected: showList === mode.list }}
-            onPress={() => setShowList(mode.list)}
-            style={[styles.viewButton, showList === mode.list && styles.viewButtonActive]}>
-            <Text style={[styles.viewButtonText, showList === mode.list && styles.viewButtonTextActive]}>{mode.label}</Text>
-          </Pressable>
-        ))}
+        <Text style={overview ? styles.overviewLabel : styles.mapEyebrow}>
+          {overview ? "Θεματικές" : regions.length + " ΠΕΡΙΟΧΕΣ"}
+        </Text>
+        <View style={styles.modeSwitch}>
+          {([{ label: "Χάρτης", list: false }, { label: "Λίστα", list: true }] as const).map(mode => (
+            <Pressable key={mode.label} accessibilityRole="button"
+              testID={mode.list ? "atlas-list-toggle" : "atlas-map-toggle"}
+              accessibilityLabel={mode.list ? "Προβολή ως λίστα" : "Προβολή χάρτη"}
+              accessibilityState={{ selected: showList === mode.list }}
+              onPress={() => setShowList(mode.list)}
+              style={[styles.viewButton, showList === mode.list && styles.viewButtonActive]}>
+              <Text style={[styles.viewButtonText, showList === mode.list && styles.viewButtonTextActive]}>{mode.label}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
       {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame, { aspectRatio: MAP_WIDTH / mapHeight }]}>
       <Svg
@@ -309,15 +324,19 @@ export default function FantasyMap({
               pointerEvents="none"
             >
               <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={0.6} />
-              <Path d={islandPath} fill="none" stroke={region.fill} strokeWidth={13} strokeOpacity={0.09} />
+              <Path d={islandPath} fill="none"
+                stroke={region.status === "in-progress" ? "#B1A5FF" : region.fill}
+                strokeWidth={region.status === "in-progress" ? 17 : 13}
+                strokeOpacity={region.status === "in-progress" ? 0.25 : 0.09} />
               <Path d={islandPath} fill="none" stroke="#94C0B7" strokeWidth={6} strokeOpacity={0.13} />
               <Path
                 d={islandPath}
                 fill={`url(#land-${region.seed})`}
                 fillOpacity={0.92}
-                stroke="#CFC9A9"
-                strokeWidth={1.35}
-                strokeOpacity={0.62}
+                stroke={region.status === "complete" ? "#E5C989"
+                  : region.status === "in-progress" ? "#C2B3FF" : "#CFC9A9"}
+                strokeWidth={region.status === "in-progress" ? 2 : 1.35}
+                strokeOpacity={region.status === "in-progress" || region.status === "complete" ? 0.95 : 0.62}
               />
               <Path
                 d={innerPath}
@@ -361,23 +380,29 @@ export default function FantasyMap({
             reduce the visible white fill of small glyphs on Android. */}
         {positionedRegions.map((region) => {
           const labelLines = wrapTitle(region.title, maxLabelChars);
-          const labelStartY = region.cy + 14;
-          const detailY = labelStartY + labelLines.length * (labelFontSize + 2) + 1;
+          const labelStartY = region.cy - 3;
+          const detailY = labelStartY + labelLines.length * (labelFontSize + 2) + 3;
+          const barY = region.cy + 43;
 
           return (
             <G key={`label-${region.id}`} opacity={1} fillOpacity={1} stroke="none"
+              testID={`atlas-island-${region.id}`}
+              accessible accessibilityRole="button"
+              accessibilityLabel={region.title + (region.progressLoaded
+                ? ", " + region.completedLessons + " από " + region.totalLessons + " μαθήματα"
+                : region.status === "coming-soon" ? ", σύντομα" : "")}
               onPress={() => onSelectRegion(region.id)}>
               {/* Preserve the whole island as a touch target, including coasts. */}
               <Path d={smoothClosedPath(makeIslandPoints(region.cx, region.cy, region.rx, region.ry, region.seed))}
                 fill="transparent" />
               <SvgText
                 x={region.cx}
-                y={region.cy - 5}
-                fontSize={columns >= 4 ? 12 : 18}
+                y={region.cy - 22}
+                fontSize={columns >= 4 ? 12 : 20}
                 textAnchor="middle"
                 fill="#FFFFFF"
               >
-                {region.emoji ?? "✦"}
+                {region.status === "complete" ? "✓" : region.emoji ?? "✦"}
               </SvgText>
 
               {labelLines.map((line, index) => (
@@ -398,13 +423,25 @@ export default function FantasyMap({
                 <SvgText
                   x={region.cx}
                   y={detailY}
-                  fontSize={columns >= 5 ? 7.2 : columns === 4 ? 7.8 : 8.2}
-                  fontWeight="500"
+                  fontSize={columns >= 5 ? 7.2 : columns === 4 ? 7.8 : 9}
+                  fontWeight="600"
                   textAnchor="middle"
                   fill="#F0E9D6"
                 >
                   {region.detail}
                 </SvgText>
+              ) : null}
+              {region.progressLoaded && region.totalLessons ? (
+                <G>
+                  <Rect x={region.cx - region.rx * 0.42} y={barY}
+                    width={region.rx * 0.84} height={3.5} rx={2}
+                    fill="#101B29" opacity={0.9} />
+                  <Rect x={region.cx - region.rx * 0.42} y={barY}
+                    width={region.rx * 0.84 * Math.max(0, Math.min(1,
+                      (region.completedLessons ?? 0) / region.totalLessons))}
+                    height={3.5} rx={2}
+                    fill={region.status === "complete" ? "#E5C989" : "#B1A5FF"} />
+                </G>
               ) : null}
             </G>
           );
@@ -420,16 +457,27 @@ export default function FantasyMap({
               style={[styles.regionListItem, overview && styles.overviewListItem]}
               onPress={() => onSelectRegion(region.id)}
               accessibilityRole="button"
-              accessibilityLabel={`${region.title}${region.detail ? `, ${region.detail}` : ""}`}
+              accessibilityLabel={region.title + (region.progressLoaded
+                ? ", " + region.completedLessons + " από " + region.totalLessons + " μαθήματα"
+                : region.detail ? ", " + region.detail : "")}
               accessibilityHint="Άνοιγμα αυτής της χώρας ή περιοχής γνώσης"
             >
               <View style={[styles.regionListIcon, { backgroundColor: region.fill }]}>
-                <Text style={styles.regionListEmoji}>{region.emoji ?? "✦"}</Text>
+                <Text style={styles.regionListEmoji}>{region.status === "complete" ? "✓" : region.emoji ?? "✦"}</Text>
               </View>
               <View style={styles.regionListText}>
                 <Text style={styles.regionListTitle}>{region.title}</Text>
                 {region.detail ? (
-                  <Text style={styles.regionListDetail}>{region.detail}</Text>
+                  <Text style={styles.regionListDetail}>{region.progressLoaded
+                    ? region.completedLessons + " / " + region.totalLessons + " μαθήματα"
+                    : region.detail}</Text>
+                ) : null}
+                {region.progressLoaded && region.totalLessons ? (
+                  <View style={styles.listProgressTrack}>
+                    <View style={[styles.listProgressFill, {
+                      width: Math.round((region.completedLessons ?? 0) / region.totalLessons * 100) + "%",
+                    }]} />
+                  </View>
                 ) : null}
               </View>
               <Text style={styles.regionListArrow}>›</Text>
@@ -447,26 +495,37 @@ const styles = StyleSheet.create({
   },
   mapFrame: {
     width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
     overflow: "hidden",
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#33454C",
-    marginBottom: 12,
+    marginBottom: 0,
   },
-  viewControls: { flexDirection: "row", alignSelf: "flex-end", backgroundColor: "#181E2A", padding: 4, borderRadius: 14, marginVertical: 12 },
+  viewControls: { flexDirection: "row", alignSelf: "center", width: "100%", maxWidth: 520,
+    alignItems: "center", justifyContent: "space-between", marginTop: 3, marginBottom: 8 },
+  mapEyebrow: { color: "#A7AAC1", fontSize: 10, lineHeight: 16, fontWeight: "800", letterSpacing: 1.1 },
+  modeSwitch: { flexDirection: "row", borderRadius: 12, backgroundColor: "#191D2A", padding: 3 },
   overviewFrame: { maxWidth: 520, alignSelf: "center" },
-  overviewControls: { flexWrap: "wrap", rowGap: 8, alignSelf: "stretch", alignItems: "center", marginTop: 4, marginBottom: 10, backgroundColor: "transparent", padding: 0 },
+  overviewControls: { flexWrap: "wrap", rowGap: 8, marginTop: 4, marginBottom: 10 },
   overviewLabel: { flex: 1, minWidth: 72, color: "#AAB3BF", fontSize: 13, lineHeight: 20, paddingRight: 8 },
   overviewListItem: { paddingVertical: 10, paddingHorizontal: 12, minHeight: 60 },
-  viewButton: { paddingHorizontal: 20, paddingVertical: 11, borderRadius: 10, minHeight: 44 },
+  viewButton: { paddingHorizontal: 13, paddingVertical: 8, borderRadius: 9, minHeight: 40, justifyContent: "center" },
   viewButtonActive: { backgroundColor: "#343448" },
-  viewButtonText: { color: "#AAB3BF", fontSize: 14, fontWeight: "600" },
+  viewButtonText: { color: "#AAB3BF", fontSize: 12, fontWeight: "700" },
   viewButtonTextActive: { color: "#F3EEE2" },
   regionList: {
     gap: 8,
     marginTop: 2,
     marginBottom: 8,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
   },
+  listProgressTrack: { height: 4, borderRadius: 3, backgroundColor: "#30354A",
+    marginTop: 7, overflow: "hidden", width: "85%" },
+  listProgressFill: { height: "100%", borderRadius: 3, backgroundColor: "#B1A5FF" },
   regionListItem: {
     flexDirection: "row",
     alignItems: "center",
