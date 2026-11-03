@@ -17,11 +17,10 @@ type Props = {
   onOpenSubcategory: (subcategoryId: string, categoryId: string) => void;
 };
 
-// The map component supports a bundled visual layer while preserving native
-// labels, taps and progress. The image is deliberately opt-in until the
-// approved artwork is committed to assets/maps/history-midnight-atlas.webp.
-// This avoids a broken Metro require in the review branch.
-const HISTORY_ATLAS_IMAGE: ImageSourcePropType | undefined = undefined;
+// This locally bundled artwork is only shown for History's three destinations.
+// Other category atlases and Home's knowledge overview keep their SVG treatment.
+const HISTORY_ATLAS_IMAGE: ImageSourcePropType =
+  require("../../assets/maps/history-midnight-atlas.webp");
 
 const REGION_COLORS = [
   "#7867AA", "#487C79", "#A08051", "#577C9C", "#9B6D86", "#658A75",
