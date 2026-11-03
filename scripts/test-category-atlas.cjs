@@ -277,8 +277,10 @@ assert.match(screen, /history-midnight-atlas-screen-background/,
   "History background must be anchored behind the entire screen including header");
 assert.match(screen, /source={HISTORY_ATLAS_IMAGE} resizeMode="stretch"/,
   "wallpaper fits the complete safe-area viewport without crop");
-assert.match(screen, /style={StyleSheet.absoluteFillObject}/,
+assert.match(screen, /style={styles.screenBackground}/,
   "wallpaper positioning must not consume layout space");
+assert.match(screen, /screenBackground: \{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 \}/,
+  "screen background has explicit absolute-fill coordinates for RN 0.88");
 assert.match(screen, /style={styles.screenRoot}/,
   "screen root clips decorative background to the viewport");
 assert.match(screen, /fitHeight={isHistoryAtlas \? fittedMapHeight : undefined}/,
