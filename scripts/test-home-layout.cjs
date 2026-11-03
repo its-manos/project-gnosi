@@ -123,7 +123,7 @@ assert.ok(nodes(mapTree).some(node => node.type === "svg"));
 assert.equal(nodes(mapTree).filter(node => node.type === "g" && node.props?.onPress).length, 7);
 
 // Each subcategory has an accessible, ordered series of checkpoints.
-const path = Array.from({ length: 30 }, (_v, index) => ({
+const adventureLessons = Array.from({ length: 30 }, (_v, index) => ({
   id: "anc-" + index, subcategoryId: "ancient-greece", title: "Ενότητα " + (index + 1),
 }));
 const access = (lesson, catalogue, completed, inProgress) => {
@@ -138,7 +138,7 @@ const adventure = compile("src/screens/SubcategoryScreen.tsx", {
 });
 const adventureProps = {
   category: categories[0], subcategory: { id: "ancient-greece", title: "Αρχαία Ελλάδα", description: "Ιστορικό ταξίδι" },
-  lessons: path, completedLessonIds: [], inProgressLessonIds: [], progressLoaded: true,
+  lessons: adventureLessons, completedLessonIds: [], inProgressLessonIds: [], progressLoaded: true,
   onBack: () => actions.push("back"), onOpenLesson: id => actions.push("open:" + id),
 };
 tree = adventure(adventureProps);
