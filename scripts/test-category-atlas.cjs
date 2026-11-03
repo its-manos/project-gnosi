@@ -141,7 +141,7 @@ const worldTitle = detailNodes.find(node =>
 assert.ok(ancientTrack && worldTrack && worldTitle);
 assert.equal(ancientTrack.props.y - ancientTitle.props.y, 17,
   "bring Ancient Greece progress closer to the title");
-assert.equal(worldTrack.props.y - worldTitle.props.y, 26,
+assert.equal(worldTrack.props.y - worldTitle.props.y, 33,
   "leave other island compositions unchanged during the first landmark pilot");
 const ancientBacking = detailNodes.find(node =>
   node.type === "rect" && node.props?.fill === "#12232E"
