@@ -30,8 +30,7 @@ export type AppScreen =
   | "player-stats"
   | "account"
   | "progress"
-  | "saved"
-  | "search";
+  | "saved";
 
 
 export function useLearningApp() {

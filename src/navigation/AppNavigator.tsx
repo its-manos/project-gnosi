@@ -35,7 +35,6 @@ import ReviewMistakesScreen from "../screens/ReviewMistakesScreen";
 import WeeklyReviewScreen from "../screens/WeeklyReviewScreen";
 import AccountScreen from "../screens/AccountScreen";
 import SavedLessonsScreen from "../screens/SavedLessonsScreen";
-import SearchScreen from "../screens/SearchScreen";
 import DailyChallengeScreen from "../screens/DailyChallengeScreen";
 import DailyChallengePreferencesScreen from "../screens/DailyChallengePreferencesScreen";
 import SyncStatus from "../components/SyncStatus";
@@ -263,24 +262,18 @@ export default function AppNavigator() {
         <HomeScreen
           onKnowledgeReview={() => openKnowledgeReview("home")}
           onOpenProfile={() => openProfile("home")}
-          onWeeklyReview={() => openKnowledgeReview("progress")}
           categories={categories}
           subcategories={subcategories}
           featuredLesson={discovery.featured}
-          suggestedLessons={discovery.suggestions}
           progressLoaded={app.progressLoaded}
           completedCount={app.completedLessonIds.length}
-          savedCount={bookmarks.savedLessonIds.length}
           inProgressLesson={inProgressLesson}
           inProgressAnsweredCount={app.inProgressAnsweredCount}
           inProgressQuestionCount={app.inProgressQuestionCount}
           onResumeLesson={app.openLesson}
           onOpenCategory={app.openCategory}
           onOpenLesson={app.openLesson}
-          onOpenSaved={() => app.setScreen("saved")}
-          onOpenSearch={() => app.setScreen("search")}
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
-          onOpenDailyPreferences={() => openDailyPreferences("home")}
         />
       );
       break;
@@ -321,21 +314,6 @@ export default function AppNavigator() {
       );
       break;
 
-    case "search":
-      screenContent = (
-        <SearchScreen
-          completedLessonIds={app.completedLessonIds}
-          inProgressLessonIds={app.inProgressLessonIds}
-          progressLoaded={app.progressLoaded}
-          lessons={lessons}
-          categories={categories}
-          subcategories={subcategories}
-          onBack={() => navigateTo("home")}
-          onOpenLesson={app.openLesson}
-        />
-      );
-      break;
-
     case "saved":
       screenContent = (
         <SavedLessonsScreen
@@ -357,6 +335,9 @@ export default function AppNavigator() {
           category={activeCategory}
           subcategories={categorySubcategories}
           lessons={lessons}
+          completedLessonIds={app.completedLessonIds}
+          inProgressLessonIds={app.inProgressLessonIds}
+          progressLoaded={app.progressLoaded}
           onBack={() => navigateTo("home")}
           onOpenSubcategory={app.openSubcategory}
         />

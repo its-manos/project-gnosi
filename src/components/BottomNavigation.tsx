@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AppScreen } from "../hooks/useLearningApp";
 import { colors } from "../theme";
 
-type NavigationTarget = "home" | "progress" | "search" | "saved";
+type NavigationTarget = "home" | "progress" | "saved";
 
 type Props = {
   currentScreen: AppScreen;
@@ -20,7 +20,6 @@ type Tab = {
 const tabs: Tab[] = [
   { key: "home", label: "Αρχική", accessibilityLabel: "Επιστροφή στην αρχική" },
   { key: "progress", label: "Πρόοδος", accessibilityLabel: "Πρόοδος μαθημάτων και καθημερινών quiz" },
-  { key: "search", label: "Αναζήτηση", accessibilityLabel: "Αναζήτηση μαθημάτων" },
   { key: "saved", label: "Αποθηκευμένα", accessibilityLabel: "Αποθηκευμένα άρθρα" },
 ];
 
@@ -43,15 +42,6 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
     );
   }
 
-  if (name === "search") {
-    return (
-      <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-        <Circle cx={10.8} cy={10.8} r={6.8} stroke={color} strokeWidth={1.8} />
-        <Path d="m16 16 4.5 4.5" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
-      </Svg>
-    );
-  }
-
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <Path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
@@ -62,7 +52,6 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
 function activeTabForScreen(screen: AppScreen): NavigationTarget | null {
   if (["home", "category", "subcategory", "lesson", "quiz", "results", "review"].includes(screen)) return "home";
   if (["progress", "account", "weekly-review"].includes(screen)) return "progress";
-  if (screen === "search") return "search";
   if (screen === "saved") return "saved";
   return null;
 }
@@ -106,24 +95,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    minHeight: 68,
+    minHeight: 60,
     paddingHorizontal: 12,
-    paddingTop: 7,
+    paddingTop: 6,
     backgroundColor: "#0E111C",
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
   tab: {
     flex: 1,
-    minHeight: 52,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    borderRadius: 14,
+    gap: 3,
+    borderRadius: 12,
     paddingHorizontal: 4,
   },
   tabSelected: {
-    backgroundColor: colors.accentSurface,
+    backgroundColor: "rgba(168, 155, 255, 0.16)",
   },
   tabPressed: {
     opacity: 0.72,
