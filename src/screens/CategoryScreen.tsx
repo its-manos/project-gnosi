@@ -28,6 +28,9 @@ export default function CategoryScreen({
   const { width: windowWidth } = useWindowDimensions();
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+  const [navHeight, setNavHeight] = useState(0);
+  const [headingHeight, setHeadingHeight] = useState(0);
+  const [controlsHeight, setControlsHeight] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(true);
   const [entrance] = useState(() => new Animated.Value(0));
   const [zoom] = useState(() => new Animated.Value(0.975));
@@ -79,12 +82,19 @@ export default function CategoryScreen({
     [subcategories, lessons, completedLessonIds, inProgressLessonIds, progressLoaded],
   );
 
-  // The map grows into the actual safe-area viewport, not the device's full
-  // height. It only scrolls when a small phone or larger text requires it.
-  const frameWidth = Math.max(260, Math.min(520, windowWidth - 28));
-  const mapPixels = viewportHeight > 0 ? Math.max(315, viewportHeight - 225) : 390;
-  const minMapHeight = Math.round(mapPixels * 360 / frameWidth);
-  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 2;
+  // Size the atlas against *measured* safe-area content and controls, not a
+  // guessed header allowance. This prevents the few-pixel overscroll on normal
+  // screens while still allowing scrolling when large text needs extra room.
+  const frameWidth = Math.max(1, Math.min(520, windowWidth - 28));
+  const chromeMeasured = viewportHeight > 0 && navHeight > 0 && headingHeight > 0 && controlsHeight > 0;
+  // navBar (10), heading (6), viewControls (3 + 8) margins;
+  // content (4 + 12) padding; 4px tolerance for frame borders/rounding.
+  const chromeSpacing = 10 + 6 + 3 + 8 + 4 + 12 + 4;
+  const usableMapPixels = chromeMeasured
+    ? Math.max(0, viewportHeight - navHeight - headingHeight - controlsHeight - chromeSpacing)
+    : 0;
+  const minMapHeight = Math.floor(usableMapPixels * 360 / frameWidth);
+  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 3;
 
   return (
     <ScrollView testID="category-atlas-screen" style={styles.viewport}
@@ -97,7 +107,10 @@ export default function CategoryScreen({
       onContentSizeChange={(_width, next) => {
         setContentHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
       }}>
-      <View style={styles.navBar}>
+      <View style={styles.navBar} onLayout={event => {
+        const next = event.nativeEvent.layout.height;
+        setNavHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
+      }}>
         <Pressable testID="category-atlas-back" style={styles.back} onPress={onBack}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στους κόσμους γνώσης"
           hitSlop={6}>
@@ -107,7 +120,10 @@ export default function CategoryScreen({
         <View style={styles.rightMark} accessible={false}><Text style={styles.sparkle}>✦</Text></View>
       </View>
 
-      <View style={styles.heading}>
+      <View style={styles.heading} onLayout={event => {
+        const next = event.nativeEvent.layout.height;
+        setHeadingHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
+      }}>
         <View style={styles.headingRow}>
           <Text style={styles.title}>{category.title}</Text>
           <View style={styles.percentBadge} accessible
@@ -117,9 +133,8 @@ export default function CategoryScreen({
             <Text style={styles.percentText}>{progressLoaded ? categoryProgress.percent + "%" : "—"}</Text>
           </View>
         </View>
-        <Text style={styles.description} numberOfLines={2}>{category.description}</Text>
         <View style={styles.progressLine}>
-          <Text style={styles.progressCaption}>Η εξερεύνησή σου</Text>
+          <Text style={styles.progressCaption}>Πρόοδος</Text>
           <Text style={styles.progressCaption}>{progressLoaded
             ? categoryProgress.completed + " / " + categoryProgress.total + " μαθήματα"
             : "Φόρτωση…"}</Text>
@@ -137,6 +152,9 @@ export default function CategoryScreen({
         <FantasyMap
           regions={mapRegions}
           minHeight={minMapHeight}
+          onControlsHeightChange={next => {
+            setControlsHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
+          }}
           onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
           emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
         />
@@ -163,10 +181,9 @@ const styles = StyleSheet.create({
   headingRow: { flexDirection: "row", alignItems: "center", gap: 12, justifyContent: "space-between" },
   title: { flex: 1, color: colors.text, fontSize: 27, lineHeight: 34,
     fontWeight: "900", letterSpacing: -0.45 },
-  percentBadge: { backgroundColor: colors.accentSurface, paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 12, minWidth: 56, alignItems: "center" },
-  percentText: { color: "#C9BCFF", fontSize: 15, fontWeight: "900" },
-  description: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
+  percentBadge: { backgroundColor: colors.accentSurface, paddingHorizontal: 9, paddingVertical: 5,
+    borderRadius: 12, minWidth: 50, alignItems: "center" },
+  percentText: { color: "#C9BCFF", fontSize: 14, fontWeight: "800" },
   progressLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 7 },
   progressCaption: { color: colors.textMuted, fontSize: 11, fontWeight: "700" },
   track: { height: 5, borderRadius: 5, backgroundColor: colors.border, overflow: "hidden", marginTop: 3 },
