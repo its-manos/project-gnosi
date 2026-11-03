@@ -35,7 +35,7 @@ assert.equal(lesson.questions.length, 7);
 assert.deepEqual(lesson.questions.map(q => q.correctIndex), [2,0,3,1,2,3,1]);
 assert.equal(new Set(lesson.questions.map(q => q.id)).size, 7);
 assert.ok(lesson.questions.every(q => q.id.startsWith('stage-') &&
-  q.version === '2' && q.difficulty === 'hard' &&
+  q.version === (['stage-festival-frame','stage-audience-unknown'].includes(q.id) ? '3' : '2') && q.difficulty === 'hard' &&
   q.answers.length === 4 && new Set(q.answers).size === 4 &&
   q.correctIndex >= 0 && q.correctIndex < 4 && q.explanation.length >= 80));
 assert.deepEqual(lesson.checkpoints.map(c => c.questionId), lesson.questions.map(q => q.id));
