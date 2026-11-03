@@ -65,7 +65,7 @@ const byId = (t,id) => nodes(t).find(n => n.props?.testID === id);
 const press = (t,label) => nodes(t).find(n => n.type === 'Pressable' && n.props.accessibilityLabel === label).props.onPress();
 const lay = (n,y) => n.props.onLayout({ nativeEvent: { layout: { y } } });
 function openGate(t) {
-  const gate = nodes(t).find(n => n.type === 'ActionButton' && n.props.label === 'Άνοιγμα ερωτήσεων →');
+  const gate = nodes(t).find(n => n.type === 'ActionButton' && n.props.label === 'Έτοιμος για ερωτήσεις →');
   assert.ok(gate, 'pending checkpoint offers an accessible full-screen entry');
   gate.props.onPress();
   const modalTree = render();
@@ -268,29 +268,51 @@ assert.equal(analyticsScrollEvents.at(-1).last_paragraph,2);
 const observedCount=analyticsScrollEvents.length;
 measuredScroll.props.onScroll({nativeEvent:{contentOffset:{y:0},layoutMeasurement:{height:200}}});
 assert.equal(analyticsScrollEvents.length,observedCount,'Scrolling back cannot lower the last-seen paragraph');
-// Native placement callbacks open a question only when the gate enters the visible viewport.
+// The learner can finish reading, reread and scroll around the checkpoint without
+// being interrupted by a question or hearing an opening cue.
 reset(); tree=render();
 const visibleGate=byId(tree,'reader-checkpoint-0');
 const gateParagraph=byId(tree,'reader-paragraph-3');
 const gateSection=nodes(tree).find(n=>n.type==='View'&&n.props?.onLayout&&n!==gateParagraph&&nodes(n).includes(gateParagraph));
-assert.ok(visibleGate&&gateSection);
-lay(gateSection,120); lay(gateParagraph,320); lay(visibleGate,200);
+assert.ok(visibleGate && gateSection);
+assert.ok(nodes(visibleGate).some(n=>n.type==='Text' &&
+  n.props.children==='Έτοιμος να δοκιμάσεις όσα έμαθες;'));
+lay(gateSection,120); lay(gateParagraph,320);
 const gateScroll=nodes(tree).find(n=>n.type==='ScrollView');
-const cueBefore=openingCues.length;
+const cueBefore=openingCues.length, callsBefore=calls.length;
 gateScroll.props.onScroll({nativeEvent:{contentOffset:{y:0},layoutMeasurement:{height:260}}});
-tree=render();
-assert.equal(byId(tree,'reader-question-screen'),undefined,'a question cannot pop open before its gate is reached');
-assert.equal(openingCues.length,cueBefore);
 gateScroll.props.onScroll({nativeEvent:{contentOffset:{y:400},layoutMeasurement:{height:300}}});
+gateScroll.props.onScroll({nativeEvent:{contentOffset:{y:0},layoutMeasurement:{height:260}}});
+gateScroll.props.onContentSizeChange();
 tree=render();
-assert.ok(byId(tree,'reader-question-screen'),'scrolling to the gate opens the full-screen question automatically');
-assert.equal(openingCues.length,cueBefore+1,'automatic opening triggers one cue');
-gateScroll.props.onScroll({nativeEvent:{contentOffset:{y:400},layoutMeasurement:{height:300}}});
+assert.equal(byId(tree,'reader-question-screen'),undefined,'scrolling over a checkpoint must never open questions');
+assert.equal(openingCues.length,cueBefore,'scrolling and layout must never play the question sound');
+assert.equal(calls.length,callsBefore,'reading and scrolling must not save answers or award progress');
+assert.equal(nodes(tree).find(n=>n.type==='ScrollView').props.scrollEnabled,true,
+ 'reader remains scrollable until the learner deliberately opens questions');
+const button=nodes(visibleGate).find(n=>n.type==='ActionButton' &&
+  n.props.label==='Έτοιμος για ερωτήσεις →');
+assert.ok(button);
+button.props.onPress();
 tree=render();
-assert.equal(openingCues.length,cueBefore+1,'re-renders and scroll repeats never replay the opening cue');
+assert.ok(byId(tree,'reader-question-screen'),'tapping the button opens the full-screen question');
+assert.equal(openingCues.length,cueBefore+1,'the opening cue plays only after the tap');
+button.props.onPress(); tree=render();
+assert.equal(openingCues.length,cueBefore+1,'double tapping cannot replay the cue');
 nodes(tree).find(n=>n.type==='Modal').props.onRequestClose();
 assert.deepEqual(calls.at(-1),['back'],'Android hardware Back invokes the existing leave guard');
 assert.ok(byId(render(),'reader-question-screen'),'declining the leave warning does not reveal the article');
+// An already saved answer must restore the next pending checkpoint, without
+// opening its modal or playing a cue until the learner taps the button.
+reset({ 0: lesson.questions[0].correctIndex });
+tree=render();
+const previousCues=openingCues.length;
+assert.equal(byId(tree,'reader-question-screen'),undefined,'resume does not automatically open a question');
+assert.equal(openingCues.length,previousCues,'resume does not replay an old opening cue');
+assert.ok(byId(tree,'reader-checkpoint-1'),'the next question is still available after resume');
+tree=openGate(tree);
+assert.ok(byId(tree,'reader-modal-question-1'),'manual resume enters the next pending question');
+assert.equal(openingCues.length,previousCues+1,'resume plays the cue only on the new tap');
 // Three-format lesson pilot on an in-memory copy, preserving published data.
 const typedPilot={ ...lesson, questions: lesson.questions.map(q=>({...q})) };
 assert.ok(typedPilot.questions.length>=3);
