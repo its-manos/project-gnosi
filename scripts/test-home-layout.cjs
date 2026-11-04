@@ -23,6 +23,7 @@ let homeScrollState = null;
 let homeScrollHookIndex = 0;
 const react = {
   useMemo: fn => fn(),
+  useRef: initial => ({ current: initial }),
   useState: initial => {
     if (homeScrollState !== null) {
       const index = homeScrollHookIndex++;
@@ -508,6 +509,39 @@ assert.equal(actions.at(-1), "open:anc-0");
 tree = adventure({ ...adventureProps, completedLessonIds: ["anc-0"] });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1").props.disabled, false);
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-2").props.disabled, true);
+
+// Adventure 2.0: the atlas uses bounded vector paths rather than a cropped
+// bitmap, and users deep in the curriculum can jump to their active stop.
+const completedNineteen = adventureLessons.slice(0, 19).map(item => item.id);
+tree = adventure({ ...adventureProps, completedLessonIds: completedNineteen });
+const mapFrame = nodes(tree).find(node => node.props?.testID === "adventure-map");
+const stops = nodes(mapFrame).filter(node => node.props?.testID?.startsWith("adventure-node-"));
+const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.style)
+  && node.props.style[0]?.position === "absolute" && node.props.style[0]?.width === 148);
+const width = mapFrame.props.style[1].width;
+assert.equal(stops.length, 30);
+assert.equal(stopPositions.length, 30);
+assert.ok(stopPositions.every(node => node.props.style[1].left >= 0 &&
+  node.props.style[1].left + 148 <= width), "all stop labels stay inside the map width");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#2E9A7E"),
+  "completed legs use a green route");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#A89BFF"),
+  "the next leg is distinctly highlighted");
+const next = nodes(tree).find(node => node.props?.testID === "adventure-continue");
+next.props.onPress();
+assert.equal(actions.at(-1), "open:anc-19", "Continue opens the next unlocked lesson");
+const scrollView = nodes(tree).find(node => node.props?.testID === "subcategory-adventure-path");
+let jumpY = -1;
+scrollView.props.ref.current = { scrollTo: ({ y }) => { jumpY = y; } };
+mapFrame.props.onLayout({ nativeEvent: { layout: { y: 350 } } });
+const jump = nodes(tree).find(node => node.props?.testID === "adventure-jump-to-current");
+assert.ok(jump, "current-location shortcut appears for advanced progress");
+jump.props.onPress();
+assert.ok(jumpY > 350, "shortcut scrolls to the current map checkpoint");
+assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-20").props.disabled,
+  "later lessons remain locked after jumping");
+assert.ok(!nodes(tree).some(node => node.props?.children === "Ακολούθησε τους σταθμούς με τη σειρά."),
+  "remove redundant tutorial copy above the first chapter");
 tree = adventure({ ...adventureProps, progressLoaded: false });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0").props.disabled, true);
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
