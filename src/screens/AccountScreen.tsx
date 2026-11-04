@@ -3,6 +3,8 @@ import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useState } from "react";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import { MotionView, MotionPressable } from "../components/HomeMotion";
 import AccountPanel from "../components/AccountPanel";
 import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
@@ -16,15 +18,14 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
   const { store } = useLearningSession();
   const [activeSection, setActiveSection] = useState<"account" | "experience" | "privacy" | "sync" | "dev" | null>(null);
   const goBack = () => activeSection ? setActiveSection(null) : onBack();
-  return <ScrollView scrollEnabled={activeSection !== null} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
+  return <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={activeSection !== null} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <AppHeader onBack={goBack} />
     {activeSection === null ? <View testID="account-settings-dashboard">
-      <View style={styles.heading}>
-        <View style={styles.headingGlow} pointerEvents="none" />
+      <MotionView entranceDelay={0} style={styles.heading}>
         <View style={styles.headingTop}><Text style={styles.headingSymbol}>✦</Text><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text></View>
         <Text style={styles.title}>Ρυθμίσεις</Text>
         <Text style={styles.subtitle}>Διαχειρίσου την εμπειρία σου.</Text>
-      </View>
+      </MotionView>
       {([
         ["account", "Λογαριασμός", "Σύνδεση, εγγραφή και αντίγραφα", "◉", "#B7A5FF"],
         ["experience", "Εμπειρία μάθησης", "Ήχος και κίνηση", "✧", "#82C4C7"],
@@ -32,7 +33,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
         ...(store.userId ? [["sync", "Συγχρονισμός", "Κατάσταση προόδου", "↻", "#91B7FF"]] : []),
         ...(__DEV__ && devControls ? [["dev", "Εργαλεία δοκιμών", "Επιλογές ανάπτυξης", "⚙", "#B7A5FF"]] : []),
       ] as const).map(([id, title, detail, icon, accent]) => (
-        <Pressable key={id} accessibilityRole="button" accessibilityLabel={title}
+        <MotionPressable key={id} entranceDelay={65 + (id === "account" ? 0 : id === "experience" ? 45 : id === "privacy" ? 90 : id === "sync" ? 135 : 180)} pressScale={0.983} accessibilityRole="button" accessibilityLabel={title}
           style={styles.tile} onPress={() => setActiveSection(id)}>
           <View style={[styles.iconShell, { backgroundColor: accent + "16" }]}><Text style={[styles.tileSymbol, { color: accent }]}>{icon}</Text></View>
           <View style={styles.tileCopy}>
@@ -40,7 +41,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
             <Text style={styles.tileDetail}>{detail}</Text>
           </View>
           <Text style={styles.chevron}>›</Text>
-        </Pressable>
+        </MotionPressable>
       ))}
     </View> : <>
       <Text style={styles.eyebrow}>ΡΥΘΜΙΣΕΙΣ</Text>
@@ -50,12 +51,14 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
       {activeSection === "sync" && store.userId ? <SyncStatus detailed /> : null}
       {activeSection === "dev" && __DEV__ && devControls ? <LearningDevTools {...devControls} /> : null}
     </>}
-  </ScrollView>;
+  </ScrollView></View>;
 }
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#0D1827" },
+  scroll: { flex: 1 },
   content: { width: "100%", maxWidth: 640, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
   overviewContent: { flexGrow: 1 },
-  heading: { gap: 9, marginTop: 8, marginBottom: 20, borderRadius: 22, borderWidth: 1, borderColor: "#353453", backgroundColor: "#1B1B32", padding: 20, overflow: "hidden" },
+  heading: { gap: 9, marginTop: 8, marginBottom: 20, borderRadius: 22, borderWidth: 1, borderColor: "#393D5D", backgroundColor: "#20233B", padding: 20, overflow: "hidden" },
   headingGlow: { position: "absolute", width: 190, height: 190, borderRadius: 95, backgroundColor: "#302D56", right: -60, top: -100 },
   headingTop: { flexDirection: "row", alignItems: "center", gap: 9 },
   eyebrow: { color: colors.accentLight, fontSize: 10, fontWeight: "800", letterSpacing: 1.7 },
@@ -64,7 +67,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: 16 },
   sectionTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: "800", marginBottom: 2 },
   body: { color: colors.textBody, fontSize: 14, lineHeight: 23, marginBottom: 16 },
-  tile: { minHeight: 79, flexDirection: "row", alignItems: "center", padding: 14, marginBottom: 10, borderRadius: 17, borderWidth: 1, borderColor: "#30334D", backgroundColor: "#171A2A" },
+  tile: { minHeight: 79, flexDirection: "row", alignItems: "center", padding: 14, marginBottom: 10, borderRadius: 17, borderWidth: 1, borderColor: "#3A4059", backgroundColor: "#1D2637" },
   headingSymbol: { color: "#B7A5FF", fontSize: 20 },
   tileSymbol: { fontSize: 24, fontWeight: "700" },
   iconShell: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginRight: 13 },
