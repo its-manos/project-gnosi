@@ -7,7 +7,7 @@
  * the entire layer remains decorative and never captures touches.
  */
 import { memo, useState } from "react";
-import { HomeAtlasAmbientGlow, HomeAtlasCurrent, HomeAtlasTwinkleStar } from "./HomeAtlasMotion";
+import { HomeAtlasAmbientGlow, HomeAtlasTwinkles } from "./HomeAtlasMotion";
 import { StyleSheet, View } from "react-native";
 import Svg, {
   Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop,
@@ -210,14 +210,18 @@ function HomeAtlasBackground() {
               <Circle r={1.35} fill="#E8D0A7" stroke="none" />
             </G>)}
         </G>
-        {/* Small UI-thread ambient accents; the chart itself never animates. */}
-        <HomeAtlasAmbientGlow h={h} />
-        {[[115, 0.065], [362, 0.058], [403, 0.416], [387, 0.75]].map(([x, y], index) =>
-          <HomeAtlasTwinkleStar key={index} index={index} x={x} y={h * y} />)}
-        <HomeAtlasCurrent h={h} />
+        {/* A static chart bearing replaces the per-frame animated SVG dash
+            offset; no path or gradient is updated while the app is active. */}
+        <Path d={`M -15 ${h * .59} C 110 ${h * .55} 294 ${h * .64} 437 ${h * .57}`}
+          stroke="#B7B7AF" strokeWidth={0.75} strokeOpacity={0.13}
+          fill="none" strokeDasharray="2 18" />
         {/* Edge falloff keeps text and cards high-contrast. */}
         <Rect width={420} height={h} fill="url(#home-atlas-vignette)" />
       </Svg> : null}
+      {h > 0 ? <>
+        <HomeAtlasAmbientGlow width={viewport.width} height={viewport.height} />
+        <HomeAtlasTwinkles width={viewport.width} height={viewport.height} />
+      </> : null}
     </View>
   );
 }
