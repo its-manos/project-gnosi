@@ -64,6 +64,27 @@ function stableNoise(seed: number) {
   return value - Math.floor(value);
 }
 
+/** Keep constellation threads outside the islands, never through labels.
+ * Independent destinations have no order: this is only decorative geometry. */
+export function getAtlasConnectorSegment(
+  from: Point & { rx: number; ry: number },
+  to: Point & { rx: number; ry: number },
+): string {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  if (length < 1) return "";
+  const edge = (point: { rx: number; ry: number }) =>
+    length / Math.hypot(dx / Math.max(1, point.rx), dy / Math.max(1, point.ry));
+  // Short links keep a minimum visible strand; long links stop just clear of
+  // each landmass, even when the destination has an irregular shoreline.
+  const fromInset = Math.min(length * 0.43, edge(from) + 8);
+  const toInset = Math.min(length * 0.43, edge(to) + 8);
+  const ux = dx / length;
+  const uy = dy / length;
+  return `M ${(from.x + ux * fromInset).toFixed(1)} ${(from.y + uy * fromInset).toFixed(1)} L ${(to.x - ux * toInset).toFixed(1)} ${(to.y - uy * toInset).toFixed(1)}`;
+}
+
 function overviewRows(count: number): number[] {
   if (count === 5) return [2, 3];
   if (count === 6) return [3, 3];
@@ -437,8 +458,13 @@ export default function FantasyMap({
       const controlY = (region.cy + other.cy) / 2 - 18;
       return [{
         key,
+        midX: controlX,
+        midY: (region.cy + other.cy) / 2,
         d: fitted
-          ? `M ${region.cx} ${region.cy} L ${other.cx} ${other.cy}`
+          ? getAtlasConnectorSegment(
+              { x: region.cx, y: region.cy, rx: region.rx, ry: region.ry },
+              { x: other.cx, y: other.cy, rx: other.rx, ry: other.ry },
+            )
           : `M ${other.cx} ${other.cy} Q ${controlX} ${controlY} ${region.cx} ${region.cy}`,
       }];
     });
@@ -492,6 +518,13 @@ export default function FantasyMap({
               <Stop offset="1" stopColor="#101827" stopOpacity={0} />
             </RadialGradient>
           ) : null}
+          {fitted ? (
+            <RadialGradient id="atlas-nebula" cx="45%" cy="45%" r="56%">
+              <Stop offset="0" stopColor="#665C88" stopOpacity={0.14} />
+              <Stop offset="0.55" stopColor="#4B5878" stopOpacity={0.055} />
+              <Stop offset="1" stopColor="#101827" stopOpacity={0} />
+            </RadialGradient>
+          ) : null}
           {positionedRegions.map((region) => fitted ? (
             <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
               <Stop offset="0" stopColor={region.fill} />
@@ -517,6 +550,9 @@ export default function FantasyMap({
           fill={fitted ? "#101827" : "url(#atlas-sea)"} />
         {fitted ? <Rect width={MAP_WIDTH} height={mapHeight}
           fill="url(#atlas-atmosphere)" pointerEvents="none" /> : null}
+        {fitted ? <Rect x={40} y={mapHeight * 0.13}
+          width={280} height={mapHeight * 0.72}
+          fill="url(#atlas-nebula)" pointerEvents="none" /> : null}
         {Array.from({ length: 9 }, (_, index) => (
           <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
             stroke="#7CA8AC" strokeOpacity={fitted ? 0.045 : 0.07} fill="none" />
@@ -538,19 +574,49 @@ export default function FantasyMap({
               strokeDasharray="3 11" />
           </G>
         ) : null}
+        {fitted ? (
+          <G pointerEvents="none">
+            {/* The circular chart grid is deliberately incomplete and faint:
+                the destinations are free choices, not points along a track. */}
+            <Path testID="atlas-chart-orbit-upper"
+              d={`M -66 ${mapHeight * 0.42} A 248 ${mapHeight * 0.51} 0 0 1 426 ${mapHeight * 0.42}`}
+              stroke="#91A8B8" strokeWidth={0.85} strokeOpacity={0.12} fill="none" />
+            <Path testID="atlas-chart-orbit-lower"
+              d={`M -54 ${mapHeight * 0.59} A 255 ${mapHeight * 0.56} 0 0 0 414 ${mapHeight * 0.59}`}
+              stroke="#D8C3A3" strokeWidth={0.75} strokeOpacity={0.1} fill="none" />
+            {Array.from({ length: 9 }, (_, i) => {
+              const x = 24 + i * 39;
+              return (
+                <Path key={`atlas-chart-tick-${i}`} testID={`atlas-chart-tick-${i}`}
+                  d={`M ${x} 0 V ${i % 3 === 0 ? 12 : 6} M ${x} ${mapHeight} v -${i % 3 === 0 ? 12 : 6}`}
+                  stroke="#C2B79E" strokeWidth={0.8} strokeOpacity={0.22} fill="none" />
+              );
+            })}
+          </G>
+        ) : null}
         {!fitted ? <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15}
           fill="none" stroke="#89AAA6" strokeOpacity={0.18} /> : null}
         {fitted ? (
           <G pointerEvents="none">
             {/* Restrained starfield adds depth to empty space without a new
                 illustration layer, bitmap download, or animation. */}
-            {Array.from({ length: 36 }, (_, index) => {
+            {Array.from({ length: 50 }, (_, index) => {
               const x = 14 + stableNoise(index + 91) * (MAP_WIDTH - 28);
               const y = 20 + stableNoise(index + 397) * (mapHeight - 40);
               return <Circle key={`atlas-star-${index}`} cx={x} cy={y}
-                r={index % 7 === 0 ? 1.2 : 0.65}
+                r={index % 11 === 0 ? 1.4 : index % 5 === 0 ? 0.9 : 0.5}
                 fill={index % 5 === 0 ? "#E4CFA6" : "#B5CADD"}
-                opacity={index % 7 === 0 ? 0.44 : 0.22} />;
+                opacity={index % 11 === 0 ? 0.52 : index % 5 === 0 ? 0.3 : 0.17} />;
+            })}
+            {Array.from({ length: 7 }, (_, index) => {
+              const x = 24 + stableNoise(index + 601) * (MAP_WIDTH - 48);
+              const y = 24 + stableNoise(index + 743) * (mapHeight - 48);
+              return (
+                <G key={`atlas-sky-cross-${index}`}>
+                  <Path d={`M ${x-2.2} ${y} h 4.4 M ${x} ${y-2.2} v 4.4`}
+                    stroke="#B8C9D6" strokeWidth={0.6} opacity={0.31} fill="none" />
+                </G>
+              );
             })}
           </G>
         ) : null}
@@ -565,16 +631,16 @@ export default function FantasyMap({
             r={region.rx * 1.85} fill={region.fill} opacity={0.045}
             pointerEvents="none" />
         )) : null}
-        {connectorPaths.map((connector) => (
-          <Path
-            key={connector.key}
-            d={connector.d}
-            fill="none"
-            stroke="#BEB896"
-            strokeWidth={1}
-            strokeDasharray="2 5"
-            opacity={fitted ? 0.24 : 0.32}
-          />
+        {connectorPaths.map(connector => (
+          <G key={connector.key} pointerEvents="none">
+            {fitted ? (
+              <Path d={connector.d} fill="none" stroke="#859CB3"
+                strokeWidth={2.5} opacity={0.10} />
+            ) : null}
+            <Path d={connector.d} fill="none" stroke={fitted ? "#D5C3AA" : "#BEB896"}
+              strokeWidth={fitted ? 0.85 : 1} strokeDasharray="2 5"
+              opacity={fitted ? 0.43 : 0.32} />
+          </G>
         ))}
 
         {positionedRegions.map((region) => {
