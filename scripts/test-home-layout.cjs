@@ -152,6 +152,21 @@ assert.equal(tree.props.children[0].type, "HomeAtlasBackground",
   "static atlas renders before the scrollable content");
 assert.equal(tree.props.children[1].props.testID, "home-game-dashboard",
   "the existing dashboard scroll container stays intact");
+const oldHomeEntranceOrder = [
+  [0, "topBar"], [60, "home-primary-action"], [130, "actions"],
+  [200, "home-exploration"], [250, "home-mini-games"],
+];
+const entranceSource = fs.readFileSync(
+  path.join(root, "src/screens/HomeScreen.tsx"), "utf8");
+for (const [delay, section] of oldHomeEntranceOrder) {
+  const expected = section === "topBar" ? `<MotionView entranceDelay={${delay}} style={styles.topBar}`
+    : section === "home-primary-action" ? `<MotionPressable entranceDelay={${delay}} testID="home-primary-action"`
+    : section === "actions" ? `<MotionView entranceDelay={${delay}} style={styles.actions}`
+    : `<MotionView entranceDelay={${delay}} testID="${section}"`;
+  assert.ok(entranceSource.includes(expected),
+    `Home entrance order must preserve the established ${section} delay of ${delay} ms`);
+}
+
 assert.ok(!nodes(tree).some(node => node.type === "FantasyMap" || node.props?.children === "Πού θα ταξιδέψεις;"));
 const press = (id, value = tree) => {
   const target = nodes(value).find(node => node.props?.testID === id);

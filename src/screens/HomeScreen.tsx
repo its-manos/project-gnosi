@@ -174,7 +174,7 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionPressable entranceDelay={75} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
@@ -208,7 +208,7 @@ export default function HomeScreen({
         </View>
       </MotionPressable>
 
-      <MotionView entranceDelay={155} style={styles.actions}>
+      <MotionView entranceDelay={130} style={styles.actions}>
         <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
@@ -235,7 +235,7 @@ export default function HomeScreen({
         </MotionPressable>
       </MotionView>
 
-      <MotionView entranceDelay={230} testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
+      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
         <View style={styles.sectionRow}>
           <Text style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
           <Text style={styles.worldCount}>{categories.length} κόσμοι</Text>
@@ -260,7 +260,7 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionView entranceDelay={300} testID="home-mini-games" style={[styles.miniGames, tight && styles.tightMiniGames]}>
+      <MotionView entranceDelay={250} testID="home-mini-games" style={[styles.miniGames, tight && styles.tightMiniGames]}>
         <Text style={[styles.miniGamesHeading, tight && styles.tightMiniGamesHeading]}>Μίνι παιχνίδια</Text>
         <View style={styles.miniGamesRow}>
           {upcomingMiniGames.map(game =>
