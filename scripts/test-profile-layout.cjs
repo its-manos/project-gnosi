@@ -47,7 +47,8 @@ const player = {
   learningXP: 300, challengeXP: 20, recallXP: 0, explorationXP: 0,
 };
 const common = {
-  react, "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native": native,
+  react, "react/jsx-runtime": { jsx, jsxs: jsx },
+  "../utils/screenLayout": { availableScreenHeight: (viewport, window) => viewport > 0 ? viewport : Math.max(0, window - 130), stableLayoutHeight: (old, next) => next > 0 && Math.abs(old - next) >= 1 ? next : old }, "react-native": native,
   "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle", Path: "Path" },
   "../state/LearningSession": {
     useLearningSnapshot: () => learning,
