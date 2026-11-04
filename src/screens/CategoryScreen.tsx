@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
-import { MotionPressable } from "../components/HomeMotion";
+import { MotionPressable, MotionView } from "../components/HomeMotion";
 import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
 import { colors } from "../theme";
 import { getAtlasCategoryProgress, getAtlasRegionProgress } from "../utils/categoryAtlas";
@@ -81,7 +81,7 @@ export default function CategoryScreen({
 
   return (
     <View testID="category-atlas-screen" style={styles.screen}>
-      <View style={styles.navigationHeader}>
+      <MotionView entranceDelay={0} testID="category-atlas-header" style={styles.navigationHeader}>
         <Pressable testID="category-atlas-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στους κόσμους γνώσης"
           hitSlop={8}>
@@ -94,11 +94,11 @@ export default function CategoryScreen({
         <View style={styles.headerMark} accessible={false}>
           <Text style={styles.sparkle}>✦</Text>
         </View>
-      </View>
+      </MotionView>
 
       {featuredRegion ? (
         <MotionPressable testID="category-atlas-continue" style={styles.continueCard}
-          pressScale={0.983}
+          entranceDelay={75} pressScale={0.983}
           disabled={!progressLoaded}
           accessibilityRole="button"
           accessibilityState={{ disabled: !progressLoaded }}
@@ -155,12 +155,15 @@ export default function CategoryScreen({
         {/* Wait for the real viewport size before mounting the atlas. Otherwise
             FantasyMap briefly paints its legacy non-fitted layout on entry. */}
         {mapViewport.width > 0 && mapViewport.height > 0 ? (
-          <FantasyMap
-            regions={mapRegions}
-            fitViewport={mapViewport}
-            onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
-            emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
-          />
+          <MotionView entranceDelay={155} testID="category-atlas-map-entrance"
+            style={styles.mapEntrance}>
+            <FantasyMap
+              regions={mapRegions}
+              fitViewport={mapViewport}
+              onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
+              emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
+            />
+          </MotionView>
         ) : null}
       </View>
     </View>
@@ -217,4 +220,7 @@ const styles = StyleSheet.create({
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
     marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",
   },
+  // Measured parent remains a normal View: entrance animation never alters
+  // screen geometry, and the map is first mounted in its fitted layout.
+  mapEntrance: { width: "100%" },
 });
