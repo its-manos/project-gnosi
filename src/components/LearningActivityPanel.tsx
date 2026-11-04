@@ -47,8 +47,8 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
     {dashboard ? <>
       <Text style={styles.dashboardHeading}>Αυτή την εβδομάδα</Text>
       <View style={styles.dashboardMetrics} testID="activity-dashboard-metrics">
-        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="7ήμερο" />
-        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="7ήμερο" />
+        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="εβδομάδα" />
+        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="εβδομάδα" />
         <DashboardMetric label="Ενεργές ημέρες" value={String(summary.activeDays)} detail="συνολικά" />
       </View>
     </> : !compact ? <View style={styles.metrics}>
