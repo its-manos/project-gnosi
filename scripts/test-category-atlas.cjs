@@ -420,12 +420,30 @@ assert.match(motionCode, /cancelAnimation\(/, "ambient animations are cancelled 
 assert.match(motionCode, /useAnimatedProps\(/, "ambient opacity runs on the UI thread");
 assert.doesNotMatch(motionCode, /setTimeout|setInterval|requestAnimationFrame/,
   "no JS-thread timers for continuous atlas motion");
+assert.match(motionCode, /export function AtlasContinueAccent\(/,
+  "the shortcut has its own non-repeating outline glint");
+assert.match(motionCode, /export function AtlasContinueArrow\(/,
+  "the shortcut arrow has a one-time nudge");
+assert.match(motionCode, /export function AtlasProgressFill\(/,
+  "the shortcut progress uses animated percentage width");
+assert.match(motionCode, /useAnimatedStyle\(/,
+  "card animation uses UI-thread styles, not React re-renders");
+assert.doesNotMatch(motionCode, /withRepeat[\s\S]*export function AtlasContinueAccent/,
+  "the card highlight must not start an ongoing looping pulse");
 const screen = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
 const navigator = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
 assert.match(screen, /<FantasyMap/);
 assert.match(screen, /getAtlasRegionProgress/);
 assert.match(screen, /getAtlasCategoryProgress/);
 assert.match(screen, /testID="category-atlas-continue"/);
+assert.match(screen, /pressScale=\{0\.983\}/,
+  "card press feedback stays restrained");
+assert.match(screen, /<AtlasContinueAccent\s*\/>/,
+  "card accent stays decorative");
+assert.match(screen, /<AtlasContinueArrow\s*\/>/,
+  "the navigation arrow has its own brief cue");
+assert.match(screen, /<AtlasProgressFill percent=/,
+  "regional progress has a smooth UI-thread fill");
 assert.match(screen, /Η ΠΡΟΟΔΟΣ ΣΟΥ/,
   "overall progress heading is explicit rather than repeating category title");
 assert.match(screen, /#6C668A/, "island tints share Adventure Path palette");
@@ -445,6 +463,12 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "../components/FantasyMap": { __esModule: true, default: map },
+  "../components/HomeMotion": { MotionPressable: "MotionPressable" },
+  "../components/CategoryAtlasMotion": {
+    AtlasContinueAccent: "AtlasContinueAccent",
+    AtlasContinueArrow: "AtlasContinueArrow",
+    AtlasProgressFill: "AtlasProgressFill",
+  },
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
   "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
 });
@@ -467,22 +491,41 @@ const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "../components/FantasyMap": { __esModule: true, default: map },
+  "../components/HomeMotion": { MotionPressable: "MotionPressable" },
+  "../components/CategoryAtlasMotion": {
+    AtlasContinueAccent: "AtlasContinueAccent",
+    AtlasContinueArrow: "AtlasContinueArrow",
+    AtlasProgressFill: "AtlasProgressFill",
+  },
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
   "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
 }).default;
+const shortcutVisits = [];
 const screenProps = {
   category: { id: "history", title: "Ιστορία" },
   subcategories: [{ id: "ancient", title: "Αρχαία Ελλάδα" },
     { id: "world", title: "Παγκόσμια ιστορία" }],
   lessons, completedLessonIds: ["a"], inProgressLessonIds: ["b"],
   progressLoaded: true, onBack: () => {},
-  onOpenSubcategory: () => {},
+  onOpenSubcategory: (id, categoryId) => shortcutVisits.push([id, categoryId]),
 };
 const renderCategory = () => {
   screenHookIndex = 0;
   return screenWithLayout(screenProps);
 };
 let categoryTree = renderCategory();
+const shortcut = nodes(categoryTree).find(node =>
+  node.props?.testID === "category-atlas-continue");
+assert.equal(shortcut.type, "MotionPressable",
+  "the Continue shortcut uses the established Home press animation");
+assert.equal(shortcut.props.pressScale, 0.983);
+assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueAccent"));
+assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueArrow"));
+const fill = nodes(shortcut).find(node => node.type === "AtlasProgressFill");
+assert.equal(fill.props.percent, 50, "progress motion uses real regional completion");
+shortcut.props.onPress();
+assert.deepEqual(shortcutVisits, [["ancient", "history"]],
+  "animated shortcut still opens the same subcategory");
 assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 0,
   "old non-fitted FantasyMap must not flash while viewport is unmeasured");
 const mapShell = nodes(categoryTree).find(node =>
