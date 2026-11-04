@@ -45,7 +45,16 @@ export class LearningStore {
     this.key = `@gnosi/learning-v2/${userId ?? "guest"}`;
     this.snapshot = this.makeSnapshot();
   }
-  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: syncBackup(this.doc), activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId }; }
+  // Sync status changes often without modifying progress. Reuse the parsed
+  // backup until progress/bookmarks actually change, keeping selectors stable.
+  private backupCache: { progress: SyncDocument["progress"]; bookmarks: SyncDocument["bookmarks"]; value: LearningBackup } | null = null;
+  private makeSnapshot(): LearningSnapshot {
+    const { progress, bookmarks } = this.doc;
+    if (!this.backupCache || this.backupCache.progress !== progress || this.backupCache.bookmarks !== bookmarks) {
+      this.backupCache = { progress, bookmarks, value: syncBackup(this.doc) };
+    }
+    return { ready: this.ready, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: this.backupCache.value, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId };
+  }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
