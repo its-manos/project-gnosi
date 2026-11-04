@@ -64,7 +64,7 @@ assert.ok(node(tree, "progress-summary"), "progress totals are visible");
 assert.ok(text(node(tree, "progress-summary")).includes("7"), "completed count is retained");
 assert.ok(text(node(tree, "progress-summary")).includes(String(categories.length)), "world count is live");
 assert.ok(text(node(tree, "progress-summary")).includes("%"), "completion percent remains");
-assert.ok(text(node(tree, "progress-knowledge-link")).includes("3 / 12"));
+assert.ok(text(node(tree, "progress-knowledge-link")).includes("4 / 12"));
 assert.ok(text(node(tree, "progress-reading-link")).includes("7 / " + lessons.length));
 assert.ok(!nodes(tree).some(n => n.type === "Mastery" || n.type === "Categories"),
   "the Progress dashboard has no expandable knowledge or reading content");
