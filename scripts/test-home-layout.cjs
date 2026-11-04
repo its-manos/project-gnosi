@@ -627,6 +627,43 @@ assert.equal(pinnedFrame.props.children[0].props.testID, "adventure-atlas-underl
   "map underlay is drawn behind the scrolling checkpoints");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
   "only the active checkpoint receives a breathing halo");
+const medallionParts = lessonId => {
+  const press = nodes(mapFrame).find(node => node.props?.testID === "adventure-node-" + lessonId);
+  assert.ok(press, "checkpoint must remain a separate accessible control");
+  const outer = nodes(press).find(node =>
+    Array.isArray(node.props?.style) && node.props.style[0]?.width === 74);
+  const coin = nodes(outer).find(node =>
+    Array.isArray(node.props?.style) && node.props.style[0]?.width === 69);
+  const inset = nodes(coin).find(node =>
+    node.props?.style?.[0]?.position === "absolute" && node.props?.style?.[0]?.top === 7);
+  return { press, outer, coin, inset };
+};
+const completedMedal = medallionParts("anc-0");
+const activeMedal = medallionParts("anc-19");
+const lockedMedal = medallionParts("anc-20");
+assert.equal(completedMedal.outer.props.style[1].borderColor, "#AE9671",
+  "completed checkpoints use a bronze outer seal");
+assert.equal(completedMedal.coin.props.style[1].backgroundColor, "#254339",
+  "completed medallions retain a green completion core");
+assert.equal(completedMedal.inset.props.style[1].borderColor, "#A8916B",
+  "completed medallions have a restrained inner engraving");
+assert.equal(activeMedal.outer.props.style[2].borderColor, "#A99AE3",
+  "current checkpoint retains a clearly distinct lavender rim");
+assert.equal(activeMedal.coin.props.style[2].borderColor, "#C5B7FF",
+  "current checkpoint stays visually brighter than locked markers");
+assert.ok(nodes(activeMedal.press).some(node => node.type === "AdventureActiveHalo"),
+  "only the current checkpoint has the breathing animated halo");
+assert.equal(lockedMedal.outer.props.style[3].borderColor, "#41495C",
+  "locked checkpoints use a quiet weathered outer rim");
+assert.equal(lockedMedal.inset.props.style[3].opacity, 0.32,
+  "locked inner engraving stays subdued");
+assert.equal(completedMedal.press.props.disabled, false);
+assert.equal(activeMedal.press.props.disabled, false);
+assert.equal(lockedMedal.press.props.disabled, true);
+assert.equal(nodes(completedMedal.press).filter(node => node.type === "AdventureActiveHalo").length, 0,
+  "completed stations never spawn ambient animations");
+assert.equal(nodes(lockedMedal.press).filter(node => node.type === "AdventureActiveHalo").length, 0,
+  "locked stations never spawn ambient animations");
 assert.ok(!nodes(mapFrame).some(node => node.props?.children === "ΣΕ ΕΞΕΛΙΞΗ" ||
   node.props?.children === "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ"),
   "node state is conveyed by checkpoint styling, not redundant captions");
@@ -802,5 +839,9 @@ assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
   "lighting adds no animated layers beyond the existing ambient tide");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
+assert.match(adventureMotionSource, /backgroundColor: "rgba\(136,113,205,0\.12\)"/,
+  "current halo is a translucent light ring, not a large opaque disk");
+assert.equal((adventureMotionSource.match(/withRepeat\(/g) || []).length, 1,
+  "checkpoint polish adds no additional looping animations");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
