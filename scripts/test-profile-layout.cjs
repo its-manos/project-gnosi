@@ -111,6 +111,55 @@ assert.ok(text(nodes(tree).find(n=>n.props.testID==='knowledge-selected-subject'
   'completion insight describes actual mastered concepts');
 model={...model,categories:originalCategories};
 
+// Reading tiles reuse the same native press feedback, but report actual
+// completed lessons rather than the knowledge success-stage percentage.
+let readingSnapshot={backup:{completedIds:[lessons[0].id]}};
+const Reading=load('src/components/LearningActivityPanel.tsx',{
+  ...common,
+  '../state/LearningSession':{
+    useLearningSnapshot:()=>readingSnapshot,
+    useDailySnapshot:()=>daily,
+  },
+  '../utils/dailySyncDocument':{dailyHistory:()=>[]},
+  '../utils/learningActivity':{activityBuckets:()=>[],activitySummary:()=>({})},
+  '../utils/dailyChallenge':{getAthensDateKey:()=> '2026-10-30'},
+  './HomeMotion':{MotionPressable:'MotionPressable'},
+  './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
+}).CategoryProgress;
+slots=[];cursor=0;
+const renderReadingTiles=()=>{cursor=0;return Reading({detail:true});};
+tree=renderReadingTiles();
+let readingTiles=nodes(tree).filter(n=>n.type==='MotionPressable');
+assert.equal(readingTiles.length,4,'reading detail shows four tappable categories initially');
+assert.ok(readingTiles.every(n=>n.props.accessibilityRole==='button'),
+  'reading tiles are accessible buttons');
+const readingFirst=readingTiles.find(n=>n.props.testID==='reading-subject-'+lessons[0].categoryId);
+assert.ok(readingFirst,'completed lesson category is in the prioritized overview');
+readingFirst.props.onPress();tree=renderReadingTiles();
+assert.ok(nodes(tree).some(n=>n.props.testID==='reading-selected-subject'));
+assert.ok(text(nodes(tree).find(n=>n.props.testID==='reading-selected-subject')).includes('Απομένουν'),
+  'selected reading category shows its real remaining lesson count');
+assert.equal(nodes(tree).find(n=>n.props.testID==='reading-subject-'+lessons[0].categoryId).props.accessibilityState.selected,true);
+nodes(tree).find(n=>n.props.testID==='reading-subject-'+lessons[0].categoryId).props.onPress();
+tree=renderReadingTiles();
+assert.ok(!nodes(tree).some(n=>n.props.testID==='reading-selected-subject'),
+  'selected reading tile can collapse');
+const categoryLessons=lessons.filter(l=>l.categoryId===lessons[0].categoryId);
+readingSnapshot={backup:{completedIds:categoryLessons.map(l=>l.id)}};
+tree=renderReadingTiles();
+const completeReadingTile=nodes(tree).find(n=>n.props.testID==='reading-subject-'+lessons[0].categoryId);
+assert.ok(text(completeReadingTile).includes('✓'),
+  'a completely read category gets a quiet checkmark');
+assert.ok(nodes(completeReadingTile).some(n=>n.type==='ProgressBarFill'&&n.props.percent===100));
+completeReadingTile.props.onPress();tree=renderReadingTiles();
+assert.ok(text(nodes(tree).find(n=>n.props.testID==='reading-selected-subject')).includes('Ολοκλήρωσες όλα'),
+  'reading milestone is grounded in the live completed lesson count');
+const allReading=nodes(tree).find(n=>n.props.testID==='reading-all-subjects');
+assert.ok(allReading,'all categories remain reachable through disclosure');
+allReading.props.onPress();tree=renderReadingTiles();
+assert.equal(nodes(tree).filter(n=>n.type==='MotionPressable').length,7,
+  'expanded reading detail preserves all seven category tiles');
+
 let resumed=[];
 model={...model,due:[],practice:[]};ready=true;
 learning={...learning,knowledgeSession:null};
