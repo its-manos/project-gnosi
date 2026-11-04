@@ -1,0 +1,31 @@
+name: Progress dashboard checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/screens/ProgressScreen.tsx"
+      - "src/components/ReviewActions.tsx"
+      - "src/components/KnowledgeMastery.tsx"
+      - "src/components/LearningActivityPanel.tsx"
+      - "scripts/test-progress-layout.cjs"
+      - "scripts/test-profile-layout.cjs"
+      - ".github/workflows/progress-dashboard.yml"
+  workflow_dispatch:
+
+jobs:
+  progress-dashboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: node scripts/test-progress-layout.cjs
+      - run: node scripts/test-profile-layout.cjs
+      - run: node scripts/test-learning-activity.cjs
+      - run: node scripts/test-knowledge-review-ui.cjs
