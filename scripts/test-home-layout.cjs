@@ -58,7 +58,7 @@ const reanimated = {
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
 
-function compile(file, extra = {}, returnModule = false) {
+function compile(file, extra = {}, returnModule = false, globals = {}) {
   const mod = { exports: {} };
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
@@ -82,7 +82,7 @@ function compile(file, extra = {}, returnModule = false) {
   };
   vm.runInNewContext(code, {
     module: mod, exports: mod.exports,
-    __DEV__: true, process: { env: atlasTestEnv },
+    __DEV__: true, process: { env: atlasTestEnv }, ...globals,
     require: id => { if (id in imports) return imports[id]; throw Error("Missing stub " + id); },
   });
   return returnModule ? mod.exports : mod.exports.default;
@@ -371,27 +371,70 @@ assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα
 // Render the static atlas with a measured portrait viewport. This is a native
 // SVG tree contract, not a screenshot or frame-rate test.
 let atlasSize = { width: 0, height: 0 };
+let atlasReady = false;
+let atlasReducedMotion = false;
+let atlasHookIndex = 0;
+let atlasEffects = [];
+let atlasTimerCallback = null;
+let atlasTimerDelay = null;
+let atlasTimerCanceled = false;
 const atlas = compile("src/components/HomeAtlasBackground.tsx", {
   react: {
     memo: component => component,
-    useState: () => [atlasSize, next => {
-      atlasSize = typeof next === "function" ? next(atlasSize) : next;
-    }],
+    useEffect: effect => { atlasEffects.push(effect); },
+    useState: initial => {
+      const index = atlasHookIndex++;
+      const current = index === 0 ? atlasSize : atlasReady;
+      return [current ?? initial, next => {
+        const updated = typeof next === "function" ? next(index === 0 ? atlasSize : atlasReady) : next;
+        if (index === 0) atlasSize = updated;
+        else atlasReady = updated;
+      }];
+    },
   },
+  "react-native-reanimated": { useReducedMotion: () => atlasReducedMotion },
   "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
   "./HomeAtlasMotion": {
     HomeAtlasAmbientGlow: "HomeAtlasAmbientGlow",
     HomeAtlasTwinkles: "HomeAtlasTwinkles",
   },
+}, false, {
+  setTimeout: (fn, delay) => {
+    atlasTimerCallback = fn;
+    atlasTimerDelay = delay;
+    return 1;
+  },
+  clearTimeout: id => {
+    if (id === 1) atlasTimerCanceled = true;
+  },
 });
-let atlasTree = atlas();
+const renderAtlas = (props) => {
+  atlasHookIndex = 0;
+  atlasEffects = [];
+  return atlas(props);
+};
+let atlasTree = renderAtlas();
+assert.equal(nodes(atlasTree).filter(node => node.type === "svg").length, 0,
+  "initial Home mount has no native atlas SVG work");
+
 assert.equal(atlasTree.props.testID, "home-atlas-background");
 assert.equal(atlasTree.props.pointerEvents, "none", "atlas cannot intercept card taps");
 assert.equal(atlasTree.props.accessible, false, "decorative atlas stays out of the accessibility tree");
 atlasTree.props.onLayout({ nativeEvent: { layout: { width: 390, height: 844 } } });
-atlasTree = atlas();
+atlasTree = renderAtlas();
+assert.equal(nodes(atlasTree).filter(node => node.type === "svg").length, 0,
+  "even with viewport measurements, SVG must wait until card entrances finish");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "ambient effects must wait alongside the static atlas");
+const atlasCleanup = atlasEffects[0]();
+assert.equal(atlasTimerDelay, 800,
+  "native atlas mounting begins only after the last 250 ms + 320 ms entrance");
+assert.equal(typeof atlasTimerCallback, "function",
+  "a single deferred mount callback is registered");
+atlasTimerCallback();
+atlasTree = renderAtlas();
 let atlasSvg = nodes(atlasTree).find(node => node.type === "svg");
-assert.ok(atlasSvg, "atlas mounts after receiving real viewport measurements");
+assert.ok(atlasSvg, "atlas mounts after the delayed callback");
 assert.equal(atlasSvg.props.width, 390);
 assert.equal(atlasSvg.props.height, 844);
 assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (844 * 420 / 390),
@@ -417,7 +460,7 @@ assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow
   "only one small compositor-friendly atmosphere overlay is animated");
 assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasTwinkles").length, 1,
   "star twinkles are isolated from the static SVG");
-const motionlessAtlas = atlas({ showAmbientMotion: false });
+const motionlessAtlas = renderAtlas({ showAmbientMotion: false });
 assert.equal(nodes(motionlessAtlas).filter(node => node.type === "svg").length, 1,
   "static diagnostic mode retains the full cartography");
 assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
@@ -430,9 +473,24 @@ assert.ok(nodes(atlasSvg).some(node => node.type === "path"
 assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 31,
   "the richer static chart keeps engraved navigation marks");
 atlasTree.props.onLayout({ nativeEvent: { layout: { width: 844, height: 390 } } });
-atlasSvg = nodes(atlas()).find(node => node.type === "svg");
+atlasSvg = nodes(renderAtlas()).find(node => node.type === "svg");
 assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (390 * 420 / 844),
   "landscape rotation recomputes geometry without retaining portrait crop");
+assert.equal(atlasTimerCanceled, false, "the pending timer remains active until cleanup");
+atlasCleanup();
+assert.equal(atlasTimerCanceled, true,
+  "the delayed mount timer is canceled on unmount");
+atlasReducedMotion = true;
+atlasReady = false;
+atlasTimerCallback = null;
+renderAtlas();
+atlasEffects[0]();
+assert.equal(atlasReady, true,
+  "reduced-motion settings bypass the deferred atlas mount");
+assert.equal(atlasTimerCallback, null,
+  "reduced motion never starts the delayed mounting timer");
+assert.ok(nodes(renderAtlas()).some(node => node.type === "svg"),
+  "reduced motion renders the static atlas normally");
 const staticAtlasSource = fs.readFileSync(
   path.join(root, "src/components/HomeAtlasBackground.tsx"), "utf8");
 assert.ok(!/withRepeat\(|withTiming\(|useSharedValue\(|setInterval\(/.test(staticAtlasSource),

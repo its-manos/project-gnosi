@@ -6,9 +6,10 @@
  * Static geography is independent of the few animated ambient accents;
  * the entire layer remains decorative and never captures touches.
  */
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { HomeAtlasAmbientGlow, HomeAtlasTwinkles } from "./HomeAtlasMotion";
 import { StyleSheet, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 import Svg, {
   Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop,
 } from "react-native-svg";
@@ -28,8 +29,28 @@ const stars: ReadonlyArray<readonly [number, number, number, number]> = [
   [379, .862, .95, .4], [58, .91, .85, .37], [222, .954, .7, .23],
 ];
 
+// The final Home section begins at 250 ms and enters for 320 ms. Leave a
+// generous buffer so native SVG tree creation cannot interrupt its entrance.
+const ATLAS_REVEAL_DELAY_MS = 800;
+
 function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?: boolean } = {}) {
   const [viewport, setViewport] = useState<Size>({ width: 0, height: 0 });
+  const [atlasReady, setAtlasReady] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const hasViewport = viewport.width > 0 && viewport.height > 0;
+
+  // Native SVG mounting is the expensive part: keep a solid Midnight Atlas
+  // underlay while Home's original entrance animations play. The delay is
+  // one-shot, canceled on navigation, and bypassed if motion is reduced.
+  useEffect(() => {
+    if (!hasViewport || atlasReady) return;
+    if (reducedMotion) {
+      setAtlasReady(true);
+      return;
+    }
+    const timer = setTimeout(() => setAtlasReady(true), ATLAS_REVEAL_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [hasViewport, atlasReady, reducedMotion]);
   // Use matching aspect ratios in physical pixels and SVG coordinates.
   // Unlike 'slice' or a background image, this never crops or distorts.
   const h = viewport.width > 0 ? viewport.height * 420 / viewport.width : 0;
@@ -57,7 +78,7 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
         setViewport(previous => Math.abs(previous.width - width) < 1
           && Math.abs(previous.height - height) < 1 ? previous : { width, height });
       }}>
-      {h > 0 ? <Svg width={viewport.width} height={viewport.height}
+      {atlasReady && h > 0 ? <Svg width={viewport.width} height={viewport.height}
         viewBox={`0 0 420 ${h}`} pointerEvents="none">
         <Defs>
           <LinearGradient id="home-atlas-night" x1="0%" y1="0%" x2="70%" y2="100%">
@@ -239,7 +260,7 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
         {/* Edge falloff keeps text and cards high-contrast. */}
         <Rect width={420} height={h} fill="url(#home-atlas-vignette)" />
       </Svg> : null}
-      {h > 0 && showAmbientMotion ? <>
+      {atlasReady && h > 0 && showAmbientMotion ? <>
         <HomeAtlasAmbientGlow width={viewport.width} height={viewport.height} />
         <HomeAtlasTwinkles width={viewport.width} height={viewport.height} />
       </> : null}
