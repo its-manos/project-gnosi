@@ -863,6 +863,18 @@ assert.match(atlasSource, /const east =/, "atlas has an eastern Anatolian coastl
 assert.match(atlasSource, /const crete =/, "Crete anchors the southern map");
 assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptical");
 assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
+assert.doesNotMatch(atlasSource, /styles\.tideLayer|waveStyle|translateX: tide\.value/,
+  "the full-screen tide SVG must not animate transforms or opacity");
+assert.match(atlasSource, /testID="adventure-atlas-ambient-glow"/,
+  "a compact native-opacity glow replaces the viewport-sized animated tide");
+assert.match(atlasSource, /const glowStyle = useAnimatedStyle/,
+  "the atlas effect animates only a view style, not SVG element props");
+assert.doesNotMatch(atlasSource, /useAnimatedProps/,
+  "Adventure background never updates SVG attributes per frame");
+assert.match(atlasSource, /strokeDasharray="3 16" opacity=\{0\.30\}/,
+  "the original sea-current contours remain visible as static SVG paths");
+assert.match(atlasSource, /width: width \* 0\.64, height: height \* 0\.34/,
+  "the animated atmosphere occupies only a bounded fraction of the viewport");
 assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
 assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
 const islandDefinitions = atlasSource.split("const islands: Isle[] = [")[1]?.split("];")[0];
