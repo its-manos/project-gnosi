@@ -271,6 +271,16 @@ assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasAtmosphereB
   "one atmosphere layer animates without moving any islands");
 assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasTwinkleStar").length, 5,
   "only five deterministic stars twinkle on the UI thread");
+const nativeAmbientLayer = nodes(fittedAncient).find(node =>
+  node.props?.testID === "atlas-native-ambient-layer");
+assert.ok(nativeAmbientLayer, "ambient view layer mounts only in fitted category maps");
+assert.equal(nativeAmbientLayer.props.pointerEvents, "none",
+  "ambient views cannot intercept island taps");
+assert.equal(nativeAmbientLayer.props.accessible, false,
+  "ambient views are excluded from screen reader focus");
+assert.ok(!nodes(fittedAncient).find(node => node.type === "svg").props.children
+  .flat?.(Infinity).some?.(node => node?.type === "AtlasTwinkleStar"),
+  "animated stars must sit outside the main cartographic SVG");
 assert.ok(!nodes(map(props)).some(node => [
   "AtlasDestinationFeedback", "AtlasAtmosphereBreath", "AtlasTwinkleStar",
 ].includes(node.type)), "non-fitted atlas does not gain ambient motion");
@@ -445,9 +455,65 @@ showList = false;
 const motionCode = fs.readFileSync(path.join(root, "src/components/CategoryAtlasMotion.tsx"), "utf8");
 assert.match(motionCode, /useReducedMotion\(/, "atlas respects system reduced-motion settings");
 assert.match(motionCode, /cancelAnimation\(/, "ambient animations are cancelled on unmount");
-assert.match(motionCode, /useAnimatedProps\(/, "ambient opacity runs on the UI thread");
+assert.equal((motionCode.match(/useAnimatedProps\(/g) || []).length, 1,
+  "only the one-shot destination coastline glint updates SVG props");
+assert.match(motionCode, /useAnimatedStyle\(/,
+  "ambient opacity changes only native view styles on the UI thread");
+assert.doesNotMatch(motionCode, /AnimatedCircle|AnimatedRect/,
+  "continuously animated SVG circles and rectangles have been removed");
+assert.equal((motionCode.match(/withRepeat\(/g) || []).length, 2,
+  "the category sky has only one breathing glow and one staggered star animation per star");
+assert.match(motionCode, /useReducedMotion\(/,
+  "the native ambient layer respects reduced-motion preferences");
 assert.doesNotMatch(motionCode, /setTimeout|setInterval|requestAnimationFrame/,
   "no JS-thread timers for continuous atlas motion");
+// Exercise the actual native-view ambient components with reduced motion,
+// not just a static source-code search. These are headless worklet contracts.
+let ambientReduced = true;
+let ambientLoops = 0;
+const ambientAnimation = compile("src/components/CategoryAtlasMotion.tsx", {
+  react: { useEffect: effect => effect() },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "react-native-svg": { ...svg, Ellipse: "ellipse", RadialGradient: "radialGradient" },
+  "react-native-reanimated": {
+    __esModule: true,
+    default: { View: "AnimatedView", createAnimatedComponent: component => component },
+    Easing: { sin: x => x, inOut: fn => fn },
+    useReducedMotion: () => ambientReduced,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: fn => fn(),
+    useAnimatedProps: fn => fn(),
+    cancelAnimation: () => {},
+    withDelay: (_delay, animation) => animation,
+    withSequence: (...animations) => animations.at(-1),
+    withRepeat: animation => { ambientLoops++; return animation; },
+    withTiming: target => target,
+  },
+});
+const skyGlow = ambientAnimation.AtlasAtmosphereBreath();
+const skyStar = ambientAnimation.AtlasTwinkleStar({
+  cx: 180, cy: 245, index: 2, mapHeight: 490,
+});
+assert.equal(skyGlow.type, "AnimatedView");
+assert.equal(skyGlow.props.pointerEvents, "none");
+assert.equal(skyGlow.props.accessible, false);
+assert.equal(skyGlow.props.style[1].opacity, 0.07,
+  "reduced motion retains a static atmospheric light");
+assert.equal(nodes(skyGlow).filter(node => node.type === "ellipse").length, 1,
+  "the gradient ellipse is static inside the composited view");
+assert.equal(skyStar.type, "AnimatedView");
+assert.equal(skyStar.props.pointerEvents, "none");
+assert.equal(skyStar.props.accessible, false);
+assert.equal(skyStar.props.style[1].left, "50%");
+assert.equal(skyStar.props.style[1].top, "50%",
+  "native stars retain the original fitted SVG coordinates");
+assert.equal(skyStar.props.style[2].opacity, 0.17);
+assert.equal(ambientLoops, 0, "reduced motion schedules no ambient repeats");
+ambientReduced = false;
+ambientAnimation.AtlasAtmosphereBreath();
+ambientAnimation.AtlasTwinkleStar({ cx: 180, cy: 245, index: 2, mapHeight: 490 });
+assert.equal(ambientLoops, 2, "only native opacity animates when motion is enabled");
 assert.match(motionCode, /export function AtlasContinueAccent\(/,
   "the shortcut has its own non-repeating outline glint");
 assert.match(motionCode, /export function AtlasContinueArrow\(/,
