@@ -15,10 +15,11 @@ const react = {
   useMemo: fn => fn(),
   useEffect() {},
 };
+let screenWidth = 390;
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
-  ActivityIndicator: "Spinner", StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: 390, height: 810, fontScale: 1 }),
-  useWindowDimensions: () => ({ width: 390, height: 810, fontScale: 1 }),
+  ActivityIndicator: "Spinner", StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: screenWidth, height: 810, fontScale: 1 }),
+  useWindowDimensions: () => ({ width: screenWidth, height: 810, fontScale: 1 }),
 };
 const { lessons } = load("src/data/lessons.ts");
 const { quizFingerprint } = load("src/utils/learningActivity.ts");
@@ -108,6 +109,12 @@ assert.equal(nodes(tree).filter(n => n.props?.children === "Η δραστηρι�
   "Statistics should only have one activity heading");
 assert.ok(!nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
 assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"), "Default Statistics overview should not scroll");
+screenWidth = 320;
+tree = render();
+assert.ok(nodes(tree).some(n => n.props?.testID === "stats-accessibility-scroll"),
+  "Narrow screens should use the scrollable statistics layout to avoid clipping");
+screenWidth = 390;
+tree = render();
 assert.ok(!nodes(tree).some(n => n.type === "ScrollView"), "Normal viewport stays fixed");
 const quizToggle = nodes(tree).find(n => n.type === "MotionPressable" && text(n).includes("Καθημερινά quiz"));
 assert.ok(quizToggle, "Quiz details stay discoverable");
