@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { StyleSheet, View, type DimensionValue } from "react-native";
 import Animated, {
   Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue,
-  withRepeat, withSequence, withTiming,
+  withDelay, withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 import { colors } from "../theme";
 
@@ -27,19 +27,24 @@ export function AdventureProgressFill({ percent }: { percent: number }) {
 
 export function AdventureActiveHalo() {
   const reduced = useReducedMotion();
-  const glowOpacity = useSharedValue(0.55);
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: glowOpacity.value }));
+  // One shared value drives a single soft pulse, rather than scaling the
+  // checkpoint itself or stacking multiple moving concentric borders.
+  const pulse = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + pulse.value * 0.13 }],
+    opacity: 0.78 * (1 - pulse.value),
+  }));
   useEffect(() => {
-    cancelAnimation(glowOpacity);
-    if (reduced) { glowOpacity.value = 0.65; return; }
-    // A stationary halo that only changes opacity avoids wobbling/scaling
-    // around the medallion and stays crisp on Android and iPhone.
-    glowOpacity.value = withRepeat(withSequence(
-      withTiming(0.82, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
-      withTiming(0.42, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+    cancelAnimation(pulse);
+    pulse.value = 0;
+    if (reduced) return; // A visible, stationary outline.
+    pulse.value = withRepeat(withSequence(
+      withTiming(1, { duration: 2200, easing: Easing.out(Easing.quad) }),
+      // Pause while invisible, then reset behind the coin for the next pulse.
+      withDelay(550, withTiming(0, { duration: 0 })),
     ), -1, false);
-    return () => cancelAnimation(glowOpacity);
-  }, [reduced, glowOpacity]);
+    return () => cancelAnimation(pulse);
+  }, [reduced, pulse]);
   return <Animated.View pointerEvents="none" accessible={false}
     testID="adventure-active-halo" style={[styles.halo, animatedStyle]} />;
 }
@@ -47,9 +52,11 @@ export function AdventureActiveHalo() {
 const styles = StyleSheet.create({
   progressFill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 5 },
   halo: {
-    position: "absolute", top: -3, left: -3,
-    width: 80, height: 80, borderRadius: 40,
-    borderColor: "#B7A7F0", borderWidth: 1.5,
-    backgroundColor: "transparent",
+    // The 84pt ring starts just outside the 74pt wrapper. At maximum scale
+    // its faded edge stays close to the marker, not over neighboring titles.
+    position: "absolute", top: -5, left: -5,
+    width: 84, height: 84, borderRadius: 42,
+    borderColor: "#BCAAFB", borderWidth: 2.5,
+    backgroundColor: "rgba(159,137,242,0.16)",
   },
 });
