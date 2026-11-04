@@ -33,7 +33,10 @@ learning={...learning,knowledgeSession:null};model={...model,due:[]};pending=[{i
 ready=false;tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0);ready=true;
 // The default learning map limits subjects without removing access to any subject or help.
 model={...model,categories:Array.from({length:8},(_,i)=>({id:String(i),title:'Θεματική '+i,percent:i,mastered:0,total:10}))};slots=[];cursor=0;
-const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,'./ActionButton':{__esModule:true,default:'Action'}}).default;
+const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,
+  './ActionButton':{__esModule:true,default:'Action'},
+  './HomeMotion':{MotionPressable:'MotionPressable'},
+  './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}}).default;
 const renderMap=()=>{cursor=0;return Map({onOpen(){},mapOnly:true});};tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0,'no duplicate review CTA');assert.ok(!text(tree).includes('τρεις σωστές'));
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).props.onPress();tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8);
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Πώς μετριέται')).props.onPress();tree=renderMap();assert.ok(text(tree).includes('τρεις σωστές'));
@@ -60,19 +63,30 @@ const renderKnowledgeTiles=()=>{cursor=0;return Map({onOpen(){},mapOnly:true,det
 tree=renderKnowledgeTiles();
 const tileGrid=nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid');
 assert.ok(tileGrid,'detail layout uses subject tiles');
-assert.equal(nodes(tileGrid).filter(n=>n.props.accessibilityRole==='progressbar').length,4,
-  'initial knowledge view focuses on four subjects');
+assert.equal(nodes(tileGrid).filter(n=>n.type==='MotionPressable').length,4,
+  'initial knowledge view has four tactile subject tiles');
+assert.ok(nodes(tileGrid).every(n=>n.type!=='MotionPressable'||n.props.accessibilityRole==='button'),
+  'each interactive tile has an accessible button role');
+const firstKnowledgeTile=nodes(tileGrid).find(n=>n.props.testID==='knowledge-subject-0');
+assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);
+firstKnowledgeTile.props.onPress();tree=renderKnowledgeTiles();
+assert.equal(nodes(tree).find(n=>n.props.testID==='knowledge-subject-0').props.accessibilityState.selected,true);
+assert.ok(text(nodes(tree).find(n=>n.props.testID==='knowledge-selected-subject')).includes('πρώτη κατακτημένη έννοια'),
+  'selected empty subject offers a truthful first milestone');
+nodes(tree).find(n=>n.props.testID==='knowledge-subject-0').props.onPress();tree=renderKnowledgeTiles();
+assert.ok(!nodes(tree).some(n=>n.props.testID==='knowledge-selected-subject'),
+  'tapping a selected tile collapses its short insight');
 assert.ok(!text(tileGrid).includes('0%'), 'zero subjects do not repeat 0% labels');
 const showAll=nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects');
 assert.ok(showAll,'all subjects remain reachable');
 assert.equal(showAll.props.accessibilityState.expanded,false);
 showAll.props.onPress();tree=renderKnowledgeTiles();
 assert.equal(nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects').props.accessibilityState.expanded,true);
-assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.props.accessibilityRole==='progressbar').length,8,
-  'expanded knowledge view renders every subject');
+assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.type==='MotionPressable').length,8,
+  'expanded knowledge view renders all interactive subjects');
 nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects').props.onPress();
 tree=renderKnowledgeTiles();
-assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.props.accessibilityRole==='progressbar').length,4,
+assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.type==='MotionPressable').length,4,
   'knowledge view can collapse to its short overview');
 assert.ok(!text(tree).includes('Η κατάκτηση χρειάζεται'),
   'long methodology is collapsed initially');
@@ -82,6 +96,20 @@ nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Πώς μετριέ�
 tree=renderKnowledgeTiles();
 assert.ok(text(tree).includes('τρεις σωστές δοκιμές'),
   'methodology remains available on demand');
+
+// Real mastery data changes can distinguish progress from completion without
+// any new persisted achievement or fabricated reward.
+const originalCategories=model.categories;
+model={...model,categories:[{...model.categories[0],percent:100,mastered:10,total:10},...model.categories.slice(1)]};
+tree=renderKnowledgeTiles();
+const completedTile=nodes(tree).find(n=>n.props.testID==='knowledge-subject-0');
+assert.ok(text(completedTile).includes('✓'), 'fully mastered subject gains a restrained checkmark');
+assert.ok(nodes(completedTile).some(n=>n.type==='ProgressBarFill'&&n.props.percent===100),
+  'native fill reflects real review progress');
+completedTile.props.onPress();tree=renderKnowledgeTiles();
+assert.ok(text(nodes(tree).find(n=>n.props.testID==='knowledge-selected-subject')).includes('Όλες οι έννοιες'),
+  'completion insight describes actual mastered concepts');
+model={...model,categories:originalCategories};
 
 let resumed=[];
 model={...model,due:[],practice:[]};ready=true;
