@@ -64,7 +64,8 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
                 <Stop offset="0.62" stopColor="#070B15" stopOpacity={0.03} />
                 <Stop offset="1" stopColor="#070B15" stopOpacity={0.46} />
               </RadialGradient>
-    
+            </>
+          ) : null}
         </Defs>
         <Rect width={MAP_WIDTH} height={mapHeight} rx={fitted ? 0 : 20}
           fill={fitted ? "#101827" : "url(#atlas-sea)"} />
