@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import { categories, type Lesson } from "../data/lessons";
 import type { LearningInsightsView } from "./LearningInsightsScreen";
 import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
+import HomeAtlasBackground from "../components/HomeAtlasBackground";
 import ReviewActions from "../components/ReviewActions";
 import SyncStatus from "../components/SyncStatus";
 import { colors } from "../theme";
@@ -23,6 +25,8 @@ type Props = {
   onOpenLesson: (id: string) => void;
 };
 
+const RING_CIRCUMFERENCE = 2 * Math.PI * 31;
+
 export default function ProgressScreen({
   onOpenInsights, onKnowledgeReview, onWeeklyReview, onOpenProfile, onHome,
   completedLessons, inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
@@ -32,14 +36,13 @@ export default function ProgressScreen({
   const [viewportHeight, setViewportHeight] = useState(0);
   const { model, ready: knowledgeReady } = useKnowledgeModel();
 
-  // Measure the *actual* content area between the top safe area and bottom
-  // navigation rather than using platform-specific phone dimensions.
+  // Measure inside the app's safe area, ABOVE the bottom navigation.
+  // Normal devices render a fixed page, not a tall, rubber-band ScrollView.
   const availableHeight = viewportHeight || windowHeight - 130;
-  const dense = availableHeight < 610;
-  const veryDense = availableHeight < 530;
-  // Only exceptionally short layouts or enlarged accessibility text scroll.
-  // The normal Progress screen is an actual fixed viewport, not a ScrollView.
-  const accessibleScroll = availableHeight < 470 || fontScale >= 1.4;
+  const dense = availableHeight < 650;
+  const veryDense = availableHeight < 560;
+  // Protect touch targets and readable text on very short or zoomed screens.
+  const accessibleScroll = availableHeight < 490 || fontScale >= 1.4;
 
   const completedCount = completedLessons.length;
   const exploredCount = new Set(completedLessons.map(lesson => lesson.categoryId)).size;
@@ -48,14 +51,12 @@ export default function ProgressScreen({
     : 0;
   const mastered = model.categories.reduce((sum, item) => sum + item.mastered, 0);
   const totalConcepts = model.categories.reduce((sum, item) => sum + item.total, 0);
-  const viewportStyle = [
-    styles.content, dense && styles.contentDense,
-    veryDense && styles.contentVeryDense,
-  ];
+  const masteryPercent = totalConcepts ? Math.round(mastered / totalConcepts * 100) : 0;
   const onViewportLayout = (event: { nativeEvent: { layout: { height: number } } }) => {
     const next = event.nativeEvent.layout.height;
     if (next > 0) setViewportHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
   };
+  const contentStyle = [styles.content, dense && styles.contentDense, veryDense && styles.contentVeryDense];
 
   const dashboard = <>
     <SyncStatus quiet />
@@ -70,32 +71,39 @@ export default function ProgressScreen({
       </Pressable>
     </View>
 
-    <View testID="progress-summary" style={[styles.summary, dense && styles.summaryDense]}>
-      <View style={styles.summaryHeading}>
-        <Text style={styles.summaryTitle}>Οι ανακαλύψεις σου</Text>
-        <Text style={styles.percent}>{lessonProgressLoaded ? percent + "%" : "—"}</Text>
-      </View>
-      <View style={styles.metrics}>
-        <View style={styles.metric}>
-          <Text style={[styles.metricValue, veryDense && styles.metricValueDense]}>
-            {lessonProgressLoaded ? completedCount : "—"} <Text style={styles.metricTotal}>/ {totalLessonCount}</Text>
-          </Text>
-          <Text style={styles.metricLabel}>μαθήματα</Text>
-        </View>
-        <View style={styles.metricDivider} />
-        <View style={styles.metric}>
-          <Text style={[styles.metricValue, veryDense && styles.metricValueDense]}>
-            {lessonProgressLoaded ? exploredCount : "—"} <Text style={styles.metricTotal}>/ {categories.length}</Text>
-          </Text>
-          <Text style={styles.metricLabel}>κόσμοι</Text>
-        </View>
-      </View>
-      <View style={styles.track} accessible={lessonProgressLoaded}
-        accessibilityRole="progressbar"
-        accessibilityLabel="Ολοκλήρωση μαθημάτων"
+    <View testID="progress-summary" style={[styles.summary, veryDense && styles.summaryDense]}>
+      <View style={[styles.ring, veryDense && styles.ringDense]} accessible
+        accessibilityRole="progressbar" accessibilityLabel="Ολοκλήρωση μαθημάτων"
         accessibilityValue={lessonProgressLoaded
-          ? { min: 0, max: totalLessonCount || 1, now: completedCount } : undefined}>
-        <View style={[styles.trackFill, { width: lessonProgressLoaded ? percent + "%" : "0%" }]} />
+          ? { min: 0, max: 100, now: percent } : { text: "Φόρτωση προόδου" }}>
+        <Svg width="100%" height="100%" viewBox="0 0 80 80" pointerEvents="none">
+          <Circle cx="40" cy="40" r="31" fill="none" stroke="#3C405A" strokeWidth="6" />
+          <Circle cx="40" cy="40" r="31" fill="none" stroke={colors.accent} strokeWidth="6"
+            strokeDasharray={RING_CIRCUMFERENCE}
+            strokeDashoffset={RING_CIRCUMFERENCE * (1 - (lessonProgressLoaded ? percent : 0) / 100)}
+            strokeLinecap="round" transform="rotate(-90 40 40)" />
+        </Svg>
+        <Text style={styles.ringValue}>{lessonProgressLoaded ? percent + "%" : "—"}</Text>
+      </View>
+      <View style={styles.summaryBody}>
+        <Text style={styles.summaryTitle}>Οι ανακαλύψεις σου</Text>
+        <View style={styles.metrics}>
+          <View style={styles.metric}>
+            <Text style={styles.metricValue} numberOfLines={1}>
+              {lessonProgressLoaded ? completedCount : "—"}
+              <Text style={styles.metricTotal}> / {totalLessonCount}</Text>
+            </Text>
+            <Text style={styles.metricLabel}>μαθήματα</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.metric}>
+            <Text style={styles.metricValue} numberOfLines={1}>
+              {lessonProgressLoaded ? exploredCount : "—"}
+              <Text style={styles.metricTotal}> / {categories.length}</Text>
+            </Text>
+            <Text style={styles.metricLabel}>κόσμοι</Text>
+          </View>
+        </View>
       </View>
     </View>
 
@@ -111,100 +119,135 @@ export default function ProgressScreen({
       <Text style={styles.learningHeading}>Η μάθησή σου</Text>
       <View style={styles.destinations}>
         <Pressable testID="progress-knowledge-link"
-          style={({ pressed }) => [styles.destination, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.destination, dense && styles.destinationDense,
+            veryDense && styles.destinationVeryDense, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Άνοιγμα γνώσεων"
           onPress={() => onOpenInsights("knowledge")}>
           <View style={styles.destinationHeader}>
-            <Text style={styles.destinationSymbol}>✦</Text>
+            <Text style={styles.destinationTitle}>✦  Γνώσεις</Text>
             <Text style={styles.chevron}>↗</Text>
           </View>
-          <Text style={styles.destinationTitle}>Γνώσεις</Text>
-          <Text style={[styles.destinationNumber, veryDense && styles.destinationNumberDense]}>
-            {knowledgeReady ? mastered + " / " + totalConcepts : "—"}
-          </Text>
-          <Text style={styles.destinationCaption} numberOfLines={2}>έννοιες κατακτημένες</Text>
+          <View style={styles.destinationCenter}>
+            <Text style={[styles.destinationNumber, veryDense && styles.destinationNumberDense]}>
+              {knowledgeReady ? mastered + " / " + totalConcepts : "—"}
+            </Text>
+            <Text style={styles.destinationCaption} numberOfLines={1}>έννοιες κατακτημένες</Text>
+          </View>
+          <View style={styles.destinationFoot}>
+            <View style={styles.destinationTrack} accessible={false}>
+              <View style={[styles.knowledgeFill, { width: knowledgeReady ? masteryPercent + "%" : "0%" }]} />
+            </View>
+            <Text style={styles.destinationAction}>Δες την ανάλυση  ›</Text>
+          </View>
         </Pressable>
         <Pressable testID="progress-reading-link"
-          style={({ pressed }) => [styles.destination, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.destination, dense && styles.destinationDense,
+            veryDense && styles.destinationVeryDense, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Άνοιγμα ανάγνωσης"
           onPress={() => onOpenInsights("reading")}>
           <View style={styles.destinationHeader}>
-            <Text style={styles.destinationSymbol}>◈</Text>
+            <Text style={styles.destinationTitle}>◇  Ανάγνωση</Text>
             <Text style={styles.chevron}>↗</Text>
           </View>
-          <Text style={styles.destinationTitle}>Ανάγνωση</Text>
-          <Text style={[styles.destinationNumber, veryDense && styles.destinationNumberDense]}>
-            {lessonProgressLoaded ? completedCount + " / " + totalLessonCount : "—"}
-          </Text>
-          <Text style={styles.destinationCaption} numberOfLines={2}>ολοκληρωμένα μαθήματα</Text>
+          <View style={styles.destinationCenter}>
+            <Text style={[styles.destinationNumber, veryDense && styles.destinationNumberDense]}>
+              {lessonProgressLoaded ? completedCount + " / " + totalLessonCount : "—"}
+            </Text>
+            <Text style={styles.destinationCaption} numberOfLines={1}>μαθήματα ολοκληρωμένα</Text>
+          </View>
+          <View style={styles.destinationFoot}>
+            <View style={styles.destinationTrack} accessible={false}>
+              <View style={[styles.readingFill, { width: lessonProgressLoaded ? percent + "%" : "0%" }]} />
+            </View>
+            <Text style={styles.destinationAction}>Δες την ανάλυση  ›</Text>
+          </View>
         </Pressable>
       </View>
     </View>
   </>;
 
-  return accessibleScroll ? (
-    <ScrollView testID="progress-accessibility-scroll" style={styles.screen}
-      onLayout={onViewportLayout} contentContainerStyle={[...viewportStyle, styles.scrollContent]}
-      showsVerticalScrollIndicator={false}>
-      {dashboard}
-    </ScrollView>
-  ) : (
-    <View testID="progress-fixed-dashboard" onLayout={onViewportLayout}
-      style={[styles.screen, ...viewportStyle]}>
-      {dashboard}
+  return (
+    <View testID="progress-shell" onLayout={onViewportLayout} style={styles.screen}>
+      <HomeAtlasBackground showAmbientMotion={false} />
+      {accessibleScroll ? (
+        <ScrollView testID="progress-accessibility-scroll"
+          style={styles.scroll} contentContainerStyle={[...contentStyle, styles.scrollContent]}
+          showsVerticalScrollIndicator={false}>
+          {dashboard}
+        </ScrollView>
+      ) : (
+        <View testID="progress-fixed-dashboard" style={[styles.fixedContent, ...contentStyle]}>
+          {dashboard}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, minHeight: 0, width: "100%", maxWidth: 720, alignSelf: "center" },
-  content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 12, gap: 12 },
-  contentDense: { paddingTop: 7, paddingBottom: 7, gap: 8 },
-  contentVeryDense: { paddingTop: 4, paddingBottom: 4, gap: 6 },
+  screen: {
+    flex: 1, minHeight: 0, width: "100%", maxWidth: 720,
+    alignSelf: "center", overflow: "hidden", backgroundColor: "#101827",
+  },
+  scroll: { flex: 1, minHeight: 0 },
+  fixedContent: { flex: 1, minHeight: 0, justifyContent: "space-between" },
+  content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 14, gap: 14 },
+  contentDense: { paddingTop: 7, paddingBottom: 9, gap: 9 },
+  contentVeryDense: { paddingTop: 5, paddingBottom: 6, gap: 6 },
   scrollContent: { flexGrow: 1 },
   heading: { flexDirection: "row", alignItems: "center", minHeight: 44, gap: 12 },
-  copy: { flex: 1, gap: 0 },
-  eyebrow: { color: colors.accentLight, fontSize: 9, lineHeight: 14, letterSpacing: 1.1, fontWeight: "800" },
-  title: { color: colors.text, fontSize: 26, lineHeight: 32, fontWeight: "900" },
-  titleDense: { fontSize: 23, lineHeight: 28 },
+  copy: { flex: 1, gap: 1 },
+  eyebrow: { color: colors.accentLight, fontSize: 9, lineHeight: 14, letterSpacing: 1.1, fontWeight: "900" },
+  title: { color: colors.text, fontSize: 23, lineHeight: 29, fontWeight: "900" },
+  titleDense: { fontSize: 21, lineHeight: 27 },
   profile: {
     minHeight: 44, justifyContent: "center", paddingHorizontal: 12,
-    backgroundColor: colors.surface, borderWidth: 1,
-    borderColor: colors.border, borderRadius: 13,
+    backgroundColor: "#1B2032", borderWidth: 1, borderColor: colors.border,
+    borderRadius: 13,
   },
-  link: { color: colors.accentLight, fontSize: 13, fontWeight: "800" },
+  link: { color: colors.accentLight, fontSize: 12, fontWeight: "800" },
   summary: {
-    padding: 14, borderRadius: 19, gap: 9, backgroundColor: colors.surface,
-    borderWidth: 1, borderColor: colors.border,
+    minHeight: 104, flexDirection: "row", alignItems: "center", gap: 12,
+    paddingHorizontal: 14, paddingVertical: 12, borderRadius: 20,
+    backgroundColor: "#192234", borderWidth: 1, borderColor: "#384153",
   },
-  summaryDense: { paddingVertical: 10, paddingHorizontal: 12, gap: 6 },
-  summaryHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  summaryTitle: { color: colors.text, fontSize: 13, fontWeight: "800" },
-  percent: { color: colors.accentLight, fontSize: 14, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  metrics: { flexDirection: "row", alignItems: "center", gap: 14 },
-  metric: { flex: 1, gap: 1 },
-  metricDivider: { height: 26, width: 1, backgroundColor: colors.border },
-  metricValue: { color: colors.text, fontSize: 21, lineHeight: 26, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  metricValueDense: { fontSize: 19, lineHeight: 22 },
+  summaryDense: { minHeight: 94, paddingHorizontal: 11, paddingVertical: 9, gap: 9 },
+  ring: { width: 78, height: 78, alignItems: "center", justifyContent: "center" },
+  ringDense: { width: 68, height: 68 },
+  ringValue: {
+    position: "absolute", textAlign: "center", color: colors.accentLight,
+    fontSize: 17, lineHeight: 23, fontWeight: "900", fontVariant: ["tabular-nums"],
+  },
+  summaryBody: { flex: 1, minWidth: 0, gap: 10 },
+  summaryTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800" },
+  metrics: { flexDirection: "row", alignItems: "center", gap: 10 },
+  metric: { flex: 1, minWidth: 0, gap: 2 },
+  metricDivider: { height: 28, width: 1, backgroundColor: "#384054" },
+  metricValue: { color: colors.text, fontSize: 20, lineHeight: 25, fontWeight: "900", fontVariant: ["tabular-nums"] },
   metricTotal: { color: colors.textMuted, fontSize: 12, fontWeight: "600" },
   metricLabel: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  track: { height: 5, borderRadius: 8, backgroundColor: colors.border, overflow: "hidden" },
-  trackFill: { height: "100%", borderRadius: 8, backgroundColor: colors.accent },
-  learning: { flex: 1, minHeight: 0, gap: 8 },
-  learningHeading: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: "800" },
-  destinations: { flex: 1, minHeight: 0, flexDirection: "row", gap: 10 },
+  learning: { gap: 8 },
+  learningHeading: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "800" },
+  destinations: { flexDirection: "row", gap: 10 },
   destination: {
-    flex: 1, minWidth: 0, borderRadius: 19, borderWidth: 1,
-    borderColor: colors.borderStrong, backgroundColor: colors.surface,
-    paddingHorizontal: 13, paddingVertical: 10,
-    justifyContent: "space-between", gap: 3,
+    flex: 1, minWidth: 0, height: 176, borderRadius: 19,
+    borderWidth: 1, borderColor: "#43405C", backgroundColor: "#192033",
+    paddingHorizontal: 13, paddingVertical: 12,
+    justifyContent: "space-between",
   },
+  destinationDense: { height: 154, paddingVertical: 10, paddingHorizontal: 11 },
+  destinationVeryDense: { height: 142, paddingVertical: 8 },
   pressed: { opacity: 0.82 },
-  destinationHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  destinationSymbol: { color: colors.accentLight, fontSize: 18, lineHeight: 24 },
-  chevron: { color: colors.accentLight, fontSize: 18, lineHeight: 24 },
-  destinationTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
-  destinationNumber: { color: colors.accentLight, fontSize: 22, lineHeight: 27, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  destinationNumberDense: { fontSize: 19, lineHeight: 22 },
-  destinationCaption: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
+  destinationHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 3 },
+  destinationTitle: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: "900" },
+  chevron: { color: colors.accentLight, fontSize: 18, lineHeight: 22 },
+  destinationCenter: { gap: 3 },
+  destinationNumber: { color: colors.accentLight, fontSize: 25, lineHeight: 31, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  destinationNumberDense: { fontSize: 21, lineHeight: 27 },
+  destinationCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 16 },
+  destinationFoot: { gap: 8 },
+  destinationTrack: { height: 5, backgroundColor: "#333951", borderRadius: 5, overflow: "hidden" },
+  knowledgeFill: { height: "100%", backgroundColor: colors.accent, borderRadius: 5 },
+  readingFill: { height: "100%", backgroundColor: "#7CB8BA", borderRadius: 5 },
+  destinationAction: { color: "#BAB0EF", fontSize: 11, lineHeight: 16, fontWeight: "800" },
 });
