@@ -51,7 +51,7 @@ export default function LearningInsightsScreen({
       : totalConcepts === 0
         ? "Οι έννοιες εμφανίζονται όταν ξεκινήσεις quiz και επαναλήψεις."
         : mastered === 0
-          ? "Η ανάγνωση δεν είναι κατάκτηση. Επανάλαβε για να χτίσεις γνώση."
+          ? "Η πρώτη κατάκτηση έρχεται με επαναλήψεις."
           : null;
 
   return <View style={styles.screen} testID="learning-insights-screen">
@@ -117,12 +117,12 @@ export default function LearningInsightsScreen({
               <Svg width="100%" height="100%" viewBox="0 0 88 88" pointerEvents="none">
                 <Circle cx="44" cy="44" r="34" fill="none"
                   stroke={readingTab ? "#35515D" : "#3B3957"} strokeWidth={7} />
-                <MotionXpCircle cx="44" cy="44" r="34" fill="none"
+                {ready && percent > 0 ? <MotionXpCircle cx="44" cy="44" r="34" fill="none"
                   stroke={readingTab ? "#8BCACB" : colors.accent}
                   strokeWidth={7} strokeLinecap="round"
                   transform="rotate(-90 44 44)" circumference={INSIGHT_RING_LENGTH}
-                  progress={ready ? percent / 100 : 0}
-                  strokeDasharray={`${INSIGHT_RING_LENGTH * (ready ? percent / 100 : 0)} ${INSIGHT_RING_LENGTH}`} />
+                  progress={percent / 100}
+                  strokeDasharray={`${INSIGHT_RING_LENGTH * percent / 100} ${INSIGHT_RING_LENGTH}`} /> : null}
               </Svg>
               <Text testID="insights-overview-percent"
                 style={[styles.ringPercent, readingTab && styles.readingAccent]}>
@@ -131,6 +131,16 @@ export default function LearningInsightsScreen({
             </View>
           </View>
           {overviewHint ? <Text style={styles.overviewHint}>{overviewHint}</Text> : null}
+          {!readingTab && knowledgeReady && model.due.length > 0 ? (
+            <Pressable testID="insights-review-action" accessibilityRole="button"
+              accessibilityLabel={`${model.due.length} ερωτήσεις για επανάληψη`}
+              onPress={onKnowledgeReview}
+              style={({ pressed }) => [styles.reviewLink, pressed && styles.reviewLinkPressed]}>
+              <Text style={styles.reviewSymbol}>✦</Text>
+              <Text style={styles.reviewLinkText}>{model.due.length} ερωτήσεις για επανάληψη</Text>
+              <Text style={styles.reviewArrow}>›</Text>
+            </Pressable>
+          ) : null}
         </MotionView>
 
         {readingTab ? <View testID="learning-insights-reading" style={styles.details}>
@@ -207,7 +217,7 @@ const styles = StyleSheet.create({
   content: { paddingTop: 16, paddingBottom: 36, gap: 14 },
   overview: {
     backgroundColor: "#1B2035", borderWidth: 1, borderColor: "#51496D",
-    borderRadius: 20, padding: 17, gap: 9, overflow: "hidden",
+    borderRadius: 20, paddingHorizontal: 15, paddingVertical: 12, gap: 7, overflow: "hidden",
   },
   readingOverview: { backgroundColor: "#192A35", borderColor: "#385963" },
   overviewAccent: {
@@ -226,12 +236,21 @@ const styles = StyleSheet.create({
   overviewValueCompact: { fontSize: 30, lineHeight: 38 },
   overviewTotal: { color: colors.textMuted, fontSize: 17, lineHeight: 27, fontWeight: "700" },
   overviewFootnote: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
-  ring: { width: 94, height: 94, justifyContent: "center", alignItems: "center" },
+  ring: { width: 82, height: 82, justifyContent: "center", alignItems: "center" },
   ringPercent: {
     position: "absolute", color: "#B8AAFF", fontSize: 18, lineHeight: 24,
     fontWeight: "900", fontVariant: ["tabular-nums"],
   },
-  overviewHint: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
+  overviewHint: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
+  reviewLink: {
+    flexDirection: "row", alignItems: "center", minHeight: 44, gap: 8,
+    paddingHorizontal: 11, borderRadius: 12, marginTop: 1,
+    backgroundColor: "#302B4A", borderWidth: 1, borderColor: "#494167",
+  },
+  reviewLinkPressed: { backgroundColor: "#40375E" },
+  reviewSymbol: { color: "#B9ACFF", fontSize: 15 },
+  reviewLinkText: { flex: 1, color: "#D0C7FF", fontSize: 12, fontWeight: "800" },
+  reviewArrow: { color: "#B9ACFF", fontSize: 22 },
   details: { gap: 12 },
   empty: {
     color: colors.textMuted, fontSize: 13, lineHeight: 21, paddingHorizontal: 6, paddingVertical: 9,
