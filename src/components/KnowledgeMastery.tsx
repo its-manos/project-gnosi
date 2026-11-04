@@ -7,7 +7,7 @@ import { categories as learningCategories } from "../data/lessons";
 import ActionButton from "./ActionButton";
 import { colors } from "../theme";
 
-export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false, singleColumn = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean }) {
+export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false, singleColumn = false, threeColumn = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean }) {
   const { model, ready, today } = useKnowledgeModel(), learning = useLearningSnapshot();
   const [expanded, setExpanded] = useState(false);
   const [allSubjects, setAllSubjects] = useState(false);
@@ -29,7 +29,8 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
         <View style={[styles.detailGrid, singleColumn && styles.detailGridSingle]} testID="knowledge-tile-grid">
           {model.categories.map(category => {
             const emoji = learningCategories.find(item => item.id === category.id)?.emoji ?? "✦";
-            return <View key={category.id} style={[styles.detailTile, singleColumn && styles.detailTileSingle]}
+            return <View key={category.id} style={[styles.detailTile, singleColumn && styles.detailTileSingle,
+              threeColumn && !singleColumn && styles.detailTileWide]}
               accessible accessibilityRole="progressbar"
               accessibilityLabel={`Γνώσεις: ${category.title}`}
               accessibilityValue={{ min: 0, max: 100, now: category.percent,
@@ -77,6 +78,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   detailTileSingle: { minHeight: 110, flexBasis: "auto" },
+  detailTileWide: { flexBasis: "30%" },
   tileTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   tileEmoji: { fontSize: 19, lineHeight: 26 },
   tilePercent: { color: "#B3A5FB", fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] },
