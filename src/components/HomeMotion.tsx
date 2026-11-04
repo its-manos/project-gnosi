@@ -2,12 +2,12 @@
  * Decorative Home 2.0 motion. Motion affects transforms/opacity only: none of
  * these components changes Yoga layout, hit areas, or saved learning state.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PropsWithChildren, ComponentProps } from "react";
 import { Pressable, StyleSheet, View, type PressableProps, type TextProps, type ViewProps } from "react-native";
 import { Circle } from "react-native-svg";
 import Animated, {
-  Easing, FadeInDown, FadeInUp, cancelAnimation,
+  Easing, FadeInDown, FadeInUp, cancelAnimation, runOnJS,
   useAnimatedProps, useAnimatedStyle, useReducedMotion, useSharedValue,
   withDelay, withRepeat, withSequence, withSpring, withTiming,
 } from "react-native-reanimated";
@@ -28,11 +28,22 @@ export function MotionView({ entranceDelay = 0, ...props }: ViewProps & { entran
   return <Animated.View {...props} entering={entering} />;
 }
 
-type MotionPressableProps = PressableProps & { entranceDelay?: number; pressScale?: number };
+type MotionPressableProps = PressableProps & {
+  entranceDelay?: number;
+  pressScale?: number;
+  /** Called after the native entrance has finished, without waiting on JS timers. */
+  onEntranceComplete?: () => void;
+};
 export function MotionPressable({
-  entranceDelay, pressScale = 0.974, style, onPressIn, onPressOut, disabled, ...props
+  entranceDelay, pressScale = 0.974, onEntranceComplete,
+  style, onPressIn, onPressOut, disabled, ...props
 }: MotionPressableProps) {
   const reduced = useReducedMotion();
+  // Keep the completion callback current without restarting the entrance on
+  // ordinary parent re-renders (for example, when the map is measured).
+  const completionRef = useRef(onEntranceComplete);
+  completionRef.current = onEntranceComplete;
+  const notifyEntranceComplete = useCallback(() => completionRef.current?.(), []);
   const shouldEnter = !reduced && entranceDelay !== undefined;
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -46,9 +57,15 @@ export function MotionPressable({
     if (reduced || entranceDelay === undefined) {
       entranceOpacity.value = 1;
       entranceRise.value = 0;
+      notifyEntranceComplete();
     } else {
       entranceOpacity.value = withDelay(entranceDelay, withTiming(1, { duration: 320, easing: ease }));
-      entranceRise.value = withDelay(entranceDelay, withTiming(0, { duration: 320, easing: ease }));
+      // The UI-thread completion is authoritative. The Category screen can
+      // defer its expensive SVG mount until the card has actually entered.
+      entranceRise.value = withDelay(entranceDelay,
+        withTiming(0, { duration: 320, easing: ease }, finished => {
+          if (finished) runOnJS(notifyEntranceComplete)();
+        }));
     }
     return () => {
       cancelAnimation(scale);
@@ -56,7 +73,7 @@ export function MotionPressable({
       cancelAnimation(entranceOpacity);
       cancelAnimation(entranceRise);
     };
-  }, [entranceDelay, reduced, scale, opacity, entranceOpacity, entranceRise]);
+  }, [entranceDelay, reduced, scale, opacity, entranceOpacity, entranceRise, notifyEntranceComplete]);
 
   // The old pressed opacity was only a fallback. Reanimated now owns the
   // interaction, while the original unpressed layout styles stay unchanged.
