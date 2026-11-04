@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { Easing, cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef,
   useSharedValue, withTiming } from "react-native-reanimated";
 import type { ScrollViewInstance } from "react-native";
@@ -283,12 +283,17 @@ export default function SubcategoryScreen({
             const disabled = !progressLoaded || !access.unlocked;
             const active = progressLoaded && nextLesson?.id === lesson.id;
             const chapter = isAncientGreece ? ancientGreeceChapters[index] : undefined;
+            // Locked destinations have no press feedback. On Android they
+            // should not each mount Reanimated shared values, worklets and
+            // entrance bookkeeping inside a long scrollable path.
+            const NodePressable = Platform.OS === "android" && disabled
+              ? Pressable : MotionPressable;
             return (
               <View key={lesson.id} style={[styles.stopPosition, {
                 left: point.x - NODE_WIDTH / 2, top: point.y - 36,
               }]}>
                 {chapter ? <Text style={styles.chapterBadge}>{chapter}</Text> : null}
-                <MotionPressable pressScale={0.96} testID={"adventure-node-" + lesson.id}
+                <NodePressable pressScale={0.96} testID={"adventure-node-" + lesson.id}
                   style={styles.nodePressable}
                   onPress={() => onOpenLesson(lesson.id)} disabled={disabled}
                   accessibilityRole="button" accessibilityState={{ disabled }}
@@ -321,7 +326,7 @@ export default function SubcategoryScreen({
                     numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}>
                     {lesson.title}
                   </Text>
-                </MotionPressable>
+                </NodePressable>
               </View>
             );
           })}
