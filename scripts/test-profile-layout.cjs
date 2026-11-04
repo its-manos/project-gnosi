@@ -60,12 +60,24 @@ const renderKnowledgeTiles=()=>{cursor=0;return Map({onOpen(){},mapOnly:true,det
 tree=renderKnowledgeTiles();
 const tileGrid=nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid');
 assert.ok(tileGrid,'detail layout uses subject tiles');
-assert.equal(nodes(tileGrid).filter(n=>n.props.accessibilityRole==='progressbar').length,8,
-  'all eight subjects remain accessible');
+assert.equal(nodes(tileGrid).filter(n=>n.props.accessibilityRole==='progressbar').length,4,
+  'initial knowledge view focuses on four subjects');
+assert.ok(!text(tileGrid).includes('0%'), 'zero subjects do not repeat 0% labels');
+const showAll=nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects');
+assert.ok(showAll,'all subjects remain reachable');
+assert.equal(showAll.props.accessibilityState.expanded,false);
+showAll.props.onPress();tree=renderKnowledgeTiles();
+assert.equal(nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects').props.accessibilityState.expanded,true);
+assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.props.accessibilityRole==='progressbar').length,8,
+  'expanded knowledge view renders every subject');
+nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects').props.onPress();
+tree=renderKnowledgeTiles();
+assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.props.accessibilityRole==='progressbar').length,4,
+  'knowledge view can collapse to its short overview');
 assert.ok(!text(tree).includes('Η κατάκτηση χρειάζεται'),
   'long methodology is collapsed initially');
-assert.equal(nodes(tree).filter(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).length,0,
-  'already-visible subjects need no redundant expand button');
+assert.equal(nodes(tree).filter(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).length,1,
+  'all subjects remain accessible through one compact disclosure');
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Πώς μετριέται')).props.onPress();
 tree=renderKnowledgeTiles();
 assert.ok(text(tree).includes('τρεις σωστές δοκιμές'),
