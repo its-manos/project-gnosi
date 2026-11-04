@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
@@ -45,6 +45,10 @@ export default function CategoryScreen({
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
   const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
+  // On Android, mounting the detailed SVG during the card's native entrance
+  // competes for rendering time. Mount it only once that entrance finishes.
+  // Track the category key so switching destinations cannot reuse old readiness.
+  const [androidMapReadyFor, setAndroidMapReadyFor] = useState<string | null>(null);
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
     [lessons, category.id, completedLessonIds, progressLoaded],
@@ -75,6 +79,8 @@ export default function CategoryScreen({
       lessons.filter(lesson => lesson.categoryId === category.id), inProgressLessonIds),
     [mapRegions, lessons, category.id, inProgressLessonIds],
   );
+  const canMountMap = Platform.OS !== "android" || !featuredRegion
+    || androidMapReadyFor === category.id;
   const hasProgress = featuredRegion?.status === "in-progress";
   const featuredPercent = featuredRegion?.totalLessons
     ? Math.round(featuredRegion.completedLessons / featuredRegion.totalLessons * 100) : 0;
@@ -97,8 +103,10 @@ export default function CategoryScreen({
       </MotionView>
 
       {featuredRegion ? (
-        <MotionPressable testID="category-atlas-continue" style={styles.continueCard}
-          entranceDelay={75} pressScale={0.983}
+        <MotionPressable key={category.id} testID="category-atlas-continue"
+          style={styles.continueCard} entranceDelay={75} pressScale={0.983}
+          onEntranceComplete={Platform.OS === "android"
+            ? () => setAndroidMapReadyFor(category.id) : undefined}
           disabled={!progressLoaded}
           accessibilityRole="button"
           accessibilityState={{ disabled: !progressLoaded }}
@@ -152,10 +160,10 @@ export default function CategoryScreen({
           setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
             Math.abs(previous.height - height) < 1 ? previous : { width, height });
         }}>
-        {/* Mount the fitted map only after measuring the viewport. The map
-            remains static; a cheap native cover fades out after the Continue
-            card appears, preserving the original visual entrance sequence. */}
-        {mapViewport.width > 0 && mapViewport.height > 0 ? (
+        {/* Android mounts the heavy SVG only after the card's native entrance
+            completes, preventing contention and enforcing the visual order.
+            iOS keeps its existing lightweight reveal cover. */}
+        {canMountMap && mapViewport.width > 0 && mapViewport.height > 0 ? (
           <View testID="category-atlas-map-entrance"
             style={styles.mapEntrance}>
             <FantasyMap
@@ -165,7 +173,7 @@ export default function CategoryScreen({
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
               emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
-            <AtlasMapRevealCover />
+            {Platform.OS !== "android" ? <AtlasMapRevealCover /> : null}
           </View>
         ) : null}
       </View>
