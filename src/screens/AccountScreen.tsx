@@ -7,11 +7,12 @@ import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
 import PendingReportsPanel from "../components/PendingReportsPanel";
 import type { BackupControls } from "../components/CloudBackupPanel";
-import { useLearningSnapshot } from "../state/LearningSession";
+import { useLearningSession } from "../state/LearningSession";
 import { colors } from "../theme";
 
 export default function AccountScreen({ onBack, backupControls, devControls }: { onBack: () => void; backupControls?: BackupControls; devControls?: LearningDevControls }) {
-  const snapshot = useLearningSnapshot();
+  // Account identity does not change during background progress synchronization.
+  const { store } = useLearningSession();
   return <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
     <AppHeader onBack={onBack} />
     <Text style={styles.title}>Λογαριασμός και ρυθμίσεις</Text>
@@ -20,7 +21,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
     <PendingReportsPanel />
     <UsageSharing />
     {__DEV__ && devControls ? <LearningDevTools {...devControls} /> : null}
-    {snapshot.userId ? <>
+    {store.userId ? <>
       <Text style={styles.title}>Η πρόοδός σου</Text>
       <Text style={styles.body}>Πρόσθεσε την πρόοδο επισκέπτη από την προεπισκόπηση παρακάτω.</Text>
       <SyncStatus detailed />
