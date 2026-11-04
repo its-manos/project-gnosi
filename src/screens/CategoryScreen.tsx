@@ -150,12 +150,16 @@ export default function CategoryScreen({
           setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
             Math.abs(previous.height - height) < 1 ? previous : { width, height });
         }}>
-        <FantasyMap
-          regions={mapRegions}
-          fitViewport={mapViewport.width && mapViewport.height ? mapViewport : undefined}
-          onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
-          emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
-        />
+        {/* Wait for the real viewport size before mounting the atlas. Otherwise
+            FantasyMap briefly paints its legacy non-fitted layout on entry. */}
+        {mapViewport.width > 0 && mapViewport.height > 0 ? (
+          <FantasyMap
+            regions={mapRegions}
+            fitViewport={mapViewport}
+            onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
+            emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
+          />
+        ) : null}
       </View>
     </View>
   );
