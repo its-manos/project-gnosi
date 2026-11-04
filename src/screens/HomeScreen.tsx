@@ -1,4 +1,4 @@
-import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout";
+import { availableScreenHeight } from "../utils/screenLayout";
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
