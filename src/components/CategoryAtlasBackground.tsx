@@ -22,10 +22,14 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
   const regions = { length: regionCount };
   // Match FantasyMap's compact row allocation (3 regions use two rows).
   const rows = regionCount === 3 ? 2 : Math.max(1, Math.ceil(regionCount / 3));
-  const mapHeight = Math.max(180, Math.round(height * MAP_WIDTH / Math.min(520, width)));
+  const renderedWidth = Math.min(520, width);
+  const mapHeight = Math.max(180, Math.round(height * MAP_WIDTH / renderedWidth));
+  const renderedHeight = mapHeight * renderedWidth / MAP_WIDTH;
   return (
     <View testID="category-atlas-static-background" pointerEvents="none"
-      accessible={false} style={StyleSheet.absoluteFill}>
+      accessible={false} style={[styles.background, {
+        left: (width - renderedWidth) / 2, width: renderedWidth, height: renderedHeight,
+      }]}>
       <Svg width="100%" height="100%"
         viewBox={`0 0 ${MAP_WIDTH} ${mapHeight}`} preserveAspectRatio="xMidYMid meet"
         pointerEvents="none">
@@ -213,3 +217,8 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
 }
 
 export default memo(CategoryAtlasBackground);
+
+const styles = StyleSheet.create({
+  // FantasyMap itself is centred and capped at 520pt on wide screens.
+  background: { position: "absolute", top: 0, overflow: "hidden" },
+});
