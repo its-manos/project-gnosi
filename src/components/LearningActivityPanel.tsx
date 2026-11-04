@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { categories, lessons } from "../data/lessons";
+import { lessons } from "../data/lessons";
+import { categoryCompletionRows } from "../utils/categoryCompletion";
 import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { activityBuckets, activitySummary, type ActivityBucket } from "../utils/learningActivity";
@@ -122,22 +123,10 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
   const snapshot = useLearningSnapshot();
   const [expanded, setExpanded] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  // Count all lessons once rather than scanning the entire catalogue for
-  // each category. Keep catalogue order as the stable ranking tie-breaker.
-  const rows = useMemo(() => {
-    const completed = new Set(snapshot.backup.completedIds);
-    const counts = new Map<string, { total: number; count: number }>();
-    for (const lesson of lessons) {
-      const current = counts.get(lesson.categoryId) ?? { total: 0, count: 0 };
-      current.total += 1;
-      if (completed.has(lesson.id)) current.count += 1;
-      counts.set(lesson.categoryId, current);
-    }
-    return categories.map((category, index) => {
-      const { total, count } = counts.get(category.id) ?? { total: 0, count: 0 };
-      return { category, index, count, total, percent: total ? Math.round(count / total * 100) : 0 };
-    });
-  }, [snapshot.backup.completedIds]);
+  const rows = useMemo(
+    () => categoryCompletionRows(snapshot.backup.completedIds),
+    [snapshot.backup.completedIds],
+  );
   // The detail screen begins with subjects already explored. Stable ties retain
   // catalogue order, and every subject is accessible via the disclosure.
   const ranked = compact || detail
