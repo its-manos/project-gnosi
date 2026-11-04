@@ -3,7 +3,7 @@ import { AccessibilityInfo, Pressable, StyleSheet, Text, View, useWindowDimensio
 import Animated, { Easing, cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef,
   useSharedValue, withTiming } from "react-native-reanimated";
 import type { ScrollViewInstance } from "react-native";
-import Svg, { Circle, Ellipse, Path } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { colors } from "../theme";
 import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
@@ -87,6 +87,7 @@ export default function SubcategoryScreen({
   const [mapViewportHeight, setMapViewportHeight] = useState(0);
   const [mapContentHeight, setMapContentHeight] = useState(0);
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
+  const [atlasSize, setAtlasSize] = useState<{ width: number; height: number } | null>(null);
   const autoFocusedRef = useRef<string | null>(null);
   const userInteractedRef = useRef(false);
   const path = useMemo(() => getSubcategoryPath(lessons, subcategory.id), [lessons, subcategory.id]);
@@ -150,7 +151,20 @@ export default function SubcategoryScreen({
     subcategory.id, nextIndex, mapHeight, path.length]);
 
   return (
-    <View testID="subcategory-adventure-path" style={styles.screen}>
+    <View testID="subcategory-adventure-path" style={styles.screen}
+      onLayout={event => {
+        const { width, height } = event.nativeEvent.layout;
+        if (width <= 0 || height <= 0) return;
+        setAtlasSize(previous => previous &&
+          Math.abs(previous.width - width) < 1 && Math.abs(previous.height - height) < 1
+          ? previous : { width, height });
+      }}>
+      {/* Anchored to the fixed screen, not the tall scrolling lesson map. */}
+      <View testID="adventure-atlas-underlay" pointerEvents="none"
+        accessible={false} style={styles.atlasUnderlay}>
+        {atlasSize && atlasSize.width > 0 && atlasSize.height > 0 ?
+          <AdventureAtlasBackground width={atlasSize.width} height={atlasSize.height} /> : null}
+      </View>
       <MotionView entranceDelay={0} testID="adventure-category-header" style={styles.navigationHeader}>
         <Pressable testID="adventure-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
@@ -223,19 +237,8 @@ export default function SubcategoryScreen({
             }}
             onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAnimation(scrollPosition); }}>
             <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
-          <AdventureAtlasBackground width={mapWidth} height={mapHeight} />
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
-            {/* Faint engraved contours and stars suggest an old atlas without a
-                raster image that could crop or overflow across devices. */}
-            {points.filter((_point, index) => index % 3 === 1).map((point, index) => (
-              <Ellipse key={"contour-" + index} cx={point.x < mapWidth / 2 ? mapWidth - 28 : 28}
-                cy={point.y + 48} rx={Math.min(110, mapWidth * 0.28)} ry={63}
-                stroke="#6F658D" strokeWidth={1} opacity={0.14} fill="none" />
-            ))}
-            {points.filter((_point, index) => index % 4 === 2).map((point, index) => (
-              <Circle key={"star-" + index} cx={point.x < mapWidth / 2 ? mapWidth - 22 : 22}
-                cy={point.y - 40} r={2.1} fill="#BAA9DA" opacity={0.43} />
-            ))}
+            {/* The geographical atlas is screen-anchored behind this transparent route. */}
             {segments.map((segment, index) => (
               <Path key={"route-base-" + index} d={segment.d} fill="none"
                 stroke="#24283C" strokeWidth={14} strokeLinecap="round" />
@@ -301,7 +304,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1, minHeight: 0, width: "100%", maxWidth: 720,
     alignSelf: "center", paddingHorizontal: 20, paddingTop: 6, gap: 9,
+    backgroundColor: "#101827", overflow: "hidden",
   },
+  atlasUnderlay: { ...StyleSheet.absoluteFillObject },
   mapViewport: {
     flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
     borderTopWidth: 1, borderColor: "#25273A",
@@ -321,7 +326,7 @@ const styles = StyleSheet.create({
   sparkle: { color: colors.accentLight, fontSize: 22 },
   continueCard: {
     paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
-    backgroundColor: "#1B2034", borderColor: "#51496F",
+    backgroundColor: "rgba(27,32,52,0.93)", borderColor: "#51496F",
     borderWidth: 1, borderRadius: 18, gap: 8,
   },
   cardHeading: {
