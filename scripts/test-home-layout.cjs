@@ -583,8 +583,8 @@ tree = adventure({ ...adventureProps, completedLessonIds: ["anc-0"] });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1").props.disabled, false);
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-2").props.disabled, true);
 
-// Adventure 2.0: the atlas uses bounded vector paths rather than a cropped
-// bitmap, and users deep in the curriculum can jump to their active stop.
+// Adventure 3.0: the geographical atlas belongs to the fixed screen root,
+// not the 30-lesson scrolling content; current-stop focus remains unchanged.
 const completedNineteen = adventureLessons.slice(0, 19).map(item => item.id);
 tree = adventure({ ...adventureProps, completedLessonIds: completedNineteen });
 const mapFrame = nodes(tree).find(node => node.props?.testID === "adventure-map");
@@ -594,12 +594,13 @@ const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.s
 const width = mapFrame.props.style[1].width;
 assert.equal(stops.length, 30);
 assert.equal(stopPositions.length, 30);
-const atlas = nodes(mapFrame).find(node => node.type === "AtlasBackground");
-assert.ok(atlas, "bounded uniform atlas is behind the route and nodes");
-assert.equal(atlas.props.width, mapFrame.props.style[1].width);
-assert.equal(atlas.props.height, mapFrame.props.style[1].height);
-assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 1,
-  "single atlas background, not one per checkpoint");
+const atlasLayer = nodes(tree).find(node => node.props?.testID === "adventure-atlas-underlay");
+assert.ok(atlasLayer, "full-screen underlay exists beside fixed header and map viewport");
+assert.equal(atlasLayer.props.pointerEvents, "none", "atlas never intercepts taps");
+assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 0,
+  "no oversized atlas is mounted inside the scrolling path");
+assert.ok(!nodes(pinnedFrame).some(node => node.type === "AtlasBackground"),
+  "atlas remains fixed while lessons scroll");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
   "only the active checkpoint receives a breathing halo");
 assert.ok(nodes(mapFrame).some(node => node.props?.pressScale === 0.96),
@@ -666,6 +667,21 @@ const renderMotion = extra => {
   return motionScreen({ ...adventureProps, completedLessonIds: completedNineteen, ...extra });
 };
 let motionTree = renderMotion({ progressLoaded: false });
+// Native layout supplies the actual available screen size (not window or
+// 4300-point map height); verify a dimension change repositions the atlas.
+const rootLayout = nodes(motionTree).find(node => node.props?.testID === "subcategory-adventure-path");
+rootLayout.props.onLayout({ nativeEvent: { layout: { width: 360, height: 710 } } });
+motionTree = renderMotion({ progressLoaded: false });
+let fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
+assert.ok(fullAtlas, "measured screen mounts the geographical underlay");
+assert.equal(fullAtlas.props.width, 360);
+assert.equal(fullAtlas.props.height, 710);
+nodes(motionTree).find(node => node.props?.testID === "subcategory-adventure-path")
+  .props.onLayout({ nativeEvent: { layout: { width: 390, height: 640 } } });
+motionTree = renderMotion({ progressLoaded: false });
+fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
+assert.equal(fullAtlas.props.width, 390, "atlas follows responsive width");
+assert.equal(fullAtlas.props.height, 640, "atlas follows the screen, not the scroll height");
 let motionScroll = nodes(motionTree).find(node => node.props?.testID === "adventure-map-scroll");
 const autoCalls = adventureAnimationCalls;
 autoCalls.length = 0;
@@ -700,6 +716,13 @@ const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/Ad
 assert.match(atlasSource, /useReducedMotion/, "atlas respects reduce motion");
 assert.match(atlasSource, /pointerEvents="none"/, "atlas cannot intercept lesson taps");
 assert.match(atlasSource, /withRepeat\(/, "atlas has low-frequency ambient motion");
+assert.match(atlasSource, /const west =/, "atlas has a recognisable western mainland coastline");
+assert.match(atlasSource, /const east =/, "atlas has an eastern Anatolian coastline");
+assert.match(atlasSource, /const crete =/, "Crete anchors the southern map");
+assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptical");
+assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
+assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
+assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
