@@ -1,4 +1,5 @@
 import ProfileScreen from "../screens/ProfileScreen";
+import { backDestination, requiresLearningExitConfirmation } from "./navigationRules";
 import PlayerStatsScreen from "../screens/PlayerStatsScreen";
 import KnowledgeReviewScreen from "../screens/KnowledgeReviewScreen";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
@@ -147,12 +148,7 @@ export default function AppNavigator() {
       return;
     }
 
-    const isInUnfinishedLearningFlow =
-      currentScreen === "lesson" || currentScreen === "quiz";
-    const isLeavingLearningFlow =
-      destination !== "lesson" && destination !== "quiz";
-
-    if (isInUnfinishedLearningFlow && isLeavingLearningFlow) {
+    if (requiresLearningExitConfirmation(currentScreen, destination)) {
       const message = currentScreen === "lesson"
         ? `Βρίσκεσαι στη μέση του «${activeLessonTitle}». Οι απαντήσεις που έχεις ήδη δώσει αποθηκεύονται στη συσκευή σου. Μπορείς να επιστρέψεις από την αρχική με την επιλογή «Συνέχισε από εκεί που έμεινες».`
         : `Βρίσκεσαι στη μέση του quiz «${activeLessonTitle}». Η τρέχουσα προσπάθεια του ξεχωριστού quiz δεν αποθηκεύεται ακόμη. Αν φύγεις, θα χρειαστεί να το ξεκινήσεις ξανά.`;
@@ -186,15 +182,12 @@ export default function AppNavigator() {
       if (isDailyChallengeOpen) { setIsDailyChallengeOpen(false); return true; }
       if (app.screen === "home") return false;
       if (app.screen === "review") { app.endMistakeReview(); return true; }
-      const destination: AppScreen = app.screen === "account" ? accountOrigin
-        : app.screen === "profile" ? profileOrigin
-        : app.screen === "player-stats" ? "profile"
-        : app.screen === "knowledge-review" ? knowledgeOrigin
-        : app.screen === "learning-insights" ? "progress"
-        : app.screen === "weekly-review" ? "progress"
-        : app.screen === "lesson" || app.screen === "results" ? app.lessonBackScreen
-        : app.screen === "quiz" ? "lesson"
-        : app.screen === "subcategory" ? "category" : "home";
+      const destination = backDestination(app.screen, {
+        account: accountOrigin,
+        profile: profileOrigin,
+        knowledge: knowledgeOrigin,
+        lesson: app.lessonBackScreen,
+      });
       navigateTo(destination);
       return true;
     });
