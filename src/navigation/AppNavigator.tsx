@@ -125,10 +125,15 @@ export default function AppNavigator() {
     const savedIds = new Set(bookmarks.savedLessonIds);
     return lessons.filter(lesson => savedIds.has(lesson.id));
   }, [bookmarks.savedLessonIds]);
-  const completedLessons = useMemo(() => {
-    const completedIds = new Set(app.completedLessonIds);
-    return lessons.filter(lesson => completedIds.has(lesson.id));
-  }, [app.completedLessonIds]);
+  const completedIds = useMemo(() => new Set(app.completedLessonIds), [app.completedLessonIds]);
+  const completedLessons = useMemo(
+    () => lessons.filter(lesson => completedIds.has(lesson.id)),
+    [completedIds],
+  );
+  const completedSubcategoryCount = useMemo(
+    () => subcategoryLessons.reduce((count, lesson) => count + Number(completedIds.has(lesson.id)), 0),
+    [subcategoryLessons, completedIds],
+  );
   const inProgressLesson = lessons.find(
     (lesson) => lesson.id === app.inProgressLessonId
   ) ?? null;
@@ -437,7 +442,7 @@ export default function AppNavigator() {
           onHome={() => navigateTo("home")}
           onReadAgain={app.restartLesson}
           nextLesson={nextLesson}
-          pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: subcategoryLessons.filter(l => app.completedLessonIds.includes(l.id)).length }}
+          pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: completedSubcategoryCount }}
           onOpenLesson={app.openLesson}
           onBrowse={() => navigateTo("category")}
         />
