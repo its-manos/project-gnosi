@@ -1,6 +1,6 @@
 /** Adventure Path-specific visual polish. Does not affect map geometry or scroll. */
 import { useEffect } from "react";
-import { StyleSheet, Text, View, type DimensionValue } from "react-native";
+import { StyleSheet, View, type DimensionValue } from "react-native";
 import Animated, {
   Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue,
   withDelay, withRepeat, withSequence, withTiming,
