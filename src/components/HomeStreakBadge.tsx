@@ -1,6 +1,7 @@
 /**
- * Compact, native-rendered quiz streak badge. The layout matches Home's XP
- * circle; only a tiny, compositor-side flame transform is animated.
+ * Home quiz streak medallion. The flame stays vector-sharp and the numeral
+ * stays readable while the artwork flickers gently behind it.
+ * No layout or SVG-path animation occurs per frame.
  */
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -11,37 +12,39 @@ import Animated, {
 } from "react-native-reanimated";
 
 type Props = {
-  /** Null while daily progress is being restored. */
+  /** Null while account-scoped daily progress is loading. */
   streak: number | null;
 };
 
 export default function HomeStreakBadge({ streak }: Props) {
   const reducedMotion = useReducedMotion();
   const active = (streak ?? 0) > 0;
-  const flameScale = useSharedValue(1);
+  const breathe = useSharedValue(0);
 
   useEffect(() => {
-    cancelAnimation(flameScale);
-    flameScale.value = 1;
+    cancelAnimation(breathe);
+    breathe.value = 0;
     if (reducedMotion) return;
 
-    // Keep the flame alive without redrawing SVG paths every frame.
-    // A zero streak still has a quieter idle animation.
-    flameScale.value = withRepeat(
-      withTiming(active ? 1.055 : 1.03, {
-        duration: active ? 1450 : 1900,
+    // Transform only the small flame layer on the UI thread. A broken streak
+    // still gets a gentler idle motion without looking like an active streak.
+    breathe.value = withRepeat(
+      withTiming(1, {
+        duration: active ? 1450 : 2100,
         easing: Easing.inOut(Easing.sin),
       }),
       -1,
       true,
     );
-    return () => cancelAnimation(flameScale);
-  }, [active, flameScale, reducedMotion]);
+    return () => cancelAnimation(breathe);
+  }, [active, breathe, reducedMotion]);
 
   const flameStyle = useAnimatedStyle(() => ({
+    opacity: 0.94 - breathe.value * 0.07,
     transform: [
-      { translateY: (1 - flameScale.value) * 9 },
-      { scale: flameScale.value },
+      { translateY: -breathe.value * 0.85 },
+      { rotate: `${breathe.value * 1.4 - 0.7}deg` },
+      { scaleY: 1 + breathe.value * 0.045 },
     ],
   }));
 
@@ -55,50 +58,63 @@ export default function HomeStreakBadge({ streak }: Props) {
         : String(streak) + " συνεχόμενες ημέρες ολοκληρωμένου καθημερινού quiz"}
     >
       <View style={styles.badge}>
-        <Svg width={48} height={48} viewBox="0 0 48 48"
+        {/* An ornamental frame rather than a second progress meter.
+            The level's XP ring remains the visual source of progress. */}
+        <Svg width={50} height={50} viewBox="0 0 50 50"
           style={styles.ring} accessible={false} pointerEvents="none">
-          <Circle cx={24} cy={24} r={20.5} fill="none"
-            stroke="#423A68" strokeWidth={3} />
-          <Circle cx={24} cy={24} r={16.5} fill="none"
-            stroke="#6384E9" strokeOpacity={0.26} strokeWidth={0.8} />
-          <Path d="M 18 4.5 A 20.5 20.5 0 0 1 42.6 15.4"
-            fill="none" stroke="#B6A5FF" strokeWidth={3.5} strokeLinecap="round" />
-          <Path d="M 7.1 35.6 A 20.5 20.5 0 0 0 18 43.5"
-            fill="none" stroke="#516DF7" strokeOpacity={0.65}
-            strokeWidth={2} strokeLinecap="round" />
+          <Circle cx={25} cy={25} r={21} fill="none"
+            stroke="#413B5C" strokeWidth={2.5} />
+          <Circle cx={25} cy={25} r={17.7} fill="none"
+            stroke="#5D5C93" strokeOpacity={0.27} strokeWidth={0.8} />
+          <Path d="M 20 4.6 A 21 21 0 0 1 43.9 15.9"
+            fill="none" stroke={active ? "#8C9EFF" : "#797BAF"}
+            strokeWidth={2.8} strokeLinecap="round" opacity={0.8} />
+          <Path d="M 11 40.2 A 21 21 0 0 0 18 44"
+            fill="none" stroke="#637AE6" strokeOpacity={0.38}
+            strokeWidth={1.8} strokeLinecap="round" />
         </Svg>
-        <Animated.View pointerEvents="none" style={[styles.flame, flameStyle]}>
-          <Svg width={42} height={42} viewBox="0 0 48 48" accessible={false}>
+        <Animated.View style={[styles.flame, flameStyle]} pointerEvents="none"
+          accessible={false}>
+          <Svg width={39} height={41} viewBox="0 0 48 48" accessible={false}>
             <Defs>
-              <LinearGradient id="streakFlame" x1="0%" y1="0%" x2="90%" y2="100%">
-                <Stop offset="0%" stopColor="#4AD5FF" />
-                <Stop offset="52%" stopColor="#6474FF" />
-                <Stop offset="100%" stopColor="#A35DFF" />
+              <LinearGradient id="homeStreakFlameOuter" x1="22%" y1="0%" x2="72%" y2="100%">
+                <Stop offset="0%" stopColor="#61D7FF" />
+                <Stop offset="47%" stopColor="#6387FF" />
+                <Stop offset="100%" stopColor="#9251E9" />
               </LinearGradient>
-              <LinearGradient id="streakCore" x1="0%" y1="0%" x2="100%" y2="100%">
-                <Stop offset="0%" stopColor="#A5EAFF" />
-                <Stop offset="100%" stopColor="#856AFF" />
+              <LinearGradient id="homeStreakFlameInner" x1="16%" y1="0%" x2="83%" y2="100%">
+                <Stop offset="0%" stopColor="#B2F3FF" />
+                <Stop offset="58%" stopColor="#78A9FF" />
+                <Stop offset="100%" stopColor="#A76AFF" />
               </LinearGradient>
             </Defs>
-            {/* Three layered silhouettes suggest motion without animated path data. */}
-            <Path d="M24 5 C30 12 23 17 29 22 C33 18 36 15 34 10
-              C43 18 43 29 38 35 C34 41 27 43 22 42
-              C12 41 8 33 11 25 C14 20 17 17 17 12
-              C22 18 22 23 20 27 C27 21 28 12 24 5 Z"
-              fill="url(#streakFlame)" opacity={active ? 0.94 : 0.78} />
-            <Path d="M23 17 C28 23 25 28 27 30 C30 26 32 23 31 20
-              C37 27 36 36 30 39 C23 43 16 37 17 31
-              C19 27 22 24 23 17 Z"
-              fill="url(#streakCore)" opacity={0.78} />
-            <Path d="M12 35 C19 41 30 42 38 33"
-              fill="none" stroke="#8E6BFF" strokeWidth={2.3}
-              strokeLinecap="round" opacity={0.85} />
+            {/* Open, irregular tongues show above and beside the numeral. */}
+            <Path
+              d="M25 4 C28 13 21 18 25 24 C30 21 32 16 30 12
+                 C39 18 41 29 36 36 C30 44 17 44 12 35
+                 C8 28 13 24 16 19 C17 23 19 26 17 29
+                 C24 24 22 17 25 4 Z"
+              fill="url(#homeStreakFlameOuter)" opacity={active ? 1 : 0.78}
+            />
+            <Path
+              d="M25 15 C28 20 24 24 25 27 C29 25 31 22 32 20
+                 C36 28 33 35 28 38 C22 41 17 35 20 29
+                 C23 26 25 22 25 15 Z"
+              fill="url(#homeStreakFlameInner)" opacity={active ? 0.9 : 0.7}
+            />
+            <Path d="M14 31 C12 35 17 40 22 41" stroke="#9D6DFF"
+              strokeWidth={1.4} strokeLinecap="round" fill="none"
+              opacity={0.6} />
           </Svg>
         </Animated.View>
-        <Text testID="home-streak-count" style={styles.count}
-          numberOfLines={1} adjustsFontSizeToFit>
-          {streak === null ? "—" : streak}
-        </Text>
+        {/* A dark lower core gives one-, two- and three-digit streaks contrast
+            without masking the flame's visible tip. */}
+        <View pointerEvents="none" style={styles.numberCore}>
+          <Text testID="home-streak-count" style={styles.count}
+            numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65}>
+            {streak === null ? "—" : streak}
+          </Text>
+        </View>
       </View>
       <Text style={styles.label} numberOfLines={1}>σερί quiz</Text>
     </View>
@@ -108,18 +124,25 @@ export default function HomeStreakBadge({ streak }: Props) {
 const styles = StyleSheet.create({
   container: { flexDirection: "row", alignItems: "center", gap: 4 },
   badge: {
-    width: 48, height: 48, borderRadius: 24,
+    width: 50, height: 50, borderRadius: 25,
     alignItems: "center", justifyContent: "center",
-    backgroundColor: "#151928",
-    borderWidth: 1, borderColor: "#403A55",
+    backgroundColor: "#151928", borderWidth: 1, borderColor: "#403A55",
   },
   ring: { position: "absolute", top: 0, left: 0 },
-  flame: { position: "absolute", top: 2, left: 2, width: 42, height: 42 },
+  flame: {
+    position: "absolute", top: 3, left: 5.5,
+    width: 39, height: 41, alignItems: "center", justifyContent: "center",
+  },
+  numberCore: {
+    position: "absolute", top: 25, left: 14, width: 22, height: 21,
+    borderRadius: 12, backgroundColor: "rgba(18, 21, 43, 0.94)",
+    borderWidth: 0.7, borderColor: "rgba(157, 148, 249, 0.45)",
+    alignItems: "center", justifyContent: "center",
+  },
   count: {
-    color: "#F3F0FF", fontSize: 18, lineHeight: 23,
-    fontWeight: "900", fontVariant: ["tabular-nums"],
-    textShadowColor: "#1A1E62", textShadowRadius: 3,
-    textShadowOffset: { width: 0, height: 1 },
+    width: 20, textAlign: "center", color: "#F3F0FF",
+    fontSize: 14, lineHeight: 17, fontWeight: "900",
+    fontVariant: ["tabular-nums"],
   },
   label: { color: "#ABB0C1", fontSize: 10, lineHeight: 13 },
 });
