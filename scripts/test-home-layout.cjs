@@ -574,6 +574,10 @@ assert.equal(pinnedFrame.props.entranceDelay, 150,
   "the fixed map viewport fades in only once after the Continue card");
 assert.equal(pinnedFrame.props.style.flex, 1,
   "entrance animation does not change map viewport layout sizing");
+assert.equal(pinnedFrame.props.style.marginBottom, 8,
+  "atlas viewport leaves a small gap above the fixed bottom navigation");
+assert.equal(pinnedFrame.props.style.paddingBottom, undefined,
+  "navigation clearance remains outside the atlas and its scroll viewport");
 const nestedScroll = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-map-scroll");
 assert.ok(nestedScroll, "the map has its own scroll container");
 assert.equal(nodes(tree).filter(node => node.type === "ScrollView").length, 1,
