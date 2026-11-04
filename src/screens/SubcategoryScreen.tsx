@@ -139,7 +139,7 @@ export default function SubcategoryScreen({
     if (!progressLoaded || reduceMotion === null || !mapViewportHeight ||
       mapContentHeight < mapViewportHeight ||
       mapContentHeight + 2 < mapHeight + MAP_BOTTOM_PADDING ||
-      !points.length || !scrollRef.current ||
+      !points.length ||
       autoFocusedRef.current === subcategory.id || userInteractedRef.current) return;
     autoFocusedRef.current = subcategory.id;
     scrollToCurrent(!reduceMotion);
