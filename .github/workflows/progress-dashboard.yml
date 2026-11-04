@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "src/screens/ProgressScreen.tsx"
+      - "src/components/ProgressGradientBackground.tsx"
+      - "src/components/ProgressMotion.tsx"
+      - "src/components/HomeMotion.tsx"
       - "src/screens/LearningInsightsScreen.tsx"
       - "src/navigation/AppNavigator.tsx"
       - "src/hooks/useLearningApp.ts"
