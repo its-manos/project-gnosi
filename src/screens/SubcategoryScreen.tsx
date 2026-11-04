@@ -214,12 +214,15 @@ export default function SubcategoryScreen({
       {isTesting && path.length > 1 ?
         <Text style={styles.devHint}>Δοκιμή: όλοι οι σταθμοί ξεκλείδωτοι.</Text> : null}
 
+      {/* Do not animate the whole fixed viewport, SVG, scroll container and
+          30 checkpoint subtrees as one large surface. Continue, header and
+          the active checkpoint retain their smaller entrance/motion cues. */}
       {path.length === 0 ?
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Νέες αποστολές έρχονται</Text>
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
-        <MotionView entranceDelay={150} testID="adventure-map-viewport" style={styles.mapViewport}
+        <View testID="adventure-map-viewport" style={styles.mapViewport}
           onLayout={event => {
             const { width, height } = event.nativeEvent.layout;
             if (width <= 0 || height <= 0) return;
@@ -324,7 +327,7 @@ export default function SubcategoryScreen({
           })}
             </View>
           </Animated.ScrollView>
-        </MotionView>}
+        </View>}
     </View>
   );
 }
