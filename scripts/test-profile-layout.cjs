@@ -17,7 +17,7 @@ const react = {
 };
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
-  ActivityIndicator: "Spinner", StyleSheet: { create: value => value },
+  ActivityIndicator: "Spinner", StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: 390, height: 810, fontScale: 1 }),
   useWindowDimensions: () => ({ width: 390, height: 810, fontScale: 1 }),
 };
 const { lessons } = load("src/data/lessons.ts");
@@ -107,6 +107,8 @@ assert.ok(activity && activity.props.dashboard === true, "Stats should lead with
 assert.equal(nodes(tree).filter(n => n.props?.children === "Η δραστηριότητά σου").length, 1,
   "Statistics should only have one activity heading");
 assert.ok(!nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
+assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"), "Default Statistics overview should not scroll");
+assert.ok(!nodes(tree).some(n => n.type === "ScrollView"), "Normal viewport stays fixed");
 const quizToggle = nodes(tree).find(n => n.type === "Pressable" && text(n).includes("Καθημερινά quiz"));
 assert.ok(quizToggle, "Quiz details stay discoverable");
 quizToggle.props.onPress();
