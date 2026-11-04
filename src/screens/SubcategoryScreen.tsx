@@ -338,6 +338,9 @@ const styles = StyleSheet.create({
   atlasUnderlay: { ...StyleSheet.absoluteFill },
   mapViewport: {
     flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
+    // A small outside gap separates the atlas from the fixed bottom navigation.
+    // Margin (not padding) keeps the atlas and scroll bounds aligned to the viewport.
+    marginBottom: 8,
     backgroundColor: "#101827",
     borderTopWidth: 1, borderColor: "#25273A",
   },
