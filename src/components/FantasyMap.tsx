@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 type MapRegion = {
@@ -20,6 +20,8 @@ type Props = {
   emptyMessage?: string;
   overview?: boolean;
   minHeight?: number;
+  /** Available fixed atlas area; only Category screens use the compact constellation layout. */
+  fitViewport?: { width: number; height: number };
   onControlsHeightChange?: (height: number) => void;
 };
 
@@ -71,11 +73,11 @@ function overviewRows(count: number): number[] {
   return Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
 }
 
-function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number): PositionedRegion[] {
+function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, fitted: boolean): PositionedRegion[] {
   const count = regions.length;
   if (count === 0) return [];
 
-  const columns = columnCount(count);
+  const columns = fitted && count > 4 ? 3 : columnCount(count);
   const cellWidth = MAP_WIDTH / columns;
   const totalRows = Math.ceil(count / columns);
   // Anchor islands to the available canvas, rather than leaving a short map
@@ -86,6 +88,25 @@ function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number):
 
   const rowSizes = overviewRows(count);
   return regions.map((region, index) => {
+    if (fitted && count > 1) {
+      // Independent destinations: balance 2/3/2 or 3/3 constellations across
+      // the actual visible map, rather than growing a tall sequential grid.
+      let row = 0;
+      let column = index;
+      while (column >= rowSizes[row]) { column -= rowSizes[row]; row += 1; }
+      const cell = MAP_WIDTH / rowSizes[row];
+      const edge = Math.min(78, Math.max(57, mapHeight * 0.17));
+      const yStep = rowSizes.length === 1 ? 0
+        : (mapHeight - edge * 2) / (rowSizes.length - 1);
+      return {
+        ...region,
+        cx: cell * (column + 0.5) + Math.sin(index * 1.7) * 2.5,
+        cy: rowSizes.length === 1 ? mapHeight / 2 : edge + row * yStep,
+        rx: Math.min(65, cell * 0.35),
+        ry: Math.min(46, Math.max(36, mapHeight / (rowSizes.length * 3))),
+        seed: index + 1, fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
+      };
+    }
     if (overview && count > 1) {
       let row = 0;
       let column = index;
@@ -297,14 +318,27 @@ export default function FantasyMap({
   emptyMessage = "Νέες περιοχές θα εμφανιστούν εδώ.",
   overview = false,
   minHeight = 0,
+  fitViewport,
   onControlsHeightChange,
 }: Props) {
   const [showList, setShowList] = useState(false);
-  const columns = columnCount(regions.length);
-  const rows = Math.max(1, overview ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
+  const [controlsHeight, setControlsHeight] = useState(50);
+  const fitted = Boolean(fitViewport?.width && fitViewport?.height);
+  const columns = fitted && regions.length > 4 ? 3 : columnCount(regions.length);
+  const rows = Math.max(1, overview || fitted
+    ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
   const naturalHeight = regions.length === 1 ? 198 : overview ? rows * 128 + 32 : rows * 144 + 16;
-  const mapHeight = overview ? naturalHeight : Math.max(naturalHeight, Math.min(960, minHeight));
-  const positionedRegions = useMemo(() => makeLayout(regions, overview, mapHeight), [regions, overview, mapHeight]);
+  // Match the measured on-screen width and free height. The fixed Category
+  // atlas keeps all destinations visible without making users chase a path.
+  const fittedCanvasHeight = fitted
+    ? Math.max(160, fitViewport!.height - controlsHeight - 11) : 0;
+  const mapHeight = fitted
+    ? Math.max(180, Math.round(fittedCanvasHeight * MAP_WIDTH / Math.min(520, fitViewport!.width)))
+    : overview ? naturalHeight : Math.max(naturalHeight, Math.min(960, minHeight));
+  const positionedRegions = useMemo(
+    () => makeLayout(regions, overview, mapHeight, fitted),
+    [regions, overview, mapHeight, fitted],
+  );
   // Larger text is practical because the layout uses at most three columns for
   // up to 24 regions. Large catalogues retain a list view for full labels.
   const labelFontSize = overview ? 12.5 : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
@@ -319,21 +353,37 @@ export default function FantasyMap({
     );
   }
 
-  const connectorPaths = positionedRegions.slice(1).map((region, index) => {
-    const previous = positionedRegions[index];
-    const controlX = (previous.cx + region.cx) / 2;
-    const controlY = (previous.cy + region.cy) / 2 - 18;
-
-    return {
-      key: `${previous.id}-${region.id}`,
-      d: `M ${previous.cx} ${previous.cy} Q ${controlX} ${controlY} ${region.cx} ${region.cy}`,
-    };
+  const linked = new Set<string>();
+  const connectorPaths = positionedRegions.flatMap((region, index) => {
+    const neighbours = fitted
+      ? positionedRegions.filter(other => other.id !== region.id)
+        .sort((a, b) => Math.hypot(a.cx - region.cx, a.cy - region.cy)
+          - Math.hypot(b.cx - region.cx, b.cy - region.cy)).slice(0, 2)
+      : index ? [positionedRegions[index - 1]] : [];
+    return neighbours.flatMap(other => {
+      const key = [region.id, other.id].sort().join("-");
+      if (linked.has(key)) return [];
+      linked.add(key);
+      const controlX = (region.cx + other.cx) / 2;
+      const controlY = (region.cy + other.cy) / 2 - 18;
+      return [{
+        key,
+        d: fitted
+          ? `M ${region.cx} ${region.cy} L ${other.cx} ${other.cy}`
+          : `M ${other.cx} ${other.cy} Q ${controlX} ${controlY} ${region.cx} ${region.cy}`,
+      }];
+    });
   });
+  const ListContainer = fitted ? ScrollView : View;
 
   return (
     <View style={styles.container}>
       <View style={[styles.viewControls, overview && styles.overviewControls]}
-        onLayout={event => onControlsHeightChange?.(event.nativeEvent.layout.height)}>
+        onLayout={event => {
+          const height = event.nativeEvent.layout.height;
+          setControlsHeight(previous => Math.abs(previous - height) < 1 ? previous : height);
+          onControlsHeightChange?.(height);
+        }}>
         <Text style={overview ? styles.overviewLabel : styles.mapEyebrow}>
           {overview ? "Θεματικές" : regions.length + " ΠΕΡΙΟΧΕΣ"}
         </Text>
@@ -350,7 +400,8 @@ export default function FantasyMap({
           ))}
         </View>
       </View>
-      {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame, { aspectRatio: MAP_WIDTH / mapHeight }]}>
+      {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame,
+        { aspectRatio: MAP_WIDTH / mapHeight }, fitted && styles.fittedFrame]}>
       <Svg
         width="100%"
         height="100%"
@@ -376,7 +427,8 @@ export default function FantasyMap({
             <Stop offset="1" stopColor="#DEB766" />
           </LinearGradient>
         </Defs>
-        <Rect width={MAP_WIDTH} height={mapHeight} rx={20} fill="url(#atlas-sea)" />
+        <Rect width={MAP_WIDTH} height={mapHeight} rx={fitted ? 0 : 20}
+          fill={fitted ? "#101827" : "url(#atlas-sea)"} />
         {Array.from({ length: 9 }, (_, index) => (
           <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
             stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
@@ -400,7 +452,7 @@ export default function FantasyMap({
             stroke="#BEB896"
             strokeWidth={1}
             strokeDasharray="2 5"
-            opacity={0.32}
+            opacity={fitted ? 0.24 : 0.32}
           />
         ))}
 
@@ -593,7 +645,10 @@ export default function FantasyMap({
       </View> : null}
 
       {showList ? (
-        <View testID="knowledge-region-list" style={styles.regionList}>
+        <ListContainer testID="knowledge-region-list"
+          style={fitted ? [styles.regionListScroll,
+            { maxHeight: Math.max(140, fitViewport!.height - controlsHeight - 11) }] : styles.regionList}>
+          <View style={fitted ? styles.regionList : undefined}>
           {positionedRegions.map((region) => (
             <Pressable
               key={`list-${region.id}`}
@@ -626,7 +681,8 @@ export default function FantasyMap({
               <Text style={styles.regionListArrow}>›</Text>
             </Pressable>
           ))}
-        </View>
+          </View>
+        </ListContainer>
       ) : null}
     </View>
   );
@@ -635,6 +691,9 @@ export default function FantasyMap({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+  },
+  fittedFrame: {
+    borderWidth: 0, borderRadius: 0, backgroundColor: "#101827",
   },
   mapFrame: {
     width: "100%",
@@ -658,6 +717,9 @@ const styles = StyleSheet.create({
   viewButtonActive: { backgroundColor: "#343448" },
   viewButtonText: { color: "#AAB3BF", fontSize: 12, fontWeight: "700" },
   viewButtonTextActive: { color: "#F3EEE2" },
+  regionListScroll: {
+    width: "100%", maxWidth: 520, alignSelf: "center",
+  },
   regionList: {
     gap: 8,
     marginTop: 2,
