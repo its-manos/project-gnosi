@@ -51,6 +51,20 @@ assert.ok(activity.includes('calculateDailyChallengeProgress(history, todayKey)'
   "Daily quiz history and streaks must use the existing calculator.");
 assert.ok(activity.includes('progress-daily-details'),
   "Keep expandable daily challenge history and accuracy.");
+assert.ok(activity.includes('<LearningActivityPanel todayKey={todayKey} dashboard />'),
+  "The chart and weekly activity should precede the quiz details in Statistics.");
+assert.equal((activity.match(/Η δραστηριότητά σου/g) || []).length, 1,
+  "Only the main Statistics heading should use the activity title.");
+assert.doesNotMatch(activity, /MetricCard|metricsGrid/,
+  "Old oversized quiz KPI grid should not return.");
+assert.ok(activity.includes('stats.currentStreak') && activity.includes('stats.longestStreak') &&
+  activity.includes('stats.totalCorrectAnswers') && activity.includes('history.slice(0, 10)'),
+  "Expanded quiz details retain streaks, accuracy and history.");
+const activityPanel = read("src/components/LearningActivityPanel.tsx");
+assert.ok(activityPanel.includes('testID="activity-dashboard-metrics"') &&
+  activityPanel.includes('testID="activity-chart"') &&
+  activityPanel.includes('testID="activity-accuracy"'),
+  "Compact weekly metrics, the chart, and lesson accuracy all remain present.");
 assert.doesNotMatch(activity, /lessonScores|mastery\.count|completedLessons|totalLessonCount/,
   "Mastery and lesson completion belong in Progress / Learning Insights.");
 assert.ok(routes.includes('<PlayerStatsScreen onBack={() => app.setScreen("profile")} />'),
