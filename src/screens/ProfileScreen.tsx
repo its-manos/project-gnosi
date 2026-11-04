@@ -2,7 +2,7 @@ import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import { useLearningSession, useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
+import { useLearningSession, useDailyDataSnapshot, useLearningDataSnapshot } from "../state/LearningSession";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 import { dailyHistory } from "../utils/dailySyncDocument";
@@ -78,8 +78,8 @@ function QuickLink({ title, subtitle, icon, onPress }: {
 
 export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide }: Props) {
   const { email } = useLearningSession();
-  const learning = useLearningSnapshot();
-  const daily = useDailySnapshot();
+  const learning = useLearningDataSnapshot();
+  const daily = useDailyDataSnapshot();
   // useKnowledgeProfile already subscribes to the Athens day boundary.
   // Avoid another AppState listener and minute interval on this screen.
   const today = getAthensDateKey();
