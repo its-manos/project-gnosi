@@ -24,7 +24,7 @@ let model={due:[],practice:[],categories:[],topics:[]},ready=true;
 const modelHook={'../hooks/useKnowledgeModel':{useKnowledgeModel:()=>({model,today:'2026-10-30',ready})}};
 learning={...learning,knowledgeSession:null};
 let pending=[];
-const Review=load('src/components/ReviewActions.tsx',{...common,...modelHook,'../utils/weeklyReview':{weeklyPlan:()=>pending},'./ActionButton':{__esModule:true,default:'Action'}}).default;
+const Review=load('src/components/ReviewActions.tsx',{...common,...modelHook,'../utils/weeklyReview':{weeklyPlan:()=>pending},'./ActionButton':{__esModule:true,default:'Action'},'./ProgressMotion':{ProgressActionHighlight:'ActionHighlight'}}).default;
 const actions={onReview:()=>calls.push('review'),onExplore:()=>calls.push('explore'),onWeeklyReview:()=>calls.push('weekly')};
 tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,1);assert.ok(!text(tree).endsWith('0'));nodes(tree).find(n=>n.type==='Action').props.onPress();assert.equal(calls.at(-1),'explore');
 model={...model,due:[{}],practice:[{}]};tree=Review(actions);nodes(tree).find(n=>n.type==='Action').props.onPress();assert.equal(calls.at(-1),'review');
