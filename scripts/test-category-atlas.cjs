@@ -519,6 +519,11 @@ assert.equal(chartStarCount(staticBg), 30,
 const bgSvg = staticBgNodes.find(node => node.type === "svg");
 assert.equal(bgSvg.props.viewBox, "0 0 360 519",
   "background uses the identical fitted viewBox as the interactive map");
+const wideBg = bgModule.default({ width: 680, height: 490, regionCount: 3 });
+assert.equal(wideBg.props.style[1].width, 520,
+  "wide-screen background respects FantasyMap\'s maximum 520pt width");
+assert.equal(wideBg.props.style[1].left, 80,
+  "background remains centered beneath the wide-screen island SVG");
 const splitMap = map({ ...props, regions: regionData, fitViewport: { width: 340, height: 490 },
   hideControls: true, externalBackground: true });
 const splitNodes = nodes(splitMap);
