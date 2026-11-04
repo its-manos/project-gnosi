@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { ActivityIndicator, AppState, Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -32,6 +32,9 @@ function ScopedLearning({ userId, email, children }: { userId: string | null; em
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const [dailyStore] = useState(() => getDailyStore(userId));
   const daily = useSyncExternalStore(dailyStore.subscribe, dailyStore.getSnapshot, dailyStore.getSnapshot);
+  // Sync status can update frequently; do not invalidate every context consumer
+  // just because the readiness boundary re-rendered.
+  const contextValue = useMemo(() => ({ store, dailyStore, email }), [store, dailyStore, email]);
   useEffect(() => {
     void store.start(); void dailyStore.start();
     const subscription = AppState.addEventListener("change", state => { if (state === "active") { void store.retry(); void dailyStore.retry(); } });
@@ -39,7 +42,7 @@ function ScopedLearning({ userId, email, children }: { userId: string | null; em
     return () => { subscription.remove(); clearInterval(interval); store.stop(); dailyStore.stop(); };
   }, [store, dailyStore]);
   if (!snapshot.ready || !daily.ready) return <Loading error={!snapshot.ready ? snapshot.error : daily.error} retry={() => { void store.start(); void dailyStore.start(); }} />;
-  return <Context.Provider value={{ store, dailyStore, email }}>{children}</Context.Provider>;
+  return <Context.Provider value={contextValue}>{children}</Context.Provider>;
 }
 /** A keyed boundary remounts all reading/navigation state on account changes. */
 export default function LearningSession({ children }: { children: ReactNode }) {
