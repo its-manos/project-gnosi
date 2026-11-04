@@ -302,7 +302,6 @@ export default function AppNavigator() {
           onOpenInsights={(view: LearningInsightsView) => { setProgressView(view); app.setScreen("learning-insights"); }}
           onKnowledgeReview={() => openKnowledgeReview("progress")}
           onOpenProfile={() => openProfile("progress")}
-          onWeeklyReview={() => openKnowledgeReview("progress")}
           onHome={() => navigateTo("home")}
           completedLessons={completedLessons}
           inProgressLesson={inProgressLesson}
