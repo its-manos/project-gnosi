@@ -238,17 +238,28 @@ export default function SubcategoryScreen({
             onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAnimation(scrollPosition); }}>
             <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
-            {/* Route geometry stays scrollable above the viewport-anchored atlas. */}
+            {/* An engraved double stroke keeps the path visible on sea and land.
+                The short glow is static: no per-segment animations or extra layers. */}
             {segments.map((segment, index) => (
-              <Path key={"route-base-" + index} d={segment.d} fill="none"
-                stroke="#24283C" strokeWidth={14} strokeLinecap="round" />
+              <Path key={"route-etch-" + index} d={segment.d} fill="none"
+                stroke="#BBA889" strokeWidth={17} strokeLinecap="round" opacity={0.16} />
             ))}
             {segments.map((segment, index) => (
+              <Path key={"route-base-" + index} d={segment.d} fill="none"
+                stroke="#101929" strokeWidth={13} strokeLinecap="round" opacity={0.94} />
+            ))}
+            {segments.map((segment, index) =>
+              segment.done || segment.toNext ?
+                <Path key={"route-halo-" + index} d={segment.d} fill="none"
+                  stroke={segment.done ? "#3F9A7C" : "#AD9FFB"} strokeWidth={8}
+                  strokeLinecap="round" opacity={segment.done ? 0.20 : 0.25} /> : null)}
+            {segments.map((segment, index) => (
               <Path key={"route-line-" + index} d={segment.d} fill="none"
-                stroke={segment.done ? "#2E9A7E" : segment.toNext ? "#A89BFF" : "#645C81"}
-                strokeWidth={segment.done ? 5 : 3} strokeLinecap="round"
+                stroke={segment.done ? "#2E9A7E" : segment.toNext ? "#A89BFF" : "#82778F"}
+                strokeWidth={segment.done ? 4.5 : segment.toNext ? 3.5 : 2.8}
+                strokeLinecap="round"
                 strokeDasharray={segment.done ? undefined : "3 11"}
-                opacity={segment.done ? 0.9 : segment.toNext ? 1 : 0.65} />
+                opacity={segment.done ? 0.96 : segment.toNext ? 1 : 0.78} />
             ))}
           </Svg>
 
@@ -357,9 +368,10 @@ const styles = StyleSheet.create({
   stopPosition: { position: "absolute", width: NODE_WIDTH, alignItems: "center" },
   chapterBadge: {
     position: "absolute", top: -28, alignSelf: "center", overflow: "hidden",
-    color: "#C9BDFF", fontSize: 10, fontWeight: "900", textAlign: "center",
-    lineHeight: 16, letterSpacing: 0.75, paddingHorizontal: 10, paddingVertical: 3,
-    borderRadius: 8, backgroundColor: "#2D2944",
+    color: "#D6C8FF", fontSize: 10, fontWeight: "900", textAlign: "center",
+    lineHeight: 16, letterSpacing: 0.9, paddingHorizontal: 10, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 0.75, borderColor: "#756E8F",
+    backgroundColor: "#24263E",
   },
   nodePressable: { width: NODE_WIDTH, alignItems: "center", minHeight: 120 },
   nodeOuter: { width: 74, height: 74, alignItems: "center", justifyContent: "center" },
@@ -376,6 +388,8 @@ const styles = StyleSheet.create({
   nodeTitle: {
     color: colors.textBody, fontSize: 12, lineHeight: 17, fontWeight: "800",
     textAlign: "center", marginTop: 7, minHeight: 34,
+    paddingHorizontal: 7, paddingVertical: 2, borderRadius: 7,
+    backgroundColor: "rgba(9,15,27,0.79)",
     textShadowColor: "#0B0D15", textShadowRadius: 4, textShadowOffset: { width: 0, height: 1 },
   },
   nodeTitleLocked: { color: "#9298AB" },
