@@ -119,20 +119,28 @@ export default function AppNavigator() {
     () => getSubcategoryPath(lessons, app.activeSubcategoryId),
     [app.activeSubcategoryId]
   );
-  const savedLessons = useMemo(
-    () => lessons.filter((lesson) => bookmarks.savedLessonIds.includes(lesson.id)),
-    [bookmarks.savedLessonIds]
-  );
-  const completedLessons = useMemo(
-    () => lessons.filter((lesson) => app.completedLessonIds.includes(lesson.id)),
-    [app.completedLessonIds]
-  );
+  // Catalogue order is stable; Set membership avoids scanning saved/completed
+  // ID arrays once for every lesson whenever these lists change.
+  const savedLessons = useMemo(() => {
+    const savedIds = new Set(bookmarks.savedLessonIds);
+    return lessons.filter(lesson => savedIds.has(lesson.id));
+  }, [bookmarks.savedLessonIds]);
+  const completedLessons = useMemo(() => {
+    const completedIds = new Set(app.completedLessonIds);
+    return lessons.filter(lesson => completedIds.has(lesson.id));
+  }, [app.completedLessonIds]);
   const inProgressLesson = lessons.find(
     (lesson) => lesson.id === app.inProgressLessonId
   ) ?? null;
 
-  const discovery = getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate);
-  const nextLesson = activeLesson ? getNextPathLesson(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds) : null;
+  const discovery = useMemo(
+    () => getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate),
+    [app.completedLessonIds, app.inProgressLessonIds, discoveryDate],
+  );
+  const nextLesson = useMemo(
+    () => activeLesson ? getNextPathLesson(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds) : null,
+    [activeLesson, app.completedLessonIds, app.inProgressLessonIds],
+  );
 
   const currentScreen = app.screen;
   const setAppScreen = app.setScreen;
