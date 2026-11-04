@@ -289,15 +289,21 @@ export default function SubcategoryScreen({
                     : disabled ? ", κλειδωμένο. Ολοκλήρωσε πρώτα " +
                       (access.prerequisite?.title ?? "το προηγούμενο μάθημα")
                       : ", διαθέσιμο")}>
-                  <View style={styles.nodeOuter}>
+                  <View style={[styles.nodeOuter, done && styles.nodeOuterDone,
+                    active && styles.nodeOuterActive, disabled && styles.nodeOuterLocked]}>
                     {active ? <AdventureActiveHalo /> : null}
                     <View style={[styles.node, done && styles.nodeDone, active && styles.nodeActive,
                       disabled && styles.nodeLocked]}>
+                      {/* A single stationary engraved inset per medal. No new SVG or animation. */}
+                      {done || active || disabled ?
+                        <View pointerEvents="none" accessible={false}
+                          style={[styles.nodeInset, done && styles.nodeInsetDone,
+                            active && styles.nodeInsetActive, disabled && styles.nodeInsetLocked]} /> : null}
                       {done ? <Text style={styles.nodeCheck}>✓</Text>
                         : disabled ? <Svg width={23} height={25} viewBox="0 0 24 24">
                           <Path d="M6.5 10V7.5a5.5 5.5 0 0 1 11 0V10M5.5 10h13v10h-13z"
-                            stroke="#777D93" strokeWidth={1.8} strokeLinejoin="round" fill="none" />
-                          <Circle cx={12} cy={15} r={1.4} fill="#777D93" />
+                            stroke="#8993A8" strokeWidth={1.8} strokeLinejoin="round" fill="none" />
+                          <Circle cx={12} cy={15} r={1.4} fill="#8993A8" />
                         </Svg>
                           : <Text style={styles.nodeNumber}>{index + 1}</Text>}
                     </View>
@@ -383,17 +389,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#24263B",
   },
   nodePressable: { width: NODE_WIDTH, alignItems: "center", minHeight: 120 },
-  nodeOuter: { width: 74, height: 74, alignItems: "center", justifyContent: "center" },
+  nodeOuter: {
+    width: 74, height: 74, borderRadius: 37,
+    alignItems: "center", justifyContent: "center",
+  },
+  // Completed stations resemble aged bronze seals, with a green core so
+  // completion remains identifiable without depending on metal color alone.
+  nodeOuterDone: { borderWidth: 1.5, borderColor: "#AE9671", backgroundColor: "#262D32" },
+  nodeOuterActive: { borderWidth: 1.5, borderColor: "#A99AE3", backgroundColor: "#302945" },
+  nodeOuterLocked: { borderWidth: 1, borderColor: "#41495C", backgroundColor: "#18212F" },
   node: {
     width: 69, height: 69, borderRadius: 35, borderWidth: 3,
     backgroundColor: "#2B2C45", borderColor: "#6C668A",
     alignItems: "center", justifyContent: "center",
   },
-  nodeActive: { borderColor: "#B9A8FF", borderWidth: 4, backgroundColor: "#4B3F79" },
-  nodeDone: { borderColor: colors.success, backgroundColor: colors.successSurface },
-  nodeLocked: { borderColor: "#373A50", backgroundColor: "#1D2232" },
+  nodeDone: { borderWidth: 2, borderColor: "#BBA27C", backgroundColor: "#254339" },
+  nodeActive: { borderWidth: 3, borderColor: "#C5B7FF", backgroundColor: "#4B3F79" },
+  nodeLocked: { borderWidth: 2, borderColor: "#485166", backgroundColor: "#222938" },
+  nodeInset: {
+    position: "absolute", top: 7, right: 7, bottom: 7, left: 7,
+    borderRadius: 28, borderWidth: 1,
+  },
+  nodeInsetDone: { borderColor: "#A8916B", opacity: 0.68 },
+  nodeInsetActive: { borderColor: "#AFA2E3", opacity: 0.55 },
+  nodeInsetLocked: { borderColor: "#5F687B", opacity: 0.32 },
   nodeNumber: { color: "#F6F0FF", fontSize: 25, lineHeight: 31, fontWeight: "900" },
-  nodeCheck: { color: colors.success, fontSize: 34, lineHeight: 40, fontWeight: "800" },
+  nodeCheck: { color: "#C1EDD3", fontSize: 34, lineHeight: 40, fontWeight: "800" },
   nodeTitle: {
     color: colors.textBody, fontSize: 12, lineHeight: 16, fontWeight: "800",
     textAlign: "center", marginTop: 5,
