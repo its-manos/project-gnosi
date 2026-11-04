@@ -23,7 +23,7 @@ function MiniMetric({ label, value, detail }: { label: string; value: string; de
 function DashboardMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
   return <View style={styles.dashboardMetric}>
     <Text style={styles.dashboardValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{value}</Text>
-    <Text style={styles.dashboardLabel} numberOfLines={2}>{label}</Text>
+    <Text style={styles.dashboardLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{label}</Text>
     <Text style={styles.dashboardDetail} numberOfLines={1}>{detail}</Text>
   </View>;
 }
@@ -47,8 +47,8 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
     {dashboard ? <>
       <Text style={styles.dashboardHeading}>Αυτή την εβδομάδα</Text>
       <View style={styles.dashboardMetrics} testID="activity-dashboard-metrics">
-        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="7 ημέρες" />
-        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="7 ημέρες" />
+        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="εβδομάδα" />
+        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="εβδομάδα" />
         <DashboardMetric label="Ενεργές ημέρες" value={String(summary.activeDays)} detail="συνολικά" />
       </View>
     </> : !compact ? <View style={styles.metrics}>
@@ -215,8 +215,8 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
 const styles = StyleSheet.create({
   sectionDashboard: { marginTop: 0, marginBottom: 0, gap: 10 },
   dashboardHeading: { color: colors.textBody, fontSize: 12, lineHeight: 18, fontWeight: "800" },
-  dashboardMetrics: { flexDirection: "row", gap: 8 },
-  dashboardMetric: { flex: 1, minWidth: 0, minHeight: 92, paddingHorizontal: 11, paddingVertical: 9, justifyContent: "center", gap: 2, borderWidth: 1, borderColor: "#4A4566", borderRadius: 16, backgroundColor: "#20243C" },
+  dashboardMetrics: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 92, paddingHorizontal: 11, paddingVertical: 9, justifyContent: "center", gap: 2, borderWidth: 1, borderColor: "#4A4566", borderRadius: 16, backgroundColor: "#20243C" },
   dashboardValue: { color: colors.accentLight, fontSize: 27, lineHeight: 33, fontWeight: "900", fontVariant: ["tabular-nums"] },
   dashboardLabel: { color: colors.text, fontSize: 10.5, lineHeight: 14, fontWeight: "800" },
   dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 13 },
