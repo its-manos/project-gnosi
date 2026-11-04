@@ -66,6 +66,7 @@ function compile(file, extra = {}, returnModule = false, globals = {}) {
   }).outputText;
   const imports = {
     react, "react/jsx-runtime": { jsx, jsxs: jsx },
+    "../utils/screenLayout": { availableScreenHeight: (viewport, window) => viewport > 0 ? viewport : Math.max(0, window - 130) },
     "react-native": native, "react-native-svg": svg,
     "react-native-reanimated": reanimated,
     // The shared FantasyMap is compiled in isolation here; map-only motion
