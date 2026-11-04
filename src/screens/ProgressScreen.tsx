@@ -108,7 +108,7 @@ export default function ProgressScreen({
         ) : (
           <View testID="progress-reading" style={styles.reading}>
             <Text style={styles.hint}>Η ανάγνωση και η κατάκτηση γνώσεων μετρώνται ξεχωριστά.</Text>
-            <CategoryProgress compact />
+            {lessonProgressLoaded ? <CategoryProgress compact /> : <Text style={styles.hint}>Φόρτωση μαθημάτων…</Text>}
             {lessonProgressLoaded && completedLessons.length > 0 ? (
               <>
                 <Pressable style={styles.disclosure} accessibilityRole="button"
