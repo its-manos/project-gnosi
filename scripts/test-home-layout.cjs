@@ -341,8 +341,7 @@ const atlas = compile("src/components/HomeAtlasBackground.tsx", {
   "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
   "./HomeAtlasMotion": {
     HomeAtlasAmbientGlow: "HomeAtlasAmbientGlow",
-    HomeAtlasTwinkleStar: "HomeAtlasTwinkleStar",
-    HomeAtlasCurrent: "HomeAtlasCurrent",
+    HomeAtlasTwinkles: "HomeAtlasTwinkles",
   },
 });
 let atlasTree = atlas();
@@ -366,12 +365,15 @@ assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 27,
   "atlas contains a deterministic star chart and instrument rings");
 assert.ok(!nodes(atlasSvg).some(node => node.type === "image"),
   "Home background contains no stretched bitmap or network image");
-assert.equal(nodes(atlasSvg).filter(node => node.type === "HomeAtlasAmbientGlow").length, 1,
-  "only one low-opacity atmosphere layer is animated");
-assert.equal(nodes(atlasSvg).filter(node => node.type === "HomeAtlasTwinkleStar").length, 4,
-  "only four deterministic stars twinkle, not the entire star field");
-assert.equal(nodes(atlasSvg).filter(node => node.type === "HomeAtlasCurrent").length, 1,
-  "only one quiet dotted chart bearing flows");
+assert.equal(nodes(atlasSvg).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "the chart SVG never contains animated gradient or path props");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 1,
+  "only one small compositor-friendly atmosphere overlay is animated");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasTwinkles").length, 1,
+  "star twinkles are isolated from the static SVG");
+assert.ok(nodes(atlasSvg).some(node => node.type === "path"
+  && node.props.strokeDasharray === "2 18" && node.props.strokeOpacity === 0.13),
+  "the chart bearing is present but no longer animates its dash props");
 assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 31,
   "the richer static chart keeps engraved navigation marks");
 atlasTree.props.onLayout({ nativeEvent: { layout: { width: 844, height: 390 } } });
@@ -387,49 +389,66 @@ assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\)/,
 assert.match(staticAtlasSource, /absoluteFill/,
   "atlas stays fixed outside the scrollable dashboard");
 
-// Verify reduced motion without a simulator: the real animated components
-// must mount as static SVG elements and never schedule loops when disabled.
+// Verify reduced motion without a simulator: the new effects animate only
+// native view opacity and do not animate any SVG property on each frame.
 let homeAmbientReduced = true;
 let homeAmbientLoops = 0;
 const atlasMotion = compile("src/components/HomeAtlasMotion.tsx", {
   react: { useEffect: fn => fn() },
   "react-native-reanimated": {
     __esModule: true,
-    default: { createAnimatedComponent: component => component },
-    Easing: { sin: x => x, linear: x => x, inOut: fn => fn },
+    default: { View: "AnimatedView" },
+    Easing: { sin: x => x, inOut: fn => fn },
     useReducedMotion: () => homeAmbientReduced,
     useSharedValue: initial => ({ value: initial }),
-    useAnimatedProps: fn => fn(),
+    useAnimatedStyle: fn => fn(),
     cancelAnimation: () => {},
     withDelay: (_delay, result) => result,
     withSequence: (...values) => values.at(-1),
     withRepeat: result => { homeAmbientLoops++; return result; },
     withTiming: value => value,
   },
+  "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
 }, true);
-const glow = atlasMotion.HomeAtlasAmbientGlow({ h: 910 });
-const twinkle = atlasMotion.HomeAtlasTwinkleStar({ x: 200, y: 90, index: 2 });
-const current = atlasMotion.HomeAtlasCurrent({ h: 910 });
-for (const [component, id] of [
-  [glow, "home-atlas-motion-glow"],
-  [twinkle, "home-atlas-motion-star-2"],
-  [current, "home-atlas-motion-current"],
-]) {
-  assert.equal(component.props.testID, id);
-  assert.equal(component.props.pointerEvents, "none",
-    "ambient SVG accents never steal touch targets");
-  assert.equal(component.props.animatedProps, undefined,
-    "reduce-motion leaves the original fixed illustration visible");
+const glow = atlasMotion.HomeAtlasAmbientGlow({ width: 390, height: 844 });
+assert.equal(glow.type, "AnimatedView");
+assert.equal(glow.props.testID, "home-atlas-motion-glow");
+assert.equal(glow.props.pointerEvents, "none");
+assert.equal(glow.props.accessible, false);
+assert.equal(glow.props.style[2].opacity, 0.065);
+assert.equal(nodes(glow).filter(node => node.type === "ellipse").length, 1,
+  "the glow's geometry stays static inside a separately composited view");
+const skyTwinkles = atlasMotion.HomeAtlasTwinkles({ width: 390, height: 844 });
+assert.equal(skyTwinkles.props.pointerEvents, "none");
+const starNodes = [skyTwinkles.props.children].flat(Infinity);
+assert.equal(starNodes.length, 4, "at most four small stars twinkle");
+for (const node of starNodes) {
+  const dot = node.type(node.props);
+  assert.equal(dot.type, "AnimatedView");
+  assert.equal(dot.props.pointerEvents, "none");
+  assert.equal(dot.props.accessible, false);
+  assert.equal(dot.props.style[2].opacity, 0.17);
+  assert.equal(dot.props.style[0].width, 3,
+    "stars are tiny composited views, not animated SVG nodes");
 }
-assert.equal(homeAmbientLoops, 0, "reduce-motion disables all infinite loops");
+assert.equal(homeAmbientLoops, 0, "reduce motion prevents every infinite loop");
 homeAmbientReduced = false;
-atlasMotion.HomeAtlasAmbientGlow({ h: 910 });
-for (let index = 0; index < 4; index++) {
-  atlasMotion.HomeAtlasTwinkleStar({ x: 200, y: 90, index });
-}
-atlasMotion.HomeAtlasCurrent({ h: 910 });
-assert.equal(homeAmbientLoops, 6,
-  "the live view animates one glow, four stars, and one bearing only");
+atlasMotion.HomeAtlasAmbientGlow({ width: 390, height: 844 });
+for (const node of starNodes) node.type(node.props);
+assert.equal(homeAmbientLoops, 5,
+  "only one view-based glow and four tiny stars loop during normal motion");
+const nativeMotionSource = fs.readFileSync(
+  path.join(root, "src/components/HomeAtlasMotion.tsx"), "utf8");
+assert.ok(!/useAnimatedProps|Animated\.createAnimatedComponent|strokeDashoffset/.test(nativeMotionSource),
+  "no background SVG property is animated on the UI thread");
+assert.match(nativeMotionSource, /useReducedMotion/,
+  "ambient animations always respect reduced motion");
+const homeMotionSourceCheck = fs.readFileSync(
+  path.join(root, "src/components/HomeMotion.tsx"), "utf8");
+assert.match(homeMotionSourceCheck, /export function MotionShimmer/,
+  "the original Continue button shimmer remains installed");
+assert.match(homeMotionSourceCheck, /withTiming\(width \+ 42/,
+  "the Continue shimmer's original animation has not been changed");
 
 // Responsive density follows the available Home height after safe areas and tabs.
 homeScrollState = [0, 0, 0];
