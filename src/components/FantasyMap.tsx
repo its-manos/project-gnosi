@@ -627,10 +627,10 @@ export default function FantasyMap({
                   {/* Thin ink seam and a restrained engraved upper ridge give
                       the landmass depth. Keep relief away from titles and
                       progress bars; do not add another luminous checkpoint ring. */}
-                  <Path testID={`atlas-island-rim-${region.id}`} d={islandPath}
+                  <Path testID={`atlas-rim-${region.id}`} d={islandPath}
                     fill="none" stroke="#0D1627" strokeWidth={2.6}
                     strokeOpacity={0.55} />
-                  <Path testID={`atlas-island-relief-${region.id}`}
+                  <Path testID={`atlas-relief-${region.id}`}
                     d={upperIslandContour(makeIslandPoints(
                       region.cx, region.cy, region.rx * 0.91, region.ry * 0.87, region.seed,
                     ))}
