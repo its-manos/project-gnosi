@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
@@ -32,14 +32,6 @@ const CHAPTER_GAP = 25;
 const NODE_WIDTH = 148;
 const MAP_BOTTOM_PADDING = 32;
 
-// Keep the first checkpoint of the active chapter in view, not just the next
-// lesson. Other paths without chapter boundaries focus the next lesson itself.
-export function getAdventureChapterStart(index: number, isAncientGreece: boolean) {
-  if (index <= 0) return 0;
-  if (!isAncientGreece) return index;
-  return [...chapterStarts].reverse().find(start => start <= index) ?? 0;
-}
-
 export function getAdventureEntryOffset(
   chapterY: number, mapHeight: number, viewportHeight: number,
 ) {
@@ -48,9 +40,11 @@ export function getAdventureEntryOffset(
   return Math.min(maxScroll, Math.max(0, chapterY - 112));
 }
 
-export function getAdventureGlideDuration(distance: number) {
-  // An intentional, medium-speed reveal, capped for late chapters.
-  return Math.round(Math.min(1800, Math.max(800, 750 + Math.abs(distance) * 0.35)));
+// Shared destination for both the initial focus and "Η ΘΕΣΗ ΜΟΥ".
+export function getAdventureCurrentOffset(
+  checkpointY: number, mapHeight: number, viewportHeight: number,
+) {
+  return getAdventureEntryOffset(checkpointY + 12, mapHeight, viewportHeight);
 }
 
 function pointFor(index: number, width: number, isAncientGreece: boolean) {
@@ -80,12 +74,6 @@ export default function SubcategoryScreen({
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
   const autoFocusedRef = useRef<string | null>(null);
   const userInteractedRef = useRef(false);
-  const scrollOffsetRef = useRef(0);
-  const autoScrollRef = useRef<{
-    animation: Animated.CompositeAnimation;
-    value: Animated.Value;
-    listener: string;
-  } | null>(null);
   const path = useMemo(() => getSubcategoryPath(lessons, subcategory.id), [lessons, subcategory.id]);
   const completed = path.filter(lesson => completedLessonIds.includes(lesson.id)).length;
   const nextLesson = path.find(lesson => !completedLessonIds.includes(lesson.id) &&
@@ -108,15 +96,6 @@ export default function SubcategoryScreen({
   const progressPercent = path.length ? Math.round(completed / path.length * 100) : 0;
   const isTesting = devLessonsUnlocked();
 
-  const cancelAutoScroll = () => {
-    const running = autoScrollRef.current;
-    autoScrollRef.current = null;
-    if (running) {
-      running.animation.stop();
-      running.value.removeListener(running.listener);
-    }
-  };
-
   useEffect(() => {
     let mounted = true;
     AccessibilityInfo.isReduceMotionEnabled()
@@ -126,54 +105,34 @@ export default function SubcategoryScreen({
     return () => { mounted = false; subscription.remove(); };
   }, []);
 
-  // The outer heading/card never scroll. Wait for the inner ScrollView to be
-  // laid out and progress to hydrate before making a single entry movement.
+  // Both entry focus and the "Η ΘΕΣΗ ΜΟΥ" shortcut use the same ScrollView
+  // command and exact destination. A single native animated scrollTo is more
+  // reliable on iOS than issuing dozens of scrollTo calls per JS animation
+  // frame (which can end prematurely on a long, detailed map).
+  const scrollToCurrent = (animated: boolean) => {
+    const focusIndex = nextIndex >= 0 ? nextIndex : path.length - 1;
+    if (focusIndex < 0 || !points[focusIndex]) return;
+    const target = getAdventureCurrentOffset(
+      points[focusIndex].y, mapHeight, mapViewportHeight,
+    );
+    scrollRef.current?.scrollTo({ y: target, animated });
+  };
+
+  // The Continue card stays pinned. After progress and map measurements are
+  // ready, focus once on the next checkpoint. Dragging before hydration wins.
   useEffect(() => {
     if (!progressLoaded || reduceMotion === null || !mapViewportHeight ||
       mapContentHeight < mapViewportHeight || !points.length ||
       autoFocusedRef.current === subcategory.id || userInteractedRef.current) return;
     autoFocusedRef.current = subcategory.id;
-
-    const focusIndex = nextIndex >= 0 ? nextIndex : path.length - 1;
-    const chapterIndex = getAdventureChapterStart(focusIndex, isAncientGreece);
-    const target = getAdventureEntryOffset(points[chapterIndex].y, mapHeight, mapViewportHeight);
-    if (target < 1) return;
-
-    if (reduceMotion) {
-      scrollRef.current?.scrollTo({ y: target, animated: false });
-      scrollOffsetRef.current = target;
-      return;
-    }
-
-    const value = new Animated.Value(scrollOffsetRef.current);
-    const listener = value.addListener(({ value: position }) => {
-      scrollRef.current?.scrollTo({ y: position, animated: false });
-      scrollOffsetRef.current = position;
-    });
-    const animation = Animated.timing(value, {
-      toValue: target,
-      duration: getAdventureGlideDuration(target - scrollOffsetRef.current),
-      easing: Easing.inOut(Easing.cubic),
-      useNativeDriver: false,
-    });
-    autoScrollRef.current = { animation, value, listener };
-    animation.start(() => {
-      if (autoScrollRef.current?.animation === animation) {
-        value.removeListener(listener);
-        autoScrollRef.current = null;
-      }
-    });
+    scrollToCurrent(!reduceMotion);
   }, [progressLoaded, reduceMotion, mapViewportHeight, mapContentHeight,
-    subcategory.id, nextIndex, isAncientGreece, mapHeight, path.length]);
-
-  useEffect(() => () => { cancelAutoScroll(); }, []);
+    subcategory.id, nextIndex, mapHeight, path.length]);
 
   const jumpToCurrent = () => {
     if (nextIndex < 0 || !points[nextIndex]) return;
-    cancelAutoScroll();
     userInteractedRef.current = true;
-    const target = getAdventureEntryOffset(points[nextIndex].y + 12, mapHeight, mapViewportHeight);
-    scrollRef.current?.scrollTo({ y: target, animated: !reduceMotion });
+    scrollToCurrent(!reduceMotion);
   };
 
   return (
@@ -250,9 +209,7 @@ export default function SubcategoryScreen({
             onContentSizeChange={(_width, height) => {
               setMapContentHeight(previous => Math.abs(previous - height) < 1 ? previous : height);
             }}
-            onScroll={event => { scrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
-            scrollEventThrottle={32}
-            onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAutoScroll(); }}>
+            onScrollBeginDrag={() => { userInteractedRef.current = true; }}>
             <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
             {/* Faint engraved contours and stars suggest an old atlas without a
