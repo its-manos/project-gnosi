@@ -88,6 +88,18 @@ function AdventureAtlasBackground({ width, height }: Props) {
       { x: 254, y: .584, rx: 6, ry: 7, turn: 25 },
       { x: 166, y: .531, rx: 5, ry: 8, turn: -16 },
       { x: 292, y: .759, rx: 5, ry: 9, turn: 30 },
+      // Small archipelagos give the chart a sense of scale without adding
+      // large visual shapes underneath the lesson labels.
+      { x: 235, y: .249, rx: 4.5, ry: 8, turn: -20 }, // Northern Sporades
+      { x: 251, y: .263, rx: 6, ry: 4, turn: 18 },
+      { x: 267, y: .277, rx: 3.4, ry: 4.6, turn: 24 },
+      { x: 171, y: .558, rx: 4.5, ry: 6, turn: -12 }, // Western Cyclades
+      { x: 173, y: .610, rx: 3.4, ry: 5, turn: 24 },
+      { x: 249, y: .658, rx: 3.8, ry: 7.5, turn: 31 }, // Lesser Cyclades
+      { x: 258, y: .681, rx: 3.5, ry: 4.3, turn: 14 },
+      { x: 277, y: .697, rx: 4.2, ry: 5.6, turn: -13 },
+      { x: 339, y: .719, rx: 3.5, ry: 5.2, turn: 30 }, // Dodecanese
+      { x: 345, y: .749, rx: 4.2, ry: 6.5, turn: -28 },
     ];
     const relief = [
       `M 18 ${h * .045} C 81 ${h * .055} 89 ${h * .09} 79 ${h * .14} S 46 ${h * .225} 20 ${h * .252}`,
@@ -173,6 +185,20 @@ function AdventureAtlasBackground({ width, height }: Props) {
         </G>
         <Rect x={9} y={9} width={402} height={Math.max(0, h - 18)}
           fill="none" stroke="#BEAC95" strokeWidth={0.7} opacity={0.18} />
+        {/* Four quiet Greek-key corner engravings, not a busy repeating frame. */}
+        <G fill="none" stroke="#C8AB83" strokeWidth={0.85} opacity={0.23}>
+          {[
+            { x: 18, y: 31, angle: 0 },
+            { x: 402, y: 31, angle: 180 },
+            { x: 18, y: h - 31, angle: 0 },
+            { x: 402, y: h - 31, angle: 180 },
+          ].map((corner, index) =>
+            <G key={"fret-" + index}
+              transform={`translate(${corner.x} ${corner.y}) rotate(${corner.angle})`}>
+              <Path d="M 0 10 H 36 V 0 H 12 V 7 H 28 V 4 H 20" />
+              <Path d="M 0 14 H 40" opacity={0.45} />
+            </G>)}
+        </G>
         <G fill="#C0AB8C" fontSize={8} opacity={0.32} letterSpacing={1}>
           <SvgText x={20} y={23}>24° E</SvgText>
           <SvgText x={356} y={23}>26° E</SvgText>
@@ -180,6 +206,13 @@ function AdventureAtlasBackground({ width, height }: Props) {
           <SvgText x={367} y={h * .75}>36° N</SvgText>
         </G>
 
+        {/* Fine chart bearings suggest routes without overpowering checkpoints. */}
+        <G fill="none" stroke="#B9A989" strokeWidth={0.8} opacity={0.09}
+          strokeDasharray="2 14">
+          <Path d={`M 270 ${h * .235} L 420 ${h * .485}`} />
+          <Path d={`M 270 ${h * .235} L 0 ${h * .775}`} />
+          <Path d={`M 270 ${h * .235} L 80 ${h * .08}`} />
+        </G>
         {/* Two opposing shores make the sea legible as the Aegean basin. */}
         <G fill="url(#adventure-land)" fillOpacity={0.75}
           stroke="#B7A27F" strokeWidth={1.35} strokeOpacity={0.42}>
