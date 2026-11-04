@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useDailySnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
-
 import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
@@ -11,23 +10,15 @@ import { MotionView } from "../components/HomeMotion";
 import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
 import { colors } from "../theme";
+
 function formatDate(dateKey: string): string {
-  const date = new Date(`${dateKey}T12:00:00Z`);
+  const date = new Date(dateKey + "T12:00:00Z");
   return new Intl.DateTimeFormat("el-GR", {
     day: "numeric",
     month: "short",
     year: "numeric",
     timeZone: "Europe/Athens",
   }).format(date);
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.metricCard}>
-      <Text style={[styles.metricLabel, styles.cardLabel]}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
-    </View>
-  );
 }
 
 export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
@@ -54,115 +45,141 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
     [history, todayKey],
   );
 
-  return <View style={styles.screen}>
-    <ProgressGradientBackground />
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <AppHeader onBack={onBack} /><SyncStatus quiet />
-      <MotionView entranceDelay={0} style={styles.heading}>
-        <Text style={styles.eyebrow}>Ο ΡΥΘΜΟΣ ΣΟΥ</Text>
-        <Text style={styles.title}>Η δραστηριότητά σου</Text>
-        <Text style={styles.intro}>Η συνέπειά σου και οι καθημερινές προκλήσεις.</Text>
-      </MotionView>
-      <MotionView entranceDelay={65} style={styles.overview} testID="activity-overview">
-        <View style={styles.metricsGrid}>
-          <MetricCard label="ΤΡΕΧΟΝ ΣΕΡΙ QUIZ" value={historyLoaded ? String(stats.currentStreak) : "—"} />
-          <MetricCard label="ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ" value={historyLoaded ? String(stats.longestStreak) : "—"} />
-          <MetricCard label="ΟΛΟΚΛΗΡΩΜΕΝΑ QUIZ" value={historyLoaded ? String(stats.completedChallenges) : "—"} />
-          <MetricCard label="ΣΥΝΟΛΙΚΟΙ ΠΟΝΤΟΙ QUIZ" value={historyLoaded ? stats.totalPoints.toLocaleString("el-GR") : "—"} />
-        </View>
-      </MotionView>
-      <Text style={styles.sectionTitle}>Η δραστηριότητά σου</Text>
-    <LearningActivityPanel todayKey={todayKey} />
-      <View testID="progress-daily">
-        <Pressable style={styles.disclosure} accessibilityRole="button" accessibilityState={{ expanded: dailyExpanded }} onPress={() => setDailyExpanded(value => !value)}>
-          <View style={styles.accountCopy}><Text style={styles.accountTitle}>Οι καθημερινές προκλήσεις σου</Text><Text style={styles.muted}>{historyLoaded ? `${stats.completedChallenges} quiz · ${stats.totalPoints.toLocaleString("el-GR")} πόντοι` : "Φόρτωση στατιστικών…"}</Text></View><Text style={styles.chevron}>{dailyExpanded ? "−" : "+"}</Text>
-        </Pressable>
-        {dailyExpanded ? <View testID="progress-daily-details" style={styles.dailyDetails}>
-      {!historyLoaded ? (
-        <View style={styles.loadingCard}>
-          <ActivityIndicator color={colors.accentLight} />
-          <Text style={styles.muted}>Φόρτωση στατιστικών…</Text>
-        </View>
-      ) : (
-        <>
-          <View style={styles.accuracyCard}>
-            <View style={styles.accuracyHeader}>
-              <View style={styles.accuracyCopy}>
-                <Text style={styles.metricLabel}>ΣΥΝΟΛΙΚΗ ΑΚΡΙΒΕΙΑ</Text>
-                <Text style={styles.accuracyValue}>{stats.totalAnswers ? `${stats.accuracyPercent}%` : "—"}</Text>
-              </View>
-              <Text style={styles.accuracyCount}>{stats.totalCorrectAnswers} / {stats.totalAnswers} σωστές</Text>
-            </View>
-            <View style={styles.track}>
-              <View style={[styles.trackFill, { width: `${stats.accuracyPercent}%` }]} />
-            </View>
-          </View>
+  return (
+    <View style={styles.screen} testID="player-stats-screen">
+      <ProgressGradientBackground />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <AppHeader onBack={onBack} />
+        <SyncStatus quiet />
+        <MotionView entranceDelay={0} style={styles.heading}>
+          <Text style={styles.eyebrow}>Ο ΡΥΘΜΟΣ ΣΟΥ</Text>
+          <Text style={styles.title}>Η δραστηριότητά σου</Text>
+          <Text style={styles.intro}>Η συνέπειά σου, μέρα με τη μέρα.</Text>
+        </MotionView>
 
-          <Text style={styles.sectionTitle}>Πρόσφατες προκλήσεις</Text>
-          {history.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>Η πρώτη σου πρόκληση σε περιμένει</Text>
+        <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
+          <LearningActivityPanel todayKey={todayKey} dashboard />
+        </MotionView>
+
+        <MotionView entranceDelay={115} style={styles.quizSection} testID="progress-daily">
+          <Pressable
+            style={({ pressed }) => [styles.disclosure, pressed && styles.disclosurePressed]}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: dailyExpanded }}
+            onPress={() => setDailyExpanded(value => !value)}
+          >
+            <View style={styles.accountCopy}>
+              <Text style={styles.accountTitle}>Καθημερινά quiz</Text>
+              <Text style={styles.muted}>
+                {historyLoaded
+                  ? stats.completedChallenges + " ολοκληρωμένα · " + stats.totalPoints.toLocaleString("el-GR") + " πόντοι"
+                  : "Φόρτωση στατιστικών…"}
+              </Text>
             </View>
-          ) : (
-            <View style={styles.historyList}>
-              {history.slice(0, 10).map((entry) => (
-                <View key={entry.dateKey} style={styles.historyRow}>
-                  <View style={styles.historyDateBlock}>
-                    <Text style={styles.historyDate}>{formatDate(entry.dateKey)}</Text>
-                    <Text style={styles.historySubtext}>{entry.correctCount} / 7 σωστές απαντήσεις</Text>
-                  </View>
-                  <View style={styles.historyScoreBlock}>
-                    <Text style={styles.historyScore}>{entry.score}</Text>
-                    <Text style={styles.historyScoreMeta}>πόντοι</Text>
-                  </View>
+            <Text style={styles.chevron} accessible={false}>{dailyExpanded ? "−" : "+"}</Text>
+          </Pressable>
+          {dailyExpanded ? (
+            <View testID="progress-daily-details" style={styles.dailyDetails}>
+              {!historyLoaded ? (
+                <View style={styles.loadingCard}>
+                  <ActivityIndicator color={colors.accentLight} />
+                  <Text style={styles.muted}>Φόρτωση στατιστικών…</Text>
                 </View>
-              ))}
-            </View>
-          )}
-        </>
-      )}
-        </View> : null}
-      </View>
+              ) : (
+                <>
+                  <View style={styles.streakRow}>
+                    <View style={styles.streakCard}>
+                      <Text style={styles.metricLabel}>ΤΡΕΧΟΝ ΣΕΡΙ QUIZ</Text>
+                      <Text style={styles.streakValue}>{stats.currentStreak}<Text style={styles.streakUnit}> ημέρες</Text></Text>
+                    </View>
+                    <View style={styles.streakCard}>
+                      <Text style={styles.metricLabel}>ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ</Text>
+                      <Text style={styles.streakValue}>{stats.longestStreak}<Text style={styles.streakUnit}> ημέρες</Text></Text>
+                    </View>
+                  </View>
 
-    </ScrollView>
-  </View>;
+                  <View style={styles.accuracyCard}>
+                    <View style={styles.accuracyHeader}>
+                      <View style={styles.accuracyCopy}>
+                        <Text style={styles.metricLabel}>ΑΚΡΙΒΕΙΑ QUIZ</Text>
+                        <Text style={styles.accuracyValue}>{stats.totalAnswers ? stats.accuracyPercent + "%" : "—"}</Text>
+                      </View>
+                      <Text style={styles.accuracyCount}>{stats.totalCorrectAnswers} / {stats.totalAnswers} σωστές</Text>
+                    </View>
+                    <View style={styles.track}>
+                      <View style={[styles.trackFill, { width: stats.accuracyPercent + "%" }]} />
+                    </View>
+                  </View>
+
+                  <Text style={styles.sectionTitle}>Πρόσφατες προκλήσεις</Text>
+                  {history.length === 0 ? (
+                    <View style={styles.emptyCard}>
+                      <Text style={styles.emptyTitle}>Η πρώτη σου πρόκληση σε περιμένει</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.historyList}>
+                      {history.slice(0, 10).map((entry) => (
+                        <View key={entry.dateKey} style={styles.historyRow}>
+                          <View style={styles.historyDateBlock}>
+                            <Text style={styles.historyDate}>{formatDate(entry.dateKey)}</Text>
+                            <Text style={styles.historySubtext}>{entry.correctCount} / 7 σωστές απαντήσεις</Text>
+                          </View>
+                          <View style={styles.historyScoreBlock}>
+                            <Text style={styles.historyScore}>{entry.score}</Text>
+                            <Text style={styles.historyScoreMeta}>πόντοι</Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </>
+              )}
+            </View>
+          ) : null}
+        </MotionView>
+      </ScrollView>
+    </View>
+  );
 }
+
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: "#101827" },
-  heading: { gap: 4, marginTop: 6, marginBottom: 14 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 10, paddingBottom: 30 },
+  heading: { gap: 4, marginTop: 5, marginBottom: 14 },
   eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 1.1 },
-  overview: { marginBottom: 8 },
-  disclosure: { flexDirection: "row", alignItems: "center", minHeight: 72, padding: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, marginVertical: 8 },
-  dailyDetails: { paddingBottom: 12 },
-  accountCopy: { flex: 1, gap: 4 },
-  accountTitle: { color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "800" },
-  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 10, paddingBottom: 36 },
   title: { color: colors.text, fontSize: 25, lineHeight: 32, fontWeight: "900" },
   intro: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
-  sectionTitle: { color: colors.text, fontSize: 19, fontWeight: "900", marginTop: 15, marginBottom: 13 },
-  metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  metricCard: { flexBasis: "46%", flexGrow: 1, minHeight: 91, backgroundColor: "#20243C", borderColor: "#484360", borderWidth: 1, borderRadius: 17, padding: 13, gap: 5 },
-  metricLabel: { color: colors.textMuted, fontSize: 9, fontWeight: "900", letterSpacing: 0.8, lineHeight: 14 },
-  cardLabel: { minHeight: 28, flexGrow: 1 },
-  metricValue: { color: colors.accentLight, fontSize: 29, lineHeight: 38, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  loadingCard: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 11, padding: 24, backgroundColor: colors.surface, borderRadius: 17 },
+  activityOverview: { marginBottom: 12 },
+  quizSection: { marginBottom: 6 },
+  disclosure: { flexDirection: "row", alignItems: "center", minHeight: 72, paddingHorizontal: 15, paddingVertical: 12, backgroundColor: "#20243C", borderWidth: 1, borderColor: "#484360", borderRadius: 18 },
+  disclosurePressed: { backgroundColor: "#2A2C47" },
+  accountCopy: { flex: 1, gap: 4, paddingRight: 10 },
+  accountTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "800" },
+  chevron: { color: colors.accentLight, fontSize: 25, fontWeight: "500", paddingHorizontal: 5 },
   muted: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
-  accuracyCard: { marginTop: 12, padding: 17, backgroundColor: colors.surfaceSoft, borderRadius: 18, borderWidth: 1, borderColor: colors.border },
+  dailyDetails: { paddingTop: 10, paddingBottom: 12 },
+  streakRow: { flexDirection: "row", gap: 9 },
+  streakCard: { flex: 1, minWidth: 0, minHeight: 83, padding: 13, justifyContent: "space-between", backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 15 },
+  metricLabel: { color: colors.textMuted, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 0.45 },
+  streakValue: { color: colors.accentLight, fontSize: 26, lineHeight: 34, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  streakUnit: { color: colors.textMuted, fontSize: 11, fontWeight: "600" },
+  loadingCard: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 11, padding: 24, backgroundColor: colors.surface, borderRadius: 17 },
+  accuracyCard: { marginTop: 10, padding: 15, backgroundColor: colors.surfaceSoft, borderRadius: 16, borderWidth: 1, borderColor: colors.border },
   accuracyHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 10 },
   accuracyCopy: { flex: 1 },
-  accuracyValue: { color: colors.text, fontSize: 30, fontWeight: "900", marginTop: 4 },
+  accuracyValue: { color: colors.text, fontSize: 27, lineHeight: 34, fontWeight: "900", marginTop: 3 },
   accuracyCount: { color: colors.textBody, fontSize: 11, textAlign: "right", marginBottom: 6, flexShrink: 1 },
-  track: { height: 7, overflow: "hidden", backgroundColor: "#282D40", borderRadius: 20, marginTop: 13 },
+  track: { height: 7, overflow: "hidden", backgroundColor: "#282D40", borderRadius: 20, marginTop: 11 },
   trackFill: { height: "100%", backgroundColor: colors.accent, borderRadius: 20 },
-  emptyCard: { padding: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, gap: 8 },
-  emptyTitle: { color: colors.text, fontSize: 16, fontWeight: "800" },
-  historyList: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: 18, overflow: "hidden" },
-  historyRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 14, borderBottomColor: colors.border, borderBottomWidth: 1 },
+  sectionTitle: { color: colors.text, fontSize: 17, lineHeight: 24, fontWeight: "900", marginTop: 19, marginBottom: 10 },
+  emptyCard: { padding: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 16 },
+  emptyTitle: { color: colors.text, fontSize: 15, fontWeight: "800" },
+  historyList: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" },
+  historyRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 15, paddingVertical: 12, borderBottomColor: colors.border, borderBottomWidth: 1 },
   historyDateBlock: { flex: 1, paddingRight: 12 },
   historyDate: { color: colors.text, fontSize: 13, fontWeight: "800", textTransform: "capitalize" },
-  historySubtext: { color: colors.textMuted, fontSize: 11, marginTop: 5 },
+  historySubtext: { color: colors.textMuted, fontSize: 11, marginTop: 4 },
   historyScoreBlock: { alignItems: "flex-end", minWidth: 54 },
   historyScore: { color: colors.accentLight, fontSize: 20, fontWeight: "900" },
   historyScoreMeta: { color: colors.textMuted, fontSize: 10 },
-  chevron: { color: colors.accentLight, fontSize: 28, fontWeight: "400", paddingLeft: 6 },
 });
