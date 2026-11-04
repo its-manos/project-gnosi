@@ -92,7 +92,7 @@ export function AtlasDestinationFeedback({ d, regionId, pressedRegion }: {
       opacity: reduced ? (active ? 0.42 : 0)
         : withTiming(active ? 0.42 : 0, { duration: active ? 90 : 180 }),
     };
-  }, [pressedRegion, regionId, reduced]);
+  });
 
   return <AnimatedPath testID="atlas-motion-press-glint" pointerEvents="none"
     d={d} fill="none" stroke="#EBD9BF" strokeWidth={3.2}
