@@ -67,13 +67,14 @@ assert.equal(nodes(tileGrid).filter(n=>n.type==='MotionPressable').length,4,
   'initial knowledge view has four tactile subject tiles');
 assert.ok(nodes(tileGrid).every(n=>n.type!=='MotionPressable'||n.props.accessibilityRole==='button'),
   'each interactive tile has an accessible button role');
-const firstKnowledgeTile=nodes(tileGrid).find(n=>n.props.testID==='knowledge-subject-0');
+const firstKnowledgeTile=nodes(tileGrid).find(n=>n.type==='MotionPressable');
+const firstKnowledgeId=firstKnowledgeTile.props.testID;
 assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);
 firstKnowledgeTile.props.onPress();tree=renderKnowledgeTiles();
-assert.equal(nodes(tree).find(n=>n.props.testID==='knowledge-subject-0').props.accessibilityState.selected,true);
+assert.equal(nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.accessibilityState.selected,true);
 assert.ok(text(nodes(tree).find(n=>n.props.testID==='knowledge-selected-subject')).includes('πρώτη κατακτημένη έννοια'),
   'selected empty subject offers a truthful first milestone');
-nodes(tree).find(n=>n.props.testID==='knowledge-subject-0').props.onPress();tree=renderKnowledgeTiles();
+nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.onPress();tree=renderKnowledgeTiles();
 assert.ok(!nodes(tree).some(n=>n.props.testID==='knowledge-selected-subject'),
   'tapping a selected tile collapses its short insight');
 assert.ok(!text(tileGrid).includes('0%'), 'zero subjects do not repeat 0% labels');
