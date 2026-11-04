@@ -329,6 +329,34 @@ frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
 const fittedCanvas = Math.max(180, Math.round((490 - 50 - 11) * 360 / 340));
 assert.equal(frame.props.style[2].aspectRatio, 360 / fittedCanvas);
 assert.equal(frame.props.style[3].borderWidth, 0, "integrated atlas has no black inset frame");
+
+// Category Atlas is map-only: reclaim the entire viewport, without a label,
+// map/list switch, or hidden reserved row height. Other map usages keep them.
+const mapOnlyTree = map({ ...props, fitViewport: { width: 340, height: 490 },
+  hideControls: true });
+const mapOnlyNodes = nodes(mapOnlyTree);
+const mapOnlyFrame = mapOnlyNodes.find(node => node.props?.testID === "knowledge-world-map");
+assert.ok(mapOnlyFrame, "map-only atlas retains its interactive constellation");
+assert.equal(mapOnlyFrame.props.style[2].aspectRatio,
+  360 / Math.round(490 * 360 / 340),
+  "map-only constellation fills the complete measured viewport");
+assert.equal(mapOnlyNodes.filter(node => ["atlas-map-toggle", "atlas-list-toggle"]
+  .includes(node.props?.testID)).length, 0,
+  "map/list mode buttons must not be visible");
+assert.ok(!mapOnlyNodes.some(node => typeof node.props?.children === "string"
+  && node.props.children.includes("ΠΕΡΙΟΧΕΣ")),
+  "subcategory count row must not be visible");
+const mapOnlyIsland = mapOnlyNodes.find(node => node.props?.testID === "atlas-island-ancient");
+assert.equal(typeof mapOnlyIsland?.props.onPress, "function",
+  "removing controls must not affect island taps");
+const selectedBefore = selected.length;
+mapOnlyIsland.props.onPress();
+assert.equal(selected.length, selectedBefore + 1);
+assert.equal(selected[selected.length - 1], "ancient");
+assert.equal(nodes(tree).filter(node => ["atlas-map-toggle", "atlas-list-toggle"]
+  .includes(node.props?.testID)).length, 2,
+  "standard map and list controls remain available elsewhere");
+assert.equal(frame.props.style[3].borderWidth, 0, "integrated atlas has no black inset frame");
 assert.equal(nodes(frame).filter(node => node.type === "rect"
   && node.props?.stroke === "#89AAA6").length, 0,
   "fitted map is not drawn inside another rounded border");
@@ -462,6 +490,7 @@ assert.match(screen, /#6C668A/, "island tints share Adventure Path palette");
 assert.match(screen, /letterSpacing: 1.4/, "header typography matches Subcategory screen");
 assert.match(screen, /testID="category-atlas-map-viewport"/);
 assert.match(screen, /fitViewport=/, "map respects actual viewport rather than enforcing a tall path");
+assert.match(screen, /hideControls/, "Category Atlas hides the count and map/list row");
 assert.match(screen, /chooseAtlasFeaturedRegion/, "shortcut chooses an explored area independently");
 assert.doesNotMatch(screen, /<ScrollView/, "map exploration fits without page scrolling");
 assert.doesNotMatch(screen, /\{category\.description\}/, "remove redundant category description");
@@ -566,6 +595,8 @@ assert.equal(mapReveal.type, "MotionView",
   "the atlas fades in after measurement without replacing the map");
 assert.equal(mapReveal.props.entranceDelay, 155);
 assert.equal(mountedMaps.length, 1, "measured screen mounts exactly one map");
+assert.equal(mountedMaps[0].props.hideControls, true,
+  "Category Atlas only renders the constellation without mode controls");
 assert.equal(nodes(mapReveal).filter(node => node.type === map).length, 1,
   "fitted map stays inside the non-layout-shifting entrance wrapper");
 assert.deepEqual(
