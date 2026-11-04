@@ -495,7 +495,8 @@ export default function FantasyMap({
           {positionedRegions.map((region) => (
             <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
               <Stop offset="0" stopColor={region.fill} />
-              <Stop offset="1" stopColor={fitted ? "#222938" : "#253B40"} />
+              {fitted ? <Stop offset="0.45" stopColor="#343D4F" /> : null}
+              <Stop offset="1" stopColor={fitted ? "#1D2738" : "#253B40"} />
             </LinearGradient>
           ))}
           <LinearGradient id="atlas-progress-lavender" x1="0" y1="0" x2="1" y2="0">
@@ -595,7 +596,8 @@ export default function FantasyMap({
               key={region.id}
               pointerEvents="none"
             >
-              <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={0.6} />
+              <Path d={islandPath} transform={fitted ? "translate(0 4)" : "translate(0 5)"}
+                fill="#050F18" opacity={fitted ? 0.75 : 0.6} />
               <Path d={islandPath} fill="none"
                 stroke={fitted
                   ? region.status === "in-progress" ? "#C5B7FF"
@@ -620,13 +622,29 @@ export default function FantasyMap({
                 strokeWidth={region.status === "in-progress" ? 2 : 1.35}
                 strokeOpacity={region.status === "in-progress" || region.status === "complete" ? 0.95 : 0.62}
               />
+              {fitted ? (
+                <G pointerEvents="none">
+                  {/* Thin ink seam and a restrained engraved upper ridge give
+                      the landmass depth. Keep relief away from titles and
+                      progress bars; do not add another luminous checkpoint ring. */}
+                  <Path testID={`atlas-island-rim-${region.id}`} d={islandPath}
+                    fill="none" stroke="#0D1627" strokeWidth={2.6}
+                    strokeOpacity={0.55} />
+                  <Path testID={`atlas-island-relief-${region.id}`}
+                    d={upperIslandContour(makeIslandPoints(
+                      region.cx, region.cy, region.rx * 0.91, region.ry * 0.87, region.seed,
+                    ))}
+                    fill="none" stroke="#EEE3CF" strokeWidth={0.9}
+                    strokeOpacity={0.28} strokeLinecap="round" />
+                </G>
+              ) : null}
               <Path
                 d={innerPath}
                 fill="none"
                 stroke={fitted ? "#A8916B" : "#D7D3B4"}
                 strokeWidth={0.7}
                 strokeDasharray="2 4"
-                strokeOpacity={fitted ? 0.28 : 0.42}
+                strokeOpacity={fitted ? 0.22 : 0.42}
               />
 
               {/* Small nearby islets make the landmasses feel like a fantasy atlas. */}
