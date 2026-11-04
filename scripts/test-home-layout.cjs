@@ -64,6 +64,13 @@ function compile(file, extra = {}, returnModule = false) {
     react, "react/jsx-runtime": { jsx, jsxs: jsx },
     "react-native": native, "react-native-svg": svg,
     "react-native-reanimated": reanimated,
+    // The shared FantasyMap is compiled in isolation here; map-only motion
+    // is tested separately in test-category-atlas.cjs.
+    "./CategoryAtlasMotion": {
+      AtlasAtmosphereBreath: "AtlasAtmosphereBreath",
+      AtlasTwinkleStar: "AtlasTwinkleStar",
+      AtlasDestinationFeedback: "AtlasDestinationFeedback",
+    },
     "../theme": { colors: {
       accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E",
       textMuted: "#ABB0C1", success: "#3CC69A", successSurface: "#17372F",

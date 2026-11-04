@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { AccessibilityInfo, Animated, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
+import { MotionPressable, MotionView } from "../components/HomeMotion";
+import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
 import { colors } from "../theme";
 import { getAtlasCategoryProgress, getAtlasRegionProgress } from "../utils/categoryAtlas";
 
@@ -16,46 +18,33 @@ type Props = {
   onOpenSubcategory: (subcategoryId: string, categoryId: string) => void;
 };
 
+// Muted slate, violet, bronze and green from the Adventure Path vocabulary.
+// These are decorative identities, never lock/progression colors.
 const REGION_COLORS = [
-  "#7867AA", "#487C79", "#A08051", "#577C9C", "#9B6D86", "#658A75",
+  "#6C668A", "#4E6D70", "#90795F", "#526A7D", "#756478", "#5C7769",
 ];
 const REGION_SYMBOLS = ["✦", "✧", "✥", "✺", "✷", "✹"];
+
+// The atlas is free exploration: this choice affects only the shortcut card,
+// not the order, access, or placement of any destination.
+export function chooseAtlasFeaturedRegion<T extends { id: string; status: string }>(
+  regions: T[], lessons: readonly Pick<Lesson, "id" | "subcategoryId">[],
+  inProgressLessonIds: readonly string[],
+): T | undefined {
+  const active = new Set(inProgressLessonIds);
+  const inProgressRegionId = [...lessons].reverse()
+    .find(lesson => active.has(lesson.id))?.subcategoryId;
+  return regions.find(region => region.id === inProgressRegionId && region.status === "in-progress")
+    ?? regions.find(region => region.status === "in-progress")
+    ?? regions.find(region => region.status === "new")
+    ?? regions[0];
+}
 
 export default function CategoryScreen({
   category, subcategories, lessons, completedLessonIds, inProgressLessonIds,
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
-  const { width: windowWidth } = useWindowDimensions();
-  const [viewportHeight, setViewportHeight] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
-  const [navHeight, setNavHeight] = useState(0);
-  const [headingHeight, setHeadingHeight] = useState(0);
-  const [controlsHeight, setControlsHeight] = useState(0);
-  const [reduceMotion, setReduceMotion] = useState(true);
-  const [entrance] = useState(() => new Animated.Value(0));
-  const [zoom] = useState(() => new Animated.Value(0.975));
-
-  useEffect(() => {
-    let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled().then(enabled => {
-      if (mounted) setReduceMotion(enabled);
-    }).catch(() => { if (mounted) setReduceMotion(true); });
-    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
-    return () => { mounted = false; subscription.remove(); };
-  }, []);
-
-  useEffect(() => {
-    entrance.setValue(reduceMotion ? 1 : 0);
-    zoom.setValue(reduceMotion ? 1 : 0.975);
-    if (reduceMotion) return;
-    const animation = Animated.parallel([
-      Animated.timing(entrance, { toValue: 1, duration: 230, useNativeDriver: true }),
-      Animated.timing(zoom, { toValue: 1, duration: 260, useNativeDriver: true }),
-    ]);
-    animation.start();
-    return () => animation.stop();
-  }, [entrance, zoom, category.id, reduceMotion]);
-
+  const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
     [lessons, category.id, completedLessonIds, progressLoaded],
@@ -81,112 +70,158 @@ export default function CategoryScreen({
     }),
     [subcategories, lessons, completedLessonIds, inProgressLessonIds, progressLoaded],
   );
-
-  // Size the atlas against *measured* safe-area content and controls, not a
-  // guessed header allowance. This prevents the few-pixel overscroll on normal
-  // screens while still allowing scrolling when large text needs extra room.
-  const frameWidth = Math.max(1, Math.min(520, windowWidth - 28));
-  const chromeMeasured = viewportHeight > 0 && navHeight > 0 && headingHeight > 0 && controlsHeight > 0;
-  // navBar (10), heading (6), viewControls (3 + 8) margins;
-  // content (4 + 12) padding; 4px tolerance for frame borders/rounding.
-  const chromeSpacing = 10 + 6 + 3 + 8 + 4 + 12 + 4;
-  const usableMapPixels = chromeMeasured
-    ? Math.max(0, viewportHeight - navHeight - headingHeight - controlsHeight - chromeSpacing)
-    : 0;
-  const minMapHeight = Math.floor(usableMapPixels * 360 / frameWidth);
-  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 3;
+  const featuredRegion = useMemo(
+    () => chooseAtlasFeaturedRegion(mapRegions,
+      lessons.filter(lesson => lesson.categoryId === category.id), inProgressLessonIds),
+    [mapRegions, lessons, category.id, inProgressLessonIds],
+  );
+  const hasProgress = featuredRegion?.status === "in-progress";
+  const featuredPercent = featuredRegion?.totalLessons
+    ? Math.round(featuredRegion.completedLessons / featuredRegion.totalLessons * 100) : 0;
 
   return (
-    <ScrollView testID="category-atlas-screen" style={styles.viewport}
-      contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
-      scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false} overScrollMode="never"
-      onLayout={event => {
-        const next = event.nativeEvent.layout.height;
-        setViewportHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
-      }}
-      onContentSizeChange={(_width, next) => {
-        setContentHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
-      }}>
-      <View style={styles.navBar} onLayout={event => {
-        const next = event.nativeEvent.layout.height;
-        setNavHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
-      }}>
-        <Pressable testID="category-atlas-back" style={styles.back} onPress={onBack}
+    <View testID="category-atlas-screen" style={styles.screen}>
+      <MotionView entranceDelay={0} testID="category-atlas-header" style={styles.navigationHeader}>
+        <Pressable testID="category-atlas-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στους κόσμους γνώσης"
-          hitSlop={6}>
-          <Text style={styles.backLabel}>‹  Κόσμοι</Text>
+          hitSlop={8}>
+          <Text style={styles.backText}>‹ ΠΙΣΩ</Text>
         </Pressable>
-        <Text style={styles.brand} maxFontSizeMultiplier={1.3}>ΓΝΩΣΗ</Text>
-        <View style={styles.rightMark} accessible={false}><Text style={styles.sparkle}>✦</Text></View>
-      </View>
+        <Text testID="category-atlas-title" style={styles.categoryTitle}
+          numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          {category.title.toLocaleUpperCase("el-GR")}
+        </Text>
+        <View style={styles.headerMark} accessible={false}>
+          <Text style={styles.sparkle}>✦</Text>
+        </View>
+      </MotionView>
 
-      <View style={styles.heading} onLayout={event => {
-        const next = event.nativeEvent.layout.height;
-        setHeadingHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
-      }}>
-        <View style={styles.headingRow}>
-          <Text style={styles.title}>{category.title}</Text>
-          <View style={styles.percentBadge} accessible
-            accessibilityLabel={progressLoaded
-              ? "Ολοκλήρωση κόσμου " + categoryProgress.percent + " τοις εκατό"
-              : "Φόρτωση προόδου κόσμου"}>
-            <Text style={styles.percentText}>{progressLoaded ? categoryProgress.percent + "%" : "—"}</Text>
+      {featuredRegion ? (
+        <MotionPressable testID="category-atlas-continue" style={styles.continueCard}
+          entranceDelay={75} pressScale={0.983}
+          disabled={!progressLoaded}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !progressLoaded }}
+          accessibilityLabel={progressLoaded
+            ? (hasProgress ? "Συνέχισε: " : "Εξερεύνησε: ") + featuredRegion.title
+            : "Φόρτωση προόδου κατηγορίας"}
+          onPress={() => {
+            if (progressLoaded) onOpenSubcategory(featuredRegion.id, category.id);
+          }}>
+          <AtlasContinueAccent />
+          <View style={styles.cardHeading}>
+            <Text style={styles.cardCategory} numberOfLines={1}>Η ΠΡΟΟΔΟΣ ΣΟΥ</Text>
+            <Text style={styles.categoryCount} testID="category-atlas-category-progress">
+              {progressLoaded ? categoryProgress.completed + " / " + categoryProgress.total : "— / " + categoryProgress.total}
+            </Text>
           </View>
-        </View>
-        <View style={styles.progressLine}>
-          <Text style={styles.progressCaption}>Πρόοδος</Text>
-          <Text style={styles.progressCaption}>{progressLoaded
-            ? categoryProgress.completed + " / " + categoryProgress.total + " μαθήματα"
-            : "Φόρτωση…"}</Text>
-        </View>
-        <View testID="category-atlas-progress" style={styles.track}
-          accessible accessibilityRole="progressbar"
-          accessibilityLabel="Ολοκληρωμένα μαθήματα σε αυτόν τον κόσμο"
-          accessibilityValue={{ min: 0, max: Math.max(1, categoryProgress.total),
-            now: progressLoaded ? categoryProgress.completed : 0 }}>
-          <View style={[styles.trackFill, { width: (progressLoaded ? categoryProgress.percent : 0) + "%" }]} />
-        </View>
-      </View>
+          <View style={styles.cardBody}>
+            <View style={styles.cardCopy}>
+              <Text style={styles.cardEyebrow}>
+                {!progressLoaded ? "ΦΟΡΤΩΣΗ ΠΡΟΟΔΟΥ" :
+                  hasProgress ? "ΣΥΝΕΧΙΣΕ ΤΗΝ ΕΞΕΡΕΥΝΗΣΗ" :
+                  featuredRegion.status === "complete" ? "ΟΛΟΚΛΗΡΩΜΕΝΗ ΠΕΡΙΟΧΗ" :
+                  "ΕΞΕΡΕΥΝΗΣΕ ΜΙΑ ΠΕΡΙΟΧΗ"}
+              </Text>
+              <Text style={styles.cardTitle} numberOfLines={2}>{featuredRegion.title}</Text>
+            </View>
+            <View style={styles.cardAction} accessible={false}>
+              <AtlasContinueArrow />
+            </View>
+          </View>
+          <View style={styles.progressSummary}>
+            <Text style={styles.progressCaption}>Πρόοδος περιοχής</Text>
+            <Text style={styles.progressCaption}>{progressLoaded
+              ? featuredRegion.completedLessons + " / " + featuredRegion.totalLessons + " μαθήματα"
+              : "Φόρτωση…"}</Text>
+          </View>
+          <View testID="category-atlas-progress" style={styles.progressTrack}
+            accessible accessibilityRole="progressbar"
+            accessibilityLabel={"Πρόοδος περιοχής " + featuredRegion.title}
+            accessibilityValue={{ min: 0, max: Math.max(1, featuredRegion.totalLessons),
+              now: progressLoaded ? featuredRegion.completedLessons : 0 }}>
+            <AtlasProgressFill percent={progressLoaded ? featuredPercent : 0} />
+          </View>
+        </MotionPressable>
+      ) : null}
 
-      <Animated.View style={[styles.atlasArea, { opacity: entrance, transform: [{ scale: zoom }] }]}>
-        <FantasyMap
-          regions={mapRegions}
-          minHeight={minMapHeight}
-          onControlsHeightChange={next => {
-            setControlsHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
-          }}
-          onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
-          emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
-        />
-      </Animated.View>
-    </ScrollView>
+      <View testID="category-atlas-map-viewport" style={styles.mapViewport}
+        onLayout={event => {
+          const { width, height } = event.nativeEvent.layout;
+          if (width <= 0 || height <= 0) return;
+          setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
+            Math.abs(previous.height - height) < 1 ? previous : { width, height });
+        }}>
+        {/* Wait for the real viewport size before mounting the atlas. Otherwise
+            FantasyMap briefly paints its legacy non-fitted layout on entry. */}
+        {mapViewport.width > 0 && mapViewport.height > 0 ? (
+          <MotionView entranceDelay={155} testID="category-atlas-map-entrance"
+            style={styles.mapEntrance}>
+            <FantasyMap
+              regions={mapRegions}
+              fitViewport={mapViewport}
+              hideControls
+              onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
+              emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
+            />
+          </MotionView>
+        ) : null}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  viewport: { flex: 1, backgroundColor: colors.background },
-  content: {
-    width: "100%", maxWidth: 560, alignSelf: "center",
-    paddingHorizontal: 14, paddingTop: 4, paddingBottom: 12,
+  screen: {
+    flex: 1, minHeight: 0, width: "100%", maxWidth: 720, alignSelf: "center",
+    paddingHorizontal: 20, paddingTop: 6, gap: 9, backgroundColor: "#101827",
+    overflow: "hidden",
   },
-  navBar: { minHeight: 44, flexDirection: "row", alignItems: "center",
-    justifyContent: "space-between", marginBottom: 10 },
-  back: { minWidth: 80, minHeight: 44, justifyContent: "center" },
-  backLabel: { color: colors.accentLight, fontSize: 13, lineHeight: 20, fontWeight: "800" },
-  brand: { color: colors.accentLight, fontSize: 15, letterSpacing: 2.6,
-    fontWeight: "900", textAlign: "center", flexShrink: 1 },
-  rightMark: { width: 80, minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
-  sparkle: { color: colors.accentLight, fontSize: 23 },
-  heading: { gap: 5, marginBottom: 6 },
-  headingRow: { flexDirection: "row", alignItems: "center", gap: 12, justifyContent: "space-between" },
-  title: { flex: 1, color: colors.text, fontSize: 27, lineHeight: 34,
-    fontWeight: "900", letterSpacing: -0.45 },
-  percentBadge: { backgroundColor: colors.accentSurface, paddingHorizontal: 9, paddingVertical: 5,
-    borderRadius: 12, minWidth: 50, alignItems: "center" },
-  percentText: { color: "#C9BCFF", fontSize: 14, fontWeight: "800" },
-  progressLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 7 },
-  progressCaption: { color: colors.textMuted, fontSize: 11, fontWeight: "700" },
-  track: { height: 5, borderRadius: 5, backgroundColor: colors.border, overflow: "hidden", marginTop: 3 },
-  trackFill: { height: "100%", borderRadius: 5, backgroundColor: colors.accentLight },
-  atlasArea: { width: "100%" },
+  navigationHeader: {
+    minHeight: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+  },
+  backButton: { width: 66, minHeight: 44, justifyContent: "center" },
+  backText: { color: colors.accentLight, fontSize: 11, fontWeight: "800", letterSpacing: 0.4 },
+  categoryTitle: {
+    flex: 1, textAlign: "center", color: colors.accentLight,
+    fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 1.4,
+  },
+  headerMark: { width: 66, minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
+  sparkle: { color: colors.accentLight, fontSize: 22 },
+  continueCard: {
+    paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
+    backgroundColor: "#1B2034", borderColor: "#6A618C",
+    borderWidth: 1, borderRadius: 18, gap: 8,
+  },
+  cardHeading: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
+  },
+  cardCategory: {
+    flex: 1, color: colors.accentLight, fontSize: 13, lineHeight: 19,
+    fontWeight: "900", letterSpacing: 0.15,
+  },
+  categoryCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
+  cardBody: { flexDirection: "row", alignItems: "center", gap: 10 },
+  cardCopy: { flex: 1, gap: 3 },
+  cardEyebrow: {
+    color: "#ABA1D4", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.8,
+  },
+  cardTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "800" },
+  cardAction: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
+    borderWidth: 1, borderColor: "#C9BFFF", alignItems: "center", justifyContent: "center",
+  },
+   progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  progressCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
+  progressTrack: {
+    height: 8, borderRadius: 5, backgroundColor: "#302F4B", overflow: "hidden",
+    borderWidth: 1, borderColor: "#62597D",
+  },
+  mapViewport: {
+    flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
+    marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",
+  },
+  // Measured parent remains a normal View: entrance animation never alters
+  // screen geometry, and the map is first mounted in its fitted layout.
+  mapEntrance: { width: "100%" },
 });
