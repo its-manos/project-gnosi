@@ -202,6 +202,8 @@ press("home-primary-action");
 press("home-daily-quiz");
 press("home-knowledge-review");
 press("home-level-profile");
+assert.equal(nodes(tree).find(node => node.props?.testID === "home-level-profile").props.style.borderWidth,
+  undefined, "level badge has no duplicate native border outside its SVG ring");
 assert.deepEqual(actions, ["resume:0", "daily", "review", "profile"]);
 const ring = nodes(tree).find(node => node.props?.testID === "home-xp-ring");
 assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(" ")[0]) - 2 * Math.PI * 21 * .25) < 0.01);
@@ -332,6 +334,8 @@ assert.equal(renderedStreak.props.style.width, 50,
   "streak circle matches the 50pt level badge");
 assert.equal(renderedStreak.props.style.backgroundColor, "#151928",
   "streak circle uses the level badge surface");
+assert.equal(renderedStreak.props.style.borderWidth, undefined,
+  "streak badge has no duplicate native border outside its SVG ring");
 assert.equal(nodes(renderedStreak).filter(node => node.type === "circle").length, 2,
   "streak badge has the same base and accent ring layers as the level badge");
 assert.ok(nodes(renderedStreak).filter(node => node.type === "circle")
