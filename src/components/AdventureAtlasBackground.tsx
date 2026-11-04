@@ -188,13 +188,13 @@ function AdventureAtlasBackground({ width, height }: Props) {
         {/* Four quiet Greek-key corner engravings, not a busy repeating frame. */}
         <G fill="none" stroke="#C8AB83" strokeWidth={0.85} opacity={0.23}>
           {[
-            { x: 18, y: 31, angle: 0 },
-            { x: 402, y: 31, angle: 180 },
-            { x: 18, y: h - 31, angle: 0 },
-            { x: 402, y: h - 31, angle: 180 },
+            { x: 18, y: 31, sx: 1, sy: 1 },
+            { x: 402, y: 31, sx: -1, sy: 1 },
+            { x: 18, y: h - 31, sx: 1, sy: -1 },
+            { x: 402, y: h - 31, sx: -1, sy: -1 },
           ].map((corner, index) =>
             <G key={"fret-" + index}
-              transform={`translate(${corner.x} ${corner.y}) rotate(${corner.angle})`}>
+              transform={`translate(${corner.x} ${corner.y}) scale(${corner.sx} ${corner.sy})`}>
               <Path d="M 0 10 H 36 V 0 H 12 V 7 H 28 V 4 H 20" />
               <Path d="M 0 14 H 40" opacity={0.45} />
             </G>)}
