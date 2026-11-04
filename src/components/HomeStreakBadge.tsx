@@ -52,7 +52,6 @@ const styles = StyleSheet.create({
     width: 50, height: 50, borderRadius: 25,
     alignItems: "center", justifyContent: "center",
     backgroundColor: colors.surface,
-    borderWidth: 1, borderColor: "#403A55",
   },
   ring: { position: "absolute", top: 0, left: 0 },
   center: { alignItems: "center", justifyContent: "center" },
