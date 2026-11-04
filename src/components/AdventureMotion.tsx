@@ -27,17 +27,17 @@ export function AdventureProgressFill({ percent }: { percent: number }) {
 
 export function AdventureActiveHalo() {
   const reduced = useReducedMotion();
-  const scale = useSharedValue(1.15);
+  const scale = useSharedValue(1.06);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    opacity: 0.75 + (scale.value - 1.12) * 2.5,
+    opacity: 0.60 + (scale.value - 1.04) * 2.3,
   }));
   useEffect(() => {
     cancelAnimation(scale);
-    if (reduced) { scale.value = 1.15; return; }
+    if (reduced) { scale.value = 1.06; return; }
     scale.value = withRepeat(withSequence(
-      withTiming(1.19, { duration: 1900, easing: Easing.inOut(Easing.sin) }),
-      withTiming(1.12, { duration: 1900, easing: Easing.inOut(Easing.sin) }),
+      withTiming(1.11, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
+      withTiming(1.04, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
     ), -1, false);
     return () => cancelAnimation(scale);
   }, [reduced, scale]);
@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
   progressFill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 5 },
   halo: {
     position: "absolute", width: 74, height: 74, borderRadius: 37,
-    borderColor: "#8C7CDE", borderWidth: 1, backgroundColor: "#25213E",
+    borderColor: "#B7A7F0", borderWidth: 1.5,
+    backgroundColor: "rgba(136,113,205,0.12)",
   },
 });
