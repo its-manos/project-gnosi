@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { Easing, cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef,
   useSharedValue, withTiming } from "react-native-reanimated";
@@ -73,6 +73,16 @@ function segmentBetween(from: { x: number; y: number }, to: { x: number; y: numb
   return "M " + from.x + " " + from.y +
     " C " + from.x + " " + (from.y + half) +
     " " + to.x + " " + (to.y - half) + " " + to.x + " " + to.y;
+}
+
+/** The locked Android stops stay native Pressables instead of allocating
+ * four Reanimated shared values per inert checkpoint. Keep the original
+ * MotionPressable prop interface so pressScale remains on usable stops.
+ */
+function AndroidLockedCheckpoint({ pressScale: _pressScale,
+  entranceDelay: _entranceDelay, ...props
+}: ComponentProps<typeof MotionPressable>) {
+  return <Pressable {...props} />;
 }
 
 export default function SubcategoryScreen({
@@ -287,7 +297,7 @@ export default function SubcategoryScreen({
             // should not each mount Reanimated shared values, worklets and
             // entrance bookkeeping inside a long scrollable path.
             const NodePressable = Platform.OS === "android" && disabled
-              ? Pressable : MotionPressable;
+              ? AndroidLockedCheckpoint : MotionPressable;
             return (
               <View key={lesson.id} style={[styles.stopPosition, {
                 left: point.x - NODE_WIDTH / 2, top: point.y - 36,
