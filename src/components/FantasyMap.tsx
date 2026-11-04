@@ -492,11 +492,16 @@ export default function FantasyMap({
               <Stop offset="1" stopColor="#101827" stopOpacity={0} />
             </RadialGradient>
           ) : null}
-          {positionedRegions.map((region) => (
+          {positionedRegions.map((region) => fitted ? (
             <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
               <Stop offset="0" stopColor={region.fill} />
-              {fitted ? <Stop offset="0.45" stopColor="#343D4F" /> : null}
-              <Stop offset="1" stopColor={fitted ? "#1D2738" : "#253B40"} />
+              <Stop offset="0.45" stopColor="#343D4F" />
+              <Stop offset="1" stopColor="#1D2738" />
+            </LinearGradient>
+          ) : (
+            <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
+              <Stop offset="0" stopColor={region.fill} />
+              <Stop offset="1" stopColor="#253B40" />
             </LinearGradient>
           ))}
           <LinearGradient id="atlas-progress-lavender" x1="0" y1="0" x2="1" y2="0">
