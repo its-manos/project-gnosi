@@ -62,7 +62,7 @@ const native = {
 };
 const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
   Defs: "defs", G: "g", LinearGradient: "linearGradient",
-  RadialGradient: "radialGradient",
+  RadialGradient: "radialGradient", Ellipse: "ellipse",
   Rect: "rect", Stop: "stop", Text: "text" };
 let showList = false;
 const mapModule = compile("src/components/FantasyMap.tsx", {
@@ -323,6 +323,18 @@ assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
 assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
   && node.props?.id === "atlas-nebula").length, 1,
   "soft nebula stays in SVG geometry without an external texture");
+assert.equal(nodes(frame).filter(node => node.props?.testID === "atlas-sky-atmosphere").length, 1,
+  "map atmosphere uses one local noninteractive background layer");
+assert.equal(nodes(frame).filter(node => node.type === "ellipse"
+  && String(node.props?.fill).startsWith("url(#atlas-nebula-")).length, 2,
+  "two soft color washes balance the top-right and lower-left sky");
+assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-sky-vignette"),
+  "vignette makes map edges recede without covering island labels");
+assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
+  && String(node.props?.id).startsWith("atlas-region-aura-")).length, five.length,
+  "every destination gets a subtle theme-aware aura");
+assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-premium-compass"),
+  "fitted atlas compass gets an engraved star-chart treatment");
 assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-upper"));
 assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-lower"));
 assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-chart-tick-")).length, 9,
@@ -335,6 +347,15 @@ assert.ok(nodes(frame).some(node => node.type === "path"
   "faint map engravings add depth without implying lesson progression");
 const readableFrame = nodes(map({ ...props, fitViewport: { width: 340, height: 490 } }))
   .find(node => node.props?.testID === "knowledge-world-map");
+assert.ok(nodes(readableFrame).some(node => node.props?.testID === "atlas-decorative-constellations"),
+  "sparse catalogues have decorative chart groups outside destination interactions");
+assert.ok(nodes(readableFrame).filter(node =>
+  String(node.props?.testID).startsWith("atlas-route-anchor-")).length >= 2,
+  "fitted links have small, noninteractive guide stars in the open sky");
+assert.ok(nodes(readableFrame).filter(node =>
+  String(node.props?.testID).startsWith("atlas-route-anchor-"))
+    .every(node => node.props.pointerEvents === "none"),
+  "route anchor decoration cannot steal island taps");
 const fittedLabel = nodes(readableFrame).find(node => node.type === "text"
   && node.props?.children === "Παγκόσμια");
 assert.equal(fittedLabel.props.fontSize, 12.5,
@@ -364,6 +385,10 @@ assert.ok(constellationEdges.every(edge => !edge.props.d.startsWith("M 90.0")),
   "constellation link starts are inset from the island centres");
 assert.equal(nodes(normals).filter(node => node.props?.testID?.startsWith("atlas-chart-orbit-")).length, 0,
   "non-fitted map keeps its original background");
+assert.equal(nodes(normals).filter(node => node.props?.testID === "atlas-sky-vignette").length, 0,
+  "legacy overview map must not inherit the richer category sky");
+assert.equal(nodes(normals).filter(node => String(node.props?.testID).startsWith("atlas-route-anchor-")).length, 0,
+  "overview connectors keep their unchanged visual behavior");
 showList = true;
 tree = map({ ...props, regions: five, fitViewport: { width: 340, height: 490 } });
 const list = nodes(tree).find(node => node.props?.testID === "knowledge-region-list");
