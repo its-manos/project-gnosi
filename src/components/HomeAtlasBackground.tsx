@@ -191,7 +191,7 @@ export default memo(HomeAtlasBackground);
 
 const styles = StyleSheet.create({
   underlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: "hidden",
     backgroundColor: "#101827",
   },
