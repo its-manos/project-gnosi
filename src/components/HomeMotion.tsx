@@ -44,6 +44,7 @@ export function MotionPressable({
   const completionRef = useRef(onEntranceComplete);
   completionRef.current = onEntranceComplete;
   const notifyEntranceComplete = useCallback(() => completionRef.current?.(), []);
+  const hasCompletion = onEntranceComplete !== undefined;
   const shouldEnter = !reduced && entranceDelay !== undefined;
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -57,15 +58,17 @@ export function MotionPressable({
     if (reduced || entranceDelay === undefined) {
       entranceOpacity.value = 1;
       entranceRise.value = 0;
-      notifyEntranceComplete();
+      if (hasCompletion) notifyEntranceComplete();
     } else {
       entranceOpacity.value = withDelay(entranceDelay, withTiming(1, { duration: 320, easing: ease }));
-      // The UI-thread completion is authoritative. The Category screen can
-      // defer its expensive SVG mount until the card has actually entered.
+      // Preserve the original animation on every other card: only the
+      // Category shortcut needs a native completion -> JS notification.
       entranceRise.value = withDelay(entranceDelay,
-        withTiming(0, { duration: 320, easing: ease }, finished => {
-          if (finished) runOnJS(notifyEntranceComplete)();
-        }));
+        hasCompletion
+          ? withTiming(0, { duration: 320, easing: ease }, finished => {
+              if (finished) runOnJS(notifyEntranceComplete)();
+            })
+          : withTiming(0, { duration: 320, easing: ease }));
     }
     return () => {
       cancelAnimation(scale);
@@ -73,7 +76,7 @@ export function MotionPressable({
       cancelAnimation(entranceOpacity);
       cancelAnimation(entranceRise);
     };
-  }, [entranceDelay, reduced, scale, opacity, entranceOpacity, entranceRise, notifyEntranceComplete]);
+  }, [entranceDelay, reduced, scale, opacity, entranceOpacity, entranceRise, hasCompletion, notifyEntranceComplete]);
 
   // The old pressed opacity was only a fallback. Reanimated now owns the
   // interaction, while the original unpressed layout styles stay unchanged.
