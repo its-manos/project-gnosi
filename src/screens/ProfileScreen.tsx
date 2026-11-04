@@ -1,3 +1,4 @@
+import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -91,7 +92,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [xpExpanded, setXpExpanded] = useState(false);
-  const availableHeight = viewportHeight || windowHeight - 130;
+  const availableHeight = availableScreenHeight(viewportHeight, windowHeight);
   const dense = availableHeight < 700;
   const veryDense = availableHeight < 585;
   const compact = width < 365;
@@ -107,7 +108,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
   return <View style={styles.screen} testID="profile-screen"
     onLayout={event => {
       const next = event.nativeEvent.layout.height;
-      if (next > 0) setViewportHeight(old => Math.abs(old - next) < 1 ? old : next);
+      if (next > 0) setViewportHeight(old => stableLayoutHeight(old, next));
     }}>
     <ProgressGradientBackground />
     <ScrollView style={styles.viewport} bounces={false} overScrollMode="never"
@@ -115,7 +116,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       contentContainerStyle={[styles.content, dense && styles.contentDense,
         veryDense && styles.contentVeryDense]}
       onContentSizeChange={(_, next) => {
-        setContentHeight(old => Math.abs(old - next) < 1 ? old : next);
+        setContentHeight(old => stableLayoutHeight(old, next));
       }}>
       <SyncStatus quiet />
       <MotionView entranceDelay={0} style={styles.top}>
