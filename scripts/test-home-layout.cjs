@@ -657,7 +657,7 @@ assert.ok(nodes(activeMedal.press).some(node => node.type === "AdventureActiveHa
   "only the current checkpoint has the single breathing outline");
 assert.equal(lockedMedal.outer.props.style[3].borderColor, "#41495C",
   "locked checkpoints use a quiet weathered outer rim");
-assert.equal(lockedMedal.inset.props.style[3].opacity, 0.32,
+assert.equal(lockedMedal.inset.props.style[2].opacity, 0.32,
   "locked inner engraving stays subdued");
 assert.equal(completedMedal.press.props.disabled, false);
 assert.equal(activeMedal.press.props.disabled, false);
