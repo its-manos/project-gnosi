@@ -256,6 +256,22 @@ assert.ok(fittedAncientBar.props.y - fittedAncientLabels[1].props.y >= 10,
   "the second title line must stay clear of its progress track");
 assert.ok(fittedAncientIsland.props.onPress,
   "wrapping a destination title must not remove its tap target");
+const islandRims = nodes(fittedAncient).filter(node =>
+  typeof node.props?.testID === "string" && node.props.testID.startsWith("atlas-rim-"));
+const islandReliefs = nodes(fittedAncient).filter(node =>
+  typeof node.props?.testID === "string" && node.props.testID.startsWith("atlas-relief-"));
+assert.equal(islandRims.length, 3, "each fitted island has one subtle contour seam");
+assert.equal(islandReliefs.length, 3, "each fitted island has one engraved upper ridge");
+assert.ok(islandRims.every(node => node.type === "path" && node.props.strokeOpacity <= 0.55),
+  "shadows stay restrained rather than becoming heavy rings");
+assert.ok(islandReliefs.every(node => node.type === "path" &&
+  node.props.fill === "none" && !node.props.d.endsWith(" Z")),
+  "fitted relief stays above the labels instead of closing around progress bars");
+const normals = nodes(map(props));
+assert.ok(!normals.some(node => node.props?.testID?.startsWith("atlas-rim-") ||
+  node.props?.testID?.startsWith("atlas-relief-")),
+  "regular non-fitted FantasyMap artwork must not change");
+
 
 const compactRadii = mapModule.getCompactAtlasRadii;
 assert.deepEqual(
