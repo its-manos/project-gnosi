@@ -38,3 +38,40 @@ const renderMap=()=>{cursor=0;return Map({onOpen(){},mapOnly:true});};tree=rende
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).props.onPress();tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8);
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Πώς μετριέται')).props.onPress();tree=renderMap();assert.ok(text(tree).includes('τρεις σωστές'));
 console.log('Review/map disclosure passed: single next action, resume/due/practice/weekly/empty/loading states, three-subject preview, full expansion and optional explanation.');
+
+slots=[];cursor=0;
+const renderPreview=()=>{cursor=0;return Map({onOpen(){},mapOnly:true,preview:true});};
+tree=renderPreview();
+assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);
+assert.ok(!text(tree).includes("Πώς μετριέται"),"secondary disclosures stay out of the initial viewport");
+assert.ok(!text(tree).includes("έννοιες κατακτημένες"),"preview rows use one compact label");
+nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Αναλυτική εικόνα')).props.onPress();
+tree=renderPreview();
+assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8,"all subject rows remain reachable");
+assert.ok(text(tree).includes("Πώς μετριέται"));
+nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes("Πίσω στη σύνοψη")).props.onPress();
+tree=renderPreview();
+assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);
+
+let resumed=[];
+model={...model,due:[],practice:[]};ready=true;
+learning={...learning,knowledgeSession:null};
+const withLesson={...actions,inProgressLesson:lessons[0],lessonProgressLoaded:true,
+  inProgressAnsweredCount:2,inProgressQuestionCount:4,onResumeLesson:id=>resumed.push(id)};
+tree=Review(withLesson);
+assert.equal(nodes(tree).filter(n=>n.type==='Action').length,1);
+assert.equal(nodes(tree).find(n=>n.type==='Action').props.label,'Συνέχισε το μάθημα');
+nodes(tree).find(n=>n.type==='Action').props.onPress();
+assert.equal(resumed.at(-1),lessons[0].id);
+model={...model,due:[{}]};
+tree=Review(withLesson);
+assert.equal(nodes(tree).find(n=>n.type==='Action').props.label,'Ξεκίνα την επανάληψη');
+assert.ok(nodes(tree).some(n=>n.props.testID==='progress-resume'),"resume remains available as secondary action");
+nodes(tree).find(n=>n.props.testID==='progress-resume').props.onPress();
+assert.equal(resumed.length,2);
+ready=false;tree=Review(withLesson);
+assert.equal(nodes(tree).find(n=>n.type==='Action').props.label,'Συνέχισε το μάθημα',
+  "hydrating review data does not hide the known in-progress lesson");
+ready=true;
+console.log('Progress Phase 1 action/map tests passed: preview disclosure, one primary action, review priority, resume accessibility, and hydration.');
+
