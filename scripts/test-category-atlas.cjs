@@ -58,6 +58,7 @@ assert.equal(overall.percent, 0);
 const jsx = (type, props) => ({ type, props });
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
+  Platform: { OS: "ios" },
   StyleSheet: { create: values => values },
 };
 const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
@@ -279,6 +280,25 @@ assert.equal(glintNode.props.pressedRegion.value, null,
   "the touch glint settles without forcing another full map render");
 assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasDestinationFeedback").length, 3,
   "all fitted islands receive a lightweight outline glint");
+// Android keeps every island and its controls, but skips low-contrast chart ink.
+assert.equal(nodes(fittedAncient).filter(node =>
+  node.props?.testID?.startsWith("atlas-star-")).length, 50,
+  "the iPhone keeps all fifty chart stars");
+native.Platform.OS = "android";
+const androidFitted = map({ ...props, regions: [
+  { ...regionData[0], id: "ancient-greece", title: "Αρχαία Ελλάδα" },
+  regionData[1], regionData[2],
+], fitViewport: { width: 340, height: 490 } });
+assert.equal(nodes(androidFitted).filter(node =>
+  node.props?.testID?.startsWith("atlas-star-")).length, 30,
+  "Android uses a smaller decorative star field");
+assert.equal(nodes(androidFitted).filter(node =>
+  node.props?.testID?.startsWith("atlas-island-")).length, 3,
+  "all Android island labels and accessible targets remain intact");
+assert.equal(nodes(androidFitted).filter(node =>
+  node.type === "AtlasTwinkleStar").length, 5,
+  "Android retains the same five subtle star animations");
+native.Platform.OS = "ios";
 assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasAtmosphereBreath").length, 1,
   "one atmosphere layer animates without moving any islands");
 assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasTwinkleStar").length, 5,
