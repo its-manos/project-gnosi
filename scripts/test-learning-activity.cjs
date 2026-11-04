@@ -116,7 +116,7 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
   assert.ok(summaryStrip,'Statistics must show its compact activity strip');
   const summaryCards=nodes(summaryStrip).filter(n=>typeof n.type==='function'&&n.type.name==='DashboardMetric');
   assert.equal(summaryCards.length,3,'The weekly dashboard should contain three compact metric tiles');
-  assert.ok(summaryCards.every(n=>n.type(n.props).props.style.minHeight===92),
+  assert.ok(summaryCards.every(n=>n.type(n.props).props.style.minHeight===65),
     'Compact tiles share a bounded minimum height');
   assert.deepEqual(summaryCards.map(n=>n.props.label),['Νέα μαθήματα','Επαναλήψεις','Ενεργές ημέρες']);
   assert.ok(dashboardNodes.some(n=>n.props?.testID==='activity-chart'),
