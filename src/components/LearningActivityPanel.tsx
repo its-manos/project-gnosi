@@ -84,7 +84,7 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
   </View>;
 }
 
-export function CategoryProgress({ compact = false }: { compact?: boolean } = {}) {
+export function CategoryProgress({ compact = false, detail = false }: { compact?: boolean; detail?: boolean } = {}) {
   const snapshot = useLearningSnapshot();
   const [expanded, setExpanded] = useState(false);
   const completed = new Set(snapshot.backup.completedIds);
@@ -101,19 +101,19 @@ export function CategoryProgress({ compact = false }: { compact?: boolean } = {}
     : rows;
   const visible = compact && !expanded ? ranked.slice(0, 3) : ranked;
 
-  return <View style={[styles.section, compact && styles.sectionCompact]} testID="reading-category-progress">
-    <Text style={[styles.title, compact && styles.titleCompact]}>Οι κόσμοι που εξερευνάς</Text>
-    <View style={[styles.categoryCard, compact && styles.categoryCardCompact]}>
+  return <View style={[styles.section, compact && styles.sectionCompact, detail && styles.sectionDetail]} testID="reading-category-progress">
+    <Text style={[styles.title, compact && styles.titleCompact, detail && styles.titleDetail]}>{detail ? "Ανά θεματική" : "Οι κόσμοι που εξερευνάς"}</Text>
+    <View style={[styles.categoryCard, compact && styles.categoryCardCompact, detail && styles.categoryCardDetail]}>
       {visible.map(({ category, count, total, percent }) => (
-        <View key={category.id} style={[styles.category, compact && styles.categoryCompact]}
+        <View key={category.id} style={[styles.category, compact && styles.categoryCompact, detail && styles.categoryDetail]}
           accessible accessibilityRole="progressbar"
           accessibilityLabel={category.title}
           accessibilityValue={{ min: 0, max: total || 1, now: count, text: count + " από " + total + " μαθήματα, " + percent + "%" }}>
           <View style={styles.categoryHeader}>
-            <Text style={styles.categoryTitle}>{category.emoji} {category.title}</Text>
-            <Text style={styles.categoryCount}>{count} / {total}</Text>
+            <Text style={[styles.categoryTitle, detail && styles.categoryTitleDetail]}>{category.emoji} {category.title}</Text>
+            <Text style={[styles.categoryCount, detail && styles.categoryCountDetail]}>{count} / {total}</Text>
           </View>
-          <View style={styles.categoryTrack}><View style={[styles.categoryFill, { width: percent + "%" }]} /></View>
+          <View style={[styles.categoryTrack, detail && styles.categoryTrackDetail]}><View style={[styles.categoryFill, detail && styles.categoryFillDetail, { width: percent + "%" }]} /></View>
         </View>
       ))}
     </View>
@@ -128,8 +128,21 @@ export function CategoryProgress({ compact = false }: { compact?: boolean } = {}
 const styles = StyleSheet.create({
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
   sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
+  sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },
+  titleDetail: { fontSize: 17, lineHeight: 24, fontWeight: "800" },
   titleCompact: { fontSize: 14, lineHeight: 20 },
   categoryCardCompact: { padding: 12, gap: 10 },
+  categoryCardDetail: {
+    backgroundColor: "#192A35", borderColor: "#385963", padding: 15, gap: 0,
+  },
+  categoryDetail: {
+    paddingVertical: 12, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(146, 204, 208, 0.17)",
+  },
+  categoryTitleDetail: { color: "#E7ECEC" },
+  categoryCountDetail: { color: "#9CD2D1" },
+  categoryTrackDetail: { backgroundColor: "#31434F" },
+  categoryFillDetail: { backgroundColor: "#82C4C7" },
   categoryCompact: { gap: 5 },
   categoryMore: { minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
   categoryMoreText: { color: colors.accentLight, fontSize: 13, fontWeight: "700" },
