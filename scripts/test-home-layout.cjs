@@ -359,6 +359,12 @@ assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (844 * 420 / 390),
 assert.equal(atlasSvg.props.pointerEvents, "none");
 assert.ok(nodes(atlasSvg).filter(node => node.type === "radialGradient").length >= 4,
   "celestial atmosphere has layered, static gradient depth");
+assert.ok(nodes(atlasSvg).some(node => node.type === "radialGradient"
+  && node.props.id === "home-atlas-lantern"),
+  "a restrained static warm halo balances the cool Midnight Atlas light");
+assert.ok(nodes(atlasSvg).some(node => node.type === "g"
+  && node.props.strokeDasharray === "3 12" && node.props.opacity === 0.16),
+  "fine survey arcs remain static and secondary to the dashboard");
 assert.ok(nodes(atlasSvg).filter(node => node.type === "path").length >= 45,
   "atlas includes coastline relief, bearings, and engraved compass details");
 assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 27,

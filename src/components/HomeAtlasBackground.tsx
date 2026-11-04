@@ -79,6 +79,12 @@ function HomeAtlasBackground() {
             <Stop offset="0%" stopColor="#907A59" stopOpacity={0.09} />
             <Stop offset="100%" stopColor="#907A59" stopOpacity={0} />
           </RadialGradient>
+          {/* A warm pool of light beside the colder atlas tones; fully static. */}
+          <RadialGradient id="home-atlas-lantern" cx="76%" cy="31%" rx="54%" ry="39%">
+            <Stop offset="0%" stopColor="#B59D7E" stopOpacity={0.095} />
+            <Stop offset="52%" stopColor="#7F6E70" stopOpacity={0.035} />
+            <Stop offset="100%" stopColor="#7F6E70" stopOpacity={0} />
+          </RadialGradient>
           <RadialGradient id="home-atlas-vignette" cx="49%" cy="48%" rx="73%" ry="76%">
             <Stop offset="30%" stopColor="#050A16" stopOpacity={0} />
             <Stop offset="77%" stopColor="#050A16" stopOpacity={0.09} />
@@ -103,6 +109,7 @@ function HomeAtlasBackground() {
         <Rect width={420} height={h} fill="url(#home-atlas-teal)" />
         <Rect width={420} height={h} fill="url(#home-atlas-violet)" />
         <Rect width={420} height={h} fill="url(#home-atlas-gold-haze)" />
+        <Rect width={420} height={h} fill="url(#home-atlas-lantern)" />
 
         {/* Almost-hidden edge of a celestial sphere inside the astrolabe. */}
         <Circle cx={433} cy={h * 0.057} r={70}
@@ -128,10 +135,24 @@ function HomeAtlasBackground() {
           <Path d={`M 420 ${h * .15} Q 133 ${h * .46} 0 ${h * .86}`}
             strokeDasharray="2 13" />
         </G>
+        {/* Restrained engraved survey arcs, visible in the gutters between cards. */}
+        <G fill="none" stroke="#C3B89F" strokeWidth={0.7}
+          strokeDasharray="3 12" opacity={0.16}>
+          <Path d={`M -18 ${h * .255} C 92 ${h * .222} 184 ${h * .275} 275 ${h * .245}`} />
+          <Path d={`M 232 ${h * .463} Q 337 ${h * .422} 438 ${h * .492}`} />
+          <Path d={`M -18 ${h * .835} Q 95 ${h * .787} 188 ${h * .823}`} />
+        </G>
         {/* Abstract shores, deliberately secondary to the Home cards. */}
         <G fill="url(#home-atlas-shore)" fillOpacity={0.48}
           stroke="#BDA786" strokeOpacity={0.28} strokeWidth={1}>
           <Path d={upperShore} /><Path d={lowerShore} />
+        </G>
+        {/* A second fine shore tracing gives the coastline an inked edge. */}
+        <G fill="none" stroke="#D0BA97" strokeWidth={0.65} opacity={0.14}>
+          <Path d={`M 0 ${h * .258} Q 48 ${h * .217} 47 ${h * .204}
+            T 98 ${h * .151} Q 128 ${h * .116} 137 ${h * .084}`} />
+          <Path d={`M 420 ${h * .736} Q 385 ${h * .812} 354 ${h * .815}
+            T 271 ${h * .893} Q 189 ${h * .922} 105 ${h * .934}`} />
         </G>
         <G fill="none" stroke="#B8AA8F" strokeWidth={0.8} opacity={0.14}>
           {Array.from({ length: 5 }, (_, i) =>
