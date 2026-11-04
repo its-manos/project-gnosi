@@ -39,4 +39,9 @@ for (const callback of ["onStats", "onAccount", "onInterests", "onGuide"]) {
 assert.match(profile, /scrollEnabled=\{canScroll\}/,
   "Default Profile layout should fit the viewport with a scroll fallback.");
 assert.match(profile, /ProgressGradientBackground/);
+assert.match(profile, /accessibilityState=\\{\\{ expanded: xpExpanded, disabled: !profileReady \\}\\}/,
+  "The existing XP explanation should still be accessible as a disclosure.");
+assert.match(profile, /<XpRules learningXP=\\{profile\\.learningXP\\}/);
+assert.match(read("src/components/KnowledgeProgress.tsx"), /<XpRules learningXP=\\{p\\.learningXP\\}/,
+  "Keep XP rules in one shared component rather than duplicating explanations.");
 console.log("Profile fourth-tab routing, data ownership and action contracts passed.");
