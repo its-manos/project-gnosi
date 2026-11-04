@@ -577,8 +577,10 @@ assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueA
 assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueArrow").length, 1,
   "Continue icon receives a one-shot nudge without changing its tap target");
 const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
-assert.equal(pinnedFrame.props.entranceDelay, 150,
-  "the fixed map viewport fades in only once after the Continue card");
+assert.equal(pinnedFrame.type, "View",
+  "the scrollable adventure map mounts as a static viewport instead of a massive animated surface");
+assert.equal(pinnedFrame.props.entranceDelay, undefined,
+  "map entrance no longer competes with autoscroll and checkpoint animations");
 assert.equal(pinnedFrame.props.style.flex, 1,
   "entrance animation does not change map viewport layout sizing");
 assert.equal(pinnedFrame.props.style.marginBottom, 8,
