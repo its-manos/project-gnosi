@@ -649,6 +649,31 @@ export default function FantasyMap({
         {!fitted ? <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15}
           fill="none" stroke="#89AAA6" strokeOpacity={0.18} /> : null}
         {fitted ? (
+          <G testID="atlas-fitted-map-border" pointerEvents="none">
+            {/* An engraved chart neatline frames the open atlas without a
+                heavy native card. Leave the upper right open for the compass.
+                All paths are static, and remain behind the island hit targets. */}
+            <Path testID="atlas-map-border-main"
+              d={`M 18 10 H 285 M 10 26 V ${mapHeight - 25}
+                Q 10 ${mapHeight - 10} 25 ${mapHeight - 10}
+                H 335 Q 350 ${mapHeight - 10} 350 ${mapHeight - 25} V 60`}
+              fill="none" stroke="#BFA984" strokeWidth={0.85}
+              strokeOpacity={0.37} strokeLinecap="round" />
+            <Path testID="atlas-map-border-inner"
+              d={`M 18 29 V ${mapHeight - 22} H 342 V 68 M 19 17 H 284`}
+              fill="none" stroke="#86A0B2" strokeWidth={0.55}
+              strokeOpacity={0.19} />
+            <Path testID="atlas-map-border-marks"
+              d={`M 25 7 V 17 M 7 25 H 17
+                M 7 ${mapHeight - 25} H 17
+                M 25 ${mapHeight - 17} V ${mapHeight - 7}
+                M 335 ${mapHeight - 17} V ${mapHeight - 7}
+                M 343 ${mapHeight - 25} H 353 M 343 66 H 353`}
+              fill="none" stroke="#D0BB94" strokeWidth={0.85}
+              strokeOpacity={0.42} />
+          </G>
+        ) : null}
+        {fitted ? (
           <G pointerEvents="none">
             {/* Restrained starfield adds depth to empty space without a new
                 illustration layer, bitmap download, or animation. */}
