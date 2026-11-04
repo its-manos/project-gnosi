@@ -37,8 +37,16 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
   const summary = useMemo(() => activitySummary(snapshot.activity, snapshot.backup.completedIds, dailyDates, todayKey, [...Object.values(snapshot.weeklyReviews ?? {}).map(answer => getAthensDateKey(new Date(answer.at))), ...Object.values(snapshot.knowledgeReviews ?? {}).flatMap(dates => Object.keys(dates))]), [snapshot.activity, snapshot.backup.completedIds, snapshot.weeklyReviews, snapshot.knowledgeReviews, dailyDates, todayKey]);
   const buckets = useMemo(() => activityBuckets(snapshot.activity, todayKey, mode), [snapshot.activity, todayKey, mode]);
   const selected = buckets.find(bucket => bucket.key === selectedKey) ?? buckets[buckets.length - 1];
-  const max = Math.max(1, ...buckets.map(bucket => bucket.first + bucket.replay));
-  const total = buckets.reduce((sum, bucket) => sum + bucket.first + bucket.replay, 0);
+  // Derive the chart scale and total together; avoid two separate bucket scans.
+  const { max, total } = useMemo(() => buckets.reduce(
+    (result, bucket) => {
+      const count = bucket.first + bucket.replay;
+      result.max = Math.max(result.max, count);
+      result.total += count;
+      return result;
+    },
+    { max: 1, total: 0 },
+  ), [buckets]);
   const switchMode = (value: "daily" | "weekly") => { setMode(value); setSelectedKey(""); };
   const barHeight = dashboard ? 88 : 120;
 
