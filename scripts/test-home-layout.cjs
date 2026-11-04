@@ -11,6 +11,7 @@ const jsx = (type, props) => ({ type, props });
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
   ActivityIndicator: "Spinner", useWindowDimensions: () => ({ width: 360, height: 740 }),
+  Platform: { OS: "ios" },
   StyleSheet: { create: value => value },
 };
 const svg = {
@@ -577,8 +578,10 @@ assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueA
 assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueArrow").length, 1,
   "Continue icon receives a one-shot nudge without changing its tap target");
 const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
-assert.equal(pinnedFrame.props.entranceDelay, 150,
-  "the fixed map viewport fades in only once after the Continue card");
+assert.equal(pinnedFrame.type, "View",
+  "the scrollable adventure map mounts as a static viewport instead of a massive animated surface");
+assert.equal(pinnedFrame.props.entranceDelay, undefined,
+  "map entrance no longer competes with autoscroll and checkpoint animations");
 assert.equal(pinnedFrame.props.style.flex, 1,
   "entrance animation does not change map viewport layout sizing");
 assert.equal(pinnedFrame.props.style.marginBottom, 8,
@@ -610,6 +613,23 @@ const first = nodes(tree).find(node => node.props?.testID === "adventure-node-an
 const second = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1");
 assert.equal(first.props.disabled, false);
 assert.equal(second.props.disabled, true);
+// On Android, all 29 locked checkpoints use ordinary native Pressables
+// instead of mounting Reanimated hooks that cannot provide press feedback.
+native.Platform.OS = "android";
+const androidAdventureTree = adventure(adventureProps);
+const androidStops = nodes(androidAdventureTree).filter(node =>
+  node.props?.testID?.startsWith("adventure-node-"));
+assert.equal(androidStops.length, 30, "Android retains all checkpoint controls");
+assert.equal(androidStops.filter(node => node.type?.name === "AndroidLockedCheckpoint").length, 29,
+  "locked Android checkpoints do not allocate Reanimated press animations");
+assert.equal(androidStops.filter(node => node.type === "Pressable").length, 1,
+  "the usable Android checkpoint keeps its animated press feedback");
+const firstLockedAndroidStop = androidStops.find(node =>
+  node.props.testID === "adventure-node-anc-1");
+assert.equal(firstLockedAndroidStop.type(firstLockedAndroidStop.props).type, "Pressable",
+  "the Android locked-stop wrapper forwards native pressable semantics");
+assert.equal(firstLockedAndroidStop.props.disabled, true);
+native.Platform.OS = "ios";
 first.props.onPress();
 assert.equal(actions.at(-1), "open:anc-0");
 tree = adventure({ ...adventureProps, completedLessonIds: ["anc-0"] });
@@ -853,6 +873,38 @@ renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "re-rendering cannot restart the entry animation");
 
+// The Android map budget drops only distant detail, never the main geography.
+const staticAtlas = compile("src/components/AdventureAtlasBackground.tsx", {
+  react: { ...react, memo: component => component },
+  "react-native-svg": { ...svg, RadialGradient: "radialGradient" },
+  "react-native-reanimated": {
+    __esModule: true,
+    default: { View: "AnimatedView" },
+    Easing: { inOut: fn => fn, sin: value => value },
+    useReducedMotion: () => true,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: fn => fn(),
+    cancelAnimation: () => {},
+    withRepeat: animation => animation,
+    withSequence: (...animations) => animations.at(-1),
+    withTiming: target => target,
+  },
+});
+const islandCount = tree => nodes(tree).filter(node => node.type === "g"
+  && typeof node.props?.transform === "string"
+  && /^translate\([^)]*\) rotate\(/.test(node.props.transform)).length;
+native.Platform.OS = "ios";
+const iosAtlas = staticAtlas({ width: 360, height: 680 });
+assert.equal(islandCount(iosAtlas), 30, "iPhone retains all island silhouettes");
+native.Platform.OS = "android";
+const androidAtlas = staticAtlas({ width: 360, height: 680 });
+assert.equal(islandCount(androidAtlas), 20,
+  "Android omits ten tiny islets but keeps all important landmasses");
+assert.equal(nodes(androidAtlas).filter(node =>
+  node.props?.testID === "adventure-atlas-ambient-glow").length, 1,
+  "Android retains atmospheric movement in a compact native view");
+native.Platform.OS = "ios";
+
 const atlasSource = fs.readFileSync(path.join(root, "src/components/AdventureAtlasBackground.tsx"), "utf8");
 const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/AdventureMotion.tsx"), "utf8");
 assert.match(atlasSource, /useReducedMotion/, "atlas respects reduce motion");
@@ -863,6 +915,18 @@ assert.match(atlasSource, /const east =/, "atlas has an eastern Anatolian coastl
 assert.match(atlasSource, /const crete =/, "Crete anchors the southern map");
 assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptical");
 assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
+assert.doesNotMatch(atlasSource, /styles\.tideLayer|waveStyle|translateX: tide\.value/,
+  "the full-screen tide SVG must not animate transforms or opacity");
+assert.match(atlasSource, /testID="adventure-atlas-ambient-glow"/,
+  "a compact native-opacity glow replaces the viewport-sized animated tide");
+assert.match(atlasSource, /const glowStyle = useAnimatedStyle/,
+  "the atlas effect animates only a view style, not SVG element props");
+assert.doesNotMatch(atlasSource, /useAnimatedProps/,
+  "Adventure background never updates SVG attributes per frame");
+assert.match(atlasSource, /strokeDasharray="3 16" opacity=\{0\.30\}/,
+  "the original sea-current contours remain visible as static SVG paths");
+assert.match(atlasSource, /width: width \* 0\.64, height: height \* 0\.34/,
+  "the animated atmosphere occupies only a bounded fraction of the viewport");
 assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
 assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
 const islandDefinitions = atlasSource.split("const islands: Isle[] = [")[1]?.split("];")[0];

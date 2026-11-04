@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { Easing, cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef,
   useSharedValue, withTiming } from "react-native-reanimated";
 import type { ScrollViewInstance } from "react-native";
@@ -73,6 +73,16 @@ function segmentBetween(from: { x: number; y: number }, to: { x: number; y: numb
   return "M " + from.x + " " + from.y +
     " C " + from.x + " " + (from.y + half) +
     " " + to.x + " " + (to.y - half) + " " + to.x + " " + to.y;
+}
+
+/** The locked Android stops stay native Pressables instead of allocating
+ * four Reanimated shared values per inert checkpoint. Keep the original
+ * MotionPressable prop interface so pressScale remains on usable stops.
+ */
+function AndroidLockedCheckpoint({ pressScale: _pressScale,
+  entranceDelay: _entranceDelay, ...props
+}: ComponentProps<typeof MotionPressable>) {
+  return <Pressable {...props} />;
 }
 
 export default function SubcategoryScreen({
@@ -214,12 +224,15 @@ export default function SubcategoryScreen({
       {isTesting && path.length > 1 ?
         <Text style={styles.devHint}>Δοκιμή: όλοι οι σταθμοί ξεκλείδωτοι.</Text> : null}
 
+      {/* Do not animate the whole fixed viewport, SVG, scroll container and
+          30 checkpoint subtrees as one large surface. Continue, header and
+          the active checkpoint retain their smaller entrance/motion cues. */}
       {path.length === 0 ?
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Νέες αποστολές έρχονται</Text>
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
-        <MotionView entranceDelay={150} testID="adventure-map-viewport" style={styles.mapViewport}
+        <View testID="adventure-map-viewport" style={styles.mapViewport}
           onLayout={event => {
             const { width, height } = event.nativeEvent.layout;
             if (width <= 0 || height <= 0) return;
@@ -280,12 +293,17 @@ export default function SubcategoryScreen({
             const disabled = !progressLoaded || !access.unlocked;
             const active = progressLoaded && nextLesson?.id === lesson.id;
             const chapter = isAncientGreece ? ancientGreeceChapters[index] : undefined;
+            // Locked destinations have no press feedback. On Android they
+            // should not each mount Reanimated shared values, worklets and
+            // entrance bookkeeping inside a long scrollable path.
+            const NodePressable = Platform.OS === "android" && disabled
+              ? AndroidLockedCheckpoint : MotionPressable;
             return (
               <View key={lesson.id} style={[styles.stopPosition, {
                 left: point.x - NODE_WIDTH / 2, top: point.y - 36,
               }]}>
                 {chapter ? <Text style={styles.chapterBadge}>{chapter}</Text> : null}
-                <MotionPressable pressScale={0.96} testID={"adventure-node-" + lesson.id}
+                <NodePressable pressScale={0.96} testID={"adventure-node-" + lesson.id}
                   style={styles.nodePressable}
                   onPress={() => onOpenLesson(lesson.id)} disabled={disabled}
                   accessibilityRole="button" accessibilityState={{ disabled }}
@@ -318,13 +336,13 @@ export default function SubcategoryScreen({
                     numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}>
                     {lesson.title}
                   </Text>
-                </MotionPressable>
+                </NodePressable>
               </View>
             );
           })}
             </View>
           </Animated.ScrollView>
-        </MotionView>}
+        </View>}
     </View>
   );
 }

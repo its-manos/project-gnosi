@@ -1,27 +1,28 @@
 /** Lightweight, UI-thread-only motion for the fixed Category Atlas.
  * Static islands, routes, labels and touch geometry remain unchanged.
+ * Ambient loops animate only small native-view opacity, never SVG properties.
+ * One-shot destination glints retain their exact coastline shape.
  * The normal (non-fitted) FantasyMap is intentionally unaffected.
  */
 import { useEffect } from "react";
+import type { SharedValue } from "react-native-reanimated";
 import { StyleSheet, View, type DimensionValue } from "react-native";
-import { Circle, Path, Rect } from "react-native-svg";
+import Svg, { Ellipse, Path, RadialGradient, Stop, Defs } from "react-native-svg";
 import Animated, {
   Easing, cancelAnimation, useAnimatedProps, useAnimatedStyle, useReducedMotion,
   useSharedValue, withDelay, withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const soften = Easing.inOut(Easing.sin);
 
-/** A single low-opacity layer breathes over the existing static nebula.
- * No geometric transformations, timers on JS, or per-frame React renders.
+/** A compact, self-contained gradient stays static inside a composited view.
+ * Only the wrapper's native opacity animates, so the map SVG never repaints.
  */
-export function AtlasAtmosphereBreath({ height }: { height: number }) {
+export function AtlasAtmosphereBreath() {
   const reduced = useReducedMotion();
   const opacity = useSharedValue(0.07);
-  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
   useEffect(() => {
     cancelAnimation(opacity);
     opacity.value = 0.07;
@@ -34,19 +35,29 @@ export function AtlasAtmosphereBreath({ height }: { height: number }) {
     return () => cancelAnimation(opacity);
   }, [reduced, opacity]);
 
-  return <AnimatedRect testID="atlas-motion-atmosphere" pointerEvents="none"
-    x={40} y={height * 0.13} width={280} height={height * 0.72}
-    fill="url(#atlas-nebula)" opacity={0.07}
-    animatedProps={reduced ? undefined : animatedProps} />;
+  return <Animated.View testID="atlas-motion-atmosphere"
+    pointerEvents="none" accessible={false}
+    style={[styles.atmosphere, animatedStyle]}>
+    <Svg width="100%" height="100%" viewBox="0 0 240 300" pointerEvents="none">
+      <Defs>
+        <RadialGradient id="atlas-native-ambient" cx="50%" cy="50%" rx="50%" ry="50%">
+          <Stop offset="0%" stopColor="#8C7CB0" stopOpacity={0.9} />
+          <Stop offset="65%" stopColor="#5C638B" stopOpacity={0.38} />
+          <Stop offset="100%" stopColor="#5C638B" stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Ellipse cx={120} cy={150} rx={120} ry={150} fill="url(#atlas-native-ambient)" />
+    </Svg>
+  </Animated.View>;
 }
 
-/** Five stars at most; the other 50 static stars never change or re-render. */
-export function AtlasTwinkleStar({ cx, cy, index }: {
-  cx: number; cy: number; index: number;
+/** Five tiny native-view dots; the other fifty chart stars never animate. */
+export function AtlasTwinkleStar({ cx, cy, index, mapHeight }: {
+  cx: number; cy: number; index: number; mapHeight: number;
 }) {
   const reduced = useReducedMotion();
   const opacity = useSharedValue(0.17);
-  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
   useEffect(() => {
     cancelAnimation(opacity);
     opacity.value = 0.17;
@@ -59,29 +70,64 @@ export function AtlasTwinkleStar({ cx, cy, index }: {
     return () => cancelAnimation(opacity);
   }, [index, reduced, opacity]);
 
-  return <AnimatedCircle testID={`atlas-motion-star-${index}`}
-    pointerEvents="none" cx={cx} cy={cy} r={1.8} fill="#E6D7BF"
-    opacity={0.17} animatedProps={reduced ? undefined : animatedProps} />;
+  return <Animated.View testID={`atlas-motion-star-${index}`}
+    pointerEvents="none" accessible={false}
+    style={[styles.star, {
+      left: `${cx / 360 * 100}%`,
+      top: `${cy / mapHeight * 100}%`,
+    }, animatedStyle]} />;
 }
 
-/** Press-in glint stays within the existing coastline and never takes taps. */
-export function AtlasDestinationFeedback({ d, active }: {
-  d: string; active: boolean;
-}) {
+/**
+ * Stagger the Category map AFTER the Continue card without animating its
+ * expensive SVG tree. A solid native view covers the chart at first paint,
+ * then fades away after the card's 75ms delay + 320ms entrance finishes.
+ *
+ * This is a one-shot view-opacity animation, not a full-map transform,
+ * SVG prop update, JS timer, or layout change.
+ */
+export function AtlasMapRevealCover() {
   const reduced = useReducedMotion();
-  const opacity = useSharedValue(0);
-  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+  const opacity = useSharedValue(reduced ? 0 : 1);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
   useEffect(() => {
     cancelAnimation(opacity);
-    opacity.value = reduced ? (active ? 0.42 : 0)
-      : withTiming(active ? 0.42 : 0, { duration: active ? 90 : 180 });
+    if (reduced) {
+      opacity.value = 0;
+      return;
+    }
+    // Continue finishes entering at ~395ms; the map fades in afterwards.
+    opacity.value = withDelay(410, withTiming(0, {
+      duration: 260, easing: Easing.out(Easing.cubic),
+    }));
     return () => cancelAnimation(opacity);
-  }, [active, reduced, opacity]);
+  }, [reduced, opacity]);
+
+  if (reduced) return null;
+  return <Animated.View testID="category-atlas-map-reveal-cover"
+    pointerEvents="none" accessible={false}
+    style={[styles.mapRevealCover, animatedStyle]} />;
+}
+
+/** The coastline glint subscribes directly to a shared press ID. Unlike
+ * React state, touching an island does not rebuild the entire 1,100-line map.
+ * Animated SVG props are still used *only for a short tap*, never in a loop.
+ */
+export function AtlasDestinationFeedback({ d, regionId, pressedRegion }: {
+  d: string; regionId: string; pressedRegion: SharedValue<string | null>;
+}) {
+  const reduced = useReducedMotion();
+  const animatedProps = useAnimatedProps(() => {
+    const active = pressedRegion.value === regionId;
+    return {
+      opacity: reduced ? (active ? 0.42 : 0)
+        : withTiming(active ? 0.42 : 0, { duration: active ? 90 : 180 }),
+    };
+  });
 
   return <AnimatedPath testID="atlas-motion-press-glint" pointerEvents="none"
     d={d} fill="none" stroke="#EBD9BF" strokeWidth={3.2}
-    opacity={reduced && active ? 0.42 : 0}
-    animatedProps={reduced ? undefined : animatedProps} />;
+    opacity={0} animatedProps={animatedProps} />;
 }
 
 
@@ -148,6 +194,20 @@ export function AtlasContinueArrow() {
 }
 
 const styles = StyleSheet.create({
+  // Matches the Category viewport's original fill exactly. The static map
+  // remains mounted beneath it and is never translated or recomposited.
+  mapRevealCover: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "#101827",
+  },
+  atmosphere: {
+    position: "absolute", left: "10%", top: "18%",
+    width: "76%", height: "65%",
+  },
+  star: {
+    position: "absolute", width: 3.6, height: 3.6, borderRadius: 1.8,
+    backgroundColor: "#E6D7BF",
+  },
   progressFill: {
     height: "100%", borderRadius: 5, backgroundColor: "#B1A5FF",
   },

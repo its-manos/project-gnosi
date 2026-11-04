@@ -1,15 +1,16 @@
 /** Fixed-viewport Aegean atlas for the Adventure Path.
- * All geometry is local SVG: no oversized bitmap, remote fetch or per-frame
- * path generation. The viewBox matches the measured aspect ratio exactly.
+ * All geography and bathymetry are static SVG. The only ambient loop changes
+ * a small native view's opacity, avoiding full-screen SVG layer movement.
+ * The viewBox matches the measured aspect ratio exactly.
  */
 import { memo, useEffect, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
   Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue,
   withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 import Svg, {
-  Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText,
+  Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText,
 } from "react-native-svg";
 
 type Props = { width: number; height: number };
@@ -31,7 +32,8 @@ function islandOutline(rx: number, ry: number) {
 
 function AdventureAtlasBackground({ width, height }: Props) {
   const reduced = useReducedMotion();
-  const tide = useSharedValue(-1);
+  const androidLite = Platform.OS === "android";
+  const glow = useSharedValue(0.07);
   // 420 map-units wide at every device width, with an exact aspect-ratio
   // match. No aspectFill, crop or non-uniform stretch on either platform.
   const h = height * 420 / width;
@@ -130,23 +132,19 @@ function AdventureAtlasBackground({ width, height }: Props) {
     return { west, east, peloponnese, crete, islands, relief, depths };
   }, [h]);
 
-  const waveStyle = useAnimatedStyle(() => ({
-    opacity: 0.28 + (tide.value + 1) * 0.035,
-    transform: [
-      { translateX: tide.value * 3 },
-      { translateY: tide.value * 1.5 },
-    ],
-  }));
-
+  // Subtle ocean lighting uses a bounded native-view opacity, not a
+  // translated full-screen SVG. The coastlines and current lines never move.
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
   useEffect(() => {
-    cancelAnimation(tide);
-    if (reduced) { tide.value = 0; return; }
-    tide.value = withRepeat(withSequence(
-      withTiming(1, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
-      withTiming(-1, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
+    cancelAnimation(glow);
+    glow.value = 0.07;
+    if (reduced) return;
+    glow.value = withRepeat(withSequence(
+      withTiming(0.15, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0.07, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
     ), -1, false);
-    return () => cancelAnimation(tide);
-  }, [reduced, tide]);
+    return () => cancelAnimation(glow);
+  }, [reduced, glow]);
 
   return (
     <View pointerEvents="none" accessible={false} style={styles.underlay}>
@@ -180,7 +178,8 @@ function AdventureAtlasBackground({ width, height }: Props) {
         <G stroke="#A9B6BA" strokeWidth={0.65} opacity={0.11} strokeDasharray="2 13">
           {[36, 94, 152, 210, 268, 326, 384].map(x =>
             <Path key={"meridian-" + x} d={`M ${x} 0 V ${h}`} />)}
-          {Array.from({ length: Math.ceil(h / 86) }, (_, n) => (n + 1) * 86).map(y =>
+          {Array.from({ length: Math.ceil(h / (androidLite ? 148 : 86)) },
+            (_, n) => (n + 1) * (androidLite ? 148 : 86)).map(y =>
             <Path key={"parallel-" + y} d={`M 0 ${y} H 420`} />)}
         </G>
         <Rect x={9} y={9} width={402} height={Math.max(0, h - 18)}
@@ -221,20 +220,22 @@ function AdventureAtlasBackground({ width, height }: Props) {
           <Path d={geography.peloponnese} />
           <Path d={geography.crete} />
         </G>
-        <G stroke="#CFB891" strokeWidth={3.5} opacity={0.07} fill="none">
+        {!androidLite ? <G stroke="#CFB891" strokeWidth={3.5} opacity={0.07} fill="none">
           <Path d={geography.west} /><Path d={geography.east} />
           <Path d={geography.peloponnese} /><Path d={geography.crete} />
-        </G>
+        </G> : null}
         {/* Land relief follows the coast; sea contours follow the basin. */}
         <G fill="none" stroke="#B3AE9F" strokeWidth={0.85} opacity={0.18}>
-          {geography.relief.map((d, n) => <Path key={"relief-" + n} d={d} />)}
+          {geography.relief.filter((_, n) => !androidLite || n % 2 === 0)
+            .map((d, n) => <Path key={"relief-" + n} d={d} />)}
         </G>
         <G fill="none" stroke="#879FB4" strokeWidth={0.85} opacity={0.21}>
-          {geography.depths.map((d, n) => <Path key={"depth-" + n} d={d} />)}
+          {geography.depths.filter((_, n) => !androidLite || n % 2 === 0)
+            .map((d, n) => <Path key={"depth-" + n} d={d} />)}
         </G>
         <G stroke="#C5B58E" strokeWidth={1} fill="#344446" fillOpacity={0.73}
           strokeOpacity={0.47}>
-          {geography.islands.map((isle, n) =>
+          {geography.islands.filter((_, n) => !androidLite || n < 20).map((isle, n) =>
             <G key={"isle-" + n} transform={`translate(${isle.x} ${h * isle.y}) rotate(${isle.turn})`}>
               <Path d={islandOutline(isle.rx, isle.ry)} />
               {isle.rx > 10 && isle.ry > 12 ?
@@ -274,15 +275,30 @@ function AdventureAtlasBackground({ width, height }: Props) {
         </G>
         {/* Soft paper-edge falloff helps checkpoints stand out without a hard frame. */}
         <Rect width={420} height={h} fill="url(#adventure-atlas-vignette)" />
+        {/* Current marks are now entirely static; avoid moving a second,
+            viewport-sized SVG layer over the checkpoint animations. */}
+        <G fill="none" stroke="#A6B6C6" strokeWidth={1.1}
+          strokeDasharray="3 16" opacity={0.30}>
+          {geography.depths.filter((_, n) => n % (androidLite ? 4 : 2) === 0).map((d, n) =>
+            <Path key={"current-" + n} d={d} />)}
+        </G>
       </Svg>
 
-      {/* Only this small translucent tide layer moves on the UI thread. */}
-      <Animated.View pointerEvents="none" style={[styles.tideLayer, waveStyle]}>
-        <Svg width={width} height={height} viewBox={`0 0 420 ${h}`} pointerEvents="none">
-          <G fill="none" stroke="#A6B6C6" strokeWidth={1.1} strokeDasharray="3 16">
-            {geography.depths.filter((_, n) => n % 2 === 0).map((d, n) =>
-              <Path key={"current-" + n} d={d} />)}
-          </G>
+      {/* Only this small, separately composited glow changes opacity. */}
+      <Animated.View testID="adventure-atlas-ambient-glow" pointerEvents="none"
+        accessible={false} style={[styles.tideGlow, {
+          left: width * 0.18, top: height * 0.30,
+          width: width * 0.64, height: height * 0.34,
+        }, glowStyle]}>
+        <Svg width="100%" height="100%" viewBox="0 0 220 160" pointerEvents="none">
+          <Defs>
+            <RadialGradient id="adventure-tide-glow" cx="50%" cy="50%" rx="50%" ry="50%">
+              <Stop offset="0%" stopColor="#9DBAC6" stopOpacity={0.9} />
+              <Stop offset="65%" stopColor="#628A9D" stopOpacity={0.28} />
+              <Stop offset="100%" stopColor="#628A9D" stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Ellipse cx={110} cy={80} rx={110} ry={80} fill="url(#adventure-tide-glow)" />
         </Svg>
       </Animated.View>
     </View>
@@ -293,5 +309,5 @@ export default memo(AdventureAtlasBackground);
 
 const styles = StyleSheet.create({
   underlay: { ...StyleSheet.absoluteFill, overflow: "hidden", backgroundColor: "#101827" },
-  tideLayer: { ...StyleSheet.absoluteFill },
+  tideGlow: { position: "absolute" },
 });
