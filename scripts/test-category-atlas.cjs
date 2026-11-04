@@ -563,6 +563,69 @@ ambientReduced = false;
 ambientAnimation.AtlasAtmosphereBreath();
 ambientAnimation.AtlasTwinkleStar({ cx: 180, cy: 245, index: 2, mapHeight: 490 });
 assert.equal(ambientLoops, 2, "only native opacity animates when motion is enabled");
+// The heavy SVG never animates. A single opaque native view fades out
+// AFTER the Continue card's 75ms + 320ms entrance. Reduced motion bypasses it.
+let revealReduced = false;
+const revealTrace = [];
+const mapRevealMotion = compile("src/components/CategoryAtlasMotion.tsx", {
+  react: { useEffect: effect => effect() },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "react-native-svg": svg,
+  "react-native-reanimated": {
+    __esModule: true,
+    default: { View: "AnimatedView", createAnimatedComponent: component => component },
+    Easing: {
+      sin: x => x, cubic: x => x, inOut: fn => fn, out: fn => fn,
+    },
+    useReducedMotion: () => revealReduced,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: fn => fn(),
+    useAnimatedProps: fn => fn(),
+    cancelAnimation: () => {},
+    withDelay: (delay, animation) => {
+      revealTrace.push({ type: "delay", delay });
+      return animation;
+    },
+    withSequence: (...animations) => animations.at(-1),
+    withRepeat: animation => animation,
+    withTiming: (target, config) => {
+      revealTrace.push({ type: "timing", target, duration: config?.duration });
+      return target;
+    },
+  },
+});
+const cover = mapRevealMotion.AtlasMapRevealCover();
+assert.equal(cover.type, "AnimatedView");
+assert.equal(cover.props.testID, "category-atlas-map-reveal-cover");
+assert.equal(cover.props.pointerEvents, "none",
+  "map reveal must not block any island press");
+assert.equal(cover.props.accessible, false);
+assert.equal(cover.props.style[0].backgroundColor, "#101827",
+  "cover is an opaque match for the static atlas canvas");
+assert.equal(cover.props.style[1].opacity, 1,
+  "first paint hides the map until the Continue card enters");
+assert.deepEqual(revealTrace.map(item => item.type), ["timing", "delay"],
+  "map reveal is one timing with a delay, not continuous motion");
+assert.equal(revealTrace[0].target, 0);
+assert.equal(revealTrace[0].duration, 260);
+assert.ok(revealTrace[1].delay >= 75 + 320,
+  "map does not appear before the Continue card finishes entering");
+const revealCode = motionCode.slice(
+  motionCode.indexOf("export function AtlasMapRevealCover"),
+  motionCode.indexOf("export function AtlasDestinationFeedback"),
+);
+assert.doesNotMatch(revealCode, /withRepeat\(/,
+  "revealing the map must never animate indefinitely");
+assert.doesNotMatch(revealCode, /useAnimatedProps|setTimeout|setInterval/,
+  "reveal must not drive the heavy SVG or schedule JS timers");
+revealTrace.length = 0;
+revealReduced = true;
+assert.equal(mapRevealMotion.AtlasMapRevealCover(), null,
+  "reduced motion immediately presents the static map");
+assert.equal(revealTrace.length, 0,
+  "reduced motion schedules no delayed reveal");
+
 assert.match(motionCode, /export function AtlasContinueAccent\(/,
   "the shortcut has its own non-repeating outline glint");
 assert.match(motionCode, /export function AtlasContinueArrow\(/,
@@ -627,6 +690,7 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
+    AtlasMapRevealCover: "AtlasMapRevealCover",
     AtlasProgressFill: "AtlasProgressFill",
   },
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
@@ -657,6 +721,7 @@ const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
+    AtlasMapRevealCover: "AtlasMapRevealCover",
     AtlasProgressFill: "AtlasProgressFill",
   },
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
@@ -717,6 +782,12 @@ assert.equal(mountedMaps[0].props.hideControls, true,
   "Category Atlas only renders the constellation without mode controls");
 assert.equal(nodes(mapReveal).filter(node => node.type === map).length, 1,
   "fitted map stays inside the non-layout-shifting entrance wrapper");
+assert.equal(mapReveal.props.children[0].type, map,
+  "the static chart is mounted first and never receives a fade transform");
+assert.equal(mapReveal.props.children[1].type, "AtlasMapRevealCover",
+  "a light native cover reveals the map only after the Continue card");
+assert.equal(nodes(mapReveal).filter(node => node.type === "AtlasMapRevealCover").length, 1,
+  "the map has exactly one decorative reveal overlay");
 assert.deepEqual(
   { ...mountedMaps[0].props.fitViewport }, { width: 340, height: 490 },
   "first map mount uses the real viewport size rather than legacy layout");
