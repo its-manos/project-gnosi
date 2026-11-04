@@ -616,72 +616,10 @@ ambientReduced = false;
 ambientAnimation.AtlasAtmosphereBreath();
 ambientAnimation.AtlasTwinkleStar({ cx: 180, cy: 245, index: 2, mapHeight: 490 });
 assert.equal(ambientLoops, 2, "only native opacity animates when motion is enabled");
-// The heavy SVG never animates. A single opaque native view fades out
-// AFTER the Continue card's 75ms + 320ms entrance. Reduced motion bypasses it.
-let revealReduced = false;
-const revealTrace = [];
-const mapRevealMotion = compile("src/components/CategoryAtlasMotion.tsx", {
-  react: { useEffect: effect => effect(), useState: initial => [initial, () => {}] },
-  "./CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
-  "react/jsx-runtime": { jsx, jsxs: jsx },
-  "react-native": native,
-  "react-native-svg": svg,
-  "react-native-reanimated": {
-    __esModule: true,
-    default: { View: "AnimatedView", createAnimatedComponent: component => component },
-    Easing: {
-      sin: x => x, cubic: x => x, inOut: fn => fn, out: fn => fn,
-    },
-    useReducedMotion: () => revealReduced,
-    useSharedValue: initial => ({ value: initial }),
-    useAnimatedStyle: fn => fn(),
-    useAnimatedProps: fn => fn(),
-    cancelAnimation: () => {},
-    runOnJS: fn => fn,
-    withDelay: (delay, animation) => {
-      revealTrace.push({ type: "delay", delay });
-      return animation;
-    },
-    withSequence: (...animations) => animations.at(-1),
-    withRepeat: animation => animation,
-    withTiming: (target, config) => {
-      revealTrace.push({ type: "timing", target, duration: config?.duration });
-      return target;
-    },
-  },
-});
-const cover = mapRevealMotion.AtlasMapRevealCover({ width: 340, height: 490, regionCount: 3 });
-assert.equal(cover.type, "AnimatedView");
-assert.equal(cover.props.testID, "category-atlas-map-reveal-cover");
-assert.equal(cover.props.pointerEvents, "none",
-  "map reveal must not block any island press");
-assert.equal(cover.props.accessible, false);
-assert.equal(cover.props.children.type, "CategoryAtlasBackground",
-  "the reveal cover matches the already-visible static chart rather than flashing dark");
-assert.equal(cover.props.children.props.regionCount, 3);
-assert.equal(cover.props.style[1].opacity, 1,
-  "the interactive SVG begins hidden behind its static chart");
-assert.deepEqual(revealTrace.map(item => item.type), ["timing", "delay"],
-  "map reveal is one timing with a delay, not continuous motion");
-assert.equal(revealTrace[0].target, 0);
-assert.equal(revealTrace[0].duration, 300);
-assert.equal(revealTrace[1].delay, 110,
-  "fade starts shortly after the card-completion gate mounts the interactive SVG");
-const revealCode = motionCode.slice(
-  motionCode.indexOf("export function AtlasMapRevealCover"),
-  motionCode.indexOf("export function AtlasDestinationFeedback"),
-);
-assert.doesNotMatch(revealCode, /withRepeat\(/,
-  "revealing the map must never animate indefinitely");
-assert.doesNotMatch(revealCode, /useAnimatedProps|setTimeout|setInterval/,
-  "reveal must not drive the heavy SVG or schedule JS timers");
-revealTrace.length = 0;
-revealReduced = true;
-assert.equal(mapRevealMotion.AtlasMapRevealCover({ width: 340, height: 490, regionCount: 3 }), null,
-  "reduced motion immediately presents the static map");
-assert.equal(revealTrace.length, 0,
-  "reduced motion schedules no delayed reveal");
-
+// Map visibility no longer depends on a delayed card callback or a
+// duplicate full-background reveal animation.
+assert.doesNotMatch(motionCode, /AtlasMapRevealCover|CategoryAtlasBackground|runOnJS/,
+  "atlas motion must not import or schedule a redundant SVG cover");
 assert.match(motionCode, /export function AtlasContinueAccent\(/,
   "the shortcut has its own non-repeating outline glint");
 assert.match(motionCode, /export function AtlasContinueArrow\(/,
@@ -747,7 +685,6 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
-    AtlasMapRevealCover: "AtlasMapRevealCover",
     AtlasProgressFill: "AtlasProgressFill",
   },
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
@@ -779,7 +716,6 @@ const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
-    AtlasMapRevealCover: "AtlasMapRevealCover",
     AtlasProgressFill: "AtlasProgressFill",
   },
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
@@ -830,16 +766,13 @@ mapShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } }
 categoryTree = renderCategory();
 assert.equal(nodes(categoryTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
   "static chart becomes visible as soon as the viewport is measured");
-assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 0,
-  "iOS also waits for the Continue card before mounting the interactive SVG");
-nodes(categoryTree).find(node => node.props?.testID === "category-atlas-continue")
-  .props.onEntranceComplete();
-categoryTree = renderCategory();
+assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 1,
+  "background and interactive islands mount together after the first measurement");
 let mountedMaps = nodes(categoryTree).filter(node => node.type === map);
 const mapReveal = nodes(categoryTree).find(node =>
   node.props?.testID === "category-atlas-map-entrance");
 assert.equal(mapReveal.type, "View",
-  "the atlas mounts after the card completion without whole-map compositing");
+  "the atlas mounts after measurement without waiting for the card animation");
 assert.equal(mapReveal.props.entranceDelay, undefined,
   "map entrance animation does not compete with card or island motion");
 assert.equal(mountedMaps.length, 1, "measured screen mounts exactly one map");
@@ -849,12 +782,10 @@ assert.equal(mountedMaps[0].props.externalBackground, true,
   "the interactive SVG uses the separate chart layer");
 assert.equal(nodes(mapReveal).filter(node => node.type === map).length, 1,
   "fitted map stays inside the non-layout-shifting entrance wrapper");
-assert.equal(mapReveal.props.children[0].type, map,
-  "the interactive chart is never given a full-map fade transform");
-assert.equal(mapReveal.props.children[1].type, "AtlasMapRevealCover",
-  "a light native cover reveals the map only after the Continue card");
-assert.equal(nodes(mapReveal).filter(node => node.type === "AtlasMapRevealCover").length, 1,
-  "the map has exactly one decorative reveal overlay");
+assert.equal(mapReveal.props.children.type, map,
+  "interactive islands render immediately, without another SVG cover");
+assert.equal(nodes(mapReveal).filter(node => node.type === "AtlasMapRevealCover").length, 0,
+  "the atlas contains no deferred reveal layer");
 assert.deepEqual(
   { ...mountedMaps[0].props.fitViewport }, { width: 340, height: 490 },
   "first map mount uses the real viewport size rather than legacy layout");
@@ -867,16 +798,11 @@ assert.deepEqual(
   { ...mountedMaps[0].props.fitViewport }, { width: 310, height: 420 },
   "fitted map still adapts when viewport dimensions change");
 
-// Neither platform may render the expensive SVG during the card entrance.
-// The actual MotionPressable completion drives the mount; measuring alone
-// cannot cause an early atlas paint on either device.
-const homeMotionCode = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
-assert.match(homeMotionCode, /runOnJS\(notifyEntranceComplete\)/,
-  "card completion is signalled by its native animation, not a JS timer");
-assert.match(homeMotionCode, /if \(finished\) runOnJS/,
-  "an interrupted entrance must not mount the heavy atlas");
-assert.match(homeMotionCode, /completionRef\.current = onEntranceComplete/,
-  "progress or layout re-renders must not restart the entrance");
+// The Continue card still animates, but no longer controls map readiness.
+assert.doesNotMatch(screen, /mapReadyFor|canMountMap|onEntranceComplete/,
+  "the card entrance must not block interactive destinations");
+assert.doesNotMatch(screen, /AtlasMapRevealCover/,
+  "the duplicate chart cover must not delay island visibility");
 const androidNative = { ...native, Platform: { OS: "android" } };
 const androidState = [];
 let androidHookIndex = 0;
@@ -901,7 +827,6 @@ const androidScreen = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
-    AtlasMapRevealCover: "AtlasMapRevealCover",
     AtlasProgressFill: "AtlasProgressFill",
   },
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
@@ -916,28 +841,20 @@ const androidShell = nodes(androidTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 androidShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
 androidTree = renderAndroidCategory();
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 0,
-  "Android must keep the map unmounted even after measuring its viewport");
+assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
+  "Android mounts the interactive islands as soon as the viewport is measured");
 assert.equal(nodes(androidTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
   "Android reveals the same static chart before the interactive map");
-const androidCard = nodes(androidTree).find(node =>
-  node.props?.testID === "category-atlas-continue");
-assert.equal(typeof androidCard.props.onEntranceComplete, "function",
-  "both platforms connect map readiness to the card animation finishing");
-androidCard.props.onEntranceComplete();
-androidTree = renderAndroidCategory();
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "the map mounts once the card entrance has completed");
-assert.equal(nodes(androidTree).filter(node => node.type === "AtlasMapRevealCover").length, 1,
-  "Android uses the same static-background reveal as iOS");
+assert.equal(nodes(androidTree).filter(node => node.type === "AtlasMapRevealCover").length, 0,
+  "Android also shows its islands with no additional reveal gate");
 androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 0,
-  "a newly selected category cannot inherit the previous map's ready state");
+assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
+  "switching categories keeps the fitted map available immediately");
 renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
 androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" },
   subcategories: [] });
 assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "empty categories still display their empty map without waiting for a missing card");
+  "empty categories still display their empty map without waiting for a card");
 
 const choose = screenModule.chooseAtlasFeaturedRegion;
 const picks = [
