@@ -315,6 +315,7 @@ const styles = StyleSheet.create({
   nodeTitleLocked: { color: "#9298AB" },
   nodeTitleActive: { color: "#C7BCFF" },
   nodeStatus: { color: "#B9A8FF", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.4 },
+  finishedCopy: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   empty: { padding: 20, backgroundColor: colors.surface, borderRadius: 16, gap: 10 },
   emptyTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
   devHint: { color: "#E4C486", fontSize: 11, lineHeight: 17 },
