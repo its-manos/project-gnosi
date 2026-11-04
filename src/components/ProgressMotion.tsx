@@ -57,17 +57,20 @@ export function ProgressRingGlow({ progress, ready }: { progress: number; ready:
     accessible={false} style={[styles.ringGlow, animatedStyle]} />;
 }
 
-/** A single soft upper-edge highlight on the primary CTA, no sweep loop. */
+/** A single gentle surface lift within the actual primary CTA.
+ * Rendered beneath the button label and clipped to its rounded shape:
+ * unlike the old 1.4px stripe, it doesn't look like a rendering artifact.
+ */
 export function ProgressActionHighlight() {
   const reduced = useReducedMotion();
-  const opacity = useSharedValue(0.13);
+  const opacity = useSharedValue(0.025);
   useEffect(() => {
     cancelAnimation(opacity);
-    opacity.value = 0.13;
+    opacity.value = 0.025;
     if (!reduced) {
       opacity.value = withDelay(540, withSequence(
-        withTiming(0.42, { duration: 390, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.13, { duration: 680, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.085, { duration: 360, easing: Easing.out(Easing.cubic) }),
+        withTiming(0.025, { duration: 700, easing: Easing.inOut(Easing.sin) }),
       ));
     }
     return () => cancelAnimation(opacity);
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#A89BFF", borderRadius: 999,
   },
   actionHighlight: {
-    position: "absolute", top: 6, left: "13%", right: "13%",
-    height: 1.4, borderRadius: 2, backgroundColor: "#FFFFFF",
+    ...StyleSheet.absoluteFill, borderRadius: 15,
+    backgroundColor: "#FFFFFF",
   },
 });
