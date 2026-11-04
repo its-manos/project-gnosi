@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     alignSelf: "center", paddingHorizontal: 20, paddingTop: 6, gap: 9,
     backgroundColor: "#101827", overflow: "hidden",
   },
-  atlasUnderlay: { ...StyleSheet.absoluteFillObject },
+  atlasUnderlay: { ...StyleSheet.absoluteFill },
   mapViewport: {
     flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
     borderTopWidth: 1, borderColor: "#25273A",
