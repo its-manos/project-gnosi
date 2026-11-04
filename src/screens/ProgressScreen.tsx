@@ -4,7 +4,9 @@ import Svg, { Circle } from "react-native-svg";
 import { categories, type Lesson } from "../data/lessons";
 import type { LearningInsightsView } from "./LearningInsightsScreen";
 import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
-import HomeAtlasBackground from "../components/HomeAtlasBackground";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import { MotionView, MotionPressable, MotionXpCircle } from "../components/HomeMotion";
+import { ProgressBarFill } from "../components/ProgressMotion";
 import ReviewActions from "../components/ReviewActions";
 import SyncStatus from "../components/SyncStatus";
 import { colors } from "../theme";
@@ -64,7 +66,7 @@ export default function ProgressScreen({
 
   const dashboard = <>
     <SyncStatus quiet />
-    <View style={styles.heading} testID="progress-heading">
+    <MotionView entranceDelay={0} style={styles.heading} testID="progress-heading">
       <View style={styles.copy}>
         <Text style={styles.eyebrow}>Ο ΧΑΡΤΗΣ ΤΗΣ ΜΑΘΗΣΗΣ</Text>
         <Text style={[styles.title, veryDense && styles.titleDense]}>Η πρόοδός σου</Text>
@@ -73,19 +75,20 @@ export default function ProgressScreen({
         accessibilityLabel="Το προφίλ μου" onPress={onOpenProfile}>
         <Text style={styles.link}>Προφίλ ↗</Text>
       </Pressable>
-    </View>
+    </MotionView>
 
-    <View testID="progress-summary" style={[styles.summary, veryDense && styles.summaryDense]}>
+    <MotionView entranceDelay={70} testID="progress-summary" style={[styles.summary, veryDense && styles.summaryDense]}>
       <View style={[styles.ring, veryDense && styles.ringDense]} accessible
         accessibilityRole="progressbar" accessibilityLabel="Ολοκλήρωση μαθημάτων"
         accessibilityValue={lessonProgressLoaded
           ? { min: 0, max: 100, now: percent } : { text: "Φόρτωση προόδου" }}>
         <Svg width="100%" height="100%" viewBox="0 0 80 80" pointerEvents="none">
           <Circle cx="40" cy="40" r="31" fill="none" stroke="#3C405A" strokeWidth="6" />
-          <Circle cx="40" cy="40" r="31" fill="none" stroke={colors.accent} strokeWidth="6"
-            strokeDasharray={RING_CIRCUMFERENCE}
-            strokeDashoffset={RING_CIRCUMFERENCE * (1 - (lessonProgressLoaded ? percent : 0) / 100)}
-            strokeLinecap="round" transform="rotate(-90 40 40)" />
+          <MotionXpCircle cx="40" cy="40" r="31" fill="none"
+            stroke={colors.accent} strokeWidth={6} strokeLinecap="round"
+            transform="rotate(-90 40 40)" circumference={RING_CIRCUMFERENCE}
+            progress={lessonProgressLoaded ? percent / 100 : 0}
+            strokeDasharray={`${RING_CIRCUMFERENCE * (lessonProgressLoaded ? percent / 100 : 0)} ${RING_CIRCUMFERENCE}`} />
         </Svg>
         <Text style={styles.ringValue}>{lessonProgressLoaded ? percent + "%" : "—"}</Text>
       </View>
@@ -109,22 +112,26 @@ export default function ProgressScreen({
           </View>
         </View>
       </View>
-    </View>
+    </MotionView>
 
-    <ReviewActions onReview={onKnowledgeReview} onWeeklyReview={onWeeklyReview}
+    <MotionView entranceDelay={140}>
+      <ReviewActions onReview={onKnowledgeReview} onWeeklyReview={onWeeklyReview}
       onExplore={onHome} inProgressLesson={inProgressLesson}
       inProgressAnsweredCount={inProgressAnsweredCount}
       inProgressQuestionCount={inProgressQuestionCount}
       inProgressLessonCount={inProgressLessonCount}
       lessonProgressLoaded={lessonProgressLoaded} onResumeLesson={onOpenLesson}
       dense={dense} />
+    </MotionView>
 
     <View style={styles.learning} testID="progress-learning">
-      <Text style={styles.learningHeading}>Η μάθησή σου</Text>
+      <MotionView entranceDelay={205}>
+        <Text style={styles.learningHeading}>Η μάθησή σου</Text>
+      </MotionView>
       <View style={styles.destinations}>
-        <Pressable testID="progress-knowledge-link"
-          style={({ pressed }) => [styles.destination, dense && styles.destinationDense,
-            veryDense && styles.destinationVeryDense, pressed && styles.pressed]}
+        <MotionPressable testID="progress-knowledge-link" entranceDelay={235} pressScale={0.983}
+          style={[styles.destination, dense && styles.destinationDense,
+            veryDense && styles.destinationVeryDense]}
           accessibilityRole="button" accessibilityLabel="Άνοιγμα γνώσεων"
           onPress={() => onOpenInsights("knowledge")}>
           <View style={styles.destinationHeader}>
@@ -139,14 +146,14 @@ export default function ProgressScreen({
           </View>
           <View style={styles.destinationFoot}>
             <View style={styles.destinationTrack} accessible={false}>
-              <View style={[styles.knowledgeFill, { width: knowledgeReady ? masteryPercent + "%" : "0%" }]} />
+              <ProgressBarFill tone="knowledge" percent={knowledgeReady ? masteryPercent : 0} />
             </View>
             <Text style={styles.destinationAction}>Δες την ανάλυση  ›</Text>
           </View>
-        </Pressable>
-        <Pressable testID="progress-reading-link"
-          style={({ pressed }) => [styles.destination, dense && styles.destinationDense,
-            veryDense && styles.destinationVeryDense, pressed && styles.pressed]}
+        </MotionPressable>
+        <MotionPressable testID="progress-reading-link" entranceDelay={290} pressScale={0.983}
+          style={[styles.destination, dense && styles.destinationDense,
+            veryDense && styles.destinationVeryDense]}
           accessibilityRole="button" accessibilityLabel="Άνοιγμα ανάγνωσης"
           onPress={() => onOpenInsights("reading")}>
           <View style={styles.destinationHeader}>
@@ -161,18 +168,18 @@ export default function ProgressScreen({
           </View>
           <View style={styles.destinationFoot}>
             <View style={styles.destinationTrack} accessible={false}>
-              <View style={[styles.readingFill, { width: lessonProgressLoaded ? percent + "%" : "0%" }]} />
+              <ProgressBarFill tone="reading" percent={lessonProgressLoaded ? percent : 0} />
             </View>
             <Text style={styles.destinationAction}>Δες την ανάλυση  ›</Text>
           </View>
-        </Pressable>
+        </MotionPressable>
       </View>
     </View>
   </>;
 
   return (
     <View testID="progress-shell" onLayout={onViewportLayout} style={styles.screen}>
-      <HomeAtlasBackground showAmbientMotion={false} />
+      <ProgressGradientBackground />
       {accessibleScroll ? (
         <ScrollView testID="progress-accessibility-scroll"
           style={styles.scroll} contentContainerStyle={[...contentStyle, styles.scrollContent]}
@@ -244,7 +251,6 @@ const styles = StyleSheet.create({
   },
   destinationDense: { height: 154, paddingVertical: 10, paddingHorizontal: 11 },
   destinationVeryDense: { height: 142, paddingVertical: 8 },
-  pressed: { opacity: 0.82 },
   destinationHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 3 },
   destinationTitle: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: "900" },
   chevron: { color: colors.accentLight, fontSize: 18, lineHeight: 22 },
@@ -254,7 +260,5 @@ const styles = StyleSheet.create({
   destinationCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 16 },
   destinationFoot: { gap: 8 },
   destinationTrack: { height: 5, backgroundColor: "#333951", borderRadius: 5, overflow: "hidden" },
-  knowledgeFill: { height: "100%", backgroundColor: colors.accent, borderRadius: 5 },
-  readingFill: { height: "100%", backgroundColor: "#7CB8BA", borderRadius: 5 },
   destinationAction: { color: "#BAB0EF", fontSize: 11, lineHeight: 16, fontWeight: "800" },
 });
