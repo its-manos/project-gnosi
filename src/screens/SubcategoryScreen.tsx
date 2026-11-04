@@ -322,6 +322,12 @@ export default function SubcategoryScreen({
           })}
             </View>
           </ScrollView>
+          {progressLoaded && nextIndex > 1 ?
+            <Pressable testID="adventure-jump-to-current" onPress={jumpToCurrent}
+              style={({ pressed }) => [styles.jumpButton, pressed && styles.pressed]}
+              accessibilityRole="button" accessibilityLabel="Μετάβαση στον επόμενο σταθμό του χάρτη">
+              <Text style={styles.jumpText}>Η ΘΕΣΗ ΜΟΥ  ↓</Text>
+            </Pressable> : null}
         </View>}
     </View>
   );
