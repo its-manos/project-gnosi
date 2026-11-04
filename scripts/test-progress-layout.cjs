@@ -33,8 +33,8 @@ const common = {
   "../components/KnowledgeMastery": { __esModule: true, default: "Mastery" },
   "../components/ReviewActions": { __esModule: true, default: "ReviewActions" },
   "../components/ProgressGradientBackground": { __esModule: true, default: "GradientBackground" },
-  "../components/HomeMotion": { MotionView: "MotionView", MotionPressable: "MotionPressable", MotionXpCircle: "MotionXpCircle" },
-  "../components/ProgressMotion": { ProgressBarFill: "ProgressBarFill" },
+  "../components/HomeMotion": { MotionView: "MotionView", MotionPressable: "MotionPressable", MotionXpCircle: "MotionXpCircle", MotionCounter: "MotionCounter" },
+  "../components/ProgressMotion": { ProgressBarFill: "ProgressBarFill", ProgressRingGlow: "ProgressRingGlow" },
   "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle" },
   "../components/SyncStatus": { __esModule: true, default: "SyncStatus" },
   "../components/LearningActivityPanel": { CategoryProgress: "Categories" },
@@ -70,6 +70,12 @@ assert.ok(!nodes(tree).some(n => n.type === "ScrollView"));
 assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "Circle"), "overview retains the ring track");
 assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "MotionXpCircle"),
   "the completed arc animates as the percentage changes");
+const glow = nodes(node(tree, "progress-summary")).find(n => n.type === "ProgressRingGlow");
+assert.ok(glow, "completion ring gets a separate, soft interior halo");
+assert.equal(glow.props.ready, true);
+assert.equal(glow.props.progress, Math.round(7 / lessons.length * 100));
+assert.equal(nodes(tree).filter(n => n.type === "MotionCounter").length, 4,
+  "summary and destination numbers animate on real data changes");
 const learningCards = ["progress-knowledge-link", "progress-reading-link"];
 for (const key of learningCards) {
   const element = node(tree, key);
@@ -80,6 +86,10 @@ for (const key of learningCards) {
   assert.ok(nodes(element).some(n => n.type === "ProgressBarFill"), "card animates its progress bar");
 }
 assert.ok(node(tree, "progress-summary"), "progress totals are visible");
+assert.ok(nodes(node(tree, "progress-learning")).some(n => n.props.style?.backgroundColor === "#182631"),
+  "Reading card has a distinctive, restrained teal treatment");
+assert.ok(nodes(node(tree, "progress-learning")).some(n => n.props.style?.backgroundColor === "#82C4C7"),
+  "Reading has an accent that doesn't add another card outline");
 assert.ok(text(node(tree, "progress-summary")).includes("7"), "completed count is retained");
 assert.ok(text(node(tree, "progress-summary")).includes(String(categories.length)), "world count is live");
 assert.ok(text(node(tree, "progress-summary")).includes("%"), "completion percent remains");
@@ -140,6 +150,8 @@ props = { ...props, lessonProgressLoaded: false };
 tree = render();
 assert.ok(!text(node(tree, "progress-summary")).includes("0%"), "loading must not show false zero");
 assert.ok(text(node(tree, "progress-reading-link")).includes("—"));
+assert.equal(nodes(node(tree, "progress-summary")).find(n => n.type === "ProgressRingGlow").props.ready, false,
+  "the ring halo stays off until real progress is hydrated");
 props = { ...props, lessonProgressLoaded: true, completedLessons: [] };
 tree = render();
 assert.ok(text(node(tree, "progress-reading-link")).includes("0 / " + lessons.length));
