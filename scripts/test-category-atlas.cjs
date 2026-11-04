@@ -804,11 +804,11 @@ assert.deepEqual(
 // The actual MotionPressable completion drives the mount; measuring alone
 // cannot cause an early atlas paint. iOS retains the existing reveal cover.
 const homeMotionCode = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
-assert.match(homeMotionCode, /runOnJS\\(notifyEntranceComplete\\)/,
+assert.match(homeMotionCode, /runOnJS\(notifyEntranceComplete\)/,
   "card completion is signalled by its native animation, not a JS timer");
-assert.match(homeMotionCode, /if \\(finished\\) runOnJS/,
+assert.match(homeMotionCode, /if \(finished\) runOnJS/,
   "an interrupted entrance must not mount the heavy atlas");
-assert.match(homeMotionCode, /completionRef\\.current = onEntranceComplete/,
+assert.match(homeMotionCode, /completionRef\.current = onEntranceComplete/,
   "progress or layout re-renders must not restart the entrance");
 const androidNative = { ...native, Platform: { OS: "android" } };
 const androidState = [];
