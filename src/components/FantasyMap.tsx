@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 type MapRegion = {
   id: string;
@@ -525,6 +525,36 @@ export default function FantasyMap({
               <Stop offset="1" stopColor="#101827" stopOpacity={0} />
             </RadialGradient>
           ) : null}
+          {fitted ? (
+            <>
+              <RadialGradient id="atlas-nebula-teal" cx="50%" cy="50%" rx="50%" ry="50%">
+                <Stop offset="0" stopColor="#406D7B" stopOpacity={0.27} />
+                <Stop offset="0.5" stopColor="#2A4B5E" stopOpacity={0.11} />
+                <Stop offset="1" stopColor="#162334" stopOpacity={0} />
+              </RadialGradient>
+              <RadialGradient id="atlas-nebula-gold" cx="50%" cy="50%" rx="50%" ry="50%">
+                <Stop offset="0" stopColor="#947959" stopOpacity={0.19} />
+                <Stop offset="0.55" stopColor="#5D5362" stopOpacity={0.08} />
+                <Stop offset="1" stopColor="#141B2D" stopOpacity={0} />
+              </RadialGradient>
+              <RadialGradient id="atlas-vignette" cx="50%" cy="48%" rx="76%" ry="70%">
+                <Stop offset="0" stopColor="#070B15" stopOpacity={0} />
+                <Stop offset="0.62" stopColor="#070B15" stopOpacity={0.03} />
+                <Stop offset="1" stopColor="#070B15" stopOpacity={0.46} />
+              </RadialGradient>
+              {positionedRegions.map(region => (
+                <RadialGradient key={`atlas-region-aura-${region.id}`}
+                  id={`atlas-region-aura-${region.seed}`}
+                  cx="50%" cy="50%" rx="50%" ry="50%">
+                  <Stop offset="0" stopColor={region.status === "complete"
+                    ? "#C8AA73" : region.fill} stopOpacity={region.status === "in-progress" ? 0.23 : 0.16} />
+                  <Stop offset="0.55" stopColor={region.status === "complete"
+                    ? "#BBA27C" : region.fill} stopOpacity={0.08} />
+                  <Stop offset="1" stopColor={region.fill} stopOpacity={0} />
+                </RadialGradient>
+              ))}
+            </>
+          ) : null}
           {positionedRegions.map((region) => fitted ? (
             <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
               <Stop offset="0" stopColor={region.fill} />
@@ -550,9 +580,18 @@ export default function FantasyMap({
           fill={fitted ? "#101827" : "url(#atlas-sea)"} />
         {fitted ? <Rect width={MAP_WIDTH} height={mapHeight}
           fill="url(#atlas-atmosphere)" pointerEvents="none" /> : null}
-        {fitted ? <Rect x={40} y={mapHeight * 0.13}
-          width={280} height={mapHeight * 0.72}
-          fill="url(#atlas-nebula)" pointerEvents="none" /> : null}
+        {fitted ? (
+          <G testID="atlas-sky-atmosphere" pointerEvents="none">
+            <Rect x={40} y={mapHeight * 0.13} width={280} height={mapHeight * 0.72}
+              fill="url(#atlas-nebula)" />
+            <Ellipse cx={MAP_WIDTH * 0.76} cy={mapHeight * 0.43}
+              rx={MAP_WIDTH * 0.40} ry={mapHeight * 0.33}
+              fill="url(#atlas-nebula-teal)" />
+            <Ellipse cx={MAP_WIDTH * 0.23} cy={mapHeight * 0.82}
+              rx={MAP_WIDTH * 0.38} ry={mapHeight * 0.27}
+              fill="url(#atlas-nebula-gold)" />
+          </G>
+        ) : null}
         {Array.from({ length: 9 }, (_, index) => (
           <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
             stroke="#7CA8AC" strokeOpacity={fitted ? 0.045 : 0.07} fill="none" />
@@ -620,15 +659,30 @@ export default function FantasyMap({
             })}
           </G>
         ) : null}
-        <G opacity={0.65}>
-          <Circle cx={326} cy={30} r={13} fill="none" stroke="#C9BB92" strokeWidth={0.6} />
-          <Path d="M326 13 L330 30 L326 45 L322 30 Z" fill="#C9BB92" />
+        {fitted ? <Rect testID="atlas-sky-vignette" width={MAP_WIDTH}
+          height={mapHeight} fill="url(#atlas-vignette)" pointerEvents="none" /> : null}
+        <G testID={fitted ? "atlas-premium-compass" : undefined}
+          opacity={fitted ? 0.83 : 0.65} pointerEvents="none">
+          {fitted ? (
+            <G>
+              <Circle cx={326} cy={30} r={18} fill="#101827" fillOpacity={0.52}
+                stroke="#BDAF8D" strokeWidth={0.55} strokeOpacity={0.6} />
+              <Circle cx={326} cy={30} r={15.3} fill="none"
+                stroke="#879CAA" strokeWidth={0.55} strokeOpacity={0.5}
+                strokeDasharray="1 4" />
+              <Path d="M326 8 V 12 M326 48 V52 M304 30 H308 M344 30 H348"
+                fill="none" stroke="#D0BF9A" strokeWidth={0.8} strokeOpacity={0.72} />
+            </G>
+          ) : <Circle cx={326} cy={30} r={13} fill="none"
+            stroke="#C9BB92" strokeWidth={0.6} />}
+          <Path d="M326 13 L330 30 L326 45 L322 30 Z"
+            fill={fitted ? "#D5C49C" : "#C9BB92"} />
           <Path d="M312 30 L326 26 L340 30 L326 34 Z" fill="#799B9D" />
-          <SvgText x={305} y={23} fill="#C9BB92" fontSize={7}>Β</SvgText>
+          <SvgText x={fitted ? 297 : 305} y={23} fill="#C9BB92" fontSize={7}>Β</SvgText>
         </G>
         {fitted ? positionedRegions.map(region => (
           <Circle key={`atlas-ambient-${region.id}`} cx={region.cx} cy={region.cy}
-            r={region.rx * 1.85} fill={region.fill} opacity={0.045}
+            r={region.rx * 1.88} fill={`url(#atlas-region-aura-${region.seed})`}
             pointerEvents="none" />
         )) : null}
         {connectorPaths.map(connector => (
