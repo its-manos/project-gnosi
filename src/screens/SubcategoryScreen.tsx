@@ -33,7 +33,9 @@ const ancientGreeceChapters: Record<number, string> = {
 };
 const chapterStarts = [5, 11, 18, 24];
 const NODE_SPACING = 142;
-const CHAPTER_GAP = 25;
+// Reserve space for a 3-line lesson title plus the active-status label
+// before the next chapter's badge; other checkpoints keep their compact spacing.
+const CHAPTER_GAP = 55;
 const NODE_WIDTH = 148;
 const MAP_BOTTOM_PADDING = 32;
 
