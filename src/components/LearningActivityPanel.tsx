@@ -71,9 +71,9 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
       <View style={[styles.chart, dashboard && styles.chartDashboard]}>
         <View style={[styles.axis, dashboard && styles.axisDashboard]} accessible={false}><Text style={styles.axisText}>{max}</Text><Text style={styles.axisText}>0</Text></View>
         <View style={styles.bars}>
-          {buckets.map(bucket => {
+          {buckets.map((bucket, index) => {
             const count = bucket.first + bucket.replay, active = bucket.key === selected.key;
-            return <Pressable key={bucket.key} onPress={() => setSelectedKey(bucket.key)} accessibilityRole="button"
+            return <MotionPressable key={`${mode}-${bucket.key}`} entranceDelay={dashboard ? 80 + index * 48 : undefined} pressScale={0.985} onPress={() => setSelectedKey(bucket.key)} accessibilityRole="button"
               accessibilityState={{ selected: active }} accessibilityLabel={`${rangeLabel(bucket)}: ${bucket.first} πρώτες ολοκληρώσεις, ${bucket.replay} επαναλήψεις`}
               style={[styles.column, dashboard && styles.columnDashboard, active && styles.selectedColumn]}>
               <View style={[styles.barArea, dashboard && styles.barAreaDashboard]}>
@@ -85,7 +85,7 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
                 </View>
               </View>
               <Text style={[styles.barLabel, dashboard && styles.barLabelDashboard, active && styles.activeLabel]}>{new Date(`${bucket.key}T12:00:00Z`).getUTCDate()}{"\n"}{new Intl.DateTimeFormat("el-GR", { month: "short", timeZone: "UTC" }).format(new Date(`${bucket.key}T12:00:00Z`)).replace(".", "")}</Text>
-            </Pressable>;
+            </MotionPressable>;
           })}
         </View>
       </View>
