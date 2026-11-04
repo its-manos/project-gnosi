@@ -17,6 +17,8 @@ on:
       - "src/state/DailyStore.ts"
       - "src/hooks/useKnowledgeProfile.ts"
       - "src/screens/ProfileScreen.tsx"
+      - "src/screens/AccountScreen.tsx"
+      - "src/screens/DailyChallengePreferencesScreen.tsx"
       - "src/components/BottomNavigation.tsx"
       - "src/components/ReviewActions.tsx"
       - "src/components/ActionButton.tsx"
