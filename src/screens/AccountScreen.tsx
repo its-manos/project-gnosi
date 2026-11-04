@@ -1,7 +1,8 @@
 import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
 import AccountPanel from "../components/AccountPanel";
 import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
@@ -13,8 +14,10 @@ import { colors } from "../theme";
 export default function AccountScreen({ onBack, backupControls, devControls }: { onBack: () => void; backupControls?: BackupControls; devControls?: LearningDevControls }) {
   // Account identity does not change during background progress synchronization.
   const { store } = useLearningSession();
+  const [activeSection, setActiveSection] = useState<"account" | "experience" | "privacy" | "sync" | "dev" | null>(null);
+  const goBack = () => activeSection ? setActiveSection(null) : onBack();
   return <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
-    <AppHeader onBack={onBack} />
+    <AppHeader onBack={goBack} />
     <View style={styles.heading}>
       <Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text>
       <Text style={styles.title}>Λογαριασμός και ρυθμίσεις</Text>
