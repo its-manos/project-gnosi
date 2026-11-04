@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { lessons } from "../data/lessons";
 import { categoryCompletionRows } from "../utils/categoryCompletion";
-import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
+import { useDailyDataSnapshot, useLearningDataSnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { activityBuckets, activitySummary, type ActivityBucket } from "../utils/learningActivity";
 import { colors } from "../theme";
@@ -31,7 +31,7 @@ function DashboardMetric({ label, value, detail, index }: { label: string; value
 }
 
 export default function LearningActivityPanel({ todayKey, compact = false, dashboard = false }: { todayKey: string; compact?: boolean; dashboard?: boolean }) {
-  const snapshot = useLearningSnapshot(), daily = useDailySnapshot();
+  const snapshot = useLearningDataSnapshot(), daily = useDailyDataSnapshot();
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
   const [selectedKey, setSelectedKey] = useState("");
   const dailyDates = useMemo(() => dailyHistory(daily.doc).map(row => row.dateKey), [daily.doc]);
@@ -120,7 +120,7 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
 }
 
 export function CategoryProgress({ compact = false, detail = false, singleColumn = false, threeColumn = false }: { compact?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean } = {}) {
-  const snapshot = useLearningSnapshot();
+  const snapshot = useLearningDataSnapshot();
   const [expanded, setExpanded] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const rows = useMemo(
