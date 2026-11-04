@@ -17,10 +17,12 @@ on:
       - "src/components/ActionButton.tsx"
       - "src/components/KnowledgeMastery.tsx"
       - "src/components/LearningActivityPanel.tsx"
+      - "src/utils/categoryCompletion.ts"
       - "scripts/test-progress-layout.cjs"
       - "scripts/test-navigation-rules.cjs"
       - "scripts/test-profile-layout.cjs"
       - "scripts/test-learning-activity.cjs"
+      - "scripts/test-category-completion.cjs"
       - "scripts/test-knowledge-review-ui.cjs"
       - ".github/workflows/progress-dashboard.yml"
   workflow_dispatch:
@@ -41,4 +43,5 @@ jobs:
       - run: node scripts/test-progress-layout.cjs
       - run: node scripts/test-profile-layout.cjs
       - run: node scripts/test-learning-activity.cjs
+      - run: node scripts/test-category-completion.cjs
       - run: node scripts/test-knowledge-review-ui.cjs
