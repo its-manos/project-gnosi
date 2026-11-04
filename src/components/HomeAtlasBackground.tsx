@@ -1,11 +1,13 @@
 /**
- * Home's static Midnight Atlas backdrop.
+ * Home's Midnight Atlas backdrop.
  *
  * Geometry is local SVG and follows the measured Home viewport exactly:
  * no image crop, stretched bitmap, per-frame path updates, or remote request.
- * Motion comes in a later phase; this layer never captures touches.
+ * Static geography is independent of the few animated ambient accents;
+ * the entire layer remains decorative and never captures touches.
  */
 import { memo, useState } from "react";
+import { HomeAtlasAmbientGlow, HomeAtlasCurrent, HomeAtlasTwinkleStar } from "./HomeAtlasMotion";
 import { StyleSheet, View } from "react-native";
 import Svg, {
   Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop,
@@ -82,6 +84,16 @@ function HomeAtlasBackground() {
             <Stop offset="77%" stopColor="#050A16" stopOpacity={0.09} />
             <Stop offset="100%" stopColor="#050A16" stopOpacity={0.39} />
           </RadialGradient>
+          <RadialGradient id="home-atlas-breath" cx="50%" cy="50%" rx="50%" ry="50%">
+            <Stop offset="0%" stopColor="#97BAC4" stopOpacity={0.95} />
+            <Stop offset="60%" stopColor="#50798A" stopOpacity={0.35} />
+            <Stop offset="100%" stopColor="#50798A" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="home-atlas-celestial-disc" cx="42%" cy="36%" rx="63%" ry="63%">
+            <Stop offset="0%" stopColor="#B8ACBC" stopOpacity={0.51} />
+            <Stop offset="45%" stopColor="#7C708B" stopOpacity={0.25} />
+            <Stop offset="100%" stopColor="#5A617B" stopOpacity={0.05} />
+          </RadialGradient>
           <LinearGradient id="home-atlas-shore" x1="0%" y1="0%" x2="100%" y2="100%">
             <Stop offset="0%" stopColor="#263C45" />
             <Stop offset="100%" stopColor="#273044" />
@@ -91,6 +103,14 @@ function HomeAtlasBackground() {
         <Rect width={420} height={h} fill="url(#home-atlas-teal)" />
         <Rect width={420} height={h} fill="url(#home-atlas-violet)" />
         <Rect width={420} height={h} fill="url(#home-atlas-gold-haze)" />
+
+        {/* Almost-hidden edge of a celestial sphere inside the astrolabe. */}
+        <Circle cx={433} cy={h * 0.057} r={70}
+          fill="url(#home-atlas-celestial-disc)" opacity={0.28} />
+        <G fill="none" stroke="#C5B7C8" strokeWidth={0.7} opacity={0.10}>
+          <Path d={`M 398 ${h * 0.01} Q 422 ${h * 0.055} 393 ${h * 0.12}`} />
+          <Path d={`M 379 ${h * 0.038} Q 410 ${h * 0.073} 420 ${h * 0.14}`} />
+        </G>
 
         {/* Very faint survey grid; it sits behind the existing opaque cards. */}
         <G fill="none" stroke="#96A9B6" strokeWidth={0.65}
@@ -162,6 +182,16 @@ function HomeAtlasBackground() {
           <Path d="M -65 -65 L 65 65 M 65 -65 L -65 65" opacity={0.42} />
         </G>
 
+        {/* Survey rosettes inhabit the margins, not the touch targets. */}
+        <G fill="none" stroke="#C7B398" strokeWidth={0.75} opacity={0.24}>
+          {[[15, 0.31], [403, 0.49], [30, 0.77]].map(([x, y], i) =>
+            <G key={`home-survey-${i}`} transform={`translate(${x} ${h * y})`}>
+              <Circle r={5.2} />
+              <Path d="M -10 0 H 10 M 0 -10 V 10" />
+              <Circle r={1} fill="#D6BE9A" stroke="none" />
+            </G>)}
+        </G>
+
         {/* Distant constellations are decor, never extra destinations. */}
         <G stroke="#D6C09C" fill="none" strokeWidth={0.72} opacity={0.23}>
           <Path d={`M 65 ${h * .10} L 115 ${h * .065} L 158 ${h * .12}
@@ -180,6 +210,11 @@ function HomeAtlasBackground() {
               <Circle r={1.35} fill="#E8D0A7" stroke="none" />
             </G>)}
         </G>
+        {/* Small UI-thread ambient accents; the chart itself never animates. */}
+        <HomeAtlasAmbientGlow h={h} />
+        {[[115, 0.065], [362, 0.058], [403, 0.416], [387, 0.75]].map(([x, y], index) =>
+          <HomeAtlasTwinkleStar key={index} index={index} x={x} y={h * y} />)}
+        <HomeAtlasCurrent h={h} />
         {/* Edge falloff keeps text and cards high-contrast. */}
         <Rect width={420} height={h} fill="url(#home-atlas-vignette)" />
       </Svg> : null}
