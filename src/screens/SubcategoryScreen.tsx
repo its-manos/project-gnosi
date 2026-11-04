@@ -98,7 +98,7 @@ export default function SubcategoryScreen({
         </Pressable>
         <Text testID="adventure-category-title" style={styles.categoryTitle}
           numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
-          {category.title.toUpperCase()}
+          {category.title.toLocaleUpperCase("el-GR")}
         </Text>
         <View style={styles.headerMark} accessible={false}><Text style={styles.sparkle}>✦</Text></View>
       </View>
