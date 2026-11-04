@@ -270,10 +270,20 @@ const readableFrame = nodes(map({ ...props, fitViewport: { width: 340, height: 4
   .find(node => node.props?.testID === "knowledge-world-map");
 const fittedLabel = nodes(readableFrame).find(node => node.type === "text"
   && node.props?.children === "Παγκόσμια");
-assert.equal(fittedLabel.props.fontSize, 14,
-  "three-destination labels use a larger readable font");
-assert.equal(fittedLabel.props.fill, "#FBF8EF",
-  "fitted titles use a warm high-contrast color");
+assert.equal(fittedLabel.props.fontSize, 12.5,
+  "category labels match the Adventure Path's compact system typography");
+assert.equal(fittedLabel.props.fontWeight, "800",
+  "category labels use the same weight as Adventure Path stop labels");
+assert.equal(fittedLabel.props.fill, "#D0D2DA",
+  "unstarted destinations use the Adventure Path's softer text body color");
+const activeAtlasText = nodes(readableFrame).find(node => node.type === "text"
+  && node.props?.children === "Αρχαία Ελλάδα");
+assert.equal(activeAtlasText?.props.fill, "#C7BCFF",
+  "started destinations match the Adventure Path's active label accent");
+const selectedMapControl = nodes(map({ ...props, fitViewport: { width: 340, height: 490 } }))
+  .find(node => node.props?.testID === "atlas-map-toggle");
+assert.ok(selectedMapControl.props.style.some(style => style?.backgroundColor === "#34304E"),
+  "fitted map controls use the Subcategory's muted violet surfaces");
 assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 5);
 const constellationEdges = nodes(frame).filter(node =>
   node.type === "path" && node.props?.strokeDasharray === "2 5");
@@ -295,6 +305,8 @@ assert.match(screen, /getAtlasCategoryProgress/);
 assert.match(screen, /testID="category-atlas-continue"/);
 assert.match(screen, /Η ΠΡΟΟΔΟΣ ΣΟΥ/,
   "overall progress heading is explicit rather than repeating category title");
+assert.match(screen, /#6C668A/, "island tints share Adventure Path palette");
+assert.match(screen, /letterSpacing: 1.4/, "header typography matches Subcategory screen");
 assert.match(screen, /testID="category-atlas-map-viewport"/);
 assert.match(screen, /fitViewport=/, "map respects actual viewport rather than enforcing a tall path");
 assert.match(screen, /chooseAtlasFeaturedRegion/, "shortcut chooses an explored area independently");
