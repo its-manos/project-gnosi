@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } fr
 import Svg, { Circle } from "react-native-svg";
 import { useLearningSession, useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
-import { useAthensDate } from "../hooks/useAthensDate";
+import { getAthensDateKey } from "../utils/dailyChallenge";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { playerTitle } from "../gamification/rules";
@@ -49,7 +49,9 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
   const { email } = useLearningSession();
   const learning = useLearningSnapshot();
   const daily = useDailySnapshot();
-  const today = useAthensDate();
+  // useKnowledgeProfile already subscribes to the Athens day boundary.
+  // Avoid another AppState listener and minute interval on this screen.
+  const today = getAthensDateKey();
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const quizStats = useMemo(
     () => calculateDailyChallengeProgress(dailyHistory(daily.doc), today),
