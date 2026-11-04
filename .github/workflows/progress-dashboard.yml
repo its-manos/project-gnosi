@@ -12,6 +12,7 @@ on:
       - "src/navigation/AppNavigator.tsx"
       - "src/navigation/navigationRules.ts"
       - "src/hooks/useLearningApp.ts"
+      - "src/state/LearningSession.tsx"
       - "src/components/BottomNavigation.tsx"
       - "src/components/ReviewActions.tsx"
       - "src/components/ActionButton.tsx"
