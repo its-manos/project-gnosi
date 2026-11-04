@@ -27,20 +27,19 @@ export function AdventureProgressFill({ percent }: { percent: number }) {
 
 export function AdventureActiveHalo() {
   const reduced = useReducedMotion();
-  const scale = useSharedValue(1.06);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: 0.60 + (scale.value - 1.04) * 2.3,
-  }));
+  const glowOpacity = useSharedValue(0.55);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: glowOpacity.value }));
   useEffect(() => {
-    cancelAnimation(scale);
-    if (reduced) { scale.value = 1.06; return; }
-    scale.value = withRepeat(withSequence(
-      withTiming(1.11, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
-      withTiming(1.04, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
+    cancelAnimation(glowOpacity);
+    if (reduced) { glowOpacity.value = 0.65; return; }
+    // A stationary halo that only changes opacity avoids wobbling/scaling
+    // around the medallion and stays crisp on Android and iPhone.
+    glowOpacity.value = withRepeat(withSequence(
+      withTiming(0.82, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0.42, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
     ), -1, false);
-    return () => cancelAnimation(scale);
-  }, [reduced, scale]);
+    return () => cancelAnimation(glowOpacity);
+  }, [reduced, glowOpacity]);
   return <Animated.View pointerEvents="none" accessible={false}
     testID="adventure-active-halo" style={[styles.halo, animatedStyle]} />;
 }
@@ -48,8 +47,9 @@ export function AdventureActiveHalo() {
 const styles = StyleSheet.create({
   progressFill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 5 },
   halo: {
-    position: "absolute", width: 74, height: 74, borderRadius: 37,
+    position: "absolute", top: -3, left: -3,
+    width: 80, height: 80, borderRadius: 40,
     borderColor: "#B7A7F0", borderWidth: 1.5,
-    backgroundColor: "rgba(136,113,205,0.12)",
+    backgroundColor: "transparent",
   },
 });
