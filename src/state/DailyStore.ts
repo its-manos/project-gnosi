@@ -37,6 +37,19 @@ export class DailyStore {
   }
   private makeSnapshot(): DailySnapshot { return { ready: this.ready, doc: this.doc, status: this.status, error: this.error, userId: this.userId }; }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
+  // Data-only subscribers should not render on sync status/error transitions.
+  // Cache the selected snapshot identity for useSyncExternalStore.
+  private dataSnapshot: DailySnapshot | null = null;
+  getDataSnapshot = (): DailySnapshot => {
+    const current = this.snapshot;
+    const previous = this.dataSnapshot;
+    if (previous &&
+      previous.ready === current.ready &&
+      previous.doc === current.doc &&
+      previous.userId === current.userId) return previous;
+    this.dataSnapshot = current;
+    return current;
+  };
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   async start(): Promise<void> {
