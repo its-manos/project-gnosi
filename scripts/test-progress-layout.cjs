@@ -116,6 +116,22 @@ assert.doesNotMatch(progressMotionSource, /withRepeat\(/, "no continuous progres
 const backgroundSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ProgressGradientBackground.tsx"), "utf8");
 assert.ok(!backgroundSource.includes("HomeAtlasBackground"), "gradient has no atlas dependency");
 assert.ok(!backgroundSource.includes("withRepeat"), "gradient stays static");
+
+const reviewSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ReviewActions.tsx"), "utf8");
+const buttonSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ActionButton.tsx"), "utf8");
+assert.match(reviewSource, /decoration=\{<ProgressActionHighlight \/>\}/,
+  "the highlight is a child of the primary button, not a misplaced sibling");
+assert.match(reviewSource, /overflow: "hidden"/,
+  "the button clips its decorative layer to the existing rounded corners");
+assert.match(buttonSource, /\{decoration\}[\s\S]*?<Text style=/,
+  "the highlight is painted under the button label");
+assert.match(progressMotionSource, /\.\.\.StyleSheet\.absoluteFill/,
+  "the highlight covers the rounded button instead of drawing a stray stripe");
+assert.doesNotMatch(progressMotionSource, /height: 1\.4/,
+  "the old 1.4px horizontal line cannot regress");
+assert.match(progressMotionSource, /pointerEvents="none"/,
+  "the decorative overlay never intercepts the review button");
+
 primary.props.onReview(); primary.props.onExplore(); primary.props.onWeeklyReview();
 assert.equal(review, 1); assert.equal(explore, 1); assert.equal(weekly, 1);
 
