@@ -7,7 +7,7 @@
  * the entire layer remains decorative and never captures touches.
  */
 import { memo, useEffect, useState } from "react";
-import { HomeAtlasAmbientGlow, HomeAtlasTwinkles } from "./HomeAtlasMotion";
+import { HomeAtlasAmbientGlow, HomeAtlasReveal, HomeAtlasTwinkles } from "./HomeAtlasMotion";
 import { StyleSheet, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import Svg, {
@@ -78,7 +78,8 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
         setViewport(previous => Math.abs(previous.width - width) < 1
           && Math.abs(previous.height - height) < 1 ? previous : { width, height });
       }}>
-      {atlasReady && h > 0 ? <Svg width={viewport.width} height={viewport.height}
+      {atlasReady && h > 0 ? <HomeAtlasReveal>
+        <Svg width={viewport.width} height={viewport.height}
         viewBox={`0 0 420 ${h}`} pointerEvents="none">
         <Defs>
           <LinearGradient id="home-atlas-night" x1="0%" y1="0%" x2="70%" y2="100%">
@@ -259,7 +260,8 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
           fill="none" strokeDasharray="2 18" />
         {/* Edge falloff keeps text and cards high-contrast. */}
         <Rect width={420} height={h} fill="url(#home-atlas-vignette)" />
-      </Svg> : null}
+        </Svg>
+      </HomeAtlasReveal> : null}
       {atlasReady && h > 0 && showAmbientMotion ? <>
         <HomeAtlasAmbientGlow width={viewport.width} height={viewport.height} />
         <HomeAtlasTwinkles width={viewport.width} height={viewport.height} />

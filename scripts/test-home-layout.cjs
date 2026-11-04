@@ -396,6 +396,7 @@ const atlas = compile("src/components/HomeAtlasBackground.tsx", {
   "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
   "./HomeAtlasMotion": {
     HomeAtlasAmbientGlow: "HomeAtlasAmbientGlow",
+    HomeAtlasReveal: "HomeAtlasReveal",
     HomeAtlasTwinkles: "HomeAtlasTwinkles",
   },
 }, false, {
@@ -435,6 +436,13 @@ atlasTimerCallback();
 atlasTree = renderAtlas();
 let atlasSvg = nodes(atlasTree).find(node => node.type === "svg");
 assert.ok(atlasSvg, "atlas mounts after the delayed callback");
+const atlasReveal = nodes(atlasTree).find(node => node.type === "HomeAtlasReveal");
+assert.ok(atlasReveal, "a dedicated one-shot reveal wraps the static chart");
+assert.equal(atlasReveal.props.children.type, "svg",
+  "only the fixed SVG, not the interactive Home cards, is faded in");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasReveal").length, 1,
+  "exactly one Home background reveal mounts");
+
 assert.equal(atlasSvg.props.width, 390);
 assert.equal(atlasSvg.props.height, 844);
 assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (844 * 420 / 390),
@@ -504,23 +512,46 @@ assert.match(staticAtlasSource, /absoluteFill/,
 // native view opacity and do not animate any SVG property on each frame.
 let homeAmbientReduced = true;
 let homeAmbientLoops = 0;
+let revealDelayMs = null;
+let revealDurationMs = null;
 const atlasMotion = compile("src/components/HomeAtlasMotion.tsx", {
   react: { useEffect: fn => fn() },
   "react-native-reanimated": {
     __esModule: true,
     default: { View: "AnimatedView" },
-    Easing: { sin: x => x, inOut: fn => fn },
+    Easing: { sin: x => x, cubic: x => x, inOut: fn => fn, out: fn => fn },
     useReducedMotion: () => homeAmbientReduced,
     useSharedValue: initial => ({ value: initial }),
     useAnimatedStyle: fn => fn(),
     cancelAnimation: () => {},
-    withDelay: (_delay, result) => result,
+    withDelay: (delay, result) => {
+      if (delay === 100) revealDelayMs = delay;
+      return result;
+    },
     withSequence: (...values) => values.at(-1),
     withRepeat: result => { homeAmbientLoops++; return result; },
-    withTiming: value => value,
+    withTiming: (value, config) => {
+      if (value === 1 && config?.duration === 600) revealDurationMs = config.duration;
+      return value;
+    },
   },
   "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
 }, true);
+const revealedStatic = atlasMotion.HomeAtlasReveal({ children: "static-svg" });
+assert.equal(revealedStatic.type, "AnimatedView");
+assert.equal(revealedStatic.props.testID, "home-atlas-reveal");
+assert.equal(revealedStatic.props.pointerEvents, "none");
+assert.equal(revealedStatic.props.accessible, false);
+assert.equal(revealedStatic.props.children, "static-svg",
+  "one-shot reveal does not redraw the chart as animated SVG");
+assert.equal(revealedStatic.props.style[1].opacity, 1,
+  "reduced-motion users see the SVG without a fade");
+assert.equal(revealDelayMs, null, "reduced motion does not schedule the fade");
+homeAmbientReduced = false;
+atlasMotion.HomeAtlasReveal({ children: "static-svg" });
+assert.equal(revealDelayMs, 100, "fade allows a brief native paint buffer");
+assert.equal(revealDurationMs, 600, "the chart gently fades in once after mounting");
+homeAmbientReduced = true;
 const glow = atlasMotion.HomeAtlasAmbientGlow({ width: 390, height: 844 });
 assert.equal(glow.type, "AnimatedView");
 assert.equal(glow.props.testID, "home-atlas-motion-glow");

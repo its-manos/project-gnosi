@@ -5,7 +5,7 @@
  * or gradient props. The only looping work is opacity on a small, separate
  * view and four tiny star views, all on the UI thread.
  */
-import { useEffect } from "react";
+import { useEffect, type PropsWithChildren } from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 import Animated, {
@@ -14,6 +14,33 @@ import Animated, {
 } from "react-native-reanimated";
 
 const ease = Easing.inOut(Easing.sin);
+/**
+ * One-off compositor fade for the fixed cartography only. It starts after
+ * the existing deferred native SVG mount, so the heavy chart never competes
+ * with the card entrances; no SVG paths or gradients animate.
+ */
+export function HomeAtlasReveal({ children }: PropsWithChildren) {
+  const reduced = useReducedMotion();
+  const opacity = useSharedValue(reduced ? 1 : 0);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  useEffect(() => {
+    cancelAnimation(opacity);
+    opacity.value = reduced ? 1 : 0;
+    if (!reduced) {
+      opacity.value = withDelay(100, withTiming(1, {
+        duration: 600, easing: Easing.out(Easing.cubic),
+      }));
+    }
+    return () => cancelAnimation(opacity);
+  }, [reduced, opacity]);
+
+  return <Animated.View testID="home-atlas-reveal" pointerEvents="none"
+    accessible={false} style={[styles.reveal, animatedStyle]}>
+    {children}
+  </Animated.View>;
+}
+
 const highlights = [
   { x: 115, y: 0.065 }, { x: 362, y: 0.058 },
   { x: 403, y: 0.416 }, { x: 387, y: 0.75 },
@@ -94,6 +121,7 @@ export function HomeAtlasTwinkles({ width, height }: { width: number; height: nu
 }
 
 const styles = StyleSheet.create({
+  reveal: { ...StyleSheet.absoluteFill },
   glow: { position: "absolute" },
   star: { position: "absolute", width: 3, height: 3, borderRadius: 1.5,
     backgroundColor: "#E8D5B4" },
