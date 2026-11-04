@@ -371,7 +371,7 @@ assert.ok(!/withRepeat\(|withTiming\(|useSharedValue\(|setInterval\(/.test(stati
   "phase one leaves the new atlas static; ambient motion is deferred");
 assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\)/,
   "dashboard updates should not redraw the atlas");
-assert.match(staticAtlasSource, /absoluteFillObject/,
+assert.match(staticAtlasSource, /absoluteFill/,
   "atlas stays fixed outside the scrollable dashboard");
 
 // Responsive density follows the available Home height after safe areas and tabs.
