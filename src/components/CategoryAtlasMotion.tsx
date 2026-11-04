@@ -4,13 +4,12 @@
  * One-shot destination glints retain their exact coastline shape.
  * The normal (non-fitted) FantasyMap is intentionally unaffected.
  */
-import { useEffect, useState } from "react";
-import CategoryAtlasBackground from "./CategoryAtlasBackground";
+import { useEffect } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { StyleSheet, View, type DimensionValue } from "react-native";
 import Svg, { Ellipse, Path, RadialGradient, Stop, Defs } from "react-native-svg";
 import Animated, {
-  Easing, cancelAnimation, runOnJS, useAnimatedProps, useAnimatedStyle, useReducedMotion,
+  Easing, cancelAnimation, useAnimatedProps, useAnimatedStyle, useReducedMotion,
   useSharedValue, withDelay, withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 
@@ -79,40 +78,6 @@ export function AtlasTwinkleStar({ cx, cy, index, mapHeight }: {
     }, animatedStyle]} />;
 }
 
-/** The card completion mounts the island SVG on both platforms. A duplicate
- * of the already-visible static chart sits above it and fades away; neither
- * the interactive map nor its native hit geometry receives an opacity transform.
- * Unmount this temporary cover after the one-shot reveal completes.
- */
-export function AtlasMapRevealCover({ width, height, regionCount }: {
-  width: number; height: number; regionCount: number;
-}) {
-  const reduced = useReducedMotion();
-  const [visible, setVisible] = useState(!reduced);
-  const opacity = useSharedValue(reduced ? 0 : 1);
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  useEffect(() => {
-    cancelAnimation(opacity);
-    if (reduced) {
-      opacity.value = 0;
-      return;
-    }
-    // The screen mounts this only after the 75ms + 320ms card animation.
-    // Give the native SVG a brief first-paint window before revealing it.
-    opacity.value = withDelay(110, withTiming(0, {
-      duration: 300, easing: Easing.out(Easing.cubic),
-    }, finished => {
-      if (finished) runOnJS(setVisible)(false);
-    }));
-    return () => cancelAnimation(opacity);
-  }, [reduced, opacity]);
-  if (reduced || !visible) return null;
-  return <Animated.View testID="category-atlas-map-reveal-cover"
-    pointerEvents="none" accessible={false}
-    style={[styles.mapRevealCover, animatedStyle]}>
-    <CategoryAtlasBackground width={width} height={height} regionCount={regionCount} />
-  </Animated.View>;
-}
 /** The coastline glint subscribes directly to a shared press ID. Unlike
  * React state, touching an island does not rebuild the entire 1,100-line map.
  * Animated SVG props are still used *only for a short tap*, never in a loop.
@@ -198,8 +163,6 @@ export function AtlasContinueArrow() {
 }
 
 const styles = StyleSheet.create({
-  // A temporary copy of the already-visible chart prevents a dark flash.
-  mapRevealCover: { ...StyleSheet.absoluteFill },
   atmosphere: {
     position: "absolute", left: "10%", top: "18%",
     width: "76%", height: "65%",
