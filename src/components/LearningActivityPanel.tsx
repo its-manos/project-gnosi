@@ -5,7 +5,7 @@ import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession"
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { activityBuckets, activitySummary, type ActivityBucket } from "../utils/learningActivity";
 import { colors } from "../theme";
-import { MotionPressable } from "./HomeMotion";
+import { MotionPressable, MotionView } from "./HomeMotion";
 import { ProgressBarFill } from "./ProgressMotion";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 
@@ -20,12 +20,13 @@ function MiniMetric({ label, value, detail }: { label: string; value: string; de
   return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text><Text style={styles.small}>{detail}</Text></View>;
 }
 
-function DashboardMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return <View style={styles.dashboardMetric}>
+function DashboardMetric({ label, value, detail, index }: { label: string; value: string; detail: string; index: number }) {
+  return <MotionView entranceDelay={80 + index * 65} style={styles.dashboardMetric}>
+    <View pointerEvents="none" accessible={false} style={[styles.metricAccent, index === 1 && styles.metricAccentReplay, index === 2 && styles.metricAccentDays]} />
     <Text style={styles.dashboardValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{value}</Text>
     <Text style={styles.dashboardLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{label}</Text>
     <Text style={styles.dashboardDetail} numberOfLines={1}>{detail}</Text>
-  </View>;
+  </MotionView>;
 }
 
 export default function LearningActivityPanel({ todayKey, compact = false, dashboard = false }: { todayKey: string; compact?: boolean; dashboard?: boolean }) {
@@ -47,9 +48,9 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
     {dashboard ? <>
       <Text style={styles.dashboardHeading}>Αυτή την εβδομάδα</Text>
       <View style={styles.dashboardMetrics} testID="activity-dashboard-metrics">
-        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="εβδομάδα" />
-        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="εβδομάδα" />
-        <DashboardMetric label="Ενεργές ημέρες" value={String(summary.activeDays)} detail="συνολικά" />
+        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="εβδομάδα" index={0} />
+        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="εβδομάδα" index={1} />
+        <DashboardMetric label="Ενεργές ημέρες" value={String(summary.activeDays)} detail="συνολικά" index={2} />
       </View>
     </> : !compact ? <View style={styles.metrics}>
       <MiniMetric label="ΝΕΑ ΜΑΘΗΜΑΤΑ" value={String(summary.firstThisWeek)} detail="αυτή την εβδομάδα" />
@@ -231,6 +232,9 @@ const styles = StyleSheet.create({
   dashboardHeading: { color: colors.textBody, fontSize: 12, lineHeight: 18, fontWeight: "800" },
   dashboardMetrics: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 62, paddingHorizontal: 11, paddingVertical: 8, justifyContent: "center", gap: 1, borderWidth: 1, borderColor: "#4A4566", borderRadius: 15, backgroundColor: "#20243C" },
+  metricAccent: { position: "absolute", left: 11, top: 0, width: 32, height: 2, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: FIRST, opacity: 0.8 },
+  metricAccentReplay: { backgroundColor: REPLAY },
+  metricAccentDays: { backgroundColor: "#9B9EDB" },
   dashboardValue: { color: colors.accentLight, fontSize: 25, lineHeight: 30, fontWeight: "900", fontVariant: ["tabular-nums"] },
   dashboardLabel: { color: colors.text, fontSize: 10, lineHeight: 13, fontWeight: "800" },
   dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 12 },
