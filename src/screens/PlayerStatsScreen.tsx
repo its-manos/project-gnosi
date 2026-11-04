@@ -169,7 +169,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: "#101827" },
   content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 6, paddingBottom: 18 },
-  fixedContent: { flex: 1, minHeight: 0, justifyContent: "flex-start" },
+  fixedContent: { flex: 1, minHeight: 0, justifyContent: "space-evenly" },
   heading: { gap: 2, marginTop: 1, marginBottom: 7 },
   eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 1.1 },
   title: { color: colors.text, fontSize: 22, lineHeight: 29, fontWeight: "900" },
