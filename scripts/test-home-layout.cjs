@@ -36,6 +36,22 @@ const react = {
     return [showList, value => { showList = typeof value === "function" ? value(showList) : value; }];
   },
 };
+const adventureAnimationCalls = [];
+const adventureCancelCalls = [];
+const reanimated = {
+  __esModule: true,
+  default: { ScrollView: "ScrollView" },
+  Easing: { inOut: easing => easing, cubic: t => t },
+  useAnimatedRef: () => ({ current: {} }),
+  useSharedValue: initial => ({ value: initial }),
+  useAnimatedReaction: () => {},
+  scrollTo: () => {},
+  withTiming: (target, config) => {
+    adventureAnimationCalls.push({ target, duration: config.duration });
+    return target;
+  },
+  cancelAnimation: value => adventureCancelCalls.push(value),
+};
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
 
@@ -47,6 +63,7 @@ function compile(file, extra = {}, returnModule = false) {
   const imports = {
     react, "react/jsx-runtime": { jsx, jsxs: jsx },
     "react-native": native, "react-native-svg": svg,
+    "react-native-reanimated": reanimated,
     "../theme": { colors: {
       accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E",
       textMuted: "#ABB0C1", success: "#3CC69A", successSurface: "#17372F",
@@ -497,6 +514,10 @@ assert.equal(adventureModule.getAdventureCurrentOffset(2800, 4500, 500), 2700,
   "next checkpoint has the same offset whichever navigation initiates it");
 assert.equal(adventureModule.getAdventureCurrentOffset(75, 1200, 600), 0,
   "early lessons do not introduce phantom scrolling");
+assert.ok(adventureModule.getAdventureScrollDuration(2800) >= 3000,
+  "UI-thread map glide must be noticeably slower over long journeys");
+assert.ok(adventureModule.getAdventureScrollDuration(2800) <= 5200,
+  "entry animation remains reasonably bounded");
 assert.equal(adventureModule.getAdventureEntryOffset(2700, 4500, 500), 2588,
   "chapter marker remains visible near the top of the map pane");
 assert.equal(adventureModule.getAdventureEntryOffset(500, 1200, 1100), 132,
@@ -581,14 +602,9 @@ const next = nodes(tree).find(node => node.props?.testID === "adventure-continue
 next.props.onPress();
 assert.equal(actions.at(-1), "open:anc-19", "Continue opens the next unlocked lesson");
 const mapScroll = nodes(tree).find(node => node.props?.testID === "adventure-map-scroll");
-let jumpY = -1;
-mapScroll.props.ref.current = { scrollTo: ({ y }) => { jumpY = y; } };
-const jump = nodes(tree).find(node => node.props?.testID === "adventure-jump-to-current");
-assert.ok(!nodes(mapScroll).some(node => node.props?.testID === "adventure-jump-to-current"),
-  "the floating jump control stays pinned above the map scroller");
-assert.ok(jump, "current-location shortcut appears for advanced progress");
-jump.props.onPress();
-assert.ok(jumpY > 2000, "shortcut scrolls inside the map to the current checkpoint");
+assert.ok(mapScroll, "map remains independently scrollable");
+assert.ok(!nodes(tree).some(node => node.props?.testID === "adventure-jump-to-current"),
+  "the redundant Η ΘΕΣΗ ΜΟΥ button has been removed");
 assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-20").props.disabled,
   "later lessons remain locked after jumping");
 assert.ok(!nodes(tree).some(node => node.props?.children === "Ακολούθησε τους σταθμούς με τη σειρά."),
@@ -629,8 +645,8 @@ const renderMotion = extra => {
 };
 let motionTree = renderMotion({ progressLoaded: false });
 let motionScroll = nodes(motionTree).find(node => node.props?.testID === "adventure-map-scroll");
-const autoCalls = [];
-motionScroll.props.ref.current = { scrollTo: call => autoCalls.push(call) };
+const autoCalls = adventureAnimationCalls;
+autoCalls.length = 0;
 motionScroll.props.onLayout({ nativeEvent: { layout: { height: 540 } } });
 motionScroll.props.onContentSizeChange(360, 1200);
 motionTree = renderMotion({ progressLoaded: false });
@@ -642,17 +658,19 @@ assert.equal(autoCalls.length, 0, "wait for full map content measurement before 
 motionScroll.props.onContentSizeChange(360, 4800);
 motionTree = renderMotion({ progressLoaded: true });
 motionState.effects[1]();
-assert.equal(autoCalls.length, 1, "one automatic scroll after progress and layout are ready");
-assert.equal(autoCalls[0].animated, true, "use the same native animation as the manual button");
-const motionJump = nodes(motionTree).find(node => node.props?.testID === "adventure-jump-to-current");
-motionJump.props.onPress();
-assert.equal(autoCalls.length, 2);
-assert.equal(autoCalls[0].y, autoCalls[1].y,
-  "automatic opening and the working Η ΘΕΣΗ ΜΟΥ button must have identical final destinations");
-assert.ok(autoCalls[0].y > 2700,
+assert.equal(autoCalls.length, 1, "only one UI-thread entry animation after full hydration");
+assert.equal(autoCalls[0].target, adventureModule.getAdventureCurrentOffset(
+  75 + 19 * 142 + 3 * 25, 75 + 29 * 142 + 4 * 25 + 115, 540,
+), "automatic entry must preserve the previously correct checkpoint destination");
+assert.ok(autoCalls[0].target > 2700,
   "19/30 completion must land at the current checkpoint, not before chapter IV");
+assert.ok(autoCalls[0].duration >= 3000,
+  "the slower glide uses an explicit multi-second duration");
+mapScroll.props.onScrollBeginDrag();
+assert.equal(adventureCancelCalls.length, 1,
+  "manually dragging the map cancels automatic movement");
 renderMotion({ progressLoaded: true });
 motionState.effects[1]();
-assert.equal(autoCalls.length, 2, "re-rendering cannot restart the entry animation");
+assert.equal(autoCalls.length, 1, "re-rendering cannot restart the entry animation");
 
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
