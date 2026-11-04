@@ -3,7 +3,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } fr
 import type { ScrollViewInstance } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
-import AppHeader from "../components/AppHeader";
 import { colors } from "../theme";
 import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked } from "../utils/devLessonAccess";
@@ -91,62 +90,57 @@ export default function SubcategoryScreen({
     <ScrollView ref={scrollRef} testID="subcategory-adventure-path"
       contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
       bounces={false} alwaysBounceVertical={false} overScrollMode="never">
-      <AppHeader onBack={onBack} style={styles.appHeader} />
-      <View style={styles.hero}>
-        <Text style={styles.eyebrow}>{category.title.toUpperCase()}  /  ΔΙΑΔΡΟΜΗ ΓΝΩΣΗΣ</Text>
-        <Text style={styles.title}>{subcategory.title}</Text>
-        <Text style={styles.description} numberOfLines={2}>{subcategory.description}</Text>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>Η ΠΟΡΕΙΑ ΣΟΥ</Text>
-          <Text style={styles.progressCount}>{progressLoaded
-            ? completed + " / " + path.length + " μαθήματα" : "—"}</Text>
-        </View>
-        <View testID="adventure-progress" style={styles.progressTrack} accessible
-          accessibilityRole="progressbar" accessibilityLabel="Πρόοδος διαδρομής"
-          accessibilityValue={{ min: 0, max: Math.max(1, path.length),
-            now: progressLoaded ? completed : 0 }}>
-          <View style={[styles.progressFill, { width: (progressLoaded ? progressPercent : 0) + "%" }]} />
-        </View>
+      <View testID="adventure-category-header" style={styles.navigationHeader}>
+        <Pressable testID="adventure-back" onPress={onBack} style={styles.backButton}
+          accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
+          hitSlop={8}>
+          <Text style={styles.backText}>‹ ΠΙΣΩ</Text>
+        </Pressable>
+        <Text testID="adventure-category-title" style={styles.categoryTitle}
+          numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+          {category.title.toUpperCase()}
+        </Text>
+        <View style={styles.headerMark} accessible={false}><Text style={styles.sparkle}>✦</Text></View>
       </View>
 
-      {progressLoaded && nextLesson ?
+      {path.length > 0 ?
         <Pressable testID="adventure-continue"
-          style={({ pressed }) => [styles.continueCard, pressed && styles.pressed]}
-          onPress={() => onOpenLesson(nextLesson.id)} accessibilityRole="button"
-          accessibilityLabel={"Συνέχισε τη διαδρομή: " + nextLesson.title}>
-          <View style={styles.continueAccent} />
-          <View style={styles.continueCopy}>
-            <View style={styles.continueMeta}>
-              <Text style={styles.continueEyebrow}>ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ</Text>
-              <Text style={styles.continueIndex}>{nextIndex + 1} / {path.length}</Text>
-            </View>
-            <Text style={styles.continueTitle} numberOfLines={2}>{nextLesson.title}</Text>
-            <Text style={styles.continuePrompt}>Συνέχισε την εξερεύνηση  →</Text>
+          style={({ pressed }) => [styles.continueCard, pressed && progressLoaded && !!nextLesson && styles.pressed]}
+          onPress={() => { if (progressLoaded && nextLesson) onOpenLesson(nextLesson.id); }}
+          disabled={!progressLoaded || !nextLesson} accessibilityRole="button"
+          accessibilityState={{ disabled: !progressLoaded || !nextLesson }}
+          accessibilityLabel={progressLoaded && nextLesson
+            ? "Συνέχισε τη διαδρομή: " + nextLesson.title
+            : "Πρόοδος διαδρομής: " + subcategory.title}>
+          <View style={styles.cardHeading}>
+            <Text style={styles.subcategoryTitle} numberOfLines={1}>{subcategory.title}</Text>
+            <Text style={styles.progressCount}>{progressLoaded
+              ? completed + " / " + path.length : "— / " + path.length}</Text>
           </View>
-          <View style={styles.continueButton}>
-            <Text style={styles.continueArrow}>›</Text>
+          <View style={styles.cardBody}>
+            <View style={styles.continueCopy}>
+              <Text style={styles.continueEyebrow}>
+                {!progressLoaded ? "ΦΟΡΤΩΣΗ ΠΡΟΟΔΟΥΣ" :
+                  nextLesson ? "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ" : "ΔΙΑΔΡΟΜΗ ΟΛΟΚΛΗΡΩΜΕΝΗ"}
+              </Text>
+              <Text style={styles.continueTitle} numberOfLines={2}>
+                {!progressLoaded ? "Ο χάρτης σου ετοιμάζεται…" :
+                  nextLesson ? nextLesson.title : "Εξερεύνησες όλους τους σταθμούς!"}
+              </Text>
+            </View>
+            {progressLoaded && nextLesson ?
+              <View style={styles.continueButton}><Text style={styles.continueArrow}>›</Text></View>
+              : null}
+          </View>
+          <View testID="adventure-progress" style={styles.progressTrack}
+            accessible accessibilityRole="progressbar" accessibilityLabel="Πρόοδος διαδρομής"
+            accessibilityValue={{ min: 0, max: Math.max(1, path.length),
+              now: progressLoaded ? completed : 0 }}>
+            <View style={[styles.progressFill, {
+              width: (progressLoaded ? progressPercent : 0) + "%",
+            }]} />
           </View>
         </Pressable> : null}
-
-      {progressLoaded && path.length > 0 && completed === path.length ?
-        <View style={styles.finishedCard}>
-          <Text style={styles.finishedTitle}>✦ Ολοκλήρωσες τη διαδρομή!</Text>
-          <Text style={styles.finishedCopy}>Όλοι οι σταθμοί παραμένουν διαθέσιμοι για επανάληψη.</Text>
-        </View> : null}
-
-      {path.length > 0 ?
-        <View style={styles.mapToolbar}>
-          <View style={styles.mapToolbarCopy}>
-            <Text style={styles.mapHeading}>Ο ΧΑΡΤΗΣ ΤΗΣ ΔΙΑΔΡΟΜΗΣ</Text>
-            <Text style={styles.mapSubheading}>Κάθε σταθμός μια νέα ανακάλυψη</Text>
-          </View>
-          {progressLoaded && nextIndex > 1 ?
-            <Pressable testID="adventure-jump-to-current" onPress={jumpToCurrent}
-              style={({ pressed }) => [styles.jumpButton, pressed && styles.pressed]}
-              accessibilityRole="button" accessibilityLabel="Μετάβαση στον επόμενο σταθμό του χάρτη">
-              <Text style={styles.jumpText}>Η ΘΕΣΗ ΜΟΥ  ↓</Text>
-            </Pressable> : null}
-        </View> : null}
 
       {isTesting && path.length > 1 ?
         <Text style={styles.devHint}>Δοκιμή: όλοι οι σταθμοί ξεκλείδωτοι.</Text> : null}
@@ -159,6 +153,12 @@ export default function SubcategoryScreen({
         <View testID="adventure-map" onLayout={event => {
           mapTopRef.current = event.nativeEvent.layout.y;
         }} style={[styles.map, { width: mapWidth, height: mapHeight }]}>
+          {progressLoaded && nextIndex > 1 ?
+            <Pressable testID="adventure-jump-to-current" onPress={jumpToCurrent}
+              style={({ pressed }) => [styles.jumpButton, pressed && styles.pressed]}
+              accessibilityRole="button" accessibilityLabel="Μετάβαση στον επόμενο σταθμό του χάρτη">
+              <Text style={styles.jumpText}>Η ΘΕΣΗ ΜΟΥ  ↓</Text>
+            </Pressable> : null}
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
             {/* Faint engraved contours and stars suggest an old atlas without a
                 raster image that could crop or overflow across devices. */}
@@ -233,61 +233,52 @@ export default function SubcategoryScreen({
 const styles = StyleSheet.create({
   content: {
     width: "100%", maxWidth: 720, alignSelf: "center",
-    paddingHorizontal: 20, paddingTop: 8, paddingBottom: 44, gap: 13,
+    paddingHorizontal: 20, paddingTop: 6, paddingBottom: 44, gap: 9,
   },
-  appHeader: { marginBottom: 1 },
-  hero: { gap: 5, marginBottom: 2 },
-  eyebrow: {
-    color: colors.accentLight, fontSize: 10, lineHeight: 16,
-    fontWeight: "900", letterSpacing: 1.15,
+  navigationHeader: {
+    minHeight: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  title: { color: colors.text, fontSize: 28, lineHeight: 36, fontWeight: "900" },
-  description: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginTop: 1 },
-  progressHeader: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 11,
+  backButton: { width: 66, minHeight: 44, justifyContent: "center" },
+  backText: { color: colors.accentLight, fontSize: 11, fontWeight: "800", letterSpacing: 0.4 },
+  categoryTitle: {
+    flex: 1, textAlign: "center", color: colors.accentLight,
+    fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 1.4,
   },
-  progressLabel: {
-    color: colors.textMuted, fontSize: 10, fontWeight: "800", letterSpacing: 1,
-  },
-  progressCount: { color: colors.text, fontSize: 12, fontWeight: "800" },
-  progressTrack: {
-    height: 8, borderRadius: 5, backgroundColor: "#282A41", overflow: "hidden", marginTop: 3,
-  },
-  progressFill: {
-    height: "100%", backgroundColor: colors.accentLight, borderRadius: 5,
-  },
+  headerMark: { width: 66, minHeight: 44, alignItems: "flex-end", justifyContent: "center" },
+  sparkle: { color: colors.accentLight, fontSize: 22 },
   continueCard: {
-    flexDirection: "row", alignItems: "center", padding: 15, paddingLeft: 18,
-    gap: 12, backgroundColor: "#1B2034", borderWidth: 1, borderColor: "#51496F",
-    borderRadius: 20, minHeight: 114, overflow: "hidden",
+    paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
+    backgroundColor: "#1B2034", borderColor: "#51496F",
+    borderWidth: 1, borderRadius: 18, gap: 8,
   },
-  continueAccent: {
-    position: "absolute", left: 0, top: 17, bottom: 17,
-    width: 3, borderTopRightRadius: 3, borderBottomRightRadius: 3,
-    backgroundColor: colors.accentLight,
+  cardHeading: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
   },
-  continueCopy: { flex: 1, gap: 6 },
-  continueMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 6 },
+  subcategoryTitle: {
+    flex: 1, color: colors.accentLight, fontSize: 14,
+    fontWeight: "900", lineHeight: 19,
+  },
+  progressCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
+  cardBody: { flexDirection: "row", alignItems: "center", gap: 10 },
+  continueCopy: { flex: 1, gap: 3 },
   continueEyebrow: {
-    color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.7,
+    color: "#ABA1D4", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.8,
   },
-  continueIndex: { color: "#9D98B7", fontSize: 10, fontWeight: "800" },
-  continueTitle: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: "900" },
-  continuePrompt: { color: "#B7ABE9", fontSize: 11, lineHeight: 17, fontWeight: "700" },
+  continueTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "800" },
   continueButton: {
-    width: 43, height: 43, borderRadius: 22, backgroundColor: colors.accent,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
     alignItems: "center", justifyContent: "center",
   },
-  continueArrow: { color: "#1C1B32", fontSize: 32, lineHeight: 37, fontWeight: "600", marginTop: -3 },
-  mapToolbar: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 3,
+  continueArrow: {
+    color: "#1C1B32", fontSize: 30, lineHeight: 36, fontWeight: "600", marginTop: -3,
   },
-  mapToolbarCopy: { flex: 1, gap: 3 },
-  mapHeading: { color: colors.textBody, fontWeight: "900", fontSize: 10, letterSpacing: 0.9 },
-  mapSubheading: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
+  progressTrack: { height: 7, borderRadius: 5, backgroundColor: "#323047", overflow: "hidden" },
+  progressFill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 5 },
   jumpButton: {
-    minHeight: 44, paddingHorizontal: 11, borderRadius: 12, backgroundColor: "#27243D",
-    borderWidth: 1, borderColor: "#484162", justifyContent: "center", alignItems: "center",
+    position: "absolute", top: 0, right: 0, zIndex: 2,
+    minHeight: 38, paddingHorizontal: 11, borderRadius: 11,
+    backgroundColor: "#27243D", borderWidth: 1, borderColor: "#484162",
+    justifyContent: "center", alignItems: "center",
   },
   jumpText: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.3 },
   map: { alignSelf: "center", position: "relative", marginTop: 2 },
@@ -324,9 +315,6 @@ const styles = StyleSheet.create({
   nodeTitleLocked: { color: "#9298AB" },
   nodeTitleActive: { color: "#C7BCFF" },
   nodeStatus: { color: "#B9A8FF", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.4 },
-  finishedCard: { padding: 16, borderRadius: 17, backgroundColor: colors.successSurface, gap: 5 },
-  finishedTitle: { color: colors.success, fontSize: 15, fontWeight: "800" },
-  finishedCopy: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   empty: { padding: 20, backgroundColor: colors.surface, borderRadius: 16, gap: 10 },
   emptyTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
   devHint: { color: "#E4C486", fontSize: 11, lineHeight: 17 },
