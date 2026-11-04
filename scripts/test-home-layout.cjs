@@ -24,6 +24,7 @@ let homeScrollHookIndex = 0;
 const react = {
   useMemo: fn => fn(),
   useRef: initial => ({ current: initial }),
+  useEffect: () => {},
   useState: initial => {
     if (homeScrollState !== null) {
       const index = homeScrollHookIndex++;
@@ -486,11 +487,27 @@ const access = (lesson, catalogue, completed, inProgress) => {
   const prerequisite = index > 0 ? catalogue[index - 1] : null;
   return { prerequisite, unlocked: !prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id) };
 };
-const adventure = compile("src/screens/SubcategoryScreen.tsx", {
-  "../components/AppHeader": { __esModule: true, default: "AppHeader" },
+const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
-});
+}, true);
+const adventure = adventureModule.default;
+assert.equal(adventureModule.getAdventureChapterStart(0, true), 0);
+assert.equal(adventureModule.getAdventureChapterStart(4, true), 0);
+assert.equal(adventureModule.getAdventureChapterStart(19, true), 18,
+  "19 completed lessons opens at chapter IV, not at the first chapter or at lesson 20");
+assert.equal(adventureModule.getAdventureChapterStart(29, true), 24,
+  "a completed path opens at the final chapter");
+assert.equal(adventureModule.getAdventureChapterStart(19, false), 19,
+  "paths without chapter markers focus the next lesson");
+assert.equal(adventureModule.getAdventureEntryOffset(2700, 4500, 500), 2588,
+  "chapter marker remains visible near the top of the map pane");
+assert.equal(adventureModule.getAdventureEntryOffset(500, 1200, 1100), 132,
+  "entry offset is clamped on short maps");
+assert.equal(adventureModule.getAdventureEntryOffset(75, 1200, 600), 0,
+  "chapter I stays near the top");
+assert.ok(adventureModule.getAdventureGlideDuration(2500) >= 1400);
+assert.ok(adventureModule.getAdventureGlideDuration(2500) <= 1800);
 const adventureProps = {
   category: categories[0], subcategory: { id: "ancient-greece", title: "Αρχαία Ελλάδα", description: "Ιστορικό ταξίδι" },
   lessons: adventureLessons, completedLessonIds: [], inProgressLessonIds: [], progressLoaded: true,
@@ -513,6 +530,18 @@ assert.ok(!nodes(tree).some(node => node.props?.children === "Ιστορικό �
 const compactCard = nodes(tree).find(node => node.props?.testID === "adventure-continue");
 const progressInCard = nodes(compactCard).find(node => node.props?.testID === "adventure-progress");
 assert.ok(progressInCard, "the only progress track is integrated into the Continue card");
+const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
+const nestedScroll = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-map-scroll");
+assert.ok(nestedScroll, "the map has its own scroll container");
+assert.equal(nodes(tree).filter(node => node.type === "ScrollView").length, 1,
+  "the header and Continue card are outside the only ScrollView");
+assert.ok(!nodes(pinnedFrame).some(node => node.props?.testID === "adventure-continue"),
+  "the Continue card never moves with the map");
+assert.equal(nestedScroll.props.contentContainerStyle.paddingBottom, 32,
+  "map scroll has a little bottom breathing room");
+assert.equal(typeof nestedScroll.props.onScrollBeginDrag, "function",
+  "user drag can interrupt the entry glide");
+
 assert.equal(nodes(tree).filter(node => node.props?.testID === "adventure-progress").length, 1);
 assert.ok(nodes(compactCard).some(node => node.props?.children === "Αρχαία Ελλάδα"),
   "subcategory identity moves into the Continue card");
@@ -556,14 +585,15 @@ assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-continue"),
 const next = nodes(tree).find(node => node.props?.testID === "adventure-continue");
 next.props.onPress();
 assert.equal(actions.at(-1), "open:anc-19", "Continue opens the next unlocked lesson");
-const scrollView = nodes(tree).find(node => node.props?.testID === "subcategory-adventure-path");
+const mapScroll = nodes(tree).find(node => node.props?.testID === "adventure-map-scroll");
 let jumpY = -1;
-scrollView.props.ref.current = { scrollTo: ({ y }) => { jumpY = y; } };
-mapFrame.props.onLayout({ nativeEvent: { layout: { y: 350 } } });
+mapScroll.props.ref.current = { scrollTo: ({ y }) => { jumpY = y; } };
 const jump = nodes(tree).find(node => node.props?.testID === "adventure-jump-to-current");
+assert.ok(!nodes(mapScroll).some(node => node.props?.testID === "adventure-jump-to-current"),
+  "the floating jump control stays pinned above the map scroller");
 assert.ok(jump, "current-location shortcut appears for advanced progress");
 jump.props.onPress();
-assert.ok(jumpY > 350, "shortcut scrolls to the current map checkpoint");
+assert.ok(jumpY > 2000, "shortcut scrolls inside the map to the current checkpoint");
 assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-20").props.disabled,
   "later lessons remain locked after jumping");
 assert.ok(!nodes(tree).some(node => node.props?.children === "Ακολούθησε τους σταθμούς με τη σειρά."),
