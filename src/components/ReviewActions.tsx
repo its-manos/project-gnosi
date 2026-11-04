@@ -8,7 +8,6 @@ import { colors } from "../theme";
 
 type Props = {
   onReview: () => void;
-  onWeeklyReview?: () => void;
   onExplore: () => void;
   inProgressLesson?: Lesson | null;
   inProgressAnsweredCount?: number;
@@ -44,7 +43,7 @@ export default function ReviewActions({
     ? inProgressAnsweredCount + " / " + inProgressQuestionCount + " ερωτήσεις"
       + (inProgressLessonCount > 1 ? " · " + inProgressLessonCount + " μαθήματα σε εξέλιξη" : "")
     : active ? "Η επανάληψή σου έχει αποθηκευτεί."
-    : reviewDue ? "" // The due count and CTA already explain the next step.
+    : reviewDue ? ""
     : ready ? "Δεν έχεις εκκρεμείς επαναλήψεις." : "";
   const primaryLabel = resumePrimary ? "Συνέχισε το μάθημα"
     : active ? "Συνέχεια επανάληψης"
