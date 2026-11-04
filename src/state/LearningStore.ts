@@ -56,6 +56,24 @@ export class LearningStore {
     return { ready: this.ready, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: this.backupCache.value, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId };
   }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
+  // Data-only subscribers should not render on sync status/error transitions.
+  // Cache the selected snapshot identity for useSyncExternalStore.
+  private dataSnapshot: LearningSnapshot | null = null;
+  getDataSnapshot = (): LearningSnapshot => {
+    const current = this.snapshot;
+    const previous = this.dataSnapshot;
+    if (previous &&
+      previous.ready === current.ready &&
+      previous.backup === current.backup &&
+      previous.activity === current.activity &&
+      previous.weeklyReviews === current.weeklyReviews &&
+      previous.rewards === current.rewards &&
+      previous.knowledgeReviews === current.knowledgeReviews &&
+      previous.knowledgeSession === current.knowledgeSession &&
+      previous.userId === current.userId) return previous;
+    this.dataSnapshot = current;
+    return current;
+  };
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   async start(): Promise<void> {
