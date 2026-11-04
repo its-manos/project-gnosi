@@ -73,6 +73,21 @@ function overviewRows(count: number): number[] {
   return Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
 }
 
+// Compact, asymmetric constellations keep small catalogues spread across the
+// canvas without pushing their last destination to the far bottom edge.
+// Normalized coordinates make the same composition work on tall and short phones.
+export function getCompactAtlasPoint(index: number, count: number): Point | null {
+  const arrangements: Record<number, Point[]> = {
+    2: [{ x: 0.31, y: 0.36 }, { x: 0.69, y: 0.64 }],
+    3: [{ x: 0.30, y: 0.25 }, { x: 0.72, y: 0.46 }, { x: 0.39, y: 0.73 }],
+    4: [
+      { x: 0.28, y: 0.23 }, { x: 0.73, y: 0.36 },
+      { x: 0.27, y: 0.65 }, { x: 0.72, y: 0.79 },
+    ],
+  };
+  return arrangements[count]?.[index] ?? null;
+}
+
 function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, fitted: boolean): PositionedRegion[] {
   const count = regions.length;
   if (count === 0) return [];
@@ -89,13 +104,27 @@ function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, 
   const rowSizes = overviewRows(count);
   return regions.map((region, index) => {
     if (fitted && count > 1) {
-      // Independent destinations: balance 2/3/2 or 3/3 constellations across
-      // the actual visible map, rather than growing a tall sequential grid.
+      const compactPoint = getCompactAtlasPoint(index, count);
+      if (compactPoint) {
+        // Layout-only: islands, labels, progress and touch targets retain their
+        // established artwork and freely selectable behavior.
+        return {
+          ...region,
+          cx: MAP_WIDTH * compactPoint.x,
+          cy: Math.max(74, Math.min(mapHeight - 77, mapHeight * compactPoint.y)),
+          rx: count === 2 ? 60 : 61,
+          ry: 45,
+          seed: index + 1, fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
+        };
+      }
+
+      // For larger catalogues, balanced constellations remain fully visible.
+      // Use moderate insets instead of pinning the first/last row to the edges.
       let row = 0;
       let column = index;
       while (column >= rowSizes[row]) { column -= rowSizes[row]; row += 1; }
       const cell = MAP_WIDTH / rowSizes[row];
-      const edge = Math.min(78, Math.max(57, mapHeight * 0.17));
+      const edge = Math.max(67, Math.min(mapHeight * 0.27, mapHeight / 2 - 36));
       const yStep = rowSizes.length === 1 ? 0
         : (mapHeight - edge * 2) / (rowSizes.length - 1);
       return {
@@ -437,13 +466,33 @@ export default function FantasyMap({
           <Path key={`parallel-${index}`} d={`M 0 ${index * 40} Q 180 ${index * 40 + 30} 360 ${index * 40}`}
             stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
         ))}
-        <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15} fill="none" stroke="#89AAA6" strokeOpacity={0.18} />
+        {!fitted ? <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15}
+          fill="none" stroke="#89AAA6" strokeOpacity={0.18} /> : null}
+        {fitted ? (
+          <G pointerEvents="none">
+            {/* Restrained starfield adds depth to empty space without a new
+                illustration layer, bitmap download, or animation. */}
+            {Array.from({ length: 36 }, (_, index) => {
+              const x = 14 + stableNoise(index + 91) * (MAP_WIDTH - 28);
+              const y = 20 + stableNoise(index + 397) * (mapHeight - 40);
+              return <Circle key={`atlas-star-${index}`} cx={x} cy={y}
+                r={index % 7 === 0 ? 1.2 : 0.65}
+                fill={index % 5 === 0 ? "#E4CFA6" : "#B5CADD"}
+                opacity={index % 7 === 0 ? 0.44 : 0.22} />;
+            })}
+          </G>
+        ) : null}
         <G opacity={0.65}>
           <Circle cx={326} cy={30} r={13} fill="none" stroke="#C9BB92" strokeWidth={0.6} />
           <Path d="M326 13 L330 30 L326 45 L322 30 Z" fill="#C9BB92" />
           <Path d="M312 30 L326 26 L340 30 L326 34 Z" fill="#799B9D" />
           <SvgText x={305} y={23} fill="#C9BB92" fontSize={7}>Β</SvgText>
         </G>
+        {fitted ? positionedRegions.map(region => (
+          <Circle key={`atlas-ambient-${region.id}`} cx={region.cx} cy={region.cy}
+            r={region.rx * 1.85} fill={region.fill} opacity={0.045}
+            pointerEvents="none" />
+        )) : null}
         {connectorPaths.map((connector) => (
           <Path
             key={connector.key}
