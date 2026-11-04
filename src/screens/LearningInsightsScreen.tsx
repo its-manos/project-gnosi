@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import type { Lesson } from "../data/lessons";
 import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
 import KnowledgeMastery from "../components/KnowledgeMastery";
 import { CategoryProgress } from "../components/LearningActivityPanel";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
-import { MotionView } from "../components/HomeMotion";
-import { ProgressBarFill } from "../components/ProgressMotion";
+import { MotionView, MotionXpCircle } from "../components/HomeMotion";
 import { colors } from "../theme";
 
 export type LearningInsightsView = "knowledge" | "reading";
+const INSIGHT_RING_LENGTH = 2 * Math.PI * 34;
 
 type Props = {
   initialView: LearningInsightsView;
@@ -40,17 +41,17 @@ export default function LearningInsightsScreen({
   const ready = readingTab ? lessonProgressLoaded : knowledgeReady;
   const percent = total > 0 ? Math.max(0, Math.min(100, Math.round(current / total * 100))) : 0;
 
+  // Keep explanatory copy only for a meaningful empty or loading state.
+  // The normal overview is intentionally visual and compact.
   const overviewHint = !ready
-    ? "Η πρόοδός σου φορτώνεται…"
+    ? "Φόρτωση προόδου…"
     : readingTab
-      ? current === 0
-        ? "Το πρώτο ολοκληρωμένο μάθημα θα ξεκινήσει την πορεία σου."
-        : "Κάθε ολοκληρωμένο μάθημα μετρά στην αναγνωστική σου πορεία."
+      ? current === 0 ? "Το πρώτο σου μάθημα σε περιμένει." : null
       : totalConcepts === 0
-        ? "Οι πρώτες έννοιες θα εμφανιστούν καθώς προχωράς στα μαθήματα και τα quiz."
+        ? "Οι έννοιες εμφανίζονται όταν ξεκινήσεις quiz και επαναλήψεις."
         : mastered === 0
-          ? "Η ανάγνωση είναι η αρχή. Η γνώση κατακτάται με επαναλήψεις σε διαφορετικές ημέρες."
-          : "Η κατάκτηση μετρά επαναλαμβανόμενη γνώση, όχι μόνο ολοκληρωμένα μαθήματα.";
+          ? "Η ανάγνωση δεν είναι κατάκτηση. Επανάλαβε για να χτίσεις γνώση."
+          : null;
 
   return <View style={styles.screen} testID="learning-insights-screen">
     <ProgressGradientBackground />
@@ -91,41 +92,50 @@ export default function LearningInsightsScreen({
         showsVerticalScrollIndicator={false}>
         <MotionView entranceDelay={90} testID="insights-overview"
           style={[styles.overview, readingTab && styles.readingOverview]}>
-          <View style={styles.overviewTop}>
-            <View style={styles.overviewCopy}>
+          <View style={[styles.overviewAccent, readingTab && styles.readingAccentBar]}
+            pointerEvents="none" />
+          <View style={styles.overviewRow}>
+            <View style={styles.overviewMain}>
               <Text style={[styles.overviewEyebrow, readingTab && styles.readingAccent]}>
-                {readingTab ? "Η ΑΝΑΓΝΩΣΤΙΚΗ ΣΟΥ ΠΟΡΕΙΑ" : "Η ΚΑΤΑΚΤΗΣΗ ΣΟΥ"}
+                {readingTab ? "ΜΑΘΗΜΑΤΑ" : "ΚΑΤΑΚΤΗΜΕΝΕΣ ΕΝΝΟΙΕΣ"}
               </Text>
-              <Text style={[styles.overviewHeading, compact && styles.headingCompact]}>
-                {readingTab ? "Ανάγνωση" : "Γνώσεις"}
+              <View style={styles.overviewValues}>
+                <Text style={[styles.overviewValue, compact && styles.overviewValueCompact]}>
+                  {ready ? current : "—"}
+                </Text>
+                <Text style={styles.overviewTotal}> / {total}</Text>
+              </View>
+              <Text style={styles.overviewFootnote}>
+                {readingTab ? "Ολοκληρώθηκαν" : "Μένουν στη μνήμη"}
               </Text>
             </View>
-            <Text testID="insights-overview-percent"
-              style={[styles.percent, readingTab && styles.readingAccent]}>
-              {ready ? percent + "%" : "—"}
-            </Text>
+            <View testID="insights-ring" style={styles.ring}
+              accessible accessibilityRole="progressbar"
+              accessibilityLabel={readingTab ? "Ολοκλήρωση μαθημάτων" : "Κατακτημένες έννοιες"}
+              accessibilityValue={ready ? { min: 0, max: 100, now: percent } : { text: "Φόρτωση" }}>
+              <Svg width="100%" height="100%" viewBox="0 0 88 88" pointerEvents="none">
+                <Circle cx="44" cy="44" r="34" fill="none"
+                  stroke={readingTab ? "#35515D" : "#3B3957"} strokeWidth={7} />
+                <MotionXpCircle cx="44" cy="44" r="34" fill="none"
+                  stroke={readingTab ? "#8BCACB" : colors.accent}
+                  strokeWidth={7} strokeLinecap="round"
+                  transform="rotate(-90 44 44)" circumference={INSIGHT_RING_LENGTH}
+                  progress={ready ? percent / 100 : 0}
+                  strokeDasharray={`${INSIGHT_RING_LENGTH * (ready ? percent / 100 : 0)} ${INSIGHT_RING_LENGTH}`} />
+              </Svg>
+              <Text testID="insights-overview-percent"
+                style={[styles.ringPercent, readingTab && styles.readingAccent]}>
+                {ready ? percent + "%" : "—"}
+              </Text>
+            </View>
           </View>
-          <View style={styles.overviewValues}>
-            <Text style={styles.overviewValue}>{ready ? current : "—"}</Text>
-            <Text style={styles.overviewTotal}> / {total}</Text>
-            <Text style={styles.overviewUnit}>
-              {readingTab ? "μαθήματα" : "έννοιες"}
-            </Text>
-          </View>
-          <View style={styles.progressTrack} accessible={ready}
-            accessibilityRole="progressbar"
-            accessibilityLabel={readingTab ? "Ολοκλήρωση μαθημάτων" : "Κατακτημένες έννοιες"}
-            accessibilityValue={ready ? { min: 0, max: 100, now: percent } : undefined}>
-            <ProgressBarFill tone={readingTab ? "reading" : "knowledge"}
-              percent={ready ? percent : 0} />
-          </View>
-          <Text style={styles.overviewHint}>{overviewHint}</Text>
+          {overviewHint ? <Text style={styles.overviewHint}>{overviewHint}</Text> : null}
         </MotionView>
 
         {readingTab ? <View testID="learning-insights-reading" style={styles.details}>
           {lessonProgressLoaded ? (
             <MotionView entranceDelay={150}>
-              <CategoryProgress detail />
+              <CategoryProgress detail singleColumn={compact} />
             </MotionView>
           ) : <Text style={styles.empty}>Φόρτωση μαθημάτων…</Text>}
           {lessonProgressLoaded && completedLessons.length > 0 ? <>
@@ -136,7 +146,6 @@ export default function LearningInsightsScreen({
                 onPress={() => setLessonsExpanded(previous => !previous)}>
                 <View style={styles.disclosureCopy}>
                   <Text style={styles.disclosureTitle}>Ολοκληρωμένα μαθήματα</Text>
-                  <Text style={styles.disclosureSubtitle}>Δες όσα έχεις ήδη ανακαλύψει</Text>
                 </View>
                 <View style={styles.disclosureCountBadge}>
                   <Text style={styles.disclosureCount}>{completedLessons.length}</Text>
@@ -160,7 +169,7 @@ export default function LearningInsightsScreen({
             : null}
         </View> : <View testID="learning-insights-knowledge" style={styles.details}>
           <MotionView entranceDelay={150}>
-            <KnowledgeMastery onOpen={onKnowledgeReview} mapOnly detail />
+            <KnowledgeMastery onOpen={onKnowledgeReview} mapOnly detail singleColumn={compact} />
           </MotionView>
         </View>}
       </ScrollView>
@@ -197,21 +206,30 @@ const styles = StyleSheet.create({
   content: { paddingTop: 16, paddingBottom: 36, gap: 14 },
   overview: {
     backgroundColor: "#1B2035", borderWidth: 1, borderColor: "#51496D",
-    borderRadius: 20, padding: 16, gap: 9,
+    borderRadius: 20, padding: 17, gap: 9, overflow: "hidden",
   },
   readingOverview: { backgroundColor: "#192A35", borderColor: "#385963" },
-  overviewTop: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  overviewCopy: { flex: 1, minWidth: 0, gap: 4 },
-  overviewEyebrow: { color: "#B3A5FB", fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 0.5 },
-  overviewHeading: { color: colors.text, fontSize: 23, lineHeight: 29, fontWeight: "900" },
-  headingCompact: { fontSize: 20, lineHeight: 26 },
-  percent: { color: "#B8AAFF", fontSize: 20, lineHeight: 28, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  overviewAccent: {
+    position: "absolute", left: 18, top: -1, width: 88, height: 3,
+    borderRadius: 3, backgroundColor: "#A99BFF",
+  },
+  readingAccentBar: { backgroundColor: "#8BCACB" },
+  overviewRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  overviewMain: { flex: 1, minWidth: 0, gap: 5 },
+  overviewEyebrow: { color: "#B3A5FB", fontSize: 11, lineHeight: 17,
+    fontWeight: "900", letterSpacing: 0.6 },
   readingAccent: { color: "#9CD2D1" },
-  overviewValues: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", gap: 2 },
-  overviewValue: { color: colors.text, fontSize: 30, lineHeight: 39, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  overviewTotal: { color: colors.textMuted, fontSize: 17, lineHeight: 24, fontWeight: "700" },
-  overviewUnit: { color: colors.textMuted, fontSize: 12, lineHeight: 22, marginLeft: 6 },
-  progressTrack: { height: 7, backgroundColor: "#343950", borderRadius: 5, overflow: "hidden" },
+  overviewValues: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" },
+  overviewValue: { color: colors.text, fontSize: 38, lineHeight: 46,
+    fontWeight: "900", fontVariant: ["tabular-nums"] },
+  overviewValueCompact: { fontSize: 30, lineHeight: 38 },
+  overviewTotal: { color: colors.textMuted, fontSize: 17, lineHeight: 27, fontWeight: "700" },
+  overviewFootnote: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
+  ring: { width: 94, height: 94, justifyContent: "center", alignItems: "center" },
+  ringPercent: {
+    position: "absolute", color: "#B8AAFF", fontSize: 18, lineHeight: 24,
+    fontWeight: "900", fontVariant: ["tabular-nums"],
+  },
   overviewHint: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
   details: { gap: 12 },
   empty: {
@@ -225,7 +243,6 @@ const styles = StyleSheet.create({
   disclosurePressed: { backgroundColor: "#233947" },
   disclosureCopy: { flex: 1, minWidth: 0, gap: 3 },
   disclosureTitle: { color: colors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
-  disclosureSubtitle: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   disclosureCountBadge: {
     minWidth: 28, paddingHorizontal: 7, height: 26, alignItems: "center", justifyContent: "center",
     borderRadius: 13, backgroundColor: "#304B51",
