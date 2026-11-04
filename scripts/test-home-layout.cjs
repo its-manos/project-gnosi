@@ -594,15 +594,15 @@ const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.s
 const width = mapFrame.props.style[1].width;
 assert.equal(stops.length, 30);
 assert.equal(stopPositions.length, 30);
-// Chapter badges sit 28pt above the following stop. Reserve room for
-// a preceding 3-line Greek title AND the optional 14pt active-state caption.
+// Chapter badges sit 28pt above the following stop. Allow a full
+// 3-line title but do not reserve empty space for redundant status captions.
 const chapterBeginnings = [5, 11, 18, 24];
 for (const start of chapterBeginnings) {
   const previousTop = stopPositions[start - 1].props.style[1].top;
   const chapterBadgeTop = stopPositions[start].props.style[1].top - 28;
-  const worstCasePreviousEnd = previousTop + 74 + 5 + 3 * 16 + 14;
+  const worstCasePreviousEnd = previousTop + 74 + 5 + 3 * 16;
   assert.ok(chapterBadgeTop - worstCasePreviousEnd >= 20,
-    "chapter " + start + " must clear a long active lesson title and status");
+    "chapter " + start + " must clear a long 3-line Greek lesson title");
 }
 assert.equal(stopPositions[1].props.style[1].top - stopPositions[0].props.style[1].top, 142,
   "normal checkpoint density is unchanged outside chapter boundaries");
@@ -621,6 +621,9 @@ assert.equal(pinnedFrame.props.children[0].props.testID, "adventure-atlas-underl
   "map underlay is drawn behind the scrolling checkpoints");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
   "only the active checkpoint receives a breathing halo");
+assert.ok(!nodes(mapFrame).some(node => node.props?.children === "ΣΕ ΕΞΕΛΙΞΗ" ||
+  node.props?.children === "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ"),
+  "node state is conveyed by checkpoint styling, not redundant captions");
 assert.ok(nodes(mapFrame).some(node => node.props?.pressScale === 0.96),
   "lesson checkpoint press feedback uses the existing MotionPressable");
 assert.ok(stopPositions.every(node => node.props.style[1].left >= 0 &&
@@ -751,7 +754,7 @@ motionTree = renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "only one UI-thread entry animation after full hydration");
 assert.equal(autoCalls[0].target, adventureModule.getAdventureCurrentOffset(
-  75 + 19 * 142 + 3 * 55, 75 + 29 * 142 + 4 * 55 + 115, 540,
+  75 + 19 * 142 + 3 * 40, 75 + 29 * 142 + 4 * 40 + 115, 540,
 ), "automatic entry must preserve the previously correct checkpoint destination");
 assert.ok(autoCalls[0].target > 2700,
   "19/30 completion must land at the current checkpoint, not before chapter IV");
