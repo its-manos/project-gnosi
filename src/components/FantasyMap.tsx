@@ -659,6 +659,34 @@ export default function FantasyMap({
             })}
           </G>
         ) : null}
+        {fitted && regions.length <= 4 && mapHeight >= 330 ? (
+          <G testID="atlas-decorative-constellations" pointerEvents="none">
+            {/* Two small non-interactive star charts occupy clear sky, away
+                from labels. They do not designate destinations or a path. */}
+            <G opacity={0.54}>
+              <Path d={`M 227 ${mapHeight * 0.13} L 247 ${mapHeight * 0.18} L 283 ${mapHeight * 0.16}
+                L 270 ${mapHeight * 0.225}`}
+                fill="none" stroke="#B5C5DA" strokeWidth={0.75} strokeOpacity={0.5} />
+              {[[227, 0.13], [247, 0.18], [283, 0.16], [270, 0.225]].map(([x, y], i) => (
+                <G key={`atlas-sky-cluster-north-${i}`}>
+                  <Circle cx={x} cy={mapHeight * y} r={i === 1 ? 2.25 : 1.35}
+                    fill="#E1DBCB" opacity={0.78} />
+                  {i === 1 ? <Path d={`M ${x-4} ${mapHeight*y} h8 M ${x} ${mapHeight*y-4} v8`}
+                    fill="none" stroke="#D7C7AE" strokeWidth={0.55} opacity={0.45} /> : null}
+                </G>
+              ))}
+            </G>
+            <G opacity={0.42}>
+              <Path d={`M 232 ${mapHeight * 0.82} L 276 ${mapHeight * 0.86}
+                L 295 ${mapHeight * 0.79}`}
+                fill="none" stroke="#BCA98F" strokeWidth={0.7} strokeOpacity={0.48} />
+              {[[232, 0.82], [276, 0.86], [295, 0.79]].map(([x, y], i) => (
+                <Circle key={`atlas-sky-cluster-south-${i}`} cx={x} cy={mapHeight*y}
+                  r={i === 1 ? 2 : 1.3} fill="#E3C99A" opacity={0.68} />
+              ))}
+            </G>
+          </G>
+        ) : null}
         {fitted ? <Rect testID="atlas-sky-vignette" width={MAP_WIDTH}
           height={mapHeight} fill="url(#atlas-vignette)" pointerEvents="none" /> : null}
         <G testID={fitted ? "atlas-premium-compass" : undefined}
@@ -694,6 +722,14 @@ export default function FantasyMap({
             <Path d={connector.d} fill="none" stroke={fitted ? "#D5C3AA" : "#BEB896"}
               strokeWidth={fitted ? 0.85 : 1} strokeDasharray="2 5"
               opacity={fitted ? 0.43 : 0.32} />
+            {fitted && regions.length <= 4 && connector.d ? (
+              <G testID={`atlas-route-anchor-${connector.key}`} pointerEvents="none">
+                <Circle cx={connector.midX} cy={connector.midY} r={4.2}
+                  fill="#D3C6AF" opacity={0.11} />
+                <Circle cx={connector.midX} cy={connector.midY} r={1.5}
+                  fill="#DDCDB4" opacity={0.62} />
+              </G>
+            ) : null}
           </G>
         ))}
 
