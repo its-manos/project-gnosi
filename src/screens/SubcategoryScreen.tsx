@@ -300,7 +300,7 @@ export default function SubcategoryScreen({
                           : <Text style={styles.nodeNumber}>{index + 1}</Text>}
                     </View>
                   </View>
-                  <Text testID={"adventure-node-title-" + lesson.id}
+                  <Text testID={"adventure-label-" + lesson.id}
                     style={[styles.nodeTitle, { width: labelWidth },
                       disabled && styles.nodeTitleLocked, active && styles.nodeTitleActive]}
                     numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}>
