@@ -41,7 +41,7 @@ export default memo(ProgressGradientBackground);
 
 const styles = StyleSheet.create({
   background: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "#0D1827",
   },
 });
