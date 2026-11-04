@@ -841,14 +841,20 @@ assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
   "lighting adds no animated layers beyond the existing ambient tide");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
-assert.match(adventureMotionSource, /backgroundColor: "transparent"/,
-  "halo has no colored disk behind the active coin");
-assert.match(adventureMotionSource, /width: 80, height: 80, borderRadius: 40/,
-  "the active halo is one thin, concentric outer outline");
-assert.doesNotMatch(adventureMotionSource, /transform: \[\{ scale:/,
-  "active halo does not expand or wobble around the marker");
-assert.match(adventureMotionSource, /glowOpacity\.value = 0\.65/,
-  "reduced-motion users see a stable, visible active outline");
+assert.match(adventureMotionSource, /width: 84, height: 84, borderRadius: 42/,
+  "pulse stays concentric and close to the 74pt checkpoint wrapper");
+assert.match(adventureMotionSource, /borderWidth: 2\.5/,
+  "pulse has a legible stroke, including on high-density screens");
+assert.match(adventureMotionSource, /backgroundColor: "rgba\(159,137,242,0\.16\)"/,
+  "one translucent halo creates soft light without an opaque disk");
+assert.match(adventureMotionSource, /scale: 1 \+ pulse\.value \* 0\.13/,
+  "only the outer halo expands, by a bounded thirteen percent");
+assert.match(adventureMotionSource, /opacity: 0\.78 \* \(1 - pulse\.value\)/,
+  "expanding halo fades completely before resetting");
+assert.match(adventureMotionSource, /withDelay\(550, withTiming\(0, \{ duration: 0 \}\)\)/,
+  "invisible pause prevents an incessant, overlapping pulse");
+assert.match(adventureMotionSource, /if \(reduced\) return/,
+  "reduced-motion renders a visible static halo without repeating");
 assert.equal((adventureMotionSource.match(/withRepeat\(/g) || []).length, 1,
   "checkpoint polish adds no additional looping animations");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
