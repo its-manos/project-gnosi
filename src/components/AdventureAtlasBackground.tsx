@@ -245,6 +245,6 @@ function AdventureAtlasBackground({ width, height }: Props) {
 export default memo(AdventureAtlasBackground);
 
 const styles = StyleSheet.create({
-  underlay: { ...StyleSheet.absoluteFillObject, overflow: "hidden", backgroundColor: "#101827" },
-  tideLayer: { ...StyleSheet.absoluteFillObject },
+  underlay: { ...StyleSheet.absoluteFill, overflow: "hidden", backgroundColor: "#101827" },
+  tideLayer: { ...StyleSheet.absoluteFill },
 });
