@@ -220,7 +220,6 @@ const styles = StyleSheet.create({
   readingTileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
   readingTileCountComplete: { color: "#AFE3E2" },
   readingTileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#334B56", overflow: "hidden" },
-  readingTileFill: { height: "100%", borderRadius: 5 },
   readingInsight: {
     backgroundColor: "#1D3540", borderWidth: 1, borderColor: "#40626C",
     borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
@@ -230,14 +229,6 @@ const styles = StyleSheet.create({
   readingInsightValue: { color: "#B0E1DD", fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
   readingInsightCaption: { color: colors.textBody, fontSize: 12, lineHeight: 18 },
 
-  categoryDetail: {
-    paddingVertical: 12, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(146, 204, 208, 0.17)",
-  },
-  categoryTitleDetail: { color: "#E7ECEC" },
-  categoryCountDetail: { color: "#9CD2D1" },
-  categoryTrackDetail: { backgroundColor: "#31434F" },
-  categoryFillDetail: { backgroundColor: "#82C4C7" },
   categoryCompact: { gap: 5 },
   categoryMore: { minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
   categoryMorePressed: { opacity: 0.75 },
