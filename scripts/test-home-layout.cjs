@@ -594,6 +594,12 @@ const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.s
 const width = mapFrame.props.style[1].width;
 assert.equal(stops.length, 30);
 assert.equal(stopPositions.length, 30);
+const chapterMarker = nodes(mapFrame).find(node => node.props?.children === "ΚΕΦΑΛΑΙΟ IV");
+assert.ok(chapterMarker, "chapter IV milestone is still positioned on the path");
+assert.equal(chapterMarker.props.style.color, "#E3CEAA",
+  "warm engraved chapter badges are distinct from the active violet checkpoint");
+assert.equal(chapterMarker.props.style.top, -28,
+  "chapter ornamentation must not shift the badge into previous lesson titles");
 // Chapter badges sit 28pt above the following stop. Allow a full
 // 3-line title but do not reserve empty space for redundant status captions.
 const chapterBeginnings = [5, 11, 18, 24];
@@ -779,6 +785,15 @@ assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptica
 assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
 assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
 assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
+const islandDefinitions = atlasSource.split("const islands: Isle[] = [")[1]?.split("];")[0];
+assert.ok(islandDefinitions, "atlas retains a static island definition list");
+assert.ok((islandDefinitions.match(/{ x: /g) || []).length >= 30,
+  "small archipelagos add geographic detail without extra animated layers");
+assert.match(atlasSource, /key={"fret-" \+ index}/,
+  "Greek-key corner patterns are static atlas engravings");
+assert.match(atlasSource, /Fine chart bearings/,
+  "subtle nautical bearings remain underneath lesson routes");
+
 assert.match(atlasSource, /RadialGradient id="adventure-atlas-ambient"/,
   "static center light adds visual depth");
 assert.match(atlasSource, /RadialGradient id="adventure-atlas-vignette"/,
