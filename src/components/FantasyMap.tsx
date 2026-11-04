@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSharedValue } from "react-native-reanimated";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 import { AtlasAtmosphereBreath, AtlasDestinationFeedback, AtlasTwinkleStar } from "./CategoryAtlasMotion";
@@ -409,7 +410,9 @@ export default function FantasyMap({
 }: Props) {
   const [showList, setShowList] = useState(false);
   const [controlsHeight, setControlsHeight] = useState(50);
-  const [pressedRegion, setPressedRegion] = useState<string | null>(null);
+  // Press feedback uses a UI-thread shared value. A touch must not re-render
+  // the entire cartographic SVG just to light up one island coastline.
+  const pressedRegion = useSharedValue<string | null>(null);
   const fitted = Boolean(fitViewport?.width && fitViewport?.height);
   const columns = fitted && regions.length > 4 ? 3 : columnCount(regions.length);
   const rows = Math.max(1, overview || fitted
@@ -886,10 +889,12 @@ export default function FantasyMap({
               accessibilityLabel={region.title + (region.progressLoaded
                 ? ", " + region.completedLessons + " από " + region.totalLessons + " μαθήματα"
                 : region.status === "coming-soon" ? ", σύντομα" : "")}
-              onPressIn={fitted ? () => setPressedRegion(region.id) : undefined}
-              onPressOut={fitted ? () => setPressedRegion(null) : undefined}
+              onPressIn={fitted ? () => { pressedRegion.value = region.id; } : undefined}
+              onPressOut={fitted ? () => {
+                if (pressedRegion.value === region.id) pressedRegion.value = null;
+              } : undefined}
               onPress={() => {
-                setPressedRegion(null);
+                pressedRegion.value = null;
                 onSelectRegion(region.id);
               }}>
               {/* Preserve the whole island as a touch target, including coasts. */}
@@ -897,7 +902,7 @@ export default function FantasyMap({
                 region.cx, region.cy, region.rx, region.ry, region.seed,
               ))} fill="transparent" />
               {fitted ? <AtlasDestinationFeedback
-                d={pressShape} active={pressedRegion === region.id} /> : null}
+                d={pressShape} regionId={region.id} pressedRegion={pressedRegion} /> : null}
               {isAncientGreeceLandmark ? (
                 <G>
                   <AncientGreekTemple x={region.cx - 26 * (columns >= 3 ? 0.84 : 1)}
