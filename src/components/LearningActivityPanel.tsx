@@ -84,7 +84,7 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
   </View>;
 }
 
-export function CategoryProgress({ compact = false, detail = false, singleColumn = false }: { compact?: boolean; detail?: boolean; singleColumn?: boolean } = {}) {
+export function CategoryProgress({ compact = false, detail = false, singleColumn = false, threeColumn = false }: { compact?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean } = {}) {
   const snapshot = useLearningSnapshot();
   const [expanded, setExpanded] = useState(false);
   const completed = new Set(snapshot.backup.completedIds);
@@ -107,7 +107,8 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
       detail && styles.categoryCardDetail, detail && styles.categoryGrid,
       detail && singleColumn && styles.categoryGridSingle]}>
       {visible.map(({ category, count, total, percent }) => detail ? (
-        <View key={category.id} style={[styles.readingTile, singleColumn && styles.readingTileSingle]}
+        <View key={category.id} style={[styles.readingTile, singleColumn && styles.readingTileSingle,
+          threeColumn && !singleColumn && styles.readingTileWide]}
           accessible accessibilityRole="progressbar"
           accessibilityLabel={category.title}
           accessibilityValue={{ min: 0, max: total || 1, now: count,
@@ -162,6 +163,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1F313D", borderWidth: 1, borderColor: "#35545F",
   },
   readingTileSingle: { minHeight: 110, flexBasis: "auto" },
+  readingTileWide: { flexBasis: "30%" },
   readingTileHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   readingTileEmoji: { fontSize: 19, lineHeight: 26 },
   readingTilePercent: { color: "#9CD2D1", fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] },
