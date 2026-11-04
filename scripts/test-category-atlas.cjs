@@ -800,6 +800,75 @@ assert.deepEqual(
   { ...mountedMaps[0].props.fitViewport }, { width: 310, height: 420 },
   "fitted map still adapts when viewport dimensions change");
 
+// Android must never render the expensive SVG during the card entrance.
+// The actual MotionPressable completion drives the mount; measuring alone
+// cannot cause an early atlas paint. iOS retains the existing reveal cover.
+const homeMotionCode = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
+assert.match(homeMotionCode, /runOnJS\\(notifyEntranceComplete\\)/,
+  "card completion is signalled by its native animation, not a JS timer");
+assert.match(homeMotionCode, /if \\(finished\\) runOnJS/,
+  "an interrupted entrance must not mount the heavy atlas");
+assert.match(homeMotionCode, /completionRef\\.current = onEntranceComplete/,
+  "progress or layout re-renders must not restart the entrance");
+const androidNative = { ...native, Platform: { OS: "android" } };
+const androidState = [];
+let androidHookIndex = 0;
+const androidScreen = compile("src/screens/CategoryScreen.tsx", {
+  react: {
+    useMemo: fn => fn(),
+    useState: initial => {
+      const index = androidHookIndex++;
+      if (!(index in androidState)) androidState[index] = initial;
+      return [androidState[index], next => {
+        androidState[index] = typeof next === "function" ? next(androidState[index]) : next;
+      }];
+    },
+  },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": androidNative,
+  "../components/FantasyMap": { __esModule: true, default: map },
+  "../components/HomeMotion": {
+    MotionPressable: "MotionPressable", MotionView: "MotionView",
+  },
+  "../components/CategoryAtlasMotion": {
+    AtlasContinueAccent: "AtlasContinueAccent",
+    AtlasContinueArrow: "AtlasContinueArrow",
+    AtlasMapRevealCover: "AtlasMapRevealCover",
+    AtlasProgressFill: "AtlasProgressFill",
+  },
+  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
+  "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
+}).default;
+const renderAndroidCategory = options => {
+  androidHookIndex = 0;
+  return androidScreen({ ...screenProps, ...options });
+};
+let androidTree = renderAndroidCategory();
+const androidShell = nodes(androidTree).find(node =>
+  node.props?.testID === "category-atlas-map-viewport");
+androidShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
+androidTree = renderAndroidCategory();
+assert.equal(nodes(androidTree).filter(node => node.type === map).length, 0,
+  "Android must keep the map unmounted even after measuring its viewport");
+const androidCard = nodes(androidTree).find(node =>
+  node.props?.testID === "category-atlas-continue");
+assert.equal(typeof androidCard.props.onEntranceComplete, "function",
+  "Android connects map readiness to the card animation finishing");
+androidCard.props.onEntranceComplete();
+androidTree = renderAndroidCategory();
+assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
+  "the map mounts once the card entrance has completed");
+assert.equal(nodes(androidTree).filter(node => node.type === "AtlasMapRevealCover").length, 0,
+  "Android does not fade a full-viewport overlay across the heavy SVG");
+androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
+assert.equal(nodes(androidTree).filter(node => node.type === map).length, 0,
+  "a newly selected category cannot inherit the previous map's ready state");
+renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
+androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" },
+  subcategories: [] });
+assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
+  "empty categories still display their empty map without waiting for a missing card");
+
 const choose = screenModule.chooseAtlasFeaturedRegion;
 const picks = [
   { id: "ancient", status: "new" },
