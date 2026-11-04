@@ -39,7 +39,7 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
   const max = Math.max(1, ...buckets.map(bucket => bucket.first + bucket.replay));
   const total = buckets.reduce((sum, bucket) => sum + bucket.first + bucket.replay, 0);
   const switchMode = (value: "daily" | "weekly") => { setMode(value); setSelectedKey(""); };
-  const barHeight = dashboard ? 70 : 120;
+  const barHeight = dashboard ? 88 : 120;
 
   return <View style={[styles.section, dashboard && styles.sectionDashboard]}>
     {!dashboard ? <Text style={styles.title}>Η δραστηριότητά σου</Text> : null}
@@ -47,8 +47,8 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
     {dashboard ? <>
       <Text style={styles.dashboardHeading}>Αυτή την εβδομάδα</Text>
       <View style={styles.dashboardMetrics} testID="activity-dashboard-metrics">
-        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="εβδομάδα" />
-        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="εβδομάδα" />
+        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="7ήμερο" />
+        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="7ήμερο" />
         <DashboardMetric label="Ενεργές ημέρες" value={String(summary.activeDays)} detail="συνολικά" />
       </View>
     </> : !compact ? <View style={styles.metrics}>
@@ -95,7 +95,7 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
       </View>
       <View style={[styles.selection, dashboard && styles.selectionDashboard]} accessibilityLiveRegion="polite">
         <Text style={[styles.selectionTitle, dashboard && styles.selectionTitleDashboard]}>{rangeLabel(selected)}</Text>
-        {!dashboard ? <Text style={styles.small}>{selected.first} νέα μαθήματα · {selected.replay} πλήρεις επαναλήψεις</Text> : null}
+        {dashboard ? <Text style={styles.dashboardSelectedSummary}>{selected.first} νέα · {selected.replay} επαναλήψεις</Text> : <Text style={styles.small}>{selected.first} νέα μαθήματα · {selected.replay} πλήρεις επαναλήψεις</Text>}
       </View>
       {!total ? <Text style={styles.hint}>Ολοκλήρωσε ένα μάθημα για να ξεκινήσεις.</Text> : null}
     </View>
@@ -217,7 +217,7 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
 const styles = StyleSheet.create({
   sectionDashboard: { marginTop: 0, marginBottom: 0, gap: 7 },
   dashboardChartHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  switchRowDashboard: { flex: 1, maxWidth: 192, borderRadius: 9, padding: 2, gap: 2 },
+  switchRowDashboard: { flex: 1, maxWidth: 176, borderRadius: 9, padding: 2, gap: 2 },
   switchButtonDashboard: { minHeight: 30, paddingVertical: 4, paddingHorizontal: 3, borderRadius: 7 },
   switchTextDashboard: { fontSize: 10, lineHeight: 15 },
   axisDashboard: { paddingTop: 20, paddingBottom: 30 },
@@ -225,19 +225,20 @@ const styles = StyleSheet.create({
   barNumberDashboard: { fontSize: 9, lineHeight: 13, marginBottom: 2 },
   barLabelDashboard: { fontSize: 9, lineHeight: 13, marginTop: 3 },
   legendDashboard: { gap: 9 },
-  selectionDashboard: { paddingTop: 5, gap: 1 },
+  selectionDashboard: { paddingTop: 7, gap: 1 },
   selectionTitleDashboard: { fontSize: 11, lineHeight: 16 },
+  dashboardSelectedSummary: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
   dashboardHeading: { color: colors.textBody, fontSize: 12, lineHeight: 18, fontWeight: "800" },
   dashboardMetrics: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 65, paddingHorizontal: 10, paddingVertical: 6, justifyContent: "center", gap: 2, borderWidth: 1, borderColor: "#4A4566", borderRadius: 16, backgroundColor: "#20243C" },
-  dashboardValue: { color: colors.accentLight, fontSize: 23, lineHeight: 27, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 62, paddingHorizontal: 11, paddingVertical: 8, justifyContent: "center", gap: 1, borderWidth: 1, borderColor: "#4A4566", borderRadius: 15, backgroundColor: "#20243C" },
+  dashboardValue: { color: colors.accentLight, fontSize: 25, lineHeight: 30, fontWeight: "900", fontVariant: ["tabular-nums"] },
   dashboardLabel: { color: colors.text, fontSize: 10, lineHeight: 13, fontWeight: "800" },
-  dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 13 },
-  dashboardAccuracy: { color: colors.textMuted, fontSize: 11, lineHeight: 17, paddingHorizontal: 2 },
-  chartCardDashboard: { padding: 11, gap: 6, borderColor: "#44415E", backgroundColor: "#1D2337" },
+  dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 12 },
+  dashboardAccuracy: { color: colors.textMuted, fontSize: 11, lineHeight: 17, paddingHorizontal: 3, marginTop: 3 },
+  chartCardDashboard: { padding: 13, gap: 8, borderColor: "#44415E", backgroundColor: "#1D2337" },
   chartTitleDashboard: { fontSize: 15, lineHeight: 20, fontWeight: "800" },
   chartDashboard: { paddingTop: 0 },
-  barAreaDashboard: { height: 92 },
+  barAreaDashboard: { height: 112 },
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
   sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
   sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },
