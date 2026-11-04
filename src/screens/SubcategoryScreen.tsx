@@ -7,7 +7,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { colors } from "../theme";
 import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
-import { AdventureActiveHalo, AdventureProgressFill } from "../components/AdventureMotion";
+import { AdventureActiveHalo, AdventureContinueAccent, AdventureContinueArrow, AdventureProgressFill } from "../components/AdventureMotion";
 import { MotionCounter, MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked } from "../utils/devLessonAccess";
@@ -181,6 +181,7 @@ export default function SubcategoryScreen({
           accessibilityLabel={progressLoaded && nextLesson
             ? "Συνέχισε τη διαδρομή: " + nextLesson.title
             : "Πρόοδος διαδρομής: " + subcategory.title}>
+          {progressLoaded && nextLesson ? <AdventureContinueAccent /> : null}
           <View style={styles.cardHeading}>
             <Text style={styles.subcategoryTitle} numberOfLines={1}>{subcategory.title}</Text>
             <MotionCounter progressKey={progressLoaded ? completed + "/" + path.length : "loading"}
@@ -199,7 +200,7 @@ export default function SubcategoryScreen({
               </Text>
             </View>
             {progressLoaded && nextLesson ?
-              <View style={styles.continueButton}><Text style={styles.continueArrow}>›</Text></View>
+              <View style={styles.continueButton}><AdventureContinueArrow /></View>
               : null}
           </View>
           <View testID="adventure-progress" style={styles.progressTrack}
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
   sparkle: { color: colors.accentLight, fontSize: 22 },
   continueCard: {
     paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
-    backgroundColor: "#1B2034", borderColor: "#51496F",
+    backgroundColor: "#1B2034", borderColor: "#6A618C",
     borderWidth: 1, borderRadius: 18, gap: 8,
   },
   cardHeading: {
@@ -374,12 +375,13 @@ const styles = StyleSheet.create({
   continueTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "800" },
   continueButton: {
     width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
+    borderWidth: 1, borderColor: "#C9BFFF",
     alignItems: "center", justifyContent: "center",
   },
-  continueArrow: {
-    color: "#1C1B32", fontSize: 30, lineHeight: 36, fontWeight: "600", marginTop: -3,
+  progressTrack: {
+    height: 8, borderRadius: 5, backgroundColor: "#302F4B", overflow: "hidden",
+    borderWidth: 1, borderColor: "#62597D",
   },
-  progressTrack: { height: 7, borderRadius: 5, backgroundColor: "#323047", overflow: "hidden" },
   map: { alignSelf: "center", position: "relative", marginTop: 2 },
   pathSvg: { position: "absolute", top: 0, left: 0 },
   stopPosition: { position: "absolute", width: NODE_WIDTH, alignItems: "center" },
