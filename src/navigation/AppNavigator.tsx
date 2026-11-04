@@ -11,7 +11,7 @@ import { getLessonAccess, getNextPathLesson, getSubcategoryPath } from "../utils
 import { devLessonsUnlocked, setDevLessonUnlockAll } from "../utils/devLessonAccess";
 import { welcomeLessonCandidates } from "../utils/welcomeLesson";
 import { useAthensDate } from "../hooks/useAthensDate";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, BackHandler, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
@@ -187,25 +187,30 @@ export default function AppNavigator() {
     setAppScreen(destination);
   };
 
-  // Use the same leave guard as the on-screen controls for Android system Back.
-  useEffect(() => {
-    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (welcome.visible || welcome.loading) return false;
-      if (isDailyPreferencesOpen) { closeDailyPreferences(); return true; }
-      if (isDailyChallengeOpen) { setIsDailyChallengeOpen(false); return true; }
-      if (app.screen === "home") return false;
-      if (app.screen === "review") { app.endMistakeReview(); return true; }
-      const destination = backDestination(app.screen, {
-        account: accountOrigin,
-        profile: profileOrigin,
-        knowledge: knowledgeOrigin,
-        lesson: app.lessonBackScreen,
-      });
-      navigateTo(destination);
-      return true;
+  // Keep the native listener stable across progress, animation and state renders.
+  // Read the latest navigation state at press time to avoid stale closures.
+  const hardwareBackRef = useRef<() => boolean>(() => false);
+  hardwareBackRef.current = () => {
+    if (welcome.visible || welcome.loading) return false;
+    if (isDailyPreferencesOpen) { closeDailyPreferences(); return true; }
+    if (isDailyChallengeOpen) { setIsDailyChallengeOpen(false); return true; }
+    if (app.screen === "home") return false;
+    if (app.screen === "review") { app.endMistakeReview(); return true; }
+    const destination = backDestination(app.screen, {
+      account: accountOrigin,
+      profile: profileOrigin,
+      knowledge: knowledgeOrigin,
+      lesson: app.lessonBackScreen,
     });
+    navigateTo(destination);
+    return true;
+  };
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress", () => hardwareBackRef.current(),
+    );
     return () => subscription.remove();
-  });
+  }, []);
 
   const analyticsScreen: AnalyticsScreen = welcome.visible ? "welcome"
     : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" || app.screen === "learning-insights" ? "progress" : app.screen;
