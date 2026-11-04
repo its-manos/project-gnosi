@@ -16,6 +16,7 @@ import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
 import { MotionCounter, MotionHeroAccent, MotionIcon, MotionPressable, MotionQuizGlow, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
 import HomeAtlasBackground from "../components/HomeAtlasBackground";
+import HomeStreakBadge from "../components/HomeStreakBadge";
 
 type Props = {
   categories: Category[];
@@ -151,14 +152,7 @@ export default function HomeScreen({
       <MotionView entranceDelay={0} style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.headerStats}>
-          <View testID="home-quiz-streak" style={styles.streak} accessible
-            accessibilityLabel={daily.ready ? String(quizStreak) + " συνεχόμενες ημέρες ολοκληρωμένου καθημερινού quiz" : "Φόρτωση σερί καθημερινού quiz"}>
-            <Text style={styles.flame}>🔥</Text>
-            <View>
-              <Text style={styles.streakCount}>{daily.ready ? quizStreak : "—"}</Text>
-              <Text style={styles.streakLabel}>σερί quiz</Text>
-            </View>
-          </View>
+          <HomeStreakBadge streak={daily.ready ? quizStreak : null} />
           {onOpenProfile ? <MotionPressable entranceDelay={0} testID="home-level-profile" style={styles.levelBadge}
             onPress={onOpenProfile} accessibilityRole="button"
             accessibilityLabel={profileReady ? "Το προφίλ μου. Επίπεδο " + profile.level + ". " + profile.earned + " από " + profile.required + " XP για το επόμενο επίπεδο." : "Το προφίλ μου. Φόρτωση επιπέδου."}>
@@ -316,10 +310,6 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
   logo: { color: colors.accentLight, fontSize: 21, lineHeight: 27, fontWeight: "900", letterSpacing: 2.4 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
-  streak: { flexDirection: "row", alignItems: "center", gap: 5 },
-  flame: { fontSize: 19, lineHeight: 24 },
-  streakCount: { color: colors.text, fontSize: 17, fontWeight: "900", lineHeight: 20 },
-  streakLabel: { color: colors.textMuted, fontSize: 10, lineHeight: 13 },
   levelBadge: { width: 50, height: 50, alignItems: "center", justifyContent: "center",
     borderRadius: 25, backgroundColor: colors.surface, borderWidth: 1,
     borderColor: "#403A55" },
