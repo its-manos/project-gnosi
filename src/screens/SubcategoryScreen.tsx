@@ -100,6 +100,9 @@ export default function SubcategoryScreen({
   const nextIndex = nextLesson ? path.findIndex(lesson => lesson.id === nextLesson.id) : -1;
   const isAncientGreece = subcategory.id === "ancient-greece";
   const mapWidth = Math.max(1, Math.min(420, viewportWidth - 40));
+  // Labels can extend slightly past the 148pt checkpoint touch target without
+  // crossing the map edge, even in the outermost 27% / 72% lanes.
+  const labelWidth = Math.min(170, mapWidth * 0.51);
   const points = path.map((_lesson, index) => pointFor(index, mapWidth, isAncientGreece));
   const mapHeight = points.length ? points[points.length - 1].y + 115 : 0;
   const segments = points.slice(1).map((point, index) => ({
@@ -297,8 +300,12 @@ export default function SubcategoryScreen({
                           : <Text style={styles.nodeNumber}>{index + 1}</Text>}
                     </View>
                   </View>
-                  <Text style={[styles.nodeTitle, disabled && styles.nodeTitleLocked,
-                    active && styles.nodeTitleActive]} numberOfLines={2}>{lesson.title}</Text>
+                  <Text testID={"adventure-node-title-" + lesson.id}
+                    style={[styles.nodeTitle, { width: labelWidth },
+                      disabled && styles.nodeTitleLocked, active && styles.nodeTitleActive]}
+                    numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}>
+                    {lesson.title}
+                  </Text>
                   {active ? <Text style={styles.nodeStatus}>{started ? "ΣΕ ΕΞΕΛΙΞΗ" : "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ"}</Text> : null}
                 </MotionPressable>
               </View>
@@ -386,11 +393,10 @@ const styles = StyleSheet.create({
   nodeNumber: { color: "#F6F0FF", fontSize: 25, lineHeight: 31, fontWeight: "900" },
   nodeCheck: { color: colors.success, fontSize: 34, lineHeight: 40, fontWeight: "800" },
   nodeTitle: {
-    color: colors.textBody, fontSize: 12, lineHeight: 17, fontWeight: "800",
-    textAlign: "center", marginTop: 7, minHeight: 34,
-    paddingHorizontal: 7, paddingVertical: 2, borderRadius: 7,
-    backgroundColor: "rgba(9,15,27,0.79)",
-    textShadowColor: "#0B0D15", textShadowRadius: 4, textShadowOffset: { width: 0, height: 1 },
+    color: colors.textBody, fontSize: 12, lineHeight: 16, fontWeight: "800",
+    textAlign: "center", marginTop: 5,
+    // Contrast comes from the shadow, not a large dark rectangle covering the atlas.
+    textShadowColor: "#020713", textShadowRadius: 7, textShadowOffset: { width: 0, height: 1 },
   },
   nodeTitleLocked: { color: "#9298AB" },
   nodeTitleActive: { color: "#C7BCFF" },
