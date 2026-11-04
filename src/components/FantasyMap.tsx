@@ -402,8 +402,10 @@ export default function FantasyMap({
   );
   // Larger text is practical because the layout uses at most three columns for
   // up to 24 regions. Large catalogues retain a list view for full labels.
+  // Match Adventure Path stop labels: platform system face, 800 weight,
+  // 12-ish point type and muted text. Longer names still scale to two lines.
   const labelFontSize = overview ? 12.5
-    : fitted ? (regions.length <= 4 ? 14 : columns >= 4 ? 11 : 12.5)
+    : fitted ? (regions.length <= 4 ? 12.5 : columns >= 4 ? 10.5 : 11.5)
     : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
   const maxLabelChars = fitted && regions.length <= 4 ? 15
     : fitted && columns === 3 ? 15 : columns >= 4 ? 10 : columns === 3 ? 12 : 16;
@@ -448,18 +450,21 @@ export default function FantasyMap({
           setControlsHeight(previous => Math.abs(previous - height) < 1 ? previous : height);
           onControlsHeightChange?.(height);
         }}>
-        <Text style={overview ? styles.overviewLabel : styles.mapEyebrow}>
+        <Text style={overview ? styles.overviewLabel : fitted ? styles.fittedMapEyebrow : styles.mapEyebrow}>
           {overview ? "Θεματικές" : regions.length + " ΠΕΡΙΟΧΕΣ"}
         </Text>
-        <View style={styles.modeSwitch}>
+        <View style={[styles.modeSwitch, fitted && styles.fittedModeSwitch]}>
           {([{ label: "Χάρτης", list: false }, { label: "Λίστα", list: true }] as const).map(mode => (
             <Pressable key={mode.label} accessibilityRole="button"
               testID={mode.list ? "atlas-list-toggle" : "atlas-map-toggle"}
               accessibilityLabel={mode.list ? "Προβολή ως λίστα" : "Προβολή χάρτη"}
               accessibilityState={{ selected: showList === mode.list }}
               onPress={() => setShowList(mode.list)}
-              style={[styles.viewButton, showList === mode.list && styles.viewButtonActive]}>
-              <Text style={[styles.viewButtonText, showList === mode.list && styles.viewButtonTextActive]}>{mode.label}</Text>
+              style={[styles.viewButton, showList === mode.list && styles.viewButtonActive,
+                fitted && showList === mode.list && styles.fittedViewButtonActive]}>
+              <Text style={[styles.viewButtonText, showList === mode.list && styles.viewButtonTextActive,
+                fitted && styles.fittedViewButtonText,
+                fitted && showList === mode.list && styles.fittedViewButtonTextActive]}>{mode.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -486,7 +491,8 @@ export default function FantasyMap({
           ) : null}
           {positionedRegions.map((region) => (
             <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
-              <Stop offset="0" stopColor={region.fill} /><Stop offset="1" stopColor="#253B40" />
+              <Stop offset="0" stopColor={region.fill} />
+              <Stop offset="1" stopColor={fitted ? "#222938" : "#253B40"} />
             </LinearGradient>
           ))}
           <LinearGradient id="atlas-progress-lavender" x1="0" y1="0" x2="1" y2="0">
@@ -588,26 +594,36 @@ export default function FantasyMap({
             >
               <Path d={islandPath} transform="translate(0 5)" fill="#050F18" opacity={0.6} />
               <Path d={islandPath} fill="none"
-                stroke={region.status === "in-progress" ? "#B1A5FF" : region.fill}
-                strokeWidth={region.status === "in-progress" ? 17 : 13}
-                strokeOpacity={region.status === "in-progress" ? 0.25 : 0.09} />
-              <Path d={islandPath} fill="none" stroke="#94C0B7" strokeWidth={6} strokeOpacity={0.13} />
+                stroke={fitted
+                  ? region.status === "in-progress" ? "#C5B7FF"
+                    : region.status === "complete" ? "#BBA27C" : "#6C668A"
+                  : region.status === "in-progress" ? "#B1A5FF" : region.fill}
+                strokeWidth={fitted ? (region.status === "in-progress" ? 12 : 8)
+                  : region.status === "in-progress" ? 17 : 13}
+                strokeOpacity={fitted ? (region.status === "in-progress" ? 0.16 : 0.07)
+                  : region.status === "in-progress" ? 0.25 : 0.09} />
+              <Path d={islandPath} fill="none"
+                stroke={fitted ? "#7C7691" : "#94C0B7"}
+                strokeWidth={fitted ? 4 : 6} strokeOpacity={fitted ? 0.12 : 0.13} />
               <Path
                 d={islandPath}
                 fill={`url(#land-${region.seed})`}
-                fillOpacity={0.92}
-                stroke={region.status === "complete" ? "#E5C989"
-                  : region.status === "in-progress" ? "#C2B3FF" : "#CFC9A9"}
+                fillOpacity={fitted ? 0.88 : 0.92}
+                stroke={fitted
+                  ? region.status === "complete" ? "#BBA27C"
+                    : region.status === "in-progress" ? "#C5B7FF" : "#6C668A"
+                  : region.status === "complete" ? "#E5C989"
+                    : region.status === "in-progress" ? "#C2B3FF" : "#CFC9A9"}
                 strokeWidth={region.status === "in-progress" ? 2 : 1.35}
                 strokeOpacity={region.status === "in-progress" || region.status === "complete" ? 0.95 : 0.62}
               />
               <Path
                 d={innerPath}
                 fill="none"
-                stroke="#D7D3B4"
+                stroke={fitted ? "#A8916B" : "#D7D3B4"}
                 strokeWidth={0.7}
                 strokeDasharray="2 4"
-                strokeOpacity={0.42}
+                strokeOpacity={fitted ? 0.28 : 0.42}
               />
 
               {/* Small nearby islets make the landmasses feel like a fantasy atlas. */}
@@ -714,7 +730,10 @@ export default function FantasyMap({
                   fontSize={regionLabelSize}
                   fontWeight={fitted ? "800" : "700"}
                   textAnchor="middle"
-                  fill={fitted ? "#FBF8EF" : "#FFFFFF"}
+                  fill={fitted
+                    ? region.status === "in-progress" ? "#C7BCFF"
+                      : region.status === "complete" ? "#C1EDD3" : "#D0D2DA"
+                    : "#FFFFFF"}
                 >
                   {line}
                 </SvgText>
@@ -820,15 +839,20 @@ const styles = StyleSheet.create({
   viewControls: { flexDirection: "row", alignSelf: "center", width: "100%", maxWidth: 520,
     alignItems: "center", justifyContent: "space-between", marginTop: 3, marginBottom: 8 },
   mapEyebrow: { color: "#A7AAC1", fontSize: 10, lineHeight: 16, fontWeight: "800", letterSpacing: 1.1 },
+  fittedMapEyebrow: { color: "#ABB0C1", fontSize: 10, lineHeight: 16, fontWeight: "800", letterSpacing: 1.1 },
   modeSwitch: { flexDirection: "row", borderRadius: 12, backgroundColor: "#191D2A", padding: 3 },
+  fittedModeSwitch: { backgroundColor: "#191D2D" },
   overviewFrame: { maxWidth: 520, alignSelf: "center" },
   overviewControls: { flexWrap: "wrap", rowGap: 8, marginTop: 4, marginBottom: 10 },
   overviewLabel: { flex: 1, minWidth: 72, color: "#AAB3BF", fontSize: 13, lineHeight: 20, paddingRight: 8 },
   overviewListItem: { paddingVertical: 10, paddingHorizontal: 12, minHeight: 60 },
   viewButton: { paddingHorizontal: 13, paddingVertical: 8, borderRadius: 9, minHeight: 40, justifyContent: "center" },
   viewButtonActive: { backgroundColor: "#343448" },
+  fittedViewButtonActive: { backgroundColor: "#34304E" },
   viewButtonText: { color: "#AAB3BF", fontSize: 12, fontWeight: "700" },
   viewButtonTextActive: { color: "#F3EEE2" },
+  fittedViewButtonText: { color: "#ABB0C1", fontWeight: "800" },
+  fittedViewButtonTextActive: { color: "#F3F0E8" },
   regionListScroll: {
     width: "100%", maxWidth: 520, alignSelf: "center",
   },
