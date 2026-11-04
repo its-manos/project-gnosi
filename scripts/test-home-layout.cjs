@@ -594,6 +594,18 @@ const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.s
 const width = mapFrame.props.style[1].width;
 assert.equal(stops.length, 30);
 assert.equal(stopPositions.length, 30);
+// Chapter badges sit 28pt above the following stop. Reserve room for
+// a preceding 3-line Greek title AND the optional 14pt active-state caption.
+const chapterBeginnings = [5, 11, 18, 24];
+for (const start of chapterBeginnings) {
+  const previousTop = stopPositions[start - 1].props.style[1].top;
+  const chapterBadgeTop = stopPositions[start].props.style[1].top - 28;
+  const worstCasePreviousEnd = previousTop + 74 + 5 + 3 * 16 + 14;
+  assert.ok(chapterBadgeTop - worstCasePreviousEnd >= 20,
+    "chapter " + start + " must clear a long active lesson title and status");
+}
+assert.equal(stopPositions[1].props.style[1].top - stopPositions[0].props.style[1].top, 142,
+  "normal checkpoint density is unchanged outside chapter boundaries");
 const atlasLayer = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-atlas-underlay");
 assert.ok(atlasLayer, "underlay is inside the fixed map viewport");
 assert.equal(atlasLayer.props.pointerEvents, "none", "atlas never intercepts taps");
@@ -739,7 +751,7 @@ motionTree = renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "only one UI-thread entry animation after full hydration");
 assert.equal(autoCalls[0].target, adventureModule.getAdventureCurrentOffset(
-  75 + 19 * 142 + 3 * 25, 75 + 29 * 142 + 4 * 25 + 115, 540,
+  75 + 19 * 142 + 3 * 55, 75 + 29 * 142 + 4 * 55 + 115, 540,
 ), "automatic entry must preserve the previously correct checkpoint destination");
 assert.ok(autoCalls[0].target > 2700,
   "19/30 completion must land at the current checkpoint, not before chapter IV");
