@@ -2,13 +2,13 @@ import { buildKnowledgeModel } from "../knowledge/model";
 import { mergeRewardLedgers } from "../gamification/rewards";
 import { useMemo } from "react";
 import { lessons } from "../data/lessons";
-import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
+import { useDailyDataSnapshot, useLearningDataSnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { knowledgeProfile } from "../utils/knowledgeScoring";
 import { useAthensDate } from "./useAthensDate";
 
 export function useKnowledgeProfile() {
-  const learning = useLearningSnapshot(), daily = useDailySnapshot(), today = useAthensDate();
+  const learning = useLearningDataSnapshot(), daily = useDailyDataSnapshot(), today = useAthensDate();
   const profile = useMemo(() => { const base = knowledgeProfile(lessons, learning.backup.completedIds,
     learning.activity, learning.weeklyReviews, dailyHistory(daily.doc), today, mergeRewardLedgers(learning.rewards, daily.doc.rewards));
     const recalled = buildKnowledgeModel({ ...learning.backup, activity: learning.activity, weeklyReviews: learning.weeklyReviews, knowledgeReviews: learning.knowledgeReviews }, daily.doc, today).recalled;
