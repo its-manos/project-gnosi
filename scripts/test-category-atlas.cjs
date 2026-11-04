@@ -248,6 +248,25 @@ const fittedAncient = map({ ...props, regions: [
   { ...regionData[0], id: "ancient-greece", title: "Αρχαία Ελλάδα" },
   regionData[1], regionData[2],
 ], fitViewport: { width: 340, height: 490 } });
+// The fitted chart has a static engraved perimeter, not a native card border.
+// It leaves the compass clear and does not appear in other FantasyMap usages.
+const chartBorder = nodes(fittedAncient).find(node =>
+  node.props?.testID === "atlas-fitted-map-border");
+assert.ok(chartBorder, "fitted category map receives its engraved chart frame");
+assert.equal(chartBorder.props.pointerEvents, "none",
+  "the decorative border cannot intercept coastline or island taps");
+const borderPaths = nodes(chartBorder).filter(node => node.type === "path");
+assert.deepEqual(Array.from(borderPaths, node => node.props.testID),
+  ["atlas-map-border-main", "atlas-map-border-inner", "atlas-map-border-marks"]);
+assert.ok(borderPaths.every(node => node.props.fill === "none" &&
+  node.props.strokeWidth <= 0.9 && node.props.strokeOpacity <= 0.42),
+"border engraving stays thin, low contrast, and free of large SVG fills");
+assert.ok(borderPaths[0].props.d.includes("H 285 M 10 26") &&
+  borderPaths[0].props.d.includes("V 60"),
+  "upper right border is interrupted to avoid overlapping the compass");
+assert.equal(nodes(map(props)).filter(node =>
+  node.props?.testID === "atlas-fitted-map-border").length, 0,
+  "overview and legacy maps do not inherit the chart border");
 const fittedAncientIsland = nodes(fittedAncient).find(node =>
   node.props?.testID === "atlas-island-ancient-greece");
 assert.ok(fittedAncientIsland, "Ancient Greece remains an accessible island");
