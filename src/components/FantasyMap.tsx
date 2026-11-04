@@ -407,8 +407,11 @@ export default function FantasyMap({
   const labelFontSize = overview ? 12.5
     : fitted ? (regions.length <= 4 ? 12.5 : columns >= 4 ? 10.5 : 11.5)
     : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
-  const maxLabelChars = fitted && regions.length <= 4 ? 15
-    : fitted && columns === 3 ? 15 : columns >= 4 ? 10 : columns === 3 ? 12 : 16;
+  // Compact island contours curve inward at title height. Even when a title
+  // fits in the overall SVG width it can touch the coast, so keep multiword
+  // names to shorter lines inside the island's central safe area.
+  const maxLabelChars = fitted && regions.length <= 4 ? 11
+    : fitted && columns === 3 ? 12 : columns >= 4 ? 10 : columns === 3 ? 12 : 16;
 
   if (regions.length === 0) {
     return (
