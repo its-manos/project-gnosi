@@ -159,6 +159,30 @@ export function MotionShimmer() {
 }
 
 /**
+ * A single quiet glint on the Continue card rim as Home settles.
+ * Unlike the ambient stars, it never repeats or touches SVG geometry.
+ */
+export function MotionHeroAccent() {
+  const reduced = useReducedMotion();
+  const glow = useSharedValue(0.16);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
+  useEffect(() => {
+    cancelAnimation(glow);
+    glow.value = 0.16;
+    if (reduced) return;
+    glow.value = withDelay(410, withSequence(
+      withTiming(0.42, { duration: 380, easing: ease }),
+      withTiming(0.16, { duration: 900, easing: ease }),
+    ));
+    return () => cancelAnimation(glow);
+  }, [reduced, glow]);
+  return <Animated.View testID="home-hero-rim" pointerEvents="none"
+    accessible={false} style={[styles.heroRim, animatedStyle]}>
+    <View pointerEvents="none" style={styles.heroRimTop} />
+  </Animated.View>;
+}
+
+/**
  * Highlight the actual quiz card perimeter, not an un-clipped bright oval
  * behind its counter. A single UI-thread pulse settles to a faint outline
  * while today's quiz is unfinished. No layout or hit area changes.
@@ -194,6 +218,10 @@ const styles = StyleSheet.create({
   iconBox: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
   shimmer: { position: "absolute", top: -8, bottom: -8, left: 0,
     width: 35, backgroundColor: "#FFFFFF", opacity: 0.12, transform: [{ skewX: "-16deg" }] },
+  heroRim: { ...StyleSheet.absoluteFill, borderRadius: 18,
+    borderWidth: 1, borderColor: "#CBBDEA" },
+  heroRimTop: { position: "absolute", top: 0, left: 17, right: 17,
+    height: 1, backgroundColor: "#F1E8FF", opacity: 0.44 },
   // Overlay the 16pt-radius card's own boundary, never its content.
   quizGlow: { ...StyleSheet.absoluteFill,
     borderRadius: 16, borderWidth: 2, borderColor: "#C7B6FF" },

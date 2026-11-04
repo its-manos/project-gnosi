@@ -122,6 +122,7 @@ const home = compile("src/screens/HomeScreen.tsx", {
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
     MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
+    MotionHeroAccent: "HeroAccent",
   },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
@@ -173,6 +174,10 @@ const textById = (id, t = tree) => nodes(t).find(node => node.props?.testID === 
 assert.equal(textById("home-hero-location").props.children, "Ιστορία · Αρχαία Ελλάδα",
   "continue card shows real category and subcategory titles");
 assert.match(textById("home-primary-action").props.accessibilityLabel, /Ιστορία · Αρχαία Ελλάδα/);
+assert.equal(nodes(textById("home-primary-action")).filter(node => node.type === "HeroAccent").length, 1,
+  "a single one-shot decorative rim lives within Continue");
+assert.equal(textById("home-primary-action").props.style({ pressed: false })[0].borderColor, "#5B5070",
+  "Continue uses a restrained brighter border without changing footprint");
 assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
   "completed daily quiz does not pulse");
 assert.equal(textById("home-daily-answered").props.children, "7/7",
@@ -587,6 +592,13 @@ assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
 // The Daily Quiz highlight stays inside its original 16pt card,
 // preserves touch handling, respects reduced motion and does not repeat.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
+const heroRimSource = homeMotionSource.slice(
+  homeMotionSource.indexOf("export function MotionHeroAccent"),
+  homeMotionSource.indexOf("export function MotionQuizGlow"));
+assert.match(heroRimSource, /useReducedMotion/, "Continue accent respects reduced-motion settings");
+assert.match(heroRimSource, /pointerEvents="none"/, "Continue accent never takes taps");
+assert.doesNotMatch(heroRimSource, /withRepeat\(/,
+  "Continue accent is a one-shot highlight rather than another ambient loop");
 const dailyHighlightSource = homeMotionSource.slice(homeMotionSource.indexOf("export function MotionQuizGlow"));
 assert.match(dailyHighlightSource, /\.\.\.StyleSheet\.absoluteFill/,
   "highlight follows the card perimeter");
