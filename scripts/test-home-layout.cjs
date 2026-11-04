@@ -76,7 +76,7 @@ function compile(file, extra = {}, returnModule = false, globals = {}) {
       AtlasDestinationFeedback: "AtlasDestinationFeedback",
     },
     "../theme": { colors: {
-      accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E",
+      accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E", surface: "#151928",
       textMuted: "#ABB0C1", success: "#3CC69A", successSurface: "#17372F",
     } },
     ...extra,
@@ -120,10 +120,13 @@ const worldArtwork = {
   geography: otherWorlds.GeographyWorldIcon,
   "difficult-history": otherWorlds.DifficultHistoryWorldIcon,
 };
+// Compile the streak badge separately to assert its ring and inner caption.
+const HomeStreakBadge = compile("src/components/HomeStreakBadge.tsx");
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
   "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
+  "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
     MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
@@ -199,6 +202,8 @@ press("home-primary-action");
 press("home-daily-quiz");
 press("home-knowledge-review");
 press("home-level-profile");
+assert.equal(nodes(tree).find(node => node.props?.testID === "home-level-profile").props.style.borderWidth,
+  undefined, "level badge has no duplicate native border outside its SVG ring");
 assert.deepEqual(actions, ["resume:0", "daily", "review", "profile"]);
 const ring = nodes(tree).find(node => node.props?.testID === "home-xp-ring");
 assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(" ")[0]) - 2 * Math.PI * 21 * .25) < 0.01);
@@ -317,7 +322,34 @@ assert.ok(nodes(futureCard).some(node => node.props?.children === "🌟"),
   "new/unknown categories safely fall back to their emoji");
 futureCard.props.onPress();
 assert.equal(actions.at(-1), "category:future-world");
-assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
+const streakSlot = nodes(tree).find(node => node.type === HomeStreakBadge);
+assert.ok(streakSlot, "Home uses the same-size circular streak badge");
+assert.equal(streakSlot.props.streak, 2,
+  "the new medallion receives the existing daily quiz streak, not a separate metric");
+const renderedStreak = HomeStreakBadge({ streak: streakSlot.props.streak });
+assert.match(renderedStreak.props.accessibilityLabel, /καθημερινού quiz/);
+assert.equal(renderedStreak.props.testID, "home-quiz-streak");
+assert.equal(nodes(renderedStreak).find(node => node.props?.testID === "home-streak-count").props.children, 2);
+assert.equal(renderedStreak.props.style.width, 50,
+  "streak circle matches the 50pt level badge");
+assert.equal(renderedStreak.props.style.backgroundColor, "#151928",
+  "streak circle uses the level badge surface");
+assert.equal(renderedStreak.props.style.borderWidth, undefined,
+  "streak badge has no duplicate native border outside its SVG ring");
+assert.equal(nodes(renderedStreak).filter(node => node.type === "circle").length, 2,
+  "streak badge has the same base and accent ring layers as the level badge");
+assert.ok(nodes(renderedStreak).filter(node => node.type === "circle")
+  .every(node => node.props.r === 21 && node.props.strokeWidth === 3.5),
+  "streak ring matches level ring dimensions");
+assert.ok(nodes(renderedStreak).some(node => node.props?.children === "ΣΕΡΙ"),
+  "streak caption is inside the medallion");
+assert.ok(!nodes(renderedStreak).some(node => node.props?.children === "σερί quiz"),
+  "no extra text appears beside the ring");
+assert.equal(nodes(renderedStreak).filter(node => node.type === "path").length, 0,
+  "flame artwork is removed");
+const loadingStreak = HomeStreakBadge({ streak: null });
+assert.match(loadingStreak.props.accessibilityLabel, /Φόρτωση/);
+assert.equal(nodes(loadingStreak).find(node => node.props?.testID === "home-streak-count").props.children, "—");
 assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
 // The counter is the number of submitted answers, not the current index,
 // correct answers, or a streak. It is scoped to today's Athens daily record.
