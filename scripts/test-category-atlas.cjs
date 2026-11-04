@@ -272,6 +272,19 @@ assert.ok(!normals.some(node => node.props?.testID?.startsWith("atlas-rim-") ||
   node.props?.testID?.startsWith("atlas-relief-")),
   "regular non-fitted FantasyMap artwork must not change");
 
+// Independent constellation threads stop at the island edges rather than
+// crossing SVG labels and progress bars.
+const segment = mapModule.getAtlasConnectorSegment(
+  { x: 50, y: 100, rx: 48, ry: 42 },
+  { x: 250, y: 100, rx: 48, ry: 42 },
+);
+assert.equal(segment, "M 106.0 100.0 L 194.0 100.0",
+  "constellation links should finish just outside illustrated destinations");
+assert.equal(mapModule.getAtlasConnectorSegment(
+  { x: 50, y: 50, rx: 45, ry: 40 },
+  { x: 50, y: 50, rx: 45, ry: 40 },
+), "", "coincident points do not create invalid paths");
+
 
 const compactRadii = mapModule.getCompactAtlasRadii;
 assert.deepEqual(
@@ -307,6 +320,16 @@ assert.ok(nodes(frame).filter(node => node.type === "circle"
 assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
   && node.props?.id === "atlas-atmosphere").length, 1,
   "category atlas has a subtle static radial atmosphere");
+assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
+  && node.props?.id === "atlas-nebula").length, 1,
+  "soft nebula stays in SVG geometry without an external texture");
+assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-upper"));
+assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-lower"));
+assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-chart-tick-")).length, 9,
+  "astral chart ticks stay sparse and decorative");
+assert.equal(nodes(frame).filter(node => node.type === "circle"
+  && ["#E4CFA6","#B5CADD"].includes(node.props?.fill)).length, 50,
+  "quiet starfield has deterministic density on all screen sizes");
 assert.ok(nodes(frame).some(node => node.type === "path"
   && node.props?.stroke === "#8CA6B9" && node.props?.strokeOpacity === 0.11),
   "faint map engravings add depth without implying lesson progression");
@@ -337,6 +360,10 @@ const constellationEdges = nodes(frame).filter(node =>
 assert.ok(constellationEdges.length >= five.length - 1, "destinations share a constellation");
 assert.ok(constellationEdges.every(edge => edge.props.d.includes(" L ")),
   "connections are undirected constellations, not a sequential checkpoint route");
+assert.ok(constellationEdges.every(edge => !edge.props.d.startsWith("M 90.0")),
+  "constellation link starts are inset from the island centres");
+assert.equal(nodes(normals).filter(node => node.props?.testID?.startsWith("atlas-chart-orbit-")).length, 0,
+  "non-fitted map keeps its original background");
 showList = true;
 tree = map({ ...props, regions: five, fitViewport: { width: 340, height: 490 } });
 const list = nodes(tree).find(node => node.props?.testID === "knowledge-region-list");
