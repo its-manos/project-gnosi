@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Svg, { Circle } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
 import { useLearningSession, useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { getAthensDateKey } from "../utils/dailyChallenge";
@@ -31,6 +31,14 @@ const badgeGlyphs: Record<string, string> = {
   recall: "◈",
 };
 
+function StreakFlame() {
+  return <Svg width={17} height={19} viewBox="0 0 24 24" fill="none" accessible={false}>
+    <Path d="M12.5 2.5c.6 3.6-1.4 5.4-3.2 7.4-.4-1.6-.4-2.9-.1-4.2C5.4 8.9 4.5 12 5 15c.6 4.2 3.4 6.5 7 6.5s6.6-2.7 7-6.6c.3-3.2-1.3-6.1-4.2-8.8.2 2.5-.4 3.9-1.3 5.1-.2-3.2-.4-5.6-1-8.7Z"
+      stroke="#A9A4FF" strokeWidth={1.6} strokeLinejoin="round" fill="#7068BA" />
+    <Path d="M12 13.1c.4 1.7-2.1 3-2.1 4.6a2.1 2.1 0 0 0 4.2 0c0-1.3-.6-2.5-2.1-4.6Z" fill="#D4CAFF" />
+  </Svg>;
+}
+
 function QuickLink({ title, subtitle, symbol, onPress }: {
   title: string; subtitle: string; symbol: string; onPress: () => void;
 }) {
@@ -40,7 +48,7 @@ function QuickLink({ title, subtitle, symbol, onPress }: {
     <Text style={styles.quickSymbol} accessible={false}>{symbol}</Text>
     <View style={styles.quickCopy}>
       <Text style={styles.quickTitle} numberOfLines={1} adjustsFontSizeToFit>{title}</Text>
-      <Text style={styles.quickSubtitle} numberOfLines={1}>{subtitle}</Text>
+      <Text style={styles.quickSubtitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>{subtitle}</Text>
     </View>
     <Text style={styles.quickArrow} accessible={false}>›</Text>
   </Pressable>;
@@ -111,9 +119,12 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
           <Text style={styles.playerTitle} testID="player-title" numberOfLines={1}
             adjustsFontSizeToFit>{profileReady ? playerTitle(profile.level) : "Ο παίκτης"}</Text>
           <Text style={styles.identity} numberOfLines={1}>{identity}</Text>
+          <Text style={styles.xpTotal}>{profileReady
+            ? profile.totalXP.toLocaleString("el-GR") + " XP συνολικά"
+            : "Φόρτωση XP…"}</Text>
           <View style={styles.xpCaptionRow}>
-            <Text style={styles.xpCaption}>{profileReady ? profile.totalXP.toLocaleString("el-GR") + " XP συνολικά" : "Φόρτωση XP…"}</Text>
-            <Text style={styles.xpCaption}>{profileReady ? profile.earned + " / " + profile.required : "—"}</Text>
+            <Text style={styles.xpCaption}>Προς επίπεδο {profileReady ? profile.level + 1 : "—"}</Text>
+            <Text style={styles.xpCaption}>{profileReady ? profile.earned + " / " + profile.required + " XP" : "—"}</Text>
           </View>
           <View style={styles.xpTrack} accessible accessibilityRole="progressbar"
             accessibilityLabel="Πρόοδος στο επόμενο επίπεδο"
@@ -153,7 +164,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
 
       <MotionView entranceDelay={115} style={styles.metrics} testID="profile-summary">
         <View style={[styles.metric, dense && styles.metricDense]}>
-          <Text style={styles.metricEyebrow}>◇  ΣΕΡΙ QUIZ</Text>
+          <View style={styles.metricLabelRow}><StreakFlame /><Text style={styles.metricEyebrow}>ΣΕΡΙ QUIZ</Text></View>
           <Text style={styles.metricValue}>{daily.ready ? quizStats.currentStreak : "—"}
             <Text style={styles.metricUnit}> ημέρες</Text>
           </Text>
@@ -177,7 +188,8 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
               !badge.unlocked && styles.badgeLocked]}>
             <Text style={[styles.badgeSymbol, !badge.unlocked && styles.badgeSymbolLocked]}
               accessible={false}>{badgeGlyphs[badge.id] ?? "✦"}</Text>
-            <Text style={styles.badgeName} numberOfLines={2}>{badge.title}</Text>
+            <Text style={styles.badgeName} numberOfLines={2} adjustsFontSizeToFit
+              minimumFontScale={0.75}>{badge.title}</Text>
             <Text style={styles.badgeProgress}>{profileReady
               ? badge.unlocked ? "✓" : Math.min(badge.current, badge.target) + "/" + badge.target
               : "—"}</Text>
@@ -188,13 +200,13 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       <MotionView entranceDelay={205} style={styles.actions} testID="profile-links">
         <Text style={styles.sectionTitle}>Ο χώρος σου</Text>
         <View style={[styles.linksGrid, compact && styles.linksGridCompact]}>
-          <QuickLink title="Δραστηριότητα" subtitle="Στατιστικά & ημερήσια quiz"
+          <QuickLink title="Δραστηριότητα" subtitle="Στατιστικά & quiz"
             symbol="◷" onPress={onStats} />
-          <QuickLink title="Λογαριασμός" subtitle="Ασφάλεια & συγχρονισμός"
+          <QuickLink title="Λογαριασμός" subtitle="Ασφάλεια & sync"
             symbol="⚙" onPress={onAccount} />
-          <QuickLink title="Ενδιαφέροντα" subtitle="Προσωπικές προτιμήσεις"
+          <QuickLink title="Ενδιαφέροντα" subtitle="Οι επιλογές σου"
             symbol="✧" onPress={onInterests} />
-          <QuickLink title="Οδηγός" subtitle="Γνώρισε ξανά τη Γνώση"
+          <QuickLink title="Οδηγός" subtitle="Πώς λειτουργεί"
             symbol="⌁" onPress={onGuide} />
         </View>
       </MotionView>
@@ -217,20 +229,21 @@ const styles = StyleSheet.create({
   settingsButton: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center",
     backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
   settingsText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
-  hero: { minHeight: 154, flexDirection: "row", alignItems: "center", gap: 12,
+  hero: { minHeight: 154, flexDirection: "row", alignItems: "center", gap: 10,
     paddingHorizontal: 12, paddingVertical: 15, borderRadius: 22, overflow: "hidden",
     backgroundColor: "#20243C", borderColor: "#555078", borderWidth: 1 },
   heroDense: { minHeight: 124, paddingVertical: 10, gap: 9 },
   heroAccent: { position: "absolute", left: 22, top: -1, width: 88, height: 3,
     backgroundColor: "#B2A3FF", borderRadius: 3 },
-  avatar: { width: 52, height: 52, borderRadius: 17, borderColor: "#62598A", borderWidth: 1,
+  avatar: { width: 46, height: 46, borderRadius: 15, borderColor: "#62598A", borderWidth: 1,
     backgroundColor: "#373455", alignItems: "center", justifyContent: "center" },
   avatarDense: { width: 42, height: 42, borderRadius: 14 },
   avatarGlyph: { color: "#D4C9FF", fontSize: 26 },
-  heroCopy: { flex: 1, minWidth: 0, gap: 6 },
+  heroCopy: { flex: 1, minWidth: 0, gap: 5 },
   playerTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "900" },
   identity: { color: "#C6C6D8", fontSize: 11, lineHeight: 17 },
-  xpCaptionRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 3 },
+  xpTotal: { color: "#D4C8FF", fontSize: 12, lineHeight: 18, fontWeight: "800" },
+  xpCaptionRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 5 },
   xpCaption: { color: "#C8BDFF", fontSize: 10, lineHeight: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },
   xpTrack: { height: 6, borderRadius: 6, backgroundColor: "#3D3D5C", overflow: "hidden" },
   xpFill: { height: "100%", borderRadius: 6, backgroundColor: "#B1A5FF" },
@@ -238,7 +251,7 @@ const styles = StyleSheet.create({
   xpHelpText: { color: "#C6B9FF", fontSize: 10, lineHeight: 16, fontWeight: "800" },
   xpPanel: { padding: 15, borderRadius: 17, borderColor: "#45415F", borderWidth: 1,
     backgroundColor: "#1B2234" },
-  levelRing: { width: 80, height: 80, alignItems: "center", justifyContent: "center" },
+  levelRing: { width: 88, height: 88, alignItems: "center", justifyContent: "center" },
   levelRingDense: { width: 68, height: 68 },
   levelCenter: { position: "absolute", alignItems: "center" },
   levelCaption: { color: "#AAA4D2", fontSize: 9, fontWeight: "900" },
@@ -249,6 +262,7 @@ const styles = StyleSheet.create({
     borderColor: "#3A5360", borderWidth: 1 },
   metricDense: { minHeight: 70, paddingVertical: 8 },
   badgeMetric: { backgroundColor: "#25263B", borderColor: "#53475E" },
+  metricLabelRow: { flexDirection: "row", alignItems: "center", gap: 7 },
   metricEyebrow: { color: "#9DC7D0", fontSize: 10, lineHeight: 16,
     fontWeight: "900", letterSpacing: 0.5 },
   gold: { color: "#DBC495" },
@@ -260,20 +274,20 @@ const styles = StyleSheet.create({
   sectionTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "900" },
   sectionHint: { color: colors.textMuted, fontSize: 10, lineHeight: 15, flexShrink: 1 },
   badgeRow: { flexDirection: "row", gap: 7 },
-  badge: { flex: 1, minWidth: 0, minHeight: 96, paddingHorizontal: 5, paddingVertical: 7,
+  badge: { flex: 1, minWidth: 0, minHeight: 96, paddingHorizontal: 3, paddingVertical: 7,
     alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 14,
     backgroundColor: "#272B43", borderWidth: 1, borderColor: "#595176" },
   badgeDense: { minHeight: 80, paddingVertical: 4 },
   badgeLocked: { backgroundColor: "#1C2535", borderColor: "#384052" },
   badgeSymbol: { color: "#CFC1FF", fontSize: 23, lineHeight: 28 },
   badgeSymbolLocked: { color: "#757C97" },
-  badgeName: { color: colors.textBody, fontSize: 10, lineHeight: 13, fontWeight: "700",
+  badgeName: { color: colors.textBody, fontSize: 9.5, lineHeight: 13, fontWeight: "700",
     textAlign: "center" },
   badgeProgress: { color: "#B9AAFF", fontSize: 10, fontWeight: "900", fontVariant: ["tabular-nums"] },
   actions: { gap: 8 },
   linksGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   linksGridCompact: { gap: 6 },
-  quickLink: { width: "48.5%", flexGrow: 1, minHeight: 58, paddingHorizontal: 9,
+  quickLink: { width: "48.5%", flexGrow: 1, minHeight: 58, paddingHorizontal: 8,
     flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderColor: "#38435C",
     borderRadius: 15, backgroundColor: "#1A2538" },
   quickLinkPressed: { backgroundColor: "#2D304A" },
