@@ -39,20 +39,20 @@ for (const callback of ["onStats", "onAccount", "onInterests", "onGuide"]) {
 assert.match(profile, /scrollEnabled=\{canScroll\}/,
   "Default Profile layout should fit the viewport with a scroll fallback.");
 assert.match(profile, /ProgressGradientBackground/);
-assert.match(profile, /accessibilityState=\\{\\{ expanded: xpExpanded, disabled: !profileReady \\}\\}/,
-  "The existing XP explanation should still be accessible as a disclosure.");
-assert.match(profile, /<XpRules learningXP=\\{profile\\.learningXP\\}/);
-assert.match(read("src/components/KnowledgeProgress.tsx"), /<XpRules learningXP=\\{p\\.learningXP\\}/,
-  "Keep XP rules in one shared component rather than duplicating explanations.");
+assert.ok(profile.includes('accessibilityState={{ expanded: xpExpanded, disabled: !profileReady }}'),
+  "The existing XP explanation should remain accessible.");
+assert.ok(profile.includes('<XpRules learningXP={profile.learningXP}'));
+assert.ok(read("src/components/KnowledgeProgress.tsx").includes('<XpRules learningXP={p.learningXP}'),
+  "Keep XP rules in one shared component.");
 const activity = read("src/screens/PlayerStatsScreen.tsx");
-assert.match(activity, /<LearningActivityPanel todayKey=\\{todayKey\\}/,
+assert.ok(activity.includes('<LearningActivityPanel todayKey={todayKey}'),
   "Player activity history must remain accessible.");
-assert.match(activity, /calculateDailyChallengeProgress\\(history, todayKey\\)/,
+assert.ok(activity.includes('calculateDailyChallengeProgress(history, todayKey)'),
   "Daily quiz history and streaks must use the existing calculator.");
-assert.match(activity, /progress-daily-details/,
-  "Keep the expandable daily challenge history and accuracy.");
-assert.doesNotMatch(activity, /lessonScores|mastery\\.count|completedLessons|totalLessonCount/,
+assert.ok(activity.includes('progress-daily-details'),
+  "Keep expandable daily challenge history and accuracy.");
+assert.doesNotMatch(activity, /lessonScores|mastery\.count|completedLessons|totalLessonCount/,
   "Mastery and lesson completion belong in Progress / Learning Insights.");
-assert.match(routes, /<PlayerStatsScreen onBack=\\{\\(\\) => app\\.setScreen\\("profile"\\)\\} \\/>/,
-  "The Player Statistics route should not require learning-progress props.");
+assert.ok(routes.includes('<PlayerStatsScreen onBack={() => app.setScreen("profile")} />'),
+  "Player Statistics should not require learning-progress props.");
 console.log("Profile fourth-tab and activity ownership contracts passed.");
