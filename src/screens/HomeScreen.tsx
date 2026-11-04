@@ -14,7 +14,8 @@ import {
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
-import { MotionCounter, MotionIcon, MotionPressable, MotionQuizGlow, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import { MotionCounter, MotionHeroAccent, MotionIcon, MotionPressable, MotionQuizGlow, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import HomeAtlasBackground from "../components/HomeAtlasBackground";
 
 type Props = {
   categories: Category[];
@@ -70,6 +71,9 @@ export default function HomeScreen({
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
   const { height } = useWindowDimensions();
+  // Development-only A/B switch for isolating Android native SVG paint from
+  // its four twinkles + ambient glow. Release builds always use the full atlas.
+  const atlasDebugMode = __DEV__ ? process.env.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE : undefined;
   // The available Home viewport excludes the top safe area and bottom tabs.
   // Window height alone made some iPhones use the spacious layout and scroll
   // by a few points after the lesson breadcrumb was added.
@@ -119,7 +123,10 @@ export default function HomeScreen({
   };
 
   return (
-    <ScrollView testID="home-game-dashboard" style={styles.viewport}
+    <View testID="home-atlas-screen" style={styles.screen}>
+      {atlasDebugMode === "off" ? null
+        : <HomeAtlasBackground showAmbientMotion={atlasDebugMode !== "static"} />}
+      <ScrollView testID="home-game-dashboard" style={styles.viewport}
       contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent]}
       scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false}
       overScrollMode="never" showsVerticalScrollIndicator={false}
@@ -178,6 +185,7 @@ export default function HomeScreen({
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
             + (heroLocation ? ". " + heroLocation : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
+        <MotionHeroAccent />
         <View style={styles.heroTop}>
           <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
           <Text style={styles.heroCount}>{heroIsResume
@@ -193,7 +201,9 @@ export default function HomeScreen({
             {hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
           </Text> : null}
         {heroIsResume && inProgressQuestionCount > 0 ?
-          <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]} /></View>
+          <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]}>
+              <View pointerEvents="none" style={styles.trackSheen} />
+            </View></View>
           : null}
         <View style={styles.heroButton}>
           <MotionShimmer />
@@ -210,6 +220,7 @@ export default function HomeScreen({
             : "Καθημερινό quiz, φόρτωση προόδου"}
           onPress={onStartDailyChallenge}>
           <MotionQuizGlow active={daily.ready && !todayCompleted} />
+          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.quizLip]} />
           <View style={styles.quizTop}>
             <Text style={styles.actionIcon}>✦</Text>
             <MotionCounter progressKey={today + "-" + dailyProgress} testID="home-daily-answered" style={styles.quizAnswered}
@@ -221,6 +232,7 @@ export default function HomeScreen({
         <MotionPressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel="Επανάληψη γνώσεων"
           onPress={onKnowledgeReview} disabled={!onKnowledgeReview}>
+          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.reviewLip]} />
           <Text style={[styles.actionIcon, styles.reviewIcon]}>◎</Text>
           <Text style={styles.actionTitle}>Επανάληψη</Text>
           <Text style={styles.actionMeta}>Εξάσκησε τις γνώσεις σου</Text>
@@ -271,11 +283,13 @@ export default function HomeScreen({
           )}
         </View>
       </MotionView>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
   // Fill the available viewport by growing the cards and knowledge-world
   // tiles, not the gaps between sections. Minimum card sizes remain intact;
@@ -307,13 +321,14 @@ const styles = StyleSheet.create({
   streakCount: { color: colors.text, fontSize: 17, fontWeight: "900", lineHeight: 20 },
   streakLabel: { color: colors.textMuted, fontSize: 10, lineHeight: 13 },
   levelBadge: { width: 50, height: 50, alignItems: "center", justifyContent: "center",
-    borderRadius: 25, backgroundColor: colors.surface },
+    borderRadius: 25, backgroundColor: colors.surface, borderWidth: 1,
+    borderColor: "#403A55" },
   levelRing: { position: "absolute", top: 0, left: 0 },
   levelCenter: { alignItems: "center", justifyContent: "center" },
   levelCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 10, fontWeight: "900" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
-  hero: { flexGrow: 2, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#474160",
-    backgroundColor: "#1B2032", gap: 6, justifyContent: "space-between" },
+  hero: { flexGrow: 2, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#5B5070",
+    backgroundColor: "#1B2434", gap: 6, justifyContent: "space-between" },
   heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1, textAlign: "right" },
@@ -323,17 +338,22 @@ const styles = StyleSheet.create({
     fontWeight: "700" },
   track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginTop: 2 },
   trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.accentLight },
+  trackSheen: { position: "absolute", top: 0, left: 0, right: 0, height: 1,
+    backgroundColor: "#F3EDFF", opacity: 0.47 },
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2, overflow: "hidden" },
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
   actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
     padding: 12, justifyContent: "center", gap: 4 },
-  quizCard: { backgroundColor: "#242039", borderColor: "#39344F" },
+  quizCard: { backgroundColor: "#252139", borderColor: "#564A6B" },
+  cardLip: { position: "absolute", top: 1, left: 16, right: 16, height: 1 },
+  quizLip: { backgroundColor: "#D8C5F2", opacity: 0.34 },
+  reviewLip: { backgroundColor: "#9CE4C5", opacity: 0.30 },
   quizTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   quizAnswered: { color: colors.accentLight, fontSize: 24, lineHeight: 27,
     fontWeight: "900", letterSpacing: -0.6, fontVariant: ["tabular-nums"] },
-  reviewCard: { backgroundColor: "#19332E", borderColor: "#30554B" },
+  reviewCard: { backgroundColor: "#1D352F", borderColor: "#426B5E" },
   actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
   reviewIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
@@ -345,8 +365,8 @@ const styles = StyleSheet.create({
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
     alignContent: "stretch", flexGrow: 1, columnGap: 8, rowGap: 8 },
-  category: { width: "22.7%", minHeight: 78, backgroundColor: colors.surface,
-    borderColor: colors.border, borderWidth: 1, borderRadius: 14,
+  category: { width: "22.7%", minHeight: 78, backgroundColor: "#182133",
+    borderColor: colors.border, borderTopColor: "#44475D", borderWidth: 1, borderRadius: 14,
     alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 4 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
@@ -355,7 +375,8 @@ const styles = StyleSheet.create({
   miniGamesRow: { flexDirection: "row", gap: 10, flexGrow: 1 },
   miniGameCard: { flex: 1, minHeight: 62, paddingHorizontal: 10, paddingVertical: 8,
     flexDirection: "row", alignItems: "center", gap: 9, borderRadius: 14,
-    backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+    backgroundColor: colors.surface, borderColor: colors.border, borderTopColor: "#3B3C52",
+    borderWidth: 1 },
   miniGameIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center",
     justifyContent: "center", backgroundColor: colors.accentSurface },
   miniGameSymbol: { color: colors.accentLight, fontSize: 18, lineHeight: 23, fontWeight: "800" },

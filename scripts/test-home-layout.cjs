@@ -7,6 +7,9 @@ const assert = require("node:assert/strict");
 const ts = require("typescript");
 
 const root = path.join(__dirname, "..");
+// Emulate Expo's development-only EXPO_PUBLIC inline substitution in the
+// headless renderer. This lets the contract exercise all three A/B modes.
+const atlasTestEnv = {};
 const jsx = (type, props) => ({ type, props });
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
@@ -56,7 +59,7 @@ const reanimated = {
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
 
-function compile(file, extra = {}, returnModule = false) {
+function compile(file, extra = {}, returnModule = false, globals = {}) {
   const mod = { exports: {} };
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
@@ -80,6 +83,7 @@ function compile(file, extra = {}, returnModule = false) {
   };
   vm.runInNewContext(code, {
     module: mod, exports: mod.exports,
+    __DEV__: true, process: { env: atlasTestEnv }, ...globals,
     require: id => { if (id in imports) return imports[id]; throw Error("Missing stub " + id); },
   });
   return returnModule ? mod.exports : mod.exports.default;
@@ -119,9 +123,11 @@ const worldArtwork = {
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
+  "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
     MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
+    MotionHeroAccent: "HeroAccent",
   },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
@@ -143,6 +149,45 @@ const props = {
 };
 let tree = home(props);
 assert.ok(nodes(tree).some(node => node.props?.testID === "home-game-dashboard"));
+assert.equal(nodes(tree).filter(node => node.type === "HomeAtlasBackground").length, 1,
+  "one fixed atlas sits behind the Home dashboard");
+assert.equal(tree.props.testID, "home-atlas-screen",
+  "Home's atlas owns the viewport, not an individual dashboard card");
+assert.equal(tree.props.children[0].type, "HomeAtlasBackground",
+  "static atlas renders before the scrollable content");
+assert.equal(tree.props.children[1].props.testID, "home-game-dashboard",
+  "the existing dashboard scroll container stays intact");
+assert.equal(tree.props.children[0].props.showAmbientMotion, true,
+  "the default Home presentation retains all ambient effects");
+atlasTestEnv.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE = "static";
+const staticHomeTree = home(props);
+assert.equal(staticHomeTree.props.children[0].type, "HomeAtlasBackground");
+assert.equal(staticHomeTree.props.children[0].props.showAmbientMotion, false,
+  "static diagnostic mode removes only the ambient motion");
+assert.equal(staticHomeTree.props.children[1].props.testID, "home-game-dashboard");
+atlasTestEnv.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE = "off";
+const plainHomeTree = home(props);
+assert.equal(plainHomeTree.props.children[0], null,
+  "off diagnostic mode excludes the entire background");
+assert.equal(plainHomeTree.props.children[1].props.testID, "home-game-dashboard",
+  "dashboard navigation and layout remain mounted in all modes");
+atlasTestEnv.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE = undefined;
+
+const oldHomeEntranceOrder = [
+  [0, "topBar"], [60, "home-primary-action"], [130, "actions"],
+  [200, "home-exploration"], [250, "home-mini-games"],
+];
+const entranceSource = fs.readFileSync(
+  path.join(root, "src/screens/HomeScreen.tsx"), "utf8");
+for (const [delay, section] of oldHomeEntranceOrder) {
+  const expected = section === "topBar" ? `<MotionView entranceDelay={${delay}} style={styles.topBar}`
+    : section === "home-primary-action" ? `<MotionPressable entranceDelay={${delay}} testID="home-primary-action"`
+    : section === "actions" ? `<MotionView entranceDelay={${delay}} style={styles.actions}`
+    : `<MotionView entranceDelay={${delay}} testID="${section}"`;
+  assert.ok(entranceSource.includes(expected),
+    `Home entrance order must preserve the established ${section} delay of ${delay} ms`);
+}
+
 assert.ok(!nodes(tree).some(node => node.type === "FantasyMap" || node.props?.children === "Πού θα ταξιδέψεις;"));
 const press = (id, value = tree) => {
   const target = nodes(value).find(node => node.props?.testID === id);
@@ -165,6 +210,10 @@ const textById = (id, t = tree) => nodes(t).find(node => node.props?.testID === 
 assert.equal(textById("home-hero-location").props.children, "Ιστορία · Αρχαία Ελλάδα",
   "continue card shows real category and subcategory titles");
 assert.match(textById("home-primary-action").props.accessibilityLabel, /Ιστορία · Αρχαία Ελλάδα/);
+assert.equal(nodes(textById("home-primary-action")).filter(node => node.type === "HeroAccent").length, 1,
+  "a single one-shot decorative rim lives within Continue");
+assert.equal(textById("home-primary-action").props.style({ pressed: false })[0].borderColor, "#5B5070",
+  "Continue uses a restrained brighter border without changing footprint");
 assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
   "completed daily quiz does not pulse");
 assert.equal(textById("home-daily-answered").props.children, "7/7",
@@ -320,6 +369,230 @@ for (const game of upcomingGames) {
 assert.ok(nodes(tree).some(node => node.props?.children === "Μίνι παιχνίδια"));
 assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα").length, 2);
 
+// Render the static atlas with a measured portrait viewport. This is a native
+// SVG tree contract, not a screenshot or frame-rate test.
+let atlasSize = { width: 0, height: 0 };
+let atlasReady = false;
+let atlasReducedMotion = false;
+let atlasHookIndex = 0;
+let atlasEffects = [];
+let atlasTimerCallback = null;
+let atlasTimerDelay = null;
+let atlasTimerCanceled = false;
+const atlas = compile("src/components/HomeAtlasBackground.tsx", {
+  react: {
+    memo: component => component,
+    useEffect: effect => { atlasEffects.push(effect); },
+    useState: initial => {
+      const index = atlasHookIndex++;
+      const current = index === 0 ? atlasSize : atlasReady;
+      return [current ?? initial, next => {
+        const updated = typeof next === "function" ? next(index === 0 ? atlasSize : atlasReady) : next;
+        if (index === 0) atlasSize = updated;
+        else atlasReady = updated;
+      }];
+    },
+  },
+  "react-native-reanimated": { useReducedMotion: () => atlasReducedMotion },
+  "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
+  "./HomeAtlasMotion": {
+    HomeAtlasAmbientGlow: "HomeAtlasAmbientGlow",
+    HomeAtlasReveal: "HomeAtlasReveal",
+    HomeAtlasTwinkles: "HomeAtlasTwinkles",
+  },
+}, false, {
+  setTimeout: (fn, delay) => {
+    atlasTimerCallback = fn;
+    atlasTimerDelay = delay;
+    return 1;
+  },
+  clearTimeout: id => {
+    if (id === 1) atlasTimerCanceled = true;
+  },
+});
+const renderAtlas = (props) => {
+  atlasHookIndex = 0;
+  atlasEffects = [];
+  return atlas(props);
+};
+let atlasTree = renderAtlas();
+assert.equal(nodes(atlasTree).filter(node => node.type === "svg").length, 0,
+  "initial Home mount has no native atlas SVG work");
+
+assert.equal(atlasTree.props.testID, "home-atlas-background");
+assert.equal(atlasTree.props.pointerEvents, "none", "atlas cannot intercept card taps");
+assert.equal(atlasTree.props.accessible, false, "decorative atlas stays out of the accessibility tree");
+atlasTree.props.onLayout({ nativeEvent: { layout: { width: 390, height: 844 } } });
+atlasTree = renderAtlas();
+assert.equal(nodes(atlasTree).filter(node => node.type === "svg").length, 0,
+  "even with viewport measurements, SVG must wait until card entrances finish");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "ambient effects must wait alongside the static atlas");
+const atlasCleanup = atlasEffects[0]();
+assert.equal(atlasTimerDelay, 800,
+  "native atlas mounting begins only after the last 250 ms + 320 ms entrance");
+assert.equal(typeof atlasTimerCallback, "function",
+  "a single deferred mount callback is registered");
+atlasTimerCallback();
+atlasTree = renderAtlas();
+let atlasSvg = nodes(atlasTree).find(node => node.type === "svg");
+assert.ok(atlasSvg, "atlas mounts after the delayed callback");
+const atlasReveal = nodes(atlasTree).find(node => node.type === "HomeAtlasReveal");
+assert.ok(atlasReveal, "a dedicated one-shot reveal wraps the static chart");
+assert.equal(atlasReveal.props.children.type, "svg",
+  "only the fixed SVG, not the interactive Home cards, is faded in");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasReveal").length, 1,
+  "exactly one Home background reveal mounts");
+
+assert.equal(atlasSvg.props.width, 390);
+assert.equal(atlasSvg.props.height, 844);
+assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (844 * 420 / 390),
+  "aspect-ratio matched atlas does not crop or stretch");
+assert.equal(atlasSvg.props.pointerEvents, "none");
+assert.ok(nodes(atlasSvg).filter(node => node.type === "radialGradient").length >= 4,
+  "celestial atmosphere has layered, static gradient depth");
+assert.ok(nodes(atlasSvg).some(node => node.type === "radialGradient"
+  && node.props.id === "home-atlas-lantern"),
+  "a restrained static warm halo balances the cool Midnight Atlas light");
+assert.ok(nodes(atlasSvg).some(node => node.type === "g"
+  && node.props.strokeDasharray === "3 12" && node.props.opacity === 0.16),
+  "fine survey arcs remain static and secondary to the dashboard");
+assert.ok(nodes(atlasSvg).filter(node => node.type === "path").length >= 45,
+  "atlas includes coastline relief, bearings, and engraved compass details");
+assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 27,
+  "atlas contains a deterministic star chart and instrument rings");
+assert.ok(!nodes(atlasSvg).some(node => node.type === "image"),
+  "Home background contains no stretched bitmap or network image");
+assert.equal(nodes(atlasSvg).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "the chart SVG never contains animated gradient or path props");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 1,
+  "only one small compositor-friendly atmosphere overlay is animated");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasTwinkles").length, 1,
+  "star twinkles are isolated from the static SVG");
+const motionlessAtlas = renderAtlas({ showAmbientMotion: false });
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "svg").length, 1,
+  "static diagnostic mode retains the full cartography");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "static diagnostic mode mounts no ambient glow");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasTwinkles").length, 0,
+  "static diagnostic mode mounts no twinkle views");
+assert.ok(nodes(atlasSvg).some(node => node.type === "path"
+  && node.props.strokeDasharray === "2 18" && node.props.strokeOpacity === 0.13),
+  "the chart bearing is present but no longer animates its dash props");
+assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 31,
+  "the richer static chart keeps engraved navigation marks");
+atlasTree.props.onLayout({ nativeEvent: { layout: { width: 844, height: 390 } } });
+atlasSvg = nodes(renderAtlas()).find(node => node.type === "svg");
+assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (390 * 420 / 844),
+  "landscape rotation recomputes geometry without retaining portrait crop");
+assert.equal(atlasTimerCanceled, false, "the pending timer remains active until cleanup");
+atlasCleanup();
+assert.equal(atlasTimerCanceled, true,
+  "the delayed mount timer is canceled on unmount");
+atlasReducedMotion = true;
+atlasReady = false;
+atlasTimerCallback = null;
+renderAtlas();
+atlasEffects[0]();
+assert.equal(atlasReady, true,
+  "reduced-motion settings bypass the deferred atlas mount");
+assert.equal(atlasTimerCallback, null,
+  "reduced motion never starts the delayed mounting timer");
+assert.ok(nodes(renderAtlas()).some(node => node.type === "svg"),
+  "reduced motion renders the static atlas normally");
+const staticAtlasSource = fs.readFileSync(
+  path.join(root, "src/components/HomeAtlasBackground.tsx"), "utf8");
+assert.ok(!/withRepeat\(|withTiming\(|useSharedValue\(|setInterval\(/.test(staticAtlasSource),
+  "all time-based motion stays isolated outside the static SVG geometry");
+assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\)/,
+  "dashboard updates should not redraw the atlas");
+assert.match(staticAtlasSource, /absoluteFill/,
+  "atlas stays fixed outside the scrollable dashboard");
+
+// Verify reduced motion without a simulator: the new effects animate only
+// native view opacity and do not animate any SVG property on each frame.
+let homeAmbientReduced = true;
+let homeAmbientLoops = 0;
+let revealDelayMs = null;
+let revealDurationMs = null;
+const atlasMotion = compile("src/components/HomeAtlasMotion.tsx", {
+  react: { useEffect: fn => fn() },
+  "react-native-reanimated": {
+    __esModule: true,
+    default: { View: "AnimatedView" },
+    Easing: { sin: x => x, cubic: x => x, inOut: fn => fn, out: fn => fn },
+    useReducedMotion: () => homeAmbientReduced,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: fn => fn(),
+    cancelAnimation: () => {},
+    withDelay: (delay, result) => {
+      if (delay === 100) revealDelayMs = delay;
+      return result;
+    },
+    withSequence: (...values) => values.at(-1),
+    withRepeat: result => { homeAmbientLoops++; return result; },
+    withTiming: (value, config) => {
+      if (value === 1 && config?.duration === 600) revealDurationMs = config.duration;
+      return value;
+    },
+  },
+  "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
+}, true);
+const revealedStatic = atlasMotion.HomeAtlasReveal({ children: "static-svg" });
+assert.equal(revealedStatic.type, "AnimatedView");
+assert.equal(revealedStatic.props.testID, "home-atlas-reveal");
+assert.equal(revealedStatic.props.pointerEvents, "none");
+assert.equal(revealedStatic.props.accessible, false);
+assert.equal(revealedStatic.props.children, "static-svg",
+  "one-shot reveal does not redraw the chart as animated SVG");
+assert.equal(revealedStatic.props.style[1].opacity, 1,
+  "reduced-motion users see the SVG without a fade");
+assert.equal(revealDelayMs, null, "reduced motion does not schedule the fade");
+homeAmbientReduced = false;
+atlasMotion.HomeAtlasReveal({ children: "static-svg" });
+assert.equal(revealDelayMs, 100, "fade allows a brief native paint buffer");
+assert.equal(revealDurationMs, 600, "the chart gently fades in once after mounting");
+homeAmbientReduced = true;
+const glow = atlasMotion.HomeAtlasAmbientGlow({ width: 390, height: 844 });
+assert.equal(glow.type, "AnimatedView");
+assert.equal(glow.props.testID, "home-atlas-motion-glow");
+assert.equal(glow.props.pointerEvents, "none");
+assert.equal(glow.props.accessible, false);
+assert.equal(glow.props.style[2].opacity, 0.065);
+assert.equal(nodes(glow).filter(node => node.type === "ellipse").length, 1,
+  "the glow's geometry stays static inside a separately composited view");
+const skyTwinkles = atlasMotion.HomeAtlasTwinkles({ width: 390, height: 844 });
+assert.equal(skyTwinkles.props.pointerEvents, "none");
+const starNodes = [skyTwinkles.props.children].flat(Infinity);
+assert.equal(starNodes.length, 4, "at most four small stars twinkle");
+for (const node of starNodes) {
+  const dot = node.type(node.props);
+  assert.equal(dot.type, "AnimatedView");
+  assert.equal(dot.props.pointerEvents, "none");
+  assert.equal(dot.props.accessible, false);
+  assert.equal(dot.props.style[2].opacity, 0.17);
+  assert.equal(dot.props.style[0].width, 3,
+    "stars are tiny composited views, not animated SVG nodes");
+}
+assert.equal(homeAmbientLoops, 0, "reduce motion prevents every infinite loop");
+homeAmbientReduced = false;
+atlasMotion.HomeAtlasAmbientGlow({ width: 390, height: 844 });
+for (const node of starNodes) node.type(node.props);
+assert.equal(homeAmbientLoops, 5,
+  "only one view-based glow and four tiny stars loop during normal motion");
+const nativeMotionSource = fs.readFileSync(
+  path.join(root, "src/components/HomeAtlasMotion.tsx"), "utf8");
+assert.ok(!/useAnimatedProps|Animated\.createAnimatedComponent|strokeDashoffset/.test(nativeMotionSource),
+  "no background SVG property is animated on the UI thread");
+assert.match(nativeMotionSource, /useReducedMotion/,
+  "ambient animations always respect reduced motion");
+const homeMotionSourceCheck = fs.readFileSync(
+  path.join(root, "src/components/HomeMotion.tsx"), "utf8");
+assert.match(homeMotionSourceCheck, /export function MotionShimmer/,
+  "the original Continue button shimmer remains installed");
+assert.match(homeMotionSourceCheck, /withTiming\(width \+ 42/,
+  "the Continue shimmer's original animation has not been changed");
+
 // Responsive density follows the available Home height after safe areas and tabs.
 homeScrollState = [0, 0, 0];
 const renderMeasuredHome = () => { homeScrollHookIndex = 0; return home(props); };
@@ -451,6 +724,13 @@ assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
 // The Daily Quiz highlight stays inside its original 16pt card,
 // preserves touch handling, respects reduced motion and does not repeat.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
+const heroRimSource = homeMotionSource.slice(
+  homeMotionSource.indexOf("export function MotionHeroAccent"),
+  homeMotionSource.indexOf("export function MotionQuizGlow"));
+assert.match(heroRimSource, /useReducedMotion/, "Continue accent respects reduced-motion settings");
+assert.match(heroRimSource, /pointerEvents="none"/, "Continue accent never takes taps");
+assert.doesNotMatch(heroRimSource, /withRepeat\(/,
+  "Continue accent is a one-shot highlight rather than another ambient loop");
 const dailyHighlightSource = homeMotionSource.slice(homeMotionSource.indexOf("export function MotionQuizGlow"));
 assert.match(dailyHighlightSource, /\.\.\.StyleSheet\.absoluteFill/,
   "highlight follows the card perimeter");
