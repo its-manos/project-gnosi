@@ -64,13 +64,14 @@ const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
   Defs: "defs", G: "g", LinearGradient: "linearGradient",
   Rect: "rect", Stop: "stop", Text: "text" };
 let showList = false;
-const map = compile("src/components/FantasyMap.tsx", {
+const mapModule = compile("src/components/FantasyMap.tsx", {
   react: { useMemo: fn => fn(), useState: initial =>
     typeof initial === "number" ? [initial, () => {}]
       : [showList, value => { showList = value; }] },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native, "react-native-svg": svg,
-}).default;
+});
+const map = mapModule.default;
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const regionData = [
@@ -214,6 +215,20 @@ frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
 assert.equal(frame.props.style[2].aspectRatio, 360 / 304,
   "keep a natural map height when no viewport minimum is supplied");
 
+// Compact layouts keep islands balanced across the screen even when a map
+// viewport is tall. No destination is placed on a sequential lesson path.
+const compact = mapModule.getCompactAtlasPoint;
+assert.equal(compact(0, 3).x, 0.30);
+assert.equal(compact(1, 3).y, 0.46);
+assert.equal(compact(2, 3).y, 0.73);
+assert.ok(compact(2, 3).y - compact(0, 3).y < 0.5,
+  "three destinations no longer leave the middle as an empty corridor");
+assert.ok(compact(0, 2).y < compact(1, 2).y,
+  "two destinations are arranged as a compact diagonal");
+assert.ok(compact(0, 4).x < compact(1, 4).x,
+  "four destinations retain independent side-by-side positions");
+assert.equal(compact(0, 5), null, "larger constellations use balanced rows");
+
 // The Category Atlas fits its islands into the visible map rather than
 // introducing sequential stops or requiring a vertical treasure hunt.
 tree = map({ ...props, regions: five, fitViewport: { width: 340, height: 490 } });
@@ -221,6 +236,12 @@ frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
 const fittedCanvas = Math.max(180, Math.round((490 - 50 - 11) * 360 / 340));
 assert.equal(frame.props.style[2].aspectRatio, 360 / fittedCanvas);
 assert.equal(frame.props.style[3].borderWidth, 0, "integrated atlas has no black inset frame");
+assert.equal(nodes(frame).filter(node => node.type === "rect"
+  && node.props?.stroke === "#89AAA6").length, 0,
+  "fitted map is not drawn inside another rounded border");
+assert.ok(nodes(frame).filter(node => node.type === "circle"
+  && (node.props?.fill === "#E4CFA6" || node.props?.fill === "#B5CADD")).length >= 30,
+  "fitted atlas gets a small static starfield");
 assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 5);
 const constellationEdges = nodes(frame).filter(node =>
   node.type === "path" && node.props?.strokeDasharray === "2 5");
@@ -240,6 +261,8 @@ assert.match(screen, /<FantasyMap/);
 assert.match(screen, /getAtlasRegionProgress/);
 assert.match(screen, /getAtlasCategoryProgress/);
 assert.match(screen, /testID="category-atlas-continue"/);
+assert.match(screen, /Η ΠΡΟΟΔΟΣ ΣΟΥ/,
+  "overall progress heading is explicit rather than repeating category title");
 assert.match(screen, /testID="category-atlas-map-viewport"/);
 assert.match(screen, /fitViewport=/, "map respects actual viewport rather than enforcing a tall path");
 assert.match(screen, /chooseAtlasFeaturedRegion/, "shortcut chooses an explored area independently");
