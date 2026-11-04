@@ -28,7 +28,7 @@ const stars: ReadonlyArray<readonly [number, number, number, number]> = [
   [379, .862, .95, .4], [58, .91, .85, .37], [222, .954, .7, .23],
 ];
 
-function HomeAtlasBackground() {
+function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?: boolean } = {}) {
   const [viewport, setViewport] = useState<Size>({ width: 0, height: 0 });
   // Use matching aspect ratios in physical pixels and SVG coordinates.
   // Unlike 'slice' or a background image, this never crops or distorts.
@@ -239,7 +239,7 @@ function HomeAtlasBackground() {
         {/* Edge falloff keeps text and cards high-contrast. */}
         <Rect width={420} height={h} fill="url(#home-atlas-vignette)" />
       </Svg> : null}
-      {h > 0 ? <>
+      {h > 0 && showAmbientMotion ? <>
         <HomeAtlasAmbientGlow width={viewport.width} height={viewport.height} />
         <HomeAtlasTwinkles width={viewport.width} height={viewport.height} />
       </> : null}

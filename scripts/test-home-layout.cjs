@@ -7,6 +7,9 @@ const assert = require("node:assert/strict");
 const ts = require("typescript");
 
 const root = path.join(__dirname, "..");
+// Emulate Expo's development-only EXPO_PUBLIC inline substitution in the
+// headless renderer. This lets the contract exercise all three A/B modes.
+const atlasTestEnv = {};
 const jsx = (type, props) => ({ type, props });
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
@@ -79,6 +82,7 @@ function compile(file, extra = {}, returnModule = false) {
   };
   vm.runInNewContext(code, {
     module: mod, exports: mod.exports,
+    __DEV__: true, process: { env: atlasTestEnv },
     require: id => { if (id in imports) return imports[id]; throw Error("Missing stub " + id); },
   });
   return returnModule ? mod.exports : mod.exports.default;
@@ -152,6 +156,22 @@ assert.equal(tree.props.children[0].type, "HomeAtlasBackground",
   "static atlas renders before the scrollable content");
 assert.equal(tree.props.children[1].props.testID, "home-game-dashboard",
   "the existing dashboard scroll container stays intact");
+assert.equal(tree.props.children[0].props.showAmbientMotion, true,
+  "the default Home presentation retains all ambient effects");
+atlasTestEnv.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE = "static";
+const staticHomeTree = home(props);
+assert.equal(staticHomeTree.props.children[0].type, "HomeAtlasBackground");
+assert.equal(staticHomeTree.props.children[0].props.showAmbientMotion, false,
+  "static diagnostic mode removes only the ambient motion");
+assert.equal(staticHomeTree.props.children[1].props.testID, "home-game-dashboard");
+atlasTestEnv.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE = "off";
+const plainHomeTree = home(props);
+assert.equal(plainHomeTree.props.children[0], null,
+  "off diagnostic mode excludes the entire background");
+assert.equal(plainHomeTree.props.children[1].props.testID, "home-game-dashboard",
+  "dashboard navigation and layout remain mounted in all modes");
+atlasTestEnv.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE = undefined;
+
 const oldHomeEntranceOrder = [
   [0, "topBar"], [60, "home-primary-action"], [130, "actions"],
   [200, "home-exploration"], [250, "home-mini-games"],
@@ -397,6 +417,13 @@ assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow
   "only one small compositor-friendly atmosphere overlay is animated");
 assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasTwinkles").length, 1,
   "star twinkles are isolated from the static SVG");
+const motionlessAtlas = atlas({ showAmbientMotion: false });
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "svg").length, 1,
+  "static diagnostic mode retains the full cartography");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "static diagnostic mode mounts no ambient glow");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasTwinkles").length, 0,
+  "static diagnostic mode mounts no twinkle views");
 assert.ok(nodes(atlasSvg).some(node => node.type === "path"
   && node.props.strokeDasharray === "2 18" && node.props.strokeOpacity === 0.13),
   "the chart bearing is present but no longer animates its dash props");

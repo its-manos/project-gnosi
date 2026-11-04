@@ -71,6 +71,9 @@ export default function HomeScreen({
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
   const { height } = useWindowDimensions();
+  // Development-only A/B switch for isolating Android native SVG paint from
+  // its four twinkles + ambient glow. Release builds always use the full atlas.
+  const atlasDebugMode = __DEV__ ? process.env.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE : undefined;
   // The available Home viewport excludes the top safe area and bottom tabs.
   // Window height alone made some iPhones use the spacious layout and scroll
   // by a few points after the lesson breadcrumb was added.
@@ -121,7 +124,8 @@ export default function HomeScreen({
 
   return (
     <View testID="home-atlas-screen" style={styles.screen}>
-      <HomeAtlasBackground />
+      {atlasDebugMode === "off" ? null
+        : <HomeAtlasBackground showAmbientMotion={atlasDebugMode !== "static"} />}
       <ScrollView testID="home-game-dashboard" style={styles.viewport}
       contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent]}
       scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false}
