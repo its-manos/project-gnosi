@@ -6,6 +6,9 @@ import type { ScrollViewInstance } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { colors } from "../theme";
+import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
+import { AdventureActiveHalo, AdventureProgressFill } from "../components/AdventureMotion";
+import { MotionPressable, MotionView } from "../components/HomeMotion";
 import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked } from "../utils/devLessonAccess";
 
@@ -148,7 +151,7 @@ export default function SubcategoryScreen({
 
   return (
     <View testID="subcategory-adventure-path" style={styles.screen}>
-      <View testID="adventure-category-header" style={styles.navigationHeader}>
+      <MotionView entranceDelay={0} testID="adventure-category-header" style={styles.navigationHeader}>
         <Pressable testID="adventure-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
           hitSlop={8}>
@@ -159,11 +162,11 @@ export default function SubcategoryScreen({
           {category.title.toLocaleUpperCase("el-GR")}
         </Text>
         <View style={styles.headerMark} accessible={false}><Text style={styles.sparkle}>✦</Text></View>
-      </View>
+      </MotionView>
 
       {path.length > 0 ?
-        <Pressable testID="adventure-continue"
-          style={({ pressed }) => [styles.continueCard, pressed && progressLoaded && !!nextLesson && styles.pressed]}
+        <MotionPressable entranceDelay={70} testID="adventure-continue"
+          style={styles.continueCard}
           onPress={() => { if (progressLoaded && nextLesson) onOpenLesson(nextLesson.id); }}
           disabled={!progressLoaded || !nextLesson} accessibilityRole="button"
           accessibilityState={{ disabled: !progressLoaded || !nextLesson }}
@@ -194,11 +197,9 @@ export default function SubcategoryScreen({
             accessible accessibilityRole="progressbar" accessibilityLabel="Πρόοδος διαδρομής"
             accessibilityValue={{ min: 0, max: Math.max(1, path.length),
               now: progressLoaded ? completed : 0 }}>
-            <View style={[styles.progressFill, {
-              width: (progressLoaded ? progressPercent : 0) + "%",
-            }]} />
+            <AdventureProgressFill percent={progressLoaded ? progressPercent : 0} />
           </View>
-        </Pressable> : null}
+        </MotionPressable> : null}
 
       {isTesting && path.length > 1 ?
         <Text style={styles.devHint}>Δοκιμή: όλοι οι σταθμοί ξεκλείδωτοι.</Text> : null}
@@ -222,6 +223,7 @@ export default function SubcategoryScreen({
             }}
             onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAnimation(scrollPosition); }}>
             <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
+          <AdventureAtlasBackground width={mapWidth} height={mapHeight} />
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
             {/* Faint engraved contours and stars suggest an old atlas without a
                 raster image that could crop or overflow across devices. */}
@@ -260,8 +262,8 @@ export default function SubcategoryScreen({
                 left: point.x - NODE_WIDTH / 2, top: point.y - 36,
               }]}>
                 {chapter ? <Text style={styles.chapterBadge}>{chapter}</Text> : null}
-                <Pressable testID={"adventure-node-" + lesson.id}
-                  style={({ pressed }) => [styles.nodePressable, pressed && !disabled && styles.pressed]}
+                <MotionPressable pressScale={0.96} testID={"adventure-node-" + lesson.id}
+                  style={styles.nodePressable}
                   onPress={() => onOpenLesson(lesson.id)} disabled={disabled}
                   accessibilityRole="button" accessibilityState={{ disabled }}
                   accessibilityLabel={lesson.title + (done ? ", ολοκληρωμένο" : started ? ", σε εξέλιξη"
@@ -269,7 +271,7 @@ export default function SubcategoryScreen({
                       (access.prerequisite?.title ?? "το προηγούμενο μάθημα")
                       : ", διαθέσιμο")}>
                   <View style={styles.nodeOuter}>
-                    {active ? <View style={styles.activeHalo} /> : null}
+                    {active ? <AdventureActiveHalo /> : null}
                     <View style={[styles.node, done && styles.nodeDone, active && styles.nodeActive,
                       disabled && styles.nodeLocked]}>
                       {done ? <Text style={styles.nodeCheck}>✓</Text>
@@ -284,7 +286,7 @@ export default function SubcategoryScreen({
                   <Text style={[styles.nodeTitle, disabled && styles.nodeTitleLocked,
                     active && styles.nodeTitleActive]} numberOfLines={2}>{lesson.title}</Text>
                   {active ? <Text style={styles.nodeStatus}>{started ? "ΣΕ ΕΞΕΛΙΞΗ" : "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ"}</Text> : null}
-                </Pressable>
+                </MotionPressable>
               </View>
             );
           })}
@@ -344,7 +346,6 @@ const styles = StyleSheet.create({
     color: "#1C1B32", fontSize: 30, lineHeight: 36, fontWeight: "600", marginTop: -3,
   },
   progressTrack: { height: 7, borderRadius: 5, backgroundColor: "#323047", overflow: "hidden" },
-  progressFill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 5 },
   map: { alignSelf: "center", position: "relative", marginTop: 2 },
   pathSvg: { position: "absolute", top: 0, left: 0 },
   stopPosition: { position: "absolute", width: NODE_WIDTH, alignItems: "center" },
@@ -356,11 +357,6 @@ const styles = StyleSheet.create({
   },
   nodePressable: { width: NODE_WIDTH, alignItems: "center", minHeight: 120 },
   nodeOuter: { width: 74, height: 74, alignItems: "center", justifyContent: "center" },
-  activeHalo: {
-    position: "absolute", width: 74, height: 74, borderRadius: 37,
-    borderColor: "#8C7CDE", borderWidth: 1, backgroundColor: "#25213E",
-    transform: [{ scale: 1.15 }],
-  },
   node: {
     width: 69, height: 69, borderRadius: 35, borderWidth: 3,
     backgroundColor: "#2B2C45", borderColor: "#6C668A",
@@ -383,5 +379,4 @@ const styles = StyleSheet.create({
   empty: { padding: 20, backgroundColor: colors.surface, borderRadius: 16, gap: 10 },
   emptyTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
   devHint: { color: "#E4C486", fontSize: 11, lineHeight: 17 },
-  pressed: { opacity: 0.76 },
 });

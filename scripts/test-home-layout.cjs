@@ -507,6 +507,9 @@ const access = (lesson, catalogue, completed, inProgress) => {
 const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
+  "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "../components/AdventureMotion": { AdventureProgressFill: "View", AdventureActiveHalo: "View" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
 }, true);
 const adventure = adventureModule.default;
 // Automatic focus and "Η ΘΕΣΗ ΜΟΥ" now use the same checkpoint offset.
@@ -546,6 +549,10 @@ assert.ok(!nodes(tree).some(node => node.props?.children === "Ιστορικό �
 const compactCard = nodes(tree).find(node => node.props?.testID === "adventure-continue");
 const progressInCard = nodes(compactCard).find(node => node.props?.testID === "adventure-progress");
 assert.ok(progressInCard, "the only progress track is integrated into the Continue card");
+assert.equal(compactCard.props.entranceDelay, 70, "Continue card uses the Home motion entrance");
+assert.equal(categoryHeader.props.entranceDelay, 0, "fixed header uses the Home motion entrance");
+const progressFill = nodes(progressInCard).find(node => node.props?.testID === "adventure-progress-fill");
+assert.ok(progressFill, "progress fill is animated without changing the accessible track");
 const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
 const nestedScroll = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-map-scroll");
 assert.ok(nestedScroll, "the map has its own scroll container");
@@ -587,6 +594,14 @@ const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.s
 const width = mapFrame.props.style[1].width;
 assert.equal(stops.length, 30);
 assert.equal(stopPositions.length, 30);
+const atlas = nodes(mapFrame).find(node => node.type === "AtlasBackground");
+assert.ok(atlas, "bounded uniform atlas is behind the route and nodes");
+assert.equal(atlas.props.width, mapFrame.props.style[1].width);
+assert.equal(atlas.props.height, mapFrame.props.style[1].height);
+assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 1,
+  "single atlas background, not one per checkpoint");
+assert.ok(nodes(mapFrame).some(node => node.props?.pressScale === 0.96),
+  "lesson checkpoint press feedback uses the existing MotionPressable");
 assert.ok(stopPositions.every(node => node.props.style[1].left >= 0 &&
   node.props.style[1].left + 148 <= width), "all stop labels stay inside the map width");
 assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#2E9A7E"),
@@ -594,6 +609,8 @@ assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.strok
 assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#A89BFF"),
   "the next leg is distinctly highlighted");
 const nineteenProgress = nodes(tree).find(node => node.props?.testID === "adventure-progress");
+assert.equal(nodes(nineteenProgress).find(node => node.props?.testID === "adventure-progress-fill").props.percent, 63,
+  "animated fill receives the actual lesson completion percentage");
 assert.equal(nineteenProgress.props.accessibilityValue.now, 19);
 assert.equal(nineteenProgress.props.accessibilityValue.max, 30);
 assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-continue"),
@@ -636,6 +653,9 @@ const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
   react: motionReact,
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
+  "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "../components/AdventureMotion": { AdventureProgressFill: "View", AdventureActiveHalo: "View" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
 });
 const renderMotion = extra => {
   motionState.stateIndex = 0;
@@ -673,4 +693,12 @@ renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "re-rendering cannot restart the entry animation");
 
+const atlasSource = fs.readFileSync(path.join(root, "src/components/AdventureAtlasBackground.tsx"), "utf8");
+const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/AdventureMotion.tsx"), "utf8");
+assert.match(atlasSource, /useReducedMotion/, "atlas respects reduce motion");
+assert.match(atlasSource, /pointerEvents="none"/, "atlas cannot intercept lesson taps");
+assert.match(atlasSource, /withRepeat\(/, "atlas has low-frequency ambient motion");
+assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
+assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
+assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
