@@ -39,6 +39,7 @@ import DailyChallengeScreen from "../screens/DailyChallengeScreen";
 import DailyChallengePreferencesScreen from "../screens/DailyChallengePreferencesScreen";
 import SyncStatus from "../components/SyncStatus";
 import ProgressScreen from "../screens/ProgressScreen";
+import LearningInsightsScreen, { type LearningInsightsView } from "../screens/LearningInsightsScreen";
 
 export default function AppNavigator() {
   const app = useLearningApp();
@@ -189,6 +190,7 @@ export default function AppNavigator() {
         : app.screen === "profile" ? profileOrigin
         : app.screen === "player-stats" ? "profile"
         : app.screen === "knowledge-review" ? knowledgeOrigin
+        : app.screen === "learning-insights" ? "progress"
         : app.screen === "weekly-review" ? "progress"
         : app.screen === "lesson" || app.screen === "results" ? app.lessonBackScreen
         : app.screen === "quiz" ? "lesson"
@@ -200,7 +202,7 @@ export default function AppNavigator() {
   });
 
   const analyticsScreen: AnalyticsScreen = welcome.visible ? "welcome"
-    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" ? "progress" : app.screen;
+    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" || app.screen === "learning-insights" ? "progress" : app.screen;
   const answeredForAnalytics = Object.keys(app.checkpointAnswers).length;
   const analyticsLessonId = activeLesson?.id;
   useEffect(() => {
@@ -297,16 +299,29 @@ export default function AppNavigator() {
     case "progress":
       screenContent = (
         <ProgressScreen
-          initialView={progressView} onViewChange={setProgressView}
+          onOpenInsights={(view: LearningInsightsView) => { setProgressView(view); app.setScreen("learning-insights"); }}
           onKnowledgeReview={() => openKnowledgeReview("progress")}
           onOpenProfile={() => openProfile("progress")}
-          onWeeklyReview={() => openKnowledgeReview("progress")}
           onHome={() => navigateTo("home")}
           completedLessons={completedLessons}
           inProgressLesson={inProgressLesson}
           inProgressAnsweredCount={app.inProgressAnsweredCount}
           inProgressQuestionCount={app.inProgressQuestionCount}
           inProgressLessonCount={app.inProgressLessonCount}
+          totalLessonCount={lessons.length}
+          lessonProgressLoaded={app.progressLoaded}
+          onOpenLesson={app.openLesson}
+        />
+      );
+      break;
+
+    case "learning-insights":
+      screenContent = (
+        <LearningInsightsScreen
+          initialView={progressView} onViewChange={setProgressView}
+          onBack={() => app.setScreen("progress")}
+          onKnowledgeReview={() => openKnowledgeReview("progress")}
+          completedLessons={completedLessons}
           totalLessonCount={lessons.length}
           lessonProgressLoaded={app.progressLoaded}
           onOpenLesson={app.openLesson}

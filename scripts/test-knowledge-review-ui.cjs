@@ -24,7 +24,9 @@ const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof i
  const saved=store.getSnapshot().knowledgeSession,record=knowledgeById.get(saved.questionIds[0]);record.question.version='changed-for-test';tree=render();assert.ok(text(tree).includes('ενημερώθηκαν οι ερωτήσεις'));assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,0,'changed scored content is never silently regraded');record.question.version=saved.questionVersions[0];
  today='2099-12-31';tree=render();assert.ok(text(tree).includes('Άλλαξε η ημέρα'));today=getAthensDateKey();
  slots=[];cursor=0;
- const Mastery=load('src/components/KnowledgeMastery.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,'../hooks/useKnowledgeModel':{useKnowledgeModel:modelHook},'./ActionButton':{__esModule:true,default:'ActionButton'}}).default;
+ const Mastery=load('src/components/KnowledgeMastery.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,'../hooks/useKnowledgeModel':{useKnowledgeModel:modelHook},'./ActionButton':{__esModule:true,default:'ActionButton'},
+  './HomeMotion':{MotionPressable:'MotionPressable'},
+  './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}}).default;
  tree=Mastery({onOpen:()=>backs++});assert.ok(text(tree).includes('Δεν μετρούν άρθρα'));assert.ok(nodes(tree).some(n=>n.props.accessibilityRole==='progressbar'));nodes(tree).find(n=>n.type==='ActionButton').props.onPress();assert.equal(backs,2);
  nodes(tree).find(n=>n.type==='Pressable').props.onPress();cursor=0;tree=Mastery({onOpen(){}});assert.ok(text(tree).includes('Μαθαίνεται'));
  await store.flushLocal();store.stop();console.log('Knowledge UI passed: fresh profile, due/practice launch, locked answers, explanation/source, honest baseline feedback, saved results/XP/next dates, content and midnight guards, category bars, topic disclosure and back callbacks. Native views mocked.');

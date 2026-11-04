@@ -5,6 +5,8 @@ import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession"
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { activityBuckets, activitySummary, type ActivityBucket } from "../utils/learningActivity";
 import { colors } from "../theme";
+import { MotionPressable } from "./HomeMotion";
+import { ProgressBarFill } from "./ProgressMotion";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 
 const FIRST = "#BEA7F4", REPLAY = "#6FC7BD";
@@ -84,25 +86,160 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
   </View>;
 }
 
-export function CategoryProgress() {
-  const snapshot = useLearningSnapshot(), completed = new Set(snapshot.backup.completedIds);
-  return <View style={styles.section}>
-    <Text style={styles.title}>Οι κόσμοι που εξερευνάς</Text>
-    <View style={styles.categoryCard}>{categories.map(category => {
-      const items = lessons.filter(lesson => lesson.categoryId === category.id);
-      const count = items.filter(lesson => completed.has(lesson.id)).length;
-      const percent = items.length ? Math.round(count / items.length * 100) : 0;
-      return <View key={category.id} style={styles.category} accessible accessibilityRole="progressbar"
-        accessibilityLabel={category.title} accessibilityValue={{ min: 0, max: items.length || 1, now: count, text: `${count} από ${items.length} μαθήματα, ${percent}%` }}>
-        <View style={styles.categoryHeader}><Text style={styles.categoryTitle}>{category.emoji} {category.title}</Text><Text style={styles.categoryCount}>{count} / {items.length}</Text></View>
-        <View style={styles.categoryTrack}><View style={[styles.categoryFill, { width: `${percent}%` }]} /></View>
-      </View>;
-    })}</View>
+export function CategoryProgress({ compact = false, detail = false, singleColumn = false, threeColumn = false }: { compact?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean } = {}) {
+  const snapshot = useLearningSnapshot();
+  const [expanded, setExpanded] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const completed = new Set(snapshot.backup.completedIds);
+  const rows = categories.map((category, index) => {
+    const items = lessons.filter(lesson => lesson.categoryId === category.id);
+    const count = items.filter(lesson => completed.has(lesson.id)).length;
+    const percent = items.length ? Math.round(count / items.length * 100) : 0;
+    return { category, index, count, total: items.length, percent };
+  });
+  // The detail screen begins with subjects already explored. Stable ties retain
+  // catalogue order, and every subject is accessible via the disclosure.
+  const ranked = compact || detail
+    ? rows.slice().sort((a, b) => b.count - a.count
+        || b.percent - a.percent || a.index - b.index)
+    : rows;
+  const limit = detail ? 4 : 3;
+  const visible = (compact || detail) && !expanded ? ranked.slice(0, limit) : ranked;
+  const selectedCategory = detail ? visible.find(row => row.category.id === selectedCategoryId) : undefined;
+
+  return <View style={[styles.section, compact && styles.sectionCompact, detail && styles.sectionDetail]} testID="reading-category-progress">
+    <Text style={[styles.title, compact && styles.titleCompact, detail && styles.titleDetail]}>{detail ? "Ανά θεματική" : "Οι κόσμοι που εξερευνάς"}</Text>
+    <View style={[styles.categoryCard, compact && styles.categoryCardCompact,
+      detail && styles.categoryCardDetail, detail && styles.categoryGrid,
+      detail && singleColumn && styles.categoryGridSingle]}>
+      {visible.map(({ category, count, total, percent }) => detail ? (
+        <MotionPressable key={category.id} testID={`reading-subject-${category.id}`}
+          pressScale={0.985}
+          onPress={() => setSelectedCategoryId(value => value === category.id ? null : category.id)}
+          style={[styles.readingTile, singleColumn && styles.readingTileSingle,
+            threeColumn && !singleColumn && styles.readingTileWide,
+            count > 0 && styles.readingTileProgressing,
+            total > 0 && count === total && styles.readingTileComplete,
+            selectedCategoryId === category.id && styles.readingTileSelected]}
+          accessibilityRole="button"
+          accessibilityState={{ selected: selectedCategoryId === category.id,
+            expanded: selectedCategoryId === category.id }}
+          accessibilityLabel={`${category.title}, ${count} από ${total} ολοκληρωμένα μαθήματα, ${percent}%`}
+          accessibilityHint="Άνοιγμα σύντομης ανάλυσης της θεματικής">
+          <View style={styles.readingTileHeader}>
+            <Text style={styles.readingTileEmoji}>{category.emoji}</Text>
+            {total > 0 && count === total
+              ? <Text style={styles.readingTileCompleted}>✓</Text>
+              : count > 0 ? <Text style={styles.readingTilePercent}>{percent}%</Text> : null}
+          </View>
+          <Text style={styles.readingTileTitle} numberOfLines={2}>{category.title}</Text>
+          <Text style={[styles.readingTileCount, count === total && total > 0 && styles.readingTileCountComplete]}>
+            {count} / {total}
+          </Text>
+          <View style={styles.readingTileTrack} pointerEvents="none">
+            <ProgressBarFill tone="reading" percent={percent} />
+          </View>
+        </MotionPressable>      ) : (
+        <View key={category.id} style={[styles.category, compact && styles.categoryCompact]}
+          accessible accessibilityRole="progressbar"
+          accessibilityLabel={category.title}
+          accessibilityValue={{ min: 0, max: total || 1, now: count, text: count + " από " + total + " μαθήματα, " + percent + "%" }}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>{category.emoji} {category.title}</Text>
+            <Text style={styles.categoryCount}>{count} / {total}</Text>
+          </View>
+          <View style={styles.categoryTrack}>
+            <View style={[styles.categoryFill, { width: percent + "%" }]} />
+          </View>
+        </View>
+      ))}
+    </View>
+    {detail && selectedCategory ? (
+      <View testID="reading-selected-subject" accessibilityLiveRegion="polite"
+        style={styles.readingInsight}>
+        <View style={styles.readingInsightHeading}>
+          <Text style={styles.readingInsightTitle} numberOfLines={2}>
+            {selectedCategory.category.title}
+          </Text>
+          <Text style={styles.readingInsightValue}>
+            {selectedCategory.count} / {selectedCategory.total}
+          </Text>
+        </View>
+        <Text style={styles.readingInsightCaption}>
+          {selectedCategory.total === 0
+            ? "Δεν υπάρχουν ακόμη μαθήματα σε αυτή τη θεματική."
+            : selectedCategory.count === selectedCategory.total
+              ? "Ολοκλήρωσες όλα τα διαθέσιμα μαθήματα εδώ."
+              : selectedCategory.count === 0
+                ? "Επόμενος στόχος: το πρώτο ολοκληρωμένο μάθημα."
+                : `Απομένουν ${selectedCategory.total - selectedCategory.count} μαθήματα για ολοκλήρωση.`}
+        </Text>
+      </View>
+    ) : null}
+    {(compact || detail) && rows.length > limit ? <Pressable
+      testID={detail ? "reading-all-subjects" : undefined}
+      style={({ pressed }) => [styles.categoryMore, detail && styles.detailMore,
+        pressed && styles.categoryMorePressed]}
+      accessibilityRole="button" accessibilityState={{ expanded }}
+      onPress={() => setExpanded(value => !value)}>
+      <Text style={[styles.categoryMoreText, detail && styles.detailMoreText]}>
+        {detail
+          ? expanded ? "Λιγότερες θεματικές" : `Όλες οι θεματικές (${rows.length})`
+          : expanded ? "Λιγότεροι κόσμοι −" : "Όλοι οι κόσμοι +"}
+      </Text>
+      {detail ? <Text style={styles.detailMoreArrow}>{expanded ? "⌃" : "⌄"}</Text> : null}
+    </Pressable> : null}
   </View>;
 }
 
 const styles = StyleSheet.create({
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
+  sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
+  sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },
+  titleDetail: { fontSize: 17, lineHeight: 24, fontWeight: "800" },
+  titleCompact: { fontSize: 14, lineHeight: 20 },
+  categoryCardCompact: { padding: 12, gap: 10 },
+  categoryCardDetail: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 0 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 },
+  categoryGridSingle: { flexDirection: "column" },
+  readingTile: {
+    width: "48%", minWidth: 0, minHeight: 123,
+    padding: 11, gap: 3, borderRadius: 15,
+    backgroundColor: "#1F313D", borderWidth: 1, borderColor: "#35545F",
+  },
+  readingTileProgressing: { borderColor: "#4A717B", backgroundColor: "#233944" },
+  readingTileComplete: { borderColor: "#6E9A9B", backgroundColor: "#264149" },
+  readingTileSelected: { borderColor: "#9CD2D1", backgroundColor: "#2A454F" },
+  readingTileSingle: { width: "100%", minHeight: 112 },
+  readingTileWide: { width: "31%" },
+  readingTileHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  readingTileEmoji: { fontSize: 19, lineHeight: 26 },
+  readingTilePercent: { color: "#9CD2D1", fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  readingTileCompleted: { color: "#BDE4DD", fontSize: 19, lineHeight: 25, fontWeight: "900" },
+  readingTileTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800", minHeight: 19 },
+  readingTileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
+  readingTileCountComplete: { color: "#AFE3E2" },
+  readingTileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#334B56", overflow: "hidden" },
+  readingInsight: {
+    backgroundColor: "#1D3540", borderWidth: 1, borderColor: "#40626C",
+    borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
+  },
+  readingInsightHeading: { flexDirection: "row", alignItems: "center", gap: 8, justifyContent: "space-between" },
+  readingInsightTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: "800" },
+  readingInsightValue: { color: "#B0E1DD", fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
+  readingInsightCaption: { color: colors.textBody, fontSize: 12, lineHeight: 18 },
+
+  categoryCompact: { gap: 5 },
+  categoryMore: { minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
+  categoryMorePressed: { opacity: 0.75 },
+  detailMore: {
+    paddingHorizontal: 12, minHeight: 46, borderRadius: 13,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    backgroundColor: "#1D303A", borderWidth: 1, borderColor: "#35545F",
+  },
+  detailMoreText: { color: "#9CD2D1" },
+  detailMoreArrow: { color: "#9CD2D1", fontSize: 20 },
+  categoryMoreText: { color: colors.accentLight, fontSize: 13, fontWeight: "700" },
   title: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "800" },
   small: { color: colors.textMuted, fontSize: 12, lineHeight: 19, flexShrink: 1 },
   metrics: { flexDirection: "row", flexWrap: "wrap", gap: 10 },

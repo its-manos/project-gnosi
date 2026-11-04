@@ -30,6 +30,7 @@ export type AppScreen =
   | "player-stats"
   | "account"
   | "progress"
+  | "learning-insights"
   | "saved";
 
 
