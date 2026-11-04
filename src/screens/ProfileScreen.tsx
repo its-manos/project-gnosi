@@ -39,13 +39,34 @@ function StreakFlame() {
   </Svg>;
 }
 
-function QuickLink({ title, subtitle, symbol, onPress }: {
-  title: string; subtitle: string; symbol: string; onPress: () => void;
+type QuickIconName = "activity" | "account" | "interests" | "guide";
+
+function QuickIcon({ name }: { name: QuickIconName }) {
+  const common = { stroke: "#B8A9F5", strokeWidth: 1.8, strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const, fill: "none" };
+  return <Svg width={23} height={23} viewBox="0 0 24 24" fill="none" accessible={false}>
+    {name === "activity" ? <>
+      <Circle cx={12} cy={12} r={9} {...common} />
+      <Path d="M12 6.5V12l4 2.5" {...common} />
+    </> : name === "account" ? <>
+      <Circle cx={12} cy={8} r={3.3} {...common} />
+      <Path d="M5 20v-1.5c0-3.3 2.7-5.2 7-5.2s7 1.9 7 5.2V20" {...common} />
+    </> : name === "interests" ? <>
+      <Path d="M12 2.5 14.6 9.4 21.5 12l-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6L12 2.5Z" {...common} />
+    </> : <>
+      <Path d="M4 5.5h6c1.4 0 2.5.5 3 1.4.5-.9 1.6-1.4 3-1.4h4v13h-4c-1.4 0-2.5.5-3 1.4-.5-.9-1.6-1.4-3-1.4H4v-13Z" {...common} />
+      <Path d="M13 7v12.9" {...common} />
+    </>}
+  </Svg>;
+}
+
+function QuickLink({ title, subtitle, icon, onPress }: {
+  title: string; subtitle: string; icon: QuickIconName; onPress: () => void;
 }) {
   return <Pressable testID={title === "Δραστηριότητα" ? "profile-activity-link" : undefined}
     style={({ pressed }) => [styles.quickLink, pressed && styles.quickLinkPressed]}
     accessibilityRole="button" accessibilityLabel={title + ". " + subtitle} onPress={onPress}>
-    <Text style={styles.quickSymbol} accessible={false}>{symbol}</Text>
+    <View style={styles.quickIcon} accessible={false}><QuickIcon name={icon} /></View>
     <View style={styles.quickCopy}>
       <Text style={styles.quickTitle} numberOfLines={1} adjustsFontSizeToFit>{title}</Text>
       <Text style={styles.quickSubtitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>{subtitle}</Text>
@@ -201,13 +222,13 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
         <Text style={styles.sectionTitle}>Ο χώρος σου</Text>
         <View style={[styles.linksGrid, compact && styles.linksGridCompact]}>
           <QuickLink title="Δραστηριότητα" subtitle="Στατιστικά & quiz"
-            symbol="◷" onPress={onStats} />
+            icon="activity" onPress={onStats} />
           <QuickLink title="Λογαριασμός" subtitle="Ασφάλεια & sync"
-            symbol="⚙" onPress={onAccount} />
+            icon="account" onPress={onAccount} />
           <QuickLink title="Ενδιαφέροντα" subtitle="Οι επιλογές σου"
-            symbol="✧" onPress={onInterests} />
+            icon="interests" onPress={onInterests} />
           <QuickLink title="Οδηγός" subtitle="Πώς λειτουργεί"
-            symbol="⌁" onPress={onGuide} />
+            icon="guide" onPress={onGuide} />
         </View>
       </MotionView>
     </ScrollView>
@@ -291,7 +312,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderColor: "#38435C",
     borderRadius: 15, backgroundColor: "#1A2538" },
   quickLinkPressed: { backgroundColor: "#2D304A" },
-  quickSymbol: { color: "#BCB0F3", fontSize: 19, width: 19, textAlign: "center" },
+  quickIcon: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
   quickCopy: { flex: 1, minWidth: 0, gap: 2 },
   quickTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800" },
   quickSubtitle: { color: colors.textMuted, fontSize: 9, lineHeight: 14 },
