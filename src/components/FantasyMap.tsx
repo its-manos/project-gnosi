@@ -352,6 +352,27 @@ function wrapTitle(title: string, maxCharacters: number): string[] {
   return lines.slice(0, 2);
 }
 
+// Preserve every word on the fitted category map. When the normal wrap would
+// need three lines, choose a balanced two-line split and scale the text rather
+// than silently dropping the last part of a Greek destination name.
+export function wrapFittedAtlasTitle(title: string, maxCharacters: number): string[] {
+  const cleaned = title.replace(/\s+/g, " ").trim();
+  const wrapped = wrapTitle(cleaned, maxCharacters);
+  if (wrapped.join(" ") === cleaned) return wrapped;
+  const words = cleaned.split(" ").filter(Boolean);
+  if (words.length < 2) return [cleaned];
+  let best: string[] = [cleaned];
+  let bestScore = Infinity;
+  for (let index = 1; index < words.length; index++) {
+    const first = words.slice(0, index).join(" ");
+    const second = words.slice(index).join(" ");
+    const score = Math.max(first.length, second.length) +
+      Math.abs(first.length - second.length) * 0.2;
+    if (score < bestScore) { best = [first, second]; bestScore = score; }
+  }
+  return best;
+}
+
 export default function FantasyMap({
   regions,
   onSelectRegion,
@@ -626,7 +647,13 @@ export default function FantasyMap({
         {/* Draw every label after every island. Avoid text strokes, which can
             reduce the visible white fill of small glyphs on Android. */}
         {positionedRegions.map((region) => {
-          const labelLines = wrapTitle(region.title, maxLabelChars);
+          const labelLines = fitted
+            ? wrapFittedAtlasTitle(region.title, maxLabelChars)
+            : wrapTitle(region.title, maxLabelChars);
+          const longestLine = Math.max(1, ...labelLines.map(line => line.length));
+          const regionLabelSize = fitted ? Math.max(10.5,
+            labelFontSize * Math.min(1, maxLabelChars / longestLine))
+            : labelFontSize;
           const isAncientGreeceLandmark = !overview && region.id === "ancient-greece";
           // The Doric pediment is detailed enough to deserve breathing room;
           // shift its title down slightly and bring the progress pill nearer.
@@ -683,8 +710,8 @@ export default function FantasyMap({
                 <SvgText
                   key={`${region.id}-label-${index}`}
                   x={region.cx}
-                  y={labelStartY + index * (labelFontSize + 2)}
-                  fontSize={labelFontSize}
+                  y={labelStartY + index * (regionLabelSize + 2)}
+                  fontSize={regionLabelSize}
                   fontWeight={fitted ? "800" : "700"}
                   textAnchor="middle"
                   fill={fitted ? "#FBF8EF" : "#FFFFFF"}
