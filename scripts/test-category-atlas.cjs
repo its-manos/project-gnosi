@@ -229,6 +229,34 @@ assert.ok(compact(0, 2).y < compact(1, 2).y,
 assert.ok(compact(0, 4).x < compact(1, 4).x,
   "four destinations retain independent side-by-side positions");
 assert.equal(compact(0, 5), null, "larger constellations use balanced rows");
+assert.deepEqual(
+  Array.from(mapModule.wrapFittedAtlasTitle("Αρχαία Ελλάδα", 11)),
+  ["Αρχαία", "Ελλάδα"],
+  "compact Greek titles must wrap before touching the curved island outline");
+assert.deepEqual(
+  Array.from(mapModule.wrapFittedAtlasTitle("Μυθολογία", 11)),
+  ["Μυθολογία"],
+  "short names remain on a single line");
+const fittedAncient = map({ ...props, regions: [
+  { ...regionData[0], id: "ancient-greece", title: "Αρχαία Ελλάδα" },
+  regionData[1], regionData[2],
+], fitViewport: { width: 340, height: 490 } });
+const fittedAncientIsland = nodes(fittedAncient).find(node =>
+  node.props?.testID === "atlas-island-ancient-greece");
+assert.ok(fittedAncientIsland, "Ancient Greece remains an accessible island");
+const fittedAncientLabels = nodes(fittedAncientIsland).filter(node =>
+  node.type === "text" && (node.props.children === "Αρχαία" ||
+    node.props.children === "Ελλάδα" || node.props.children === "Αρχαία Ελλάδα"));
+assert.deepEqual(Array.from(fittedAncientLabels, node => node.props.children),
+  ["Αρχαία", "Ελλάδα"],
+  "the fitted atlas must not render the full Ancient Greece title across the coast");
+const fittedAncientBar = nodes(fittedAncientIsland).find(node =>
+  node.props?.testID === "atlas-progress-track-ancient-greece");
+assert.ok(fittedAncientBar.props.y - fittedAncientLabels[1].props.y >= 10,
+  "the second title line must stay clear of its progress track");
+assert.ok(fittedAncientIsland.props.onPress,
+  "wrapping a destination title must not remove its tap target");
+
 const compactRadii = mapModule.getCompactAtlasRadii;
 assert.deepEqual(
   { ...compactRadii(3, 260) }, { rx: 57, ry: 39 },
