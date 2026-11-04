@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
-import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
+import { AtlasContinueAccent, AtlasContinueArrow, AtlasMapRevealCover, AtlasProgressFill } from "../components/CategoryAtlasMotion";
 import { colors } from "../theme";
 import { getAtlasCategoryProgress, getAtlasRegionProgress } from "../utils/categoryAtlas";
 
@@ -152,9 +152,9 @@ export default function CategoryScreen({
           setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
             Math.abs(previous.height - height) < 1 ? previous : { width, height });
         }}>
-        {/* Wait for the real viewport size before mounting the atlas. Avoid
-            animating the complex chart as one large composited surface:
-            the header, card and tiny ambient accents already have motion. */}
+        {/* Mount the fitted map only after measuring the viewport. The map
+            remains static; a cheap native cover fades out after the Continue
+            card appears, preserving the original visual entrance sequence. */}
         {mapViewport.width > 0 && mapViewport.height > 0 ? (
           <View testID="category-atlas-map-entrance"
             style={styles.mapEntrance}>
@@ -165,6 +165,7 @@ export default function CategoryScreen({
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
               emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
+            <AtlasMapRevealCover />
           </View>
         ) : null}
       </View>
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
     marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",
   },
-  // The map mounts in its fitted layout, without a costly entrance transform
-  // or opacity effect over hundreds of nested SVG elements.
+  // A normal measured View: only the solid cover animates. Do not animate
+  // the heavyweight SVG or affect the map's aspect ratio or hit geometry.
   mapEntrance: { width: "100%" },
 });
