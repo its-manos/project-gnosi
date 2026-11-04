@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import type { ScrollViewInstance } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import AppHeader from "../components/AppHeader";
@@ -52,7 +53,7 @@ export default function SubcategoryScreen({
   completedLessonIds, inProgressLessonIds, progressLoaded,
 }: Props) {
   const { width: viewportWidth } = useWindowDimensions();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const mapTopRef = useRef(0);
   const path = useMemo(() => getSubcategoryPath(lessons, subcategory.id), [lessons, subcategory.id]);
   const completed = path.filter(lesson => completedLessonIds.includes(lesson.id)).length;
