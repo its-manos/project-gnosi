@@ -10,6 +10,8 @@ on:
       - "src/components/FantasyMap.tsx"
       - "src/components/worldIcons/**"
       - "src/components/HomeMotion.tsx"
+      - "src/components/AdventureAtlasBackground.tsx"
+      - "src/components/AdventureMotion.tsx"
       - "package.json"
       - "package-lock.json"
       - "src/utils/categoryAtlas.ts"

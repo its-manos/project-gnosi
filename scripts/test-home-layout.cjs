@@ -23,6 +23,8 @@ let homeScrollState = null;
 let homeScrollHookIndex = 0;
 const react = {
   useMemo: fn => fn(),
+  useRef: initial => ({ current: initial }),
+  useEffect: () => {},
   useState: initial => {
     if (homeScrollState !== null) {
       const index = homeScrollHookIndex++;
@@ -33,6 +35,22 @@ const react = {
     }
     return [showList, value => { showList = typeof value === "function" ? value(showList) : value; }];
   },
+};
+const adventureAnimationCalls = [];
+const adventureCancelCalls = [];
+const reanimated = {
+  __esModule: true,
+  default: { ScrollView: "ScrollView" },
+  Easing: { inOut: easing => easing, cubic: t => t },
+  useAnimatedRef: () => ({ current: {} }),
+  useSharedValue: initial => ({ value: initial }),
+  useAnimatedReaction: () => {},
+  scrollTo: () => {},
+  withTiming: (target, config) => {
+    adventureAnimationCalls.push({ target, duration: config.duration });
+    return target;
+  },
+  cancelAnimation: value => adventureCancelCalls.push(value),
 };
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
@@ -45,6 +63,7 @@ function compile(file, extra = {}, returnModule = false) {
   const imports = {
     react, "react/jsx-runtime": { jsx, jsxs: jsx },
     "react-native": native, "react-native-svg": svg,
+    "react-native-reanimated": reanimated,
     "../theme": { colors: {
       accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E",
       textMuted: "#ABB0C1", success: "#3CC69A", successSurface: "#17372F",
@@ -485,11 +504,29 @@ const access = (lesson, catalogue, completed, inProgress) => {
   const prerequisite = index > 0 ? catalogue[index - 1] : null;
   return { prerequisite, unlocked: !prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id) };
 };
-const adventure = compile("src/screens/SubcategoryScreen.tsx", {
-  "../components/AppHeader": { __esModule: true, default: "AppHeader" },
+const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
-});
+  "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
+}, true);
+const adventure = adventureModule.default;
+// Automatic focus and "Η ΘΕΣΗ ΜΟΥ" now use the same checkpoint offset.
+assert.equal(adventureModule.getAdventureCurrentOffset(2800, 4500, 500), 2700,
+  "next checkpoint has the same offset whichever navigation initiates it");
+assert.equal(adventureModule.getAdventureCurrentOffset(75, 1200, 600), 0,
+  "early lessons do not introduce phantom scrolling");
+assert.ok(adventureModule.getAdventureScrollDuration(2800) >= 3000,
+  "UI-thread map glide must be noticeably slower over long journeys");
+assert.ok(adventureModule.getAdventureScrollDuration(2800) <= 5200,
+  "entry animation remains reasonably bounded");
+assert.equal(adventureModule.getAdventureEntryOffset(2700, 4500, 500), 2588,
+  "chapter marker remains visible near the top of the map pane");
+assert.equal(adventureModule.getAdventureEntryOffset(500, 1200, 1100), 132,
+  "entry offset is clamped on short maps");
+assert.equal(adventureModule.getAdventureEntryOffset(75, 1200, 600), 0,
+  "chapter I stays near the top");
 const adventureProps = {
   category: categories[0], subcategory: { id: "ancient-greece", title: "Αρχαία Ελλάδα", description: "Ιστορικό ταξίδι" },
   lessons: adventureLessons, completedLessonIds: [], inProgressLessonIds: [], progressLoaded: true,
@@ -499,6 +536,43 @@ tree = adventure(adventureProps);
 assert.ok(nodes(tree).some(node => node.props?.testID === "subcategory-adventure-path"));
 assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("adventure-node-")).length, 30);
 assert.equal(nodes(tree).filter(node => node.props?.children?.startsWith?.("ΚΕΦΑΛΑΙΟ ")).length, 5);
+const categoryHeader = nodes(tree).find(node => node.props?.testID === "adventure-category-header");
+const categoryTitle = nodes(categoryHeader).find(node => node.props?.testID === "adventure-category-title");
+assert.equal(categoryTitle.props.children, "ΙΣΤΟΡΙΑ",
+  "the global Gnosi logo is replaced with the selected category");
+assert.ok(!nodes(tree).some(node => node.props?.children === "ΓΝΩΣΗ"),
+  "hide the redundant logo on the adventure screen");
+assert.ok(!nodes(tree).some(node => node.props?.children === "Ο ΧΑΡΤΗΣ ΤΗΣ ΔΙΑΔΡΟΜΗΣ"),
+  "avoid a second heading that pushes the map below the fold");
+assert.ok(!nodes(tree).some(node => node.props?.children === "Ιστορικό ταξίδι"),
+  "subcategory description no longer consumes the map viewport");
+const compactCard = nodes(tree).find(node => node.props?.testID === "adventure-continue");
+const progressInCard = nodes(compactCard).find(node => node.props?.testID === "adventure-progress");
+assert.ok(progressInCard, "the only progress track is integrated into the Continue card");
+assert.equal(compactCard.props.entranceDelay, 70, "Continue card uses the Home motion entrance");
+assert.equal(categoryHeader.props.entranceDelay, 0, "fixed header uses the Home motion entrance");
+const progressFill = nodes(progressInCard).find(node => node.type === "AdventureProgressFill");
+assert.ok(progressFill, "progress fill is animated without changing the accessible track");
+const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
+const nestedScroll = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-map-scroll");
+assert.ok(nestedScroll, "the map has its own scroll container");
+assert.equal(nodes(tree).filter(node => node.type === "ScrollView").length, 1,
+  "the header and Continue card are outside the only ScrollView");
+assert.ok(!nodes(pinnedFrame).some(node => node.props?.testID === "adventure-continue"),
+  "the Continue card never moves with the map");
+assert.equal(nestedScroll.props.contentContainerStyle.paddingBottom, 32,
+  "map scroll has a little bottom breathing room");
+assert.equal(typeof nestedScroll.props.onScrollBeginDrag, "function",
+  "user drag can interrupt the entry glide");
+
+assert.equal(nodes(tree).filter(node => node.props?.testID === "adventure-progress").length, 1);
+assert.ok(nodes(compactCard).some(node => node.props?.children === "Αρχαία Ελλάδα"),
+  "subcategory identity moves into the Continue card");
+assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-map").props.style[0].marginTop, 2,
+  "no oversized gap before the map");
+const headerBack = nodes(categoryHeader).find(node => node.props?.testID === "adventure-back");
+headerBack.props.onPress();
+assert.equal(actions.at(-1), "back", "compact header preserves back navigation");
 const first = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0");
 const second = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1");
 assert.equal(first.props.disabled, false);
@@ -508,6 +582,156 @@ assert.equal(actions.at(-1), "open:anc-0");
 tree = adventure({ ...adventureProps, completedLessonIds: ["anc-0"] });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1").props.disabled, false);
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-2").props.disabled, true);
+
+// Adventure 3.0: the geographical atlas belongs to the fixed map viewport,
+// not the screen header or 30-lesson scrolling content. Scroll focus is unchanged.
+const completedNineteen = adventureLessons.slice(0, 19).map(item => item.id);
+tree = adventure({ ...adventureProps, completedLessonIds: completedNineteen });
+const mapFrame = nodes(tree).find(node => node.props?.testID === "adventure-map");
+const stops = nodes(mapFrame).filter(node => node.props?.testID?.startsWith("adventure-node-"));
+const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.style)
+  && node.props.style[0]?.position === "absolute" && node.props.style[0]?.width === 148);
+const width = mapFrame.props.style[1].width;
+assert.equal(stops.length, 30);
+assert.equal(stopPositions.length, 30);
+const atlasLayer = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-atlas-underlay");
+assert.ok(atlasLayer, "underlay is inside the fixed map viewport");
+assert.equal(atlasLayer.props.pointerEvents, "none", "atlas never intercepts taps");
+assert.ok(!nodes(categoryHeader).some(node => node.props?.testID === "adventure-atlas-underlay"),
+  "atlas does not extend beneath the fixed header");
+assert.ok(!nodes(compactCard).some(node => node.props?.testID === "adventure-atlas-underlay"),
+  "atlas does not extend beneath the Continue card");
+assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 0,
+  "no oversized atlas is mounted inside the scrolling path");
+assert.equal(nodes(nestedScroll).filter(node => node.props?.testID === "adventure-atlas-underlay").length, 0,
+  "atlas stays fixed as the scroll content moves");
+assert.equal(pinnedFrame.props.children[0].props.testID, "adventure-atlas-underlay",
+  "map underlay is drawn behind the scrolling checkpoints");
+assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
+  "only the active checkpoint receives a breathing halo");
+assert.ok(nodes(mapFrame).some(node => node.props?.pressScale === 0.96),
+  "lesson checkpoint press feedback uses the existing MotionPressable");
+assert.ok(stopPositions.every(node => node.props.style[1].left >= 0 &&
+  node.props.style[1].left + 148 <= width), "all stop labels stay inside the map width");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#2E9A7E"),
+  "completed legs use a green route");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#A89BFF"),
+  "the next leg is distinctly highlighted");
+const nineteenProgress = nodes(tree).find(node => node.props?.testID === "adventure-progress");
+assert.equal(nodes(nineteenProgress).find(node => node.type === "AdventureProgressFill").props.percent, 63,
+  "animated fill receives the actual lesson completion percentage");
+assert.equal(nineteenProgress.props.accessibilityValue.now, 19);
+assert.equal(nineteenProgress.props.accessibilityValue.max, 30);
+assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-continue"),
+  "Continue card stays visible with older completion history");
+const next = nodes(tree).find(node => node.props?.testID === "adventure-continue");
+next.props.onPress();
+assert.equal(actions.at(-1), "open:anc-19", "Continue opens the next unlocked lesson");
+const mapScroll = nodes(tree).find(node => node.props?.testID === "adventure-map-scroll");
+assert.ok(mapScroll, "map remains independently scrollable");
+assert.ok(!nodes(tree).some(node => node.props?.testID === "adventure-jump-to-current"),
+  "the redundant Η ΘΕΣΗ ΜΟΥ button has been removed");
+assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-20").props.disabled,
+  "later lessons remain locked after jumping");
+assert.ok(!nodes(tree).some(node => node.props?.children === "Ακολούθησε τους σταθμούς με τη σειρά."),
+  "remove redundant tutorial copy above the first chapter");
 tree = adventure({ ...adventureProps, progressLoaded: false });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0").props.disabled, true);
+
+// Exercise the entry effect with stable hook state and measured ScrollView
+// dimensions, rather than only testing the pure offset formula.
+const motionState = { values: [0, 0, false], refs: [], effects: [], stateIndex: 0, refIndex: 0 };
+const motionReact = {
+  useMemo: fn => fn(),
+  useState: initial => {
+    const index = motionState.stateIndex++;
+    if (!(index in motionState.values)) motionState.values[index] = initial;
+    return [motionState.values[index], update => {
+      const previous = motionState.values[index];
+      motionState.values[index] = typeof update === "function" ? update(previous) : update;
+    }];
+  },
+  useRef: initial => {
+    const index = motionState.refIndex++;
+    if (!motionState.refs[index]) motionState.refs[index] = { current: initial };
+    return motionState.refs[index];
+  },
+  useEffect: effect => { motionState.effects.push(effect); },
+};
+const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
+  react: motionReact,
+  "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
+  "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
+  "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
+});
+const renderMotion = extra => {
+  motionState.stateIndex = 0;
+  motionState.refIndex = 0;
+  motionState.effects = [];
+  return motionScreen({ ...adventureProps, completedLessonIds: completedNineteen, ...extra });
+};
+let motionTree = renderMotion({ progressLoaded: false });
+// Native layout supplies the visible scroll pane's dimensions (not the whole
+// screen or 4300-point content). Verify screen/viewport resize independently.
+let viewportLayout = nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport");
+viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 320, height: 450 } } });
+motionTree = renderMotion({ progressLoaded: false });
+let fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
+assert.ok(fullAtlas, "measured map viewport mounts its atlas");
+assert.equal(fullAtlas.props.width, 320);
+assert.equal(fullAtlas.props.height, 450);
+assert.ok(nodes(nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport"))
+  .some(node => node.type === "AtlasBackground"), "rendered atlas stays in the fixed viewport");
+viewportLayout = nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport");
+viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 350, height: 430 } } });
+motionTree = renderMotion({ progressLoaded: false });
+fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
+assert.equal(fullAtlas.props.width, 350, "atlas follows responsive map viewport width");
+assert.equal(fullAtlas.props.height, 430, "atlas stops at the map viewport, not the whole screen");
+let motionScroll = nodes(motionTree).find(node => node.props?.testID === "adventure-map-scroll");
+const autoCalls = adventureAnimationCalls;
+autoCalls.length = 0;
+motionScroll.props.onLayout({ nativeEvent: { layout: { height: 540 } } });
+motionScroll.props.onContentSizeChange(360, 1200);
+motionTree = renderMotion({ progressLoaded: false });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 0, "no entry scroll before progress hydration");
+motionTree = renderMotion({ progressLoaded: true });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 0, "wait for full map content measurement before focusing");
+motionScroll.props.onContentSizeChange(360, 4800);
+motionTree = renderMotion({ progressLoaded: true });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 1, "only one UI-thread entry animation after full hydration");
+assert.equal(autoCalls[0].target, adventureModule.getAdventureCurrentOffset(
+  75 + 19 * 142 + 3 * 25, 75 + 29 * 142 + 4 * 25 + 115, 540,
+), "automatic entry must preserve the previously correct checkpoint destination");
+assert.ok(autoCalls[0].target > 2700,
+  "19/30 completion must land at the current checkpoint, not before chapter IV");
+assert.ok(autoCalls[0].duration >= 3000,
+  "the slower glide uses an explicit multi-second duration");
+mapScroll.props.onScrollBeginDrag();
+assert.equal(adventureCancelCalls.length, 1,
+  "manually dragging the map cancels automatic movement");
+renderMotion({ progressLoaded: true });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 1, "re-rendering cannot restart the entry animation");
+
+const atlasSource = fs.readFileSync(path.join(root, "src/components/AdventureAtlasBackground.tsx"), "utf8");
+const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/AdventureMotion.tsx"), "utf8");
+assert.match(atlasSource, /useReducedMotion/, "atlas respects reduce motion");
+assert.match(atlasSource, /pointerEvents="none"/, "atlas cannot intercept lesson taps");
+assert.match(atlasSource, /withRepeat\(/, "atlas has low-frequency ambient motion");
+assert.match(atlasSource, /const west =/, "atlas has a recognisable western mainland coastline");
+assert.match(atlasSource, /const east =/, "atlas has an eastern Anatolian coastline");
+assert.match(atlasSource, /const crete =/, "Crete anchors the southern map");
+assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptical");
+assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
+assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
+assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
+assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
+assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
+assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
