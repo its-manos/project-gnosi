@@ -71,6 +71,7 @@ const mapModule = compile("src/components/FantasyMap.tsx", {
       : [showList, value => { showList = value; }] },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native, "react-native-svg": svg,
+  "react-native-reanimated": { useSharedValue: initial => ({ value: initial }) },
   "./CategoryAtlasMotion": {
     AtlasAtmosphereBreath: "AtlasAtmosphereBreath",
     AtlasTwinkleStar: "AtlasTwinkleStar",
@@ -265,6 +266,17 @@ assert.equal(typeof fittedAncientIsland.props.onPressIn, "function",
   "fitted destinations respond to press-in without a route delay");
 assert.equal(typeof fittedAncientIsland.props.onPressOut, "function",
   "fitted destinations cancel glint when the touch ends");
+const glintNode = nodes(fittedAncientIsland).find(node =>
+  node.type === "AtlasDestinationFeedback");
+assert.ok(glintNode?.props?.pressedRegion,
+  "island glints subscribe to a press shared value rather than React state");
+assert.equal(glintNode.props.pressedRegion.value, null);
+fittedAncientIsland.props.onPressIn();
+assert.equal(glintNode.props.pressedRegion.value, "ancient-greece",
+  "touching a destination triggers the glint without updating React's atlas state");
+fittedAncientIsland.props.onPressOut();
+assert.equal(glintNode.props.pressedRegion.value, null,
+  "the touch glint settles without forcing another full map render");
 assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasDestinationFeedback").length, 3,
   "all fitted islands receive a lightweight outline glint");
 assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasAtmosphereBreath").length, 1,
@@ -465,6 +477,19 @@ assert.equal((motionCode.match(/withRepeat\(/g) || []).length, 2,
   "the category sky has only one breathing glow and one staggered star animation per star");
 assert.match(motionCode, /useReducedMotion\(/,
   "the native ambient layer respects reduced-motion preferences");
+const mapCode = fs.readFileSync(path.join(root, "src/components/FantasyMap.tsx"), "utf8");
+assert.match(mapCode, /const pressedRegion = useSharedValue<string \| null>\(null\)/,
+  "island presses must not cause a 1,100-line SVG to re-render");
+assert.doesNotMatch(mapCode, /setPressedRegion\(/,
+  "touch feedback never goes through React state");
+const regionGlintCode = motionCode.slice(
+  motionCode.indexOf("export function AtlasDestinationFeedback"),
+  motionCode.indexOf("export function AtlasProgressFill"),
+);
+assert.match(regionGlintCode, /pressedRegion.value === regionId/,
+  "the animated coastline glint subscribes to the same shared press identifier");
+assert.doesNotMatch(regionGlintCode, /useEffect\(/,
+  "the glint no longer needs a React effect on every press");
 assert.doesNotMatch(motionCode, /setTimeout|setInterval|requestAnimationFrame/,
   "no JS-thread timers for continuous atlas motion");
 // Exercise the actual native-view ambient components with reduced motion,
@@ -540,8 +565,10 @@ assert.match(screen, /<MotionView entranceDelay=\{0\} testID="category-atlas-hea
   "header enters first, matching Home and Adventure Path");
 assert.match(screen, /entranceDelay=\{75\} pressScale=\{0\.983\}/,
   "Continue card follows the header with a gentle stagger");
-assert.match(screen, /<MotionView entranceDelay=\{155\} testID="category-atlas-map-entrance"/,
-  "fitted atlas enters last after its viewport has been measured");
+assert.match(screen, /<View testID="category-atlas-map-entrance"/,
+  "the fitted chart mounts only after measurement, without animating hundreds of SVG nodes");
+assert.doesNotMatch(screen, /<MotionView entranceDelay=\{155\}/,
+  "the heavyweight map must not receive a whole-SVG entrance transform");
 assert.match(screen, /mapEntrance: \{ width: "100%" \}/,
   "map entrance preserves its original measured width");
 assert.match(screen, /<AtlasContinueAccent\s*\/>/,
@@ -657,9 +684,10 @@ categoryTree = renderCategory();
 let mountedMaps = nodes(categoryTree).filter(node => node.type === map);
 const mapReveal = nodes(categoryTree).find(node =>
   node.props?.testID === "category-atlas-map-entrance");
-assert.equal(mapReveal.type, "MotionView",
-  "the atlas fades in after measurement without replacing the map");
-assert.equal(mapReveal.props.entranceDelay, 155);
+assert.equal(mapReveal.type, "View",
+  "the atlas mounts immediately after measurement without whole-map compositing");
+assert.equal(mapReveal.props.entranceDelay, undefined,
+  "map entrance animation does not compete with card or island motion");
 assert.equal(mountedMaps.length, 1, "measured screen mounts exactly one map");
 assert.equal(mountedMaps[0].props.hideControls, true,
   "Category Atlas only renders the constellation without mode controls");
