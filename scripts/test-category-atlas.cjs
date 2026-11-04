@@ -488,6 +488,10 @@ const regionGlintCode = motionCode.slice(
 );
 assert.match(regionGlintCode, /pressedRegion.value === regionId/,
   "the animated coastline glint subscribes to the same shared press identifier");
+assert.match(regionGlintCode, /useAnimatedProps\(\(\) => \{/,
+  "native press glint uses a worklet-based animated prop");
+assert.doesNotMatch(regionGlintCode, /\},\s*\[[^\]]+\]\);/,
+  "Reanimated worklets must not pass dependency arrays ignored on native");
 assert.doesNotMatch(regionGlintCode, /useEffect\(/,
   "the glint no longer needs a React effect on every press");
 assert.doesNotMatch(motionCode, /setTimeout|setInterval|requestAnimationFrame/,
