@@ -5,6 +5,7 @@
  * The normal (non-fitted) FantasyMap is intentionally unaffected.
  */
 import { useEffect } from "react";
+import type { SharedValue } from "react-native-reanimated";
 import { StyleSheet, View, type DimensionValue } from "react-native";
 import Svg, { Ellipse, Path, RadialGradient, Stop, Defs } from "react-native-svg";
 import Animated, {
@@ -77,24 +78,25 @@ export function AtlasTwinkleStar({ cx, cy, index, mapHeight }: {
     }, animatedStyle]} />;
 }
 
-/** Press-in glint stays within the existing coastline and never takes taps. */
-export function AtlasDestinationFeedback({ d, active }: {
-  d: string; active: boolean;
+/** The coastline glint subscribes directly to a shared press ID. Unlike
+ * React state, touching an island does not rebuild the entire 1,100-line map.
+ * Animated SVG props are still used *only for a short tap*, never in a loop.
+ */
+export function AtlasDestinationFeedback({ d, regionId, pressedRegion }: {
+  d: string; regionId: string; pressedRegion: SharedValue<string | null>;
 }) {
   const reduced = useReducedMotion();
-  const opacity = useSharedValue(0);
-  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
-  useEffect(() => {
-    cancelAnimation(opacity);
-    opacity.value = reduced ? (active ? 0.42 : 0)
-      : withTiming(active ? 0.42 : 0, { duration: active ? 90 : 180 });
-    return () => cancelAnimation(opacity);
-  }, [active, reduced, opacity]);
+  const animatedProps = useAnimatedProps(() => {
+    const active = pressedRegion.value === regionId;
+    return {
+      opacity: reduced ? (active ? 0.42 : 0)
+        : withTiming(active ? 0.42 : 0, { duration: active ? 90 : 180 }),
+    };
+  }, [pressedRegion, regionId, reduced]);
 
   return <AnimatedPath testID="atlas-motion-press-glint" pointerEvents="none"
     d={d} fill="none" stroke="#EBD9BF" strokeWidth={3.2}
-    opacity={reduced && active ? 0.42 : 0}
-    animatedProps={reduced ? undefined : animatedProps} />;
+    opacity={0} animatedProps={animatedProps} />;
 }
 
 
