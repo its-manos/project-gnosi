@@ -285,7 +285,7 @@ export default function AppNavigator() {
         onAccount={() => openAccount("profile")} onInterests={() => openDailyPreferences("profile")} onGuide={welcome.open} />;
       break;
     case "player-stats":
-      screenContent = <PlayerStatsScreen onBack={() => app.setScreen("profile")} completedLessons={completedLessons} totalLessonCount={lessons.length} lessonProgressLoaded={app.progressLoaded} />;
+      screenContent = <PlayerStatsScreen onBack={() => app.setScreen("profile")} />;
       break;
     case "account":
       screenContent = <AccountScreen onBack={() => app.setScreen(accountOrigin)}
