@@ -41,6 +41,14 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
   const total = buckets.reduce((sum, bucket) => sum + bucket.first + bucket.replay, 0);
   const switchMode = (value: "daily" | "weekly") => { setMode(value); setSelectedKey(""); };
   const barHeight = dashboard ? 88 : 120;
+  const weeklyCompletions = summary.firstThisWeek + summary.replaysThisWeek;
+  const insight = weeklyCompletions === 0
+    ? "Ένα μάθημα αρκεί για να ξεκινήσει η εβδομάδα σου."
+    : summary.replaysThisWeek > summary.firstThisWeek
+      ? "Αυτή την εβδομάδα έδωσες έμφαση στις επαναλήψεις."
+      : summary.firstThisWeek > summary.replaysThisWeek
+        ? "Αυτή την εβδομάδα εξερεύνησες περισσότερα νέα μαθήματα."
+        : "Νέα μαθήματα και επαναλήψεις είναι σε ισορροπία αυτή την εβδομάδα.";
 
   return <View style={[styles.section, dashboard && styles.sectionDashboard]}>
     {!dashboard ? <Text style={styles.title}>Η δραστηριότητά σου</Text> : null}
@@ -100,10 +108,16 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
       </View>
       {!total ? <Text style={styles.hint}>Ολοκλήρωσε ένα μάθημα για να ξεκινήσεις.</Text> : null}
     </View>
-    {dashboard ? <Text style={styles.dashboardAccuracy} testID="activity-accuracy">
-      Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}
-      {summary.questions > 0 ? ` · ${summary.correct} / ${summary.questions} σωστές` : ""}
-    </Text> : null}
+    {dashboard ? <View style={styles.dashboardInsight} testID="activity-insight" accessibilityRole="summary">
+      <View style={styles.insightDot} accessible={false} />
+      <View style={styles.insightCopy}>
+        <Text style={styles.insightText}>{insight}</Text>
+        <Text style={styles.dashboardAccuracy} testID="activity-accuracy">
+          Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}
+          {summary.questions > 0 ? ` · ${summary.correct} / ${summary.questions} σωστές` : ""}
+        </Text>
+      </View>
+    </View> : null}
     {compact && !dashboard ? <Text style={styles.small}>{summary.activeDays} ενεργές ημέρες · Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}</Text> : null}
     {summary.undatedCount > 0 ? <Text style={styles.legacyNote}>{summary.undatedCount} παλιότερα μαθήματα χωρίς ημερομηνία — εκτός γραφήματος.</Text> : null}
   </View>;
@@ -238,7 +252,11 @@ const styles = StyleSheet.create({
   dashboardValue: { color: colors.accentLight, fontSize: 25, lineHeight: 30, fontWeight: "900", fontVariant: ["tabular-nums"] },
   dashboardLabel: { color: colors.text, fontSize: 10, lineHeight: 13, fontWeight: "800" },
   dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 12 },
-  dashboardAccuracy: { color: colors.textMuted, fontSize: 11, lineHeight: 17, paddingHorizontal: 3, marginTop: 3 },
+  dashboardInsight: { flexDirection: "row", alignItems: "flex-start", gap: 9, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: "#48415E", backgroundColor: "#24243A" },
+  insightDot: { width: 6, height: 6, borderRadius: 3, marginTop: 6, backgroundColor: FIRST },
+  insightCopy: { flex: 1, minWidth: 0, gap: 2 },
+  insightText: { color: colors.textBody, fontSize: 11, lineHeight: 16, fontWeight: "700" },
+  dashboardAccuracy: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
   chartCardDashboard: { padding: 13, gap: 8, borderColor: "#44415E", backgroundColor: "#1D2337" },
   chartTitleDashboard: { fontSize: 15, lineHeight: 20, fontWeight: "800" },
   chartDashboard: { paddingTop: 0 },
