@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EEE6FF", opacity: 0.38,
   },
   continueAccent: {
-    ...StyleSheet.absoluteFillObject, borderRadius: 18, borderWidth: 1,
+    ...StyleSheet.absoluteFill, borderRadius: 18, borderWidth: 1,
     borderColor: "#C7B6FF",
   },
   continueArrow: {
