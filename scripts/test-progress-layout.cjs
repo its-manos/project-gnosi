@@ -42,11 +42,10 @@ const common = {
 };
 const Progress = load("src/screens/ProgressScreen.tsx", common).default;
 const Insights = load("src/screens/LearningInsightsScreen.tsx", common).default;
-let profile = 0, review = 0, weekly = 0, explore = 0, opened = [], insights = [], backs = 0;
+let profile = 0, review = 0, explore = 0, opened = [], insights = [], backs = 0;
 let props = {
   onOpenInsights: view => insights.push(view),
   onKnowledgeReview: () => review++,
-  onWeeklyReview: () => weekly++,
   onOpenProfile: () => profile++,
   onHome: () => explore++,
   onOpenLesson: id => opened.push(id),
@@ -132,8 +131,8 @@ assert.doesNotMatch(progressMotionSource, /height: 1\.4/,
 assert.match(progressMotionSource, /pointerEvents="none"/,
   "the decorative overlay never intercepts the review button");
 
-primary.props.onReview(); primary.props.onExplore(); primary.props.onWeeklyReview();
-assert.equal(review, 1); assert.equal(explore, 1); assert.equal(weekly, 1);
+primary.props.onReview(); primary.props.onExplore();
+assert.equal(review, 1); assert.equal(explore, 1);
 
 // On tall screens no leftover height is distributed between rows.
 node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 950 } } });
@@ -172,6 +171,9 @@ assert.equal(nodes(node(tree, "progress-summary")).find(n => n.type === "Progres
 props = { ...props, lessonProgressLoaded: true, completedLessons: [] };
 tree = render();
 assert.ok(text(node(tree, "progress-reading-link")).includes("0 / " + lessons.length));
+assert.equal(node(tree, "progress-summary").props.testID, "progress-summary");
+assert.ok(!nodes(node(tree, "progress-summary")).some(n => n.type === "MotionXpCircle"),
+  "an empty account must not render a rounded purple arc-cap dot");
 
 const insightProps = {
   initialView: "knowledge", onViewChange: view => insights.push(view),
