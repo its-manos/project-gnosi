@@ -118,6 +118,7 @@ const worldArtwork = {
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
+  "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
     MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
@@ -142,6 +143,14 @@ const props = {
 };
 let tree = home(props);
 assert.ok(nodes(tree).some(node => node.props?.testID === "home-game-dashboard"));
+assert.equal(nodes(tree).filter(node => node.type === "HomeAtlasBackground").length, 1,
+  "one fixed atlas sits behind the Home dashboard");
+assert.equal(tree.props.testID, "home-atlas-screen",
+  "Home's atlas owns the viewport, not an individual dashboard card");
+assert.equal(tree.props.children[0].type, "HomeAtlasBackground",
+  "static atlas renders before the scrollable content");
+assert.equal(tree.props.children[1].props.testID, "home-game-dashboard",
+  "the existing dashboard scroll container stays intact");
 assert.ok(!nodes(tree).some(node => node.type === "FantasyMap" || node.props?.children === "Πού θα ταξιδέψεις;"));
 const press = (id, value = tree) => {
   const target = nodes(value).find(node => node.props?.testID === id);
@@ -318,6 +327,52 @@ for (const game of upcomingGames) {
 }
 assert.ok(nodes(tree).some(node => node.props?.children === "Μίνι παιχνίδια"));
 assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα").length, 2);
+
+// Render the static atlas with a measured portrait viewport. This is a native
+// SVG tree contract, not a screenshot or frame-rate test.
+let atlasSize = { width: 0, height: 0 };
+const atlas = compile("src/components/HomeAtlasBackground.tsx", {
+  react: {
+    memo: component => component,
+    useState: () => [atlasSize, next => {
+      atlasSize = typeof next === "function" ? next(atlasSize) : next;
+    }],
+  },
+  "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
+});
+let atlasTree = atlas();
+assert.equal(atlasTree.props.testID, "home-atlas-background");
+assert.equal(atlasTree.props.pointerEvents, "none", "atlas cannot intercept card taps");
+assert.equal(atlasTree.props.accessible, false, "decorative atlas stays out of the accessibility tree");
+atlasTree.props.onLayout({ nativeEvent: { layout: { width: 390, height: 844 } } });
+atlasTree = atlas();
+let atlasSvg = nodes(atlasTree).find(node => node.type === "svg");
+assert.ok(atlasSvg, "atlas mounts after receiving real viewport measurements");
+assert.equal(atlasSvg.props.width, 390);
+assert.equal(atlasSvg.props.height, 844);
+assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (844 * 420 / 390),
+  "aspect-ratio matched atlas does not crop or stretch");
+assert.equal(atlasSvg.props.pointerEvents, "none");
+assert.ok(nodes(atlasSvg).filter(node => node.type === "radialGradient").length >= 4,
+  "celestial atmosphere has layered, static gradient depth");
+assert.ok(nodes(atlasSvg).filter(node => node.type === "path").length >= 45,
+  "atlas includes coastline relief, bearings, and engraved compass details");
+assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 27,
+  "atlas contains a deterministic star chart and instrument rings");
+assert.ok(!nodes(atlasSvg).some(node => node.type === "image"),
+  "Home background contains no stretched bitmap or network image");
+atlasTree.props.onLayout({ nativeEvent: { layout: { width: 844, height: 390 } } });
+atlasSvg = nodes(atlas()).find(node => node.type === "svg");
+assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (390 * 420 / 844),
+  "landscape rotation recomputes geometry without retaining portrait crop");
+const staticAtlasSource = fs.readFileSync(
+  path.join(root, "src/components/HomeAtlasBackground.tsx"), "utf8");
+assert.ok(!/withRepeat\(|withTiming\(|useSharedValue\(|setInterval\(/.test(staticAtlasSource),
+  "phase one leaves the new atlas static; ambient motion is deferred");
+assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\)/,
+  "dashboard updates should not redraw the atlas");
+assert.match(staticAtlasSource, /absoluteFillObject/,
+  "atlas stays fixed outside the scrollable dashboard");
 
 // Responsive density follows the available Home height after safe areas and tabs.
 homeScrollState = [0, 0, 0];
