@@ -13,10 +13,13 @@ on:
       - "src/hooks/useLearningApp.ts"
       - "src/components/BottomNavigation.tsx"
       - "src/components/ReviewActions.tsx"
+      - "src/components/ActionButton.tsx"
       - "src/components/KnowledgeMastery.tsx"
       - "src/components/LearningActivityPanel.tsx"
       - "scripts/test-progress-layout.cjs"
       - "scripts/test-profile-layout.cjs"
+      - "scripts/test-learning-activity.cjs"
+      - "scripts/test-knowledge-review-ui.cjs"
       - ".github/workflows/progress-dashboard.yml"
   workflow_dispatch:
 
