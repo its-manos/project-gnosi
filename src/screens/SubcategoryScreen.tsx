@@ -1,5 +1,5 @@
-import { useMemo, useRef } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AccessibilityInfo, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
@@ -30,6 +30,28 @@ const chapterStarts = [5, 11, 18, 24];
 const NODE_SPACING = 142;
 const CHAPTER_GAP = 25;
 const NODE_WIDTH = 148;
+const MAP_BOTTOM_PADDING = 32;
+
+// Keep the first checkpoint of the active chapter in view, not just the next
+// lesson. Other paths without chapter boundaries focus the next lesson itself.
+export function getAdventureChapterStart(index: number, isAncientGreece: boolean) {
+  if (index <= 0) return 0;
+  if (!isAncientGreece) return index;
+  return [...chapterStarts].reverse().find(start => start <= index) ?? 0;
+}
+
+export function getAdventureEntryOffset(
+  chapterY: number, mapHeight: number, viewportHeight: number,
+) {
+  const maxScroll = Math.max(0, mapHeight + MAP_BOTTOM_PADDING - viewportHeight);
+  // Allow space for the chapter heading and the first checkpoint ring.
+  return Math.min(maxScroll, Math.max(0, chapterY - 112));
+}
+
+export function getAdventureGlideDuration(distance: number) {
+  // An intentional, medium-speed reveal, capped for late chapters.
+  return Math.round(Math.min(1800, Math.max(800, 750 + Math.abs(distance) * 0.35)));
+}
 
 function pointFor(index: number, width: number, isAncientGreece: boolean) {
   // Mirror the turns to create a winding trail, but keep every 148pt label
@@ -53,7 +75,17 @@ export default function SubcategoryScreen({
 }: Props) {
   const { width: viewportWidth } = useWindowDimensions();
   const scrollRef = useRef<ScrollViewInstance>(null);
-  const mapTopRef = useRef(0);
+  const [mapViewportHeight, setMapViewportHeight] = useState(0);
+  const [mapContentHeight, setMapContentHeight] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
+  const autoFocusedRef = useRef<string | null>(null);
+  const userInteractedRef = useRef(false);
+  const scrollOffsetRef = useRef(0);
+  const autoScrollRef = useRef<{
+    animation: Animated.CompositeAnimation;
+    value: Animated.Value;
+    listener: string;
+  } | null>(null);
   const path = useMemo(() => getSubcategoryPath(lessons, subcategory.id), [lessons, subcategory.id]);
   const completed = path.filter(lesson => completedLessonIds.includes(lesson.id)).length;
   const nextLesson = path.find(lesson => !completedLessonIds.includes(lesson.id) &&
@@ -76,20 +108,76 @@ export default function SubcategoryScreen({
   const progressPercent = path.length ? Math.round(completed / path.length * 100) : 0;
   const isTesting = devLessonsUnlocked();
 
+  const cancelAutoScroll = () => {
+    const running = autoScrollRef.current;
+    autoScrollRef.current = null;
+    if (running) {
+      running.animation.stop();
+      running.value.removeListener(running.listener);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then(enabled => { if (mounted) setReduceMotion(enabled); })
+      .catch(() => { if (mounted) setReduceMotion(true); });
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => { mounted = false; subscription.remove(); };
+  }, []);
+
+  // The outer heading/card never scroll. Wait for the inner ScrollView to be
+  // laid out and progress to hydrate before making a single entry movement.
+  useEffect(() => {
+    if (!progressLoaded || reduceMotion === null || !mapViewportHeight ||
+      mapContentHeight < mapViewportHeight || !points.length ||
+      autoFocusedRef.current === subcategory.id || userInteractedRef.current) return;
+    autoFocusedRef.current = subcategory.id;
+
+    const focusIndex = nextIndex >= 0 ? nextIndex : path.length - 1;
+    const chapterIndex = getAdventureChapterStart(focusIndex, isAncientGreece);
+    const target = getAdventureEntryOffset(points[chapterIndex].y, mapHeight, mapViewportHeight);
+    if (target < 1) return;
+
+    if (reduceMotion) {
+      scrollRef.current?.scrollTo({ y: target, animated: false });
+      scrollOffsetRef.current = target;
+      return;
+    }
+
+    const value = new Animated.Value(scrollOffsetRef.current);
+    const listener = value.addListener(({ value: position }) => {
+      scrollRef.current?.scrollTo({ y: position, animated: false });
+      scrollOffsetRef.current = position;
+    });
+    const animation = Animated.timing(value, {
+      toValue: target,
+      duration: getAdventureGlideDuration(target - scrollOffsetRef.current),
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: false,
+    });
+    autoScrollRef.current = { animation, value, listener };
+    animation.start(() => {
+      if (autoScrollRef.current?.animation === animation) {
+        value.removeListener(listener);
+        autoScrollRef.current = null;
+      }
+    });
+  }, [progressLoaded, reduceMotion, mapViewportHeight, mapContentHeight,
+    subcategory.id, nextIndex, isAncientGreece, mapHeight, path.length]);
+
+  useEffect(() => () => { cancelAutoScroll(); }, []);
+
   const jumpToCurrent = () => {
     if (nextIndex < 0 || !points[nextIndex]) return;
-    // Scroll within the existing page, leaving space above the active node
-    // for its chapter marker. No separate screen or navigation is involved.
-    scrollRef.current?.scrollTo({
-      y: Math.max(0, mapTopRef.current + points[nextIndex].y - 180),
-      animated: true,
-    });
+    cancelAutoScroll();
+    userInteractedRef.current = true;
+    const target = getAdventureEntryOffset(points[nextIndex].y + 12, mapHeight, mapViewportHeight);
+    scrollRef.current?.scrollTo({ y: target, animated: !reduceMotion });
   };
 
   return (
-    <ScrollView ref={scrollRef} testID="subcategory-adventure-path"
-      contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
-      bounces={false} alwaysBounceVertical={false} overScrollMode="never">
+    <View testID="subcategory-adventure-path" style={styles.screen}>
       <View testID="adventure-category-header" style={styles.navigationHeader}>
         <Pressable testID="adventure-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
@@ -150,15 +238,22 @@ export default function SubcategoryScreen({
           <Text style={styles.emptyTitle}>Νέες αποστολές έρχονται</Text>
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
-        <View testID="adventure-map" onLayout={event => {
-          mapTopRef.current = event.nativeEvent.layout.y;
-        }} style={[styles.map, { width: mapWidth, height: mapHeight }]}>
-          {progressLoaded && nextIndex > 1 ?
-            <Pressable testID="adventure-jump-to-current" onPress={jumpToCurrent}
-              style={({ pressed }) => [styles.jumpButton, pressed && styles.pressed]}
-              accessibilityRole="button" accessibilityLabel="Μετάβαση στον επόμενο σταθμό του χάρτη">
-              <Text style={styles.jumpText}>Η ΘΕΣΗ ΜΟΥ  ↓</Text>
-            </Pressable> : null}
+        <View testID="adventure-map-viewport" style={styles.mapViewport}>
+          <ScrollView ref={scrollRef} testID="adventure-map-scroll"
+            style={styles.mapScroll} contentContainerStyle={styles.mapScrollContent}
+            showsVerticalScrollIndicator={false} bounces={false}
+            alwaysBounceVertical={false} overScrollMode="never"
+            onLayout={event => {
+              const height = event.nativeEvent.layout.height;
+              setMapViewportHeight(previous => Math.abs(previous - height) < 1 ? previous : height);
+            }}
+            onContentSizeChange={(_width, height) => {
+              setMapContentHeight(previous => Math.abs(previous - height) < 1 ? previous : height);
+            }}
+            onScroll={event => { scrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+            scrollEventThrottle={32}
+            onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAutoScroll(); }}>
+            <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
             {/* Faint engraved contours and stars suggest an old atlas without a
                 raster image that could crop or overflow across devices. */}
@@ -225,16 +320,24 @@ export default function SubcategoryScreen({
               </View>
             );
           })}
+            </View>
+          </ScrollView>
         </View>}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    width: "100%", maxWidth: 720, alignSelf: "center",
-    paddingHorizontal: 20, paddingTop: 6, paddingBottom: 44, gap: 9,
+  screen: {
+    flex: 1, minHeight: 0, width: "100%", maxWidth: 720,
+    alignSelf: "center", paddingHorizontal: 20, paddingTop: 6, gap: 9,
   },
+  mapViewport: {
+    flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
+    borderTopWidth: 1, borderColor: "#25273A",
+  },
+  mapScroll: { flex: 1 },
+  mapScrollContent: { alignItems: "center", paddingBottom: MAP_BOTTOM_PADDING },
   navigationHeader: {
     minHeight: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
