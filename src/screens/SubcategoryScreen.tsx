@@ -151,20 +151,7 @@ export default function SubcategoryScreen({
     subcategory.id, nextIndex, mapHeight, path.length]);
 
   return (
-    <View testID="subcategory-adventure-path" style={styles.screen}
-      onLayout={event => {
-        const { width, height } = event.nativeEvent.layout;
-        if (width <= 0 || height <= 0) return;
-        setAtlasSize(previous => previous &&
-          Math.abs(previous.width - width) < 1 && Math.abs(previous.height - height) < 1
-          ? previous : { width, height });
-      }}>
-      {/* Anchored to the fixed screen, not the tall scrolling lesson map. */}
-      <View testID="adventure-atlas-underlay" pointerEvents="none"
-        accessible={false} style={styles.atlasUnderlay}>
-        {atlasSize && atlasSize.width > 0 && atlasSize.height > 0 ?
-          <AdventureAtlasBackground width={atlasSize.width} height={atlasSize.height} /> : null}
-      </View>
+    <View testID="subcategory-adventure-path" style={styles.screen}>
       <MotionView entranceDelay={0} testID="adventure-category-header" style={styles.navigationHeader}>
         <Pressable testID="adventure-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
@@ -223,7 +210,20 @@ export default function SubcategoryScreen({
           <Text style={styles.emptyTitle}>Νέες αποστολές έρχονται</Text>
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
-        <View testID="adventure-map-viewport" style={styles.mapViewport}>
+        <View testID="adventure-map-viewport" style={styles.mapViewport}
+          onLayout={event => {
+            const { width, height } = event.nativeEvent.layout;
+            if (width <= 0 || height <= 0) return;
+            setAtlasSize(previous => previous &&
+              Math.abs(previous.width - width) < 1 && Math.abs(previous.height - height) < 1
+              ? previous : { width, height });
+          }}>
+          {/* The atlas is fixed within the map viewport, not in the scrollable path. */}
+          <View testID="adventure-atlas-underlay" pointerEvents="none"
+            accessible={false} style={styles.atlasUnderlay}>
+            {atlasSize && atlasSize.width > 0 && atlasSize.height > 0 ?
+              <AdventureAtlasBackground width={atlasSize.width} height={atlasSize.height} /> : null}
+          </View>
           <Animated.ScrollView ref={scrollRef} testID="adventure-map-scroll"
             style={styles.mapScroll} contentContainerStyle={styles.mapScrollContent}
             showsVerticalScrollIndicator={false} bounces={false}
@@ -238,7 +238,7 @@ export default function SubcategoryScreen({
             onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAnimation(scrollPosition); }}>
             <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
-            {/* The geographical atlas is screen-anchored behind this transparent route. */}
+            {/* Route geometry stays scrollable above the viewport-anchored atlas. */}
             {segments.map((segment, index) => (
               <Path key={"route-base-" + index} d={segment.d} fill="none"
                 stroke="#24283C" strokeWidth={14} strokeLinecap="round" />
@@ -309,6 +309,7 @@ const styles = StyleSheet.create({
   atlasUnderlay: { ...StyleSheet.absoluteFill },
   mapViewport: {
     flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
+    backgroundColor: "#101827",
     borderTopWidth: 1, borderColor: "#25273A",
   },
   mapScroll: { flex: 1 },
@@ -326,7 +327,7 @@ const styles = StyleSheet.create({
   sparkle: { color: colors.accentLight, fontSize: 22 },
   continueCard: {
     paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
-    backgroundColor: "rgba(27,32,52,0.93)", borderColor: "#51496F",
+    backgroundColor: "#1B2034", borderColor: "#51496F",
     borderWidth: 1, borderRadius: 18, gap: 8,
   },
   cardHeading: {
