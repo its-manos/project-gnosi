@@ -86,9 +86,10 @@ for (const key of learningCards) {
   assert.ok(nodes(element).some(n => n.type === "ProgressBarFill"), "card animates its progress bar");
 }
 assert.ok(node(tree, "progress-summary"), "progress totals are visible");
-assert.ok(nodes(node(tree, "progress-learning")).some(n => n.props.style?.backgroundColor === "#182631"),
+assert.equal(node(tree, "progress-reading-link").props.style[1].backgroundColor, "#182631",
   "Reading card has a distinctive, restrained teal treatment");
-assert.ok(nodes(node(tree, "progress-learning")).some(n => n.props.style?.backgroundColor === "#82C4C7"),
+assert.ok(nodes(node(tree, "progress-reading-link")).some(n =>
+  Array.isArray(n.props.style) && n.props.style.some(style => style?.backgroundColor === "#82C4C7")),
   "Reading has an accent that doesn't add another card outline");
 assert.ok(text(node(tree, "progress-summary")).includes("7"), "completed count is retained");
 assert.ok(text(node(tree, "progress-summary")).includes(String(categories.length)), "world count is live");
