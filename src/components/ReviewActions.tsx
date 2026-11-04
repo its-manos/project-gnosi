@@ -63,10 +63,10 @@ export default function ReviewActions({
       <Text style={[styles.title, dense && styles.titleDense]} numberOfLines={2}>{primaryTitle}</Text>
       {primaryDetail ? <Text style={styles.body} numberOfLines={dense ? 1 : 2}>{primaryDetail}</Text> : null}
       {ready || resumePrimary ? (
-        <View testID={resumePrimary ? "progress-resume" : "progress-primary-action"} style={styles.actionFrame}>
+        <View testID={resumePrimary ? "progress-resume" : "progress-primary-action"}>
           <ActionButton label={primaryLabel} onPress={primaryAction}
-            style={[styles.action, dense && styles.actionDense]} />
-          <ProgressActionHighlight />
+            style={[styles.action, dense && styles.actionDense]}
+            decoration={<ProgressActionHighlight />} />
         </View>
       ) : null}
       {resumableLesson && !resumePrimary ? (
@@ -75,7 +75,7 @@ export default function ReviewActions({
           accessibilityRole="button"
           accessibilityLabel={"Συνέχισε το μάθημα " + resumableLesson.title}
           onPress={() => onResumeLesson?.(resumableLesson.id)}>
-          <Text style={styles.secondaryText} numberOfLines={1}>Συνέχισε το μάθημα · {resumableLesson.title}</Text>
+          <Text style={styles.secondaryText} numberOfLines={dense ? 1 : 2}>Συνέχισε το μάθημα · {resumableLesson.title}</Text>
           <Text style={styles.arrow}>›</Text>
         </Pressable>
       ) : null}
@@ -104,8 +104,8 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 17, lineHeight: 23, fontWeight: "800" },
   titleDense: { fontSize: 15, lineHeight: 20 },
   body: { color: colors.textBody, fontSize: 12, lineHeight: 18 },
-  actionFrame: { position: "relative", borderRadius: 15 },
-  action: { minHeight: 44, marginTop: 3, paddingVertical: 9 },
+  // The highlight lives inside the real CTA and is clipped by its rounded corners.
+  action: { minHeight: 44, marginTop: 3, paddingVertical: 9, overflow: "hidden" },
   actionDense: { marginTop: 0, paddingVertical: 8 },
   secondary: {
     flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44,
