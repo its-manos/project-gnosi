@@ -105,7 +105,7 @@ export default function SubcategoryScreen({
   const path = useMemo(() => getSubcategoryPath(lessons, subcategory.id), [lessons, subcategory.id]);
   const completedIds = useMemo(() => new Set(completedLessonIds), [completedLessonIds]);
   const inProgressIds = useMemo(() => new Set(inProgressLessonIds), [inProgressLessonIds]);
-  const completed = path.filter(lesson => completedIds.has(lesson.id)).length;
+  const completed = useMemo(() => path.reduce((count, lesson) => count + Number(completedIds.has(lesson.id)), 0), [path, completedIds]);
   // Preserve the existing unlock policy while avoiding repeated linear ID lookups.
   const nextLesson = path.find(lesson => !completedIds.has(lesson.id) &&
     inProgressIds.has(lesson.id) &&
@@ -291,8 +291,8 @@ export default function SubcategoryScreen({
           {path.map((lesson, index) => {
             const point = points[index];
             const access = getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds);
-            const done = completedLessonIds.includes(lesson.id);
-            const started = inProgressLessonIds.includes(lesson.id) && !done;
+            const done = completedIds.has(lesson.id);
+            const started = inProgressIds.has(lesson.id) && !done;
             const disabled = !progressLoaded || !access.unlocked;
             const active = progressLoaded && nextLesson?.id === lesson.id;
             const chapter = isAncientGreece ? ancientGreeceChapters[index] : undefined;
