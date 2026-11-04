@@ -40,9 +40,9 @@ export default function ProgressScreen({
   // Normal devices render a fixed page, not a tall, rubber-band ScrollView.
   const availableHeight = viewportHeight || windowHeight - 130;
   const dense = availableHeight < 650;
-  const veryDense = availableHeight < 560;
+  const veryDense = availableHeight < 600;
   // Protect touch targets and readable text on very short or zoomed screens.
-  const accessibleScroll = availableHeight < 490 || fontScale >= 1.4;
+  const accessibleScroll = availableHeight < 525 || fontScale >= 1.4;
 
   const completedCount = completedLessons.length;
   const exploredCount = new Set(completedLessons.map(lesson => lesson.categoryId)).size;
