@@ -500,6 +500,27 @@ tree = adventure(adventureProps);
 assert.ok(nodes(tree).some(node => node.props?.testID === "subcategory-adventure-path"));
 assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("adventure-node-")).length, 30);
 assert.equal(nodes(tree).filter(node => node.props?.children?.startsWith?.("ΚΕΦΑΛΑΙΟ ")).length, 5);
+const categoryHeader = nodes(tree).find(node => node.props?.testID === "adventure-category-header");
+const categoryTitle = nodes(categoryHeader).find(node => node.props?.testID === "adventure-category-title");
+assert.equal(categoryTitle.props.children, "ΙΣΤΟΡΙΑ",
+  "the global Gnosi logo is replaced with the selected category");
+assert.ok(!nodes(tree).some(node => node.props?.children === "ΓΝΩΣΗ"),
+  "hide the redundant logo on the adventure screen");
+assert.ok(!nodes(tree).some(node => node.props?.children === "Ο ΧΑΡΤΗΣ ΤΗΣ ΔΙΑΔΡΟΜΗΣ"),
+  "avoid a second heading that pushes the map below the fold");
+assert.ok(!nodes(tree).some(node => node.props?.children === "Ιστορικό ταξίδι"),
+  "subcategory description no longer consumes the map viewport");
+const compactCard = nodes(tree).find(node => node.props?.testID === "adventure-continue");
+const progressInCard = nodes(compactCard).find(node => node.props?.testID === "adventure-progress");
+assert.ok(progressInCard, "the only progress track is integrated into the Continue card");
+assert.equal(nodes(tree).filter(node => node.props?.testID === "adventure-progress").length, 1);
+assert.ok(nodes(compactCard).some(node => node.props?.children === "Αρχαία Ελλάδα"),
+  "subcategory identity moves into the Continue card");
+assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-map").props.style[0].marginTop, 2,
+  "no oversized gap before the map");
+const headerBack = nodes(categoryHeader).find(node => node.props?.testID === "adventure-back");
+headerBack.props.onPress();
+assert.equal(actions.at(-1), "back", "compact header preserves back navigation");
 const first = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0");
 const second = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1");
 assert.equal(first.props.disabled, false);
@@ -527,6 +548,11 @@ assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.strok
   "completed legs use a green route");
 assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#A89BFF"),
   "the next leg is distinctly highlighted");
+const nineteenProgress = nodes(tree).find(node => node.props?.testID === "adventure-progress");
+assert.equal(nineteenProgress.props.accessibilityValue.now, 19);
+assert.equal(nineteenProgress.props.accessibilityValue.max, 30);
+assert.ok(nodes(tree).find(node => node.props?.testID === "adventure-continue"),
+  "Continue card stays visible with older completion history");
 const next = nodes(tree).find(node => node.props?.testID === "adventure-continue");
 next.props.onPress();
 assert.equal(actions.at(-1), "open:anc-19", "Continue opens the next unlocked lesson");
