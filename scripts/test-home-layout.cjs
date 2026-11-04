@@ -617,6 +617,17 @@ assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.strok
   "completed legs use a green route");
 assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#A89BFF"),
   "the next leg is distinctly highlighted");
+assert.equal(nodes(mapFrame).filter(node => node.type === "path" &&
+  node.props?.stroke === "#BBA889").length, 29,
+"every route leg receives a static engraved casing");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#3F9A7C"),
+  "completed path receives a subtle static emerald halo");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#AD9FFB"),
+  "the next active segment receives a lavender halo");
+const titleOnMap = nodes(mapFrame).find(node => node.type === "Text" &&
+  node.props?.children === "Ενότητα 20");
+assert.equal(titleOnMap.props.style[0].backgroundColor, "rgba(9,15,27,0.79)",
+  "checkpoint labels retain contrast over coastlines and gradients");
 const nineteenProgress = nodes(tree).find(node => node.props?.testID === "adventure-progress");
 assert.equal(nodes(nineteenProgress).find(node => node.type === "AdventureProgressFill").props.percent, 63,
   "animated fill receives the actual lesson completion percentage");
@@ -731,6 +742,12 @@ assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptica
 assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
 assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
 assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
+assert.match(atlasSource, /RadialGradient id="adventure-atlas-ambient"/,
+  "static center light adds visual depth");
+assert.match(atlasSource, /RadialGradient id="adventure-atlas-vignette"/,
+  "static edge vignette focuses the path");
+assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
+  "lighting adds no animated layers beyond the existing ambient tide");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
