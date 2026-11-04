@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
+import { useDailySnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
-import { lessons, type Lesson } from "../data/lessons";
-import { lessonScores } from "../utils/weeklyReview";
+
 import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import { MotionView } from "../components/HomeMotion";
 import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
 import { colors } from "../theme";
@@ -29,14 +30,9 @@ function MetricCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function PlayerStatsScreen({ onBack, completedLessons, totalLessonCount, lessonProgressLoaded }: { onBack: () => void; completedLessons: Lesson[]; totalLessonCount: number; lessonProgressLoaded: boolean }) {
-  const learning = useLearningSnapshot();
+export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
   const daily = useDailySnapshot();
   const [dailyExpanded, setDailyExpanded] = useState(false);
-  const mastery = useMemo(() => {
-    const rows = lessons.map(lesson => lessonScores(lesson, learning.activity, learning.weeklyReviews));
-    return { count: rows.reduce((sum, row) => sum + row.mastered, 0), unknown: completedLessons.filter(lesson => !lessonScores(lesson, learning.activity, learning.weeklyReviews).hasDetails).length };
-  }, [learning.activity, learning.weeklyReviews, completedLessons]);
   const history = useMemo(() => dailyHistory(daily.doc), [daily.doc]);
   const historyLoaded = daily.ready;
   const [todayKey, setTodayKey] = useState(() => getAthensDateKey());
@@ -58,26 +54,24 @@ export default function PlayerStatsScreen({ onBack, completedLessons, totalLesso
     [history, todayKey],
   );
 
-  const lessonProgressPercent = totalLessonCount ? Math.min(100, Math.round(completedLessons.length / totalLessonCount * 100)) : 0;
-  return <ScrollView contentContainerStyle={styles.content}>
-    <AppHeader onBack={onBack} /><SyncStatus quiet />
-    <Text style={styles.title}>Τα στατιστικά σου</Text>
-    <Text style={styles.intro}>Ο ρυθμός σου, οι ανακαλύψεις σου και οι καθημερινές προκλήσεις σου.</Text>
-      <View testID="progress-overview" style={styles.overview}>
-        <View style={styles.completionHero}>
-          <Text style={styles.metricLabel}>ΟΛΟΚΛΗΡΩΜΕΝΑ ΜΑΘΗΜΑΤΑ</Text>
-          <Text style={styles.heroValue}>{lessonProgressLoaded ? completedLessons.length : "—"}<Text style={styles.heroTotal}> / {totalLessonCount}</Text></Text>
-          <View style={styles.track} accessible accessibilityRole="progressbar" accessibilityLabel="Ολοκληρωμένα μαθήματα" accessibilityValue={{ min: 0, max: totalLessonCount || 1, now: lessonProgressLoaded ? completedLessons.length : 0 }}>
-            <View style={[styles.trackFill, { width: lessonProgressLoaded ? `${lessonProgressPercent}%` : "0%" }]} />
-          </View>
-        </View>
+  return <View style={styles.screen}>
+    <ProgressGradientBackground />
+    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AppHeader onBack={onBack} /><SyncStatus quiet />
+      <MotionView entranceDelay={0} style={styles.heading}>
+        <Text style={styles.eyebrow}>Ο ΡΥΘΜΟΣ ΣΟΥ</Text>
+        <Text style={styles.title}>Η δραστηριότητά σου</Text>
+        <Text style={styles.intro}>Η συνέπειά σου και οι καθημερινές προκλήσεις.</Text>
+      </MotionView>
+      <MotionView entranceDelay={65} style={styles.overview} testID="activity-overview">
         <View style={styles.metricsGrid}>
-          <MetricCard label="ΤΡΕΧΟΝ ΗΜΕΡΗΣΙΟ ΣΕΡΙ" value={historyLoaded ? String(stats.currentStreak) : "—"} />
-          <MetricCard label="ΣΩΣΤΑ ΑΠΑΝΤΗΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ" value={learning.ready ? String(mastery.count) : "—"} />
+          <MetricCard label="ΤΡΕΧΟΝ ΣΕΡΙ QUIZ" value={historyLoaded ? String(stats.currentStreak) : "—"} />
+          <MetricCard label="ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ" value={historyLoaded ? String(stats.longestStreak) : "—"} />
+          <MetricCard label="ΟΛΟΚΛΗΡΩΜΕΝΑ QUIZ" value={historyLoaded ? String(stats.completedChallenges) : "—"} />
+          <MetricCard label="ΣΥΝΟΛΙΚΟΙ ΠΟΝΤΟΙ QUIZ" value={historyLoaded ? stats.totalPoints.toLocaleString("el-GR") : "—"} />
         </View>
-        {learning.ready && mastery.unknown > 0 ? <Text style={styles.muted}>Παλιότερα σκορ χωρίς ανάλυση: χρειάζεται επανάληψη.</Text> : null}
-      </View>
-
+      </MotionView>
+      <Text style={styles.sectionTitle}>Η δραστηριότητά σου</Text>
     <LearningActivityPanel todayKey={todayKey} />
       <View testID="progress-daily">
         <Pressable style={styles.disclosure} accessibilityRole="button" accessibilityState={{ expanded: dailyExpanded }} onPress={() => setDailyExpanded(value => !value)}>
@@ -91,12 +85,6 @@ export default function PlayerStatsScreen({ onBack, completedLessons, totalLesso
         </View>
       ) : (
         <>
-          <View style={styles.metricsGrid}>
-            <MetricCard label="ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ" value={`${stats.longestStreak}`} />
-            <MetricCard label="ΟΛΟΚΛΗΡΩΜΕΝΑ QUIZ" value={`${stats.completedChallenges}`} />
-            <MetricCard label="ΣΥΝΟΛΙΚΟΙ ΠΟΝΤΟΙ" value={stats.totalPoints.toLocaleString("el-GR")} />
-          </View>
-
           <View style={styles.accuracyCard}>
             <View style={styles.accuracyHeader}>
               <View style={styles.accuracyCopy}>
@@ -136,23 +124,24 @@ export default function PlayerStatsScreen({ onBack, completedLessons, totalLesso
         </View> : null}
       </View>
 
-  </ScrollView>;
+    </ScrollView>
+  </View>;
 }
 const styles = StyleSheet.create({
-  overview: { gap: 12, marginTop: 4, marginBottom: 16 },
-  completionHero: { backgroundColor: colors.accentSurface, borderRadius: 22, borderColor: colors.borderStrong, borderWidth: 1, padding: 20 },
-  heroValue: { color: colors.text, fontSize: 44, lineHeight: 56, fontWeight: "900", marginTop: 8 },
-  heroTotal: { color: colors.textMuted, fontSize: 20, fontWeight: "600" },
+  screen: { flex: 1, minHeight: 0, backgroundColor: "#101827" },
+  heading: { gap: 4, marginTop: 6, marginBottom: 14 },
+  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 1.1 },
+  overview: { marginBottom: 8 },
   disclosure: { flexDirection: "row", alignItems: "center", minHeight: 72, padding: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, marginVertical: 8 },
   dailyDetails: { paddingBottom: 12 },
   accountCopy: { flex: 1, gap: 4 },
   accountTitle: { color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "800" },
-  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 42 },
-  title: { color: colors.text, fontSize: 31, lineHeight: 39, fontWeight: "900", marginBottom: 10 },
-  intro: { color: colors.textBody, fontSize: 14, lineHeight: 22, marginBottom: 25 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 10, paddingBottom: 36 },
+  title: { color: colors.text, fontSize: 25, lineHeight: 32, fontWeight: "900" },
+  intro: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
   sectionTitle: { color: colors.text, fontSize: 19, fontWeight: "900", marginTop: 15, marginBottom: 13 },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  metricCard: { flexBasis: "46%", flexGrow: 1, minHeight: 112, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 17, padding: 15, gap: 8 },
+  metricCard: { flexBasis: "46%", flexGrow: 1, minHeight: 91, backgroundColor: "#20243C", borderColor: "#484360", borderWidth: 1, borderRadius: 17, padding: 13, gap: 5 },
   metricLabel: { color: colors.textMuted, fontSize: 9, fontWeight: "900", letterSpacing: 0.8, lineHeight: 14 },
   cardLabel: { minHeight: 28, flexGrow: 1 },
   metricValue: { color: colors.accentLight, fontSize: 29, lineHeight: 38, fontWeight: "900", fontVariant: ["tabular-nums"] },
