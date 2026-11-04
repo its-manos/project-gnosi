@@ -376,10 +376,11 @@ const styles = StyleSheet.create({
   stopPosition: { position: "absolute", width: NODE_WIDTH, alignItems: "center" },
   chapterBadge: {
     position: "absolute", top: -28, alignSelf: "center", overflow: "hidden",
-    color: "#D6C8FF", fontSize: 10, fontWeight: "900", textAlign: "center",
+    // Warm engraved chapter markers distinguish milestones from violet lessons.
+    color: "#E3CEAA", fontSize: 10, fontWeight: "900", textAlign: "center",
     lineHeight: 16, letterSpacing: 0.9, paddingHorizontal: 10, paddingVertical: 3,
-    borderRadius: 8, borderWidth: 0.75, borderColor: "#756E8F",
-    backgroundColor: "#24263E",
+    borderRadius: 8, borderWidth: 0.75, borderColor: "#90795F",
+    backgroundColor: "#24263B",
   },
   nodePressable: { width: NODE_WIDTH, alignItems: "center", minHeight: 120 },
   nodeOuter: { width: 74, height: 74, alignItems: "center", justifyContent: "center" },
