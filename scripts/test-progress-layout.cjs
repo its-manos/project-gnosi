@@ -10,7 +10,7 @@ const text = tree => typeof tree === "string" || typeof tree === "number"
 const node = (tree, testID) => nodes(tree).find(n => n.props.testID === testID);
 const button = (tree, label) => nodes(tree).find(n => n.type === "Pressable" && text(n).includes(label));
 
-let slots = [], cursor = 0, fontScale = 1;
+let slots = [], cursor = 0, fontScale = 1, windowWidth = 390;
 const react = {
   useState: init => {
     const i = cursor++;
@@ -21,7 +21,7 @@ const react = {
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
   StyleSheet: { create: value => value },
-  useWindowDimensions: () => ({ height: 810, width: 390, fontScale }),
+  useWindowDimensions: () => ({ height: 810, width: windowWidth, fontScale }),
 };
 const { lessons, categories } = load("src/data/lessons.ts");
 const knowledge = { categories: [
@@ -256,6 +256,25 @@ tree = renderInsights();
 assert.equal(nodes(tree).find(n => n.type === "Mastery").props.detail, true);
 assert.ok(text(tree).includes("ΚΑΤΑΚΤΗΜΕΝΕΣ ΕΝΝΟΙΕΣ"));
 assert.ok(!nodes(tree).some(n => n.type === "Categories"));
+
+// Responsive detail layout: three columns on wide screens and a single
+// readable column when large text is enabled.
+slots = []; cursor = 0; windowWidth = 690; fontScale = 1;
+insightProps.initialView = "knowledge";
+tree = renderInsights();
+assert.equal(nodes(tree).find(n => n.type === "Mastery").props.threeColumn, true,
+  "wide screens get three compact knowledge tile columns");
+button(tree, "Ανάγνωση").props.onPress();
+tree = renderInsights();
+assert.equal(nodes(tree).find(n => n.type === "Categories").props.threeColumn, true,
+  "wide screens get matching reading columns");
+slots = []; cursor = 0; fontScale = 1.5;
+insightProps.initialView = "reading";
+tree = renderInsights();
+assert.equal(nodes(tree).find(n => n.type === "Categories").props.singleColumn, true,
+  "large accessibility fonts switch to single-column cards");
+assert.equal(nodes(tree).find(n => n.type === "Categories").props.threeColumn, false);
+fontScale = 1; windowWidth = 390;
 
 // Existing analytics allowlist and Android Back contract must recognize the new route.
 const routeSource = fs.readFileSync(require("node:path").join(__dirname, "../src/navigation/AppNavigator.tsx"), "utf8");
