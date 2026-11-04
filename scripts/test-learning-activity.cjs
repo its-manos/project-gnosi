@@ -127,6 +127,11 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
     'The activity chart must remain available in the dashboard');
   assert.ok(dashboardNodes.some(n=>n.props?.testID==='activity-accuracy'),
     'Lesson accuracy remains accessible without another large card');
+  const insightNode=dashboardNodes.find(n=>n.props?.testID==='activity-insight');
+  assert.ok(insightNode,'The compact dashboard includes a weekly activity insight');
+  assert.ok(nodes(insightNode).some(n=>typeof n.props?.children==='string' &&
+    n.props.children.includes('Αυτή την εβδομάδα')),
+    'Insight must describe the measured week rather than inventing a comparison');
   assert.equal(dashboardNodes.filter(n=>n.props?.children==='Η δραστηριότητά σου').length,0,
     'The parent Statistics screen owns its heading');
   // Preview and cancellation never write to the account. Confirm imports history.
