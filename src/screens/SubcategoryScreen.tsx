@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import Animated, { Easing, cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef,
+  useSharedValue, withTiming } from "react-native-reanimated";
 import type { ScrollViewInstance } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
@@ -40,11 +42,16 @@ export function getAdventureEntryOffset(
   return Math.min(maxScroll, Math.max(0, chapterY - 112));
 }
 
-// Shared destination for both the initial focus and "Η ΘΕΣΗ ΜΟΥ".
+// Keep the established, correctly aligned current-lesson destination.
 export function getAdventureCurrentOffset(
   checkpointY: number, mapHeight: number, viewportHeight: number,
 ) {
   return getAdventureEntryOffset(checkpointY + 12, mapHeight, viewportHeight);
+}
+
+// Slower native-thread glide, without frame-by-frame JavaScript scroll commands.
+export function getAdventureScrollDuration(distance: number) {
+  return Math.round(Math.min(5200, Math.max(1500, Math.abs(distance) * 1.25)));
 }
 
 function pointFor(index: number, width: number, isAncientGreece: boolean) {
@@ -68,7 +75,12 @@ export default function SubcategoryScreen({
   completedLessonIds, inProgressLessonIds, progressLoaded,
 }: Props) {
   const { width: viewportWidth } = useWindowDimensions();
-  const scrollRef = useRef<ScrollViewInstance>(null);
+  const scrollRef = useAnimatedRef<ScrollViewInstance>();
+  const scrollPosition = useSharedValue(0);
+  useAnimatedReaction(
+    () => scrollPosition.value,
+    y => { scrollTo(scrollRef, 0, y, false); },
+  );
   const [mapViewportHeight, setMapViewportHeight] = useState(0);
   const [mapContentHeight, setMapContentHeight] = useState(0);
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
@@ -105,17 +117,20 @@ export default function SubcategoryScreen({
     return () => { mounted = false; subscription.remove(); };
   }, []);
 
-  // Both entry focus and the "Η ΘΕΣΗ ΜΟΥ" shortcut use the same ScrollView
-  // command and exact destination. A single native animated scrollTo is more
-  // reliable on iOS than issuing dozens of scrollTo calls per JS animation
-  // frame (which can end prematurely on a long, detailed map).
+  // Animate on the UI thread; keep the same landing point that already
+  // works, while allowing a slower, explicit duration.
   const scrollToCurrent = (animated: boolean) => {
     const focusIndex = nextIndex >= 0 ? nextIndex : path.length - 1;
     if (focusIndex < 0 || !points[focusIndex]) return;
     const target = getAdventureCurrentOffset(
       points[focusIndex].y, mapHeight, mapViewportHeight,
     );
-    scrollRef.current?.scrollTo({ y: target, animated });
+    scrollPosition.value = animated
+      ? withTiming(target, {
+        duration: getAdventureScrollDuration(target - scrollPosition.value),
+        easing: Easing.inOut(Easing.cubic),
+      })
+      : target;
   };
 
   // The Continue card stays pinned. After progress and map measurements are
@@ -130,12 +145,6 @@ export default function SubcategoryScreen({
     scrollToCurrent(!reduceMotion);
   }, [progressLoaded, reduceMotion, mapViewportHeight, mapContentHeight,
     subcategory.id, nextIndex, mapHeight, path.length]);
-
-  const jumpToCurrent = () => {
-    if (nextIndex < 0 || !points[nextIndex]) return;
-    userInteractedRef.current = true;
-    scrollToCurrent(!reduceMotion);
-  };
 
   return (
     <View testID="subcategory-adventure-path" style={styles.screen}>
@@ -200,7 +209,7 @@ export default function SubcategoryScreen({
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
         <View testID="adventure-map-viewport" style={styles.mapViewport}>
-          <ScrollView ref={scrollRef} testID="adventure-map-scroll"
+          <Animated.ScrollView ref={scrollRef} testID="adventure-map-scroll"
             style={styles.mapScroll} contentContainerStyle={styles.mapScrollContent}
             showsVerticalScrollIndicator={false} bounces={false}
             alwaysBounceVertical={false} overScrollMode="never"
@@ -211,7 +220,7 @@ export default function SubcategoryScreen({
             onContentSizeChange={(_width, height) => {
               setMapContentHeight(previous => Math.abs(previous - height) < 1 ? previous : height);
             }}
-            onScrollBeginDrag={() => { userInteractedRef.current = true; }}>
+            onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAnimation(scrollPosition); }}>
             <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
             {/* Faint engraved contours and stars suggest an old atlas without a
@@ -280,13 +289,7 @@ export default function SubcategoryScreen({
             );
           })}
             </View>
-          </ScrollView>
-          {progressLoaded && nextIndex > 1 ?
-            <Pressable testID="adventure-jump-to-current" onPress={jumpToCurrent}
-              style={({ pressed }) => [styles.jumpButton, pressed && styles.pressed]}
-              accessibilityRole="button" accessibilityLabel="Μετάβαση στον επόμενο σταθμό του χάρτη">
-              <Text style={styles.jumpText}>Η ΘΕΣΗ ΜΟΥ  ↓</Text>
-            </Pressable> : null}
+          </Animated.ScrollView>
         </View>}
     </View>
   );
@@ -342,13 +345,6 @@ const styles = StyleSheet.create({
   },
   progressTrack: { height: 7, borderRadius: 5, backgroundColor: "#323047", overflow: "hidden" },
   progressFill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 5 },
-  jumpButton: {
-    position: "absolute", top: 0, right: 0, zIndex: 2,
-    minHeight: 38, paddingHorizontal: 11, borderRadius: 11,
-    backgroundColor: "#27243D", borderWidth: 1, borderColor: "#484162",
-    justifyContent: "center", alignItems: "center",
-  },
-  jumpText: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: 0.3 },
   map: { alignSelf: "center", position: "relative", marginTop: 2 },
   pathSvg: { position: "absolute", top: 0, left: 0 },
   stopPosition: { position: "absolute", width: NODE_WIDTH, alignItems: "center" },
