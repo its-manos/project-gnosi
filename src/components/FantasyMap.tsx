@@ -596,7 +596,6 @@ export default function FantasyMap({
             <Ellipse cx={MAP_WIDTH * 0.23} cy={mapHeight * 0.82}
               rx={MAP_WIDTH * 0.38} ry={mapHeight * 0.27}
               fill="url(#atlas-nebula-gold)" />
-            <AtlasAtmosphereBreath height={mapHeight} />
           </G>
         ) : null}
         {Array.from({ length: 9 }, (_, index) => (
@@ -654,11 +653,6 @@ export default function FantasyMap({
                 fill={index % 5 === 0 ? "#E4CFA6" : "#B5CADD"}
                 opacity={index % 11 === 0 ? 0.52 : index % 5 === 0 ? 0.3 : 0.17} />;
             })}
-            {[0, 11, 22, 33, 44].map((star, index) => (
-              <AtlasTwinkleStar key={star} index={index}
-                cx={14 + stableNoise(star + 91) * (MAP_WIDTH - 28)}
-                cy={20 + stableNoise(star + 397) * (mapHeight - 40)} />
-            ))}
             {Array.from({ length: 7 }, (_, index) => {
               const x = 24 + stableNoise(index + 601) * (MAP_WIDTH - 48);
               const y = 24 + stableNoise(index + 743) * (mapHeight - 48);
@@ -978,6 +972,17 @@ export default function FantasyMap({
           );
         })}
       </Svg>
+      {fitted ? (
+        <View testID="atlas-native-ambient-layer" pointerEvents="none"
+          accessible={false} style={StyleSheet.absoluteFill}>
+          <AtlasAtmosphereBreath />
+          {[0, 11, 22, 33, 44].map((star, index) => (
+            <AtlasTwinkleStar key={star} index={index} mapHeight={mapHeight}
+              cx={14 + stableNoise(star + 91) * (MAP_WIDTH - 28)}
+              cy={20 + stableNoise(star + 397) * (mapHeight - 40)} />
+          ))}
+        </View>
+      ) : null}
       </View> : null}
 
       {showList && !hideControls ? (
