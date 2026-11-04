@@ -509,7 +509,7 @@ const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
   "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
-  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 }, true);
 const adventure = adventureModule.default;
 // Automatic focus and "Η ΘΕΣΗ ΜΟΥ" now use the same checkpoint offset.
@@ -551,9 +551,21 @@ const progressInCard = nodes(compactCard).find(node => node.props?.testID === "a
 assert.ok(progressInCard, "the only progress track is integrated into the Continue card");
 assert.equal(compactCard.props.entranceDelay, 70, "Continue card uses the Home motion entrance");
 assert.equal(categoryHeader.props.entranceDelay, 0, "fixed header uses the Home motion entrance");
+const motionHeaderIcon = nodes(categoryHeader).find(node => node.props?.index === 0 &&
+  nodes(node).some(child => child.props?.children === "✦"));
+assert.ok(motionHeaderIcon,
+  "the fixed header reuses Home's slow, reduced-motion-aware icon drift");
+const progressCount = nodes(compactCard).find(node => node.props?.progressKey === "0/30");
+assert.ok(progressCount, "completed-lesson count uses Home's one-shot counter animation");
+assert.equal(progressCount.props.children, "0 / 30",
+  "progress count retains the visible and accessible original text");
 const progressFill = nodes(progressInCard).find(node => node.type === "AdventureProgressFill");
 assert.ok(progressFill, "progress fill is animated without changing the accessible track");
 const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
+assert.equal(pinnedFrame.props.entranceDelay, 150,
+  "the fixed map viewport fades in only once after the Continue card");
+assert.equal(pinnedFrame.props.style.flex, 1,
+  "entrance animation does not change map viewport layout sizing");
 const nestedScroll = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-map-scroll");
 assert.ok(nestedScroll, "the map has its own scroll container");
 assert.equal(nodes(tree).filter(node => node.type === "ScrollView").length, 1,
@@ -573,6 +585,8 @@ assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-map").pr
 const headerBack = nodes(categoryHeader).find(node => node.props?.testID === "adventure-back");
 headerBack.props.onPress();
 assert.equal(actions.at(-1), "back", "compact header preserves back navigation");
+assert.equal(headerBack.props.pressScale, 0.95,
+  "Back reuses Home's press feedback without altering its 44pt hit target");
 const first = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0");
 const second = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1");
 assert.equal(first.props.disabled, false);
@@ -710,6 +724,9 @@ assert.equal(longGreekLabel.props.children, longGreekTitle,
   "full editorial title is preserved without manually shortening content");
 assert.equal(longGreekLabel.props.numberOfLines, 3,
   "long editorial titles get a third line while leaving node coordinates untouched");
+const nineteenCount = nodes(tree).find(node => node.props?.progressKey === "19/30");
+assert.equal(nineteenCount.props.children, "19 / 30",
+  "counter reanimates only when completion changes, without affecting layout");
 const nineteenProgress = nodes(tree).find(node => node.props?.testID === "adventure-progress");
 assert.equal(nodes(nineteenProgress).find(node => node.type === "AdventureProgressFill").props.percent, 63,
   "animated fill receives the actual lesson completion percentage");
@@ -757,7 +774,7 @@ const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
   "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
-  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 });
 const renderMotion = extra => {
   motionState.stateIndex = 0;
