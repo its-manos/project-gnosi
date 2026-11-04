@@ -16,8 +16,10 @@ type Props = {
   onOpenSubcategory: (subcategoryId: string, categoryId: string) => void;
 };
 
+// Muted slate, violet, bronze and green from the Adventure Path vocabulary.
+// These are decorative identities, never lock/progression colors.
 const REGION_COLORS = [
-  "#7867AA", "#487C79", "#A08051", "#577C9C", "#9B6D86", "#658A75",
+  "#6C668A", "#4E6D70", "#90795F", "#526A7D", "#756478", "#5C7769",
 ];
 const REGION_SYMBOLS = ["✦", "✧", "✥", "✺", "✷", "✹"];
 
@@ -172,36 +174,36 @@ const styles = StyleSheet.create({
   backText: { color: colors.accentLight, fontSize: 11, fontWeight: "800", letterSpacing: 0.4 },
   categoryTitle: {
     flex: 1, textAlign: "center", color: colors.accentLight,
-    fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 1.2,
+    fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 1.4,
   },
   headerMark: { width: 66, minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
   sparkle: { color: colors.accentLight, fontSize: 22 },
   continueCard: {
-    paddingHorizontal: 15, paddingTop: 11, paddingBottom: 12,
+    paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
     backgroundColor: "#1B2034", borderColor: "#6A618C",
-    borderWidth: 1, borderRadius: 18, gap: 7,
+    borderWidth: 1, borderRadius: 18, gap: 8,
   },
   cardHeading: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
   },
   cardCategory: {
-    flex: 1, color: "#ABA1D4", fontSize: 11, lineHeight: 17,
-    fontWeight: "900", letterSpacing: 0.8,
+    flex: 1, color: colors.accentLight, fontSize: 13, lineHeight: 19,
+    fontWeight: "900", letterSpacing: 0.15,
   },
   categoryCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
   cardBody: { flexDirection: "row", alignItems: "center", gap: 10 },
-  cardCopy: { flex: 1, gap: 2 },
+  cardCopy: { flex: 1, gap: 3 },
   cardEyebrow: {
     color: "#ABA1D4", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.8,
   },
   cardTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "800" },
   cardAction: {
-    width: 38, height: 38, borderRadius: 19, backgroundColor: colors.accent,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
     borderWidth: 1, borderColor: "#C9BFFF", alignItems: "center", justifyContent: "center",
   },
   cardArrow: { color: "#171B2A", fontSize: 22, lineHeight: 28, fontWeight: "900" },
   progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  progressCaption: { color: "#ADAFC4", fontSize: 10, lineHeight: 14, fontWeight: "700" },
+  progressCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   progressTrack: {
     height: 8, borderRadius: 5, backgroundColor: "#302F4B", overflow: "hidden",
     borderWidth: 1, borderColor: "#62597D",
