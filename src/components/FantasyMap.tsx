@@ -23,6 +23,8 @@ type Props = {
   minHeight?: number;
   /** Available fixed atlas area; only Category screens use the compact constellation layout. */
   fitViewport?: { width: number; height: number };
+  /** Category Atlas shows only the exploration map, without a count or mode switch. */
+  hideControls?: boolean;
   onControlsHeightChange?: (height: number) => void;
 };
 
@@ -402,6 +404,7 @@ export default function FantasyMap({
   overview = false,
   minHeight = 0,
   fitViewport,
+  hideControls = false,
   onControlsHeightChange,
 }: Props) {
   const [showList, setShowList] = useState(false);
@@ -415,7 +418,8 @@ export default function FantasyMap({
   // Match the measured on-screen width and free height. The fixed Category
   // atlas keeps all destinations visible without making users chase a path.
   const fittedCanvasHeight = fitted
-    ? Math.max(160, fitViewport!.height - controlsHeight - 11) : 0;
+    ? Math.max(160, fitViewport!.height - (hideControls ? 0 : controlsHeight)
+      - (hideControls ? 0 : 11)) : 0;
   const mapHeight = fitted
     ? Math.max(180, Math.round(fittedCanvasHeight * MAP_WIDTH / Math.min(520, fitViewport!.width)))
     : overview ? naturalHeight : Math.max(naturalHeight, Math.min(960, minHeight));
@@ -475,7 +479,7 @@ export default function FantasyMap({
 
   return (
     <View style={styles.container}>
-      <View style={[styles.viewControls, overview && styles.overviewControls]}
+      {!hideControls ? <View style={[styles.viewControls, overview && styles.overviewControls]}
         onLayout={event => {
           const height = event.nativeEvent.layout.height;
           setControlsHeight(previous => Math.abs(previous - height) < 1 ? previous : height);
@@ -499,8 +503,8 @@ export default function FantasyMap({
             </Pressable>
           ))}
         </View>
-      </View>
-      {!showList ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame,
+      </View> : null}
+      {(!showList || hideControls) ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame,
         { aspectRatio: MAP_WIDTH / mapHeight }, fitted && styles.fittedFrame]}>
       <Svg
         width="100%"
@@ -976,7 +980,7 @@ export default function FantasyMap({
       </Svg>
       </View> : null}
 
-      {showList ? (
+      {showList && !hideControls ? (
         <ListContainer testID="knowledge-region-list"
           style={fitted ? [styles.regionListScroll,
             { maxHeight: Math.max(140, fitViewport!.height - controlsHeight - 11) }] : styles.regionList}>
