@@ -16,7 +16,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
   const { store } = useLearningSession();
   const [activeSection, setActiveSection] = useState<"account" | "experience" | "privacy" | "sync" | "dev" | null>(null);
   const goBack = () => activeSection ? setActiveSection(null) : onBack();
-  return <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
+  return <ScrollView scrollEnabled={activeSection !== null} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <AppHeader onBack={goBack} />
     {activeSection === null ? <View testID="account-settings-dashboard">
       <View style={styles.heading}>
@@ -52,6 +52,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
 }
 const styles = StyleSheet.create({
   content: { width: "100%", maxWidth: 640, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  overviewContent: { flexGrow: 1 },
   heading: { gap: 8, marginTop: 12, marginBottom: 18 },
   eyebrow: { color: colors.accentLight, fontSize: 10, fontWeight: "800", letterSpacing: 1.7 },
   title: { color: colors.text, fontSize: 27, lineHeight: 34, fontWeight: "900" },
