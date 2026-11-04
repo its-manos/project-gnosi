@@ -1,4 +1,4 @@
-/** Full-screen, screen-anchored Aegean atlas for the Adventure Path.
+/** Fixed-viewport Aegean atlas for the Adventure Path.
  * All geometry is local SVG: no oversized bitmap, remote fetch or per-frame
  * path generation. The viewBox matches the measured aspect ratio exactly.
  */
@@ -9,7 +9,7 @@ import Animated, {
   withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 import Svg, {
-  Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText,
+  Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText,
 } from "react-native-svg";
 
 type Props = { width: number; height: number };
@@ -88,6 +88,18 @@ function AdventureAtlasBackground({ width, height }: Props) {
       { x: 254, y: .584, rx: 6, ry: 7, turn: 25 },
       { x: 166, y: .531, rx: 5, ry: 8, turn: -16 },
       { x: 292, y: .759, rx: 5, ry: 9, turn: 30 },
+      // Small archipelagos give the chart a sense of scale without adding
+      // large visual shapes underneath the lesson labels.
+      { x: 235, y: .249, rx: 4.5, ry: 8, turn: -20 }, // Northern Sporades
+      { x: 251, y: .263, rx: 6, ry: 4, turn: 18 },
+      { x: 267, y: .277, rx: 3.4, ry: 4.6, turn: 24 },
+      { x: 171, y: .558, rx: 4.5, ry: 6, turn: -12 }, // Western Cyclades
+      { x: 173, y: .610, rx: 3.4, ry: 5, turn: 24 },
+      { x: 249, y: .658, rx: 3.8, ry: 7.5, turn: 31 }, // Lesser Cyclades
+      { x: 258, y: .681, rx: 3.5, ry: 4.3, turn: 14 },
+      { x: 277, y: .697, rx: 4.2, ry: 5.6, turn: -13 },
+      { x: 339, y: .719, rx: 3.5, ry: 5.2, turn: 30 }, // Dodecanese
+      { x: 345, y: .749, rx: 4.2, ry: 6.5, turn: -28 },
     ];
     const relief = [
       `M 18 ${h * .045} C 81 ${h * .055} 89 ${h * .09} 79 ${h * .14} S 46 ${h * .225} 20 ${h * .252}`,
@@ -149,8 +161,20 @@ function AdventureAtlasBackground({ width, height }: Props) {
             <Stop offset="0%" stopColor="#30403E" />
             <Stop offset="100%" stopColor="#282F3E" />
           </LinearGradient>
+          {/* All atmospheric lighting is static; no per-frame shader changes. */}
+          <RadialGradient id="adventure-atlas-ambient" cx="50%" cy="44%" rx="71%" ry="69%">
+            <Stop offset="0%" stopColor="#7796A4" stopOpacity={0.16} />
+            <Stop offset="52%" stopColor="#516C83" stopOpacity={0.06} />
+            <Stop offset="100%" stopColor="#516C83" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="adventure-atlas-vignette" cx="50%" cy="46%" rx="77%" ry="75%">
+            <Stop offset="25%" stopColor="#050B17" stopOpacity={0} />
+            <Stop offset="76%" stopColor="#050B17" stopOpacity={0.12} />
+            <Stop offset="100%" stopColor="#050B17" stopOpacity={0.53} />
+          </RadialGradient>
         </Defs>
         <Rect width={420} height={h} fill="url(#adventure-sea)" />
+        <Rect width={420} height={h} fill="url(#adventure-atlas-ambient)" />
 
         {/* Latitude/longitude rhumb grid, border and coordinates are stationary. */}
         <G stroke="#A9B6BA" strokeWidth={0.65} opacity={0.11} strokeDasharray="2 13">
@@ -161,6 +185,20 @@ function AdventureAtlasBackground({ width, height }: Props) {
         </G>
         <Rect x={9} y={9} width={402} height={Math.max(0, h - 18)}
           fill="none" stroke="#BEAC95" strokeWidth={0.7} opacity={0.18} />
+        {/* Four quiet Greek-key corner engravings, not a busy repeating frame. */}
+        <G fill="none" stroke="#C8AB83" strokeWidth={0.85} opacity={0.23}>
+          {[
+            { x: 18, y: 31, sx: 1, sy: 1 },
+            { x: 402, y: 31, sx: -1, sy: 1 },
+            { x: 18, y: h - 31, sx: 1, sy: -1 },
+            { x: 402, y: h - 31, sx: -1, sy: -1 },
+          ].map((corner, index) =>
+            <G key={"fret-" + index}
+              transform={`translate(${corner.x} ${corner.y}) scale(${corner.sx} ${corner.sy})`}>
+              <Path d="M 0 10 H 36 V 0 H 12 V 7 H 28 V 4 H 20" />
+              <Path d="M 0 14 H 40" opacity={0.45} />
+            </G>)}
+        </G>
         <G fill="#C0AB8C" fontSize={8} opacity={0.32} letterSpacing={1}>
           <SvgText x={20} y={23}>24° E</SvgText>
           <SvgText x={356} y={23}>26° E</SvgText>
@@ -168,6 +206,13 @@ function AdventureAtlasBackground({ width, height }: Props) {
           <SvgText x={367} y={h * .75}>36° N</SvgText>
         </G>
 
+        {/* Fine chart bearings suggest routes without overpowering checkpoints. */}
+        <G fill="none" stroke="#B9A989" strokeWidth={0.8} opacity={0.09}
+          strokeDasharray="2 14">
+          <Path d={`M 270 ${h * .235} L 420 ${h * .485}`} />
+          <Path d={`M 270 ${h * .235} L 0 ${h * .775}`} />
+          <Path d={`M 270 ${h * .235} L 80 ${h * .08}`} />
+        </G>
         {/* Two opposing shores make the sea legible as the Aegean basin. */}
         <G fill="url(#adventure-land)" fillOpacity={0.75}
           stroke="#B7A27F" strokeWidth={1.35} strokeOpacity={0.42}>
@@ -227,6 +272,8 @@ function AdventureAtlasBackground({ width, height }: Props) {
               <Path d="M -9 0 H 9 M 0 -9 V 9" />
             </G>)}
         </G>
+        {/* Soft paper-edge falloff helps checkpoints stand out without a hard frame. */}
+        <Rect width={420} height={h} fill="url(#adventure-atlas-vignette)" />
       </Svg>
 
       {/* Only this small translucent tide layer moves on the UI thread. */}

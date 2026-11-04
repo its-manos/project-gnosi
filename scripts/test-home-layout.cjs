@@ -508,8 +508,8 @@ const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
-  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
-  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
+  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo", AdventureContinueAccent: "AdventureContinueAccent", AdventureContinueArrow: "AdventureContinueArrow" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 }, true);
 const adventure = adventureModule.default;
 // Automatic focus and "Η ΘΕΣΗ ΜΟΥ" now use the same checkpoint offset.
@@ -551,9 +551,33 @@ const progressInCard = nodes(compactCard).find(node => node.props?.testID === "a
 assert.ok(progressInCard, "the only progress track is integrated into the Continue card");
 assert.equal(compactCard.props.entranceDelay, 70, "Continue card uses the Home motion entrance");
 assert.equal(categoryHeader.props.entranceDelay, 0, "fixed header uses the Home motion entrance");
+const motionHeaderIcon = nodes(categoryHeader).find(node => node.props?.index === 0 &&
+  nodes(node).some(child => child.props?.children === "✦"));
+assert.ok(motionHeaderIcon,
+  "the fixed header reuses Home's slow, reduced-motion-aware icon drift");
+const progressCount = nodes(compactCard).find(node => node.props?.progressKey === "0/30");
+assert.ok(progressCount, "completed-lesson count uses Home's one-shot counter animation");
+assert.equal(progressCount.props.children, "0 / 30",
+  "progress count retains the visible and accessible original text");
 const progressFill = nodes(progressInCard).find(node => node.type === "AdventureProgressFill");
 assert.ok(progressFill, "progress fill is animated without changing the accessible track");
+assert.equal(progressInCard.props.style.height, 8,
+  "compact progress track uses a subtly highlighted 8pt height");
+assert.equal(progressInCard.props.style.borderColor, "#62597D",
+  "progress track frame remains visibly distinct over the dark card");
+assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueAccent").length, 1,
+  "only an actionable Continue card receives the one-shot perimeter highlight");
+assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueArrow").length, 1,
+  "Continue icon receives a one-shot nudge without changing its tap target");
 const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
+assert.equal(pinnedFrame.props.entranceDelay, 150,
+  "the fixed map viewport fades in only once after the Continue card");
+assert.equal(pinnedFrame.props.style.flex, 1,
+  "entrance animation does not change map viewport layout sizing");
+assert.equal(pinnedFrame.props.style.marginBottom, 8,
+  "atlas viewport leaves a small gap above the fixed bottom navigation");
+assert.equal(pinnedFrame.props.style.paddingBottom, undefined,
+  "navigation clearance remains outside the atlas and its scroll viewport");
 const nestedScroll = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-map-scroll");
 assert.ok(nestedScroll, "the map has its own scroll container");
 assert.equal(nodes(tree).filter(node => node.type === "ScrollView").length, 1,
@@ -573,6 +597,8 @@ assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-map").pr
 const headerBack = nodes(categoryHeader).find(node => node.props?.testID === "adventure-back");
 headerBack.props.onPress();
 assert.equal(actions.at(-1), "back", "compact header preserves back navigation");
+assert.equal(headerBack.props.pressScale, 0.95,
+  "Back reuses Home's press feedback without altering its 44pt hit target");
 const first = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0");
 const second = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1");
 assert.equal(first.props.disabled, false);
@@ -594,6 +620,24 @@ const stopPositions = nodes(mapFrame).filter(node => Array.isArray(node.props?.s
 const width = mapFrame.props.style[1].width;
 assert.equal(stops.length, 30);
 assert.equal(stopPositions.length, 30);
+const chapterMarker = nodes(mapFrame).find(node => node.props?.children === "ΚΕΦΑΛΑΙΟ IV");
+assert.ok(chapterMarker, "chapter IV milestone is still positioned on the path");
+assert.equal(chapterMarker.props.style.color, "#E3CEAA",
+  "warm engraved chapter badges are distinct from the active violet checkpoint");
+assert.equal(chapterMarker.props.style.top, -28,
+  "chapter ornamentation must not shift the badge into previous lesson titles");
+// Chapter badges sit 28pt above the following stop. Allow a full
+// 3-line title but do not reserve empty space for redundant status captions.
+const chapterBeginnings = [5, 11, 18, 24];
+for (const start of chapterBeginnings) {
+  const previousTop = stopPositions[start - 1].props.style[1].top;
+  const chapterBadgeTop = stopPositions[start].props.style[1].top - 28;
+  const worstCasePreviousEnd = previousTop + 74 + 5 + 3 * 16;
+  assert.ok(chapterBadgeTop - worstCasePreviousEnd >= 20,
+    "chapter " + start + " must clear a long 3-line Greek lesson title");
+}
+assert.equal(stopPositions[1].props.style[1].top - stopPositions[0].props.style[1].top, 142,
+  "normal checkpoint density is unchanged outside chapter boundaries");
 const atlasLayer = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-atlas-underlay");
 assert.ok(atlasLayer, "underlay is inside the fixed map viewport");
 assert.equal(atlasLayer.props.pointerEvents, "none", "atlas never intercepts taps");
@@ -609,6 +653,48 @@ assert.equal(pinnedFrame.props.children[0].props.testID, "adventure-atlas-underl
   "map underlay is drawn behind the scrolling checkpoints");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
   "only the active checkpoint receives a breathing halo");
+const medallionParts = lessonId => {
+  const press = nodes(mapFrame).find(node => node.props?.testID === "adventure-node-" + lessonId);
+  assert.ok(press, "checkpoint must remain a separate accessible control");
+  const outer = nodes(press).find(node =>
+    Array.isArray(node.props?.style) && node.props.style[0]?.width === 74);
+  const coin = nodes(outer).find(node =>
+    Array.isArray(node.props?.style) && node.props.style[0]?.width === 69);
+  const inset = nodes(coin).find(node =>
+    node.props?.style?.[0]?.position === "absolute" && node.props?.style?.[0]?.top === 7);
+  return { press, outer, coin, inset };
+};
+const completedMedal = medallionParts("anc-0");
+const activeMedal = medallionParts("anc-19");
+const lockedMedal = medallionParts("anc-20");
+assert.equal(completedMedal.outer.props.style[1].borderColor, "#AE9671",
+  "completed checkpoints use a bronze outer seal");
+assert.equal(completedMedal.coin.props.style[1].backgroundColor, "#254339",
+  "completed medallions retain a green completion core");
+assert.equal(completedMedal.inset.props.style[1].borderColor, "#A8916B",
+  "completed medallions have a restrained inner engraving");
+assert.equal(activeMedal.outer.props.style[2].backgroundColor, "transparent",
+  "active outer wrapper no longer adds an opaque competing circular band");
+assert.equal(activeMedal.inset, undefined,
+  "active checkpoint omits the extra inner engraving ring");
+assert.equal(activeMedal.coin.props.style[2].borderColor, "#C5B7FF",
+  "current checkpoint keeps one clear, brighter lavender coin rim");
+assert.ok(nodes(activeMedal.press).some(node => node.type === "AdventureActiveHalo"),
+  "only the current checkpoint has the single breathing outline");
+assert.equal(lockedMedal.outer.props.style[3].borderColor, "#41495C",
+  "locked checkpoints use a quiet weathered outer rim");
+assert.equal(lockedMedal.inset.props.style[2].opacity, 0.32,
+  "locked inner engraving stays subdued");
+assert.equal(completedMedal.press.props.disabled, false);
+assert.equal(activeMedal.press.props.disabled, false);
+assert.equal(lockedMedal.press.props.disabled, true);
+assert.equal(nodes(completedMedal.press).filter(node => node.type === "AdventureActiveHalo").length, 0,
+  "completed stations never spawn ambient animations");
+assert.equal(nodes(lockedMedal.press).filter(node => node.type === "AdventureActiveHalo").length, 0,
+  "locked stations never spawn ambient animations");
+assert.ok(!nodes(mapFrame).some(node => node.props?.children === "ΣΕ ΕΞΕΛΙΞΗ" ||
+  node.props?.children === "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ"),
+  "node state is conveyed by checkpoint styling, not redundant captions");
 assert.ok(nodes(mapFrame).some(node => node.props?.pressScale === 0.96),
   "lesson checkpoint press feedback uses the existing MotionPressable");
 assert.ok(stopPositions.every(node => node.props.style[1].left >= 0 &&
@@ -617,6 +703,42 @@ assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.strok
   "completed legs use a green route");
 assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#A89BFF"),
   "the next leg is distinctly highlighted");
+assert.equal(nodes(mapFrame).filter(node => node.type === "path" &&
+  node.props?.stroke === "#BBA889").length, 29,
+"every route leg receives a static engraved casing");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#3F9A7C"),
+  "completed path receives a subtle static emerald halo");
+assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#AD9FFB"),
+  "the next active segment receives a lavender halo");
+const titleOnMap = nodes(mapFrame).find(node => node.props?.testID === "adventure-label-anc-19");
+assert.ok(titleOnMap, "checkpoint title remains visible on the path");
+assert.equal(titleOnMap.props.numberOfLines, 3,
+  "long Greek lesson titles may wrap onto a third line");
+assert.equal(titleOnMap.props.adjustsFontSizeToFit, true,
+  "small devices can shrink a long title rather than cut it");
+assert.ok(titleOnMap.props.style[1].width > 148,
+  "labels have a little more room without expanding checkpoint touch targets");
+assert.ok(titleOnMap.props.style[1].width <= width * 0.51 + 0.001,
+  "labels do not cross the map edges on narrow screens");
+assert.ok(!("backgroundColor" in titleOnMap.props.style[0]),
+  "titles no longer obscure the atlas with oversized dark rectangles");
+assert.ok(titleOnMap.props.style[0].textShadowRadius >= 6,
+  "titles use a subtle shadow for contrast against the atlas");
+const longGreekTitle = "Όσα μετρούσε το ανάκτορο: εξουσία και εργασία στη μυκηναϊκή Πύλο";
+const longLessonTree = adventure({
+  ...adventureProps,
+  lessons: adventureLessons.map((lesson, i) =>
+    i === 5 ? { ...lesson, title: longGreekTitle } : lesson),
+});
+const longGreekLabel = nodes(longLessonTree).find(node =>
+  node.props?.testID === "adventure-label-anc-5");
+assert.equal(longGreekLabel.props.children, longGreekTitle,
+  "full editorial title is preserved without manually shortening content");
+assert.equal(longGreekLabel.props.numberOfLines, 3,
+  "long editorial titles get a third line while leaving node coordinates untouched");
+const nineteenCount = nodes(tree).find(node => node.props?.progressKey === "19/30");
+assert.equal(nineteenCount.props.children, "19 / 30",
+  "counter reanimates only when completion changes, without affecting layout");
 const nineteenProgress = nodes(tree).find(node => node.props?.testID === "adventure-progress");
 assert.equal(nodes(nineteenProgress).find(node => node.type === "AdventureProgressFill").props.percent, 63,
   "animated fill receives the actual lesson completion percentage");
@@ -637,6 +759,11 @@ assert.ok(!nodes(tree).some(node => node.props?.children === "Ακολούθησ
   "remove redundant tutorial copy above the first chapter");
 tree = adventure({ ...adventureProps, progressLoaded: false });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0").props.disabled, true);
+const loadingCard = nodes(tree).find(node => node.props?.testID === "adventure-continue");
+assert.equal(nodes(loadingCard).filter(node => node.type === "AdventureContinueAccent").length, 0,
+  "loading/inactive Continue cards never flash their border");
+assert.equal(nodes(loadingCard).filter(node => node.type === "AdventureContinueArrow").length, 0,
+  "loading Continue cards have no animated chevron");
 
 // Exercise the entry effect with stable hook state and measured ScrollView
 // dimensions, rather than only testing the pure offset formula.
@@ -663,8 +790,8 @@ const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
-  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
-  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable" },
+  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo", AdventureContinueAccent: "AdventureContinueAccent", AdventureContinueArrow: "AdventureContinueArrow" },
+  "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 });
 const renderMotion = extra => {
   motionState.stateIndex = 0;
@@ -706,7 +833,7 @@ motionTree = renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "only one UI-thread entry animation after full hydration");
 assert.equal(autoCalls[0].target, adventureModule.getAdventureCurrentOffset(
-  75 + 19 * 142 + 3 * 25, 75 + 29 * 142 + 4 * 25 + 115, 540,
+  75 + 19 * 142 + 3 * 40, 75 + 29 * 142 + 4 * 40 + 115, 540,
 ), "automatic entry must preserve the previously correct checkpoint destination");
 assert.ok(autoCalls[0].target > 2700,
   "19/30 completion must land at the current checkpoint, not before chapter IV");
@@ -731,7 +858,50 @@ assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptica
 assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
 assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
 assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
+const islandDefinitions = atlasSource.split("const islands: Isle[] = [")[1]?.split("];")[0];
+assert.ok(islandDefinitions, "atlas retains a static island definition list");
+assert.ok((islandDefinitions.match(/{ x: /g) || []).length >= 30,
+  "small archipelagos add geographic detail without extra animated layers");
+assert.match(atlasSource, /key={"fret-" \+ index}/,
+  "Greek-key corner patterns are static atlas engravings");
+assert.match(atlasSource, /Fine chart bearings/,
+  "subtle nautical bearings remain underneath lesson routes");
+
+assert.match(atlasSource, /RadialGradient id="adventure-atlas-ambient"/,
+  "static center light adds visual depth");
+assert.match(atlasSource, /RadialGradient id="adventure-atlas-vignette"/,
+  "static edge vignette focuses the path");
+assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
+  "lighting adds no animated layers beyond the existing ambient tide");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
+assert.match(adventureMotionSource, /width: 84, height: 84, borderRadius: 42/,
+  "pulse stays concentric and close to the 74pt checkpoint wrapper");
+assert.match(adventureMotionSource, /borderWidth: 2\.5/,
+  "pulse has a legible stroke, including on high-density screens");
+assert.match(adventureMotionSource, /backgroundColor: "rgba\(159,137,242,0\.16\)"/,
+  "one translucent halo creates soft light without an opaque disk");
+assert.match(adventureMotionSource, /scale: 1 \+ pulse\.value \* 0\.13/,
+  "only the outer halo expands, by a bounded thirteen percent");
+assert.match(adventureMotionSource, /opacity: 0\.78 \* \(1 - pulse\.value\)/,
+  "expanding halo fades completely before resetting");
+assert.match(adventureMotionSource, /withDelay\(550, withTiming\(0, \{ duration: 0 \}\)\)/,
+  "invisible pause prevents an incessant, overlapping pulse");
+assert.match(adventureMotionSource, /if \(reduced\) return/,
+  "reduced-motion renders a visible static halo without repeating");
+assert.equal((adventureMotionSource.match(/withRepeat\(/g) || []).length, 1,
+  "Continue accents add no extra continuous animation loops");
+assert.match(adventureMotionSource, /testID="adventure-continue-accent"/,
+  "the Continue perimeter glint is a separately testable decorative overlay");
+assert.match(adventureMotionSource, /pointerEvents="none" accessible={false} style=\{\[styles\.continueAccent/,
+  "perimeter accent cannot intercept card taps or screen-reader focus");
+assert.match(adventureMotionSource, /borderRadius: 18, borderWidth: 1/,
+  "card accent matches the original 18pt rounded shape");
+assert.match(adventureMotionSource, /progressSheen/,
+  "progress fill has a static top-edge sheen, not a second animation");
+assert.match(adventureMotionSource, /testID="adventure-continue-chevron"/,
+  "Continue arrow preserves a separate entry accent");
+assert.match(adventureMotionSource, /if \(reduced\) return/,
+  "reduced-motion users skip the Continue arrow's movement");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");

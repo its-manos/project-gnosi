@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { Easing, cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef,
   useSharedValue, withTiming } from "react-native-reanimated";
 import type { ScrollViewInstance } from "react-native";
@@ -7,8 +7,8 @@ import Svg, { Circle, Path } from "react-native-svg";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { colors } from "../theme";
 import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
-import { AdventureActiveHalo, AdventureProgressFill } from "../components/AdventureMotion";
-import { MotionPressable, MotionView } from "../components/HomeMotion";
+import { AdventureActiveHalo, AdventureContinueAccent, AdventureContinueArrow, AdventureProgressFill } from "../components/AdventureMotion";
+import { MotionCounter, MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked } from "../utils/devLessonAccess";
 
@@ -33,7 +33,9 @@ const ancientGreeceChapters: Record<number, string> = {
 };
 const chapterStarts = [5, 11, 18, 24];
 const NODE_SPACING = 142;
-const CHAPTER_GAP = 25;
+// Chapter markers need clearance for three-line Greek titles,
+// but no longer need room for a redundant status caption.
+const CHAPTER_GAP = 40;
 const NODE_WIDTH = 148;
 const MAP_BOTTOM_PADDING = 32;
 
@@ -100,6 +102,9 @@ export default function SubcategoryScreen({
   const nextIndex = nextLesson ? path.findIndex(lesson => lesson.id === nextLesson.id) : -1;
   const isAncientGreece = subcategory.id === "ancient-greece";
   const mapWidth = Math.max(1, Math.min(420, viewportWidth - 40));
+  // Labels can extend slightly past the 148pt checkpoint touch target without
+  // crossing the map edge, even in the outermost 27% / 72% lanes.
+  const labelWidth = Math.min(170, mapWidth * 0.51);
   const points = path.map((_lesson, index) => pointFor(index, mapWidth, isAncientGreece));
   const mapHeight = points.length ? points[points.length - 1].y + 115 : 0;
   const segments = points.slice(1).map((point, index) => ({
@@ -153,16 +158,18 @@ export default function SubcategoryScreen({
   return (
     <View testID="subcategory-adventure-path" style={styles.screen}>
       <MotionView entranceDelay={0} testID="adventure-category-header" style={styles.navigationHeader}>
-        <Pressable testID="adventure-back" onPress={onBack} style={styles.backButton}
+        <MotionPressable testID="adventure-back" pressScale={0.95} onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
           hitSlop={8}>
           <Text style={styles.backText}>‹ ΠΙΣΩ</Text>
-        </Pressable>
+        </MotionPressable>
         <Text testID="adventure-category-title" style={styles.categoryTitle}
           numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
           {category.title.toLocaleUpperCase("el-GR")}
         </Text>
-        <View style={styles.headerMark} accessible={false}><Text style={styles.sparkle}>✦</Text></View>
+        <View style={styles.headerMark} accessible={false}>
+          <MotionIcon index={0}><Text style={styles.sparkle}>✦</Text></MotionIcon>
+        </View>
       </MotionView>
 
       {path.length > 0 ?
@@ -174,10 +181,12 @@ export default function SubcategoryScreen({
           accessibilityLabel={progressLoaded && nextLesson
             ? "Συνέχισε τη διαδρομή: " + nextLesson.title
             : "Πρόοδος διαδρομής: " + subcategory.title}>
+          {progressLoaded && nextLesson ? <AdventureContinueAccent /> : null}
           <View style={styles.cardHeading}>
             <Text style={styles.subcategoryTitle} numberOfLines={1}>{subcategory.title}</Text>
-            <Text style={styles.progressCount}>{progressLoaded
-              ? completed + " / " + path.length : "— / " + path.length}</Text>
+            <MotionCounter progressKey={progressLoaded ? completed + "/" + path.length : "loading"}
+              style={styles.progressCount}>{progressLoaded
+                ? completed + " / " + path.length : "— / " + path.length}</MotionCounter>
           </View>
           <View style={styles.cardBody}>
             <View style={styles.continueCopy}>
@@ -191,7 +200,7 @@ export default function SubcategoryScreen({
               </Text>
             </View>
             {progressLoaded && nextLesson ?
-              <View style={styles.continueButton}><Text style={styles.continueArrow}>›</Text></View>
+              <View style={styles.continueButton}><AdventureContinueArrow /></View>
               : null}
           </View>
           <View testID="adventure-progress" style={styles.progressTrack}
@@ -210,7 +219,7 @@ export default function SubcategoryScreen({
           <Text style={styles.emptyTitle}>Νέες αποστολές έρχονται</Text>
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
-        <View testID="adventure-map-viewport" style={styles.mapViewport}
+        <MotionView entranceDelay={150} testID="adventure-map-viewport" style={styles.mapViewport}
           onLayout={event => {
             const { width, height } = event.nativeEvent.layout;
             if (width <= 0 || height <= 0) return;
@@ -238,17 +247,28 @@ export default function SubcategoryScreen({
             onScrollBeginDrag={() => { userInteractedRef.current = true; cancelAnimation(scrollPosition); }}>
             <View testID="adventure-map" style={[styles.map, { width: mapWidth, height: mapHeight }]}>
           <Svg width={mapWidth} height={mapHeight} style={styles.pathSvg} pointerEvents="none">
-            {/* Route geometry stays scrollable above the viewport-anchored atlas. */}
+            {/* An engraved double stroke keeps the path visible on sea and land.
+                The short glow is static: no per-segment animations or extra layers. */}
             {segments.map((segment, index) => (
-              <Path key={"route-base-" + index} d={segment.d} fill="none"
-                stroke="#24283C" strokeWidth={14} strokeLinecap="round" />
+              <Path key={"route-etch-" + index} d={segment.d} fill="none"
+                stroke="#BBA889" strokeWidth={17} strokeLinecap="round" opacity={0.16} />
             ))}
             {segments.map((segment, index) => (
+              <Path key={"route-base-" + index} d={segment.d} fill="none"
+                stroke="#101929" strokeWidth={13} strokeLinecap="round" opacity={0.94} />
+            ))}
+            {segments.map((segment, index) =>
+              segment.done || segment.toNext ?
+                <Path key={"route-halo-" + index} d={segment.d} fill="none"
+                  stroke={segment.done ? "#3F9A7C" : "#AD9FFB"} strokeWidth={8}
+                  strokeLinecap="round" opacity={segment.done ? 0.20 : 0.25} /> : null)}
+            {segments.map((segment, index) => (
               <Path key={"route-line-" + index} d={segment.d} fill="none"
-                stroke={segment.done ? "#2E9A7E" : segment.toNext ? "#A89BFF" : "#645C81"}
-                strokeWidth={segment.done ? 5 : 3} strokeLinecap="round"
+                stroke={segment.done ? "#2E9A7E" : segment.toNext ? "#A89BFF" : "#82778F"}
+                strokeWidth={segment.done ? 4.5 : segment.toNext ? 3.5 : 2.8}
+                strokeLinecap="round"
                 strokeDasharray={segment.done ? undefined : "3 11"}
-                opacity={segment.done ? 0.9 : segment.toNext ? 1 : 0.65} />
+                opacity={segment.done ? 0.96 : segment.toNext ? 1 : 0.78} />
             ))}
           </Svg>
 
@@ -273,29 +293,38 @@ export default function SubcategoryScreen({
                     : disabled ? ", κλειδωμένο. Ολοκλήρωσε πρώτα " +
                       (access.prerequisite?.title ?? "το προηγούμενο μάθημα")
                       : ", διαθέσιμο")}>
-                  <View style={styles.nodeOuter}>
+                  <View style={[styles.nodeOuter, done && styles.nodeOuterDone,
+                    active && styles.nodeOuterActive, disabled && styles.nodeOuterLocked]}>
                     {active ? <AdventureActiveHalo /> : null}
                     <View style={[styles.node, done && styles.nodeDone, active && styles.nodeActive,
                       disabled && styles.nodeLocked]}>
+                      {/* A single stationary engraved inset per medal. No new SVG or animation. */}
+                      {done || disabled ?
+                        <View pointerEvents="none" accessible={false}
+                          style={[styles.nodeInset, done && styles.nodeInsetDone,
+                            disabled && styles.nodeInsetLocked]} /> : null}
                       {done ? <Text style={styles.nodeCheck}>✓</Text>
                         : disabled ? <Svg width={23} height={25} viewBox="0 0 24 24">
                           <Path d="M6.5 10V7.5a5.5 5.5 0 0 1 11 0V10M5.5 10h13v10h-13z"
-                            stroke="#777D93" strokeWidth={1.8} strokeLinejoin="round" fill="none" />
-                          <Circle cx={12} cy={15} r={1.4} fill="#777D93" />
+                            stroke="#8993A8" strokeWidth={1.8} strokeLinejoin="round" fill="none" />
+                          <Circle cx={12} cy={15} r={1.4} fill="#8993A8" />
                         </Svg>
                           : <Text style={styles.nodeNumber}>{index + 1}</Text>}
                     </View>
                   </View>
-                  <Text style={[styles.nodeTitle, disabled && styles.nodeTitleLocked,
-                    active && styles.nodeTitleActive]} numberOfLines={2}>{lesson.title}</Text>
-                  {active ? <Text style={styles.nodeStatus}>{started ? "ΣΕ ΕΞΕΛΙΞΗ" : "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ"}</Text> : null}
+                  <Text testID={"adventure-label-" + lesson.id}
+                    style={[styles.nodeTitle, { width: labelWidth },
+                      disabled && styles.nodeTitleLocked, active && styles.nodeTitleActive]}
+                    numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}>
+                    {lesson.title}
+                  </Text>
                 </MotionPressable>
               </View>
             );
           })}
             </View>
           </Animated.ScrollView>
-        </View>}
+        </MotionView>}
     </View>
   );
 }
@@ -309,6 +338,9 @@ const styles = StyleSheet.create({
   atlasUnderlay: { ...StyleSheet.absoluteFill },
   mapViewport: {
     flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
+    // A small outside gap separates the atlas from the fixed bottom navigation.
+    // Margin (not padding) keeps the atlas and scroll bounds aligned to the viewport.
+    marginBottom: 8,
     backgroundColor: "#101827",
     borderTopWidth: 1, borderColor: "#25273A",
   },
@@ -327,7 +359,7 @@ const styles = StyleSheet.create({
   sparkle: { color: colors.accentLight, fontSize: 22 },
   continueCard: {
     paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
-    backgroundColor: "#1B2034", borderColor: "#51496F",
+    backgroundColor: "#1B2034", borderColor: "#6A618C",
     borderWidth: 1, borderRadius: 18, gap: 8,
   },
   cardHeading: {
@@ -346,41 +378,60 @@ const styles = StyleSheet.create({
   continueTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "800" },
   continueButton: {
     width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
+    borderWidth: 1, borderColor: "#C9BFFF",
     alignItems: "center", justifyContent: "center",
   },
-  continueArrow: {
-    color: "#1C1B32", fontSize: 30, lineHeight: 36, fontWeight: "600", marginTop: -3,
+  progressTrack: {
+    height: 8, borderRadius: 5, backgroundColor: "#302F4B", overflow: "hidden",
+    borderWidth: 1, borderColor: "#62597D",
   },
-  progressTrack: { height: 7, borderRadius: 5, backgroundColor: "#323047", overflow: "hidden" },
   map: { alignSelf: "center", position: "relative", marginTop: 2 },
   pathSvg: { position: "absolute", top: 0, left: 0 },
   stopPosition: { position: "absolute", width: NODE_WIDTH, alignItems: "center" },
   chapterBadge: {
     position: "absolute", top: -28, alignSelf: "center", overflow: "hidden",
-    color: "#C9BDFF", fontSize: 10, fontWeight: "900", textAlign: "center",
-    lineHeight: 16, letterSpacing: 0.75, paddingHorizontal: 10, paddingVertical: 3,
-    borderRadius: 8, backgroundColor: "#2D2944",
+    // Warm engraved chapter markers distinguish milestones from violet lessons.
+    color: "#E3CEAA", fontSize: 10, fontWeight: "900", textAlign: "center",
+    lineHeight: 16, letterSpacing: 0.9, paddingHorizontal: 10, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 0.75, borderColor: "#90795F",
+    backgroundColor: "#24263B",
   },
   nodePressable: { width: NODE_WIDTH, alignItems: "center", minHeight: 120 },
-  nodeOuter: { width: 74, height: 74, alignItems: "center", justifyContent: "center" },
+  nodeOuter: {
+    width: 74, height: 74, borderRadius: 37,
+    alignItems: "center", justifyContent: "center",
+  },
+  // Completed stations resemble aged bronze seals, with a green core so
+  // completion remains identifiable without depending on metal color alone.
+  nodeOuterDone: { borderWidth: 1.5, borderColor: "#AE9671", backgroundColor: "#262D32" },
+  // The current stop gets a single stationary outer outline from the halo.
+  // Do not stack a third opaque ring on the fixed-size outer wrapper.
+  nodeOuterActive: { backgroundColor: "transparent" },
+  nodeOuterLocked: { borderWidth: 1, borderColor: "#41495C", backgroundColor: "#18212F" },
   node: {
     width: 69, height: 69, borderRadius: 35, borderWidth: 3,
     backgroundColor: "#2B2C45", borderColor: "#6C668A",
     alignItems: "center", justifyContent: "center",
   },
-  nodeActive: { borderColor: "#B9A8FF", borderWidth: 4, backgroundColor: "#4B3F79" },
-  nodeDone: { borderColor: colors.success, backgroundColor: colors.successSurface },
-  nodeLocked: { borderColor: "#373A50", backgroundColor: "#1D2232" },
+  nodeDone: { borderWidth: 2, borderColor: "#BBA27C", backgroundColor: "#254339" },
+  nodeActive: { borderWidth: 3, borderColor: "#C5B7FF", backgroundColor: "#4B3F79" },
+  nodeLocked: { borderWidth: 2, borderColor: "#485166", backgroundColor: "#222938" },
+  nodeInset: {
+    position: "absolute", top: 7, right: 7, bottom: 7, left: 7,
+    borderRadius: 28, borderWidth: 1,
+  },
+  nodeInsetDone: { borderColor: "#A8916B", opacity: 0.68 },
+  nodeInsetLocked: { borderColor: "#5F687B", opacity: 0.32 },
   nodeNumber: { color: "#F6F0FF", fontSize: 25, lineHeight: 31, fontWeight: "900" },
-  nodeCheck: { color: colors.success, fontSize: 34, lineHeight: 40, fontWeight: "800" },
+  nodeCheck: { color: "#C1EDD3", fontSize: 34, lineHeight: 40, fontWeight: "800" },
   nodeTitle: {
-    color: colors.textBody, fontSize: 12, lineHeight: 17, fontWeight: "800",
-    textAlign: "center", marginTop: 7, minHeight: 34,
-    textShadowColor: "#0B0D15", textShadowRadius: 4, textShadowOffset: { width: 0, height: 1 },
+    color: colors.textBody, fontSize: 12, lineHeight: 16, fontWeight: "800",
+    textAlign: "center", marginTop: 5,
+    // Contrast comes from the shadow, not a large dark rectangle covering the atlas.
+    textShadowColor: "#020713", textShadowRadius: 7, textShadowOffset: { width: 0, height: 1 },
   },
   nodeTitleLocked: { color: "#9298AB" },
   nodeTitleActive: { color: "#C7BCFF" },
-  nodeStatus: { color: "#B9A8FF", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.4 },
   finishedCopy: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   empty: { padding: 20, backgroundColor: colors.surface, borderRadius: 16, gap: 10 },
   emptyTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
