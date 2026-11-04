@@ -12,8 +12,18 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
   const [expanded, setExpanded] = useState(false);
   const [allSubjects, setAllSubjects] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [allDetailSubjects, setAllDetailSubjects] = useState(false);
   const active = learning.knowledgeSession && !learning.knowledgeSession.completed && learning.knowledgeSession.date === today;
   const previewCollapsed = preview && mapOnly && !allSubjects;
+  // Prioritize visible progress and keep catalogue order when categories tie.
+  // The default view stays short even for an account with no mastered concepts.
+  const rankedSubjects = detail
+    ? model.categories.map((category, index) => ({ category, index }))
+        .sort((a, b) => b.category.mastered - a.category.mastered
+          || b.category.percent - a.category.percent || a.index - b.index)
+        .map(item => item.category)
+    : [];
+  const focusedSubjects = allDetailSubjects ? rankedSubjects : rankedSubjects.slice(0, 4);
   if (compact && (!ready || (!model.due.length && !active))) return null;
   return <View style={[styles.card, preview && mapOnly && styles.previewCard, detail && styles.detailCard]} testID="knowledge-mastery">
     <Text style={[styles.label, detail && styles.detailLabel]}>{detail ? "ΟΙ ΘΕΜΑΤΙΚΕΣ ΣΟΥ" : "Ο ΧΑΡΤΗΣ ΤΗΣ ΓΝΩΣΗΣ ΣΟΥ"}</Text>
@@ -27,7 +37,7 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
       {!detail && (!mapOnly || showHelp) ? <><Text style={styles.body}>Νέο → Μαθαίνεται → Οικείο → Κατακτημένο. Η κατάκτηση χρειάζεται τρεις σωστές δοκιμές σε διαφορετικές περιπτώσεις και ημέρες. Η ίδια ερώτηση δεν μετρά ξανά. Μετά την κατάκτηση δεν χρειάζεται τακτική επανάληψη.</Text></> : null}
       {detail ? (
         <View style={[styles.detailGrid, singleColumn && styles.detailGridSingle]} testID="knowledge-tile-grid">
-          {model.categories.map(category => {
+          {focusedSubjects.map(category => {
             const emoji = learningCategories.find(item => item.id === category.id)?.emoji ?? "✦";
             return <View key={category.id} style={[styles.detailTile, singleColumn && styles.detailTileSingle,
               threeColumn && !singleColumn && styles.detailTileWide]}
@@ -37,7 +47,7 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
                 text: `${category.mastered} από ${category.total} έννοιες` }}>
               <View style={styles.tileTop}>
                 <Text style={styles.tileEmoji}>{emoji}</Text>
-                <Text style={styles.tilePercent}>{category.total ? category.percent + "%" : "—"}</Text>
+                {category.mastered > 0 ? <Text style={styles.tilePercent}>{category.percent}%</Text> : null}
               </View>
               <Text style={styles.tileTitle} numberOfLines={2}>{category.title}</Text>
               <Text style={styles.tileCount}>{category.mastered} / {category.total}</Text>
@@ -54,6 +64,15 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
         {!previewCollapsed ? <Text style={styles.body}>{category.mastered} / {category.total} έννοιες κατακτημένες</Text> : null}
       </View>)
       )}
+      {detail && rankedSubjects.length > 4 ? (
+        <Pressable testID="knowledge-all-subjects" accessibilityRole="button"
+          accessibilityState={{ expanded: allDetailSubjects }}
+          style={({ pressed }) => [styles.showAll, pressed && styles.showAllPressed]}
+          onPress={() => setAllDetailSubjects(value => !value)}>
+          <Text style={styles.showAllText}>{allDetailSubjects ? "Λιγότερες θεματικές" : `Όλες οι θεματικές (${rankedSubjects.length})`}</Text>
+          <Text style={styles.showAllArrow}>{allDetailSubjects ? "⌃" : "⌄"}</Text>
+        </Pressable>
+      ) : null}
       {mapOnly && !detail ? <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded: allSubjects }} onPress={() => setAllSubjects(v => !v)}><Text style={styles.link}>{allSubjects ? (preview ? "Πίσω στη σύνοψη −" : "Λιγότερες θεματικές −") : (preview ? "Αναλυτική εικόνα +" : "Όλες οι θεματικές +")}</Text></Pressable> : null}
       {!detail && !previewCollapsed && (!mapOnly || showHelp) ? <Text style={styles.body}>Οι μπάρες αφορούν τις έννοιες για τις οποίες υπάρχουν διαφορετικές δοκιμές, όχι ολόκληρο το γνωστικό πεδίο. Δεν μετρούν άρθρα που διάβασες. Χωρίς αρκετά στοιχεία, η ολοκλήρωση διατηρείται και η κατάκτηση περιμένει.</Text> : !previewCollapsed && !detail ? <Text style={styles.body}>Γνώση από επαναλήψεις, όχι ποσοστό άρθρων που διάβασες.</Text> : null}
       {mapOnly && !previewCollapsed ? <Pressable style={[styles.button, detail && styles.detailDisclosure]} accessibilityRole="button" accessibilityState={{ expanded: showHelp }} onPress={() => setShowHelp(v => !v)}><Text style={styles.link}>{showHelp ? "Κλείσιμο επεξήγησης −" : "Πώς μετριέται η γνώση; +"}</Text></Pressable> : null}
@@ -67,17 +86,17 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
 const styles = StyleSheet.create({
   card: { padding: 20, gap: 14, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong },
   previewCard: { padding: 14, gap: 8, borderRadius: 18 },
-  detailCard: { backgroundColor: "#192034", borderColor: "#43415F", padding: 16, gap: 10 },
+  detailCard: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 11 },
   detailLabel: { color: "#BDB1FB" },
   detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   detailGridSingle: { flexDirection: "column" },
   detailTile: {
-    flexBasis: "47%", flexGrow: 1, minWidth: 0, minHeight: 136,
-    padding: 12, borderRadius: 15,
+    flexBasis: "47%", flexGrow: 1, minWidth: 0, minHeight: 123,
+    padding: 11, borderRadius: 15,
     backgroundColor: "#24273F", borderWidth: 1, borderColor: "#3E3C61",
-    gap: 4,
+    gap: 3,
   },
-  detailTileSingle: { minHeight: 110, flexBasis: "auto" },
+  detailTileSingle: { minHeight: 112, flexBasis: "auto" },
   detailTileWide: { flexBasis: "30%" },
   tileTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   tileEmoji: { fontSize: 19, lineHeight: 26 },
@@ -86,6 +105,14 @@ const styles = StyleSheet.create({
   tileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
   tileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#383B58", overflow: "hidden" },
   tileFill: { height: "100%", backgroundColor: "#A99BFF", borderRadius: 5 },
+  showAll: {
+    minHeight: 46, borderRadius: 13, paddingHorizontal: 12,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    backgroundColor: "#22233A", borderWidth: 1, borderColor: "#414060",
+  },
+  showAllPressed: { backgroundColor: "#2F2C4A" },
+  showAllText: { color: "#BEB3FF", fontSize: 13, fontWeight: "800" },
+  showAllArrow: { color: "#BEB3FF", fontSize: 20 },
   detailDisclosure: {
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#44435D",
     marginTop: 3, paddingHorizontal: 2,
