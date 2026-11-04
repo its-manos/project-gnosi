@@ -4,7 +4,7 @@
  * The viewBox matches the measured aspect ratio exactly.
  */
 import { memo, useEffect, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
   Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue,
   withRepeat, withSequence, withTiming,
@@ -32,6 +32,7 @@ function islandOutline(rx: number, ry: number) {
 
 function AdventureAtlasBackground({ width, height }: Props) {
   const reduced = useReducedMotion();
+  const androidLite = Platform.OS === "android";
   const glow = useSharedValue(0.07);
   // 420 map-units wide at every device width, with an exact aspect-ratio
   // match. No aspectFill, crop or non-uniform stretch on either platform.
@@ -177,7 +178,8 @@ function AdventureAtlasBackground({ width, height }: Props) {
         <G stroke="#A9B6BA" strokeWidth={0.65} opacity={0.11} strokeDasharray="2 13">
           {[36, 94, 152, 210, 268, 326, 384].map(x =>
             <Path key={"meridian-" + x} d={`M ${x} 0 V ${h}`} />)}
-          {Array.from({ length: Math.ceil(h / 86) }, (_, n) => (n + 1) * 86).map(y =>
+          {Array.from({ length: Math.ceil(h / (androidLite ? 148 : 86)) },
+            (_, n) => (n + 1) * (androidLite ? 148 : 86)).map(y =>
             <Path key={"parallel-" + y} d={`M 0 ${y} H 420`} />)}
         </G>
         <Rect x={9} y={9} width={402} height={Math.max(0, h - 18)}
@@ -218,20 +220,22 @@ function AdventureAtlasBackground({ width, height }: Props) {
           <Path d={geography.peloponnese} />
           <Path d={geography.crete} />
         </G>
-        <G stroke="#CFB891" strokeWidth={3.5} opacity={0.07} fill="none">
+        {!androidLite ? <G stroke="#CFB891" strokeWidth={3.5} opacity={0.07} fill="none">
           <Path d={geography.west} /><Path d={geography.east} />
           <Path d={geography.peloponnese} /><Path d={geography.crete} />
-        </G>
+        </G> : null}
         {/* Land relief follows the coast; sea contours follow the basin. */}
         <G fill="none" stroke="#B3AE9F" strokeWidth={0.85} opacity={0.18}>
-          {geography.relief.map((d, n) => <Path key={"relief-" + n} d={d} />)}
+          {geography.relief.filter((_, n) => !androidLite || n % 2 === 0)
+            .map((d, n) => <Path key={"relief-" + n} d={d} />)}
         </G>
         <G fill="none" stroke="#879FB4" strokeWidth={0.85} opacity={0.21}>
-          {geography.depths.map((d, n) => <Path key={"depth-" + n} d={d} />)}
+          {geography.depths.filter((_, n) => !androidLite || n % 2 === 0)
+            .map((d, n) => <Path key={"depth-" + n} d={d} />)}
         </G>
         <G stroke="#C5B58E" strokeWidth={1} fill="#344446" fillOpacity={0.73}
           strokeOpacity={0.47}>
-          {geography.islands.map((isle, n) =>
+          {geography.islands.filter((_, n) => !androidLite || n < 20).map((isle, n) =>
             <G key={"isle-" + n} transform={`translate(${isle.x} ${h * isle.y}) rotate(${isle.turn})`}>
               <Path d={islandOutline(isle.rx, isle.ry)} />
               {isle.rx > 10 && isle.ry > 12 ?
@@ -275,7 +279,7 @@ function AdventureAtlasBackground({ width, height }: Props) {
             viewport-sized SVG layer over the checkpoint animations. */}
         <G fill="none" stroke="#A6B6C6" strokeWidth={1.1}
           strokeDasharray="3 16" opacity={0.30}>
-          {geography.depths.filter((_, n) => n % 2 === 0).map((d, n) =>
+          {geography.depths.filter((_, n) => n % (androidLite ? 4 : 2) === 0).map((d, n) =>
             <Path key={"current-" + n} d={d} />)}
         </G>
       </Svg>
