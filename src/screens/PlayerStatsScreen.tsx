@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useDailySnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { getAthensDateKey } from "../utils/dailyChallenge";
@@ -24,6 +24,9 @@ function formatDate(dateKey: string): string {
 export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
   const daily = useDailySnapshot();
   const [dailyExpanded, setDailyExpanded] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const { fontScale } = useWindowDimensions();
+  const allowScroll = dailyExpanded || (viewportHeight > 0 && viewportHeight < 575) || fontScale > 1.2;
   const history = useMemo(() => dailyHistory(daily.doc), [daily.doc]);
   const historyLoaded = daily.ready;
   const [todayKey, setTodayKey] = useState(() => getAthensDateKey());
@@ -46,9 +49,9 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
   );
 
   return (
-    <View style={styles.screen} testID="player-stats-screen">
+    <View style={styles.screen} testID="player-stats-screen" onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}>
       <ProgressGradientBackground />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {allowScroll ? <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="stats-accessibility-scroll">
         <AppHeader onBack={onBack} />
         <SyncStatus quiet />
         <MotionView entranceDelay={0} style={styles.heading}>
@@ -137,21 +140,43 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
             </View>
           ) : null}
         </MotionView>
-      </ScrollView>
+      </ScrollView> : <View style={[styles.content, styles.fixedContent]} testID="stats-fixed-dashboard">
+        <AppHeader onBack={onBack} />
+        <SyncStatus quiet />
+        <MotionView entranceDelay={0} style={styles.heading}>
+          <Text style={styles.eyebrow}>Ο ΡΥΘΜΟΣ ΣΟΥ</Text>
+          <Text style={styles.title}>Η δραστηριότητά σου</Text>
+        </MotionView>
+        <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
+          <LearningActivityPanel todayKey={todayKey} dashboard />
+        </MotionView>
+        <MotionView entranceDelay={115} style={styles.quizSection} testID="progress-daily">
+          <Pressable style={({ pressed }) => [styles.disclosure, pressed && styles.disclosurePressed]}
+            accessibilityRole="button" accessibilityState={{ expanded: false }}
+            onPress={() => setDailyExpanded(true)}>
+            <View style={styles.accountCopy}>
+              <Text style={styles.accountTitle}>Καθημερινά quiz</Text>
+              <Text style={styles.muted}>{historyLoaded ? stats.completedChallenges + " ολοκληρωμένα · " + stats.totalPoints.toLocaleString("el-GR") + " πόντοι" : "Φόρτωση στατιστικών…"}</Text>
+            </View>
+            <Text style={styles.chevron} accessible={false}>+</Text>
+          </Pressable>
+        </MotionView>
+      </View>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: "#101827" },
-  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 10, paddingBottom: 30 },
-  heading: { gap: 4, marginTop: 5, marginBottom: 14 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 6, paddingBottom: 18 },
+  fixedContent: { flex: 1, minHeight: 0, justifyContent: "flex-start" },
+  heading: { gap: 2, marginTop: 1, marginBottom: 7 },
   eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 1.1 },
-  title: { color: colors.text, fontSize: 25, lineHeight: 32, fontWeight: "900" },
+  title: { color: colors.text, fontSize: 22, lineHeight: 29, fontWeight: "900" },
   intro: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
-  activityOverview: { marginBottom: 12 },
+  activityOverview: { marginBottom: 8 },
   quizSection: { marginBottom: 6 },
-  disclosure: { flexDirection: "row", alignItems: "center", minHeight: 72, paddingHorizontal: 15, paddingVertical: 12, backgroundColor: "#20243C", borderWidth: 1, borderColor: "#484360", borderRadius: 18 },
+  disclosure: { flexDirection: "row", alignItems: "center", minHeight: 55, paddingHorizontal: 13, paddingVertical: 7, backgroundColor: "#20243C", borderWidth: 1, borderColor: "#484360", borderRadius: 18 },
   disclosurePressed: { backgroundColor: "#2A2C47" },
   accountCopy: { flex: 1, gap: 4, paddingRight: 10 },
   accountTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "800" },
