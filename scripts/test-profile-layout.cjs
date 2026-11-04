@@ -53,6 +53,24 @@ nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes("Πίσω στη σύ
 tree=renderPreview();
 assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);
 
+// Detail mode keeps all subjects visible as compact tiles without repeating
+// the explanatory essay; methodology stays one tap away.
+slots=[];cursor=0;
+const renderKnowledgeTiles=()=>{cursor=0;return Map({onOpen(){},mapOnly:true,detail:true});};
+tree=renderKnowledgeTiles();
+const tileGrid=nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid');
+assert.ok(tileGrid,'detail layout uses subject tiles');
+assert.equal(nodes(tileGrid).filter(n=>n.props.accessibilityRole==='progressbar').length,8,
+  'all eight subjects remain accessible');
+assert.ok(!text(tree).includes('Η κατάκτηση χρειάζεται'),
+  'long methodology is collapsed initially');
+assert.equal(nodes(tree).filter(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).length,0,
+  'already-visible subjects need no redundant expand button');
+nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Πώς μετριέται')).props.onPress();
+tree=renderKnowledgeTiles();
+assert.ok(text(tree).includes('τρεις σωστές δοκιμές'),
+  'methodology remains available on demand');
+
 let resumed=[];
 model={...model,due:[],practice:[]};ready=true;
 learning={...learning,knowledgeSession:null};
