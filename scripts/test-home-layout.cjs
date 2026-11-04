@@ -632,10 +632,14 @@ let motionScroll = nodes(motionTree).find(node => node.props?.testID === "advent
 const autoCalls = [];
 motionScroll.props.ref.current = { scrollTo: call => autoCalls.push(call) };
 motionScroll.props.onLayout({ nativeEvent: { layout: { height: 540 } } });
-motionScroll.props.onContentSizeChange(360, 4800);
+motionScroll.props.onContentSizeChange(360, 1200);
 motionTree = renderMotion({ progressLoaded: false });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 0, "no entry scroll before progress hydration");
+motionTree = renderMotion({ progressLoaded: true });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 0, "wait for full map content measurement before focusing");
+motionScroll.props.onContentSizeChange(360, 4800);
 motionTree = renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "one automatic scroll after progress and layout are ready");
