@@ -492,22 +492,17 @@ const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
 }, true);
 const adventure = adventureModule.default;
-assert.equal(adventureModule.getAdventureChapterStart(0, true), 0);
-assert.equal(adventureModule.getAdventureChapterStart(4, true), 0);
-assert.equal(adventureModule.getAdventureChapterStart(19, true), 18,
-  "19 completed lessons opens at chapter IV, not at the first chapter or at lesson 20");
-assert.equal(adventureModule.getAdventureChapterStart(29, true), 24,
-  "a completed path opens at the final chapter");
-assert.equal(adventureModule.getAdventureChapterStart(19, false), 19,
-  "paths without chapter markers focus the next lesson");
+// Automatic focus and "Η ΘΕΣΗ ΜΟΥ" now use the same checkpoint offset.
+assert.equal(adventureModule.getAdventureCurrentOffset(2800, 4500, 500), 2700,
+  "next checkpoint has the same offset whichever navigation initiates it");
+assert.equal(adventureModule.getAdventureCurrentOffset(75, 1200, 600), 0,
+  "early lessons do not introduce phantom scrolling");
 assert.equal(adventureModule.getAdventureEntryOffset(2700, 4500, 500), 2588,
   "chapter marker remains visible near the top of the map pane");
 assert.equal(adventureModule.getAdventureEntryOffset(500, 1200, 1100), 132,
   "entry offset is clamped on short maps");
 assert.equal(adventureModule.getAdventureEntryOffset(75, 1200, 600), 0,
   "chapter I stays near the top");
-assert.ok(adventureModule.getAdventureGlideDuration(2500) >= 1400);
-assert.ok(adventureModule.getAdventureGlideDuration(2500) <= 1800);
 const adventureProps = {
   category: categories[0], subcategory: { id: "ancient-greece", title: "Αρχαία Ελλάδα", description: "Ιστορικό ταξίδι" },
   lessons: adventureLessons, completedLessonIds: [], inProgressLessonIds: [], progressLoaded: true,
@@ -600,4 +595,60 @@ assert.ok(!nodes(tree).some(node => node.props?.children === "Ακολούθησ
   "remove redundant tutorial copy above the first chapter");
 tree = adventure({ ...adventureProps, progressLoaded: false });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0").props.disabled, true);
+
+// Exercise the entry effect with stable hook state and measured ScrollView
+// dimensions, rather than only testing the pure offset formula.
+const motionState = { values: [0, 0, false], refs: [], effects: [], stateIndex: 0, refIndex: 0 };
+const motionReact = {
+  useMemo: fn => fn(),
+  useState: initial => {
+    const index = motionState.stateIndex++;
+    if (!(index in motionState.values)) motionState.values[index] = initial;
+    return [motionState.values[index], update => {
+      const previous = motionState.values[index];
+      motionState.values[index] = typeof update === "function" ? update(previous) : update;
+    }];
+  },
+  useRef: initial => {
+    const index = motionState.refIndex++;
+    if (!motionState.refs[index]) motionState.refs[index] = { current: initial };
+    return motionState.refs[index];
+  },
+  useEffect: effect => { motionState.effects.push(effect); },
+};
+const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
+  react: motionReact,
+  "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
+  "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
+});
+const renderMotion = extra => {
+  motionState.stateIndex = 0;
+  motionState.refIndex = 0;
+  motionState.effects = [];
+  return motionScreen({ ...adventureProps, completedLessonIds: completedNineteen, ...extra });
+};
+let motionTree = renderMotion({ progressLoaded: false });
+let motionScroll = nodes(motionTree).find(node => node.props?.testID === "adventure-map-scroll");
+const autoCalls = [];
+motionScroll.props.ref.current = { scrollTo: call => autoCalls.push(call) };
+motionScroll.props.onLayout({ nativeEvent: { layout: { height: 540 } } });
+motionScroll.props.onContentSizeChange(360, 4800);
+motionTree = renderMotion({ progressLoaded: false });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 0, "no entry scroll before progress hydration");
+motionTree = renderMotion({ progressLoaded: true });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 1, "one automatic scroll after progress and layout are ready");
+assert.equal(autoCalls[0].animated, true, "use the same native animation as the manual button");
+const motionJump = nodes(motionTree).find(node => node.props?.testID === "adventure-jump-to-current");
+motionJump.props.onPress();
+assert.equal(autoCalls.length, 2);
+assert.equal(autoCalls[0].y, autoCalls[1].y,
+  "automatic opening and the working Η ΘΕΣΗ ΜΟΥ button must have identical final destinations");
+assert.ok(autoCalls[0].y > 2700,
+  "19/30 completion must land at the current checkpoint, not before chapter IV");
+renderMotion({ progressLoaded: true });
+motionState.effects[1]();
+assert.equal(autoCalls.length, 2, "re-rendering cannot restart the entry animation");
+
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
