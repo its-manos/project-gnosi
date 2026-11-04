@@ -24,7 +24,7 @@ const native = {
   useWindowDimensions: () => ({ height: 810, width: windowWidth, fontScale }),
 };
 const { lessons, categories } = load("src/data/lessons.ts");
-const knowledge = { categories: [
+const knowledge = { due: [], categories: [
   { id: "history", mastered: 3, total: 8 },
   { id: "science", mastered: 1, total: 4 },
 ] };
@@ -216,6 +216,10 @@ assert.equal(nodes(tree).find(n => n.type === "Categories").props.detail, true,
   "reading categories use the detail-specific card layout");
 assert.equal(nodes(tree).find(n => n.type === "Categories").props.singleColumn, false,
   "normal-width phones use matching teal tiles");
+const readingTileSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/LearningActivityPanel.tsx"), "utf8");
+assert.match(readingTileSource, /reading-all-subjects/);
+assert.match(readingTileSource, /detail \? 4 : 3/,
+  "reading details default to four focused subjects before expansion");
 assert.ok(!text(node(tree, "insights-overview")).includes("Κάθε ολοκληρωμένο"),
   "non-empty reading state remains visually driven");
 assert.ok(!nodes(tree).some(n => n.type === "Mastery"));
@@ -256,6 +260,25 @@ tree = renderInsights();
 assert.equal(nodes(tree).find(n => n.type === "Mastery").props.detail, true);
 assert.ok(text(tree).includes("ΚΑΤΑΚΤΗΜΕΝΕΣ ΕΝΝΟΙΕΣ"));
 assert.ok(!nodes(tree).some(n => n.type === "Categories"));
+
+// A 0% mastery ring is a quiet empty track, not a bright arc-cap dot.
+// It still announces the true zero value to assistive technology.
+const existingCategories = knowledge.categories;
+knowledge.categories = [{ id: "history", mastered: 0, total: 24, percent: 0 }];
+tree = renderInsights();
+assert.equal(node(tree, "insights-ring").props.accessibilityValue.now, 0);
+assert.ok(!nodes(node(tree, "insights-ring")).some(n => n.type === "MotionXpCircle"),
+  "zero mastery does not draw a visible rounded arc-cap dot");
+assert.ok(text(node(tree, "insights-overview")).includes("πρώτη κατάκτηση"),
+  "zero state uses concise, intentional guidance");
+knowledge.due = [{}, {}, {}];
+tree = renderInsights();
+const reviewAction = node(tree, "insights-review-action");
+assert.ok(reviewAction, "due knowledge questions have a direct next-step shortcut");
+reviewAction.props.onPress();
+assert.equal(review, 2, "due review shortcut opens the existing knowledge review route");
+knowledge.due = [];
+knowledge.categories = existingCategories;
 
 // Responsive detail layout: three columns on wide screens and a single
 // readable column when large text is enabled.
