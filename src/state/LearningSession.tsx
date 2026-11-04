@@ -18,6 +18,16 @@ export function useLearningSnapshot() {
   const { store } = useLearningSession();
   return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
+/** Data-only subscriptions avoid re-rendering for sync status changes.
+ * Use the full snapshot hooks when status/error are displayed. */
+export function useLearningDataSnapshot() {
+  const { store } = useLearningSession();
+  return useSyncExternalStore(store.subscribe, store.getDataSnapshot, store.getDataSnapshot);
+}
+export function useDailyDataSnapshot() {
+  const { dailyStore } = useLearningSession();
+  return useSyncExternalStore(dailyStore.subscribe, dailyStore.getDataSnapshot, dailyStore.getDataSnapshot);
+}
 export function useDailySnapshot() {
   const { dailyStore } = useLearningSession();
   return useSyncExternalStore(dailyStore.subscribe, dailyStore.getSnapshot, dailyStore.getSnapshot);
