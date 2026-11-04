@@ -6,7 +6,7 @@ import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
-import { MotionView } from "../components/HomeMotion";
+import { MotionPressable, MotionView } from "../components/HomeMotion";
 import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
 import { colors } from "../theme";
@@ -65,8 +65,8 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
         </MotionView>
 
         <MotionView entranceDelay={115} style={styles.quizSection} testID="progress-daily">
-          <Pressable
-            style={({ pressed }) => [styles.disclosure, pressed && styles.disclosurePressed]}
+          <MotionPressable
+            style={styles.disclosure} pressScale={0.985}
             accessibilityRole="button"
             accessibilityState={{ expanded: dailyExpanded }}
             onPress={() => setDailyExpanded(value => !value)}
@@ -80,7 +80,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
               </Text>
             </View>
             <Text style={styles.chevron} accessible={false}>{dailyExpanded ? "−" : "+"}</Text>
-          </Pressable>
+          </MotionPressable>
           {dailyExpanded ? (
             <View testID="progress-daily-details" style={styles.dailyDetails}>
               {!historyLoaded ? (
@@ -151,7 +151,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
           <LearningActivityPanel todayKey={todayKey} dashboard />
         </MotionView>
         <MotionView entranceDelay={115} style={styles.quizSection} testID="progress-daily">
-          <Pressable style={({ pressed }) => [styles.disclosure, pressed && styles.disclosurePressed]}
+          <MotionPressable style={styles.disclosure} pressScale={0.985}
             accessibilityRole="button" accessibilityState={{ expanded: false }}
             onPress={() => setDailyExpanded(true)}>
             <View style={styles.accountCopy}>
@@ -159,7 +159,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
               <Text style={styles.muted}>{historyLoaded ? stats.completedChallenges + " ολοκληρωμένα · " + stats.totalPoints.toLocaleString("el-GR") + " πόντοι" : "Φόρτωση στατιστικών…"}</Text>
             </View>
             <Text style={styles.chevron} accessible={false}>+</Text>
-          </Pressable>
+          </MotionPressable>
         </MotionView>
       </View>}
     </View>
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   activityOverview: { marginBottom: 8 },
   quizSection: { marginBottom: 6 },
   disclosure: { flexDirection: "row", alignItems: "center", minHeight: 55, paddingHorizontal: 13, paddingVertical: 7, backgroundColor: "#20243C", borderWidth: 1, borderColor: "#484360", borderRadius: 18 },
-  disclosurePressed: { backgroundColor: "#2A2C47" },
+
   accountCopy: { flex: 1, gap: 4, paddingRight: 10 },
   accountTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "800" },
   chevron: { color: colors.accentLight, fontSize: 25, fontWeight: "500", paddingHorizontal: 5 },
