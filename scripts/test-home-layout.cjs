@@ -120,10 +120,21 @@ const worldArtwork = {
   geography: otherWorlds.GeographyWorldIcon,
   "difficult-history": otherWorlds.DifficultHistoryWorldIcon,
 };
+// Render the new badge in isolation so the headless Home contract can still
+// assert its accessible streak semantics without mocking its SVG internals.
+const HomeStreakBadge = compile("src/components/HomeStreakBadge.tsx", {
+  "react-native-reanimated": {
+    ...reanimated,
+    default: { ...reanimated.default, View: "AnimatedView" },
+    useReducedMotion: () => true,
+    useAnimatedStyle: callback => callback(),
+  },
+});
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
   "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
+  "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
     MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
@@ -317,7 +328,19 @@ assert.ok(nodes(futureCard).some(node => node.props?.children === "🌟"),
   "new/unknown categories safely fall back to their emoji");
 futureCard.props.onPress();
 assert.equal(actions.at(-1), "category:future-world");
-assert.equal(nodes(tree).find(node => node.props?.testID === "home-quiz-streak").props.accessibilityLabel.includes("καθημερινού quiz"), true);
+const streakSlot = nodes(tree).find(node => node.type === HomeStreakBadge);
+assert.ok(streakSlot, "Home uses the isolated native flame component");
+assert.equal(streakSlot.props.streak, 2,
+  "the new medallion receives the existing daily quiz streak, not a separate metric");
+const renderedStreak = HomeStreakBadge({ streak: streakSlot.props.streak });
+assert.match(renderedStreak.props.accessibilityLabel, /καθημερινού quiz/);
+assert.equal(renderedStreak.props.testID, "home-quiz-streak");
+assert.equal(nodes(renderedStreak).find(node => node.props?.testID === "home-streak-count").props.children, 2);
+assert.ok(nodes(renderedStreak).filter(node => node.type === "path").length >= 3,
+  "streak flame is vector artwork rather than an emoji");
+const loadingStreak = HomeStreakBadge({ streak: null });
+assert.match(loadingStreak.props.accessibilityLabel, /Φόρτωση/);
+assert.equal(nodes(loadingStreak).find(node => node.props?.testID === "home-streak-count").props.children, "—");
 assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
 // The counter is the number of submitted answers, not the current index,
 // correct answers, or a streak. It is scoped to today's Athens daily record.
