@@ -624,10 +624,32 @@ assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.strok
   "completed path receives a subtle static emerald halo");
 assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#AD9FFB"),
   "the next active segment receives a lavender halo");
-const titleOnMap = nodes(mapFrame).find(node => node.type === "Text" &&
-  node.props?.children === "Ενότητα 20");
-assert.equal(titleOnMap.props.style[0].backgroundColor, "rgba(9,15,27,0.79)",
-  "checkpoint labels retain contrast over coastlines and gradients");
+const titleOnMap = nodes(mapFrame).find(node => node.props?.testID === "adventure-node-title-anc-19");
+assert.ok(titleOnMap, "checkpoint title remains visible on the path");
+assert.equal(titleOnMap.props.numberOfLines, 3,
+  "long Greek lesson titles may wrap onto a third line");
+assert.equal(titleOnMap.props.adjustsFontSizeToFit, true,
+  "small devices can shrink a long title rather than cut it");
+assert.ok(titleOnMap.props.style[1].width > 148,
+  "labels have a little more room without expanding checkpoint touch targets");
+assert.ok(titleOnMap.props.style[1].width <= width * 0.51 + 0.001,
+  "labels do not cross the map edges on narrow screens");
+assert.ok(!("backgroundColor" in titleOnMap.props.style[0]),
+  "titles no longer obscure the atlas with oversized dark rectangles");
+assert.ok(titleOnMap.props.style[0].textShadowRadius >= 6,
+  "titles use a subtle shadow for contrast against the atlas");
+const longGreekTitle = "Όσα μετρούσε το ανάκτορο: εξουσία και εργασία στη μυκηναϊκή Πύλο";
+const longLessonTree = adventure({
+  ...adventureProps,
+  lessons: adventureLessons.map((lesson, i) =>
+    i === 5 ? { ...lesson, title: longGreekTitle } : lesson),
+});
+const longGreekLabel = nodes(longLessonTree).find(node =>
+  node.props?.testID === "adventure-node-title-anc-5");
+assert.equal(longGreekLabel.props.children, longGreekTitle,
+  "full editorial title is preserved without manually shortening content");
+assert.equal(longGreekLabel.props.numberOfLines, 3,
+  "long editorial titles get a third line while leaving node coordinates untouched");
 const nineteenProgress = nodes(tree).find(node => node.props?.testID === "adventure-progress");
 assert.equal(nodes(nineteenProgress).find(node => node.type === "AdventureProgressFill").props.percent, 63,
   "animated fill receives the actual lesson completion percentage");
