@@ -25,8 +25,10 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
   const daily = useDailySnapshot();
   const [dailyExpanded, setDailyExpanded] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
-  const { fontScale } = useWindowDimensions();
-  const allowScroll = dailyExpanded || (viewportHeight > 0 && viewportHeight < 575) || fontScale > 1.2;
+  const { width, fontScale } = useWindowDimensions();
+  // Preserve the screen-fitting dashboard on standard phones; use the accessible
+  // scrolling layout when compact widths or enlarged text would clip content.
+  const allowScroll = dailyExpanded || (viewportHeight > 0 && viewportHeight < 575) || width < 350 || fontScale > 1.2;
   const history = useMemo(() => dailyHistory(daily.doc), [daily.doc]);
   const historyLoaded = daily.ready;
   const [todayKey, setTodayKey] = useState(() => getAthensDateKey());
