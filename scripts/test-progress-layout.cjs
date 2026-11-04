@@ -95,6 +95,17 @@ assert.equal(primary.props.onResumeLesson, props.onOpenLesson);
 primary.props.onReview(); primary.props.onExplore(); primary.props.onWeeklyReview();
 assert.equal(review, 1); assert.equal(explore, 1); assert.equal(weekly, 1);
 
+// On tall screens no leftover height is distributed between rows.
+node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 950 } } });
+tree = render();
+const tallLayout = node(tree, "progress-fixed-dashboard").props.style;
+assert.equal(tallLayout[0].justifyContent, "flex-start",
+  "tall screens keep dashboard rows together instead of using space-between");
+assert.equal(tallLayout[2].gap, 16,
+  "roomy screens increase normal spacing by only a small, bounded amount");
+assert.equal(node(tree, "progress-knowledge-link").props.style({ pressed: false })[0].height, 176,
+  "learning card height stays bounded on tall screens");
+
 node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 560 } } });
 tree = render();
 assert.equal(tree.type, "View", "typical smaller phones must not scroll");
