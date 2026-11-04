@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native";
+import type { ReactNode } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import { colors } from "../theme";
 
@@ -8,6 +9,8 @@ type Props = {
   secondary?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** Optional decorative layer drawn *inside* the button, below its label. */
+  decoration?: ReactNode;
 };
 
 export default function ActionButton({
@@ -16,6 +19,7 @@ export default function ActionButton({
   secondary = false,
   disabled = false,
   style,
+  decoration,
 }: Props) {
   return (
     <Pressable
@@ -31,6 +35,7 @@ export default function ActionButton({
         style,
       ]}
     >
+      {decoration}
       <Text style={[styles.label, secondary && styles.secondaryLabel]}>
         {label}
       </Text>
