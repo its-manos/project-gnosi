@@ -36,7 +36,7 @@ export function getAdventureEntryOffset(
   chapterY: number, mapHeight: number, viewportHeight: number,
 ) {
   const maxScroll = Math.max(0, mapHeight + MAP_BOTTOM_PADDING - viewportHeight);
-  // Allow space for the chapter heading and the first checkpoint ring.
+  // Leave enough room above the focused checkpoint for its label or chapter marker.
   return Math.min(maxScroll, Math.max(0, chapterY - 112));
 }
 
@@ -122,7 +122,9 @@ export default function SubcategoryScreen({
   // ready, focus once on the next checkpoint. Dragging before hydration wins.
   useEffect(() => {
     if (!progressLoaded || reduceMotion === null || !mapViewportHeight ||
-      mapContentHeight < mapViewportHeight || !points.length ||
+      mapContentHeight < mapViewportHeight ||
+      mapContentHeight + 2 < mapHeight + MAP_BOTTOM_PADDING ||
+      !points.length || !scrollRef.current ||
       autoFocusedRef.current === subcategory.id || userInteractedRef.current) return;
     autoFocusedRef.current = subcategory.id;
     scrollToCurrent(!reduceMotion);
