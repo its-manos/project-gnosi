@@ -1,4 +1,4 @@
-/** Full-screen, screen-anchored Aegean atlas for the Adventure Path.
+/** Fixed-viewport Aegean atlas for the Adventure Path.
  * All geometry is local SVG: no oversized bitmap, remote fetch or per-frame
  * path generation. The viewBox matches the measured aspect ratio exactly.
  */
@@ -9,7 +9,7 @@ import Animated, {
   withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 import Svg, {
-  Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText,
+  Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText,
 } from "react-native-svg";
 
 type Props = { width: number; height: number };
@@ -149,8 +149,20 @@ function AdventureAtlasBackground({ width, height }: Props) {
             <Stop offset="0%" stopColor="#30403E" />
             <Stop offset="100%" stopColor="#282F3E" />
           </LinearGradient>
+          {/* All atmospheric lighting is static; no per-frame shader changes. */}
+          <RadialGradient id="adventure-atlas-ambient" cx="50%" cy="44%" rx="71%" ry="69%">
+            <Stop offset="0%" stopColor="#7796A4" stopOpacity={0.16} />
+            <Stop offset="52%" stopColor="#516C83" stopOpacity={0.06} />
+            <Stop offset="100%" stopColor="#516C83" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="adventure-atlas-vignette" cx="50%" cy="46%" rx="77%" ry="75%">
+            <Stop offset="25%" stopColor="#050B17" stopOpacity={0} />
+            <Stop offset="76%" stopColor="#050B17" stopOpacity={0.12} />
+            <Stop offset="100%" stopColor="#050B17" stopOpacity={0.53} />
+          </RadialGradient>
         </Defs>
         <Rect width={420} height={h} fill="url(#adventure-sea)" />
+        <Rect width={420} height={h} fill="url(#adventure-atlas-ambient)" />
 
         {/* Latitude/longitude rhumb grid, border and coordinates are stationary. */}
         <G stroke="#A9B6BA" strokeWidth={0.65} opacity={0.11} strokeDasharray="2 13">
@@ -227,6 +239,8 @@ function AdventureAtlasBackground({ width, height }: Props) {
               <Path d="M -9 0 H 9 M 0 -9 V 9" />
             </G>)}
         </G>
+        {/* Soft paper-edge falloff helps checkpoints stand out without a hard frame. */}
+        <Rect width={420} height={h} fill="url(#adventure-atlas-vignette)" />
       </Svg>
 
       {/* Only this small translucent tide layer moves on the UI thread. */}
