@@ -160,6 +160,7 @@ export default function CategoryScreen({
             <FantasyMap
               regions={mapRegions}
               fitViewport={mapViewport}
+              hideControls
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
               emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
