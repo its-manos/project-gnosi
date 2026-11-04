@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
+import { AtlasAtmosphereBreath, AtlasDestinationFeedback, AtlasTwinkleStar } from "./CategoryAtlasMotion";
 
 type MapRegion = {
   id: string;
@@ -405,6 +406,7 @@ export default function FantasyMap({
 }: Props) {
   const [showList, setShowList] = useState(false);
   const [controlsHeight, setControlsHeight] = useState(50);
+  const [pressedRegion, setPressedRegion] = useState<string | null>(null);
   const fitted = Boolean(fitViewport?.width && fitViewport?.height);
   const columns = fitted && regions.length > 4 ? 3 : columnCount(regions.length);
   const rows = Math.max(1, overview || fitted
@@ -590,6 +592,7 @@ export default function FantasyMap({
             <Ellipse cx={MAP_WIDTH * 0.23} cy={mapHeight * 0.82}
               rx={MAP_WIDTH * 0.38} ry={mapHeight * 0.27}
               fill="url(#atlas-nebula-gold)" />
+            <AtlasAtmosphereBreath height={mapHeight} />
           </G>
         ) : null}
         {Array.from({ length: 9 }, (_, index) => (
@@ -647,6 +650,11 @@ export default function FantasyMap({
                 fill={index % 5 === 0 ? "#E4CFA6" : "#B5CADD"}
                 opacity={index % 11 === 0 ? 0.52 : index % 5 === 0 ? 0.3 : 0.17} />;
             })}
+            {[0, 11, 22, 33, 44].map((star, index) => (
+              <AtlasTwinkleStar key={star} index={index}
+                cx={14 + stableNoise(star + 91) * (MAP_WIDTH - 28)}
+                cy={20 + stableNoise(star + 397) * (mapHeight - 40)} />
+            ))}
             {Array.from({ length: 7 }, (_, index) => {
               const x = 24 + stableNoise(index + 601) * (MAP_WIDTH - 48);
               const y = 24 + stableNoise(index + 743) * (mapHeight - 48);
@@ -853,6 +861,9 @@ export default function FantasyMap({
             labelFontSize * Math.min(1, maxLabelChars / longestLine))
             : labelFontSize;
           const isAncientGreeceLandmark = !overview && region.id === "ancient-greece";
+          const pressShape = fitted ? smoothClosedPath(makeIslandPoints(
+            region.cx, region.cy, region.rx, region.ry, region.seed,
+          )) : "";
           // The Doric pediment is detailed enough to deserve breathing room;
           // shift its title down slightly and bring the progress pill nearer.
           // Other destinations keep their established spacing for now.
@@ -877,10 +888,18 @@ export default function FantasyMap({
               accessibilityLabel={region.title + (region.progressLoaded
                 ? ", " + region.completedLessons + " από " + region.totalLessons + " μαθήματα"
                 : region.status === "coming-soon" ? ", σύντομα" : "")}
-              onPress={() => onSelectRegion(region.id)}>
+              onPressIn={fitted ? () => setPressedRegion(region.id) : undefined}
+              onPressOut={fitted ? () => setPressedRegion(null) : undefined}
+              onPress={() => {
+                setPressedRegion(null);
+                onSelectRegion(region.id);
+              }}>
               {/* Preserve the whole island as a touch target, including coasts. */}
-              <Path d={smoothClosedPath(makeIslandPoints(region.cx, region.cy, region.rx, region.ry, region.seed))}
-                fill="transparent" />
+              <Path d={fitted ? pressShape : smoothClosedPath(makeIslandPoints(
+                region.cx, region.cy, region.rx, region.ry, region.seed,
+              ))} fill="transparent" />
+              {fitted ? <AtlasDestinationFeedback
+                d={pressShape} active={pressedRegion === region.id} /> : null}
               {isAncientGreeceLandmark ? (
                 <G>
                   <AncientGreekTemple x={region.cx - 26 * (columns >= 3 ? 0.84 : 1)}
