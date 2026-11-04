@@ -448,6 +448,63 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
   "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
 });
+// Initial layout must never show the legacy (non-fitted) map for a frame.
+// A fresh CategoryScreen renders only the measured-container shell, then
+// mounts FantasyMap once with the correct viewport on the next render.
+const screenState = [];
+let screenHookIndex = 0;
+const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
+  react: {
+    useMemo: fn => fn(),
+    useState: initial => {
+      const index = screenHookIndex++;
+      if (!(index in screenState)) screenState[index] = initial;
+      return [screenState[index], value => {
+        screenState[index] = typeof value === "function" ? value(screenState[index]) : value;
+      }];
+    },
+  },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "../components/FantasyMap": { __esModule: true, default: map },
+  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
+  "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
+}).default;
+const screenProps = {
+  category: { id: "history", title: "Ιστορία" },
+  subcategories: [{ id: "ancient", title: "Αρχαία Ελλάδα" },
+    { id: "world", title: "Παγκόσμια ιστορία" }],
+  lessons, completedLessonIds: ["a"], inProgressLessonIds: ["b"],
+  progressLoaded: true, onBack: () => {},
+  onOpenSubcategory: () => {},
+};
+const renderCategory = () => {
+  screenHookIndex = 0;
+  return screenWithLayout(screenProps);
+};
+let categoryTree = renderCategory();
+assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 0,
+  "old non-fitted FantasyMap must not flash while viewport is unmeasured");
+const mapShell = nodes(categoryTree).find(node =>
+  node.props?.testID === "category-atlas-map-viewport");
+assert.ok(mapShell && typeof mapShell.props.onLayout === "function",
+  "empty flex viewport must still measure its bounds");
+mapShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
+categoryTree = renderCategory();
+let mountedMaps = nodes(categoryTree).filter(node => node.type === map);
+assert.equal(mountedMaps.length, 1, "measured screen mounts exactly one map");
+assert.deepEqual(
+  { ...mountedMaps[0].props.fitViewport }, { width: 340, height: 490 },
+  "first map mount uses the real viewport size rather than legacy layout");
+nodes(categoryTree).find(node =>
+  node.props?.testID === "category-atlas-map-viewport"
+).props.onLayout({ nativeEvent: { layout: { width: 310, height: 420 } } });
+categoryTree = renderCategory();
+mountedMaps = nodes(categoryTree).filter(node => node.type === map);
+assert.deepEqual(
+  { ...mountedMaps[0].props.fitViewport }, { width: 310, height: 420 },
+  "fitted map still adapts when viewport dimensions change");
+
 const choose = screenModule.chooseAtlasFeaturedRegion;
 const picks = [
   { id: "ancient", status: "new" },
