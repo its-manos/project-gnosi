@@ -428,7 +428,11 @@ assert.match(motionCode, /export function AtlasProgressFill\(/,
   "the shortcut progress uses animated percentage width");
 assert.match(motionCode, /useAnimatedStyle\(/,
   "card animation uses UI-thread styles, not React re-renders");
-assert.doesNotMatch(motionCode, /withRepeat[\s\S]*export function AtlasContinueAccent/,
+const continueAccentCode = motionCode.slice(
+  motionCode.indexOf("export function AtlasContinueAccent"),
+  motionCode.indexOf("export function AtlasContinueArrow"),
+);
+assert.doesNotMatch(continueAccentCode, /withRepeat\(/,
   "the card highlight must not start an ongoing looping pulse");
 const screen = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
 const navigator = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
