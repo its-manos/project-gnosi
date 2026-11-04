@@ -71,10 +71,13 @@ export default function CategoryScreen({
     }),
     [subcategories, lessons, completedLessonIds, inProgressLessonIds, progressLoaded],
   );
+  const categoryLessons = useMemo(
+    () => lessons.filter(lesson => lesson.categoryId === category.id),
+    [lessons, category.id],
+  );
   const featuredRegion = useMemo(
-    () => chooseAtlasFeaturedRegion(mapRegions,
-      lessons.filter(lesson => lesson.categoryId === category.id), inProgressLessonIds),
-    [mapRegions, lessons, category.id, inProgressLessonIds],
+    () => chooseAtlasFeaturedRegion(mapRegions, categoryLessons, inProgressLessonIds),
+    [mapRegions, categoryLessons, inProgressLessonIds],
   );
   const hasProgress = featuredRegion?.status === "in-progress";
   const featuredPercent = featuredRegion?.totalLessons
