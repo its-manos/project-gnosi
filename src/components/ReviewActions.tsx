@@ -43,7 +43,7 @@ export default function ReviewActions({
     ? inProgressAnsweredCount + " / " + inProgressQuestionCount + " ερωτήσεις"
       + (inProgressLessonCount > 1 ? " · " + inProgressLessonCount + " μαθήματα σε εξέλιξη" : "")
     : active ? "Η επανάληψή σου έχει αποθηκευτεί."
-    : reviewDue ? "Μικρές επαναλήψεις για γνώση που μένει."
+    : reviewDue ? "" // The due count and CTA already explain the next step.
     : ready ? "Δεν έχεις εκκρεμείς επαναλήψεις." : "";
   const primaryLabel = resumePrimary ? "Συνέχισε το μάθημα"
     : active ? "Συνέχεια επανάληψης"
@@ -83,10 +83,10 @@ export default function ReviewActions({
 
 const styles = StyleSheet.create({
   card: {
-    padding: 14, gap: 6, borderRadius: 19,
-    backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.borderStrong,
+    paddingHorizontal: 14, paddingVertical: 12, gap: 5, borderRadius: 19,
+    backgroundColor: "#2B2843", borderWidth: 1, borderColor: "#554C75",
   },
-  cardDense: { paddingHorizontal: 12, paddingVertical: 10, gap: 4 },
+  cardDense: { paddingHorizontal: 12, paddingVertical: 9, gap: 4 },
   label: { color: colors.accentLight, fontSize: 10, lineHeight: 15, fontWeight: "800" },
   title: { color: colors.text, fontSize: 17, lineHeight: 23, fontWeight: "800" },
   titleDense: { fontSize: 15, lineHeight: 20 },
@@ -94,10 +94,10 @@ const styles = StyleSheet.create({
   action: { minHeight: 44, marginTop: 3, paddingVertical: 9 },
   actionDense: { marginTop: 0, paddingVertical: 8 },
   secondary: {
-    flexDirection: "row", alignItems: "center", gap: 8, minHeight: 40,
+    flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44,
     paddingTop: 3,
   },
-  secondaryDense: { minHeight: 34, paddingTop: 0 },
+  secondaryDense: { minHeight: 44, paddingTop: 0 },
   secondaryText: { flex: 1, color: colors.accentLight, fontSize: 12, lineHeight: 18, fontWeight: "700" },
   arrow: { color: colors.accentLight, fontSize: 21 },
 });
