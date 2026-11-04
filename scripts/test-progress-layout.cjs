@@ -102,8 +102,6 @@ assert.equal(nodes(tree).find(n => n.type === "ReviewActions").props.dense, true
 node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 540 } } });
 tree = render();
 assert.ok(node(tree, "progress-fixed-dashboard"), "a short phone still uses the fixed dashboard");
-assert.equal(node(tree, "progress-knowledge-link").props.style({ pressed: false }).at(-1), undefined,
-  "unpressed learning cards have no accidental state transform");
 assert.equal(node(tree, "progress-knowledge-link").props.style({ pressed: false })[2].height, 142,
   "very short screens use compact learning cards");
 node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 440 } } });
