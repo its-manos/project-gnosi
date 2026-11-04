@@ -304,10 +304,13 @@ assert.equal(fittedLabel.props.fontWeight, "800",
   "category labels use the same weight as Adventure Path stop labels");
 assert.equal(fittedLabel.props.fill, "#D0D2DA",
   "unstarted destinations use the Adventure Path's softer text body color");
-const activeAtlasText = nodes(readableFrame).find(node => node.type === "text"
-  && node.props?.children === "Αρχαία Ελλάδα");
-assert.equal(activeAtlasText?.props.fill, "#C7BCFF",
-  "started destinations match the Adventure Path's active label accent");
+const activeAtlasText = nodes(readableFrame).filter(node => node.type === "text"
+  && ["Αρχαία", "Ελλάδα"].includes(node.props?.children));
+assert.deepEqual(Array.from(activeAtlasText, node => node.props.children),
+  ["Αρχαία", "Ελλάδα"],
+  "the active title remains fully visible on two lines in the fitted map");
+assert.ok(activeAtlasText.every(node => node.props.fill === "#C7BCFF"),
+  "both title lines retain the Adventure Path's active label accent");
 const selectedMapControl = nodes(map({ ...props, fitViewport: { width: 340, height: 490 } }))
   .find(node => node.props?.testID === "atlas-map-toggle");
 assert.ok(selectedMapControl.props.style.some(style => style?.backgroundColor === "#34304E"),
