@@ -15,6 +15,7 @@ import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
 import { MotionCounter, MotionIcon, MotionPressable, MotionQuizGlow, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import HomeAtlasBackground from "../components/HomeAtlasBackground";
 
 type Props = {
   categories: Category[];
@@ -119,7 +120,9 @@ export default function HomeScreen({
   };
 
   return (
-    <ScrollView testID="home-game-dashboard" style={styles.viewport}
+    <View testID="home-atlas-screen" style={styles.screen}>
+      <HomeAtlasBackground />
+      <ScrollView testID="home-game-dashboard" style={styles.viewport}
       contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent]}
       scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false}
       overScrollMode="never" showsVerticalScrollIndicator={false}
@@ -271,11 +274,13 @@ export default function HomeScreen({
           )}
         </View>
       </MotionView>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
   // Fill the available viewport by growing the cards and knowledge-world
   // tiles, not the gaps between sections. Minimum card sizes remain intact;
