@@ -39,6 +39,7 @@ export default function ProgressScreen({
   // Measure inside the app's safe area, ABOVE the bottom navigation.
   // Normal devices render a fixed page, not a tall, rubber-band ScrollView.
   const availableHeight = viewportHeight || windowHeight - 130;
+  const roomy = availableHeight >= 760;
   const dense = availableHeight < 650;
   const veryDense = availableHeight < 600;
   // Protect touch targets and readable text on very short or zoomed screens.
@@ -56,7 +57,10 @@ export default function ProgressScreen({
     const next = event.nativeEvent.layout.height;
     if (next > 0) setViewportHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
   };
-  const contentStyle = [styles.content, dense && styles.contentDense, veryDense && styles.contentVeryDense];
+  const contentStyle = [
+    styles.content, roomy && styles.contentRoomy,
+    dense && styles.contentDense, veryDense && styles.contentVeryDense,
+  ];
 
   const dashboard = <>
     <SyncStatus quiet />
@@ -190,8 +194,11 @@ const styles = StyleSheet.create({
     alignSelf: "center", overflow: "hidden", backgroundColor: "#101827",
   },
   scroll: { flex: 1, minHeight: 0 },
-  fixedContent: { flex: 1, minHeight: 0, justifyContent: "space-between" },
+  // Extra height belongs below the dashboard, not between its sections.
+  // space-between created oversized vertical gutters on tall phones/tablets.
+  fixedContent: { flex: 1, minHeight: 0, justifyContent: "flex-start" },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 14, gap: 14 },
+  contentRoomy: { paddingTop: 18, paddingBottom: 18, gap: 16 },
   contentDense: { paddingTop: 7, paddingBottom: 9, gap: 9 },
   contentVeryDense: { paddingTop: 5, paddingBottom: 6, gap: 6 },
   scrollContent: { flexGrow: 1 },
