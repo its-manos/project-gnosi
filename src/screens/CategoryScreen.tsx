@@ -104,7 +104,7 @@ export default function CategoryScreen({
             if (progressLoaded) onOpenSubcategory(featuredRegion.id, category.id);
           }}>
           <View style={styles.cardHeading}>
-            <Text style={styles.cardCategory} numberOfLines={1}>{category.title}</Text>
+            <Text style={styles.cardCategory} numberOfLines={1}>Η ΠΡΟΟΔΟΣ ΣΟΥ</Text>
             <Text style={styles.categoryCount} testID="category-atlas-category-progress">
               {progressLoaded ? categoryProgress.completed + " / " + categoryProgress.total : "— / " + categoryProgress.total}
             </Text>
@@ -185,7 +185,8 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
   },
   cardCategory: {
-    flex: 1, color: colors.accentLight, fontSize: 14, lineHeight: 19, fontWeight: "900",
+    flex: 1, color: "#ABA1D4", fontSize: 11, lineHeight: 17,
+    fontWeight: "900", letterSpacing: 0.8,
   },
   categoryCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
   cardBody: { flexDirection: "row", alignItems: "center", gap: 10 },
