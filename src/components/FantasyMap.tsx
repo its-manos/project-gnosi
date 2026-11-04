@@ -524,7 +524,6 @@ export default function FantasyMap({
         accessibilityLabel="Διαδραστικός φανταστικός χάρτης γνώσης"
       >
         <Defs>
-          {(!fitted || !externalBackground) ? <>
           <LinearGradient id="atlas-sea" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor="#172C36" /><Stop offset="1" stopColor="#101C27" />
           </LinearGradient>
@@ -559,7 +558,6 @@ export default function FantasyMap({
                 <Stop offset="0.62" stopColor="#070B15" stopOpacity={0.03} />
                 <Stop offset="1" stopColor="#070B15" stopOpacity={0.46} />
               </RadialGradient>
-              </> : null}
           {positionedRegions.map(region => (
                 <RadialGradient key={`atlas-region-aura-${region.id}`}
                   id={`atlas-region-aura-${region.seed}`}
