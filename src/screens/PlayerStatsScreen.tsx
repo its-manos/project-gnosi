@@ -1,3 +1,4 @@
+import { stableLayoutHeight } from "../utils/screenLayout";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, AppState, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useDailySnapshot } from "../state/LearningSession";
@@ -51,7 +52,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
   );
 
   return (
-    <View style={styles.screen} testID="player-stats-screen" onLayout={event => { const next = event.nativeEvent.layout.height; if (next > 0) setViewportHeight(previous => Math.abs(previous - next) < 1 ? previous : next); }}>
+    <View style={styles.screen} testID="player-stats-screen" onLayout={event => { const next = event.nativeEvent.layout.height; if (next > 0) setViewportHeight(previous => stableLayoutHeight(previous, next)); }}>
       <ProgressGradientBackground />
       {allowScroll ? <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="stats-accessibility-scroll">
         <AppHeader onBack={onBack} />
