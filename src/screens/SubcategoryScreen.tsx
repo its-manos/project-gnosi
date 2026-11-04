@@ -295,10 +295,10 @@ export default function SubcategoryScreen({
                     <View style={[styles.node, done && styles.nodeDone, active && styles.nodeActive,
                       disabled && styles.nodeLocked]}>
                       {/* A single stationary engraved inset per medal. No new SVG or animation. */}
-                      {done || active || disabled ?
+                      {done || disabled ?
                         <View pointerEvents="none" accessible={false}
                           style={[styles.nodeInset, done && styles.nodeInsetDone,
-                            active && styles.nodeInsetActive, disabled && styles.nodeInsetLocked]} /> : null}
+                            disabled && styles.nodeInsetLocked]} /> : null}
                       {done ? <Text style={styles.nodeCheck}>✓</Text>
                         : disabled ? <Svg width={23} height={25} viewBox="0 0 24 24">
                           <Path d="M6.5 10V7.5a5.5 5.5 0 0 1 11 0V10M5.5 10h13v10h-13z"
@@ -396,7 +396,9 @@ const styles = StyleSheet.create({
   // Completed stations resemble aged bronze seals, with a green core so
   // completion remains identifiable without depending on metal color alone.
   nodeOuterDone: { borderWidth: 1.5, borderColor: "#AE9671", backgroundColor: "#262D32" },
-  nodeOuterActive: { borderWidth: 1.5, borderColor: "#A99AE3", backgroundColor: "#302945" },
+  // The current stop gets a single stationary outer outline from the halo.
+  // Do not stack a third opaque ring on the fixed-size outer wrapper.
+  nodeOuterActive: { backgroundColor: "transparent" },
   nodeOuterLocked: { borderWidth: 1, borderColor: "#41495C", backgroundColor: "#18212F" },
   node: {
     width: 69, height: 69, borderRadius: 35, borderWidth: 3,
@@ -411,7 +413,6 @@ const styles = StyleSheet.create({
     borderRadius: 28, borderWidth: 1,
   },
   nodeInsetDone: { borderColor: "#A8916B", opacity: 0.68 },
-  nodeInsetActive: { borderColor: "#AFA2E3", opacity: 0.55 },
   nodeInsetLocked: { borderColor: "#5F687B", opacity: 0.32 },
   nodeNumber: { color: "#F6F0FF", fontSize: 25, lineHeight: 31, fontWeight: "900" },
   nodeCheck: { color: "#C1EDD3", fontSize: 34, lineHeight: 40, fontWeight: "800" },
