@@ -624,7 +624,7 @@ assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.strok
   "completed path receives a subtle static emerald halo");
 assert.ok(nodes(mapFrame).some(node => node.type === "path" && node.props?.stroke === "#AD9FFB"),
   "the next active segment receives a lavender halo");
-const titleOnMap = nodes(mapFrame).find(node => node.props?.testID === "adventure-node-title-anc-19");
+const titleOnMap = nodes(mapFrame).find(node => node.props?.testID === "adventure-label-anc-19");
 assert.ok(titleOnMap, "checkpoint title remains visible on the path");
 assert.equal(titleOnMap.props.numberOfLines, 3,
   "long Greek lesson titles may wrap onto a third line");
@@ -645,7 +645,7 @@ const longLessonTree = adventure({
     i === 5 ? { ...lesson, title: longGreekTitle } : lesson),
 });
 const longGreekLabel = nodes(longLessonTree).find(node =>
-  node.props?.testID === "adventure-node-title-anc-5");
+  node.props?.testID === "adventure-label-anc-5");
 assert.equal(longGreekLabel.props.children, longGreekTitle,
   "full editorial title is preserved without manually shortening content");
 assert.equal(longGreekLabel.props.numberOfLines, 3,
