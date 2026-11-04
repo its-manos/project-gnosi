@@ -152,10 +152,11 @@ export default function CategoryScreen({
           setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
             Math.abs(previous.height - height) < 1 ? previous : { width, height });
         }}>
-        {/* Wait for the real viewport size before mounting the atlas. Otherwise
-            FantasyMap briefly paints its legacy non-fitted layout on entry. */}
+        {/* Wait for the real viewport size before mounting the atlas. Avoid
+            animating the complex chart as one large composited surface:
+            the header, card and tiny ambient accents already have motion. */}
         {mapViewport.width > 0 && mapViewport.height > 0 ? (
-          <MotionView entranceDelay={155} testID="category-atlas-map-entrance"
+          <View testID="category-atlas-map-entrance"
             style={styles.mapEntrance}>
             <FantasyMap
               regions={mapRegions}
@@ -164,7 +165,7 @@ export default function CategoryScreen({
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
               emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
-          </MotionView>
+          </View>
         ) : null}
       </View>
     </View>
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
     marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",
   },
-  // Measured parent remains a normal View: entrance animation never alters
-  // screen geometry, and the map is first mounted in its fitted layout.
+  // The map mounts in its fitted layout, without a costly entrance transform
+  // or opacity effect over hundreds of nested SVG elements.
   mapEntrance: { width: "100%" },
 });
