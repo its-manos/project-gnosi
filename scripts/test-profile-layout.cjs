@@ -109,7 +109,7 @@ assert.equal(nodes(tree).filter(n => n.props?.children === "Η δραστηρι�
 assert.ok(!nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
 assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"), "Default Statistics overview should not scroll");
 assert.ok(!nodes(tree).some(n => n.type === "ScrollView"), "Normal viewport stays fixed");
-const quizToggle = nodes(tree).find(n => n.type === "Pressable" && text(n).includes("Καθημερινά quiz"));
+const quizToggle = nodes(tree).find(n => n.type === "MotionPressable" && text(n).includes("Καθημερινά quiz"));
 assert.ok(quizToggle, "Quiz details stay discoverable");
 quizToggle.props.onPress();
 tree = render();
