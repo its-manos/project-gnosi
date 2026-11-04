@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - "src/screens/ProgressScreen.tsx"
+      - "src/screens/LearningInsightsScreen.tsx"
+      - "src/navigation/AppNavigator.tsx"
+      - "src/hooks/useLearningApp.ts"
+      - "src/components/BottomNavigation.tsx"
       - "src/components/ReviewActions.tsx"
       - "src/components/KnowledgeMastery.tsx"
       - "src/components/LearningActivityPanel.tsx"
