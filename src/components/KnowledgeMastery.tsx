@@ -76,7 +76,7 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
           })}
         </View>
       ) : (
-        (mapOnly && !allSubjects && !detail ? model.categories.slice().sort((a, b) => b.percent - a.percent).slice(0, 3) : model.categories).map(category => <View key={category.id} style={[styles.row, previewCollapsed && styles.previewRow, detail && styles.detailRow]}>
+        (mapOnly && !allSubjects ? model.categories.slice().sort((a, b) => b.percent - a.percent).slice(0, 3) : model.categories).map(category => <View key={category.id} style={[styles.row, previewCollapsed && styles.previewRow]}>
         <Text style={[styles.title, previewCollapsed && styles.previewTitle]}>{category.title} · {category.total ? `${category.percent}%` : "Χωρίς δοκιμές ακόμη"}</Text>
         <View style={[styles.track, previewCollapsed && styles.previewTrack]} accessible accessibilityRole="progressbar" accessibilityLabel={`Γνώσεις: ${category.title}`} accessibilityValue={{ min: 0, max: 100, now: category.percent }}><View style={[styles.fill, { width: `${category.percent}%` }]} /></View>
         {!previewCollapsed ? <Text style={styles.body}>{category.mastered} / {category.total} έννοιες κατακτημένες</Text> : null}
@@ -148,7 +148,6 @@ const styles = StyleSheet.create({
   tileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
   tileCountComplete: { color: "#D1C6FF" },
   tileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#383B58", overflow: "hidden" },
-  tileFill: { height: "100%", backgroundColor: "#A99BFF", borderRadius: 5 },
   subjectInsight: {
     backgroundColor: "#27273F", borderWidth: 1, borderColor: "#514976",
     borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
@@ -172,10 +171,6 @@ const styles = StyleSheet.create({
   },
   detailHelp: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
 
-  detailRow: {
-    gap: 7, paddingVertical: 11, borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(174, 160, 221, 0.16)",
-  },
   previewRow: { gap: 5, paddingVertical: 2 },
   previewTitle: { fontSize: 12, lineHeight: 18 },
   previewTrack: { height: 6 },
