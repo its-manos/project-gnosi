@@ -114,13 +114,22 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
   const snapshot = useLearningSnapshot();
   const [expanded, setExpanded] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const completed = new Set(snapshot.backup.completedIds);
-  const rows = categories.map((category, index) => {
-    const items = lessons.filter(lesson => lesson.categoryId === category.id);
-    const count = items.filter(lesson => completed.has(lesson.id)).length;
-    const percent = items.length ? Math.round(count / items.length * 100) : 0;
-    return { category, index, count, total: items.length, percent };
-  });
+  // Count all lessons once rather than scanning the entire catalogue for
+  // each category. Keep catalogue order as the stable ranking tie-breaker.
+  const rows = useMemo(() => {
+    const completed = new Set(snapshot.backup.completedIds);
+    const counts = new Map<string, { total: number; count: number }>();
+    for (const lesson of lessons) {
+      const current = counts.get(lesson.categoryId) ?? { total: 0, count: 0 };
+      current.total += 1;
+      if (completed.has(lesson.id)) current.count += 1;
+      counts.set(lesson.categoryId, current);
+    }
+    return categories.map((category, index) => {
+      const { total, count } = counts.get(category.id) ?? { total: 0, count: 0 };
+      return { category, index, count, total, percent: total ? Math.round(count / total * 100) : 0 };
+    });
+  }, [snapshot.backup.completedIds]);
   // The detail screen begins with subjects already explored. Stable ties retain
   // catalogue order, and every subject is accessible via the disclosure.
   const ranked = compact || detail
