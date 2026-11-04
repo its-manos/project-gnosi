@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { Easing, cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef,
   useSharedValue, withTiming } from "react-native-reanimated";
 import type { ScrollViewInstance } from "react-native";
@@ -8,7 +8,7 @@ import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { colors } from "../theme";
 import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
 import { AdventureActiveHalo, AdventureProgressFill } from "../components/AdventureMotion";
-import { MotionPressable, MotionView } from "../components/HomeMotion";
+import { MotionCounter, MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked } from "../utils/devLessonAccess";
 
@@ -158,16 +158,18 @@ export default function SubcategoryScreen({
   return (
     <View testID="subcategory-adventure-path" style={styles.screen}>
       <MotionView entranceDelay={0} testID="adventure-category-header" style={styles.navigationHeader}>
-        <Pressable testID="adventure-back" onPress={onBack} style={styles.backButton}
+        <MotionPressable testID="adventure-back" pressScale={0.95} onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
           hitSlop={8}>
           <Text style={styles.backText}>‹ ΠΙΣΩ</Text>
-        </Pressable>
+        </MotionPressable>
         <Text testID="adventure-category-title" style={styles.categoryTitle}
           numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
           {category.title.toLocaleUpperCase("el-GR")}
         </Text>
-        <View style={styles.headerMark} accessible={false}><Text style={styles.sparkle}>✦</Text></View>
+        <View style={styles.headerMark} accessible={false}>
+          <MotionIcon index={0}><Text style={styles.sparkle}>✦</Text></MotionIcon>
+        </View>
       </MotionView>
 
       {path.length > 0 ?
@@ -181,8 +183,9 @@ export default function SubcategoryScreen({
             : "Πρόοδος διαδρομής: " + subcategory.title}>
           <View style={styles.cardHeading}>
             <Text style={styles.subcategoryTitle} numberOfLines={1}>{subcategory.title}</Text>
-            <Text style={styles.progressCount}>{progressLoaded
-              ? completed + " / " + path.length : "— / " + path.length}</Text>
+            <MotionCounter progressKey={progressLoaded ? completed + "/" + path.length : "loading"}
+              style={styles.progressCount}>{progressLoaded
+                ? completed + " / " + path.length : "— / " + path.length}</MotionCounter>
           </View>
           <View style={styles.cardBody}>
             <View style={styles.continueCopy}>
@@ -215,7 +218,7 @@ export default function SubcategoryScreen({
           <Text style={styles.emptyTitle}>Νέες αποστολές έρχονται</Text>
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
-        <View testID="adventure-map-viewport" style={styles.mapViewport}
+        <MotionView entranceDelay={150} testID="adventure-map-viewport" style={styles.mapViewport}
           onLayout={event => {
             const { width, height } = event.nativeEvent.layout;
             if (width <= 0 || height <= 0) return;
@@ -320,7 +323,7 @@ export default function SubcategoryScreen({
           })}
             </View>
           </Animated.ScrollView>
-        </View>}
+        </MotionView>}
     </View>
   );
 }
