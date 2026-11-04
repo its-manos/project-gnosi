@@ -873,6 +873,38 @@ renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "re-rendering cannot restart the entry animation");
 
+// The Android map budget drops only distant detail, never the main geography.
+const staticAtlas = compile("src/components/AdventureAtlasBackground.tsx", {
+  react: { ...react, memo: component => component },
+  "react-native-svg": { ...svg, RadialGradient: "radialGradient" },
+  "react-native-reanimated": {
+    __esModule: true,
+    default: { View: "AnimatedView" },
+    Easing: { inOut: fn => fn, sin: value => value },
+    useReducedMotion: () => true,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: fn => fn(),
+    cancelAnimation: () => {},
+    withRepeat: animation => animation,
+    withSequence: (...animations) => animations.at(-1),
+    withTiming: target => target,
+  },
+});
+const islandCount = tree => nodes(tree).filter(node => node.type === "g"
+  && typeof node.props?.transform === "string"
+  && /^translate\([^)]*\) rotate\(/.test(node.props.transform)).length;
+native.Platform.OS = "ios";
+const iosAtlas = staticAtlas({ width: 360, height: 680 });
+assert.equal(islandCount(iosAtlas), 30, "iPhone retains all island silhouettes");
+native.Platform.OS = "android";
+const androidAtlas = staticAtlas({ width: 360, height: 680 });
+assert.equal(islandCount(androidAtlas), 20,
+  "Android omits ten tiny islets but keeps all important landmasses");
+assert.equal(nodes(androidAtlas).filter(node =>
+  node.props?.testID === "adventure-atlas-ambient-glow").length, 1,
+  "Android retains atmospheric movement in a compact native view");
+native.Platform.OS = "ios";
+
 const atlasSource = fs.readFileSync(path.join(root, "src/components/AdventureAtlasBackground.tsx"), "utf8");
 const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/AdventureMotion.tsx"), "utf8");
 assert.match(atlasSource, /useReducedMotion/, "atlas respects reduce motion");
