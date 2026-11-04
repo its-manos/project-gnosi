@@ -39,7 +39,7 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
   const max = Math.max(1, ...buckets.map(bucket => bucket.first + bucket.replay));
   const total = buckets.reduce((sum, bucket) => sum + bucket.first + bucket.replay, 0);
   const switchMode = (value: "daily" | "weekly") => { setMode(value); setSelectedKey(""); };
-  const barHeight = dashboard ? 92 : 120;
+  const barHeight = dashboard ? 70 : 120;
 
   return <View style={[styles.section, dashboard && styles.sectionDashboard]}>
     {!dashboard ? <Text style={styles.title}>Η δραστηριότητά σου</Text> : null}
@@ -58,42 +58,44 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
       <MiniMetric label="ΑΚΡΙΒΕΙΑ ΜΑΘΗΜΑΤΩΝ" value={summary.accuracy === null ? "—" : `${summary.accuracy}%`} detail={summary.questions ? `${summary.correct} / ${summary.questions} σωστές` : "θα εμφανιστεί με την πρώτη ολοκλήρωση"} />
     </View> : null}
     <View style={[styles.chartCard, dashboard && styles.chartCardDashboard]} testID="activity-chart">
+      <View style={dashboard ? styles.dashboardChartHeader : undefined}>
       <Text style={[styles.chartTitle, dashboard && styles.chartTitleDashboard]}>Ο ρυθμός σου</Text>
-      <View style={styles.switchRow}>
+      <View style={[styles.switchRow, dashboard && styles.switchRowDashboard]}>
         {(["daily", "weekly"] as const).map(value => <Pressable key={value} onPress={() => switchMode(value)} accessibilityRole="button"
-          accessibilityState={{ selected: mode === value }} style={[styles.switchButton, mode === value && styles.switchSelected]}>
-          <Text style={[styles.switchText, mode === value && styles.switchTextSelected]}>{value === "daily" ? "Ανά ημέρα" : "Ανά εβδομάδα"}</Text>
+          accessibilityState={{ selected: mode === value }} style={[styles.switchButton, dashboard && styles.switchButtonDashboard, mode === value && styles.switchSelected]}>
+          <Text style={[styles.switchText, dashboard && styles.switchTextDashboard, mode === value && styles.switchTextSelected]}>{value === "daily" ? "Ανά ημέρα" : "Ανά εβδομάδα"}</Text>
         </Pressable>)}
       </View>
-      <Text style={styles.period}>{mode === "daily" ? "Τελευταίες 7 ημέρες" : "Τελευταίες 8 εβδομάδες · από Δευτέρα"}</Text>
+      </View>
+      {!dashboard ? <Text style={styles.period}>{mode === "daily" ? "Τελευταίες 7 ημέρες" : "Τελευταίες 8 εβδομάδες · από Δευτέρα"}</Text> : null}
       <View style={[styles.chart, dashboard && styles.chartDashboard]}>
-        <View style={styles.axis} accessible={false}><Text style={styles.axisText}>{max}</Text><Text style={styles.axisText}>0</Text></View>
+        <View style={[styles.axis, dashboard && styles.axisDashboard]} accessible={false}><Text style={styles.axisText}>{max}</Text><Text style={styles.axisText}>0</Text></View>
         <View style={styles.bars}>
           {buckets.map(bucket => {
             const count = bucket.first + bucket.replay, active = bucket.key === selected.key;
             return <Pressable key={bucket.key} onPress={() => setSelectedKey(bucket.key)} accessibilityRole="button"
               accessibilityState={{ selected: active }} accessibilityLabel={`${rangeLabel(bucket)}: ${bucket.first} πρώτες ολοκληρώσεις, ${bucket.replay} επαναλήψεις`}
-              style={[styles.column, active && styles.selectedColumn]}>
+              style={[styles.column, dashboard && styles.columnDashboard, active && styles.selectedColumn]}>
               <View style={[styles.barArea, dashboard && styles.barAreaDashboard]}>
-                <Text style={styles.barNumber}>{count}</Text>
+                <Text style={[styles.barNumber, dashboard && styles.barNumberDashboard]}>{count}</Text>
                 <View style={styles.stack}>
                   {bucket.replay > 0 ? <View style={[styles.replayBar, { height: barHeight * bucket.replay / max }]} /> : null}
                   {bucket.first > 0 ? <View style={[styles.firstBar, { height: barHeight * bucket.first / max }]} /> : null}
                   {count === 0 ? <View style={styles.zeroBar} /> : null}
                 </View>
               </View>
-              <Text style={[styles.barLabel, active && styles.activeLabel]}>{new Date(`${bucket.key}T12:00:00Z`).getUTCDate()}{"\n"}{new Intl.DateTimeFormat("el-GR", { month: "short", timeZone: "UTC" }).format(new Date(`${bucket.key}T12:00:00Z`)).replace(".", "")}</Text>
+              <Text style={[styles.barLabel, dashboard && styles.barLabelDashboard, active && styles.activeLabel]}>{new Date(`${bucket.key}T12:00:00Z`).getUTCDate()}{"\n"}{new Intl.DateTimeFormat("el-GR", { month: "short", timeZone: "UTC" }).format(new Date(`${bucket.key}T12:00:00Z`)).replace(".", "")}</Text>
             </Pressable>;
           })}
         </View>
       </View>
-      <View style={styles.legend}>
+      <View style={[styles.legend, dashboard && styles.legendDashboard]}>
         <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: FIRST }]} /><Text style={styles.small}>Πρώτες ολοκληρώσεις</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: REPLAY }]} /><Text style={styles.small}>Πλήρεις επαναλήψεις</Text></View>
       </View>
-      <View style={styles.selection} accessibilityLiveRegion="polite">
-        <Text style={styles.selectionTitle}>{rangeLabel(selected)}</Text>
-        <Text style={styles.small}>{selected.first} νέα μαθήματα · {selected.replay} πλήρεις επαναλήψεις</Text>
+      <View style={[styles.selection, dashboard && styles.selectionDashboard]} accessibilityLiveRegion="polite">
+        <Text style={[styles.selectionTitle, dashboard && styles.selectionTitleDashboard]}>{rangeLabel(selected)}</Text>
+        {!dashboard ? <Text style={styles.small}>{selected.first} νέα μαθήματα · {selected.replay} πλήρεις επαναλήψεις</Text> : null}
       </View>
       {!total ? <Text style={styles.hint}>Ολοκλήρωσε ένα μάθημα για να ξεκινήσεις.</Text> : null}
     </View>
@@ -213,18 +215,29 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
 }
 
 const styles = StyleSheet.create({
-  sectionDashboard: { marginTop: 0, marginBottom: 0, gap: 10 },
+  sectionDashboard: { marginTop: 0, marginBottom: 0, gap: 7 },
+  dashboardChartHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  switchRowDashboard: { flex: 1, maxWidth: 192, borderRadius: 9, padding: 2, gap: 2 },
+  switchButtonDashboard: { minHeight: 30, paddingVertical: 4, paddingHorizontal: 3, borderRadius: 7 },
+  switchTextDashboard: { fontSize: 10, lineHeight: 15 },
+  axisDashboard: { paddingTop: 20, paddingBottom: 30 },
+  columnDashboard: { paddingTop: 0, paddingBottom: 2 },
+  barNumberDashboard: { fontSize: 9, lineHeight: 13, marginBottom: 2 },
+  barLabelDashboard: { fontSize: 9, lineHeight: 13, marginTop: 3 },
+  legendDashboard: { gap: 9 },
+  selectionDashboard: { paddingTop: 5, gap: 1 },
+  selectionTitleDashboard: { fontSize: 11, lineHeight: 16 },
   dashboardHeading: { color: colors.textBody, fontSize: 12, lineHeight: 18, fontWeight: "800" },
   dashboardMetrics: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 92, paddingHorizontal: 11, paddingVertical: 9, justifyContent: "center", gap: 2, borderWidth: 1, borderColor: "#4A4566", borderRadius: 16, backgroundColor: "#20243C" },
-  dashboardValue: { color: colors.accentLight, fontSize: 27, lineHeight: 33, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  dashboardLabel: { color: colors.text, fontSize: 10.5, lineHeight: 14, fontWeight: "800" },
+  dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 65, paddingHorizontal: 10, paddingVertical: 6, justifyContent: "center", gap: 2, borderWidth: 1, borderColor: "#4A4566", borderRadius: 16, backgroundColor: "#20243C" },
+  dashboardValue: { color: colors.accentLight, fontSize: 23, lineHeight: 27, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  dashboardLabel: { color: colors.text, fontSize: 10, lineHeight: 13, fontWeight: "800" },
   dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 13 },
   dashboardAccuracy: { color: colors.textMuted, fontSize: 11, lineHeight: 17, paddingHorizontal: 2 },
-  chartCardDashboard: { padding: 13, gap: 8, borderColor: "#44415E", backgroundColor: "#1D2337" },
-  chartTitleDashboard: { fontSize: 16, lineHeight: 23, fontWeight: "800" },
+  chartCardDashboard: { padding: 11, gap: 6, borderColor: "#44415E", backgroundColor: "#1D2337" },
+  chartTitleDashboard: { fontSize: 15, lineHeight: 20, fontWeight: "800" },
   chartDashboard: { paddingTop: 0 },
-  barAreaDashboard: { height: 123 },
+  barAreaDashboard: { height: 92 },
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
   sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
   sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },
