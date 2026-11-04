@@ -78,6 +78,37 @@ export function AtlasTwinkleStar({ cx, cy, index, mapHeight }: {
     }, animatedStyle]} />;
 }
 
+/**
+ * Stagger the Category map AFTER the Continue card without animating its
+ * expensive SVG tree. A solid native view covers the chart at first paint,
+ * then fades away after the card's 75ms delay + 320ms entrance finishes.
+ *
+ * This is a one-shot view-opacity animation, not a full-map transform,
+ * SVG prop update, JS timer, or layout change.
+ */
+export function AtlasMapRevealCover() {
+  const reduced = useReducedMotion();
+  const opacity = useSharedValue(reduced ? 0 : 1);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  useEffect(() => {
+    cancelAnimation(opacity);
+    if (reduced) {
+      opacity.value = 0;
+      return;
+    }
+    // Continue finishes entering at ~395ms; the map fades in afterwards.
+    opacity.value = withDelay(410, withTiming(0, {
+      duration: 260, easing: Easing.out(Easing.cubic),
+    }));
+    return () => cancelAnimation(opacity);
+  }, [reduced, opacity]);
+
+  if (reduced) return null;
+  return <Animated.View testID="category-atlas-map-reveal-cover"
+    pointerEvents="none" accessible={false}
+    style={[styles.mapRevealCover, animatedStyle]} />;
+}
+
 /** The coastline glint subscribes directly to a shared press ID. Unlike
  * React state, touching an island does not rebuild the entire 1,100-line map.
  * Animated SVG props are still used *only for a short tap*, never in a loop.
@@ -163,6 +194,12 @@ export function AtlasContinueArrow() {
 }
 
 const styles = StyleSheet.create({
+  // Matches the Category viewport's original fill exactly. The static map
+  // remains mounted beneath it and is never translated or recomposited.
+  mapRevealCover: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "#101827",
+  },
   atmosphere: {
     position: "absolute", left: "10%", top: "18%",
     width: "76%", height: "65%",
