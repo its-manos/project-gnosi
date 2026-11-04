@@ -31,6 +31,7 @@ export default function LearningInsightsScreen({
   const [lessonsExpanded, setLessonsExpanded] = useState(false);
   const { width, fontScale } = useWindowDimensions();
   const compact = width < 360 || fontScale >= 1.3;
+  const wide = width >= 600 && !compact;
   const { model, ready: knowledgeReady } = useKnowledgeModel();
 
   const readingTab = view === "reading";
@@ -135,7 +136,7 @@ export default function LearningInsightsScreen({
         {readingTab ? <View testID="learning-insights-reading" style={styles.details}>
           {lessonProgressLoaded ? (
             <MotionView entranceDelay={150}>
-              <CategoryProgress detail singleColumn={compact} />
+              <CategoryProgress detail singleColumn={compact} threeColumn={wide} />
             </MotionView>
           ) : <Text style={styles.empty}>Φόρτωση μαθημάτων…</Text>}
           {lessonProgressLoaded && completedLessons.length > 0 ? <>
@@ -169,7 +170,7 @@ export default function LearningInsightsScreen({
             : null}
         </View> : <View testID="learning-insights-knowledge" style={styles.details}>
           <MotionView entranceDelay={150}>
-            <KnowledgeMastery onOpen={onKnowledgeReview} mapOnly detail singleColumn={compact} />
+            <KnowledgeMastery onOpen={onKnowledgeReview} mapOnly detail singleColumn={compact} threeColumn={wide} />
           </MotionView>
         </View>}
       </ScrollView>
