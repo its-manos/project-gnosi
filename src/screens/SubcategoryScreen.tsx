@@ -33,9 +33,9 @@ const ancientGreeceChapters: Record<number, string> = {
 };
 const chapterStarts = [5, 11, 18, 24];
 const NODE_SPACING = 142;
-// Reserve space for a 3-line lesson title plus the active-status label
-// before the next chapter's badge; other checkpoints keep their compact spacing.
-const CHAPTER_GAP = 55;
+// Chapter markers need clearance for three-line Greek titles,
+// but no longer need room for a redundant status caption.
+const CHAPTER_GAP = 40;
 const NODE_WIDTH = 148;
 const MAP_BOTTOM_PADDING = 32;
 
@@ -308,7 +308,6 @@ export default function SubcategoryScreen({
                     numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}>
                     {lesson.title}
                   </Text>
-                  {active ? <Text style={styles.nodeStatus}>{started ? "ΣΕ ΕΞΕΛΙΞΗ" : "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ"}</Text> : null}
                 </MotionPressable>
               </View>
             );
@@ -402,7 +401,6 @@ const styles = StyleSheet.create({
   },
   nodeTitleLocked: { color: "#9298AB" },
   nodeTitleActive: { color: "#C7BCFF" },
-  nodeStatus: { color: "#B9A8FF", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.4 },
   finishedCopy: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   empty: { padding: 20, backgroundColor: colors.surface, borderRadius: 16, gap: 10 },
   emptyTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
