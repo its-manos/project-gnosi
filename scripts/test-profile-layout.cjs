@@ -52,7 +52,9 @@ const common = {
   "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle", Path: "Path" },
   "../state/LearningSession": {
     useLearningSnapshot: () => learning,
+    useLearningDataSnapshot: () => learning,
     useDailySnapshot: () => daily,
+    useDailyDataSnapshot: () => daily,
     useLearningSession: () => ({ email: learning.userId ? "player@example.test" : null }),
   },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => ({ profile: player, ready: true }) },
