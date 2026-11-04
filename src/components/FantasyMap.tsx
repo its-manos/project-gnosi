@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 type MapRegion = {
   id: string;
@@ -88,6 +88,17 @@ export function getCompactAtlasPoint(index: number, count: number): Point | null
   return arrangements[count]?.[index] ?? null;
 }
 
+// Scale the island silhouette to the room available without shrinking Greek
+// labels or creating overlapping hit targets on compact devices.
+export function getCompactAtlasRadii(count: number, mapHeight: number) {
+  const room = Math.max(0, Math.min(1, (mapHeight - 260) / 240));
+  const base = count === 4 ? 53 : count === 2 ? 60 : 57;
+  return {
+    rx: Math.round(base + (count === 4 ? 11 : 12) * room),
+    ry: Math.round(39 + 12 * room),
+  };
+}
+
 function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, fitted: boolean): PositionedRegion[] {
   const count = regions.length;
   if (count === 0) return [];
@@ -106,14 +117,14 @@ function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, 
     if (fitted && count > 1) {
       const compactPoint = getCompactAtlasPoint(index, count);
       if (compactPoint) {
-        // Layout-only: islands, labels, progress and touch targets retain their
-        // established artwork and freely selectable behavior.
+        // Destinations grow on larger screens, but keep safe spacing on small
+        // viewports. Positions remain independently selectable.
+        const radii = getCompactAtlasRadii(count, mapHeight);
         return {
           ...region,
           cx: MAP_WIDTH * compactPoint.x,
           cy: Math.max(74, Math.min(mapHeight - 77, mapHeight * compactPoint.y)),
-          rx: count === 2 ? 60 : 61,
-          ry: 45,
+          ...radii,
           seed: index + 1, fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
         };
       }
@@ -131,8 +142,8 @@ function makeLayout(regions: MapRegion[], overview: boolean, mapHeight: number, 
         ...region,
         cx: cell * (column + 0.5) + Math.sin(index * 1.7) * 2.5,
         cy: rowSizes.length === 1 ? mapHeight / 2 : edge + row * yStep,
-        rx: Math.min(65, cell * 0.35),
-        ry: Math.min(46, Math.max(36, mapHeight / (rowSizes.length * 3))),
+        rx: Math.min(61, cell * 0.42),
+        ry: Math.min(48, Math.max(36, mapHeight / (rowSizes.length * 3))),
         seed: index + 1, fill: region.color ?? LAND_COLORS[index % LAND_COLORS.length],
       };
     }
@@ -370,8 +381,11 @@ export default function FantasyMap({
   );
   // Larger text is practical because the layout uses at most three columns for
   // up to 24 regions. Large catalogues retain a list view for full labels.
-  const labelFontSize = overview ? 12.5 : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
-  const maxLabelChars = columns >= 4 ? 10 : columns === 3 ? 12 : 16;
+  const labelFontSize = overview ? 12.5
+    : fitted ? (regions.length <= 4 ? 14 : columns >= 4 ? 11 : 12.5)
+    : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
+  const maxLabelChars = fitted && regions.length <= 4 ? 18
+    : fitted && columns === 3 ? 15 : columns >= 4 ? 10 : columns === 3 ? 12 : 16;
 
   if (regions.length === 0) {
     return (
@@ -442,6 +456,13 @@ export default function FantasyMap({
           <LinearGradient id="atlas-sea" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor="#172C36" /><Stop offset="1" stopColor="#101C27" />
           </LinearGradient>
+          {fitted ? (
+            <RadialGradient id="atlas-atmosphere" cx="51%" cy="46%" r="69%">
+              <Stop offset="0" stopColor="#40576C" stopOpacity={0.25} />
+              <Stop offset="0.54" stopColor="#2B3E52" stopOpacity={0.11} />
+              <Stop offset="1" stopColor="#101827" stopOpacity={0} />
+            </RadialGradient>
+          ) : null}
           {positionedRegions.map((region) => (
             <LinearGradient key={region.id} id={`land-${region.seed}`} x1="0" y1="0" x2="0.8" y2="1">
               <Stop offset="0" stopColor={region.fill} /><Stop offset="1" stopColor="#253B40" />
@@ -458,14 +479,29 @@ export default function FantasyMap({
         </Defs>
         <Rect width={MAP_WIDTH} height={mapHeight} rx={fitted ? 0 : 20}
           fill={fitted ? "#101827" : "url(#atlas-sea)"} />
+        {fitted ? <Rect width={MAP_WIDTH} height={mapHeight}
+          fill="url(#atlas-atmosphere)" pointerEvents="none" /> : null}
         {Array.from({ length: 9 }, (_, index) => (
           <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
-            stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
+            stroke="#7CA8AC" strokeOpacity={fitted ? 0.045 : 0.07} fill="none" />
         ))}
         {Array.from({ length: rows * 4 }, (_, index) => (
           <Path key={`parallel-${index}`} d={`M 0 ${index * 40} Q 180 ${index * 40 + 30} 360 ${index * 40}`}
-            stroke="#7CA8AC" strokeOpacity={0.07} fill="none" />
+            stroke="#7CA8AC" strokeOpacity={fitted ? 0.045 : 0.07} fill="none" />
         ))}
+        {fitted ? (
+          <G pointerEvents="none">
+            {/* Faint cartographic latitude arcs. They are decoration, not a
+                route, and stay behind every island and touch target. */}
+            <Path d={`M -30 ${mapHeight * 0.24} C 95 ${mapHeight * 0.12}, 234 ${mapHeight * 0.33}, 390 ${mapHeight * 0.16}`}
+              fill="none" stroke="#8CA6B9" strokeWidth={0.8} strokeOpacity={0.11} />
+            <Path d={`M -25 ${mapHeight * 0.81} C 95 ${mapHeight * 0.65}, 251 ${mapHeight * 0.9}, 385 ${mapHeight * 0.68}`}
+              fill="none" stroke="#C7B48F" strokeWidth={0.7} strokeOpacity={0.12} />
+            <Path d={`M 40 ${mapHeight * 1.04} Q 130 ${mapHeight * 0.45} 308 ${-mapHeight * 0.04}`}
+              fill="none" stroke="#839EB4" strokeWidth={0.65} strokeOpacity={0.09}
+              strokeDasharray="3 11" />
+          </G>
+        ) : null}
         {!fitted ? <Rect x={7} y={7} width={346} height={mapHeight - 14} rx={15}
           fill="none" stroke="#89AAA6" strokeOpacity={0.18} /> : null}
         {fitted ? (
@@ -598,7 +634,7 @@ export default function FantasyMap({
           const labelStartY = region.cy + (isAncientGreeceLandmark ? 1 : -3);
           const barY = isAncientGreeceLandmark
             ? region.cy + (labelLines.length > 1 ? 27 : 18)
-            : region.cy + (labelLines.length > 1 ? 30 : 23);
+            : region.cy + (labelLines.length > 1 ? (fitted ? 33 : 30) : 23);
           const barWidth = region.rx * 0.82;
           const barHeight = 5.5;
           const barX = region.cx - barWidth / 2;
@@ -649,9 +685,9 @@ export default function FantasyMap({
                   x={region.cx}
                   y={labelStartY + index * (labelFontSize + 2)}
                   fontSize={labelFontSize}
-                  fontWeight="700"
+                  fontWeight={fitted ? "800" : "700"}
                   textAnchor="middle"
-                  fill="#FFFFFF"
+                  fill={fitted ? "#FBF8EF" : "#FFFFFF"}
                 >
                   {line}
                 </SvgText>
