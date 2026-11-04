@@ -20,8 +20,8 @@ assert.match(routes, /case "player-stats":/);
 assert.match(routes, /destination === "profile"/);
 assert.match(routes, /app\.screen === "account" \? accountOrigin/,
   "The account route should preserve the tab that opened it.");
-assert.doesNotMatch(routes, /app\.screen === "profile" \? profileOrigin/,
-  "Profile should be active itself rather than masquerading as Progress or Home.");
+assert.match(routes, /currentScreen=\{isDailyChallengeOpen \? "home" : app\.screen === "account" \? accountOrigin/,
+  "Profile should highlight itself while Android Back can still retain its origin.");
 assert.match(routes, /navigateTo\(destination\)/,
   "Bottom-tab navigation must still pass through the unfinished-lesson guard.");
 
