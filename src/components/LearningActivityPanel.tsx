@@ -84,25 +84,55 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
   </View>;
 }
 
-export function CategoryProgress() {
-  const snapshot = useLearningSnapshot(), completed = new Set(snapshot.backup.completedIds);
-  return <View style={styles.section}>
-    <Text style={styles.title}>Οι κόσμοι που εξερευνάς</Text>
-    <View style={styles.categoryCard}>{categories.map(category => {
-      const items = lessons.filter(lesson => lesson.categoryId === category.id);
-      const count = items.filter(lesson => completed.has(lesson.id)).length;
-      const percent = items.length ? Math.round(count / items.length * 100) : 0;
-      return <View key={category.id} style={styles.category} accessible accessibilityRole="progressbar"
-        accessibilityLabel={category.title} accessibilityValue={{ min: 0, max: items.length || 1, now: count, text: `${count} από ${items.length} μαθήματα, ${percent}%` }}>
-        <View style={styles.categoryHeader}><Text style={styles.categoryTitle}>{category.emoji} {category.title}</Text><Text style={styles.categoryCount}>{count} / {items.length}</Text></View>
-        <View style={styles.categoryTrack}><View style={[styles.categoryFill, { width: `${percent}%` }]} /></View>
-      </View>;
-    })}</View>
+export function CategoryProgress({ compact = false }: { compact?: boolean } = {}) {
+  const snapshot = useLearningSnapshot();
+  const [expanded, setExpanded] = useState(false);
+  const completed = new Set(snapshot.backup.completedIds);
+  const rows = categories.map((category, index) => {
+    const items = lessons.filter(lesson => lesson.categoryId === category.id);
+    const count = items.filter(lesson => completed.has(lesson.id)).length;
+    const percent = items.length ? Math.round(count / items.length * 100) : 0;
+    return { category, index, count, total: items.length, percent };
+  });
+  // Only the compact Progress preview ranks its worlds. Expanded and legacy
+  // views retain their original catalogue order.
+  const ranked = compact && !expanded
+    ? rows.slice().sort((a, b) => b.count - a.count || a.index - b.index)
+    : rows;
+  const visible = compact && !expanded ? ranked.slice(0, 3) : ranked;
+
+  return <View style={[styles.section, compact && styles.sectionCompact]} testID="reading-category-progress">
+    <Text style={[styles.title, compact && styles.titleCompact]}>Οι κόσμοι που εξερευνάς</Text>
+    <View style={[styles.categoryCard, compact && styles.categoryCardCompact]}>
+      {visible.map(({ category, count, total, percent }) => (
+        <View key={category.id} style={[styles.category, compact && styles.categoryCompact]}
+          accessible accessibilityRole="progressbar"
+          accessibilityLabel={category.title}
+          accessibilityValue={{ min: 0, max: total || 1, now: count, text: count + " από " + total + " μαθήματα, " + percent + "%" }}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>{category.emoji} {category.title}</Text>
+            <Text style={styles.categoryCount}>{count} / {total}</Text>
+          </View>
+          <View style={styles.categoryTrack}><View style={[styles.categoryFill, { width: percent + "%" }]} /></View>
+        </View>
+      ))}
+    </View>
+    {compact && rows.length > 3 ? <Pressable style={styles.categoryMore}
+      accessibilityRole="button" accessibilityState={{ expanded }}
+      onPress={() => setExpanded(value => !value)}>
+      <Text style={styles.categoryMoreText}>{expanded ? "Λιγότεροι κόσμοι −" : "Όλοι οι κόσμοι +"}</Text>
+    </Pressable> : null}
   </View>;
 }
 
 const styles = StyleSheet.create({
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
+  sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
+  titleCompact: { fontSize: 14, lineHeight: 20 },
+  categoryCardCompact: { padding: 12, gap: 10 },
+  categoryCompact: { gap: 5 },
+  categoryMore: { minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
+  categoryMoreText: { color: colors.accentLight, fontSize: 13, fontWeight: "700" },
   title: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "800" },
   small: { color: colors.textMuted, fontSize: 12, lineHeight: 19, flexShrink: 1 },
   metrics: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
