@@ -457,10 +457,15 @@ export default function AppNavigator() {
         {screenContent}
       </SafeAreaView>
       {!welcome.visible ? <BottomNavigation
-        currentScreen={isDailyChallengeOpen ? "home" : app.screen === "profile" ? profileOrigin : app.screen === "player-stats" ? profileOrigin : app.screen === "account" ? accountOrigin === "profile" ? profileOrigin : accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
+        currentScreen={isDailyChallengeOpen ? "home" : app.screen === "account" ? accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
           setIsDailyChallengeOpen(false);
+          // A bottom-tab visit is a root destination. Deep links from Home or
+          // Progress still remember their origin for Android system Back.
+          if (destination === "profile" && app.screen !== "profile") {
+            setProfileOrigin(app.screen === "progress" || app.screen === "learning-insights" ? "progress" : "home");
+          }
           navigateTo(destination);
         }}
       /> : null}
