@@ -4,7 +4,7 @@ import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import CategoryAtlasBackground from "../components/CategoryAtlasBackground";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
-import { AtlasContinueAccent, AtlasContinueArrow, AtlasMapRevealCover, AtlasProgressFill } from "../components/CategoryAtlasMotion";
+import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
 import { colors } from "../theme";
 import { getAtlasCategoryProgress, getAtlasRegionProgress } from "../utils/categoryAtlas";
 
@@ -46,10 +46,6 @@ export default function CategoryScreen({
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
   const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
-  // The lightweight chart paints first. Both platforms wait for the native
-  // Continue-card entrance before mounting the expensive interactive SVG.
-  // Keep readiness keyed per category so a prior visit cannot skip the entrance.
-  const [mapReadyFor, setMapReadyFor] = useState<string | null>(null);
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
     [lessons, category.id, completedLessonIds, progressLoaded],
@@ -80,7 +76,6 @@ export default function CategoryScreen({
       lessons.filter(lesson => lesson.categoryId === category.id), inProgressLessonIds),
     [mapRegions, lessons, category.id, inProgressLessonIds],
   );
-  const canMountMap = !featuredRegion || mapReadyFor === category.id;
   const hasProgress = featuredRegion?.status === "in-progress";
   const featuredPercent = featuredRegion?.totalLessons
     ? Math.round(featuredRegion.completedLessons / featuredRegion.totalLessons * 100) : 0;
@@ -105,7 +100,6 @@ export default function CategoryScreen({
       {featuredRegion ? (
         <MotionPressable key={category.id} testID="category-atlas-continue"
           style={styles.continueCard} entranceDelay={75} pressScale={0.983}
-          onEntranceComplete={() => setMapReadyFor(category.id)}
           disabled={!progressLoaded}
           accessibilityRole="button"
           accessibilityState={{ disabled: !progressLoaded }}
@@ -164,8 +158,10 @@ export default function CategoryScreen({
           <CategoryAtlasBackground width={mapViewport.width} height={mapViewport.height}
             regionCount={mapRegions.length} />
         ) : null}
-        {/* One native-card-completion gate and the same reveal on iOS/Android. */}
-        {canMountMap && mapViewport.width > 0 && mapViewport.height > 0 ? (
+        {/* Mount destinations alongside the chart on both platforms. The
+            background must never appear as an empty map while waiting for
+            card animation callbacks or a second delayed reveal. */}
+        {mapViewport.width > 0 && mapViewport.height > 0 ? (
           <View key={category.id} testID="category-atlas-map-entrance"
             style={styles.mapEntrance}>
             <FantasyMap
@@ -175,8 +171,6 @@ export default function CategoryScreen({
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
               emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
-            <AtlasMapRevealCover width={mapViewport.width} height={mapViewport.height}
-              regionCount={mapRegions.length} />
           </View>
         ) : null}
       </View>
@@ -234,7 +228,7 @@ const styles = StyleSheet.create({
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
     marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",
   },
-  // Keep the interactive SVG at its measured size. Only the static duplicate
-  // backdrop fades away above it; islands and hit geometry never move.
+  // Keep the interactive SVG at its measured size; card motion never blocks
+  // island mounting or animates the full SVG and its touch geometry.
   mapEntrance: { width: "100%" },
 });
