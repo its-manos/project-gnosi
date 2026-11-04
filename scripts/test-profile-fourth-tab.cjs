@@ -44,4 +44,15 @@ assert.match(profile, /accessibilityState=\\{\\{ expanded: xpExpanded, disabled:
 assert.match(profile, /<XpRules learningXP=\\{profile\\.learningXP\\}/);
 assert.match(read("src/components/KnowledgeProgress.tsx"), /<XpRules learningXP=\\{p\\.learningXP\\}/,
   "Keep XP rules in one shared component rather than duplicating explanations.");
-console.log("Profile fourth-tab routing, data ownership and action contracts passed.");
+const activity = read("src/screens/PlayerStatsScreen.tsx");
+assert.match(activity, /<LearningActivityPanel todayKey=\\{todayKey\\}/,
+  "Player activity history must remain accessible.");
+assert.match(activity, /calculateDailyChallengeProgress\\(history, todayKey\\)/,
+  "Daily quiz history and streaks must use the existing calculator.");
+assert.match(activity, /progress-daily-details/,
+  "Keep the expandable daily challenge history and accuracy.");
+assert.doesNotMatch(activity, /lessonScores|mastery\\.count|completedLessons|totalLessonCount/,
+  "Mastery and lesson completion belong in Progress / Learning Insights.");
+assert.match(routes, /<PlayerStatsScreen onBack=\\{\\(\\) => app\\.setScreen\\("profile"\\)\\} \\/>/,
+  "The Player Statistics route should not require learning-progress props.");
+console.log("Profile fourth-tab and activity ownership contracts passed.");
