@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSharedValue } from "react-native-reanimated";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 import { AtlasAtmosphereBreath, AtlasDestinationFeedback, AtlasTwinkleStar } from "./CategoryAtlasMotion";
 
@@ -26,6 +26,8 @@ type Props = {
   fitViewport?: { width: number; height: number };
   /** Category Atlas shows only the exploration map, without a count or mode switch. */
   hideControls?: boolean;
+  /** Static chart is rendered behind this interactive SVG as its own layer. */
+  externalBackground?: boolean;
   onControlsHeightChange?: (height: number) => void;
 };
 
@@ -406,6 +408,7 @@ export default function FantasyMap({
   minHeight = 0,
   fitViewport,
   hideControls = false,
+  externalBackground = false,
   onControlsHeightChange,
 }: Props) {
   const [showList, setShowList] = useState(false);
@@ -414,9 +417,9 @@ export default function FantasyMap({
   // the entire cartographic SVG just to light up one island coastline.
   const pressedRegion = useSharedValue<string | null>(null);
   const fitted = Boolean(fitViewport?.width && fitViewport?.height);
-  // Android retains the detailed islands, labels and navigation while
-  // omitting low-contrast background ink that is costly to rasterize.
-  const androidLite = fitted && Platform.OS === "android";
+  // Both platforms use the same Android-friendly decorative detail budget,
+  // preserving every island, label, progress marker and press interaction.
+  const androidLite = fitted;
   const columns = fitted && regions.length > 4 ? 3 : columnCount(regions.length);
   const rows = Math.max(1, overview || fitted
     ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
@@ -511,7 +514,8 @@ export default function FantasyMap({
         </View>
       </View> : null}
       {(!showList || hideControls) ? <View testID="knowledge-world-map" style={[styles.mapFrame, overview && styles.overviewFrame,
-        { aspectRatio: MAP_WIDTH / mapHeight }, fitted && styles.fittedFrame]}>
+        { aspectRatio: MAP_WIDTH / mapHeight }, fitted && styles.fittedFrame,
+        fitted && externalBackground && styles.externalBackgroundFrame]}>
       <Svg
         width="100%"
         height="100%"
@@ -520,6 +524,7 @@ export default function FantasyMap({
         accessibilityLabel="Διαδραστικός φανταστικός χάρτης γνώσης"
       >
         <Defs>
+          {(!fitted || !externalBackground) ? <>
           <LinearGradient id="atlas-sea" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor="#172C36" /><Stop offset="1" stopColor="#101C27" />
           </LinearGradient>
@@ -554,7 +559,8 @@ export default function FantasyMap({
                 <Stop offset="0.62" stopColor="#070B15" stopOpacity={0.03} />
                 <Stop offset="1" stopColor="#070B15" stopOpacity={0.46} />
               </RadialGradient>
-              {positionedRegions.map(region => (
+              </> : null}
+          {positionedRegions.map(region => (
                 <RadialGradient key={`atlas-region-aura-${region.id}`}
                   id={`atlas-region-aura-${region.seed}`}
                   cx="50%" cy="50%" rx="50%" ry="50%">
@@ -588,6 +594,7 @@ export default function FantasyMap({
             <Stop offset="1" stopColor="#DEB766" />
           </LinearGradient>
         </Defs>
+        {(!fitted || !externalBackground) ? <>
         <Rect width={MAP_WIDTH} height={mapHeight} rx={fitted ? 0 : 20}
           fill={fitted ? "#101827" : "url(#atlas-sea)"} />
         {fitted ? <Rect width={MAP_WIDTH} height={mapHeight}
@@ -727,6 +734,7 @@ export default function FantasyMap({
         ) : null}
         {fitted ? <Rect testID="atlas-sky-vignette" width={MAP_WIDTH}
           height={mapHeight} fill="url(#atlas-vignette)" pointerEvents="none" /> : null}
+        </> : null}
         <G testID={fitted ? "atlas-premium-compass" : undefined}
           opacity={fitted ? 0.83 : 0.65} pointerEvents="none">
           {fitted ? (
@@ -1070,6 +1078,7 @@ const styles = StyleSheet.create({
   fittedFrame: {
     borderWidth: 0, borderRadius: 0, backgroundColor: "#101827",
   },
+  externalBackgroundFrame: { backgroundColor: "transparent" },
   mapFrame: {
     width: "100%",
     maxWidth: 520,
