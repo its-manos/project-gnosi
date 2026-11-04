@@ -405,7 +405,7 @@ export default function FantasyMap({
   const labelFontSize = overview ? 12.5
     : fitted ? (regions.length <= 4 ? 14 : columns >= 4 ? 11 : 12.5)
     : columns >= 4 ? 10 : columns === 3 ? 11 : 12.5;
-  const maxLabelChars = fitted && regions.length <= 4 ? 18
+  const maxLabelChars = fitted && regions.length <= 4 ? 15
     : fitted && columns === 3 ? 15 : columns >= 4 ? 10 : columns === 3 ? 12 : 16;
 
   if (regions.length === 0) {
