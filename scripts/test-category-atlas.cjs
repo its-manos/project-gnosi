@@ -281,16 +281,16 @@ assert.equal(glintNode.props.pressedRegion.value, null,
 assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasDestinationFeedback").length, 3,
   "all fitted islands receive a lightweight outline glint");
 // Android keeps every island and its controls, but skips low-contrast chart ink.
-assert.equal(nodes(fittedAncient).filter(node =>
-  node.props?.testID?.startsWith("atlas-star-")).length, 50,
+const chartStarCount = tree => nodes(tree).filter(node => node.type === "circle"
+  && (node.props?.fill === "#E4CFA6" || node.props?.fill === "#B5CADD")).length;
+assert.equal(chartStarCount(fittedAncient), 50,
   "the iPhone keeps all fifty chart stars");
 native.Platform.OS = "android";
 const androidFitted = map({ ...props, regions: [
   { ...regionData[0], id: "ancient-greece", title: "Αρχαία Ελλάδα" },
   regionData[1], regionData[2],
 ], fitViewport: { width: 340, height: 490 } });
-assert.equal(nodes(androidFitted).filter(node =>
-  node.props?.testID?.startsWith("atlas-star-")).length, 30,
+assert.equal(chartStarCount(androidFitted), 30,
   "Android uses a smaller decorative star field");
 assert.equal(nodes(androidFitted).filter(node =>
   node.props?.testID?.startsWith("atlas-island-")).length, 3,
