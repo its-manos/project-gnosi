@@ -105,6 +105,6 @@ export default function AdventureAtlasBackground({ width, height }: Props) {
 }
 
 const styles = StyleSheet.create({
-  underlay: { ...StyleSheet.absoluteFillObject, overflow: "hidden" },
+  underlay: { ...StyleSheet.absoluteFill, overflow: "hidden" },
   waveLayer: { position: "absolute", top: 0, left: -8 },
 });
