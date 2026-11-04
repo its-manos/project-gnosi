@@ -32,7 +32,9 @@ const common = {
   react, "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native": native,
   "../components/KnowledgeMastery": { __esModule: true, default: "Mastery" },
   "../components/ReviewActions": { __esModule: true, default: "ReviewActions" },
-  "../components/HomeAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "../components/ProgressGradientBackground": { __esModule: true, default: "GradientBackground" },
+  "../components/HomeMotion": { MotionView: "MotionView", MotionPressable: "MotionPressable", MotionXpCircle: "MotionXpCircle" },
+  "../components/ProgressMotion": { ProgressBarFill: "ProgressBarFill" },
   "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle" },
   "../components/SyncStatus": { __esModule: true, default: "SyncStatus" },
   "../components/LearningActivityPanel": { CategoryProgress: "Categories" },
@@ -62,17 +64,20 @@ let tree = render();
 assert.equal(tree.type, "View", "Progress is a fixed View, not a scroll container");
 assert.ok(node(tree, "progress-fixed-dashboard"));
 assert.ok(node(tree, "progress-shell"));
-assert.equal(nodes(tree).find(n => n.type === "AtlasBackground").props.showAmbientMotion, false,
-  "static atlas detail must not add continuous animation work");
+assert.ok(nodes(tree).some(n => n.type === "GradientBackground"), "static gradient replaces the illustrated atlas");
+assert.ok(!nodes(tree).some(n => n.type === "AtlasBackground"), "no map SVG background remains");
 assert.ok(!nodes(tree).some(n => n.type === "ScrollView"));
-assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "Circle"), "overview has a real SVG completion ring");
+assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "Circle"), "overview retains the ring track");
+assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "MotionXpCircle"),
+  "the completed arc animates as the percentage changes");
 const learningCards = ["progress-knowledge-link", "progress-reading-link"];
 for (const key of learningCards) {
   const element = node(tree, key);
-  const style = element.props.style({ pressed: false });
+  const style = element.props.style;
+  assert.equal(element.type, "MotionPressable", "learning cards use native press motion");
   assert.equal(style[0].height, 176, "learning cards have bounded height, not stretched flex height");
   assert.ok(text(element).includes("Δες την ανάλυση"), "card signals navigation to detail");
-  assert.ok(nodes(element).some(n => n.props.style && Array.isArray(n.props.style) && n.props.style[0]?.height === "100%"), "card carries its own progress bar");
+  assert.ok(nodes(element).some(n => n.type === "ProgressBarFill"), "card animates its progress bar");
 }
 assert.ok(node(tree, "progress-summary"), "progress totals are visible");
 assert.ok(text(node(tree, "progress-summary")).includes("7"), "completed count is retained");
@@ -92,6 +97,14 @@ assert.equal(profile, 1);
 const primary = nodes(tree).find(n => n.type === "ReviewActions");
 assert.equal(primary.props.inProgressLesson, props.inProgressLesson);
 assert.equal(primary.props.onResumeLesson, props.onOpenLesson);
+assert.equal(node(tree, "progress-heading").type, "MotionView", "heading gets a subtle entrance");
+assert.equal(node(tree, "progress-summary").type, "MotionView", "summary gets a staggered entrance");
+const progressMotionSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ProgressMotion.tsx"), "utf8");
+assert.match(progressMotionSource, /useReducedMotion\(/, "indicator animations respect reduced-motion");
+assert.doesNotMatch(progressMotionSource, /withRepeat\(/, "no continuous progress animation");
+const backgroundSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ProgressGradientBackground.tsx"), "utf8");
+assert.ok(!backgroundSource.includes("HomeAtlasBackground"), "gradient has no atlas dependency");
+assert.ok(!backgroundSource.includes("withRepeat"), "gradient stays static");
 primary.props.onReview(); primary.props.onExplore(); primary.props.onWeeklyReview();
 assert.equal(review, 1); assert.equal(explore, 1); assert.equal(weekly, 1);
 
@@ -103,7 +116,7 @@ assert.equal(tallLayout[0].justifyContent, "flex-start",
   "tall screens keep dashboard rows together instead of using space-between");
 assert.equal(tallLayout[2].gap, 16,
   "roomy screens increase normal spacing by only a small, bounded amount");
-assert.equal(node(tree, "progress-knowledge-link").props.style({ pressed: false })[0].height, 176,
+assert.equal(node(tree, "progress-knowledge-link").props.style[0].height, 176,
   "learning card height stays bounded on tall screens");
 
 node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 560 } } });
@@ -113,7 +126,7 @@ assert.equal(nodes(tree).find(n => n.type === "ReviewActions").props.dense, true
 node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 540 } } });
 tree = render();
 assert.ok(node(tree, "progress-fixed-dashboard"), "a short phone still uses the fixed dashboard");
-assert.equal(node(tree, "progress-knowledge-link").props.style({ pressed: false })[2].height, 142,
+assert.equal(node(tree, "progress-knowledge-link").props.style[2].height, 142,
   "very short screens use compact learning cards");
 node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 440 } } });
 tree = render();
