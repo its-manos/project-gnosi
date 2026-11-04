@@ -278,8 +278,8 @@ assert.equal(nativeAmbientLayer.props.pointerEvents, "none",
   "ambient views cannot intercept island taps");
 assert.equal(nativeAmbientLayer.props.accessible, false,
   "ambient views are excluded from screen reader focus");
-assert.ok(!nodes(fittedAncient).find(node => node.type === "svg").props.children
-  .flat?.(Infinity).some?.(node => node?.type === "AtlasTwinkleStar"),
+const categorySvg = nodes(fittedAncient).find(node => node.type === "svg");
+assert.ok(categorySvg && !nodes(categorySvg).some(node => node.type === "AtlasTwinkleStar"),
   "animated stars must sit outside the main cartographic SVG");
 assert.ok(!nodes(map(props)).some(node => [
   "AtlasDestinationFeedback", "AtlasAtmosphereBreath", "AtlasTwinkleStar",
