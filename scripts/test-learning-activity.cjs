@@ -108,6 +108,20 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
   nodes(tree).find(n=>n.props?.children?.props?.children==='Ανά εβδομάδα').props.onPress();tree=render();
   const bars=nodes(tree).filter(n=>n.props?.accessibilityLabel?.includes('πρώτες ολοκληρώσεις'));assert.equal(bars.length,8);bars[0].props.onPress();tree=render();assert.equal(nodes(tree).filter(n=>n.props?.accessibilityState?.selected===true).length,2);
   assert.equal(nodes(component.CategoryProgress()).filter(n=>n.props?.accessibilityRole==='progressbar').length,7);
+  // The Statistics dashboard is a compact variant of the same activity data and chart.
+  slots=[];cursor=0;
+  const dashboardTree=component.default({todayKey:'2026-10-30',dashboard:true});
+  const dashboardNodes=nodes(dashboardTree);
+  const summaryStrip=dashboardNodes.find(n=>n.props?.testID==='activity-dashboard-metrics');
+  assert.ok(summaryStrip,'Statistics must show its compact activity strip');
+  assert.equal(nodes(summaryStrip).filter(n=>n.type==='View'&&n.props?.style?.minHeight===92).length,3,
+    'The weekly dashboard should contain three compact metric tiles');
+  assert.ok(dashboardNodes.some(n=>n.props?.testID==='activity-chart'),
+    'The activity chart must remain available in the dashboard');
+  assert.ok(dashboardNodes.some(n=>n.props?.testID==='activity-accuracy'),
+    'Lesson accuracy remains accessible without another large card');
+  assert.equal(dashboardNodes.filter(n=>n.props?.children==='Η δραστηριότητά σου').length,0,
+    'The parent Statistics screen owns its heading');
   // Preview and cancellation never write to the account. Confirm imports history.
   const importUI=makeStore('preview-account',disk('preview'));await importUI.start();
   slots=[];cursor=0;
