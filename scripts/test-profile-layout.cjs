@@ -78,9 +78,11 @@ assert.ok(nodes(tree).some(n => n.props?.testID === "profile-identity"));
 assert.ok(nodes(tree).some(n => n.props?.testID === "profile-achievements"));
 assert.ok(nodes(tree).some(n => n.type === "MotionXpCircle"), "Level retains its progress ring");
 const pressProfile = label => {
-  const item = nodes(tree).find(n => n.type === "Pressable" && n.props?.accessibilityLabel?.startsWith(label + "."));
+  const item = nodes(tree).find(n => typeof n.type === "function" && n.type.name === "QuickLink" && n.props?.title === label);
   assert.ok(item, "Profile shortcut should exist: " + label);
-  item.props.onPress();
+  const button = item.type(item.props);
+  assert.equal(button.type, "Pressable", "Shortcut should render a pressable control");
+  button.props.onPress();
 };
 for (const label of ["Δραστηριότητα", "Λογαριασμός", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
 assert.deepEqual(calls, ["stats", "account", "interests", "guide"]);
