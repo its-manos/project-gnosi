@@ -1,95 +1,100 @@
 /**
- * Small, UI-thread-only ambient details for the Home Midnight Atlas.
+ * Low-cost Home Atlas ambient motion.
  *
- * The map, coastlines, compass and layout stay static. Only opacity and
- * one decorative dash offset change; nothing affects touch or Yoga layout.
+ * Keep the main cartographic SVG completely static: never animate its path
+ * or gradient props. The only looping work is opacity on a small, separate
+ * view and four tiny star views, all on the UI thread.
  */
 import { useEffect } from "react";
-import { Circle, Ellipse, Path } from "react-native-svg";
+import { StyleSheet, View } from "react-native";
+import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 import Animated, {
-  Easing, cancelAnimation, useAnimatedProps, useReducedMotion,
-  useSharedValue, withDelay, withRepeat, withSequence, withTiming,
+  Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue,
+  withDelay, withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 
-const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedPath = Animated.createAnimatedComponent(Path);
-const soft = Easing.inOut(Easing.sin);
+const ease = Easing.inOut(Easing.sin);
+const highlights = [
+  { x: 115, y: 0.065 }, { x: 362, y: 0.058 },
+  { x: 403, y: 0.416 }, { x: 387, y: 0.75 },
+] as const;
 
-/** One low-opacity ambient glow; the existing sky gradients do not animate. */
-export function HomeAtlasAmbientGlow({ h }: { h: number }) {
+export function HomeAtlasAmbientGlow({ width, height }: { width: number; height: number }) {
   const reduced = useReducedMotion();
-  const opacity = useSharedValue(0.075);
-  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+  const opacity = useSharedValue(0.065);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   useEffect(() => {
     cancelAnimation(opacity);
-    opacity.value = 0.075;
+    opacity.value = 0.065;
     if (reduced) return;
-    opacity.value = withDelay(1200, withRepeat(withSequence(
-      withTiming(0.16, { duration: 7500, easing: soft }),
-      withTiming(0.075, { duration: 7500, easing: soft }),
-      withDelay(2000, withTiming(0.075, { duration: 1 })),
+    opacity.value = withDelay(1300, withRepeat(withSequence(
+      withTiming(0.13, { duration: 9000, easing: ease }),
+      withTiming(0.065, { duration: 9000, easing: ease }),
+      withDelay(2200, withTiming(0.065, { duration: 1 })),
     ), -1, false));
     return () => cancelAnimation(opacity);
   }, [reduced, opacity]);
 
-  return <AnimatedEllipse testID="home-atlas-motion-glow" pointerEvents="none"
-    cx={94} cy={h * 0.34} rx={170} ry={h * 0.19}
-    fill="url(#home-atlas-breath)" opacity={0.075}
-    animatedProps={reduced ? undefined : animatedProps} />;
+  // The tiny SVG is rendered just once; only its parent view's opacity changes.
+  // It does not occupy or redraw the full Home screen.
+  const haloWidth = width * 0.72;
+  const haloHeight = height * 0.36;
+  return <Animated.View testID="home-atlas-motion-glow" pointerEvents="none"
+    accessible={false} style={[styles.glow,
+      { width: haloWidth, height: haloHeight, left: -width * 0.12, top: height * 0.17 },
+      animatedStyle]}>
+    <Svg width={haloWidth} height={haloHeight} viewBox="0 0 220 260"
+      pointerEvents="none">
+      <Defs>
+        <RadialGradient id="home-ambient-view-glow" cx="50%" cy="50%" rx="50%" ry="50%">
+          <Stop offset="0%" stopColor="#7EA7B5" stopOpacity={0.9} />
+          <Stop offset="66%" stopColor="#456E81" stopOpacity={0.33} />
+          <Stop offset="100%" stopColor="#456E81" stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Ellipse cx={110} cy={130} rx={110} ry={130} fill="url(#home-ambient-view-glow)" />
+    </Svg>
+  </Animated.View>;
 }
 
-/** Only four stars twinkle. The rest of the celestial chart is stationary. */
-export function HomeAtlasTwinkleStar({ x, y, index }: {
-  x: number; y: number; index: number;
+function TwinkleDot({ width, height, x, y, index }: {
+  width: number; height: number; x: number; y: number; index: number;
 }) {
   const reduced = useReducedMotion();
   const opacity = useSharedValue(0.17);
-  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   useEffect(() => {
     cancelAnimation(opacity);
     opacity.value = 0.17;
     if (reduced) return;
-    opacity.value = withDelay(1500 + index * 2100, withRepeat(withSequence(
-      withTiming(0.66, { duration: 1700, easing: soft }),
-      withTiming(0.17, { duration: 2100, easing: soft }),
-      withDelay(9400, withTiming(0.17, { duration: 1 })),
+    opacity.value = withDelay(1700 + index * 2400, withRepeat(withSequence(
+      withTiming(0.58, { duration: 1800, easing: ease }),
+      withTiming(0.17, { duration: 2200, easing: ease }),
+      withDelay(10200, withTiming(0.17, { duration: 1 })),
     ), -1, false));
     return () => cancelAnimation(opacity);
   }, [index, reduced, opacity]);
 
-  return <AnimatedCircle testID={`home-atlas-motion-star-${index}`}
-    pointerEvents="none" cx={x} cy={y} r={1.9}
-    fill="#E8D5B4" opacity={0.17}
-    animatedProps={reduced ? undefined : animatedProps} />;
+  return <Animated.View testID={`home-atlas-motion-star-${index}`}
+    accessible={false} pointerEvents="none"
+    style={[styles.star,
+      { left: x / 420 * width - 1.5, top: y * height - 1.5 },
+      animatedStyle]} />;
 }
 
-/** Fine dashed survey bearing that advances by exactly one pattern repeat.
- * The geometry never moves, so its clipping and hit testing stay constant.
- */
-export function HomeAtlasCurrent({ h }: { h: number }) {
-  const reduced = useReducedMotion();
-  const offset = useSharedValue(0);
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: offset.value,
-  }));
-
-  useEffect(() => {
-    cancelAnimation(offset);
-    offset.value = 0;
-    if (reduced) return;
-    offset.value = withDelay(2700, withRepeat(
-      withTiming(-40, { duration: 24000, easing: Easing.linear }), -1, false,
-    ));
-    return () => cancelAnimation(offset);
-  }, [reduced, offset]);
-
-  return <AnimatedPath testID="home-atlas-motion-current"
-    pointerEvents="none"
-    d={`M -15 ${h * 0.59} C 110 ${h * 0.55} 294 ${h * 0.64} 437 ${h * 0.57}`}
-    stroke="#B7B7AF" strokeWidth={0.75} strokeOpacity={0.13}
-    fill="none" strokeDasharray="2 18" strokeDashoffset={0}
-    animatedProps={reduced ? undefined : animatedProps} />;
+export function HomeAtlasTwinkles({ width, height }: { width: number; height: number }) {
+  return <View testID="home-atlas-motion-stars" pointerEvents="none"
+    accessible={false} style={StyleSheet.absoluteFill}>
+    {highlights.map((star, index) =>
+      <TwinkleDot key={index} width={width} height={height}
+        index={index} x={star.x} y={star.y} />)}
+  </View>;
 }
+
+const styles = StyleSheet.create({
+  glow: { position: "absolute" },
+  star: { position: "absolute", width: 3, height: 3, borderRadius: 1.5,
+    backgroundColor: "#E8D5B4" },
+});
