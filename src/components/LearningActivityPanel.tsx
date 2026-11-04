@@ -94,12 +94,14 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
     const percent = items.length ? Math.round(count / items.length * 100) : 0;
     return { category, index, count, total: items.length, percent };
   });
-  // Only the compact Progress preview ranks its worlds. Expanded and legacy
-  // views retain their original catalogue order.
-  const ranked = compact && !expanded
-    ? rows.slice().sort((a, b) => b.count - a.count || a.index - b.index)
+  // The detail screen begins with subjects already explored. Stable ties retain
+  // catalogue order, and every subject is accessible via the disclosure.
+  const ranked = compact || detail
+    ? rows.slice().sort((a, b) => b.count - a.count
+        || b.percent - a.percent || a.index - b.index)
     : rows;
-  const visible = compact && !expanded ? ranked.slice(0, 3) : ranked;
+  const limit = detail ? 4 : 3;
+  const visible = (compact || detail) && !expanded ? ranked.slice(0, limit) : ranked;
 
   return <View style={[styles.section, compact && styles.sectionCompact, detail && styles.sectionDetail]} testID="reading-category-progress">
     <Text style={[styles.title, compact && styles.titleCompact, detail && styles.titleDetail]}>{detail ? "Ανά θεματική" : "Οι κόσμοι που εξερευνάς"}</Text>
@@ -115,7 +117,7 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
             text: count + " από " + total + " μαθήματα, " + percent + "%" }}>
           <View style={styles.readingTileHeader}>
             <Text style={styles.readingTileEmoji}>{category.emoji}</Text>
-            <Text style={styles.readingTilePercent}>{total ? percent + "%" : "—"}</Text>
+            {count > 0 ? <Text style={styles.readingTilePercent}>{percent}%</Text> : null}
           </View>
           <Text style={styles.readingTileTitle} numberOfLines={2}>{category.title}</Text>
           <Text style={styles.readingTileCount}>{count} / {total}</Text>
@@ -139,10 +141,18 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
         </View>
       ))}
     </View>
-    {compact && rows.length > 3 ? <Pressable style={styles.categoryMore}
+    {(compact || detail) && rows.length > limit ? <Pressable
+      testID={detail ? "reading-all-subjects" : undefined}
+      style={({ pressed }) => [styles.categoryMore, detail && styles.detailMore,
+        pressed && styles.categoryMorePressed]}
       accessibilityRole="button" accessibilityState={{ expanded }}
       onPress={() => setExpanded(value => !value)}>
-      <Text style={styles.categoryMoreText}>{expanded ? "Λιγότεροι κόσμοι −" : "Όλοι οι κόσμοι +"}</Text>
+      <Text style={[styles.categoryMoreText, detail && styles.detailMoreText]}>
+        {detail
+          ? expanded ? "Λιγότερες θεματικές" : `Όλες οι θεματικές (${rows.length})`
+          : expanded ? "Λιγότεροι κόσμοι −" : "Όλοι οι κόσμοι +"}
+      </Text>
+      {detail ? <Text style={styles.detailMoreArrow}>{expanded ? "⌃" : "⌄"}</Text> : null}
     </Pressable> : null}
   </View>;
 }
@@ -158,11 +168,11 @@ const styles = StyleSheet.create({
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   categoryGridSingle: { flexDirection: "column" },
   readingTile: {
-    flexBasis: "47%", flexGrow: 1, minWidth: 0, minHeight: 136,
-    padding: 12, gap: 4, borderRadius: 15,
+    flexBasis: "47%", flexGrow: 1, minWidth: 0, minHeight: 123,
+    padding: 11, gap: 3, borderRadius: 15,
     backgroundColor: "#1F313D", borderWidth: 1, borderColor: "#35545F",
   },
-  readingTileSingle: { minHeight: 110, flexBasis: "auto" },
+  readingTileSingle: { minHeight: 112, flexBasis: "auto" },
   readingTileWide: { flexBasis: "30%" },
   readingTileHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   readingTileEmoji: { fontSize: 19, lineHeight: 26 },
@@ -182,6 +192,14 @@ const styles = StyleSheet.create({
   categoryFillDetail: { backgroundColor: "#82C4C7" },
   categoryCompact: { gap: 5 },
   categoryMore: { minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
+  categoryMorePressed: { opacity: 0.75 },
+  detailMore: {
+    paddingHorizontal: 12, minHeight: 46, borderRadius: 13,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    backgroundColor: "#1D303A", borderWidth: 1, borderColor: "#35545F",
+  },
+  detailMoreText: { color: "#9CD2D1" },
+  detailMoreArrow: { color: "#9CD2D1", fontSize: 20 },
   categoryMoreText: { color: colors.accentLight, fontSize: 13, fontWeight: "700" },
   title: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "800" },
   small: { color: colors.textMuted, fontSize: 12, lineHeight: 19, flexShrink: 1 },
