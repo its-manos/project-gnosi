@@ -442,6 +442,14 @@ assert.match(screen, /getAtlasCategoryProgress/);
 assert.match(screen, /testID="category-atlas-continue"/);
 assert.match(screen, /pressScale=\{0\.983\}/,
   "card press feedback stays restrained");
+assert.match(screen, /<MotionView entranceDelay=\{0\} testID="category-atlas-header"/,
+  "header enters first, matching Home and Adventure Path");
+assert.match(screen, /entranceDelay=\{75\} pressScale=\{0\.983\}/,
+  "Continue card follows the header with a gentle stagger");
+assert.match(screen, /<MotionView entranceDelay=\{155\} testID="category-atlas-map-entrance"/,
+  "fitted atlas enters last after its viewport has been measured");
+assert.match(screen, /mapEntrance: \{ width: "100%" \}/,
+  "map entrance preserves its original measured width");
 assert.match(screen, /<AtlasContinueAccent\s*\/>/,
   "card accent stays decorative");
 assert.match(screen, /<AtlasContinueArrow\s*\/>/,
@@ -467,7 +475,9 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/HomeMotion": { MotionPressable: "MotionPressable" },
+  "../components/HomeMotion": {
+    MotionPressable: "MotionPressable", MotionView: "MotionView",
+  },
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
@@ -495,7 +505,9 @@ const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/HomeMotion": { MotionPressable: "MotionPressable" },
+  "../components/HomeMotion": {
+    MotionPressable: "MotionPressable", MotionView: "MotionView",
+  },
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
@@ -518,11 +530,20 @@ const renderCategory = () => {
   return screenWithLayout(screenProps);
 };
 let categoryTree = renderCategory();
+const header = nodes(categoryTree).find(node =>
+  node.props?.testID === "category-atlas-header");
+assert.equal(header.type, "MotionView", "header uses the same entry primitive as Home");
+assert.equal(header.props.entranceDelay, 0);
+assert.equal(nodes(categoryTree).filter(node =>
+  node.props?.testID === "category-atlas-map-entrance").length, 0,
+  "map reveal must not start before its viewport is measured");
 const shortcut = nodes(categoryTree).find(node =>
   node.props?.testID === "category-atlas-continue");
 assert.equal(shortcut.type, "MotionPressable",
   "the Continue shortcut uses the established Home press animation");
 assert.equal(shortcut.props.pressScale, 0.983);
+assert.equal(shortcut.props.entranceDelay, 75,
+  "Continue card follows the header without changing its tap response");
 assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueAccent"));
 assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueArrow"));
 const fill = nodes(shortcut).find(node => node.type === "AtlasProgressFill");
@@ -539,7 +560,14 @@ assert.ok(mapShell && typeof mapShell.props.onLayout === "function",
 mapShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
 categoryTree = renderCategory();
 let mountedMaps = nodes(categoryTree).filter(node => node.type === map);
+const mapReveal = nodes(categoryTree).find(node =>
+  node.props?.testID === "category-atlas-map-entrance");
+assert.equal(mapReveal.type, "MotionView",
+  "the atlas fades in after measurement without replacing the map");
+assert.equal(mapReveal.props.entranceDelay, 155);
 assert.equal(mountedMaps.length, 1, "measured screen mounts exactly one map");
+assert.equal(nodes(mapReveal).filter(node => node.type === map).length, 1,
+  "fitted map stays inside the non-layout-shifting entrance wrapper");
 assert.deepEqual(
   { ...mountedMaps[0].props.fitViewport }, { width: 340, height: 490 },
   "first map mount uses the real viewport size rather than legacy layout");
