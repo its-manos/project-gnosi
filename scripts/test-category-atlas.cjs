@@ -62,6 +62,7 @@ const native = {
 };
 const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
   Defs: "defs", G: "g", LinearGradient: "linearGradient",
+  RadialGradient: "radialGradient",
   Rect: "rect", Stop: "stop", Text: "text" };
 let showList = false;
 const mapModule = compile("src/components/FantasyMap.tsx", {
@@ -228,6 +229,23 @@ assert.ok(compact(0, 2).y < compact(1, 2).y,
 assert.ok(compact(0, 4).x < compact(1, 4).x,
   "four destinations retain independent side-by-side positions");
 assert.equal(compact(0, 5), null, "larger constellations use balanced rows");
+const compactRadii = mapModule.getCompactAtlasRadii;
+assert.deepEqual(
+  { ...compactRadii(3, 260) }, { rx: 57, ry: 39 },
+  "short viewports must keep enough separation between tappable islands");
+assert.deepEqual(
+  { ...compactRadii(3, 500) }, { rx: 69, ry: 51 },
+  "tall phones should make the destinations more substantial");
+assert.deepEqual(
+  { ...compactRadii(4, 500) }, { rx: 64, ry: 51 },
+  "four destinations preserve generous horizontal margins");
+const fullTitle = "Γεωλογία και η κρυμμένη Γη";
+assert.equal(mapModule.wrapFittedAtlasTitle(fullTitle, 15).join(" "), fullTitle,
+  "fitted map labels retain every Greek title word");
+assert.deepEqual(
+  Array.from(mapModule.wrapFittedAtlasTitle("Παγκόσμια ιστορία", 18)),
+  ["Παγκόσμια", "ιστορία"],
+  "normal two-line labels remain stable");
 
 // The Category Atlas fits its islands into the visible map rather than
 // introducing sequential stops or requiring a vertical treasure hunt.
@@ -242,6 +260,18 @@ assert.equal(nodes(frame).filter(node => node.type === "rect"
 assert.ok(nodes(frame).filter(node => node.type === "circle"
   && (node.props?.fill === "#E4CFA6" || node.props?.fill === "#B5CADD")).length >= 30,
   "fitted atlas gets a small static starfield");
+assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
+  && node.props?.id === "atlas-atmosphere").length, 1,
+  "category atlas has a subtle static radial atmosphere");
+assert.ok(nodes(frame).some(node => node.type === "path"
+  && node.props?.stroke === "#8CA6B9" && node.props?.strokeOpacity === 0.11),
+  "faint map engravings add depth without implying lesson progression");
+const fittedLabel = nodes(frame).find(node => node.type === "text"
+  && node.props?.children === "Παγκόσμια");
+assert.equal(fittedLabel.props.fontSize, 14,
+  "three-destination labels use a larger readable font");
+assert.equal(fittedLabel.props.fill, "#FBF8EF",
+  "fitted titles use a warm high-contrast color");
 assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 5);
 const constellationEdges = nodes(frame).filter(node =>
   node.type === "path" && node.props?.strokeDasharray === "2 5");
