@@ -67,10 +67,15 @@ const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
 let showList = false;
 const mapModule = compile("src/components/FantasyMap.tsx", {
   react: { useMemo: fn => fn(), useState: initial =>
-    typeof initial === "number" ? [initial, () => {}]
+    typeof initial === "number" || initial === null ? [initial, () => {}]
       : [showList, value => { showList = value; }] },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native, "react-native-svg": svg,
+  "./CategoryAtlasMotion": {
+    AtlasAtmosphereBreath: "AtlasAtmosphereBreath",
+    AtlasTwinkleStar: "AtlasTwinkleStar",
+    AtlasDestinationFeedback: "AtlasDestinationFeedback",
+  },
 });
 const map = mapModule.default;
 const nodes = tree => tree && typeof tree === "object"
@@ -256,6 +261,19 @@ assert.ok(fittedAncientBar.props.y - fittedAncientLabels[1].props.y >= 10,
   "the second title line must stay clear of its progress track");
 assert.ok(fittedAncientIsland.props.onPress,
   "wrapping a destination title must not remove its tap target");
+assert.equal(typeof fittedAncientIsland.props.onPressIn, "function",
+  "fitted destinations respond to press-in without a route delay");
+assert.equal(typeof fittedAncientIsland.props.onPressOut, "function",
+  "fitted destinations cancel glint when the touch ends");
+assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasDestinationFeedback").length, 3,
+  "all fitted islands receive a lightweight outline glint");
+assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasAtmosphereBreath").length, 1,
+  "one atmosphere layer animates without moving any islands");
+assert.equal(nodes(fittedAncient).filter(node => node.type === "AtlasTwinkleStar").length, 5,
+  "only five deterministic stars twinkle on the UI thread");
+assert.ok(!nodes(map(props)).some(node => [
+  "AtlasDestinationFeedback", "AtlasAtmosphereBreath", "AtlasTwinkleStar",
+].includes(node.type)), "non-fitted atlas does not gain ambient motion");
 const islandRims = nodes(fittedAncient).filter(node =>
   typeof node.props?.testID === "string" && node.props.testID.startsWith("atlas-rim-"));
 const islandReliefs = nodes(fittedAncient).filter(node =>
@@ -396,6 +414,12 @@ assert.equal(list.type, "ScrollView", "the optional list can scroll within the s
 showList = false;
 
 // The page and navigator pass existing account-scoped progress, not local keys.
+const motionCode = fs.readFileSync(path.join(root, "src/components/CategoryAtlasMotion.tsx"), "utf8");
+assert.match(motionCode, /useReducedMotion\(/, "atlas respects system reduced-motion settings");
+assert.match(motionCode, /cancelAnimation\(/, "ambient animations are cancelled on unmount");
+assert.match(motionCode, /useAnimatedProps\(/, "ambient opacity runs on the UI thread");
+assert.doesNotMatch(motionCode, /setTimeout|setInterval|requestAnimationFrame/,
+  "no JS-thread timers for continuous atlas motion");
 const screen = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
 const navigator = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
 assert.match(screen, /<FantasyMap/);
