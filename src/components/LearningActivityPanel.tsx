@@ -20,7 +20,15 @@ function MiniMetric({ label, value, detail }: { label: string; value: string; de
   return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text><Text style={styles.small}>{detail}</Text></View>;
 }
 
-export default function LearningActivityPanel({ todayKey, compact = false }: { todayKey: string; compact?: boolean }) {
+function DashboardMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return <View style={styles.dashboardMetric}>
+    <Text style={styles.dashboardValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{value}</Text>
+    <Text style={styles.dashboardLabel} numberOfLines={2}>{label}</Text>
+    <Text style={styles.dashboardDetail} numberOfLines={1}>{detail}</Text>
+  </View>;
+}
+
+export default function LearningActivityPanel({ todayKey, compact = false, dashboard = false }: { todayKey: string; compact?: boolean; dashboard?: boolean }) {
   const snapshot = useLearningSnapshot(), daily = useDailySnapshot();
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
   const [selectedKey, setSelectedKey] = useState("");
@@ -31,18 +39,26 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
   const max = Math.max(1, ...buckets.map(bucket => bucket.first + bucket.replay));
   const total = buckets.reduce((sum, bucket) => sum + bucket.first + bucket.replay, 0);
   const switchMode = (value: "daily" | "weekly") => { setMode(value); setSelectedKey(""); };
+  const barHeight = dashboard ? 92 : 120;
 
-  return <View style={styles.section}>
-    <Text style={styles.title}>Η δραστηριότητά σου</Text>
-    {compact ? <Text style={styles.small}>Αυτή την εβδομάδα: {summary.firstThisWeek} νέα μαθήματα · {summary.replaysThisWeek} επαναλήψεις</Text> : null}
-    {!compact ? <View style={styles.metrics}>
+  return <View style={[styles.section, dashboard && styles.sectionDashboard]}>
+    {!dashboard ? <Text style={styles.title}>Η δραστηριότητά σου</Text> : null}
+    {compact && !dashboard ? <Text style={styles.small}>Αυτή την εβδομάδα: {summary.firstThisWeek} νέα μαθήματα · {summary.replaysThisWeek} επαναλήψεις</Text> : null}
+    {dashboard ? <>
+      <Text style={styles.dashboardHeading}>Αυτή την εβδομάδα</Text>
+      <View style={styles.dashboardMetrics} testID="activity-dashboard-metrics">
+        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="7 ημέρες" />
+        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="7 ημέρες" />
+        <DashboardMetric label="Ενεργές ημέρες" value={String(summary.activeDays)} detail="συνολικά" />
+      </View>
+    </> : !compact ? <View style={styles.metrics}>
       <MiniMetric label="ΝΕΑ ΜΑΘΗΜΑΤΑ" value={String(summary.firstThisWeek)} detail="αυτή την εβδομάδα" />
       <MiniMetric label="ΠΛΗΡΕΙΣ ΕΠΑΝΑΛΗΨΕΙΣ" value={String(summary.replaysThisWeek)} detail="αυτή την εβδομάδα" />
       <MiniMetric label="ΕΝΕΡΓΕΣ ΗΜΕΡΕΣ" value={String(summary.activeDays)} detail="συνολικά" />
       <MiniMetric label="ΑΚΡΙΒΕΙΑ ΜΑΘΗΜΑΤΩΝ" value={summary.accuracy === null ? "—" : `${summary.accuracy}%`} detail={summary.questions ? `${summary.correct} / ${summary.questions} σωστές` : "θα εμφανιστεί με την πρώτη ολοκλήρωση"} />
     </View> : null}
-    <View style={styles.chartCard}>
-      <Text style={styles.chartTitle}>Ο ρυθμός σου</Text>
+    <View style={[styles.chartCard, dashboard && styles.chartCardDashboard]} testID="activity-chart">
+      <Text style={[styles.chartTitle, dashboard && styles.chartTitleDashboard]}>Ο ρυθμός σου</Text>
       <View style={styles.switchRow}>
         {(["daily", "weekly"] as const).map(value => <Pressable key={value} onPress={() => switchMode(value)} accessibilityRole="button"
           accessibilityState={{ selected: mode === value }} style={[styles.switchButton, mode === value && styles.switchSelected]}>
@@ -50,7 +66,7 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
         </Pressable>)}
       </View>
       <Text style={styles.period}>{mode === "daily" ? "Τελευταίες 7 ημέρες" : "Τελευταίες 8 εβδομάδες · από Δευτέρα"}</Text>
-      <View style={styles.chart}>
+      <View style={[styles.chart, dashboard && styles.chartDashboard]}>
         <View style={styles.axis} accessible={false}><Text style={styles.axisText}>{max}</Text><Text style={styles.axisText}>0</Text></View>
         <View style={styles.bars}>
           {buckets.map(bucket => {
@@ -58,11 +74,11 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
             return <Pressable key={bucket.key} onPress={() => setSelectedKey(bucket.key)} accessibilityRole="button"
               accessibilityState={{ selected: active }} accessibilityLabel={`${rangeLabel(bucket)}: ${bucket.first} πρώτες ολοκληρώσεις, ${bucket.replay} επαναλήψεις`}
               style={[styles.column, active && styles.selectedColumn]}>
-              <View style={styles.barArea}>
+              <View style={[styles.barArea, dashboard && styles.barAreaDashboard]}>
                 <Text style={styles.barNumber}>{count}</Text>
                 <View style={styles.stack}>
-                  {bucket.replay > 0 ? <View style={[styles.replayBar, { height: 120 * bucket.replay / max }]} /> : null}
-                  {bucket.first > 0 ? <View style={[styles.firstBar, { height: 120 * bucket.first / max }]} /> : null}
+                  {bucket.replay > 0 ? <View style={[styles.replayBar, { height: barHeight * bucket.replay / max }]} /> : null}
+                  {bucket.first > 0 ? <View style={[styles.firstBar, { height: barHeight * bucket.first / max }]} /> : null}
                   {count === 0 ? <View style={styles.zeroBar} /> : null}
                 </View>
               </View>
@@ -81,7 +97,11 @@ export default function LearningActivityPanel({ todayKey, compact = false }: { t
       </View>
       {!total ? <Text style={styles.hint}>Ολοκλήρωσε ένα μάθημα για να ξεκινήσεις.</Text> : null}
     </View>
-    {compact ? <Text style={styles.small}>{summary.activeDays} ενεργές ημέρες · Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}</Text> : null}
+    {dashboard ? <Text style={styles.dashboardAccuracy} testID="activity-accuracy">
+      Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}
+      {summary.questions > 0 ? ` · ${summary.correct} / ${summary.questions} σωστές` : ""}
+    </Text> : null}
+    {compact && !dashboard ? <Text style={styles.small}>{summary.activeDays} ενεργές ημέρες · Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}</Text> : null}
     {summary.undatedCount > 0 ? <Text style={styles.legacyNote}>{summary.undatedCount} παλιότερα μαθήματα χωρίς ημερομηνία — εκτός γραφήματος.</Text> : null}
   </View>;
 }
@@ -193,6 +213,18 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
 }
 
 const styles = StyleSheet.create({
+  sectionDashboard: { marginTop: 0, marginBottom: 0, gap: 10 },
+  dashboardHeading: { color: colors.textBody, fontSize: 12, lineHeight: 18, fontWeight: "800" },
+  dashboardMetrics: { flexDirection: "row", gap: 8 },
+  dashboardMetric: { flex: 1, minWidth: 0, minHeight: 92, paddingHorizontal: 11, paddingVertical: 9, justifyContent: "center", gap: 2, borderWidth: 1, borderColor: "#4A4566", borderRadius: 16, backgroundColor: "#20243C" },
+  dashboardValue: { color: colors.accentLight, fontSize: 27, lineHeight: 33, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  dashboardLabel: { color: colors.text, fontSize: 10.5, lineHeight: 14, fontWeight: "800" },
+  dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 13 },
+  dashboardAccuracy: { color: colors.textMuted, fontSize: 11, lineHeight: 17, paddingHorizontal: 2 },
+  chartCardDashboard: { padding: 13, gap: 8, borderColor: "#44415E", backgroundColor: "#1D2337" },
+  chartTitleDashboard: { fontSize: 16, lineHeight: 23, fontWeight: "800" },
+  chartDashboard: { paddingTop: 0 },
+  barAreaDashboard: { height: 123 },
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
   sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
   sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },
