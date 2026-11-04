@@ -76,7 +76,7 @@ function compile(file, extra = {}, returnModule = false, globals = {}) {
       AtlasDestinationFeedback: "AtlasDestinationFeedback",
     },
     "../theme": { colors: {
-      accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E",
+      accent: "#A89BFF", accentLight: "#B1A5FF", borderStrong: "#34304E", surface: "#151928",
       textMuted: "#ABB0C1", success: "#3CC69A", successSurface: "#17372F",
     } },
     ...extra,
@@ -120,16 +120,8 @@ const worldArtwork = {
   geography: otherWorlds.GeographyWorldIcon,
   "difficult-history": otherWorlds.DifficultHistoryWorldIcon,
 };
-// Render the new badge in isolation so the headless Home contract can still
-// assert its accessible streak semantics without mocking its SVG internals.
-const HomeStreakBadge = compile("src/components/HomeStreakBadge.tsx", {
-  "react-native-reanimated": {
-    ...reanimated,
-    default: { ...reanimated.default, View: "AnimatedView" },
-    useReducedMotion: () => true,
-    useAnimatedStyle: callback => callback(),
-  },
-});
+// Compile the streak badge separately to assert its ring and inner caption.
+const HomeStreakBadge = compile("src/components/HomeStreakBadge.tsx");
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
   "../components/worldIcons/OtherWorldIcons": otherWorlds,
@@ -329,15 +321,28 @@ assert.ok(nodes(futureCard).some(node => node.props?.children === "🌟"),
 futureCard.props.onPress();
 assert.equal(actions.at(-1), "category:future-world");
 const streakSlot = nodes(tree).find(node => node.type === HomeStreakBadge);
-assert.ok(streakSlot, "Home uses the isolated native flame component");
+assert.ok(streakSlot, "Home uses the same-size circular streak badge");
 assert.equal(streakSlot.props.streak, 2,
   "the new medallion receives the existing daily quiz streak, not a separate metric");
 const renderedStreak = HomeStreakBadge({ streak: streakSlot.props.streak });
 assert.match(renderedStreak.props.accessibilityLabel, /καθημερινού quiz/);
 assert.equal(renderedStreak.props.testID, "home-quiz-streak");
 assert.equal(nodes(renderedStreak).find(node => node.props?.testID === "home-streak-count").props.children, 2);
-assert.ok(nodes(renderedStreak).filter(node => node.type === "path").length >= 3,
-  "streak flame is vector artwork rather than an emoji");
+assert.equal(renderedStreak.props.style.width, 50,
+  "streak circle matches the 50pt level badge");
+assert.equal(renderedStreak.props.style.backgroundColor, "#151928",
+  "streak circle uses the level badge surface");
+assert.equal(nodes(renderedStreak).filter(node => node.type === "circle").length, 2,
+  "streak badge has the same base and accent ring layers as the level badge");
+assert.ok(nodes(renderedStreak).filter(node => node.type === "circle")
+  .every(node => node.props.r === 21 && node.props.strokeWidth === 3.5),
+  "streak ring matches level ring dimensions");
+assert.ok(nodes(renderedStreak).some(node => node.props?.children === "ΣΕΡΙ"),
+  "streak caption is inside the medallion");
+assert.ok(!nodes(renderedStreak).some(node => node.props?.children === "σερί quiz"),
+  "no extra text appears beside the ring");
+assert.equal(nodes(renderedStreak).filter(node => node.type === "path").length, 0,
+  "flame artwork is removed");
 const loadingStreak = HomeStreakBadge({ streak: null });
 assert.match(loadingStreak.props.accessibilityLabel, /Φόρτωση/);
 assert.equal(nodes(loadingStreak).find(node => node.props?.testID === "home-streak-count").props.children, "—");
