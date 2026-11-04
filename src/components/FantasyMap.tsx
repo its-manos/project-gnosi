@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSharedValue } from "react-native-reanimated";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 import { AtlasAtmosphereBreath, AtlasDestinationFeedback, AtlasTwinkleStar } from "./CategoryAtlasMotion";
 
@@ -414,6 +414,9 @@ export default function FantasyMap({
   // the entire cartographic SVG just to light up one island coastline.
   const pressedRegion = useSharedValue<string | null>(null);
   const fitted = Boolean(fitViewport?.width && fitViewport?.height);
+  // Android retains the detailed islands, labels and navigation while
+  // omitting low-contrast background ink that is costly to rasterize.
+  const androidLite = fitted && Platform.OS === "android";
   const columns = fitted && regions.length > 4 ? 3 : columnCount(regions.length);
   const rows = Math.max(1, overview || fitted
     ? overviewRows(regions.length).length : Math.ceil(regions.length / columns));
@@ -596,16 +599,17 @@ export default function FantasyMap({
             <Ellipse cx={MAP_WIDTH * 0.76} cy={mapHeight * 0.43}
               rx={MAP_WIDTH * 0.40} ry={mapHeight * 0.33}
               fill="url(#atlas-nebula-teal)" />
-            <Ellipse cx={MAP_WIDTH * 0.23} cy={mapHeight * 0.82}
+            {!androidLite ? <Ellipse cx={MAP_WIDTH * 0.23} cy={mapHeight * 0.82}
               rx={MAP_WIDTH * 0.38} ry={mapHeight * 0.27}
-              fill="url(#atlas-nebula-gold)" />
+              fill="url(#atlas-nebula-gold)" /> : null}
           </G>
         ) : null}
-        {Array.from({ length: 9 }, (_, index) => (
+        {Array.from({ length: 9 }, (_, index) => index)
+          .filter(index => !androidLite || index % 2 === 0).map(index => (
           <Path key={`meridian-${index}`} d={`M ${index * 45} 0 Q ${index * 45 - 45} ${mapHeight / 2} ${index * 45} ${mapHeight}`}
             stroke="#7CA8AC" strokeOpacity={fitted ? 0.045 : 0.07} fill="none" />
         ))}
-        {Array.from({ length: rows * 4 }, (_, index) => (
+        {Array.from({ length: androidLite ? rows * 2 : rows * 4 }, (_, index) => (
           <Path key={`parallel-${index}`} d={`M 0 ${index * 40} Q 180 ${index * 40 + 30} 360 ${index * 40}`}
             stroke="#7CA8AC" strokeOpacity={fitted ? 0.045 : 0.07} fill="none" />
         ))}
@@ -648,7 +652,7 @@ export default function FantasyMap({
           <G pointerEvents="none">
             {/* Restrained starfield adds depth to empty space without a new
                 illustration layer, bitmap download, or animation. */}
-            {Array.from({ length: 50 }, (_, index) => {
+            {Array.from({ length: androidLite ? 30 : 50 }, (_, index) => {
               const x = 14 + stableNoise(index + 91) * (MAP_WIDTH - 28);
               const y = 20 + stableNoise(index + 397) * (mapHeight - 40);
               return <Circle key={`atlas-star-${index}`} cx={x} cy={y}
@@ -656,7 +660,7 @@ export default function FantasyMap({
                 fill={index % 5 === 0 ? "#E4CFA6" : "#B5CADD"}
                 opacity={index % 11 === 0 ? 0.52 : index % 5 === 0 ? 0.3 : 0.17} />;
             })}
-            {Array.from({ length: 7 }, (_, index) => {
+            {Array.from({ length: androidLite ? 4 : 7 }, (_, index) => {
               const x = 24 + stableNoise(index + 601) * (MAP_WIDTH - 48);
               const y = 24 + stableNoise(index + 743) * (mapHeight - 48);
               return (
