@@ -508,7 +508,7 @@ const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
-  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
+  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo", AdventureContinueAccent: "AdventureContinueAccent", AdventureContinueArrow: "AdventureContinueArrow" },
   "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 }, true);
 const adventure = adventureModule.default;
@@ -561,6 +561,14 @@ assert.equal(progressCount.props.children, "0 / 30",
   "progress count retains the visible and accessible original text");
 const progressFill = nodes(progressInCard).find(node => node.type === "AdventureProgressFill");
 assert.ok(progressFill, "progress fill is animated without changing the accessible track");
+assert.equal(progressInCard.props.style.height, 8,
+  "compact progress track uses a subtly highlighted 8pt height");
+assert.equal(progressInCard.props.style.borderColor, "#62597D",
+  "progress track frame remains visibly distinct over the dark card");
+assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueAccent").length, 1,
+  "only an actionable Continue card receives the one-shot perimeter highlight");
+assert.equal(nodes(compactCard).filter(node => node.type === "AdventureContinueArrow").length, 1,
+  "Continue icon receives a one-shot nudge without changing its tap target");
 const pinnedFrame = nodes(tree).find(node => node.props?.testID === "adventure-map-viewport");
 assert.equal(pinnedFrame.props.entranceDelay, 150,
   "the fixed map viewport fades in only once after the Continue card");
@@ -747,6 +755,11 @@ assert.ok(!nodes(tree).some(node => node.props?.children === "Ακολούθησ
   "remove redundant tutorial copy above the first chapter");
 tree = adventure({ ...adventureProps, progressLoaded: false });
 assert.equal(nodes(tree).find(node => node.props?.testID === "adventure-node-anc-0").props.disabled, true);
+const loadingCard = nodes(tree).find(node => node.props?.testID === "adventure-continue");
+assert.equal(nodes(loadingCard).filter(node => node.type === "AdventureContinueAccent").length, 0,
+  "loading/inactive Continue cards never flash their border");
+assert.equal(nodes(loadingCard).filter(node => node.type === "AdventureContinueArrow").length, 0,
+  "loading Continue cards have no animated chevron");
 
 // Exercise the entry effect with stable hook state and measured ScrollView
 // dimensions, rather than only testing the pure offset formula.
@@ -773,7 +786,7 @@ const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
-  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo" },
+  "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo", AdventureContinueAccent: "AdventureContinueAccent", AdventureContinueArrow: "AdventureContinueArrow" },
   "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 });
 const renderMotion = extra => {
@@ -873,6 +886,18 @@ assert.match(adventureMotionSource, /withDelay\(550, withTiming\(0, \{ duration:
 assert.match(adventureMotionSource, /if \(reduced\) return/,
   "reduced-motion renders a visible static halo without repeating");
 assert.equal((adventureMotionSource.match(/withRepeat\(/g) || []).length, 1,
-  "checkpoint polish adds no additional looping animations");
+  "Continue accents add no extra continuous animation loops");
+assert.match(adventureMotionSource, /testID="adventure-continue-accent"/,
+  "the Continue perimeter glint is a separately testable decorative overlay");
+assert.match(adventureMotionSource, /pointerEvents="none" accessible={false} style=\{\[styles\.continueAccent/,
+  "perimeter accent cannot intercept card taps or screen-reader focus");
+assert.match(adventureMotionSource, /borderRadius: 18, borderWidth: 1/,
+  "card accent matches the original 18pt rounded shape");
+assert.match(adventureMotionSource, /progressSheen/,
+  "progress fill has a static top-edge sheen, not a second animation");
+assert.match(adventureMotionSource, /testID="adventure-continue-chevron"/,
+  "Continue arrow preserves a separate entry accent");
+assert.match(adventureMotionSource, /if \(reduced\) return/,
+  "reduced-motion users skip the Continue arrow's movement");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
