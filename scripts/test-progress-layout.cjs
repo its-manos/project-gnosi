@@ -32,6 +32,8 @@ const common = {
   react, "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native": native,
   "../components/KnowledgeMastery": { __esModule: true, default: "Mastery" },
   "../components/ReviewActions": { __esModule: true, default: "ReviewActions" },
+  "../components/HomeAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle" },
   "../components/SyncStatus": { __esModule: true, default: "SyncStatus" },
   "../components/LearningActivityPanel": { CategoryProgress: "Categories" },
   "../hooks/useKnowledgeModel": { useKnowledgeModel: () => ({ model: knowledge, ready: true }) },
@@ -59,7 +61,19 @@ const render = () => { cursor = 0; return Progress(props); };
 let tree = render();
 assert.equal(tree.type, "View", "Progress is a fixed View, not a scroll container");
 assert.ok(node(tree, "progress-fixed-dashboard"));
+assert.ok(node(tree, "progress-shell"));
+assert.equal(nodes(tree).find(n => n.type === "AtlasBackground").props.showAmbientMotion, false,
+  "static atlas detail must not add continuous animation work");
 assert.ok(!nodes(tree).some(n => n.type === "ScrollView"));
+assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "Circle"), "overview has a real SVG completion ring");
+const learningCards = ["progress-knowledge-link", "progress-reading-link"];
+for (const key of learningCards) {
+  const element = node(tree, key);
+  const style = element.props.style({ pressed: false });
+  assert.equal(style[0].height, 176, "learning cards have bounded height, not stretched flex height");
+  assert.ok(text(element).includes("Δες την ανάλυση"), "card signals navigation to detail");
+  assert.ok(nodes(element).some(n => n.props.style && Array.isArray(n.props.style) && n.props.style[0]?.height === "100%"), "card carries its own progress bar");
+}
 assert.ok(node(tree, "progress-summary"), "progress totals are visible");
 assert.ok(text(node(tree, "progress-summary")).includes("7"), "completed count is retained");
 assert.ok(text(node(tree, "progress-summary")).includes(String(categories.length)), "world count is live");
@@ -81,16 +95,17 @@ assert.equal(primary.props.onResumeLesson, props.onOpenLesson);
 primary.props.onReview(); primary.props.onExplore(); primary.props.onWeeklyReview();
 assert.equal(review, 1); assert.equal(explore, 1); assert.equal(weekly, 1);
 
-node(tree, "progress-fixed-dashboard").props.onLayout({ nativeEvent: { layout: { height: 560 } } });
+node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 560 } } });
 tree = render();
 assert.equal(tree.type, "View", "typical smaller phones must not scroll");
 assert.equal(nodes(tree).find(n => n.type === "ReviewActions").props.dense, true);
-node(tree, "progress-fixed-dashboard").props.onLayout({ nativeEvent: { layout: { height: 440 } } });
+node(tree, "progress-shell").props.onLayout({ nativeEvent: { layout: { height: 440 } } });
 tree = render();
-assert.equal(tree.type, "ScrollView", "exceptionally short viewport gets safe overflow");
+assert.equal(tree.type, "View", "background shell remains mounted");
+assert.ok(nodes(tree).some(n => n.type === "ScrollView"), "exceptionally short viewport gets safe overflow");
 assert.ok(node(tree, "progress-accessibility-scroll"));
 fontScale = 1.5; tree = render();
-assert.equal(tree.type, "ScrollView", "large accessibility font may scroll instead of clipping");
+assert.ok(nodes(tree).some(n => n.type === "ScrollView"), "large accessibility font may scroll instead of clipping");
 slots = []; cursor = 0; fontScale = 1;
 props = { ...props, lessonProgressLoaded: false };
 tree = render();
