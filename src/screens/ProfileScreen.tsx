@@ -10,6 +10,7 @@ import { playerTitle } from "../gamification/rules";
 import { MotionView, MotionXpCircle } from "../components/HomeMotion";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import SyncStatus from "../components/SyncStatus";
+import XpRules from "../components/XpRules";
 import { colors } from "../theme";
 
 type Props = {
@@ -60,6 +61,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
   const { height: windowHeight, width, fontScale } = useWindowDimensions();
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+  const [xpExpanded, setXpExpanded] = useState(false);
   const availableHeight = viewportHeight || windowHeight - 130;
   const dense = availableHeight < 700;
   const veryDense = availableHeight < 585;
@@ -120,6 +122,13 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
               : { text: "Φόρτωση" }}>
             <View style={[styles.xpFill, { width: (progress * 100) + "%" }]} />
           </View>
+          <Pressable onPress={() => setXpExpanded(value => !value)}
+            disabled={!profileReady} accessibilityRole="button"
+            accessibilityLabel="Πώς κερδίζω XP;"
+            accessibilityState={{ expanded: xpExpanded, disabled: !profileReady }}
+            style={styles.xpHelp}>
+            <Text style={styles.xpHelpText}>{xpExpanded ? "Λιγότερα −" : "Πώς κερδίζω XP; +"}</Text>
+          </Pressable>
         </View>
         <View style={[styles.levelRing, dense && styles.levelRingDense]} accessible
           accessibilityLabel={profileReady ? "Επίπεδο " + profile.level : "Φόρτωση επιπέδου"}>
@@ -137,6 +146,10 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
           </View>
         </View>
       </MotionView>
+      {xpExpanded ? <View style={styles.xpPanel} testID="profile-xp-rules">
+        <XpRules learningXP={profile.learningXP} challengeXP={profile.challengeXP}
+          recallXP={profile.recallXP} explorationXP={profile.explorationXP} />
+      </View> : null}
 
       <MotionView entranceDelay={115} style={styles.metrics} testID="profile-summary">
         <View style={[styles.metric, dense && styles.metricDense]}>
@@ -221,6 +234,10 @@ const styles = StyleSheet.create({
   xpCaption: { color: "#C8BDFF", fontSize: 10, lineHeight: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },
   xpTrack: { height: 6, borderRadius: 6, backgroundColor: "#3D3D5C", overflow: "hidden" },
   xpFill: { height: "100%", borderRadius: 6, backgroundColor: "#B1A5FF" },
+  xpHelp: { alignSelf: "flex-start", minHeight: 24, justifyContent: "center" },
+  xpHelpText: { color: "#C6B9FF", fontSize: 10, lineHeight: 16, fontWeight: "800" },
+  xpPanel: { padding: 15, borderRadius: 17, borderColor: "#45415F", borderWidth: 1,
+    backgroundColor: "#1B2234" },
   levelRing: { width: 80, height: 80, alignItems: "center", justifyContent: "center" },
   levelRingDense: { width: 68, height: 68 },
   levelCenter: { position: "absolute", alignItems: "center" },
