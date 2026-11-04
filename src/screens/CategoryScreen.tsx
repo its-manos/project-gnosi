@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
+import { MotionPressable } from "../components/HomeMotion";
+import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
 import { colors } from "../theme";
 import { getAtlasCategoryProgress, getAtlasRegionProgress } from "../utils/categoryAtlas";
 
@@ -95,7 +97,8 @@ export default function CategoryScreen({
       </View>
 
       {featuredRegion ? (
-        <Pressable testID="category-atlas-continue" style={styles.continueCard}
+        <MotionPressable testID="category-atlas-continue" style={styles.continueCard}
+          pressScale={0.983}
           disabled={!progressLoaded}
           accessibilityRole="button"
           accessibilityState={{ disabled: !progressLoaded }}
@@ -105,6 +108,7 @@ export default function CategoryScreen({
           onPress={() => {
             if (progressLoaded) onOpenSubcategory(featuredRegion.id, category.id);
           }}>
+          <AtlasContinueAccent />
           <View style={styles.cardHeading}>
             <Text style={styles.cardCategory} numberOfLines={1}>Η ΠΡΟΟΔΟΣ ΣΟΥ</Text>
             <Text style={styles.categoryCount} testID="category-atlas-category-progress">
@@ -122,7 +126,7 @@ export default function CategoryScreen({
               <Text style={styles.cardTitle} numberOfLines={2}>{featuredRegion.title}</Text>
             </View>
             <View style={styles.cardAction} accessible={false}>
-              <Text style={styles.cardArrow}>↗</Text>
+              <AtlasContinueArrow />
             </View>
           </View>
           <View style={styles.progressSummary}>
@@ -136,11 +140,9 @@ export default function CategoryScreen({
             accessibilityLabel={"Πρόοδος περιοχής " + featuredRegion.title}
             accessibilityValue={{ min: 0, max: Math.max(1, featuredRegion.totalLessons),
               now: progressLoaded ? featuredRegion.completedLessons : 0 }}>
-            <View style={[styles.progressFill, {
-              width: (progressLoaded ? featuredPercent : 0) + "%",
-            }]} />
+            <AtlasProgressFill percent={progressLoaded ? featuredPercent : 0} />
           </View>
-        </Pressable>
+        </MotionPressable>
       ) : null}
 
       <View testID="category-atlas-map-viewport" style={styles.mapViewport}
@@ -205,15 +207,11 @@ const styles = StyleSheet.create({
     width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
     borderWidth: 1, borderColor: "#C9BFFF", alignItems: "center", justifyContent: "center",
   },
-  cardArrow: { color: "#171B2A", fontSize: 22, lineHeight: 28, fontWeight: "900" },
-  progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+   progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   progressCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   progressTrack: {
     height: 8, borderRadius: 5, backgroundColor: "#302F4B", overflow: "hidden",
     borderWidth: 1, borderColor: "#62597D",
-  },
-  progressFill: {
-    height: "100%", borderRadius: 5, backgroundColor: colors.accentLight,
   },
   mapViewport: {
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
