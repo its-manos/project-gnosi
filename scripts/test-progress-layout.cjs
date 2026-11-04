@@ -186,18 +186,40 @@ const renderInsights = () => { cursor = 0; return Insights(insightProps); };
 tree = renderInsights();
 assert.equal(tree.type, "View", "the detail page owns its own scrollable content");
 assert.ok(node(tree, "learning-insights-screen"));
+assert.ok(nodes(tree).some(n => n.type === "GradientBackground"),
+  "learning details reuse the same static Midnight Atlas gradient");
+assert.ok(node(tree, "insights-overview"), "detail page leads with a compact mastery overview");
+assert.ok(text(node(tree, "insights-overview")).includes("4 / 12"),
+  "overview uses actual mastered concepts, not read lesson count");
+assert.ok(nodes(node(tree, "insights-overview")).some(n => n.type === "ProgressBarFill"
+  && n.props.tone === "knowledge" && n.props.percent === 33),
+  "mastery progress is shown with the same native motion system");
+assert.ok(node(tree, "learning-insights-knowledge"), "knowledge details are identifiable");
 assert.ok(nodes(tree).some(n => n.type === "Mastery"), "knowledge detail is available");
 assert.ok(nodes(tree).some(n => n.type === "ScrollView"));
 assert.equal(nodes(tree).find(n => n.type === "Mastery").props.mapOnly, true);
+assert.equal(nodes(tree).find(n => n.type === "Mastery").props.detail, true,
+  "dedicated knowledge page reveals all category rows without a secondary disclosure");
 assert.ok(!nodes(tree).some(n => n.type === "Categories"));
 button(tree, "Ανάγνωση").props.onPress();
 tree = renderInsights();
 assert.ok(node(tree, "learning-insights-reading"));
+assert.ok(text(node(tree, "insights-overview")).includes("7 / " + lessons.length),
+  "reading overview retains real completed lesson count");
+assert.ok(nodes(node(tree, "insights-overview")).some(n => n.type === "ProgressBarFill"
+  && n.props.tone === "reading"),
+  "reading breakdown uses its own teal indicator");
 assert.ok(nodes(tree).some(n => n.type === "Categories"), "reading detail is available");
+assert.equal(nodes(tree).find(n => n.type === "Categories").props.detail, true,
+  "reading categories use the detail-specific card layout");
 assert.ok(!nodes(tree).some(n => n.type === "Mastery"));
 assert.ok(!text(tree).includes(lessons[6].title), "completed list starts collapsed");
+assert.equal(node(tree, "insights-completed-toggle").props.accessibilityState.expanded, false,
+  "completed list begins closed with an explicit accessibility state");
 button(tree, "Ολοκληρωμένα μαθήματα").props.onPress();
 tree = renderInsights();
+assert.equal(node(tree, "insights-completed-toggle").props.accessibilityState.expanded, true,
+  "the completed list announces its open state");
 button(tree, lessons[6].title).props.onPress();
 assert.equal(opened.at(-1), lessons[6].id, "all completed lessons remain reachable");
 button(tree, "Γνώσεις").props.onPress();
@@ -212,12 +234,22 @@ insightProps.initialView = "reading";
 insightProps.lessonProgressLoaded = false;
 tree = renderInsights();
 assert.ok(!nodes(tree).some(n => n.type === "Categories"), "reading list waits for data");
+assert.ok(text(node(tree, "insights-overview")).includes("—"),
+  "unhydrated reading metrics must not show fabricated zero progress");
 assert.ok(text(tree).includes("Φόρτωση μαθημάτων"));
 insightProps.lessonProgressLoaded = true;
 insightProps.completedLessons = [];
 tree = renderInsights();
 assert.ok(text(tree).includes("Τα ολοκληρωμένα μαθήματα θα εμφανιστούν εδώ."));
 assert.ok(!button(tree, "Ολοκληρωμένα μαθήματα"), "fresh account cannot open a nonexistent list");
+assert.ok(text(node(tree, "insights-overview")).includes("Το πρώτο ολοκληρωμένο μάθημα"),
+  "fresh accounts see a purposeful reading empty state");
+slots = []; cursor = 0;
+insightProps.initialView = "knowledge";
+tree = renderInsights();
+assert.equal(nodes(tree).find(n => n.type === "Mastery").props.detail, true);
+assert.ok(text(tree).includes("Η ΚΑΤΑΚΤΗΣΗ ΣΟΥ"));
+assert.ok(!nodes(tree).some(n => n.type === "Categories"));
 
 // Existing analytics allowlist and Android Back contract must recognize the new route.
 const routeSource = fs.readFileSync(require("node:path").join(__dirname, "../src/navigation/AppNavigator.tsx"), "utf8");
