@@ -57,7 +57,7 @@ assert.equal(overall.percent, 0);
 
 const jsx = (type, props) => ({ type, props });
 const native = {
-  View: "View", Text: "Text", Pressable: "Pressable",
+  View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
   StyleSheet: { create: values => values },
 };
 const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
@@ -65,7 +65,9 @@ const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
   Rect: "rect", Stop: "stop", Text: "text" };
 let showList = false;
 const map = compile("src/components/FantasyMap.tsx", {
-  react: { useMemo: fn => fn(), useState: () => [showList, value => { showList = value; }] },
+  react: { useMemo: fn => fn(), useState: initial =>
+    typeof initial === "number" ? [initial, () => {}]
+      : [showList, value => { showList = value; }] },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native, "react-native-svg": svg,
 }).default;
@@ -212,18 +214,60 @@ frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
 assert.equal(frame.props.style[2].aspectRatio, 360 / 304,
   "keep a natural map height when no viewport minimum is supplied");
 
+// The Category Atlas fits its islands into the visible map rather than
+// introducing sequential stops or requiring a vertical treasure hunt.
+tree = map({ ...props, regions: five, fitViewport: { width: 340, height: 490 } });
+frame = nodes(tree).find(node => node.props?.testID === "knowledge-world-map");
+const fittedCanvas = Math.max(180, Math.round((490 - 50 - 11) * 360 / 340));
+assert.equal(frame.props.style[2].aspectRatio, 360 / fittedCanvas);
+assert.equal(frame.props.style[3].borderWidth, 0, "integrated atlas has no black inset frame");
+assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 5);
+const constellationEdges = nodes(frame).filter(node =>
+  node.type === "path" && node.props?.strokeDasharray === "2 5");
+assert.ok(constellationEdges.length >= five.length - 1, "destinations share a constellation");
+assert.ok(constellationEdges.every(edge => edge.props.d.includes(" L ")),
+  "connections are undirected constellations, not a sequential checkpoint route");
+showList = true;
+tree = map({ ...props, regions: five, fitViewport: { width: 340, height: 490 } });
+const list = nodes(tree).find(node => node.props?.testID === "knowledge-region-list");
+assert.equal(list.type, "ScrollView", "the optional list can scroll within the same map viewport");
+showList = false;
+
 // The page and navigator pass existing account-scoped progress, not local keys.
 const screen = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
 const navigator = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
 assert.match(screen, /<FantasyMap/);
 assert.match(screen, /getAtlasRegionProgress/);
 assert.match(screen, /getAtlasCategoryProgress/);
-assert.match(screen, /scrollEnabled={canScroll}/);
-assert.match(screen, /chromeMeasured/, "map height uses measured viewport chrome");
-assert.match(screen, /onControlsHeightChange=/);
+assert.match(screen, /testID="category-atlas-continue"/);
+assert.match(screen, /testID="category-atlas-map-viewport"/);
+assert.match(screen, /fitViewport=/, "map respects actual viewport rather than enforcing a tall path");
+assert.match(screen, /chooseAtlasFeaturedRegion/, "shortcut chooses an explored area independently");
+assert.doesNotMatch(screen, /<ScrollView/, "map exploration fits without page scrolling");
 assert.doesNotMatch(screen, /\{category\.description\}/, "remove redundant category description");
-assert.match(screen, /reduceMotionChanged/);
+assert.doesNotMatch(screen, /getLessonAccess/, "category has no lesson unlock path");
+assert.doesNotMatch(screen, /AdventureAtlasBackground/, "do not impose chapter-map geography");
 assert.match(navigator, /<CategoryScreen[\s\S]*?completedLessonIds={app\.completedLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?inProgressLessonIds={app\.inProgressLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?progressLoaded={app\.progressLoaded}/);
+const screenModule = compile("src/screens/CategoryScreen.tsx", {
+  react: { useMemo: fn => fn(), useState: initial => [initial, () => {}] },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "../components/FantasyMap": { __esModule: true, default: map },
+  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
+  "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
+});
+const choose = screenModule.chooseAtlasFeaturedRegion;
+const picks = [
+  { id: "ancient", status: "new" },
+  { id: "world", status: "in-progress" },
+  { id: "myths", status: "complete" },
+];
+assert.equal(choose(picks, [
+  { id: "a", subcategoryId: "ancient" }, { id: "b", subcategoryId: "world" },
+], ["b"]).id, "world", "resume the subcategory already in progress");
+assert.equal(choose(picks, [], []).id, "world", "prefer started locations without an active lesson");
+assert.equal(choose([{ id: "a", status: "complete" }, picks[0]], [], []).id, "ancient",
+  "new explorers can start anywhere");
 console.log("Category Interactive Atlas contracts passed. Device visual QA still required.");
