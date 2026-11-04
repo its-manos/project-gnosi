@@ -77,7 +77,7 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
             const count = bucket.first + bucket.replay, active = bucket.key === selected.key;
             return <MotionPressable key={`${mode}-${bucket.key}`} entranceDelay={dashboard ? 80 + index * 48 : undefined} pressScale={0.985} onPress={() => setSelectedKey(bucket.key)} accessibilityRole="button"
               accessibilityState={{ selected: active }} accessibilityLabel={`${rangeLabel(bucket)}: ${bucket.first} πρώτες ολοκληρώσεις, ${bucket.replay} επαναλήψεις`}
-              style={[styles.column, dashboard && styles.columnDashboard, active && styles.selectedColumn]}>
+              style={[styles.column, dashboard && styles.columnDashboard, active && styles.selectedColumn, dashboard && active && styles.selectedColumnDashboard]}>
               <View style={[styles.barArea, dashboard && styles.barAreaDashboard]}>
                 <Text style={[styles.barNumber, dashboard && styles.barNumberDashboard]}>{count}</Text>
                 <View style={styles.stack}>
@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
   chartTitleDashboard: { fontSize: 15, lineHeight: 20, fontWeight: "800" },
   chartDashboard: { paddingTop: 0 },
   barAreaDashboard: { height: 112 },
+  selectedColumnDashboard: { backgroundColor: "#302C49", borderWidth: 1, borderColor: "#635784", paddingHorizontal: 0 },
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
   sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
   sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },
