@@ -6,7 +6,7 @@ import { MASTERY_LABELS } from "../knowledge/model";
 import ActionButton from "./ActionButton";
 import { colors } from "../theme";
 
-export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean }) {
+export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean }) {
   const { model, ready, today } = useKnowledgeModel(), learning = useLearningSnapshot();
   const [expanded, setExpanded] = useState(false);
   const [allSubjects, setAllSubjects] = useState(false);
@@ -14,8 +14,8 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
   const active = learning.knowledgeSession && !learning.knowledgeSession.completed && learning.knowledgeSession.date === today;
   const previewCollapsed = preview && mapOnly && !allSubjects;
   if (compact && (!ready || (!model.due.length && !active))) return null;
-  return <View style={[styles.card, preview && mapOnly && styles.previewCard]} testID="knowledge-mastery">
-    <Text style={styles.label}>Ο ΧΑΡΤΗΣ ΤΗΣ ΓΝΩΣΗΣ ΣΟΥ</Text>
+  return <View style={[styles.card, preview && mapOnly && styles.previewCard, detail && styles.detailCard]} testID="knowledge-mastery">
+    <Text style={[styles.label, detail && styles.detailLabel]}>{detail ? "ΟΙ ΘΕΜΑΤΙΚΕΣ ΣΟΥ" : "Ο ΧΑΡΤΗΣ ΤΗΣ ΓΝΩΣΗΣ ΣΟΥ"}</Text>
     {mapOnly && !ready ? <Text style={styles.body}>Φόρτωση γνώσεων…</Text> : null}
     {!mapOnly ? <>
     <Text style={styles.heading}>{ready ? `${model.due.length} ερωτήσεις για επανάληψη` : "Φόρτωση γνώσεων…"}</Text>
@@ -24,13 +24,13 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
     </> : null}
     {!compact && ready ? <>
       {!mapOnly || showHelp ? <><Text style={styles.body}>Νέο → Μαθαίνεται → Οικείο → Κατακτημένο. Η κατάκτηση χρειάζεται τρεις σωστές δοκιμές σε διαφορετικές περιπτώσεις και ημέρες. Η ίδια ερώτηση δεν μετρά ξανά. Μετά την κατάκτηση δεν χρειάζεται τακτική επανάληψη.</Text></> : null}
-      {(mapOnly && !allSubjects ? model.categories.slice().sort((a, b) => b.percent - a.percent).slice(0, 3) : model.categories).map(category => <View key={category.id} style={[styles.row, previewCollapsed && styles.previewRow]}>
+      {(mapOnly && !allSubjects && !detail ? model.categories.slice().sort((a, b) => b.percent - a.percent).slice(0, 3) : model.categories).map(category => <View key={category.id} style={[styles.row, previewCollapsed && styles.previewRow, detail && styles.detailRow]}>
         <Text style={[styles.title, previewCollapsed && styles.previewTitle]}>{category.title} · {category.total ? `${category.percent}%` : "Χωρίς δοκιμές ακόμη"}</Text>
         <View style={[styles.track, previewCollapsed && styles.previewTrack]} accessible accessibilityRole="progressbar" accessibilityLabel={`Γνώσεις: ${category.title}`} accessibilityValue={{ min: 0, max: 100, now: category.percent }}><View style={[styles.fill, { width: `${category.percent}%` }]} /></View>
         {!previewCollapsed ? <Text style={styles.body}>{category.mastered} / {category.total} έννοιες κατακτημένες</Text> : null}
       </View>)}
-      {mapOnly ? <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded: allSubjects }} onPress={() => setAllSubjects(v => !v)}><Text style={styles.link}>{allSubjects ? (preview ? "Πίσω στη σύνοψη −" : "Λιγότερες θεματικές −") : (preview ? "Αναλυτική εικόνα +" : "Όλες οι θεματικές +")}</Text></Pressable> : null}
-      {!previewCollapsed && (!mapOnly || showHelp) ? <Text style={styles.body}>Οι μπάρες αφορούν τις έννοιες για τις οποίες υπάρχουν διαφορετικές δοκιμές, όχι ολόκληρο το γνωστικό πεδίο. Δεν μετρούν άρθρα που διάβασες. Χωρίς αρκετά στοιχεία, η ολοκλήρωση διατηρείται και η κατάκτηση περιμένει.</Text> : !previewCollapsed ? <Text style={styles.body}>Γνώση από επαναλήψεις, όχι ποσοστό άρθρων που διάβασες.</Text> : null}
+      {mapOnly && !detail ? <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded: allSubjects }} onPress={() => setAllSubjects(v => !v)}><Text style={styles.link}>{allSubjects ? (preview ? "Πίσω στη σύνοψη −" : "Λιγότερες θεματικές −") : (preview ? "Αναλυτική εικόνα +" : "Όλες οι θεματικές +")}</Text></Pressable> : null}
+      {!previewCollapsed && (!mapOnly || showHelp) ? <Text style={styles.body}>Οι μπάρες αφορούν τις έννοιες για τις οποίες υπάρχουν διαφορετικές δοκιμές, όχι ολόκληρο το γνωστικό πεδίο. Δεν μετρούν άρθρα που διάβασες. Χωρίς αρκετά στοιχεία, η ολοκλήρωση διατηρείται και η κατάκτηση περιμένει.</Text> : !previewCollapsed && !detail ? <Text style={styles.body}>Γνώση από επαναλήψεις, όχι ποσοστό άρθρων που διάβασες.</Text> : null}
       {mapOnly && !previewCollapsed ? <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded: showHelp }} onPress={() => setShowHelp(v => !v)}><Text style={styles.link}>{showHelp ? "Κλείσιμο επεξήγησης −" : "Πώς μετριέται η γνώση; +"}</Text></Pressable> : null}
       {!previewCollapsed ? <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => setExpanded(v => !v)}><Text style={styles.link}>{expanded ? "Κλείσιμο ενοτήτων −" : "Οι μαθησιακές ενότητές σου +"}</Text></Pressable> : null}
       {expanded && !previewCollapsed ? model.topics.filter(t => t.state !== "new").map(topic => <View key={topic.id} style={styles.row}><Text style={styles.title}>{topic.title}</Text><Text style={styles.body}>{topic.status ?? MASTERY_LABELS[topic.state]}{topic.total ? ` · ${topic.mastered}/${topic.total} έννοιες` : ""}</Text></View>) : null}
@@ -41,6 +41,12 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
 const styles = StyleSheet.create({
   card: { padding: 20, gap: 14, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong },
   previewCard: { padding: 14, gap: 8, borderRadius: 18 },
+  detailCard: { backgroundColor: "#192034", borderColor: "#43415F", padding: 16, gap: 10 },
+  detailLabel: { color: "#BDB1FB" },
+  detailRow: {
+    gap: 7, paddingVertical: 11, borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(174, 160, 221, 0.16)",
+  },
   previewRow: { gap: 5, paddingVertical: 2 },
   previewTitle: { fontSize: 12, lineHeight: 18 },
   previewTrack: { height: 6 },
