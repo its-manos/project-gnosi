@@ -11,6 +11,7 @@ const jsx = (type, props) => ({ type, props });
 const native = {
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
   ActivityIndicator: "Spinner", useWindowDimensions: () => ({ width: 360, height: 740 }),
+  Platform: { OS: "ios" },
   StyleSheet: { create: value => value },
 };
 const svg = {
@@ -612,6 +613,23 @@ const first = nodes(tree).find(node => node.props?.testID === "adventure-node-an
 const second = nodes(tree).find(node => node.props?.testID === "adventure-node-anc-1");
 assert.equal(first.props.disabled, false);
 assert.equal(second.props.disabled, true);
+// On Android, all 29 locked checkpoints use ordinary native Pressables
+// instead of mounting Reanimated hooks that cannot provide press feedback.
+native.Platform.OS = "android";
+const androidAdventureTree = adventure(adventureProps);
+const androidStops = nodes(androidAdventureTree).filter(node =>
+  node.props?.testID?.startsWith("adventure-node-"));
+assert.equal(androidStops.length, 30, "Android retains all checkpoint controls");
+assert.equal(androidStops.filter(node => node.type?.name === "AndroidLockedCheckpoint").length, 29,
+  "locked Android checkpoints do not allocate Reanimated press animations");
+assert.equal(androidStops.filter(node => node.type === "Pressable").length, 1,
+  "the usable Android checkpoint keeps its animated press feedback");
+const firstLockedAndroidStop = androidStops.find(node =>
+  node.props.testID === "adventure-node-anc-1");
+assert.equal(firstLockedAndroidStop.type(firstLockedAndroidStop.props).type, "Pressable",
+  "the Android locked-stop wrapper forwards native pressable semantics");
+assert.equal(firstLockedAndroidStop.props.disabled, true);
+native.Platform.OS = "ios";
 first.props.onPress();
 assert.equal(actions.at(-1), "open:anc-0");
 tree = adventure({ ...adventureProps, completedLessonIds: ["anc-0"] });
