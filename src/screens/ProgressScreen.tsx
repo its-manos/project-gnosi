@@ -14,7 +14,6 @@ import { colors } from "../theme";
 type Props = {
   onOpenInsights: (view: LearningInsightsView) => void;
   onKnowledgeReview: () => void;
-  onWeeklyReview?: () => void;
   onOpenProfile: () => void;
   onHome: () => void;
   completedLessons: Lesson[];
@@ -30,7 +29,7 @@ type Props = {
 const RING_CIRCUMFERENCE = 2 * Math.PI * 31;
 
 export default function ProgressScreen({
-  onOpenInsights, onKnowledgeReview, onWeeklyReview, onOpenProfile, onHome,
+  onOpenInsights, onKnowledgeReview, onOpenProfile, onHome,
   completedLessons, inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   inProgressLessonCount, totalLessonCount, lessonProgressLoaded, onOpenLesson,
 }: Props) {
@@ -85,11 +84,13 @@ export default function ProgressScreen({
         <ProgressRingGlow ready={lessonProgressLoaded} progress={percent} />
         <Svg width="100%" height="100%" viewBox="0 0 80 80" pointerEvents="none">
           <Circle cx="40" cy="40" r="31" fill="none" stroke="#3C405A" strokeWidth="6" />
-          <MotionXpCircle cx="40" cy="40" r="31" fill="none"
-            stroke={colors.accent} strokeWidth={6} strokeLinecap="round"
-            transform="rotate(-90 40 40)" circumference={RING_CIRCUMFERENCE}
-            progress={lessonProgressLoaded ? percent / 100 : 0}
-            strokeDasharray={`${RING_CIRCUMFERENCE * (lessonProgressLoaded ? percent / 100 : 0)} ${RING_CIRCUMFERENCE}`} />
+          {lessonProgressLoaded && percent > 0 ? (
+            <MotionXpCircle cx="40" cy="40" r="31" fill="none"
+              stroke={colors.accent} strokeWidth={6} strokeLinecap="round"
+              transform="rotate(-90 40 40)" circumference={RING_CIRCUMFERENCE}
+              progress={percent / 100}
+              strokeDasharray={`${RING_CIRCUMFERENCE * percent / 100} ${RING_CIRCUMFERENCE}`} />
+          ) : null}
         </Svg>
         <Text style={styles.ringValue}>{lessonProgressLoaded ? percent + "%" : "—"}</Text>
       </View>
@@ -118,13 +119,15 @@ export default function ProgressScreen({
     </MotionView>
 
     <MotionView entranceDelay={140}>
-      <ReviewActions onReview={onKnowledgeReview} onWeeklyReview={onWeeklyReview}
-      onExplore={onHome} inProgressLesson={inProgressLesson}
-      inProgressAnsweredCount={inProgressAnsweredCount}
-      inProgressQuestionCount={inProgressQuestionCount}
-      inProgressLessonCount={inProgressLessonCount}
-      lessonProgressLoaded={lessonProgressLoaded} onResumeLesson={onOpenLesson}
-      dense={dense} />
+      <ReviewActions
+        onReview={onKnowledgeReview} onExplore={onHome}
+        inProgressLesson={inProgressLesson}
+        inProgressAnsweredCount={inProgressAnsweredCount}
+        inProgressQuestionCount={inProgressQuestionCount}
+        inProgressLessonCount={inProgressLessonCount}
+        lessonProgressLoaded={lessonProgressLoaded}
+        onResumeLesson={onOpenLesson} dense={dense}
+      />
     </MotionView>
 
     <View style={styles.learning} testID="progress-learning">
