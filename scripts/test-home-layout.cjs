@@ -647,12 +647,14 @@ assert.equal(completedMedal.coin.props.style[1].backgroundColor, "#254339",
   "completed medallions retain a green completion core");
 assert.equal(completedMedal.inset.props.style[1].borderColor, "#A8916B",
   "completed medallions have a restrained inner engraving");
-assert.equal(activeMedal.outer.props.style[2].borderColor, "#A99AE3",
-  "current checkpoint retains a clearly distinct lavender rim");
+assert.equal(activeMedal.outer.props.style[2].backgroundColor, "transparent",
+  "active outer wrapper no longer adds an opaque competing circular band");
+assert.equal(activeMedal.inset, undefined,
+  "active checkpoint omits the extra inner engraving ring");
 assert.equal(activeMedal.coin.props.style[2].borderColor, "#C5B7FF",
-  "current checkpoint stays visually brighter than locked markers");
+  "current checkpoint keeps one clear, brighter lavender coin rim");
 assert.ok(nodes(activeMedal.press).some(node => node.type === "AdventureActiveHalo"),
-  "only the current checkpoint has the breathing animated halo");
+  "only the current checkpoint has the single breathing outline");
 assert.equal(lockedMedal.outer.props.style[3].borderColor, "#41495C",
   "locked checkpoints use a quiet weathered outer rim");
 assert.equal(lockedMedal.inset.props.style[3].opacity, 0.32,
@@ -839,8 +841,14 @@ assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
   "lighting adds no animated layers beyond the existing ambient tide");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
-assert.match(adventureMotionSource, /backgroundColor: "rgba\(136,113,205,0\.12\)"/,
-  "current halo is a translucent light ring, not a large opaque disk");
+assert.match(adventureMotionSource, /backgroundColor: "transparent"/,
+  "halo has no colored disk behind the active coin");
+assert.match(adventureMotionSource, /width: 80, height: 80, borderRadius: 40/,
+  "the active halo is one thin, concentric outer outline");
+assert.doesNotMatch(adventureMotionSource, /transform: \[\{ scale:/,
+  "active halo does not expand or wobble around the marker");
+assert.match(adventureMotionSource, /glowOpacity\.value = 0\.65/,
+  "reduced-motion users see a stable, visible active outline");
 assert.equal((adventureMotionSource.match(/withRepeat\(/g) || []).length, 1,
   "checkpoint polish adds no additional looping animations");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
