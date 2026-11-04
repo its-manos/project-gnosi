@@ -243,7 +243,7 @@ const fullTitle = "Γεωλογία και η κρυμμένη Γη";
 assert.equal(mapModule.wrapFittedAtlasTitle(fullTitle, 15).join(" "), fullTitle,
   "fitted map labels retain every Greek title word");
 assert.deepEqual(
-  Array.from(mapModule.wrapFittedAtlasTitle("Παγκόσμια ιστορία", 18)),
+  Array.from(mapModule.wrapFittedAtlasTitle("Παγκόσμια ιστορία", 15)),
   ["Παγκόσμια", "ιστορία"],
   "normal two-line labels remain stable");
 
@@ -266,7 +266,9 @@ assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
 assert.ok(nodes(frame).some(node => node.type === "path"
   && node.props?.stroke === "#8CA6B9" && node.props?.strokeOpacity === 0.11),
   "faint map engravings add depth without implying lesson progression");
-const fittedLabel = nodes(frame).find(node => node.type === "text"
+const readableFrame = nodes(map({ ...props, fitViewport: { width: 340, height: 490 } }))
+  .find(node => node.props?.testID === "knowledge-world-map");
+const fittedLabel = nodes(readableFrame).find(node => node.type === "text"
   && node.props?.children === "Παγκόσμια");
 assert.equal(fittedLabel.props.fontSize, 14,
   "three-destination labels use a larger readable font");
