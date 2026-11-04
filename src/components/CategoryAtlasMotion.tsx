@@ -3,9 +3,10 @@
  * The normal (non-fitted) FantasyMap is intentionally unaffected.
  */
 import { useEffect } from "react";
+import { StyleSheet, View, type DimensionValue } from "react-native";
 import { Circle, Path, Rect } from "react-native-svg";
 import Animated, {
-  Easing, cancelAnimation, useAnimatedProps, useReducedMotion,
+  Easing, cancelAnimation, useAnimatedProps, useAnimatedStyle, useReducedMotion,
   useSharedValue, withDelay, withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 
@@ -82,3 +83,83 @@ export function AtlasDestinationFeedback({ d, active }: {
     opacity={reduced && active ? 0.42 : 0}
     animatedProps={reduced ? undefined : animatedProps} />;
 }
+
+
+/** Category shortcut progress follows the real percentage without changing
+ * the card's dimensions or forcing any map re-layout. */
+export function AtlasProgressFill({ percent }: { percent: number }) {
+  const reduced = useReducedMotion();
+  const value = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: (value.value + "%") as DimensionValue,
+  }));
+  useEffect(() => {
+    cancelAnimation(value);
+    const target = Math.max(0, Math.min(100, percent));
+    value.value = reduced ? target
+      : withTiming(target, { duration: 550, easing: Easing.out(Easing.cubic) });
+    return () => cancelAnimation(value);
+  }, [percent, reduced, value]);
+  return <Animated.View testID="atlas-continue-progress-fill"
+    style={[styles.progressFill, animatedStyle]} pointerEvents="none">
+    <View style={styles.progressSheen} />
+  </Animated.View>;
+}
+
+/** A one-time restrained card perimeter glint, not a looping pulse. */
+export function AtlasContinueAccent() {
+  const reduced = useReducedMotion();
+  const glow = useSharedValue(0.16);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
+  useEffect(() => {
+    cancelAnimation(glow);
+    glow.value = 0.16;
+    if (reduced) return;
+    glow.value = withDelay(360, withSequence(
+      withTiming(0.48, { duration: 390, easing: Easing.out(Easing.cubic) }),
+      withTiming(0.16, { duration: 820, easing: Easing.out(Easing.cubic) }),
+    ));
+    return () => cancelAnimation(glow);
+  }, [reduced, glow]);
+  return <Animated.View testID="atlas-continue-accent"
+    pointerEvents="none" accessible={false}
+    style={[styles.continueAccent, animatedStyle]} />;
+}
+
+/** Small diagonal arrow cue once on entry, with no permanent movement. */
+export function AtlasContinueArrow() {
+  const reduced = useReducedMotion();
+  const lift = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: lift.value }, { translateY: -lift.value * 0.55 }],
+  }));
+  useEffect(() => {
+    cancelAnimation(lift);
+    lift.value = 0;
+    if (reduced) return;
+    lift.value = withDelay(680, withSequence(
+      withTiming(3, { duration: 230, easing: Easing.out(Easing.cubic) }),
+      withTiming(0, { duration: 340, easing: Easing.out(Easing.cubic) }),
+    ));
+    return () => cancelAnimation(lift);
+  }, [reduced, lift]);
+  return <Animated.Text testID="atlas-continue-arrow"
+    style={[styles.continueArrow, animatedStyle]}>↗</Animated.Text>;
+}
+
+const styles = StyleSheet.create({
+  progressFill: {
+    height: "100%", borderRadius: 5, backgroundColor: "#B1A5FF",
+  },
+  progressSheen: {
+    position: "absolute", top: 0, left: 0, right: 0, height: 2,
+    backgroundColor: "#EEE6FF", opacity: 0.35,
+  },
+  continueAccent: {
+    ...StyleSheet.absoluteFill, borderRadius: 18, borderWidth: 1,
+    borderColor: "#CABDF7",
+  },
+  continueArrow: {
+    color: "#171B2A", fontSize: 22, lineHeight: 28, fontWeight: "900",
+  },
+});
