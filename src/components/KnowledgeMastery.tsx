@@ -5,6 +5,8 @@ import { useLearningSnapshot } from "../state/LearningSession";
 import { MASTERY_LABELS } from "../knowledge/model";
 import { categories as learningCategories } from "../data/lessons";
 import ActionButton from "./ActionButton";
+import { MotionPressable } from "./HomeMotion";
+import { ProgressBarFill } from "./ProgressMotion";
 import { colors } from "../theme";
 
 export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false, singleColumn = false, threeColumn = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean }) {
@@ -13,6 +15,7 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
   const [allSubjects, setAllSubjects] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [allDetailSubjects, setAllDetailSubjects] = useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const active = learning.knowledgeSession && !learning.knowledgeSession.completed && learning.knowledgeSession.date === today;
   const previewCollapsed = preview && mapOnly && !allSubjects;
   // Prioritize visible progress and keep catalogue order when categories tie.
@@ -24,6 +27,9 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
         .map(item => item.category)
     : [];
   const focusedSubjects = allDetailSubjects ? rankedSubjects : rankedSubjects.slice(0, 4);
+  const selectedSubject = focusedSubjects.find(category => category.id === selectedSubjectId);
+  const remainingConcepts = selectedSubject
+    ? Math.max(0, selectedSubject.total - selectedSubject.mastered) : 0;
   if (compact && (!ready || (!model.due.length && !active))) return null;
   return <View style={[styles.card, preview && mapOnly && styles.previewCard, detail && styles.detailCard]} testID="knowledge-mastery">
     <Text style={[styles.label, detail && styles.detailLabel]}>{detail ? "ΟΙ ΘΕΜΑΤΙΚΕΣ ΣΟΥ" : "Ο ΧΑΡΤΗΣ ΤΗΣ ΓΝΩΣΗΣ ΣΟΥ"}</Text>
@@ -39,22 +45,34 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
         <View style={[styles.detailGrid, singleColumn && styles.detailGridSingle]} testID="knowledge-tile-grid">
           {focusedSubjects.map(category => {
             const emoji = learningCategories.find(item => item.id === category.id)?.emoji ?? "✦";
-            return <View key={category.id} style={[styles.detailTile, singleColumn && styles.detailTileSingle,
-              threeColumn && !singleColumn && styles.detailTileWide]}
-              accessible accessibilityRole="progressbar"
-              accessibilityLabel={`Γνώσεις: ${category.title}`}
-              accessibilityValue={{ min: 0, max: 100, now: category.percent,
-                text: `${category.mastered} από ${category.total} έννοιες` }}>
+            const selected = selectedSubjectId === category.id;
+            const complete = category.total > 0 && category.mastered === category.total;
+            const progressing = category.percent > 0;
+            return <MotionPressable key={category.id} testID={`knowledge-subject-${category.id}`}
+              pressScale={0.985} onPress={() => setSelectedSubjectId(id => id === category.id ? null : category.id)}
+              style={[styles.detailTile, singleColumn && styles.detailTileSingle,
+                threeColumn && !singleColumn && styles.detailTileWide,
+                progressing && styles.detailTileProgressing,
+                complete && styles.detailTileComplete,
+                selected && styles.detailTileSelected]}
+              accessibilityRole="button"
+              accessibilityState={{ selected, expanded: selected }}
+              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`}
+              accessibilityHint="Άνοιγμα σύντομης ανάλυσης της θεματικής">
               <View style={styles.tileTop}>
                 <Text style={styles.tileEmoji}>{emoji}</Text>
-                {category.mastered > 0 ? <Text style={styles.tilePercent}>{category.percent}%</Text> : null}
+                {complete
+                  ? <Text style={styles.tileCompleted}>✓</Text>
+                  : progressing ? <Text style={styles.tilePercent}>{category.percent}%</Text> : null}
               </View>
               <Text style={styles.tileTitle} numberOfLines={2}>{category.title}</Text>
-              <Text style={styles.tileCount}>{category.mastered} / {category.total}</Text>
-              <View style={styles.tileTrack}>
-                <View style={[styles.tileFill, { width: `${category.percent}%` }]} />
+              <Text style={[styles.tileCount, complete && styles.tileCountComplete]}>
+                {category.mastered} / {category.total}
+              </Text>
+              <View style={styles.tileTrack} pointerEvents="none">
+                <ProgressBarFill tone="knowledge" percent={category.percent} />
               </View>
-            </View>;
+            </MotionPressable>;
           })}
         </View>
       ) : (
@@ -64,6 +82,27 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
         {!previewCollapsed ? <Text style={styles.body}>{category.mastered} / {category.total} έννοιες κατακτημένες</Text> : null}
       </View>)
       )}
+      {detail && selectedSubject ? (
+        <View testID="knowledge-selected-subject" style={styles.subjectInsight}
+          accessibilityLiveRegion="polite">
+          <View style={styles.subjectInsightHeading}>
+            <Text style={styles.subjectInsightTitle} numberOfLines={2}>{selectedSubject.title}</Text>
+            <Text style={styles.subjectInsightValue}>{selectedSubject.mastered} / {selectedSubject.total}</Text>
+          </View>
+          <Text style={styles.subjectInsightCaption}>
+            {selectedSubject.total === 0
+              ? "Δεν υπάρχουν ακόμη καταγεγραμμένες έννοιες εδώ."
+              : remainingConcepts === 0
+                ? "Όλες οι έννοιες αυτής της θεματικής κατακτημένες."
+                : selectedSubject.mastered === 0
+                  ? "Επόμενος στόχος: η πρώτη κατακτημένη έννοια."
+                  : `Απομένουν ${remainingConcepts} έννοιες για πλήρη κατάκτηση.`}
+          </Text>
+          <Text style={styles.subjectInsightNote}>
+            Πρόοδος επαναλήψεων: {selectedSubject.percent}%
+          </Text>
+        </View>
+      ) : null}
       {detail && rankedSubjects.length > 4 ? (
         <Pressable testID="knowledge-all-subjects" accessibilityRole="button"
           accessibilityState={{ expanded: allDetailSubjects }}
@@ -96,15 +135,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#24273F", borderWidth: 1, borderColor: "#3E3C61",
     gap: 3,
   },
+  detailTileProgressing: { borderColor: "#5F568C", backgroundColor: "#282840" },
+  detailTileComplete: { borderColor: "#7D79A7", backgroundColor: "#302D49" },
+  detailTileSelected: { borderColor: "#C2B5FF", backgroundColor: "#302C4B" },
   detailTileSingle: { width: "100%", minHeight: 112 },
   detailTileWide: { width: "31%" },
   tileTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   tileEmoji: { fontSize: 19, lineHeight: 26 },
   tilePercent: { color: "#B3A5FB", fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  tileCompleted: { color: "#D8D0FF", fontSize: 19, lineHeight: 25, fontWeight: "900" },
   tileTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800", minHeight: 19 },
   tileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
+  tileCountComplete: { color: "#D1C6FF" },
   tileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#383B58", overflow: "hidden" },
   tileFill: { height: "100%", backgroundColor: "#A99BFF", borderRadius: 5 },
+  subjectInsight: {
+    backgroundColor: "#27273F", borderWidth: 1, borderColor: "#514976",
+    borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
+  },
+  subjectInsightHeading: { flexDirection: "row", alignItems: "center", gap: 8, justifyContent: "space-between" },
+  subjectInsightTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: "800" },
+  subjectInsightValue: { color: "#C4B8FF", fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
+  subjectInsightCaption: { color: colors.textBody, fontSize: 12, lineHeight: 18 },
+  subjectInsightNote: { color: "#ADA3DD", fontSize: 11, lineHeight: 16 },
   showAll: {
     minHeight: 46, borderRadius: 13, paddingHorizontal: 12,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
