@@ -13,6 +13,8 @@ on:
       - "src/components/IslandAtlasMap.tsx"
       - "src/components/CategoryWorldAtlasBackground.tsx"
       - "assets/atlas-source/category-world.svg"
+      - "assets/atlas-source/natural-earth-110m-land.geojson"
+      - "scripts/generate-category-world-svg.mjs"
       - "assets/atlas-export-preview/category-world.webp"
       - "scripts/export-category-world-webp.cjs"
       - "src/components/worldIcons/**"
@@ -42,6 +44,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm run atlas:world:svg:check
       - run: npm run atlas:world:check
       - run: npm run typecheck
       - run: node scripts/test-home-layout.cjs
