@@ -150,7 +150,6 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         testID="daily-choice-card"
         testPrefix="daily-choice"
       />
-    </View></QuizReveal>:null}
     </View></QuizReveal>
     :<View style={styles.centerState}><Text style={styles.errorText}>{questionsCompatible?'Δεν ήταν δυνατή η φόρτωση της πρόκλησης.':'Οι ερωτήσεις ενημερώθηκαν από τότε που ξεκίνησες. Οι απαντήσεις σου διατηρήθηκαν· αυτή η έκδοση δεν μπορεί να συνεχίσει με διαφορετικές ερωτήσεις.'}</Text><ActionButton label="Επιστροφή στην αρχική" onPress={onHome}/></View>}
     </ScrollView>
