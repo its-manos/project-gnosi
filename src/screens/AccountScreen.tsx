@@ -30,6 +30,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
     {activeSection === null ? <View testID="account-settings-dashboard">
       <MotionView entranceDelay={0} style={styles.heading}>
         <View style={styles.headingTop}><Text style={styles.headingSymbol}>✦</Text><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text></View>
+        <View pointerEvents="none" style={styles.heroAccent} />
         <Text style={styles.title}>Οι επιλογές σου</Text>
         <Text style={styles.subtitle}>Προσάρμοσε τη Γνώση στα μέτρα σου.</Text>
       </MotionView>
@@ -72,6 +73,7 @@ const styles = StyleSheet.create({
   backText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
   overviewContent: { flexGrow: 1 },
   heading: { gap: 7, marginBottom: 14, borderRadius: 22, borderWidth: 1, borderColor: "#555078", backgroundColor: "#20243C", padding: 18, overflow: "hidden" },
+  heroAccent: { position: "absolute", top: 0, left: 20, width: 86, height: 3, backgroundColor: "#B2A3FF", borderRadius: 3 },
   headingTop: { flexDirection: "row", alignItems: "center", gap: 9 },
   eyebrow: { color: colors.accentLight, fontSize: 10, fontWeight: "800", letterSpacing: 1.7 },
   title: { color: colors.text, fontSize: 27, lineHeight: 34, fontWeight: "900" },
