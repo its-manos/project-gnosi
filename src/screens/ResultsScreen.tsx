@@ -130,7 +130,6 @@ export default function ResultsScreen({
           <View style={styles.nextCopy}>
             <Text style={styles.eyebrow}>{practiceFirst ? "ΣΥΝΕΧΙΣΕ ΟΤΑΝ ΕΙΣΑΙ ΕΤΟΙΜΟΣ" : "Η ΕΠΟΜΕΝΗ ΑΝΑΚΑΛΥΨΗ"}</Text>
             <Text style={styles.nextTitle}>{nextLesson.title}</Text>
-            <Text style={styles.nextHint}>Επόμενο μάθημα</Text>
           </View>
           <View style={styles.nextArrow} accessible={false}>
             <Text style={styles.nextArrowText}>›</Text>
@@ -154,7 +153,7 @@ export default function ResultsScreen({
             accessibilityValue={{ min: 0, max: pathProgress.total, now: pathProgress.completed }}>
             <View style={[styles.pathFill, { width: String(pathPercent) + "%" }]} />
           </ProgressTrack>
-          <Text style={styles.pathNote}>{pathComplete ? "Ολοκλήρωσες αυτή τη διαδρομή!" : "Η διαδρομή συνεχίζεται."}</Text>
+          {pathComplete ? <Text style={styles.pathNote}>Ολοκλήρωσες αυτή τη διαδρομή!</Text> : null}
         </View> : null}
 
       <Pressable testID="lesson-result-details" accessibilityRole="button"
@@ -194,7 +193,7 @@ const styles = StyleSheet.create({
   chrome: { paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top },
   header: { marginBottom: profileSectionLayout.below },
   viewport: { flex: 1 },
-  content: { width: "100%", maxWidth: 640, alignSelf: "center", paddingHorizontal: 18, paddingTop: 8, paddingBottom: 38, gap: 12 },
+  content: { width: "100%", maxWidth: 640, alignSelf: "center", paddingHorizontal: 18, paddingTop: 6, paddingBottom: 28, gap: 10 },
   hero: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 94, paddingVertical: 4 },
   heroCopy: { flex: 1, minWidth: 0, gap: 5 },
   eyebrow: { color: "#BFB3ED", fontSize: 10, lineHeight: 16, fontWeight: "900", letterSpacing: 0.9 },
@@ -224,17 +223,16 @@ const styles = StyleSheet.create({
   successPill: { backgroundColor: "#19382F", borderWidth: 1, borderColor: "#3E7866", borderRadius: 13, padding: 10 },
   successText: { color: "#A6DFCA", fontSize: 12, lineHeight: 19, fontWeight: "700" },
   primaryAction: { marginTop: 2 },
-  nextCard: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 82, borderRadius: 18,
-    padding: 14, borderWidth: 1, borderColor: "#41445E", backgroundColor: "#1B2133" },
+  nextCard: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 72, borderRadius: 17,
+    paddingHorizontal: 14, paddingVertical: 11, borderWidth: 1, borderColor: "#41445E", backgroundColor: "#1B2133" },
   nextCardPrimary: { borderColor: "#7871A7", backgroundColor: "#25263D" },
   nextPressed: { backgroundColor: "#31324D" },
   nextCopy: { flex: 1, minWidth: 0, gap: 4 },
   nextTitle: { color: colors.text, fontSize: 15, lineHeight: 22, fontWeight: "800" },
-  nextHint: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
   nextArrow: { width: 34, height: 34, borderRadius: 11, backgroundColor: "#373254",
     borderWidth: 1, borderColor: "#71679C", alignItems: "center", justifyContent: "center" },
   nextArrowText: { color: "#E0D4FF", fontSize: 26, lineHeight: 29, fontWeight: "800" },
-  pathCard: { gap: 10, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: "#3C4359", backgroundColor: "#192130" },
+  pathCard: { gap: 8, borderRadius: 16, paddingHorizontal: 13, paddingVertical: 11, borderWidth: 1, borderColor: "#3C4359", backgroundColor: "#192130" },
   pathHeading: { flexDirection: "row", alignItems: "center", gap: 10 },
   pathCopy: { flex: 1, minWidth: 0, gap: 4 },
   pathTitle: { color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: "800" },
