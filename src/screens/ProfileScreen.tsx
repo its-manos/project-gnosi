@@ -10,6 +10,7 @@ import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { playerTitle } from "../gamification/rules";
 import { MotionView, MotionXpCircle } from "../components/HomeMotion";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AtlasCard from "../components/AtlasCard";
 import SyncStatus from "../components/SyncStatus";
 import XpRules from "../components/XpRules";
 import { colors } from "../theme";
@@ -131,7 +132,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
         </Pressable>
       </MotionView>
 
-      <MotionView entranceDelay={65} style={[styles.hero, dense && styles.heroDense]}
+      <AtlasCard entranceDelay={65} style={[styles.hero, dense && styles.heroDense]}
         testID="profile-identity">
         <View pointerEvents="none" style={styles.heroAccent} />
         <View style={[styles.avatar, dense && styles.avatarDense]} accessible={false}>
@@ -178,7 +179,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
             <Text style={styles.levelValue}>{profileReady ? profile.level : "—"}</Text>
           </View>
         </View>
-      </MotionView>
+      </AtlasCard>
       {xpExpanded ? <View style={styles.xpPanel} testID="profile-xp-rules">
         <XpRules learningXP={profile.learningXP} challengeXP={profile.challengeXP}
           recallXP={profile.recallXP} explorationXP={profile.explorationXP} />
@@ -252,8 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
   settingsText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
   hero: { minHeight: 154, flexDirection: "row", alignItems: "center", gap: 10,
-    paddingHorizontal: 12, paddingVertical: 15, borderRadius: 22, overflow: "hidden",
-    backgroundColor: "#20243C", borderColor: "#555078", borderWidth: 1 },
+    paddingHorizontal: 12, paddingVertical: 15 },
   heroDense: { minHeight: 124, paddingVertical: 10, gap: 9 },
   heroAccent: { position: "absolute", left: 22, top: -1, width: 88, height: 3,
     backgroundColor: "#B2A3FF", borderRadius: 3 },
