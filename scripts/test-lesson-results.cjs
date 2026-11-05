@@ -26,7 +26,7 @@ const [lesson,next,locked]=getSubcategoryPath(lessons,'ancient-greece').slice(3,
 assert.deepEqual([lesson.id,next.id,locked.id],['greek-chronology','greek-geography-seas','aegean-bronze-age']);
 assert.equal(lesson.questions.length,4,'results fixture requires an actual four-question lesson');
 const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
-const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(' '):t&&typeof t==='object'?text(t.props?.children):'';
+const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
 const named=(tree,id)=>nodes(tree).find(n=>n.props?.testID===id);
 const virtualCards=tree=>{const list=nodes(tree).find(n=>n.type==='FlatList');assert.ok(list,'expected a virtualized lesson list');return list.props.data.flatMap((item,index)=>nodes(list.props.renderItem({item,index})).filter(n=>n.type==='LessonCard'));};
 const render=props=>Screen(props);
