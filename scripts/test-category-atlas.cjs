@@ -719,6 +719,18 @@ const nameplates = nodes(islandsTree).filter(node =>
 assert.equal(nameplates.length, 3, "every destination has its own readable label backdrop");
 assert.ok(nameplates.every(node => node.props.pointerEvents === "none"),
   "text backing never intercepts an island press");
+assert.ok(nameplates.every(node => node.props.style[0].alignSelf === "center"
+  && node.props.style[0].width === undefined),
+  "visible nameplates shrink-wrap the label rather than filling their island slot");
+const placementWidths = islandsModule.getIslandAtlasPlacements(3, 340, 490);
+assert.ok(nameplates.every((node, index) => node.props.style[1].maxWidth === placementWidths[index].width),
+  "long Greek titles remain capped by their individual map slots");
+const islandLabels = nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-label-"));
+assert.ok(islandLabels.every(node =>
+  node.props.style[0].width === undefined && node.props.style[0].flexShrink === 1
+  && node.props.numberOfLines === 2),
+  "label text sizes naturally but still wraps to two lines when required");
 const startedPlate = nameplates.find(node => node.props.testID === "island-atlas-nameplate-ancient");
 assert.ok(startedPlate.props.style.some(style =>
   style && style.borderColor === "rgba(190, 173, 246, 0.52)"),
@@ -816,6 +828,7 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "react-native": native,
   "../components/IslandAtlasMap": { __esModule: true, default: "IslandAtlasMap" },
   "../components/CategoryWorldAtlasBackground": { __esModule: true, default: "CategoryWorldAtlasBackground" },
+  "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: "HistoryWorldIcon" },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
     MotionView: "MotionView", MotionPressable: "MotionPressable", MotionIcon: "MotionIcon",
@@ -847,6 +860,16 @@ assert.equal(nodes(screenTree).filter(node => node.type === "CategoryWorldAtlasB
 const screenRoot = nodes(screenTree).find(node => node.props?.testID === "category-atlas-screen");
 assert.equal(screenRoot.props.onLayout, undefined,
   "only the interactive island viewport needs to be measured");
+const historyHeaderArt = nodes(screenTree).filter(node => node.type === "HistoryWorldIcon");
+assert.equal(historyHeaderArt.length, 1,
+  "the Category History header reuses the Home pyramid illustration");
+assert.equal(historyHeaderArt[0].props.size, 32,
+  "the illustration fits the existing fixed header emblem slot");
+const otherCategoryTree = render({ category: { id: "science", title: "Επιστήμη" } });
+assert.equal(nodes(otherCategoryTree).filter(node => node.type === "HistoryWorldIcon").length, 0,
+  "other worlds do not incorrectly receive the History pyramid");
+assert.ok(nodes(otherCategoryTree).some(node => node.props?.children === "✦"),
+  "other category headers keep their existing neutral emblem");
 const mapViewport = nodes(screenTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 mapViewport.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
