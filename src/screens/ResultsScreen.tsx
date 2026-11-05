@@ -187,11 +187,10 @@ export default function ResultsScreen({
           <Text style={styles.toolText}>Δοκιμές γνώσης</Text>
         </Pressable> : null}
       </View>
-      {allowScroll ? <View style={styles.report}><ReportContentButton target={lessonReportTarget(lesson)} /></View> : null}
+      <View style={styles.report}><ReportContentButton target={lessonReportTarget(lesson)} /></View>
     </ScrollView>
 
     <View style={[styles.footer, compact && styles.footerCompact]} testID="lesson-results-sticky-footer">
-      {!allowScroll ? <View style={styles.footerReport}><ReportContentButton target={lessonReportTarget(lesson)} /></View> : null}
       <Pressable testID={nextLesson ? "lesson-next-action" : "lesson-browse-action"}
         accessibilityRole="button" accessibilityLabel={nextLesson
           ? "Συνέχισε στο επόμενο μάθημα: " + nextLesson.title
@@ -291,7 +290,6 @@ const styles = StyleSheet.create({
   footer: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 10,
     backgroundColor: "#111626", borderTopWidth: 1, borderTopColor: "#34314B" },
   footerCompact: { paddingTop: 5, paddingBottom: 5 },
-  footerReport: { position: "absolute", right: 18, top: -25 },
   continueActionCompact: { minHeight: 58, paddingVertical: 6 },
   continueAction: { minHeight: 67, borderRadius: 17, paddingHorizontal: 13, paddingVertical: 10,
     flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#AD9DFF",
