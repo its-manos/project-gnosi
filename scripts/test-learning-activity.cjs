@@ -102,6 +102,7 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
   const component=load('src/components/LearningActivityPanel.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{View:'View',Text:'Text',Pressable:'Pressable',StyleSheet:{create:x=>x}},'../state/LearningSession':{useLearningSnapshot:()=>reopened.getSnapshot(),useLearningDataSnapshot:()=>reopened.getSnapshot(),useDailySnapshot:()=>({doc:{days:{}}}),useDailyDataSnapshot:()=>({doc:{days:{}}})},
     './HomeMotion':{MotionPressable:'MotionPressable',MotionView:'MotionView'},
     './MetricCard':{__esModule:true,default:'MetricCard'},
+    './SubjectProgressTile':{__esModule:true,default:'SubjectProgressTile'},
     './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}});
   const nodes=tree=>tree&&typeof tree==='object'?[tree,...[tree.props?.children].flat(Infinity).flatMap(nodes)]:[];
   const render=()=>{cursor=0;return component.default({todayKey:'2026-10-30'});};
