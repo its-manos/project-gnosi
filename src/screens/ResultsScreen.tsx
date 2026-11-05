@@ -28,7 +28,7 @@ type Props = {
 export default function ResultsScreen({
   earnedXP = 0, highestCombo = 0, lesson, score, onHome, onReadAgain,
   onOpenLesson, onBrowse, nextLesson, pathProgress, review, returning = false,
-  practiceComplete = false, onReviewMistakes, lessonScores, onWeeklyReview,
+  practiceComplete = false, onReviewMistakes, lessonScores,
 }: Props) {
   const { height, fontScale } = useWindowDimensions();
   const compact = height < 950 || fontScale >= 1.18;
@@ -181,11 +181,6 @@ export default function ResultsScreen({
           style={({ pressed }) => [styles.tool, pressed && styles.toolPressed]}>
           <Text style={styles.toolText}>Ξαναδιάβασε</Text>
         </Pressable>
-        {onWeeklyReview ? <Pressable testID="lesson-review-action" accessibilityRole="button"
-          accessibilityLabel="Νέες δοκιμές κατανόησης" onPress={onWeeklyReview}
-          style={({ pressed }) => [styles.tool, pressed && styles.toolPressed]}>
-          <Text style={styles.toolText}>Δοκιμές γνώσης</Text>
-        </Pressable> : null}
       </View>
     </ScrollView>
 
