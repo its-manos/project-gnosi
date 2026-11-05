@@ -182,9 +182,6 @@ export default function ResultsScreen({
           <Text style={styles.toolText}>Ξαναδιάβασε</Text>
         </Pressable>
       </View>
-    </ScrollView>
-
-    <View style={[styles.footer, compact && styles.footerCompact]} testID="lesson-results-sticky-footer">
       <AtlasContinueCard entranceDelay={70}
         testID={nextLesson ? "lesson-next-action" : "lesson-browse-action"}
         accessibilityRole="button" accessibilityLabel={nextLesson
@@ -201,7 +198,9 @@ export default function ResultsScreen({
           </View>
         </View>
       </AtlasContinueCard>
-    </View>
+    </ScrollView>
+
+
   </View>;
 }
 
@@ -283,8 +282,5 @@ const styles = StyleSheet.create({
   toolPressed: { backgroundColor: "#353150" },
   toolText: { color: "#D3C6FF", fontSize: 12, lineHeight: 19, fontWeight: "800" },
   atlasContinue: { width: "100%", maxWidth: 640, alignSelf: "center" },
-  footer: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 10,
-    backgroundColor: "transparent" },
-  footerCompact: { paddingTop: 5, paddingBottom: 5 },
   continueGlyph: { color: "#FFFFFF", fontSize: 22, lineHeight: 29, fontWeight: "900", marginLeft: 2 },
 });
