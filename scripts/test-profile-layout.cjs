@@ -1,9 +1,18 @@
 const assert = require("node:assert/strict"), { load } = require("./helpers/load-typescript.cjs");
 const jsx = (type, props) => ({ type, props });
-const nodes = tree => tree && typeof tree === "object" ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
+// Resolve only the new pure category tile in the headless JSX renderer.
+let subjectTileComponent;
+const resolveTile = tree => tree && typeof tree === "object"
+  && typeof subjectTileComponent === "function" && tree.type === subjectTileComponent
+  ? tree.type(tree.props) : tree;
+const nodes = tree => {
+  const node = resolveTile(tree);
+  return node && typeof node === "object"
+    ? [node, ...[node.props?.children].flat(Infinity).flatMap(nodes)] : [];
+};
 const text = tree => typeof tree === "string" || typeof tree === "number"
   ? String(tree) : Array.isArray(tree) ? tree.map(text).join("")
-  : tree && typeof tree === "object" ? text(tree.props?.children) : "";
+  : tree && typeof tree === "object" ? text(resolveTile(tree).props?.children) : "";
 
 let slots = [], cursor = 0;
 const react = {
@@ -66,6 +75,8 @@ const common = {
   "../components/SyncStatus": { __esModule: true, default: "Sync" },
   "../components/ProgressGradientBackground": { __esModule: true, default: "Gradient" },
   "../components/AtlasCard": { __esModule: true, default: "MotionView" },
+  "../components/NavigationTile": { __esModule: true, default: "NavigationTile" },
+  "../components/MetricCard": { __esModule: true, default: "MetricCard" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
   "../components/HomeMotion": { MotionView: "MotionView", MotionXpCircle: "MotionXpCircle", MotionPressable: "MotionPressable" },
 };
@@ -90,7 +101,7 @@ const pressProfile = label => {
   const item = nodes(tree).find(n => typeof n.type === "function" && n.type.name === "QuickLink" && n.props?.title === label);
   assert.ok(item, "Profile shortcut should exist: " + label);
   const button = item.type(item.props);
-  assert.equal(button.type, "Pressable", "Shortcut should render a pressable control");
+  assert.equal(button.type, "NavigationTile", "Shortcut should render the shared navigation tile");
   button.props.onPress();
 };
 for (const label of ["Δραστηριότητα", "Λογαριασμός", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
@@ -153,9 +164,15 @@ learning={...learning,knowledgeSession:null};model={...model,due:[]};pending=[{i
 ready=false;tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0);ready=true;
 // The default learning map limits subjects without removing access to any subject or help.
 model={...model,categories:Array.from({length:8},(_,i)=>({id:String(i),title:'Θεματική '+i,percent:i,mastered:0,total:10}))};slots=[];cursor=0;
+subjectTileComponent=load('src/components/SubjectProgressTile.tsx',{
+  ...common,
+  './HomeMotion':{MotionPressable:'MotionPressable'},
+  './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
+}).default;
 const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,
   './ActionButton':{__esModule:true,default:'Action'},
   './HomeMotion':{MotionPressable:'MotionPressable'},
+  './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}}).default;
 const renderMap=()=>{cursor=0;return Map({onOpen(){},mapOnly:true});};tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0,'no duplicate review CTA');assert.ok(!text(tree).includes('τρεις σωστές'));
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).props.onPress();tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8);
@@ -189,6 +206,21 @@ assert.ok(nodes(tileGrid).every(n=>n.type!=='MotionPressable'||n.props.accessibi
   'each interactive tile has an accessible button role');
 const firstKnowledgeTile=nodes(tileGrid).find(n=>n.type==='MotionPressable');
 const firstKnowledgeId=firstKnowledgeTile.props.testID;
+// Knowledge tiles have an explicit icon medallion, readable mastery footer,
+// and a restrained 7pt track without fake 0% values on an untouched account.
+assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='ΚΑΤΑΚΤΗΣΗ'),
+  'each subject exposes a clear mastery progress caption');
+assert.ok(text(firstKnowledgeTile).includes('7%'),
+  'active subjects display their actual mastery percentage in the top badge');
+const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'
+  && typeof n.props.children==='string' && n.props.children.startsWith('Θεματική '));
+assert.ok(firstTitle?.props.adjustsFontSizeToFit&&firstTitle?.props.minimumFontScale<=0.9,
+  'long Greek subject labels adapt within a two-column tile');
+const subjectTileSource=require('node:fs').readFileSync('src/components/SubjectProgressTile.tsx','utf8');
+assert.match(subjectTileSource,/track: \{[\s\S]*?height: 7,/,
+  'shared mastery and reading bars have visible tracks');
+assert.match(subjectTileSource,/single: \{ width: "100%"/,
+  'small screens retain the accessible single-column fallback');
 assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);
 firstKnowledgeTile.props.onPress();tree=renderKnowledgeTiles();
 assert.equal(nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.accessibilityState.selected,true);
@@ -198,6 +230,14 @@ nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.onPress();tree=rend
 assert.ok(!nodes(tree).some(n=>n.props.testID==='knowledge-selected-subject'),
   'tapping a selected tile collapses its short insight');
 assert.ok(!text(tileGrid).includes('0%'), 'zero subjects do not repeat 0% labels');
+// The empty-account layout uses a quiet chevron instead of four redundant 0% badges.
+const rankedFixture=model.categories;
+model={...model,categories:rankedFixture.map(category=>({...category,percent:0}))};
+const zeroTiles=nodes(nodes(renderKnowledgeTiles()).find(n=>n.props.testID==='knowledge-tile-grid'))
+  .filter(n=>n.type==='MotionPressable');
+assert.equal(zeroTiles.length,4);
+assert.ok(zeroTiles.every(tile=>nodes(tile).some(n=>n.type==='Text'&&n.props.children==='›')));
+model={...model,categories:rankedFixture};
 const showAll=nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects');
 assert.ok(showAll,'all subjects remain reachable');
 assert.equal(showAll.props.accessibilityState.expanded,false);
@@ -247,6 +287,8 @@ const Reading=load('src/components/LearningActivityPanel.tsx',{
   '../utils/learningActivity':{activityBuckets:()=>[],activitySummary:()=>({})},
   '../utils/dailyChallenge':{getAthensDateKey:()=> '2026-10-30'},
   './HomeMotion':{MotionPressable:'MotionPressable'},
+  './MetricCard':{__esModule:true,default:'MetricCard'},
+  './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
 }).CategoryProgress;
 slots=[];cursor=0;

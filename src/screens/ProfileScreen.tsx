@@ -11,6 +11,8 @@ import { playerTitle } from "../gamification/rules";
 import { MotionView, MotionXpCircle } from "../components/HomeMotion";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import AtlasCard from "../components/AtlasCard";
+import NavigationTile from "../components/NavigationTile";
+import MetricCard from "../components/MetricCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import SyncStatus from "../components/SyncStatus";
 import XpRules from "../components/XpRules";
@@ -66,16 +68,9 @@ function QuickIcon({ name }: { name: QuickIconName }) {
 function QuickLink({ title, subtitle, icon, onPress }: {
   title: string; subtitle: string; icon: QuickIconName; onPress: () => void;
 }) {
-  return <Pressable testID={title === "Δραστηριότητα" ? "profile-activity-link" : undefined}
-    style={({ pressed }) => [styles.quickLink, pressed && styles.quickLinkPressed]}
-    accessibilityRole="button" accessibilityLabel={title + ". " + subtitle} onPress={onPress}>
-    <View style={styles.quickIcon} accessible={false}><QuickIcon name={icon} /></View>
-    <View style={styles.quickCopy}>
-      <Text style={styles.quickTitle} numberOfLines={1} adjustsFontSizeToFit>{title}</Text>
-      <Text style={styles.quickSubtitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>{subtitle}</Text>
-    </View>
-    <Text style={styles.quickArrow} accessible={false}>›</Text>
-  </Pressable>;
+  return <NavigationTile title={title} subtitle={subtitle} icon={<QuickIcon name={icon} />}
+    testID={title === "Δραστηριότητα" ? "profile-activity-link" : undefined}
+    onPress={onPress} />;
 }
 
 export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide }: Props) {
@@ -181,18 +176,18 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       </View> : null}
 
       <MotionView entranceDelay={115} style={styles.metrics} testID="profile-summary">
-        <View style={[styles.metric, dense && styles.metricDense]}>
+        <MetricCard variant="profile" style={dense && styles.metricDense}>
           <View style={styles.metricLabelRow}><StreakFlame /><Text style={styles.metricEyebrow}>ΣΕΡΙ QUIZ</Text></View>
           <Text style={styles.metricValue}>{daily.ready ? quizStats.currentStreak : "—"}
             <Text style={styles.metricUnit}> ημέρες</Text>
           </Text>
-        </View>
-        <View style={[styles.metric, styles.badgeMetric, dense && styles.metricDense]}>
+        </MetricCard>
+        <MetricCard variant="profile" style={[styles.badgeMetric, dense && styles.metricDense]}>
           <Text style={[styles.metricEyebrow, styles.gold]}>✦  ΔΙΑΚΡΙΣΕΙΣ</Text>
           <Text style={styles.metricValue}>{earnedBadgeCount ?? "—"}
             <Text style={styles.metricUnit}> / {profile.badges.length}</Text>
           </Text>
-        </View>
+        </MetricCard>
       </MotionView>
 
       <MotionView entranceDelay={160} style={styles.achievements} testID="profile-achievements">
@@ -266,9 +261,6 @@ const styles = StyleSheet.create({
   levelCaption: { color: "#AAA4D2", fontSize: 9, fontWeight: "900" },
   levelValue: { color: colors.text, fontSize: 24, lineHeight: 28, fontWeight: "900", fontVariant: ["tabular-nums"] },
   metrics: { flexDirection: "row", gap: 9 },
-  metric: { flex: 1, minWidth: 0, minHeight: 85, paddingHorizontal: 14, paddingVertical: 11,
-    justifyContent: "space-between", borderRadius: 18, backgroundColor: "#192A3B",
-    borderColor: "#3A5360", borderWidth: 1 },
   metricDense: { minHeight: 70, paddingVertical: 8 },
   badgeMetric: { backgroundColor: "#25263B", borderColor: "#53475E" },
   metricLabelRow: { flexDirection: "row", alignItems: "center", gap: 7 },
@@ -296,13 +288,4 @@ const styles = StyleSheet.create({
   actions: { gap: 8 },
   linksGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   linksGridCompact: { gap: 6 },
-  quickLink: { width: "48.5%", flexGrow: 1, minHeight: 58, paddingHorizontal: 8,
-    flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderColor: "#38435C",
-    borderRadius: 15, backgroundColor: "#1A2538" },
-  quickLinkPressed: { backgroundColor: "#2D304A" },
-  quickIcon: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
-  quickCopy: { flex: 1, minWidth: 0, gap: 2 },
-  quickTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800" },
-  quickSubtitle: { color: colors.textMuted, fontSize: 9, lineHeight: 14 },
-  quickArrow: { color: "#ACA0E7", fontSize: 19 },
 });

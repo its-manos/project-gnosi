@@ -101,6 +101,8 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
   const jsx=(type,props)=>({type,props});
   const component=load('src/components/LearningActivityPanel.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{View:'View',Text:'Text',Pressable:'Pressable',StyleSheet:{create:x=>x}},'../state/LearningSession':{useLearningSnapshot:()=>reopened.getSnapshot(),useLearningDataSnapshot:()=>reopened.getSnapshot(),useDailySnapshot:()=>({doc:{days:{}}}),useDailyDataSnapshot:()=>({doc:{days:{}}})},
     './HomeMotion':{MotionPressable:'MotionPressable',MotionView:'MotionView'},
+    './MetricCard':{__esModule:true,default:'MetricCard'},
+    './SubjectProgressTile':{__esModule:true,default:'SubjectProgressTile'},
     './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}});
   const nodes=tree=>tree&&typeof tree==='object'?[tree,...[tree.props?.children].flat(Infinity).flatMap(nodes)]:[];
   const render=()=>{cursor=0;return component.default({todayKey:'2026-10-30'});};
@@ -116,13 +118,13 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
   assert.ok(summaryStrip,'Statistics must show its compact activity strip');
   const summaryCards=nodes(summaryStrip).filter(n=>typeof n.type==='function'&&n.type.name==='DashboardMetric');
   assert.equal(summaryCards.length,3,'The weekly dashboard should contain three compact metric tiles');
-  assert.ok(summaryCards.every(n=>n.type(n.props).props.style.minHeight===62),
-    'Compact tiles share a bounded minimum height');
+  assert.ok(summaryCards.every(n=>n.type(n.props).props.variant==='dashboard'),
+    'Compact tiles use the shared metric card surface');
   assert.deepEqual(summaryCards.map(n=>n.props.label),['Νέα μαθήματα','Επαναλήψεις','Ενεργές ημέρες']);
   assert.deepEqual(summaryCards.map(n=>n.props.index),[0,1,2],
     'Dashboard metric animations should be staggered in visual order');
   assert.ok(summaryCards.every(n=>n.type(n.props).props.entranceDelay>=80),
-    'Metric motion must use the existing reduced-motion-aware component');
+    'Metric motion retains the staggered native entrance');
   assert.ok(dashboardNodes.some(n=>n.props?.testID==='activity-chart'),
     'The activity chart must remain available in the dashboard');
   assert.ok(dashboardNodes.some(n=>n.props?.testID==='activity-accuracy'),

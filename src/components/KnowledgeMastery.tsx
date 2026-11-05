@@ -5,8 +5,7 @@ import { useLearningSnapshot } from "../state/LearningSession";
 import { MASTERY_LABELS } from "../knowledge/model";
 import { categories as learningCategories } from "../data/lessons";
 import ActionButton from "./ActionButton";
-import { MotionPressable } from "./HomeMotion";
-import { ProgressBarFill } from "./ProgressMotion";
+import SubjectProgressTile from "./SubjectProgressTile";
 import { colors } from "../theme";
 
 export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false, singleColumn = false, threeColumn = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean }) {
@@ -46,33 +45,13 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
           {focusedSubjects.map(category => {
             const emoji = learningCategories.find(item => item.id === category.id)?.emoji ?? "✦";
             const selected = selectedSubjectId === category.id;
-            const complete = category.total > 0 && category.mastered === category.total;
-            const progressing = category.percent > 0;
-            return <MotionPressable key={category.id} testID={`knowledge-subject-${category.id}`}
-              pressScale={0.985} onPress={() => setSelectedSubjectId(id => id === category.id ? null : category.id)}
-              style={[styles.detailTile, singleColumn && styles.detailTileSingle,
-                threeColumn && !singleColumn && styles.detailTileWide,
-                progressing && styles.detailTileProgressing,
-                complete && styles.detailTileComplete,
-                selected && styles.detailTileSelected]}
-              accessibilityRole="button"
-              accessibilityState={{ selected, expanded: selected }}
-              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`}
-              accessibilityHint="Άνοιγμα σύντομης ανάλυσης της θεματικής">
-              <View style={styles.tileTop}>
-                <Text style={styles.tileEmoji}>{emoji}</Text>
-                {complete
-                  ? <Text style={styles.tileCompleted}>✓</Text>
-                  : progressing ? <Text style={styles.tilePercent}>{category.percent}%</Text> : null}
-              </View>
-              <Text style={styles.tileTitle} numberOfLines={2}>{category.title}</Text>
-              <Text style={[styles.tileCount, complete && styles.tileCountComplete]}>
-                {category.mastered} / {category.total}
-              </Text>
-              <View style={styles.tileTrack} pointerEvents="none">
-                <ProgressBarFill tone="knowledge" percent={category.percent} />
-              </View>
-            </MotionPressable>;
+            return <SubjectProgressTile key={category.id}
+              tone="knowledge" title={category.title} emoji={emoji}
+              completed={category.mastered} total={category.total} percent={category.percent}
+              selected={selected} singleColumn={singleColumn} threeColumn={threeColumn}
+              testID={`knowledge-subject-${category.id}`}
+              onPress={() => setSelectedSubjectId(id => id === category.id ? null : category.id)}
+              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`} />;
           })}
         </View>
       ) : (
@@ -127,27 +106,8 @@ const styles = StyleSheet.create({
   previewCard: { padding: 14, gap: 8, borderRadius: 18 },
   detailCard: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 11 },
   detailLabel: { color: "#BDB1FB" },
-  detailGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 },
+  detailGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 },
   detailGridSingle: { flexDirection: "column" },
-  detailTile: {
-    width: "48%", minWidth: 0, minHeight: 123,
-    padding: 11, borderRadius: 15,
-    backgroundColor: "#24273F", borderWidth: 1, borderColor: "#3E3C61",
-    gap: 3,
-  },
-  detailTileProgressing: { borderColor: "#5F568C", backgroundColor: "#282840" },
-  detailTileComplete: { borderColor: "#7D79A7", backgroundColor: "#302D49" },
-  detailTileSelected: { borderColor: "#C2B5FF", backgroundColor: "#302C4B" },
-  detailTileSingle: { width: "100%", minHeight: 112 },
-  detailTileWide: { width: "31%" },
-  tileTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  tileEmoji: { fontSize: 19, lineHeight: 26 },
-  tilePercent: { color: "#B3A5FB", fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  tileCompleted: { color: "#D8D0FF", fontSize: 19, lineHeight: 25, fontWeight: "900" },
-  tileTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800", minHeight: 19 },
-  tileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  tileCountComplete: { color: "#D1C6FF" },
-  tileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#383B58", overflow: "hidden" },
   subjectInsight: {
     backgroundColor: "#27273F", borderWidth: 1, borderColor: "#514976",
     borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,

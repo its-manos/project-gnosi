@@ -42,18 +42,6 @@ export default function LearningInsightsScreen({
   const ready = readingTab ? lessonProgressLoaded : knowledgeReady;
   const percent = total > 0 ? Math.max(0, Math.min(100, Math.round(current / total * 100))) : 0;
 
-  // Keep explanatory copy only for a meaningful empty or loading state.
-  // The normal overview is intentionally visual and compact.
-  const overviewHint = !ready
-    ? "Φόρτωση προόδου…"
-    : readingTab
-      ? current === 0 ? "Το πρώτο σου μάθημα σε περιμένει." : null
-      : totalConcepts === 0
-        ? "Οι έννοιες εμφανίζονται όταν ξεκινήσεις quiz και επαναλήψεις."
-        : mastered === 0
-          ? "Η πρώτη κατάκτηση έρχεται με επαναλήψεις."
-          : null;
-
   return <View style={styles.screen} testID="learning-insights-screen">
     <ProgressGradientBackground />
     <View style={styles.foreground}>
@@ -106,9 +94,6 @@ export default function LearningInsightsScreen({
                 </Text>
                 <Text style={styles.overviewTotal}> / {total}</Text>
               </View>
-              <Text style={styles.overviewFootnote}>
-                {readingTab ? "Ολοκληρώθηκαν" : "Μένουν στη μνήμη"}
-              </Text>
             </View>
             <View testID="insights-ring" style={styles.ring}
               accessible accessibilityRole="progressbar"
@@ -130,17 +115,6 @@ export default function LearningInsightsScreen({
               </Text>
             </View>
           </View>
-          {overviewHint ? <Text style={styles.overviewHint}>{overviewHint}</Text> : null}
-          {!readingTab && knowledgeReady && model.due.length > 0 ? (
-            <Pressable testID="insights-review-action" accessibilityRole="button"
-              accessibilityLabel={`${model.due.length} ερωτήσεις για επανάληψη`}
-              onPress={onKnowledgeReview}
-              style={({ pressed }) => [styles.reviewLink, pressed && styles.reviewLinkPressed]}>
-              <Text style={styles.reviewSymbol}>✦</Text>
-              <Text style={styles.reviewLinkText}>{model.due.length} ερωτήσεις για επανάληψη</Text>
-              <Text style={styles.reviewArrow}>›</Text>
-            </Pressable>
-          ) : null}
         </MotionView>
 
         {readingTab ? <View testID="learning-insights-reading" style={styles.details}>
@@ -215,9 +189,11 @@ const styles = StyleSheet.create({
   selectedReadingText: { color: "#9CD2D1" },
   scroll: { flex: 1, minHeight: 0 },
   content: { paddingTop: 16, paddingBottom: 36, gap: 14 },
+  // Matched dimensions in both tabs; only semantic values and color accents differ.
   overview: {
     backgroundColor: "#1B2035", borderWidth: 1, borderColor: "#51496D",
-    borderRadius: 20, paddingHorizontal: 15, paddingVertical: 12, gap: 7, overflow: "hidden",
+    borderRadius: 20, paddingHorizontal: 16, paddingVertical: 14,
+    minHeight: 112, justifyContent: "center", overflow: "hidden",
   },
   readingOverview: { backgroundColor: "#192A35", borderColor: "#385963" },
   overviewAccent: {
@@ -235,22 +211,11 @@ const styles = StyleSheet.create({
     fontWeight: "900", fontVariant: ["tabular-nums"] },
   overviewValueCompact: { fontSize: 30, lineHeight: 38 },
   overviewTotal: { color: colors.textMuted, fontSize: 17, lineHeight: 27, fontWeight: "700" },
-  overviewFootnote: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
   ring: { width: 82, height: 82, justifyContent: "center", alignItems: "center" },
   ringPercent: {
     position: "absolute", color: "#B8AAFF", fontSize: 18, lineHeight: 24,
     fontWeight: "900", fontVariant: ["tabular-nums"],
   },
-  overviewHint: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
-  reviewLink: {
-    flexDirection: "row", alignItems: "center", minHeight: 44, gap: 8,
-    paddingHorizontal: 11, borderRadius: 12, marginTop: 1,
-    backgroundColor: "#302B4A", borderWidth: 1, borderColor: "#494167",
-  },
-  reviewLinkPressed: { backgroundColor: "#40375E" },
-  reviewSymbol: { color: "#B9ACFF", fontSize: 15 },
-  reviewLinkText: { flex: 1, color: "#D0C7FF", fontSize: 12, fontWeight: "800" },
-  reviewArrow: { color: "#B9ACFF", fontSize: 22 },
   details: { gap: 12 },
   empty: {
     color: colors.textMuted, fontSize: 13, lineHeight: 21, paddingHorizontal: 6, paddingVertical: 9,
