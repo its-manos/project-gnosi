@@ -1,5 +1,6 @@
 import { useRef, useState, type ComponentRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
@@ -7,6 +8,8 @@ import ProgressGradientBackground from "../components/ProgressGradientBackground
 import QuizReveal from "../components/QuizReveal";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
+import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
+import QuestionStageFooter from "../components/QuestionStageFooter";
 import DevTypedLessonPilotScreen from "./DevTypedLessonPilotScreen";
 import { requestPracticeCue } from "../play/soundStatus";
 import { calculateQuizResults, createQuizSession, evaluateAnswer } from "../quiz/engine";
@@ -27,7 +30,9 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
   const sessionRef = useRef(session);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const viewport = useAdaptiveQuestionScroll();
+  const insets = useSafeAreaInsets();
   const question = session.questions[session.currentIndex] as BuiltinQuizQuestion;
+  const stageAction = useQuestionStageAction(question.id);
   const answer = session.answers[question.id]?.value;
   const answered = answer !== undefined;
   const result = calculateQuizResults(session);
@@ -93,14 +98,15 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
         <ActionButton label="Επιστροφή στο καθημερινό quiz" onPress={onBack} secondary />
       </View> : <>
         <QuizReveal key={question.id}>
-          <QuizQuestionRenderer question={question} questionNumber={step} answer={answer} onSubmit={submit} />
+          <QuizQuestionRenderer question={question} questionNumber={step} answer={answer} onSubmit={submit}
+            onActionChange={stageAction.onActionChange} />
         </QuizReveal>
-        {answered ? <View style={styles.nextBlock}>
-          <ActionButton label={session.currentIndex === session.questions.length - 1 ?
-            "Δες το αποτέλεσμα →" : "Συνέχισε →"} onPress={advance} />
-        </View> : null}
       </>}
     </ScrollView>
+    {!session.completed ? <QuestionStageFooter bottomInset={insets.bottom} action={answered ? {
+      label: session.currentIndex === session.questions.length - 1 ? "Δες το αποτέλεσμα →" : "Συνέχισε →",
+      disabled: false, onPress: advance,
+    } : stageAction.action} /> : null}
   </View>;
 }
 
@@ -119,7 +125,6 @@ const styles = StyleSheet.create({
   step: { flex: 1, height: 3, borderRadius: 3, backgroundColor: colors.border },
   stepCurrent: { backgroundColor: colors.accentLight },
   stepDone: { backgroundColor: colors.success },
-  nextBlock: { paddingBottom: 5 },
   result: { alignItems: "center", borderWidth: 1, borderColor: "#4E4B70",
     backgroundColor: "#1B2235", borderRadius: 24, padding: 22, gap: 8 },
   resultGlyph: { color: colors.accentLight, fontSize: 38 },
