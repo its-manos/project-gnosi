@@ -1,0 +1,36 @@
+name: Question stage checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/components/*QuestionCard.tsx"
+      - "src/components/InlineQuestionCard.tsx"
+      - "src/components/QuizQuestionRenderer.tsx"
+      - "src/components/QuizReveal.tsx"
+      - "src/components/questionCardStyles.ts"
+      - "src/screens/ReaderLessonScreen.tsx"
+      - "src/screens/DailyChallengeScreen.tsx"
+      - "src/hooks/useAdaptiveQuestionScroll.ts"
+      - "scripts/test-question-stage.cjs"
+      - ".github/workflows/question-stage.yml"
+  workflow_dispatch:
+
+jobs:
+  question-stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:lesson-question-card
+      - run: npm run test:question-types
+      - run: npm run test:section-end-questions
+      - run: node scripts/test-reader-pilot.cjs
+      - run: node scripts/test-quiz-integration.cjs
+      - run: node scripts/test-question-stage.cjs
