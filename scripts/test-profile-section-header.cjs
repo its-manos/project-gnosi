@@ -32,7 +32,7 @@ assert.equal(Header.profileSectionLayout.below, 13);
 const read = file => fs.readFileSync(file, "utf8");
 const screens = [
   "ProfileScreen.tsx", "PlayerStatsScreen.tsx",
-  "AccountScreen.tsx", "DailyChallengePreferencesScreen.tsx",
+  "AccountScreen.tsx", "DailyChallengePreferencesScreen.tsx", "DailyChallengeScreen.tsx",
 ];
 for (const file of screens) {
   const source = read("src/screens/" + file);

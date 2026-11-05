@@ -66,7 +66,7 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
   return <View style={styles.root} testID="quiz-types-preview">
     <ProgressGradientBackground />
     <View style={styles.chrome}>
-      <AppHeader onBack={onBack} backLabel="ΚΑΘΗΜΕΡΙΝΟ QUIZ" style={styles.appHeader} />
+      <AppHeader onBack={onBack} backLabel="ΕΡΓΑΛΕΙΑ" style={styles.appHeader} />
     </View>
     <ScrollView ref={scrollRef} style={styles.viewport}
       contentContainerStyle={styles.content}
@@ -95,7 +95,7 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
         <Text style={styles.resultCaption}>Σωστές απαντήσεις · Η δοκιμή δεν αποθηκεύεται</Text>
         <ActionButton label="Δοκίμασε ξανά" onPress={restart} />
         <ActionButton label="Δοκίμασε τις ερωτήσεις μέσα σε άρθρο (dev)" onPress={() => setShowArticlePilot(true)} secondary />
-        <ActionButton label="Επιστροφή στο καθημερινό quiz" onPress={onBack} secondary />
+        <ActionButton label="Επιστροφή στα εργαλεία δοκιμών" onPress={onBack} secondary />
       </View> : <>
         <QuizReveal key={question.id}>
           <QuizQuestionRenderer question={question} questionNumber={step} answer={answer} onSubmit={submit}
