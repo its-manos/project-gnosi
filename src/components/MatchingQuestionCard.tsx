@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { evaluateAnswer } from "../quiz/engine";
 import type { MatchingQuestion } from "../quiz/types";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
 import { questionCardStyles } from "./questionCardStyles";
 
@@ -12,10 +13,11 @@ type Props = {
   answer?: Readonly<Record<string, string>>;
   onSubmit: (pairs: Record<string, string>) => void;
   readingSize?: number;
+  onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Full-width two-stage pairing remains readable with long Greek labels. */
-export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pending, setPending] = useState<Record<string, string>>({});
   useEffect(() => { setSelectedLeft(null); setPending({}); }, [question.id, question.version]);
@@ -44,6 +46,14 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
     });
     setSelectedLeft(null);
   }
+
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: !ready, onPress: () => { if (ready) onSubmit({ ...pending }); } });
+    return () => onActionChange(null);
+  }, [answered, pending, ready, onActionChange]);
 
   return <View style={styles.card} testID="matching-card">
     <View pointerEvents="none" accessible={false} style={styles.rim} />
@@ -107,7 +117,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
         </Pressable>;
       })}
     </View>
-    {!answered ? <>
+    {!answered && !onActionChange ? <>
       <Pressable testID="matching-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: !ready }} disabled={!ready}
         onPress={() => { if (ready) onSubmit({ ...pending }); }}
