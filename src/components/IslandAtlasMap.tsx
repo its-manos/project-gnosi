@@ -7,6 +7,7 @@
 import { memo, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from "react-native-svg";
+import HistoryWorldIcon from "./worldIcons/HistoryWorldIcon";
 
 export type IslandDestination = {
   id: string;
@@ -117,10 +118,13 @@ function IslandArtwork({ index, id, width, height, status }: {
     : status === "in-progress" ? "#C1B2F7" : "#95AAB6";
   const discovered = status === "complete" || status === "in-progress";
   const suffix = id.replace(/[^a-z0-9-]/gi, "-") + "-" + index;
+  const isAncientGreece = id === "ancient-greece";
+  const emblemSize = Math.max(24, Math.min(43, height * 0.44));
 
   return (
-    <Svg width={width} height={height} viewBox="0 0 180 120" pointerEvents="none"
-      accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <View pointerEvents="none" accessible={false} style={{ width, height }}>
+      <Svg width={width} height={height} viewBox="0 0 180 120" pointerEvents="none"
+        accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Defs>
         <LinearGradient id={"island-land-" + suffix} x1="0" y1="0" x2="0.85" y2="1">
           <Stop offset="0" stopColor={colors[0]} />
@@ -153,7 +157,7 @@ function IslandArtwork({ index, id, width, height, status }: {
       <Path d="M 48 80 Q 72 73 96 80 Q 117 87 138 76"
         fill="none" stroke="#CDD1C0" strokeOpacity={0.22} strokeWidth={1} />
       {/* Tiny engraved relief/ruin, not a cartoon emoji or a large icon. */}
-      {index % 3 === 0 ? (
+      {isAncientGreece ? null : index % 3 === 0 ? (
         <>
           <Path d="M 75 60 L 75 48 L 85 44 L 95 48 L 95 60 M 73 60 H 99 M 79 47 V 59 M 86 46 V 59 M 93 47 V 59"
             fill="none" stroke="#E3D1AB" strokeOpacity={0.75} strokeWidth={1.7} />
@@ -173,7 +177,15 @@ function IslandArtwork({ index, id, width, height, status }: {
       <Circle cx={151} cy={31} r={4.5} fill={engraved} opacity={status === "new" ? 0.30 : 0.90}/>
       {status === "complete" ? <Path d="M 148 31 L 150 33 L 154 28"
         stroke="#18212A" strokeWidth={1.5} fill="none" /> : null}
-    </Svg>
+      </Svg>
+      {isAncientGreece ? (
+        <View testID="island-atlas-ancient-greece-emblem"
+          pointerEvents="none" accessible={false}
+          style={[styles.ancientGreeceEmblem, { top: height * 0.54 - emblemSize / 2 }]}>
+          <HistoryWorldIcon size={emblemSize} />
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -253,6 +265,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   pressed: { opacity: 0.77, transform: [{ scale: 0.96 }] },
+  ancientGreeceEmblem: { position: "absolute", left: 0, right: 0, alignItems: "center", justifyContent: "center" },
   namePlate: {
     // Size the visible plate to its actual title, not the whole island slot.
     // maxWidth is set per destination so long Greek names may wrap to 2 lines.
