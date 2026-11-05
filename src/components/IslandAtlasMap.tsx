@@ -7,7 +7,7 @@
 import { memo, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from "react-native-svg";
-import HistoryWorldIcon from "./worldIcons/HistoryWorldIcon";
+import AncientGreeceIslandIcon from "./islandIcons/AncientGreeceIslandIcon";
 
 export type IslandDestination = {
   id: string;
@@ -119,7 +119,10 @@ function IslandArtwork({ index, id, width, height, status }: {
   const discovered = status === "complete" || status === "in-progress";
   const suffix = id.replace(/[^a-z0-9-]/gi, "-") + "-" + index;
   const isAncientGreece = id === "ancient-greece";
-  const emblemSize = Math.max(24, Math.min(43, height * 0.44));
+  // Large enough to read as a temple; the stylobate sits on the upper plateau.
+  // No overflow or layout shift: just a decorative SVG over the land texture.
+  const emblemSize = Math.max(35, Math.min(68, height * 0.66));
+  const emblemTop = Math.max(0, height * 0.62 - emblemSize * 0.84);
 
   return (
     <View pointerEvents="none" accessible={false} style={{ width, height }}>
@@ -181,8 +184,8 @@ function IslandArtwork({ index, id, width, height, status }: {
       {isAncientGreece ? (
         <View testID="island-atlas-ancient-greece-emblem"
           pointerEvents="none" accessible={false}
-          style={[styles.ancientGreeceEmblem, { top: height * 0.54 - emblemSize / 2 }]}>
-          <HistoryWorldIcon size={emblemSize} />
+          style={[styles.ancientGreeceEmblem, { top: emblemTop }]}>
+          <AncientGreeceIslandIcon size={emblemSize} />
         </View>
       ) : null}
     </View>
