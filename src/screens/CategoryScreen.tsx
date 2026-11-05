@@ -148,7 +148,7 @@ export default function CategoryScreen({
             <AtlasProgressFill percent={progressLoaded ? featuredPercent : 0} />
           </View>
         </AtlasContinueCard>
-      ) : null>
+      ) : null}
 
       <View testID="category-atlas-map-viewport" style={styles.mapViewport}
         onLayout={event => {
