@@ -26,6 +26,7 @@ export default function DailyChallengePreferencesScreen({
   const difficulty = initialPreferences.difficulty;
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const hasChanges = topicIds.length !== initialPreferences.topicIds.length || topicIds.some(id => !initialPreferences.topicIds.includes(id));
 
 
   function toggleTopic(topicId: string) {
@@ -111,11 +112,11 @@ export default function DailyChallengePreferencesScreen({
           ) : null}
 
           <ActionButton
-            label={isSaving ? "Αποθήκευση…" : "Αποθήκευση προτιμήσεων"}
+            label={isSaving ? "Αποθήκευση…" : hasChanges ? "Αποθήκευση αλλαγών" : "Οι επιλογές σου αποθηκεύτηκαν"}
             onPress={() => { void handleSave(); }}
-            disabled={isSaving || topicIds.length < 3 || topicIds.length > 5}
+            disabled={isSaving || isLoading || !hasChanges || topicIds.length < 3 || topicIds.length > 5}
           />
-          <ActionButton label="Ακύρωση" onPress={onCancel} secondary disabled={isSaving} />
+          <ActionButton label="Πίσω στο προφίλ" onPress={onCancel} secondary disabled={isSaving} />
           <Text style={styles.footerNote}>
             Οι επιλογές σου ενημερώνουν τις προτάσεις μαθημάτων. Οι ερωτήσεις της κοινής πρόκλησης παραμένουν ίδιες για όλους.
           </Text>
