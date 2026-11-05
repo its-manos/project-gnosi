@@ -12,10 +12,11 @@ type Props = {
   answer?: unknown;
   onSubmit: (answer: unknown) => void;
   readingSize?: number;
+  compactAnswered?: boolean;
 };
 
 /** Single typed dispatch for built-in question formats. The caller owns session state. */
-export default function QuizQuestionRenderer({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+export default function QuizQuestionRenderer({ question, questionNumber, answer, onSubmit, readingSize, compactAnswered = false }: Props) {
   switch (question.type) {
     case "multiple-select":
       return <MultipleSelectQuestionCard key={question.id} question={question} questionNumber={questionNumber}
@@ -42,6 +43,6 @@ export default function QuizQuestionRenderer({ question, questionNumber, answer,
         id={question.id} question={question.prompt} answers={question.content.answers}
         correctIndex={question.content.correctIndex} explanation={question.explanation}
         questionNumber={questionNumber} answer={typeof answer === "number" ? answer : undefined}
-        readingSize={readingSize} onConfirm={onSubmit} />;
+        readingSize={readingSize} compactAnswered={compactAnswered} onConfirm={onSubmit} />;
   }
 }
