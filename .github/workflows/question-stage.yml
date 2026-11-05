@@ -10,6 +10,8 @@ on:
       - "src/components/QuizReveal.tsx"
       - "src/components/questionCardStyles.ts"
       - "src/screens/ReaderLessonScreen.tsx"
+      - "src/screens/QuizTypesPreviewScreen.tsx"
+      - "scripts/test-quiz-spot-blank-cards.cjs"
       - "src/screens/DailyChallengeScreen.tsx"
       - "src/hooks/useAdaptiveQuestionScroll.ts"
       - "scripts/test-question-stage.cjs"
