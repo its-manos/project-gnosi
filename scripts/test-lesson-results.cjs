@@ -70,6 +70,11 @@ assert.ok(nodes(progression).some(n=>n.type==='ProgressBarFill'&&n.props.tone===
 assert.ok(nodes(progression).some(n=>n.type==='ProgressBarFill'&&n.props.tone==='reading'&&n.props.percent===25));
 const footer=named(tree,'lesson-results-sticky-footer');assert.ok(footer,'persistent CTA is outside scroll content');
 const scroll=nodes(tree).find(n=>n.type==='ScrollView');assert.ok(scroll);
+assert.equal(scroll.props.contentContainerStyle[0].flexGrow,1,'result content fills available height');
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent,'space-evenly','vertical space distributed across sections');
+assert.equal(scroll.props.scrollEnabled,true,'short screens can scroll rather than clip actions');
+assert.equal(footer.props.style[0].backgroundColor,'transparent','footer shares full-screen gradient');
+
 assert.ok(!nodes(scroll).some(n=>n.props?.testID==='lesson-next-action'),'not buried inside scroll');
 const nextAction=named(tree,'lesson-next-action');
 assert.ok(nextAction.props.accessibilityLabel.includes(next.title),'next lesson is named');
