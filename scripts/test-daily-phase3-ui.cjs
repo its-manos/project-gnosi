@@ -6,7 +6,7 @@ let slots=[],cursor=0,next=0,homes=0,opened=[];
 const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:initial=>{const i=cursor++;return slots[i]??={current:initial};}};
 const native={View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x},useWindowDimensions:()=>({width:390,height:844,fontScale:1})};
 const stubs=Object.fromEntries(['QuizReveal','KnowledgeProgress','DailyAnswerReview','DailyMistakeReview',
-  'ActionButton','AnswerOption','AppHeader','ProgressBar','ReportContentButton',
+  'ActionButton','AnswerOption','ProfileSectionHeader','DailyMissionMap','ProgressBar','ReportContentButton',
   'SingleChoiceQuestionCard','ProgressGradientBackground','QuestionStageFooter']
   .map(n=>['../components/'+n,{__esModule:true,default:n}]));
 const record={...shared.createSharedDailyRecord('2026-10-31'),currentIndex:6,completed:true};
@@ -36,14 +36,25 @@ challenge={...challenge,resultDetails:undefined,record:{...record,selectionVersi
 const oldDetails={...details,questionVersions:[...details.questionVersions]};oldDetails.questionVersions[0]='old:revision';challenge={...challenge,record,resultDetails:oldDetails};tree=render();action(tree,'Δες όλες τις απαντήσεις →').props.onPress();tree=render();review=nodes(tree).find(n=>n.type==='DailyAnswerReview');assert.equal(review.props.rows[0].question,null);assert.ok(text(Review(review.props)).includes('Η ερώτηση έχει αλλάξει'));
 // Intro prioritizes the seven-question route and keeps its personalized-preferences caveat.
 challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};
-tree=render();assert.ok(text(tree).includes('2')&&text(tree).includes('ΜΕΣΑΙΕΣ')&&text(tree).includes('ΔΥΣΚΟΛΕΣ'));
-assert.ok(text(tree).includes('Τα ενδιαφέροντά σου βοηθούν στις προτάσεις μαθημάτων'));
+tree=render();assert.ok(text(tree).includes('7 στάσεις γνώσης.'));
+assert.ok(text(tree).includes('διαμορφώνουν τις προτάσεις μαθημάτων'));
+assert.equal(nodes(tree).filter(n=>n.type==='DailyMissionMap').length,1,'daily intro renders native station map');
+assert.equal(nodes(tree).find(n=>n.type==='DailyMissionMap').props.compact,true,'compact layout for phone dimensions');
+const mission=load('src/components/DailyMissionMap.tsx',{
+  react:{memo:fn=>fn},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,
+}).default({compact:true});
+assert.equal(nodes(mission).filter(n=>/^daily-route-station-/.test(n.props?.testID??'')).length,7,'route always has seven stations');
+for(const tier of ['2 εύκολες','3 μεσαίες','2 δύσκολες'])assert.ok(text(mission).includes(tier));
+assert.ok(text(mission).includes('100 πόντοι / σωστή'));
 assert.ok(!action(tree,'Όχι τώρα'),'top-left back navigation replaces the redundant close action');
 assert.equal(nodes(tree).filter(n=>n.type==='QuizTypesPreviewScreen').length,0,'dev pilot no longer lives inside Daily Quiz');
 assert.equal(nodes(tree).filter(n=>n.props?.testID==='daily-interests-link').length,1,'preferences use a compact accessible link');
 assert.equal(nodes(tree).find(n=>n.type==='ScrollView').props.scrollEnabled,false,'normal phone intro stays non-scrollable');
 // Athens rollover closes a previous day's answer review rather than presenting stale content.
-challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};tree=render();assert.ok(text(tree).includes('Η ΚΟΙΝΗ ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ'));nodes(tree).find(n=>n.type==='AppHeader').props.onBack();assert.equal(homes,1);
+challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};tree=render();assert.ok(text(tree).includes('ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ'));
+const pageHeader=nodes(tree).find(n=>n.type==='ProfileSectionHeader');
+assert.equal(pageHeader.props.title,'Ημερήσιο quiz');
+pageHeader.props.onAction();assert.equal(homes,1);
 const active={...shared.createSharedDailyRecord('2026-11-01'),answers:{}};const first=questions.find(q=>q.id===active.questionIds[0]);active.answers[0]=first.correctIndex;
 challenge={...challenge,record:active,currentQuestion:first,selectedAnswer:first.correctIndex,correctCount:1,rewardSummary:{combo:1,highestCombo:1,rows:[{eligible:true,comboXP:0}]}};tree=render();assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.answer,first.correctIndex,
   'answered choice stays parent-owned and locked');
@@ -51,6 +62,7 @@ assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.onAc
   'daily choice registers its confirmation with the fixed footer');assert.ok(Math.abs(nodes(tree).find(n=>n.type==='ProgressBar').props.progress-100/7)<1e-10);
 assert.ok(text(tree).includes('ΕΡΩΤΗΣΗ 01 / 07'),'stage displays one compact question counter');
 assert.ok(!text(tree).includes('Απαντημένες:'),'stage no longer duplicates the progress indicator');
+assert.equal(nodes(tree).find(n=>n.type==='ProfileSectionHeader').props.title,'Ημερήσιο quiz');
 const footer=nodes(tree).find(n=>n.type==='QuestionStageFooter');
 assert.equal(footer.props.action.label,'Επόμενη ερώτηση →',
   'answered daily question keeps Next visible outside the ScrollView');
