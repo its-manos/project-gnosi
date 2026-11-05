@@ -138,11 +138,11 @@ function IslandArtwork({ index, id, width, height, status }: {
       {/* Atmospheric halo is static: no native blur/shadow or animated SVG. */}
       {discovered ? <Ellipse cx={90} cy={68} rx={87} ry={45}
         fill={engraved} fillOpacity={0.045}
-        stroke={engraved} strokeOpacity={0.27} strokeWidth={1.4} /> : null}
+        stroke={engraved} strokeOpacity={0.16} strokeWidth={1.25} /> : null}
       <Ellipse cx={90} cy={68} rx={83} ry={42} fill="none"
-        stroke="#98B7BE" strokeOpacity={0.15} strokeWidth={1} />
+        stroke="#98B7BE" strokeOpacity={0.10} strokeWidth={1} />
       <Ellipse cx={90} cy={68} rx={76} ry={39} fill="none"
-        stroke="#C7B79D" strokeOpacity={0.15} strokeWidth={0.7} />
+        stroke="#C7B79D" strokeOpacity={0.09} strokeWidth={0.7} />
       <Path d={shore} fill="#0A1A26" opacity={0.70}
         transform="translate(0 6)" />
       <Path d={shore} fill={"url(#island-land-" + suffix + ")"}
@@ -159,6 +159,19 @@ function IslandArtwork({ index, id, width, height, status }: {
         fill="none" stroke="#182B37" strokeOpacity={0.48} strokeWidth={2} />
       <Path d="M 48 80 Q 72 73 96 80 Q 117 87 138 76"
         fill="none" stroke="#CDD1C0" strokeOpacity={0.22} strokeWidth={1} />
+      {/* Stone plateau underneath the Parthenon — its shadow and engraved
+          footings belong to the landmass, not the floating icon. */}
+      {isAncientGreece ? (
+        <>
+          <Ellipse cx={90} cy={78} rx={52} ry={10}
+            fill="#0B1E2B" opacity={0.48} />
+          <Path d="M 43 75 Q 61 68 85 70 Q 114 66 139 75 L 133 81 Q 91 86 47 81 Z"
+            fill="#B6A78B" fillOpacity={0.16}
+            stroke="#E7D0AA" strokeOpacity={0.18} strokeWidth={1.1} />
+          <Path d="M 54 80 Q 90 85 127 79 M 60 73 L 57 78 M 126 74 L 130 79"
+            fill="none" stroke="#D7C09A" strokeOpacity={0.26} strokeWidth={1.05} />
+        </>
+      ) : null}
       {/* Tiny engraved relief/ruin, not a cartoon emoji or a large icon. */}
       {isAncientGreece ? null : index % 3 === 0 ? (
         <>
@@ -177,9 +190,15 @@ function IslandArtwork({ index, id, width, height, status }: {
           <Circle cx={122} cy={57} r={2.3} fill="#DBC99E" opacity={0.6} />
         </>
       )}
-      <Circle cx={151} cy={31} r={4.5} fill={engraved} opacity={status === "new" ? 0.30 : 0.90}/>
-      {status === "complete" ? <Path d="M 148 31 L 150 33 L 154 28"
-        stroke="#18212A" strokeWidth={1.5} fill="none" /> : null}
+      {/* In-progress is already expressed by the rim and progress rail.
+          Only a completed island needs a small, grounded check marker. */}
+      {status === "complete" ? (
+        <>
+          <Circle cx={145} cy={59} r={5.3} fill="#D6B98D" opacity={0.94} />
+          <Path d="M 142 59 L 144.2 61 L 148 56"
+            stroke="#1E2D3A" strokeWidth={1.65} strokeLinecap="round" fill="none" />
+        </>
+      ) : null}
       </Svg>
       {isAncientGreece ? (
         <View testID="island-atlas-ancient-greece-emblem"
@@ -272,10 +291,11 @@ const styles = StyleSheet.create({
   namePlate: {
     // Size the visible plate to its actual title, not the whole island slot.
     // maxWidth is set per destination so long Greek names may wrap to 2 lines.
-    alignSelf: "center", minHeight: 32, paddingHorizontal: 9, paddingVertical: 2,
+    alignSelf: "center", minHeight: 30, paddingHorizontal: 8, paddingVertical: 2,
+    marginTop: -4,
     alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(10, 23, 38, 0.68)",
-    borderRadius: 9, borderWidth: 1, borderColor: "rgba(166, 176, 183, 0.18)",
+    backgroundColor: "rgba(10, 23, 38, 0.61)",
+    borderRadius: 10, borderWidth: 1, borderColor: "rgba(166, 176, 183, 0.16)",
   },
   activePlate: { borderColor: "rgba(190, 173, 246, 0.52)" },
   completePlate: { borderColor: "rgba(213, 184, 137, 0.46)" },
