@@ -96,7 +96,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
         {!punctuationOnly && after ? <Text style={[styles.passageText, sentenceSize]}>{after}</Text> : null}
       </View>
     </View>
-    {!answered && !onActionChange ? <>
+    {!answered ? <>
       <View style={styles.options}>
         {question.content.options.map((option, index) => {
           const selected = selectedId === option.id;
@@ -117,14 +117,14 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
           </AnswerMotion>;
         })}
       </View>
-      <Pressable testID="fill-blank-confirm" accessibilityRole="button"
+      {!onActionChange ? <Pressable testID="fill-blank-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: pending === null || submitting }}
         disabled={pending === null || submitting} onPress={confirm}
         style={({ pressed }) => [styles.confirm,
           (pending === null || submitting) && styles.confirmDisabled,
           pressed && pending !== null && !submitting && styles.confirmPressed]}>
         <Text style={styles.confirmText}>Επιβεβαίωση  →</Text>
-      </Pressable>
+      </Pressable> : null}
     </> : <QuizReveal><View testID="fill-blank-feedback" accessibilityLiveRegion="polite"
       style={[styles.feedback, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
       <Text style={[styles.feedbackTitle, isCorrect ? styles.goodText : styles.badText]}>
