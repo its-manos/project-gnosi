@@ -5,12 +5,19 @@ const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t
 let slots=[],cursor=0,next=0,homes=0,opened=[];
 const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:initial=>{const i=cursor++;return slots[i]??={current:initial};}};
 const native={View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x}};
-const stubs=Object.fromEntries(['QuizReveal','KnowledgeProgress','DailyAnswerReview','DailyMistakeReview','ActionButton','AnswerOption','AppHeader','ProgressBar','ReportContentButton'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
+const stubs=Object.fromEntries(['QuizReveal','KnowledgeProgress','DailyAnswerReview','DailyMistakeReview',
+  'ActionButton','AnswerOption','AppHeader','ProgressBar','ReportContentButton',
+  'SingleChoiceQuestionCard','ProgressGradientBackground','QuestionStageFooter']
+  .map(n=>['../components/'+n,{__esModule:true,default:n}]));
 const record={...shared.createSharedDailyRecord('2026-10-31'),currentIndex:6,completed:true};
 record.answers=Object.fromEntries(record.questionIds.map((id,i)=>{const q=questions.find(q=>q.id===id);return[i,[2,4].includes(i)?(q.correctIndex+1)%4:q.correctIndex];}));
 const details=results.createDailyResultDetails(record,questions),frozen=JSON.stringify(record);
 let challenge={record,resultDetails:details,isLoading:false,currentQuestion:null,selectedAnswer:null,correctCount:5,rewardXP:143,questionsCompatible:true,rewardSummary:{combo:2,highestCombo:2,rows:[]},nextQuestion:async()=>{next++;},answerQuestion:async()=>{},startChallenge:async()=>{}};
-const Screen=load('src/screens/DailyChallengeScreen.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...stubs,'../hooks/useDailyChallenge':{useDailyChallenge:()=>challenge}}).default;
+const Screen=load('src/screens/DailyChallengeScreen.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:0})},
+  ...stubs,
+  '../hooks/useAdaptiveQuestionScroll':{useAdaptiveQuestionScroll:()=>({scrollEnabled:false,onLayout:()=>{},onContentSizeChange:()=>{}})},
+  '../hooks/useQuestionStageAction':{useQuestionStageAction:()=>({action:null,onActionChange:()=>{}})},
+  '../hooks/useDailyChallenge':{useDailyChallenge:()=>challenge}}).default;
 const props={onHome(){homes++;},onOpenPreferences(){},onOpenLesson:id=>opened.push(id),preferences:{topicIds:['history','science','culture'],difficulty:'hard'},preferencesLoaded:true};
 const render=()=>{cursor=0;return Screen(props);};const action=(t,label)=>nodes(t).find(n=>n.type==='ActionButton'&&n.props.label===label);
 let tree=render();assert.ok(text(tree).includes('5 / 7'));assert.ok(text(tree).includes('500 / 700'));assert.ok(text(tree).includes('71%'));assert.ok(text(tree).includes('XP ημέρας: 143 XP'));assert.ok(text(tree).includes('Καλύτερο σερί: 2'));assert.ok(text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'));
@@ -25,6 +32,12 @@ const oldDetails={...details,questionVersions:[...details.questionVersions]};old
 // Athens rollover closes a previous day's answer review rather than presenting stale content.
 challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};tree=render();assert.ok(text(tree).includes('Η ΚΟΙΝΗ ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ'));nodes(tree).find(n=>n.type==='AppHeader').props.onBack();assert.equal(homes,1);
 const active={...shared.createSharedDailyRecord('2026-11-01'),answers:{}};const first=questions.find(q=>q.id===active.questionIds[0]);active.answers[0]=first.correctIndex;
-challenge={...challenge,record:active,currentQuestion:first,selectedAnswer:first.correctIndex,correctCount:1,rewardSummary:{combo:1,highestCombo:1,rows:[{eligible:true,comboXP:0}]}};tree=render();assert.ok(nodes(tree).filter(n=>n.type==='AnswerOption').every(n=>n.props.locked));assert.ok(Math.abs(nodes(tree).find(n=>n.type==='ProgressBar').props.progress-100/7)<1e-10);assert.ok(text(tree).includes('Απαντημένες: 1 / 7'));
-action(tree,'Επόμενη ερώτηση →').props.onPress();assert.equal(next,1);
+challenge={...challenge,record:active,currentQuestion:first,selectedAnswer:first.correctIndex,correctCount:1,rewardSummary:{combo:1,highestCombo:1,rows:[{eligible:true,comboXP:0}]}};tree=render();assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.answer,first.correctIndex,
+  'answered choice stays parent-owned and locked');
+assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.onActionChange !== undefined,true,
+  'daily choice registers its confirmation with the fixed footer');assert.ok(Math.abs(nodes(tree).find(n=>n.type==='ProgressBar').props.progress-100/7)<1e-10);assert.ok(text(tree).includes('Απαντημένες: 1 / 7'));
+const footer=nodes(tree).find(n=>n.type==='QuestionStageFooter');
+assert.equal(footer.props.action.label,'Επόμενη ερώτηση →',
+  'answered daily question keeps Next visible outside the ScrollView');
+footer.props.action.onPress();assert.equal(next,1);
 console.log('Phase 3 UI passed: score/accuracy/day XP/combo, supported strongest category, unlocked lesson callback, all-answer source/explanation review, missed-only practice, legacy/revised content, rollover, answered progress and locked choices. Native views mocked.');
