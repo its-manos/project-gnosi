@@ -17,7 +17,8 @@ const Screen=load('src/screens/DailyChallengeScreen.tsx',{react,'react/jsx-runti
   ...stubs,
   '../hooks/useAdaptiveQuestionScroll':{useAdaptiveQuestionScroll:()=>({scrollEnabled:false,onLayout:()=>{},onContentSizeChange:()=>{}})},
   '../hooks/useQuestionStageAction':{useQuestionStageAction:()=>({action:null,onActionChange:()=>{}})},
-  '../hooks/useDailyChallenge':{useDailyChallenge:()=>challenge}}).default;
+  '../hooks/useDailyChallenge':{useDailyChallenge:()=>challenge},
+  './QuizTypesPreviewScreen':{__esModule:true,default:'QuizTypesPreviewScreen'}}).default;
 const props={onHome(){homes++;},onOpenPreferences(){},onOpenLesson:id=>opened.push(id),preferences:{topicIds:['history','science','culture'],difficulty:'hard'},preferencesLoaded:true};
 const render=()=>{cursor=0;return Screen(props);};const action=(t,label)=>nodes(t).find(n=>n.type==='ActionButton'&&n.props.label===label);
 let tree=render();assert.ok(text(tree).includes('5 / 7'));assert.ok(text(tree).includes('500 / 700'));assert.ok(text(tree).includes('71%'));assert.ok(text(tree).includes('XP ημέρας: 143 XP'));assert.ok(text(tree).includes('Καλύτερο σερί: 2'));assert.ok(text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'));
