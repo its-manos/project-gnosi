@@ -27,6 +27,18 @@ assert.match(reader, /compactAnswered/, "reader uses the compact submitted-answe
 assert.match(daily, /compactAnswered/, "daily quiz uses the compact submitted-answer layout");
 assert.match(read("src/components/QuizReveal.tsx"), /translateY/, "question reveal has gentle lift");
 assert.match(read("src/components/QuizReveal.tsx"), /isReduceMotionEnabled/, "system reduced motion honored");
+const blank = read("src/components/FillBlankQuestionCard.tsx");
+const preview = read("src/screens/QuizTypesPreviewScreen.tsx");
+assert.match(blank, /testID="fill-blank-sentence"/, "one prominent sentence is the question");
+assert.match(blank, /punctuationOnly/, "punctuation stays attached to the answer slot");
+assert.doesNotMatch(blank, /style={styles\.hint}|style={styles\.wordBankHeading}/,
+  "word bank does not repeat explanatory instructions");
+assert.match(preview, /onLayout={viewport.onLayout}/, "preview measures available space");
+assert.match(preview, /scrollEnabled={session.completed \|\| viewport.scrollEnabled}/,
+  "preview stays fixed when the current question fits");
+assert.doesNotMatch(preview, /sectionHeading|sandboxNote|sectionEyebrow/,
+  "dev preview drops redundant hero and duplicate format title");
+
 
 let slots = [], cursor = 0;
 const react = {
