@@ -4,6 +4,7 @@ import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { MultipleSelectQuestion } from "../quiz/types";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
 import { questionCardStyles } from "./questionCardStyles";
 
@@ -14,10 +15,11 @@ type Props = {
   answer?: readonly number[];
   onSubmit: (selectedIndices: number[]) => void;
   readingSize?: number;
+  onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Multi-answer card with separate draft selection and confirmed feedback. */
-export default function MultipleSelectQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+export default function MultipleSelectQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
   const [pending, setPending] = useState<number[]>([]);
   useEffect(() => { setPending([]); }, [question.id, question.version]);
   const answered = answer !== undefined;
@@ -30,6 +32,14 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
     if (answered) return;
     setPending(previous => previous.includes(index) ? previous.filter(i => i !== index) : [...previous, index]);
   }
+
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: pending.length === 0, onPress: () => { if (pending.length > 0) onSubmit([...pending]); } });
+    return () => onActionChange(null);
+  }, [answered, pending, onActionChange]);
 
   return <View style={styles.card} testID="multiple-select-card">
     <View pointerEvents="none" accessible={false} style={styles.rim} />
@@ -71,7 +81,7 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
         </AnswerMotion>;
       })}
     </View>
-    {!answered ? <Pressable testID="multiple-select-confirm" accessibilityRole="button"
+    {!answered && !onActionChange ? <Pressable testID="multiple-select-confirm" accessibilityRole="button"
       accessibilityState={{ disabled: pending.length === 0 }} disabled={pending.length === 0}
       onPress={() => { if (pending.length > 0) onSubmit([...pending]); }}
       style={({ pressed }) => [styles.confirm, pending.length === 0 && styles.confirmDisabled, pressed && styles.confirmPressed]}>
