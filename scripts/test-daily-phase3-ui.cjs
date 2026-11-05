@@ -32,12 +32,24 @@ assert.equal(finishedTrack.props.mode,'result','results show the finished seven-
 assert.equal(finishedTrack.props.correctMask.filter(Boolean).length,5,'route uses frozen scored answers');
 assert.equal(finishedTrack.props.correctMask.filter(v=>v===false).length,2,'route distinguishes the two missed stops');
 assert.ok(!action(tree,'Επιστροφή στην αρχική'),'fixed shared header replaces duplicate home action');
-action(tree,'Άνοιξε το μάθημα →').props.onPress();assert.ok(lessons.some(l=>l.id===opened[0]));
+assert.equal(nodes(tree).find(n=>n.type==='ProfileSectionHeader').props.title,'Αποτέλεσμα');
+assert.equal(nodes(tree).filter(n=>n.type==='ActionButton').length,1,
+  'results have one prominent primary CTA, with review and lesson actions visually secondary');
+const recommend=nodes(tree).find(n=>n.props?.testID==='daily-recommendation');
+assert.ok(recommend&&recommend.type==='Pressable','recommended lesson remains a single accessible tap target');
+assert.match(recommend.props.accessibilityLabel,/Άνοιξε το μάθημα:/);
+recommend.props.onPress();assert.ok(lessons.some(l=>l.id===opened[0]));
+assert.equal(nodes(recommend).filter(n=>n.type==='ActionButton').length,0,'no nested redundant lesson CTA');
+assert.equal(nodes(tree).filter(n=>n.props?.testID==='daily-mistake-action').length,1,
+  'mistake practice is a compact but independent action');
 action(tree,'Δες όλες τις απαντήσεις →').props.onPress();tree=render();let review=nodes(tree).find(n=>n.type==='DailyAnswerReview');assert.equal(review.props.rows.length,7);assert.equal(review.props.rows.filter(r=>r.correct===false).length,2);
 const Review=load('src/components/DailyAnswerReview.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'./ActionButton':{__esModule:true,default:'ActionButton'},'./SourceLink':{__esModule:true,default:'SourceLink'},'./ReportContentButton':{__esModule:true,default:'ReportContentButton'}}).default;
 const reviewed=Review(review.props);assert.equal(nodes(reviewed).filter(n=>n.type==='SourceLink').length,7);assert.equal(nodes(reviewed).filter(n=>n.type==='ReportContentButton').length,7);
 for(const q of record.questionIds.map(id=>questions.find(q=>q.id===id)))assert.ok(text(reviewed).includes(q.explanation));
-review.props.onDone();tree=render();action(tree,'Επανάληψη λαθών (2) →').props.onPress();tree=render();const drill=nodes(tree).find(n=>n.type==='DailyMistakeReview');assert.equal(drill.props.questions.length,2);drill.props.onDone();tree=render();assert.equal(JSON.stringify(record),frozen,'answer review/practice do not mutate persisted quiz/rewards');
+review.props.onDone();tree=render();
+const practice=nodes(tree).find(n=>n.props?.testID==='daily-mistake-action');
+assert.ok(practice.props.accessibilityRole==='button');
+practice.props.onPress();tree=render();const drill=nodes(tree).find(n=>n.type==='DailyMistakeReview');assert.equal(drill.props.questions.length,2);drill.props.onDone();tree=render();assert.equal(JSON.stringify(record),frozen,'answer review/practice do not mutate persisted quiz/rewards');
 challenge={...challenge,resultDetails:undefined,record:{...record,selectionVersion:undefined,questionVersions:undefined}};tree=render();assert.ok(text(tree).includes('Δεν υπάρχει αποθηκευμένη ανάλυση σερί'));assert.ok(!text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'),'legacy results do not fabricate a category award');
 assert.ok(nodes(tree).find(n=>n.type==='DailyJourneyTrack').props.correctMask.every(value=>value===null),
   'legacy results do not fabricate correctness for individual stops');
