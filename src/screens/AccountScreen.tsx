@@ -1,10 +1,11 @@
 import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
-import { Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from "react-native";
+import { ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from "react-native";
 import { useRef, useState } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import { MotionPressable } from "../components/HomeMotion";
 import AccountPanel from "../components/AccountPanel";
 import SyncStatus from "../components/SyncStatus";
@@ -50,15 +51,13 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
     : activeSection === "sync" ? "Συγχρονισμός"
     : activeSection === "dev" ? "Εργαλεία δοκιμών" : "Λογαριασμός";
   return <View style={styles.screen}><ProgressGradientBackground /><ScrollView ref={scrollRef} style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
-    <View style={styles.top}>
-      <View style={styles.topCopy}>
-        <Text style={styles.eyebrow}>{activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}</Text>
-        <Text style={styles.topTitle}>{sectionTitle}</Text>
-      </View>
-      <Pressable onPress={goBack} accessibilityRole="button" accessibilityLabel={activeSection ? "Πίσω στις ρυθμίσεις" : "Πίσω στο προφίλ"} style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}>
-        <Text style={styles.backText}>‹ {activeSection ? "Ρυθμίσεις" : "Προφίλ"}</Text>
-      </Pressable>
-    </View>
+    <ProfileSectionHeader
+      eyebrow={activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}
+      title={sectionTitle}
+      actionLabel={activeSection ? "‹ Ρυθμίσεις" : "‹ Προφίλ"}
+      actionAccessibilityLabel={activeSection ? "Πίσω στις ρυθμίσεις" : "Πίσω στο προφίλ"}
+      onAction={goBack} style={styles.headerSpacing}
+    />
     {activeSection === null ? <View testID="account-settings-dashboard">
       {([
         ["account", "Λογαριασμός", "Σύνδεση, εγγραφή και αντίγραφα", "#B7A5FF"],
@@ -89,15 +88,9 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0D1827" },
   scroll: { flex: 1 },
-  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 8, paddingBottom: 20 },
-  top: { minHeight: 45, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 13 },
-  topCopy: { flex: 1, gap: 1 },
-  topTitle: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900" },
-  backButton: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center", backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
-  backPressed: { backgroundColor: "#2D304A" },
-  backText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 20 },
+  headerSpacing: { marginBottom: profileSectionLayout.below },
   overviewContent: { flexGrow: 1 },
-  eyebrow: { color: colors.accentLight, fontSize: 10, fontWeight: "800", letterSpacing: 1.7 },
   tile: { minHeight: 75, flexDirection: "row", alignItems: "center", padding: 12, marginBottom: 9, borderRadius: 17, borderWidth: 1, borderColor: "#38435C", backgroundColor: "#1A2538" },
   iconShell: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginRight: 13 },
   tileCopy: { flex: 1, gap: 5 },
