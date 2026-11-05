@@ -53,9 +53,9 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
         ["account", "Λογαριασμός", "Σύνδεση, εγγραφή και αντίγραφα", "◉", "#B7A5FF"],
         ["experience", "Εμπειρία μάθησης", "Ήχος και κίνηση", "✧", "#82C4C7"],
         ["privacy", "Δεδομένα και απόρρητο", "Κοινοποίηση και αναφορές", "◇", "#D9B77D"],
-        ...(store.userId ? [["sync", "Συγχρονισμός", "Κατάσταση προόδου", "↻", "#91B7FF"]] : []),
-        ...(__DEV__ && devControls ? [["dev", "Εργαλεία δοκιμών", "Επιλογές ανάπτυξης", "⚙", "#B7A5FF"]] : []),
-      ] as ReadonlyArray<readonly [SettingsSection, string, string, string, string]>).map(([id, title, detail, icon, accent]) => (
+        ...(store.userId ? [["sync", "Συγχρονισμός", "Κατάσταση προόδου", "↻", "#91B7FF"] as const] : []),
+        ...(__DEV__ && devControls ? [["dev", "Εργαλεία δοκιμών", "Επιλογές ανάπτυξης", "⚙", "#B7A5FF"] as const] : []),
+      ] as const).map(([id, title, detail, icon, accent]) => (
         <MotionPressable key={id} entranceDelay={65 + (id === "account" ? 0 : id === "experience" ? 45 : id === "privacy" ? 90 : id === "sync" ? 135 : 180)} pressScale={0.983} accessibilityRole="button" accessibilityLabel={title}
           style={styles.tile} onPress={() => setActiveSection(id)}>
           <View style={[styles.iconShell, { backgroundColor: accent + "16" }]}><SettingIcon id={id} color={accent} /></View>
