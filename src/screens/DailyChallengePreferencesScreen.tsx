@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import ActionButton from "../components/ActionButton";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AtlasCard from "../components/AtlasCard";
 import { MotionView, MotionPressable } from "../components/HomeMotion";
 import {
   DAILY_CHALLENGE_TOPICS,
@@ -73,11 +74,11 @@ export default function DailyChallengePreferencesScreen({
         <View style={styles.topCopy}><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text><Text style={styles.topTitle}>Ενδιαφέροντα</Text></View>
         <Pressable accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" onPress={onCancel} style={styles.backButton}><Text style={styles.backText}>‹ Προφίλ</Text></Pressable>
       </View>
-      <MotionView entranceDelay={0} style={[styles.hero, compact && styles.heroCompact]}>
+      <AtlasCard entranceDelay={0} style={[styles.hero, compact && styles.heroCompact]}>
         <View style={styles.heroAccent} />
         <Text style={styles.heroEyebrow}>✦  ΟΙ ΕΠΙΛΟΓΕΣ ΣΟΥ</Text>
         <Text style={styles.heroTitle}>Τι σε συναρπάζει;</Text>
-      </MotionView>
+      </AtlasCard>
 
       {isLoading ? (
         <View style={styles.loading}>
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
   topTitle: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900" },
   backButton: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center", backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
   backText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
-  hero: { borderRadius: 22, borderWidth: 1, borderColor: "#555078", backgroundColor: "#20243C", padding: 16, gap: 6, marginBottom: 13, overflow: "hidden" },
+  hero: { padding: 16, gap: 6, marginBottom: 13 },
   heroAccent: { position: "absolute", top: 0, left: 20, width: 86, height: 3, backgroundColor: "#B2A3FF", borderRadius: 3 },
   heroEyebrow: { color: "#B2A3FF", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 },
   heroTitle: { color: colors.text, fontSize: 22, lineHeight: 29, fontWeight: "900" },
