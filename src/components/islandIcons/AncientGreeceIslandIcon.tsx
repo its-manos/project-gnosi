@@ -18,12 +18,12 @@ export default function AncientGreeceIslandIcon({ size = 64 }: Props) {
       viewBox="0 0 100 100" accessible={false} pointerEvents="none">
       <Defs>
         <LinearGradient id="parthenon-pediment" x1="5%" y1="2%" x2="88%" y2="100%">
-          <Stop offset="0%" stopColor="#FBEBCC" />
+          <Stop offset="0%" stopColor="#EDDEC4" />
           <Stop offset="55%" stopColor="#CEB99A" />
           <Stop offset="100%" stopColor="#8F8580" />
         </LinearGradient>
         <LinearGradient id="parthenon-limestone" x1="0%" y1="0%" x2="100%" y2="12%">
-          <Stop offset="0%" stopColor="#F5E4C3" />
+          <Stop offset="0%" stopColor="#E6D6BB" />
           <Stop offset="39%" stopColor="#D7C4A3" />
           <Stop offset="100%" stopColor="#978A80" />
         </LinearGradient>
@@ -46,6 +46,10 @@ export default function AncientGreeceIslandIcon({ size = 64 }: Props) {
       <Path d="M 20 43 V 75 M 80 43 V 75" stroke="#E9D2AC"
         strokeOpacity={0.2} strokeWidth={1.1} />
 
+      {/* A narrow shaded return on the right gives the front elevation
+          enough architectural depth without making the emblem heavy. */}
+      <Path d="M 90.5 35.2 L 95 33 L 96.6 39.2 L 91.8 42.2 Z"
+        fill="#746F6D" stroke="#BBA88C" strokeOpacity={0.66} strokeWidth={0.7} />
       {/* Weathered triangular pediment and cornice. */}
       <Path d="M 7.7 35.6 L 50 12.8 L 92.3 35.6 Z"
         fill="url(#parthenon-pediment)" stroke="#F7E2BD" strokeWidth={1.1}
@@ -61,7 +65,7 @@ export default function AncientGreeceIslandIcon({ size = 64 }: Props) {
         <Path d="M 26 31.4 H 32 M 68 31.4 H 74" />
       </G>
       <Path d="M 7 36.1 L 93 36.1 L 91.8 41.9 L 8.2 41.9 Z"
-        fill="#E2CCAA" stroke="#FBE9C8" strokeWidth={0.8} />
+        fill="#CFB99B" stroke="#F4DFC1" strokeWidth={0.8} />
       <Path d="M 9 38.5 H 91" stroke="#8A7E70" strokeWidth={0.8} opacity={0.73} />
       {/* Triglyph rhythm is characteristic of the Doric entablature. */}
       <G stroke="#8C8172" strokeWidth={1.5} opacity={0.7}>
@@ -73,9 +77,9 @@ export default function AncientGreeceIslandIcon({ size = 64 }: Props) {
       {columns.map((x, i) => (
         <G key={"col-" + i}>
           <Rect x={x - 4} y={42.4} width={8} height={3.2} rx={0.35}
-            fill="#F5DDB6" stroke="#8F8170" strokeWidth={0.35} />
+            fill="#E7D1B0" stroke="#8F8170" strokeWidth={0.35} />
           <Rect x={x - 3} y={45.4} width={6} height={28.5} rx={0.55}
-            fill="url(#parthenon-limestone)" stroke="#F8E6C9" strokeWidth={0.42} />
+            fill="url(#parthenon-limestone)" stroke="#EEDDBF" strokeWidth={0.42} />
           <Path d={`M ${x - 1.55} 46 V 73 M ${x + 0.6} 46 V 73`}
             fill="none" stroke="#9B8F7E" strokeWidth={0.49} opacity={0.72} />
           <Path d={`M ${x - 2.15} 46 V 73`} stroke="#FFF0D2"
@@ -85,6 +89,10 @@ export default function AncientGreeceIslandIcon({ size = 64 }: Props) {
         </G>
       ))}
 
+      {/* Lower sidewall and contact shadow make the steps read as masonry
+          meeting the carved plateau, not a bright free-floating sticker. */}
+      <Path d="M 90 76 L 96 77.5 L 98.5 84 L 95 86.4 L 92 82.4 Z"
+        fill="#726E69" stroke="#A79B89" strokeWidth={0.62} />
       {/* Three projecting foundation steps with slight perspective. */}
       <Path d="M 11 76 H 89 L 92 79 H 8 Z"
         fill="#C6B097" stroke="#E7D1B0" strokeWidth={0.67} />
