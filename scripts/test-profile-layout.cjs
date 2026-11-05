@@ -66,6 +66,8 @@ const common = {
   "../components/SyncStatus": { __esModule: true, default: "Sync" },
   "../components/ProgressGradientBackground": { __esModule: true, default: "Gradient" },
   "../components/AtlasCard": { __esModule: true, default: "MotionView" },
+  "../components/NavigationTile": { __esModule: true, default: "NavigationTile" },
+  "../components/MetricCard": { __esModule: true, default: "MetricCard" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
   "../components/HomeMotion": { MotionView: "MotionView", MotionXpCircle: "MotionXpCircle", MotionPressable: "MotionPressable" },
 };
@@ -90,7 +92,7 @@ const pressProfile = label => {
   const item = nodes(tree).find(n => typeof n.type === "function" && n.type.name === "QuickLink" && n.props?.title === label);
   assert.ok(item, "Profile shortcut should exist: " + label);
   const button = item.type(item.props);
-  assert.equal(button.type, "Pressable", "Shortcut should render a pressable control");
+  assert.equal(button.type, "NavigationTile", "Shortcut should render the shared navigation tile");
   button.props.onPress();
 };
 for (const label of ["Δραστηριότητα", "Λογαριασμός", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
