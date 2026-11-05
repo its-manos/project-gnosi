@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import CategoryAtlasBackground from "../components/CategoryAtlasBackground";
-import { MotionPressable, MotionView } from "../components/HomeMotion";
+import { MotionView } from "../components/HomeMotion";
+import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
 import { colors } from "../theme";
 import { getAtlasCategoryProgress, getAtlasRegionProgress } from "../utils/categoryAtlas";
@@ -101,8 +102,8 @@ export default function CategoryScreen({
       </MotionView>
 
       {featuredRegion ? (
-        <MotionPressable key={category.id} testID="category-atlas-continue"
-          style={styles.continueCard} entranceDelay={75} pressScale={0.983}
+        <AtlasContinueCard key={category.id} testID="category-atlas-continue"
+          entranceDelay={75} pressScale={0.983}
           disabled={!progressLoaded}
           accessibilityRole="button"
           accessibilityState={{ disabled: !progressLoaded }}
@@ -113,23 +114,23 @@ export default function CategoryScreen({
             if (progressLoaded) onOpenSubcategory(featuredRegion.id, category.id);
           }}>
           <AtlasContinueAccent />
-          <View style={styles.cardHeading}>
+          <View style={atlasContinueStyles.heading}>
             <Text style={styles.cardCategory} numberOfLines={1}>Η ΠΡΟΟΔΟΣ ΣΟΥ</Text>
             <Text style={styles.categoryCount} testID="category-atlas-category-progress">
               {progressLoaded ? categoryProgress.completed + " / " + categoryProgress.total : "— / " + categoryProgress.total}
             </Text>
           </View>
-          <View style={styles.cardBody}>
-            <View style={styles.cardCopy}>
-              <Text style={styles.cardEyebrow}>
+          <View style={atlasContinueStyles.body}>
+            <View style={atlasContinueStyles.copy}>
+              <Text style={atlasContinueStyles.eyebrow}>
                 {!progressLoaded ? "ΦΟΡΤΩΣΗ ΠΡΟΟΔΟΥ" :
                   hasProgress ? "ΣΥΝΕΧΙΣΕ ΤΗΝ ΕΞΕΡΕΥΝΗΣΗ" :
                   featuredRegion.status === "complete" ? "ΟΛΟΚΛΗΡΩΜΕΝΗ ΠΕΡΙΟΧΗ" :
                   "ΕΞΕΡΕΥΝΗΣΕ ΜΙΑ ΠΕΡΙΟΧΗ"}
               </Text>
-              <Text style={styles.cardTitle} numberOfLines={2}>{featuredRegion.title}</Text>
+              <Text style={atlasContinueStyles.title} numberOfLines={2}>{featuredRegion.title}</Text>
             </View>
-            <View style={styles.cardAction} accessible={false}>
+            <View style={atlasContinueStyles.action} accessible={false}>
               <AtlasContinueArrow />
             </View>
           </View>
@@ -139,14 +140,14 @@ export default function CategoryScreen({
               ? featuredRegion.completedLessons + " / " + featuredRegion.totalLessons + " μαθήματα"
               : "Φόρτωση…"}</Text>
           </View>
-          <View testID="category-atlas-progress" style={styles.progressTrack}
+          <View testID="category-atlas-progress" style={atlasContinueStyles.progressTrack}
             accessible accessibilityRole="progressbar"
             accessibilityLabel={"Πρόοδος περιοχής " + featuredRegion.title}
             accessibilityValue={{ min: 0, max: Math.max(1, featuredRegion.totalLessons),
               now: progressLoaded ? featuredRegion.completedLessons : 0 }}>
             <AtlasProgressFill percent={progressLoaded ? featuredPercent : 0} />
           </View>
-        </MotionPressable>
+        </AtlasContinueCard>
       ) : null}
 
       <View testID="category-atlas-map-viewport" style={styles.mapViewport}
@@ -198,35 +199,13 @@ const styles = StyleSheet.create({
   },
   headerMark: { width: 66, minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
   sparkle: { color: colors.accentLight, fontSize: 22 },
-  continueCard: {
-    paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
-    backgroundColor: "#1B2034", borderColor: "#6A618C",
-    borderWidth: 1, borderRadius: 18, gap: 8,
-  },
-  cardHeading: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
-  },
   cardCategory: {
     flex: 1, color: colors.accentLight, fontSize: 13, lineHeight: 19,
     fontWeight: "900", letterSpacing: 0.15,
   },
   categoryCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
-  cardBody: { flexDirection: "row", alignItems: "center", gap: 10 },
-  cardCopy: { flex: 1, gap: 3 },
-  cardEyebrow: {
-    color: "#ABA1D4", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.8,
-  },
-  cardTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "800" },
-  cardAction: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
-    borderWidth: 1, borderColor: "#C9BFFF", alignItems: "center", justifyContent: "center",
-  },
-   progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   progressCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
-  progressTrack: {
-    height: 8, borderRadius: 5, backgroundColor: "#302F4B", overflow: "hidden",
-    borderWidth: 1, borderColor: "#62597D",
-  },
   mapViewport: {
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
     marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",

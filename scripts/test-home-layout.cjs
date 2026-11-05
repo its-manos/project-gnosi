@@ -746,10 +746,16 @@ const access = (lesson, catalogue, completed, inProgress) => {
   const prerequisite = index > 0 ? catalogue[index - 1] : null;
   return { prerequisite, unlocked: !prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id) };
 };
+const continueModule = compile("src/components/AtlasContinueCard.tsx", {
+  "./HomeMotion": { MotionPressable: "Pressable" },
+}, true);
+const atlasContinueStub = { __esModule: true, default: "Pressable",
+  atlasContinueStyles: continueModule.atlasContinueStyles };
 const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "../components/AtlasContinueCard": atlasContinueStub,
   "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo", AdventureContinueAccent: "AdventureContinueAccent", AdventureContinueArrow: "AdventureContinueArrow" },
   "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 }, true);
@@ -1051,6 +1057,7 @@ const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
   "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
+  "../components/AtlasContinueCard": atlasContinueStub,
   "../components/AdventureMotion": { AdventureProgressFill: "AdventureProgressFill", AdventureActiveHalo: "AdventureActiveHalo", AdventureContinueAccent: "AdventureContinueAccent", AdventureContinueArrow: "AdventureContinueArrow" },
   "../components/HomeMotion": { MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View", MotionCounter: "Text" },
 });

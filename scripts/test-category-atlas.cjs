@@ -673,12 +673,21 @@ assert.doesNotMatch(screen, /AdventureAtlasBackground/, "do not impose chapter-m
 assert.match(navigator, /<CategoryScreen[\s\S]*?completedLessonIds={app\.completedLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?inProgressLessonIds={app\.inProgressLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?progressLoaded={app\.progressLoaded}/);
+const continueModule = compile("src/components/AtlasContinueCard.tsx", {
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "./HomeMotion": { MotionPressable: "MotionPressable" },
+  "../theme": { colors: { accent: "#A89BFF", text: "#F3F0E8" } },
+});
+const atlasContinueStub = { __esModule: true, default: "MotionPressable",
+  atlasContinueStyles: continueModule.atlasContinueStyles };
 const screenModule = compile("src/screens/CategoryScreen.tsx", {
   react: { useMemo: fn => fn(), useState: initial => [initial, () => {}] },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "../components/FantasyMap": { __esModule: true, default: map },
   "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
+  "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
     MotionPressable: "MotionPressable", MotionView: "MotionView",
   },
@@ -710,6 +719,7 @@ const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
   "react-native": native,
   "../components/FantasyMap": { __esModule: true, default: map },
   "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
+  "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
     MotionPressable: "MotionPressable", MotionView: "MotionView",
   },
@@ -821,6 +831,7 @@ const androidScreen = compile("src/screens/CategoryScreen.tsx", {
   "react-native": androidNative,
   "../components/FantasyMap": { __esModule: true, default: map },
   "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
+  "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
     MotionPressable: "MotionPressable", MotionView: "MotionView",
   },
