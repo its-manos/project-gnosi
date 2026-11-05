@@ -53,8 +53,10 @@ assert.ok(activity.includes('progress-daily-details'),
   "Keep expandable daily challenge history and accuracy.");
 assert.ok(activity.includes('<LearningActivityPanel todayKey={todayKey} dashboard />'),
   "The chart and weekly activity should precede the quiz details in Statistics.");
-assert.equal((activity.match(/Η δραστηριότητά σου/g) || []).length, 1,
-  "Only the main Statistics heading should use the activity title.");
+assert.equal((activity.match(/title="Δραστηριότητα"/g) || []).length, 1,
+  "Statistics should declare the activity title only once in its shared header.");
+assert.doesNotMatch(activity, /Η δραστηριότητά σου/,
+  "The redundant activity heading must not return.");
 assert.doesNotMatch(activity, /MetricCard|metricsGrid/,
   "Old oversized quiz KPI grid should not return.");
 assert.ok(activity.includes('stats.currentStreak') && activity.includes('stats.longestStreak') &&
