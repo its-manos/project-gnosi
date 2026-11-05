@@ -21,13 +21,6 @@ type Props = {
   onOpenSubcategory: (subcategoryId: string, categoryId: string) => void;
 };
 
-// Muted slate, violet, bronze and green from the Adventure Path vocabulary.
-// These are decorative identities, never lock/progression colors.
-const REGION_COLORS = [
-  "#6C668A", "#4E6D70", "#90795F", "#526A7D", "#756478", "#5C7769",
-];
-const REGION_SYMBOLS = ["✦", "✧", "✥", "✺", "✷", "✹"];
-
 // The atlas is free exploration: this choice affects only the shortcut card,
 // not the order, access, or placement of any destination.
 export function chooseAtlasFeaturedRegion<T extends { id: string; status: string }>(
@@ -53,18 +46,13 @@ export default function CategoryScreen({
     [lessons, category.id, completedLessonIds, progressLoaded],
   );
   const mapRegions = useMemo(
-    () => subcategories.map((subcategory, index) => {
+    () => subcategories.map(subcategory => {
       const progress = getAtlasRegionProgress(
         lessons, subcategory.id, completedLessonIds, inProgressLessonIds, progressLoaded,
       );
       return {
         id: subcategory.id,
         title: subcategory.title,
-        emoji: REGION_SYMBOLS[index % REGION_SYMBOLS.length],
-        color: REGION_COLORS[index % REGION_COLORS.length],
-        detail: progress.status === "coming-soon" ? "Σύντομα"
-          : progress.status === "loading" ? "Φόρτωση…"
-          : progress.completed + " / " + progress.total,
         totalLessons: progress.total,
         completedLessons: progress.completed,
         progressLoaded,
