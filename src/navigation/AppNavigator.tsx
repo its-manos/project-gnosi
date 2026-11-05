@@ -60,6 +60,7 @@ export default function AppNavigator() {
   const welcome = useWelcome(daily.userId, hasActivity);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
   const [isDevQuizPreviewOpen, setIsDevQuizPreviewOpen] = useState(false);
+  const [isDevDailyIntroPreviewOpen, setIsDevDailyIntroPreviewOpen] = useState(false);
   const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
   const [preferencesOrigin, setPreferencesOrigin] = useState<"home" | "daily" | "profile">("home");
   const [knowledgeOrigin, setKnowledgeOrigin] = useState<"home" | "progress">("progress");
@@ -193,6 +194,7 @@ export default function AppNavigator() {
   const hardwareBackRef = useRef<() => boolean>(() => false);
   hardwareBackRef.current = () => {
     if (welcome.visible || welcome.loading) return false;
+    if (isDevDailyIntroPreviewOpen) { setIsDevDailyIntroPreviewOpen(false); return true; }
     if (isDevQuizPreviewOpen) { setIsDevQuizPreviewOpen(false); return true; }
     if (isDailyPreferencesOpen) { closeDailyPreferences(); return true; }
     if (isDailyChallengeOpen) { setIsDailyChallengeOpen(false); return true; }
@@ -303,7 +305,13 @@ export default function AppNavigator() {
     case "account":
       screenContent = <AccountScreen onBack={() => app.setScreen(accountOrigin)}
         devPreviewOpen={isDevQuizPreviewOpen} onCloseDevPreview={() => setIsDevQuizPreviewOpen(false)}
-        devControls={{ canResetLessonProgress: app.canResetLessonProgress, lessonProgressLoaded: app.progressLoaded, onResetLessonProgressForDevelopment: app.resetLessonProgressForDevelopment, allLessonsUnlockedForTesting, onToggleAllLessonsForTesting: toggleAllLessonsForTesting, onOpenQuestionPreview: () => { if (__DEV__) setIsDevQuizPreviewOpen(true); } }}
+        dailyIntroPreview={isDevDailyIntroPreviewOpen ? {
+          preferences: dailyPreferences.preferences, preferencesLoaded: !dailyPreferences.isLoading,
+          onClose: () => setIsDevDailyIntroPreviewOpen(false),
+          onContinue: () => { setIsDevDailyIntroPreviewOpen(false); app.setScreen("home"); setIsDailyChallengeOpen(true); },
+          onOpenPreferences: () => { setIsDevDailyIntroPreviewOpen(false); openDailyPreferences("profile"); },
+        } : undefined}
+        devControls={{ canResetLessonProgress: app.canResetLessonProgress, lessonProgressLoaded: app.progressLoaded, onResetLessonProgressForDevelopment: app.resetLessonProgressForDevelopment, allLessonsUnlockedForTesting, onToggleAllLessonsForTesting: toggleAllLessonsForTesting, onOpenQuestionPreview: () => { if (__DEV__) setIsDevQuizPreviewOpen(true); }, onOpenDailyIntroPreview: () => { if (__DEV__) setIsDevDailyIntroPreviewOpen(true); } }}
         backupControls={app.progressLoaded && bookmarks.isSavedLessonsLoaded ? {
           deviceBackup: parseLearningBackup({ schemaVersion: 1, completedIds: app.completedLessonIds, savedIds: bookmarks.savedLessonIds, attempts: app.lessonAttempts }),
           onRestoreBackup: async backup => { await Promise.all([app.mergeRestoredProgress(backup), bookmarks.mergeRestoredBookmarks(backup.savedIds)]); },
@@ -470,12 +478,13 @@ export default function AppNavigator() {
         {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus quiet /> : null}
         {screenContent}
       </SafeAreaView>
-      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && app.screen !== "quiz" ? <BottomNavigation
+      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app.screen !== "quiz" ? <BottomNavigation
         currentScreen={isDailyChallengeOpen ? "home" : app.screen === "account" ? accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
           setIsDailyChallengeOpen(false);
           setIsDevQuizPreviewOpen(false);
+          setIsDevDailyIntroPreviewOpen(false);
           // A bottom-tab visit is a root destination. Deep links from Home or
           // Progress still remember their origin for Android system Back.
           if (destination === "profile" && app.screen !== "profile") {
