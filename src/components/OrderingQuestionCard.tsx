@@ -5,6 +5,7 @@ import type { OrderingQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -13,11 +14,12 @@ type Props = {
   answer?: readonly string[];
   onSubmit: (ids: string[]) => void;
   readingSize?: number;
+  compactAnswered?: boolean;
   onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Accessible row reordering; item identity rather than stale position drives every move. */
-export default function OrderingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
+export default function OrderingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange, compactAnswered = false }: Props) {
   const [pending, setPending] = useState<string[]>(() => question.content.items.map(item => item.id));
   useEffect(() => { setPending(question.content.items.map(item => item.id)); }, [question.id, question.version]);
   const answered = answer !== undefined;
@@ -53,8 +55,8 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
-    <Text style={styles.hint}>Χρησιμοποίησε τα βέλη για να αλλάξεις τη σειρά.</Text>
-    <View style={styles.orderList}>
+    {!answered ? <Text style={styles.hint}>Χρησιμοποίησε τα βέλη για να αλλάξεις τη σειρά.</Text> : null}
+    {(!answered || !compactAnswered) ? <View style={styles.orderList}>
       {order.map((id, index) => {
         const atCorrectPlace = answered && id === correctOrder[index];
         return <View key={id} testID={`ordering-item-${id}`}
@@ -80,22 +82,21 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
           </Text>}
         </View>;
       })}
-    </View>
+    </View> : null}
     {!answered && !onActionChange ? <>
       <Pressable testID="ordering-confirm" accessibilityRole="button" onPress={() => onSubmit([...pending])}
         style={({ pressed }) => [styles.confirm, pressed && styles.pressed]}>
         <Text style={styles.confirmText}>Επιβεβαίωση σειράς  →</Text>
       </Pressable>
     </> : null}
-    {answered ? <QuizReveal><View testID="ordering-feedback" accessibilityLiveRegion="polite"
-      style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={[styles.feedbackTitle, correct ? styles.correctTitle : styles.wrongTitle]}>
-        {correct ? "✓  Σωστή ακολουθία!" : "↗  Η σωστή ακολουθία"}
-      </Text>
-      {!correct ? <View style={styles.solutionList}>{correctOrder.map((id, index) =>
-        <Text key={id} style={styles.solutionItem}>{index + 1}. {labels.get(id)}</Text>)}</View> : null}
-      <Text style={styles.feedbackText}>{question.explanation}</Text>
-    </View></QuizReveal> : null}
+    {answered ? <QuizReveal><QuestionFeedbackPanel
+      testID="ordering-feedback" correct={correct}
+      explanation={question.explanation} readingSize={readingSize}
+      selection={compactAnswered ? <AnswerSummaryText>{order.map((id, i) =>
+        `${i + 1}. ${labels.get(id) ?? id}`).join("  →  ")}</AnswerSummaryText> : undefined}
+      solution={!correct ? <AnswerSummaryText>{correctOrder.map((id, i) =>
+        `${i + 1}. ${labels.get(id) ?? id}`).join("  →  ")}</AnswerSummaryText> : undefined}
+    /></QuizReveal> : null}
   </View>;
 }
 
