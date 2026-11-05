@@ -7,6 +7,7 @@ import { dailyHistory } from "../utils/dailySyncDocument";
 import { activityBuckets, activitySummary, type ActivityBucket } from "../utils/learningActivity";
 import { colors } from "../theme";
 import { MotionPressable, MotionView } from "./HomeMotion";
+import MetricCard from "./MetricCard";
 import { ProgressBarFill } from "./ProgressMotion";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 
@@ -18,16 +19,16 @@ function rangeLabel(bucket: ActivityBucket): string {
   return bucket.key === bucket.end ? dateLabel(bucket.key, true) : `${dateLabel(bucket.key)} – ${dateLabel(bucket.end, true)}`;
 }
 function MiniMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text><Text style={styles.small}>{detail}</Text></View>;
+  return <MetricCard variant="standard"><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text><Text style={styles.small}>{detail}</Text></MetricCard>;
 }
 
 function DashboardMetric({ label, value, detail, index }: { label: string; value: string; detail: string; index: number }) {
-  return <MotionView entranceDelay={80 + index * 65} style={styles.dashboardMetric}>
+  return <MetricCard variant="dashboard" entranceDelay={80 + index * 65}>
     <View pointerEvents="none" accessible={false} style={[styles.metricAccent, index === 1 && styles.metricAccentReplay, index === 2 && styles.metricAccentDays]} />
     <Text style={styles.dashboardValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{value}</Text>
     <Text style={styles.dashboardLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{label}</Text>
     <Text style={styles.dashboardDetail} numberOfLines={1}>{detail}</Text>
-  </MotionView>;
+  </MetricCard>;
 }
 
 export default function LearningActivityPanel({ todayKey, compact = false, dashboard = false }: { todayKey: string; compact?: boolean; dashboard?: boolean }) {
@@ -238,7 +239,6 @@ const styles = StyleSheet.create({
   dashboardSelectedSummary: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
   dashboardHeading: { color: colors.textBody, fontSize: 12, lineHeight: 18, fontWeight: "800" },
   dashboardMetrics: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 62, paddingHorizontal: 11, paddingVertical: 8, justifyContent: "center", gap: 1, borderWidth: 1, borderColor: "#4A4566", borderRadius: 15, backgroundColor: "#20243C" },
   metricAccent: { position: "absolute", left: 11, top: 0, width: 32, height: 2, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: FIRST, opacity: 0.8 },
   metricAccentReplay: { backgroundColor: REPLAY },
   metricAccentDays: { backgroundColor: "#9B9EDB" },
@@ -301,7 +301,6 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "800" },
   small: { color: colors.textMuted, fontSize: 12, lineHeight: 19, flexShrink: 1 },
   metrics: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  metric: { flexGrow: 1, flexBasis: "46%", backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 17, padding: 15, gap: 6 },
   metricLabel: { color: colors.textMuted, fontSize: 10, lineHeight: 16, fontWeight: "700", letterSpacing: 0.4 },
   metricValue: { color: colors.accentLight, fontSize: 30, lineHeight: 39, fontWeight: "800" },
   chartCard: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: 16, gap: 10 },
