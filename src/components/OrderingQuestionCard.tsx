@@ -43,7 +43,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
-    <Text style={styles.hint}>Μετακίνησε τις κάρτες με τα βέλη. Η πρώτη θέση είναι η αρχή της ακολουθίας.</Text>
+    <Text style={styles.hint}>Χρησιμοποίησε τα βέλη για να αλλάξεις τη σειρά.</Text>
     <View style={styles.orderList}>
       {order.map((id, index) => {
         const atCorrectPlace = answered && id === correctOrder[index];
@@ -72,7 +72,6 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
       })}
     </View>
     {!answered ? <>
-      <Text style={styles.footHint}>Σκέψου ποιο γεγονός προηγήθηκε και ποιο ακολούθησε.</Text>
       <Pressable testID="ordering-confirm" accessibilityRole="button" onPress={() => onSubmit([...pending])}
         style={({ pressed }) => [styles.confirm, pressed && styles.pressed]}>
         <Text style={styles.confirmText}>Επιβεβαίωση σειράς  →</Text>
