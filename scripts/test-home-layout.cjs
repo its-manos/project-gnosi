@@ -449,9 +449,10 @@ assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbie
 assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasTwinkles").length, 0);
 const staticAtlasSource = fs.readFileSync(
   path.join(root, "src/components/HomeAtlasBackground.tsx"), "utf8");
-assert.ok(!/withRepeat\\(|withTiming\\(|useSharedValue\\(|setInterval\\(/.test(staticAtlasSource),
+assert.ok(!staticAtlasSource.includes("withRepeat(") && !staticAtlasSource.includes("withTiming(")
+  && !staticAtlasSource.includes("useSharedValue(") && !staticAtlasSource.includes("setInterval("),
   "all time-based motion stays isolated outside the static image");
-assert.match(staticAtlasSource, /memo\\(HomeAtlasBackground\\)/);
+assert.ok(staticAtlasSource.includes("memo(HomeAtlasBackground)"));
 assert.match(staticAtlasSource, /absoluteFill/);
 assert.doesNotMatch(staticAtlasSource, /setTimeout|setInterval|HomeAtlasReveal|atlasReady/);
 
