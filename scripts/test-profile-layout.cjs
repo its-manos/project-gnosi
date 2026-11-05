@@ -130,14 +130,30 @@ assert.equal(nodes(tree).filter(n => n.type === "SectionHeader" && n.props?.titl
   "Statistics should use one shared page header");
 assert.ok(!text(tree).includes("Η δραστηριότητά σου"), "Redundant activity introduction should be removed");
 assert.ok(!nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
-assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"), "Default Statistics overview should not scroll");
+const getStatsScroll = tree => nodes(tree).find(n => n.type === "ScrollView");
+assert.equal(getStatsScroll(tree)?.props.scrollEnabled, false, "Default Statistics overview should not scroll");
+assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"));
 screenWidth = 320;
 tree = render();
-assert.ok(nodes(tree).some(n => n.props?.testID === "stats-accessibility-scroll"),
+assert.equal(getStatsScroll(tree)?.props.scrollEnabled, true,
   "Narrow screens should use the scrollable statistics layout to avoid clipping");
 screenWidth = 390;
 tree = render();
-assert.ok(!nodes(tree).some(n => n.type === "ScrollView"), "Normal viewport stays fixed");
+assert.equal(getStatsScroll(tree)?.props.scrollEnabled, false, "Normal viewport stays fixed");
+// Content-based overflow must work even on a wide phone, without stretching the gaps.
+nodes(tree).find(n => n.props?.testID === "player-stats-screen").props.onLayout({
+  nativeEvent: { layout: { height: 580 } },
+});
+getStatsScroll(tree).props.onContentSizeChange(390, 720);
+tree = render();
+assert.equal(getStatsScroll(tree)?.props.scrollEnabled, true,
+  "Content taller than the viewport should enable scrolling");
+nodes(tree).find(n => n.props?.testID === "player-stats-screen").props.onLayout({
+  nativeEvent: { layout: { height: 820 } },
+});
+tree = render();
+assert.equal(getStatsScroll(tree)?.props.scrollEnabled, false,
+  "Scrolling should turn off when the content fits again");
 const quizToggle = nodes(tree).find(n => n.type === "MotionPressable" && text(n).includes("Καθημερινά quiz"));
 assert.ok(quizToggle, "Quiz details stay discoverable");
 quizToggle.props.onPress();

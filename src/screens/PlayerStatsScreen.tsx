@@ -27,10 +27,12 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
   const daily = useDailySnapshot();
   const [dailyExpanded, setDailyExpanded] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   const { width, fontScale } = useWindowDimensions();
-  // Preserve the screen-fitting dashboard on standard phones; use the accessible
-  // scrolling layout when compact widths or enlarged text would clip content.
-  const allowScroll = dailyExpanded || (viewportHeight > 0 && viewportHeight < 575) || width < 350 || fontScale > 1.2;
+  // Align sections from the top. Only enable scrolling when content actually
+  // exceeds the safe-area viewport or accessibility sizing needs it.
+  const allowScroll = dailyExpanded || width < 350 || fontScale > 1.2 ||
+    (viewportHeight > 0 && contentHeight > viewportHeight + 1);
   const history = useMemo(() => dailyHistory(daily.doc), [daily.doc]);
   const historyLoaded = daily.ready;
   const [todayKey, setTodayKey] = useState(() => getAthensDateKey());
@@ -53,19 +55,22 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
   );
   const pageHeader = <ProfileSectionHeader eyebrow="Ο ΧΩΡΟΣ ΣΟΥ" title="Δραστηριότητα"
     actionLabel="‹ Προφίλ" actionAccessibilityLabel="Πίσω στο προφίλ"
-    onAction={onBack} style={styles.headerSpacing} />;
+    onAction={onBack} />;
 
   return (
     <View style={styles.screen} testID="player-stats-screen" onLayout={event => { const next = event.nativeEvent.layout.height; if (next > 0) setViewportHeight(previous => stableLayoutHeight(previous, next)); }}>
       <ProgressGradientBackground />
-      {allowScroll ? <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="stats-accessibility-scroll">
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
+        bounces={false} overScrollMode="never" scrollEnabled={allowScroll}
+        onContentSizeChange={(_, next) => setContentHeight(previous => stableLayoutHeight(previous, next))}
+        testID={allowScroll ? "stats-accessibility-scroll" : "stats-fixed-dashboard"}>
         {pageHeader}
 
-        <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
+        <MotionView entranceDelay={65} testID="activity-overview">
           <LearningActivityPanel todayKey={todayKey} dashboard />
         </MotionView>
 
-        <MotionView entranceDelay={115} style={styles.quizSection} testID="progress-daily">
+        <MotionView entranceDelay={115} testID="progress-daily">
           <MotionPressable
             style={styles.disclosure} pressScale={0.985}
             accessibilityRole="button"
@@ -141,36 +146,16 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
             </View>
           ) : null}
         </MotionView>
-      </ScrollView> : <View style={[styles.content, styles.fixedContent]} testID="stats-fixed-dashboard">
-        {pageHeader}
-        <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
-          <LearningActivityPanel todayKey={todayKey} dashboard />
-        </MotionView>
-        <MotionView entranceDelay={115} style={styles.quizSection} testID="progress-daily">
-          <MotionPressable style={styles.disclosure} pressScale={0.985}
-            accessibilityRole="button" accessibilityState={{ expanded: false }}
-            onPress={() => setDailyExpanded(true)}>
-            <View style={styles.accountCopy}>
-              <Text style={styles.accountTitle}>Καθημερινά quiz</Text>
-              <Text style={styles.muted}>{historyLoaded ? stats.completedChallenges + " ολοκληρωμένα · " + stats.totalPoints.toLocaleString("el-GR") + " πόντοι" : "Φόρτωση στατιστικών…"}</Text>
-            </View>
-            <Text style={styles.chevron} accessible={false}>+</Text>
-          </MotionPressable>
-        </MotionView>
-      </View>}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: "#101827" },
-  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 18 },
-  fixedContent: { flex: 1, minHeight: 0, justifyContent: "space-between" },
-  headerSpacing: { marginBottom: profileSectionLayout.below },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 18, gap: profileSectionLayout.below },
   title: { color: colors.text, fontSize: 22, lineHeight: 29, fontWeight: "900" },
   intro: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
-  activityOverview: { marginBottom: 8 },
-  quizSection: { marginBottom: 6 },
   disclosure: { flexDirection: "row", alignItems: "center", minHeight: 55, paddingHorizontal: 13, paddingVertical: 7, backgroundColor: "#20243C", borderWidth: 1, borderColor: "#484360", borderRadius: 18 },
 
   accountCopy: { flex: 1, gap: 4, paddingRight: 10 },
