@@ -8,6 +8,7 @@ import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
 import MetricCard from "../components/MetricCard";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import ProgressTrack from "../components/ProgressTrack";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
 import { colors } from "../theme";
@@ -109,9 +110,9 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
                       </View>
                       <Text style={styles.accuracyCount}>{stats.totalCorrectAnswers} / {stats.totalAnswers} σωστές</Text>
                     </View>
-                    <View style={styles.track}>
+                    <ProgressTrack variant="accuracy">
                       <View style={[styles.trackFill, { width: stats.accuracyPercent + "%" }]} />
-                    </View>
+                    </ProgressTrack>
                   </View>
 
                   <Text style={styles.sectionTitle}>Πρόσφατες προκλήσεις</Text>
@@ -187,7 +188,6 @@ const styles = StyleSheet.create({
   accuracyCopy: { flex: 1 },
   accuracyValue: { color: colors.text, fontSize: 27, lineHeight: 34, fontWeight: "900", marginTop: 3 },
   accuracyCount: { color: colors.textBody, fontSize: 11, textAlign: "right", marginBottom: 6, flexShrink: 1 },
-  track: { height: 7, overflow: "hidden", backgroundColor: "#282D40", borderRadius: 20, marginTop: 11 },
   trackFill: { height: "100%", backgroundColor: colors.accent, borderRadius: 20 },
   sectionTitle: { color: colors.text, fontSize: 17, lineHeight: 24, fontWeight: "900", marginTop: 19, marginBottom: 10 },
   emptyCard: { padding: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 16 },
