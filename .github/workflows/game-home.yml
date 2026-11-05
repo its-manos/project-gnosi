@@ -11,6 +11,7 @@ on:
       - "src/components/AtlasCard.tsx"
       - "src/components/FantasyMap.tsx"
       - "src/components/IslandAtlasMap.tsx"
+      - "src/components/IslandHoverMotion.tsx"
       - "src/components/CategoryWorldAtlasBackground.tsx"
       - "assets/atlas-source/category-world.svg"
       - "assets/atlas-source/natural-earth-110m-land.geojson"
