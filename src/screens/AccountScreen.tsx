@@ -1,7 +1,7 @@
 import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from "react-native";
 import { useRef, useState } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
@@ -31,7 +31,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
   // Account identity does not change during background progress synchronization.
   const { store } = useLearningSession();
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const openSection = (section: SettingsSection) => {
     setActiveSection(section);
     scrollRef.current?.scrollTo({ y: 0, animated: false });
