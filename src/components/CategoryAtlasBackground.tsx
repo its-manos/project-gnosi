@@ -3,6 +3,8 @@
  * The viewBox and artwork exactly match the embedded FantasyMap backdrop.
  */
 import { memo } from "react";
+import { Image } from "expo-image";
+const atlasImage = require("../../assets/atlas-export-preview/category.webp");
 import { StyleSheet, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 
@@ -30,7 +32,10 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
       accessible={false} style={[styles.background, {
         width, height,
       }]}>
-      <Svg width="100%" height="100%"
+      {regionCount === 6 ? (
+        <Image source={atlasImage} contentFit="fill" transition={0}
+          cachePolicy="memory-disk" style={StyleSheet.absoluteFillObject} />
+      ) : <Svg width="100%" height="100%"
         viewBox={`0 0 ${MAP_WIDTH} ${mapHeight}`} preserveAspectRatio="xMidYMid meet"
         pointerEvents="none">
         <Defs>
@@ -211,7 +216,7 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
         {fitted ? <Rect testID="atlas-sky-vignette" width={MAP_WIDTH}
           height={mapHeight} fill="url(#atlas-vignette)" pointerEvents="none" /> : null}
 
-      </Svg>
+      </Svg>}
     </View>
   );
 }
