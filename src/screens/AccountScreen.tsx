@@ -2,7 +2,7 @@ import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { MotionView, MotionPressable } from "../components/HomeMotion";
@@ -31,14 +31,29 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
   // Account identity does not change during background progress synchronization.
   const { store } = useLearningSession();
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const openSection = (section: SettingsSection) => {
+    setActiveSection(section);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  };
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const goBack = () => activeSection ? setActiveSection(null) : onBack();
-  return <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
+  const goBack = () => {
+    if (activeSection) {
+      setActiveSection(null);
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    } else onBack();
+  };
+  const sectionTitle = activeSection === "account" ? "Λογαριασμός"
+    : activeSection === "experience" ? "Εμπειρία μάθησης"
+    : activeSection === "privacy" ? "Δεδομένα και απόρρητο"
+    : activeSection === "sync" ? "Συγχρονισμός"
+    : activeSection === "dev" ? "Εργαλεία δοκιμών" : "Λογαριασμός";
+  return <View style={styles.screen}><ProgressGradientBackground /><ScrollView ref={scrollRef} style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <View style={styles.top}>
       <View style={styles.topCopy}>
         <Text style={styles.eyebrow}>{activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}</Text>
-        <Text style={styles.topTitle}>{activeSection ? "Ρυθμίσεις" : "Λογαριασμός"}</Text>
+        <Text style={styles.topTitle}>{sectionTitle}</Text>
       </View>
       <Pressable onPress={goBack} accessibilityRole="button" accessibilityLabel={activeSection ? "Πίσω στις ρυθμίσεις" : "Πίσω στο προφίλ"} style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}>
         <Text style={styles.backText}>‹ {activeSection ? "Ρυθμίσεις" : "Προφίλ"}</Text>
@@ -52,14 +67,14 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
         <Text style={styles.subtitle}>Προσάρμοσε τη Γνώση στα μέτρα σου.</Text>
       </MotionView>
       {([
-        ["account", "Λογαριασμός", "Σύνδεση, εγγραφή και αντίγραφα", "◉", "#B7A5FF"],
-        ["experience", "Εμπειρία μάθησης", "Ήχος και κίνηση", "✧", "#82C4C7"],
-        ["privacy", "Δεδομένα και απόρρητο", "Κοινοποίηση και αναφορές", "◇", "#D9B77D"],
-        ...(store.userId ? [["sync", "Συγχρονισμός", "Κατάσταση προόδου", "↻", "#91B7FF"] as const] : []),
-        ...(__DEV__ && devControls ? [["dev", "Εργαλεία δοκιμών", "Επιλογές ανάπτυξης", "⚙", "#B7A5FF"] as const] : []),
-      ] as const).map(([id, title, detail, icon, accent]) => (
+        ["account", "Λογαριασμός", "Σύνδεση, εγγραφή και αντίγραφα", "#B7A5FF"],
+        ["experience", "Εμπειρία μάθησης", "Ήχος και κίνηση", "#82C4C7"],
+        ["privacy", "Δεδομένα και απόρρητο", "Κοινοποίηση και αναφορές", "#D9B77D"],
+        ...(store.userId ? [["sync", "Συγχρονισμός", "Κατάσταση προόδου", "#91B7FF"] as const] : []),
+        ...(__DEV__ && devControls ? [["dev", "Εργαλεία δοκιμών", "Επιλογές ανάπτυξης", "#B7A5FF"] as const] : []),
+      ] as const).map(([id, title, detail, accent]) => (
         <MotionPressable key={id} entranceDelay={65 + (id === "account" ? 0 : id === "experience" ? 45 : id === "privacy" ? 90 : id === "sync" ? 135 : 180)} pressScale={0.983} accessibilityRole="button" accessibilityLabel={title}
-          style={styles.tile} onPress={() => setActiveSection(id)}>
+          style={styles.tile} onPress={() => openSection(id)}>
           <View style={[styles.iconShell, { backgroundColor: accent + "16" }]}><SettingIcon id={id} color={accent} /></View>
           <View style={styles.tileCopy}>
             <Text style={styles.tileTitle}>{title}</Text>
@@ -69,7 +84,6 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
         </MotionPressable>
       ))}
     </View> : <>
-      <Text style={styles.eyebrow}>ΡΥΘΜΙΣΕΙΣ</Text>
       {activeSection === "account" ? <AccountPanel backupControls={backupControls} /> : null}
       {activeSection === "experience" ? <PlayFeedbackSettings /> : null}
       {activeSection === "privacy" ? <><UsageSharing /><PendingReportsPanel /></> : null}
@@ -97,7 +111,6 @@ const styles = StyleSheet.create({
   subtitle: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
   tile: { minHeight: 75, flexDirection: "row", alignItems: "center", padding: 12, marginBottom: 9, borderRadius: 17, borderWidth: 1, borderColor: "#38435C", backgroundColor: "#1A2538" },
   headingSymbol: { color: "#B7A5FF", fontSize: 20 },
-  tileSymbol: { fontSize: 24, fontWeight: "700" },
   iconShell: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginRight: 13 },
   tileCopy: { flex: 1, gap: 5 },
   tileTitle: { color: colors.text, fontSize: 15, fontWeight: "800" },
