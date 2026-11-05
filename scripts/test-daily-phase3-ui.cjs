@@ -3,7 +3,7 @@ const {questions}=load('src/data/questions.ts'),{lessons}=load('src/data/lessons
 const jsx=(type,props)=>({type,props}),nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
 const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
 let slots=[],cursor=0,next=0,homes=0,opened=[];
-const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:initial=>{const i=cursor++;return slots[i]??={current:initial};}};
+const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:initial=>{const i=cursor++;return slots[i]??={current:initial};},useMemo:factory=>factory()};
 const native={View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x},useWindowDimensions:()=>({width:390,height:844,fontScale:1})};
 const stubs=Object.fromEntries(['QuizReveal','KnowledgeProgress','DailyAnswerReview','DailyMistakeReview',
   'ActionButton','AnswerOption','ProfileSectionHeader','DailyMissionMap','DailyJourneyTrack','ReportContentButton',
@@ -100,11 +100,18 @@ const Journey=load('src/components/DailyJourneyTrack.tsx',{
 const stageJourney=Journey({mode:'question',answeredCount:1,currentIndex:1,shared:true});
 assert.equal(nodes(stageJourney).filter(n=>/^daily-journey-stop-/.test(n.props?.testID??'')).length,7);
 assert.equal(nodes(stageJourney).find(n=>n.props?.accessibilityRole==='progressbar').props.accessibilityValue.now,1);
+assert.equal(nodes(stageJourney).find(n=>n.props?.accessibilityRole==='progressbar').props.accessibilityLabel,
+  'Απαντημένες: 1 από 7 ερωτήσεις.');
 const resultJourney=Journey({mode:'result',correctMask:[true,true,false,true,false,true,true],shared:true});
 assert.equal(nodes(resultJourney).find(n=>n.props?.accessibilityRole==='progressbar').props.accessibilityValue.now,7);
+assert.equal(nodes(resultJourney).find(n=>n.props?.accessibilityRole==='progressbar').props.accessibilityLabel,
+  'Αποτελέσματα: 5 σωστές, 2 λανθασμένες απαντήσεις.');
 assert.ok(text(resultJourney).includes('✓')&&text(resultJourney).includes('×'),'frozen result shows both outcomes');
 const legacyJourney=Journey({mode:'result',correctMask:Array(7).fill(null),shared:false});
 assert.ok(!text(legacyJourney).includes('✓')&&!text(legacyJourney).includes('×'),'older results stay neutral when answer keys are unknown');
+assert.equal(nodes(legacyJourney).find(n=>n.props?.accessibilityRole==='progressbar').props.accessibilityLabel,
+  'Η διαδρομή ολοκληρώθηκε. Δεν υπάρχουν αναλυτικά αποτελέσματα για κάθε ερώτηση.',
+  'screen reader must not infer correctness for legacy attempts');
 // Preview the exact intro after today's attempt has already started. This is read-only.
 let previewContinues=0,previewCloses=0,liveStarts=0;
 challenge={...challenge,startChallenge:async()=>{liveStarts++;}};
