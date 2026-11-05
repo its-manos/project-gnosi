@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import IslandAtlasMap from "../components/IslandAtlasMap";
 import CategoryWorldAtlasBackground from "../components/CategoryWorldAtlasBackground";
+import HistoryWorldIcon from "../components/worldIcons/HistoryWorldIcon";
 import { MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
@@ -104,7 +105,13 @@ export default function CategoryScreen({
           {category.title.toLocaleUpperCase("el-GR")}
         </Text>
         <View style={styles.headerMark} accessible={false}>
-          <MotionIcon index={0}><Text style={styles.sparkle}>✦</Text></MotionIcon>
+          <MotionIcon index={0}>
+            {category.id === "history" ? (
+              <HistoryWorldIcon size={32} />
+            ) : (
+              <Text style={styles.sparkle}>✦</Text>
+            )}
+          </MotionIcon>
         </View>
       </MotionView>
 
