@@ -103,6 +103,7 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
     './HomeMotion':{MotionPressable:'MotionPressable',MotionView:'MotionView'},
     './MetricCard':{__esModule:true,default:'MetricCard'},
     './SubjectProgressTile':{__esModule:true,default:'SubjectProgressTile'},
+    './LearningDetailSections':{LearningSectionHeading:'Text',SubjectInsightPanel:'View',SubjectShowAll:'Pressable'},
     './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}});
   const nodes=tree=>tree&&typeof tree==='object'?[tree,...[tree.props?.children].flat(Infinity).flatMap(nodes)]:[];
   const render=()=>{cursor=0;return component.default({todayKey:'2026-10-30'});};

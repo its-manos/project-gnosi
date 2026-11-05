@@ -9,6 +9,7 @@ import { colors } from "../theme";
 import { MotionPressable, MotionView } from "./HomeMotion";
 import MetricCard from "./MetricCard";
 import SubjectProgressTile from "./SubjectProgressTile";
+import { LearningSectionHeading, SubjectInsightPanel, SubjectShowAll } from "./LearningDetailSections";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 
 const FIRST = "#BEA7F4", REPLAY = "#6FC7BD";
@@ -139,7 +140,8 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
   const selectedCategory = detail ? visible.find(row => row.category.id === selectedCategoryId) : undefined;
 
   return <View style={[styles.section, compact && styles.sectionCompact, detail && styles.sectionDetail]} testID="reading-category-progress">
-    <Text style={[styles.title, compact && styles.titleCompact, detail && styles.titleDetail]}>{detail ? "Ανά θεματική" : "Οι κόσμοι που εξερευνάς"}</Text>
+    {detail ? <LearningSectionHeading title="ΟΙ ΘΕΜΑΤΙΚΕΣ ΣΟΥ" tone="reading" />
+      : <Text style={[styles.title, compact && styles.titleCompact]}>Οι κόσμοι που εξερευνάς</Text>}
     <View style={[styles.categoryCard, compact && styles.categoryCardCompact,
       detail && styles.categoryCardDetail, detail && styles.categoryGrid,
       detail && singleColumn && styles.categoryGridSingle]}>
@@ -167,41 +169,27 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
         </View>
       ))}
     </View>
-    {detail && selectedCategory ? (
-      <View testID="reading-selected-subject" accessibilityLiveRegion="polite"
-        style={styles.readingInsight}>
-        <View style={styles.readingInsightHeading}>
-          <Text style={styles.readingInsightTitle} numberOfLines={2}>
-            {selectedCategory.category.title}
-          </Text>
-          <Text style={styles.readingInsightValue}>
-            {selectedCategory.count} / {selectedCategory.total}
-          </Text>
-        </View>
-        <Text style={styles.readingInsightCaption}>
-          {selectedCategory.total === 0
-            ? "Δεν υπάρχουν ακόμη μαθήματα σε αυτή τη θεματική."
-            : selectedCategory.count === selectedCategory.total
-              ? "Ολοκλήρωσες όλα τα διαθέσιμα μαθήματα εδώ."
-              : selectedCategory.count === 0
-                ? "Επόμενος στόχος: το πρώτο ολοκληρωμένο μάθημα."
-                : `Απομένουν ${selectedCategory.total - selectedCategory.count} μαθήματα για ολοκλήρωση.`}
-        </Text>
-      </View>
+    {detail && selectedCategory ? <SubjectInsightPanel
+      testID="reading-selected-subject" tone="reading"
+      title={selectedCategory.category.title} current={selectedCategory.count}
+      total={selectedCategory.total}
+      caption={selectedCategory.total === 0
+        ? "Δεν υπάρχουν ακόμη μαθήματα σε αυτή τη θεματική."
+        : selectedCategory.count === selectedCategory.total
+          ? "Ολοκλήρωσες όλα τα διαθέσιμα μαθήματα εδώ."
+          : selectedCategory.count === 0
+            ? "Επόμενος στόχος: το πρώτο ολοκληρωμένο μάθημα."
+            : `Απομένουν ${selectedCategory.total - selectedCategory.count} μαθήματα για ολοκλήρωση.`} /> : null}
+    {(compact || detail) && rows.length > limit ? (
+      detail ? <SubjectShowAll testID="reading-all-subjects" tone="reading"
+        expanded={expanded} count={rows.length} onPress={() => setExpanded(value => !value)} />
+      : <Pressable
+          style={({ pressed }) => [styles.categoryMore, pressed && styles.categoryMorePressed]}
+          accessibilityRole="button" accessibilityState={{ expanded }}
+          onPress={() => setExpanded(value => !value)}>
+          <Text style={styles.categoryMoreText}>{expanded ? "Λιγότεροι κόσμοι −" : "Όλοι οι κόσμοι +"}</Text>
+        </Pressable>
     ) : null}
-    {(compact || detail) && rows.length > limit ? <Pressable
-      testID={detail ? "reading-all-subjects" : undefined}
-      style={({ pressed }) => [styles.categoryMore, detail && styles.detailMore,
-        pressed && styles.categoryMorePressed]}
-      accessibilityRole="button" accessibilityState={{ expanded }}
-      onPress={() => setExpanded(value => !value)}>
-      <Text style={[styles.categoryMoreText, detail && styles.detailMoreText]}>
-        {detail
-          ? expanded ? "Λιγότερες θεματικές" : `Όλες οι θεματικές (${rows.length})`
-          : expanded ? "Λιγότεροι κόσμοι −" : "Όλοι οι κόσμοι +"}
-      </Text>
-      {detail ? <Text style={styles.detailMoreArrow}>{expanded ? "⌃" : "⌄"}</Text> : null}
-    </Pressable> : null}
   </View>;
 }
 
@@ -236,31 +224,14 @@ const styles = StyleSheet.create({
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
   sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
   sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },
-  titleDetail: { fontSize: 17, lineHeight: 24, fontWeight: "800" },
   titleCompact: { fontSize: 14, lineHeight: 20 },
   categoryCardCompact: { padding: 12, gap: 10 },
   categoryCardDetail: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 0 },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 },
   categoryGridSingle: { flexDirection: "column" },
-  readingInsight: {
-    backgroundColor: "#1D3540", borderWidth: 1, borderColor: "#40626C",
-    borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
-  },
-  readingInsightHeading: { flexDirection: "row", alignItems: "center", gap: 8, justifyContent: "space-between" },
-  readingInsightTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: "800" },
-  readingInsightValue: { color: "#B0E1DD", fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
-  readingInsightCaption: { color: colors.textBody, fontSize: 12, lineHeight: 18 },
-
   categoryCompact: { gap: 5 },
   categoryMore: { minHeight: 44, justifyContent: "center", alignItems: "flex-end" },
   categoryMorePressed: { opacity: 0.75 },
-  detailMore: {
-    paddingHorizontal: 12, minHeight: 46, borderRadius: 13,
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: "#1D303A", borderWidth: 1, borderColor: "#35545F",
-  },
-  detailMoreText: { color: "#9CD2D1" },
-  detailMoreArrow: { color: "#9CD2D1", fontSize: 20 },
   categoryMoreText: { color: colors.accentLight, fontSize: 13, fontWeight: "700" },
   title: { color: colors.text, fontSize: 21, lineHeight: 29, fontWeight: "800" },
   small: { color: colors.textMuted, fontSize: 12, lineHeight: 19, flexShrink: 1 },

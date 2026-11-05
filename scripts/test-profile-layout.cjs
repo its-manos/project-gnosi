@@ -1,9 +1,10 @@
 const assert = require("node:assert/strict"), { load } = require("./helpers/load-typescript.cjs");
 const jsx = (type, props) => ({ type, props });
-// Resolve only the new pure category tile in the headless JSX renderer.
-let subjectTileComponent;
+// Expand the pure shared learning components, without invoking stateful screens.
+let subjectTileComponent, detailSectionComponents = [];
 const resolveTile = tree => tree && typeof tree === "object"
-  && typeof subjectTileComponent === "function" && tree.type === subjectTileComponent
+  && typeof tree.type === "function"
+  && (tree.type === subjectTileComponent || detailSectionComponents.includes(tree.type))
   ? tree.type(tree.props) : tree;
 const nodes = tree => {
   const node = resolveTile(tree);
@@ -165,6 +166,8 @@ learning={...learning,knowledgeSession:null};model={...model,due:[]};pending=[{i
 ready=false;tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0);ready=true;
 // The default learning map limits subjects without removing access to any subject or help.
 model={...model,categories:Array.from({length:8},(_,i)=>({id:String(i),title:'Θεματική '+i,percent:i,mastered:0,total:10}))};slots=[];cursor=0;
+const detailSections=load('src/components/LearningDetailSections.tsx', {...common});
+detailSectionComponents=Object.values(detailSections).filter(value=>typeof value==='function');
 subjectTileComponent=load('src/components/SubjectProgressTile.tsx',{
   ...common,
   './HomeMotion':{MotionPressable:'MotionPressable'},
@@ -175,6 +178,7 @@ const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,
   './ActionButton':{__esModule:true,default:'Action'},
   './HomeMotion':{MotionPressable:'MotionPressable'},
   './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
+  './LearningDetailSections':detailSections,
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}}).default;
 const renderMap=()=>{cursor=0;return Map({onOpen(){},mapOnly:true});};tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0,'no duplicate review CTA');assert.ok(!text(tree).includes('τρεις σωστές'));
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).props.onPress();tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8);
@@ -294,6 +298,7 @@ const Reading=load('src/components/LearningActivityPanel.tsx',{
   './HomeMotion':{MotionPressable:'MotionPressable'},
   './MetricCard':{__esModule:true,default:'MetricCard'},
   './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
+  './LearningDetailSections':detailSections,
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
 }).CategoryProgress;
 slots=[];cursor=0;
