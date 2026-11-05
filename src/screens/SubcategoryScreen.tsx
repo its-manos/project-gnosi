@@ -9,6 +9,7 @@ import { colors } from "../theme";
 import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
 import { AdventureActiveHalo, AdventureContinueAccent, AdventureContinueArrow, AdventureProgressFill } from "../components/AdventureMotion";
 import { MotionCounter, MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
+import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked } from "../utils/devLessonAccess";
 
@@ -186,8 +187,7 @@ export default function SubcategoryScreen({
       </MotionView>
 
       {path.length > 0 ?
-        <MotionPressable entranceDelay={70} testID="adventure-continue"
-          style={styles.continueCard}
+        <AtlasContinueCard entranceDelay={70} testID="adventure-continue"
           onPress={() => { if (progressLoaded && nextLesson) onOpenLesson(nextLesson.id); }}
           disabled={!progressLoaded || !nextLesson} accessibilityRole="button"
           accessibilityState={{ disabled: !progressLoaded || !nextLesson }}
@@ -195,34 +195,34 @@ export default function SubcategoryScreen({
             ? "Συνέχισε τη διαδρομή: " + nextLesson.title
             : "Πρόοδος διαδρομής: " + subcategory.title}>
           {progressLoaded && nextLesson ? <AdventureContinueAccent /> : null}
-          <View style={styles.cardHeading}>
+          <View style={atlasContinueStyles.heading}>
             <Text style={styles.subcategoryTitle} numberOfLines={1}>{subcategory.title}</Text>
             <MotionCounter progressKey={progressLoaded ? completed + "/" + path.length : "loading"}
               style={styles.progressCount}>{progressLoaded
                 ? completed + " / " + path.length : "— / " + path.length}</MotionCounter>
           </View>
-          <View style={styles.cardBody}>
-            <View style={styles.continueCopy}>
-              <Text style={styles.continueEyebrow}>
+          <View style={atlasContinueStyles.body}>
+            <View style={atlasContinueStyles.copy}>
+              <Text style={atlasContinueStyles.eyebrow}>
                 {!progressLoaded ? "ΦΟΡΤΩΣΗ ΠΡΟΟΔΟΥΣ" :
                   nextLesson ? "ΕΠΟΜΕΝΟΣ ΣΤΑΘΜΟΣ" : "ΔΙΑΔΡΟΜΗ ΟΛΟΚΛΗΡΩΜΕΝΗ"}
               </Text>
-              <Text style={styles.continueTitle} numberOfLines={2}>
+              <Text style={atlasContinueStyles.title} numberOfLines={2}>
                 {!progressLoaded ? "Ο χάρτης σου ετοιμάζεται…" :
                   nextLesson ? nextLesson.title : "Εξερεύνησες όλους τους σταθμούς!"}
               </Text>
             </View>
             {progressLoaded && nextLesson ?
-              <View style={styles.continueButton}><AdventureContinueArrow /></View>
+              <View style={atlasContinueStyles.action}><AdventureContinueArrow /></View>
               : null}
           </View>
-          <View testID="adventure-progress" style={styles.progressTrack}
+          <View testID="adventure-progress" style={atlasContinueStyles.progressTrack}
             accessible accessibilityRole="progressbar" accessibilityLabel="Πρόοδος διαδρομής"
             accessibilityValue={{ min: 0, max: Math.max(1, path.length),
               now: progressLoaded ? completed : 0 }}>
             <AdventureProgressFill percent={progressLoaded ? progressPercent : 0} />
           </View>
-        </MotionPressable> : null}
+        </AtlasContinueCard> : null>
 
       {isTesting && path.length > 1 ?
         <Text style={styles.devHint}>Δοκιμή: όλοι οι σταθμοί ξεκλείδωτοι.</Text> : null}
@@ -378,34 +378,11 @@ const styles = StyleSheet.create({
   },
   headerMark: { width: 66, minHeight: 44, alignItems: "flex-end", justifyContent: "center" },
   sparkle: { color: colors.accentLight, fontSize: 22 },
-  continueCard: {
-    paddingHorizontal: 15, paddingTop: 12, paddingBottom: 13,
-    backgroundColor: "#1B2034", borderColor: "#6A618C",
-    borderWidth: 1, borderRadius: 18, gap: 8,
-  },
-  cardHeading: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
-  },
   subcategoryTitle: {
     flex: 1, color: colors.accentLight, fontSize: 14,
     fontWeight: "900", lineHeight: 19,
   },
   progressCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
-  cardBody: { flexDirection: "row", alignItems: "center", gap: 10 },
-  continueCopy: { flex: 1, gap: 3 },
-  continueEyebrow: {
-    color: "#ABA1D4", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 0.8,
-  },
-  continueTitle: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: "800" },
-  continueButton: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent,
-    borderWidth: 1, borderColor: "#C9BFFF",
-    alignItems: "center", justifyContent: "center",
-  },
-  progressTrack: {
-    height: 8, borderRadius: 5, backgroundColor: "#302F4B", overflow: "hidden",
-    borderWidth: 1, borderColor: "#62597D",
-  },
   map: { alignSelf: "center", position: "relative", marginTop: 2 },
   pathSvg: { position: "absolute", top: 0, left: 0 },
   stopPosition: { position: "absolute", width: NODE_WIDTH, alignItems: "center" },
