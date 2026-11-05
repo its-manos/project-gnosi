@@ -122,7 +122,7 @@ function IslandArtwork({ index, id, width, height, status }: {
   // Large enough to read as a temple; the stylobate sits on the upper plateau.
   // No overflow or layout shift: just a decorative SVG over the land texture.
   const emblemSize = Math.max(35, Math.min(68, height * 0.66));
-  const emblemTop = Math.max(0, height * 0.62 - emblemSize * 0.84);
+  const emblemTop = Math.max(0, height * 0.56 - emblemSize * 0.86);
 
   return (
     <View pointerEvents="none" accessible={false} style={{ width, height }}>
@@ -163,12 +163,12 @@ function IslandArtwork({ index, id, width, height, status }: {
           footings belong to the landmass, not the floating icon. */}
       {isAncientGreece ? (
         <>
-          <Ellipse cx={90} cy={78} rx={52} ry={10}
+          <Ellipse cx={90} cy={74} rx={52} ry={10}
             fill="#0B1E2B" opacity={0.48} />
-          <Path d="M 43 75 Q 61 68 85 70 Q 114 66 139 75 L 133 81 Q 91 86 47 81 Z"
+          <Path d="M 43 71 Q 61 64 85 66 Q 114 62 139 71 L 133 77 Q 91 82 47 77 Z"
             fill="#B6A78B" fillOpacity={0.16}
             stroke="#E7D0AA" strokeOpacity={0.18} strokeWidth={1.1} />
-          <Path d="M 54 80 Q 90 85 127 79 M 60 73 L 57 78 M 126 74 L 130 79"
+          <Path d="M 54 76 Q 90 81 127 75 M 60 69 L 57 74 M 126 70 L 130 75"
             fill="none" stroke="#D7C09A" strokeOpacity={0.26} strokeWidth={1.05} />
         </>
       ) : null}
