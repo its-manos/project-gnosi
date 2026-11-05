@@ -467,7 +467,7 @@ export default function AppNavigator() {
         {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus quiet /> : null}
         {screenContent}
       </SafeAreaView>
-      {!welcome.visible ? <BottomNavigation
+      {!welcome.visible && !isDailyChallengeOpen && app.screen !== "quiz" ? <BottomNavigation
         currentScreen={isDailyChallengeOpen ? "home" : app.screen === "account" ? accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
