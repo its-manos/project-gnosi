@@ -730,8 +730,20 @@ const worldWebp = fs.readFileSync(
   path.join(root, "assets/atlas-export-preview/category-world.webp"));
 assert.match(worldSvg, /viewBox="0 0 1080 2400"/,
   "world-scale SVG has the same portrait export dimensions");
-assert.match(worldSvg, /North America|South America|Africa|Continental Asia/,
-  "the source depicts a broader world than the local Aegean lesson map");
+assert.match(worldSvg, /orthographic hemisphere/,
+  "the geography is generated with a correct spherical world projection");
+assert.match(worldSvg, /clip-path="url\(#globe-clip\)"/,
+  "the geographically grounded coastlines are clipped to the visible hemisphere");
+const landData = JSON.parse(fs.readFileSync(
+  path.join(root, "assets/atlas-source/natural-earth-110m-land.geojson"), "utf8"));
+assert.ok(landData.features.length >= 100,
+  "source retains real Natural Earth shoreline polygons, not traced continent guesses");
+const generatorSource = fs.readFileSync(
+  path.join(root, "scripts/generate-category-world-svg.mjs"), "utf8");
+assert.match(generatorSource, /geoOrthographic\(/,
+  "a spherical map projection replaces stretched hand-drawn landmasses");
+assert.match(generatorSource, /geoPath\(projection\)/,
+  "graticules and coastlines share the same projection");
 assert.match(worldSvg, /#[0-9A-Fa-f]{6}/,
   "continent and sea colors are explicit, editable atlas palette tokens");
 assert.equal(worldWebp.toString("ascii", 0, 4), "RIFF",
