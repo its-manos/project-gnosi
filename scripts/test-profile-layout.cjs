@@ -191,6 +191,20 @@ assert.ok(nodes(tileGrid).every(n=>n.type!=='MotionPressable'||n.props.accessibi
   'each interactive tile has an accessible button role');
 const firstKnowledgeTile=nodes(tileGrid).find(n=>n.type==='MotionPressable');
 const firstKnowledgeId=firstKnowledgeTile.props.testID;
+// Knowledge tiles have an explicit icon medallion, readable mastery footer,
+// and a restrained 7pt track without fake 0% values on an untouched account.
+assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='ΚΑΤΑΚΤΗΣΗ'),
+  'each subject exposes a clear mastery progress caption');
+assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='›'),
+  'untouched subjects show a lightweight detail affordance');
+const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'&&n.props.children==='Θεματική 0');
+assert.ok(firstTitle?.props.adjustsFontSizeToFit&&firstTitle?.props.minimumFontScale<=0.9,
+  'long Greek subject labels adapt within a two-column tile');
+const knowledgeSource=require('node:fs').readFileSync('src/components/KnowledgeMastery.tsx','utf8');
+assert.match(knowledgeSource,/tileTrack: \{[\s\S]*?height: 7,/,
+  'mastery bars have more visible tracks without moving to a heavy chart');
+assert.match(knowledgeSource,/detailTileSingle: \{ width: "100%"/,
+  'small screens retain their accessible single-column fallback');
 assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);
 firstKnowledgeTile.props.onPress();tree=renderKnowledgeTiles();
 assert.equal(nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.accessibilityState.selected,true);
