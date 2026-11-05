@@ -68,9 +68,6 @@ function compile(file, extra = {}, returnModule = false, globals = {}) {
     react, "react/jsx-runtime": { jsx, jsxs: jsx },
     "../utils/screenLayout": { availableScreenHeight: (viewport, window) => viewport > 0 ? viewport : Math.max(0, window - 130) },
     "react-native": native, "react-native-svg": svg,
-    "expo-image": { Image: "ExpoImage" },
-    "../../assets/atlas-export-preview/home.webp": 1,
-    "../../assets/atlas-export-preview/subcategory.webp": 2,
     "react-native-reanimated": reanimated,
     // The shared FantasyMap is compiled in isolation here; map-only motion
     // is tested separately in test-category-atlas.cjs.
@@ -115,20 +112,22 @@ let daily = { ready: true, doc: { days: { "2026-11-03": {
 } } } };
 const HistoryWorldIcon = compile("src/components/worldIcons/HistoryWorldIcon.tsx");
 const otherWorlds = compile("src/components/worldIcons/OtherWorldIcons.tsx", {}, true);
-const worldArtwork = {
-  history: HistoryWorldIcon,
-  science: otherWorlds.ScienceWorldIcon,
-  nature: otherWorlds.NatureWorldIcon,
-  technology: otherWorlds.TechnologyWorldIcon,
-  culture: otherWorlds.CultureWorldIcon,
-  geography: otherWorlds.GeographyWorldIcon,
-  "difficult-history": otherWorlds.DifficultHistoryWorldIcon,
-};
+const categoryIconModule = compile("src/components/worldIcons/categoryIconMap.ts", {
+  "./HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
+  "./OtherWorldIcons": otherWorlds,
+}, true);
+const worldArtwork = categoryIconModule.categoryWorldIcons;
+assert.equal(Object.keys(worldArtwork).length, 7, "exactly seven shared world icons");
+for (const [id, Component] of Object.entries(worldArtwork)) {
+  assert.equal(categoryIconModule.getCategoryWorldIcon(id), Component,
+    "shared category map resolves " + id);
+}
+assert.equal(categoryIconModule.getCategoryWorldIcon("unknown"), undefined,
+  "unknown worlds preserve their original fallback");
 // Compile the streak badge separately to assert its ring and inner caption.
 const HomeStreakBadge = compile("src/components/HomeStreakBadge.tsx");
 const home = compile("src/screens/HomeScreen.tsx", {
-  "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
-  "../components/worldIcons/OtherWorldIcons": otherWorlds,
+  "../components/worldIcons/categoryIconMap": categoryIconModule,
   "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
   "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
@@ -405,8 +404,9 @@ for (const game of upcomingGames) {
 assert.ok(nodes(tree).some(node => node.props?.children === "Μίνι παιχνίδια"));
 assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα").length, 2);
 
-// Render the static atlas with a measured portrait viewport. This is a native
-// SVG tree contract, not a screenshot or frame-rate test.
+// The Home chart now uses a cached WebP instead of a full-screen live SVG.
+// Verify immediate static artwork, viewport-driven ambient overlays and no
+// remounting/late reveal when the measured size changes.
 let atlasSize = { width: 0, height: 0 };
 const atlas = compile("src/components/HomeAtlasBackground.tsx", {
   react: {
@@ -415,7 +415,8 @@ const atlas = compile("src/components/HomeAtlasBackground.tsx", {
       atlasSize = typeof next === "function" ? next(atlasSize) : next;
     }],
   },
-  "react-native-svg": { ...svg, RadialGradient: "radialGradient", Ellipse: "ellipse" },
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/home.webp": "home.webp",
   "./HomeAtlasMotion": {
     HomeAtlasAmbientGlow: "HomeAtlasAmbientGlow",
     HomeAtlasTwinkles: "HomeAtlasTwinkles",
@@ -425,36 +426,48 @@ let atlasTree = atlas();
 assert.equal(atlasTree.props.testID, "home-atlas-background");
 assert.equal(atlasTree.props.pointerEvents, "none", "atlas cannot intercept card taps");
 assert.equal(atlasTree.props.accessible, false, "decorative atlas stays out of the accessibility tree");
-assert.equal(nodes(atlasTree).filter(node => node.type === "ExpoImage").length, 1,
-  "bundled atlas bitmap mounts immediately, without waiting for viewport measurement");
-const imageNode = nodes(atlasTree).find(node => node.type === "ExpoImage");
-assert.equal(imageNode.props.source, 1, "Home uses its bundled WebP atlas");
-assert.equal(imageNode.props.contentFit, "fill");
-assert.equal(imageNode.props.transition, 0, "the static atlas does not fade in");
-assert.equal(imageNode.props.cachePolicy, "memory-disk");
+let atlasImage = nodes(atlasTree).find(node => node.type === "Image");
+assert.ok(atlasImage, "static chart is mounted without waiting for viewport measurement");
+assert.equal(atlasImage.props.source, "home.webp");
+assert.equal(atlasImage.props.contentFit, "fill");
+assert.equal(atlasImage.props.transition, 0, "static artwork must not fade in after cards");
+assert.equal(atlasImage.props.cachePolicy, "memory-disk");
 assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
-  "ambient overlays wait until viewport is measured");
+  "ambient overlay waits until measurement");
 atlasTree.props.onLayout({ nativeEvent: { layout: { width: 390, height: 844 } } });
 atlasTree = atlas();
-assert.equal(nodes(atlasTree).filter(node => node.type === "ExpoImage").length, 1,
-  "measuring viewport must not remount duplicate static cartography");
+atlasImage = nodes(atlasTree).find(node => node.type === "Image");
+assert.equal(nodes(atlasTree).filter(node => node.type === "Image").length, 1,
+  "measured screen retains one static chart image");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasReveal").length, 0,
+  "background has no deferred reveal layer");
 assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 1,
-  "measured viewport enables one ambient glow overlay");
+  "one small compositor-friendly atmosphere overlay is animated");
 assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasTwinkles").length, 1,
-  "measured viewport enables one twinkle overlay");
+  "star twinkles are isolated from static artwork");
 const motionlessAtlas = atlas({ showAmbientMotion: false });
-assert.equal(nodes(motionlessAtlas).filter(node => node.type === "ExpoImage").length, 1,
-  "disabling motion retains the static atlas");
-assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0);
-assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasTwinkles").length, 0);
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "Image").length, 1,
+  "static mode retains the bundled atlas artwork");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "static diagnostic mode mounts no ambient glow");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasTwinkles").length, 0,
+  "static diagnostic mode mounts no twinkles");
+atlasTree.props.onLayout({ nativeEvent: { layout: { width: 844, height: 390 } } });
+atlasTree = atlas();
+assert.equal(nodes(atlasTree).filter(node => node.type === "Image").length, 1,
+  "landscape rotation reuses a single cached background image");
+assert.equal(nodes(atlasTree).find(node => node.type === "HomeAtlasAmbientGlow").props.width, 844);
+assert.equal(nodes(atlasTree).find(node => node.type === "HomeAtlasAmbientGlow").props.height, 390);
 const staticAtlasSource = fs.readFileSync(
   path.join(root, "src/components/HomeAtlasBackground.tsx"), "utf8");
-assert.ok(!staticAtlasSource.includes("withRepeat(") && !staticAtlasSource.includes("withTiming(")
-  && !staticAtlasSource.includes("useSharedValue(") && !staticAtlasSource.includes("setInterval("),
-  "all time-based motion stays isolated outside the static image");
-assert.ok(staticAtlasSource.includes("memo(HomeAtlasBackground)"));
-assert.match(staticAtlasSource, /absoluteFill/);
-assert.doesNotMatch(staticAtlasSource, /setTimeout|setInterval|HomeAtlasReveal|atlasReady/);
+assert.ok(!/withRepeat\(|withTiming\(|useSharedValue\(|setInterval\(/.test(staticAtlasSource),
+  "all time-based motion stays isolated outside the static chart");
+assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\)/,
+  "dashboard updates should not redraw the atlas");
+assert.match(staticAtlasSource, /absoluteFill/,
+  "atlas stays fixed outside the scrollable dashboard");
+assert.doesNotMatch(staticAtlasSource, /setTimeout|setInterval|HomeAtlasReveal|atlasReady/,
+  "Home background mounts directly without deferred work");
 
 // Verify reduced motion without a simulator: the new effects animate only
 // native view opacity and do not animate any SVG property on each frame.
@@ -702,7 +715,8 @@ assert.ok(!nodes(tree).some(node => node.props?.testID === "home-xp-ring"));
 
 // Keep the detailed islands accessible on CategoryScreen even though Home is now compact.
 const categorySource = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
-assert.match(categorySource, /<FantasyMap/);
+assert.match(categorySource, /<IslandAtlasMap/,
+  "the Category screen uses its dedicated native island destinations");
 const map = compile("src/components/FantasyMap.tsx");
 const mapProps = { regions: categories.map(category => ({ id: category.id, title: category.title, emoji: category.emoji })), overview: true, onSelectRegion: id => actions.push(id) };
 const mapTree = map(mapProps);
@@ -877,15 +891,21 @@ for (const start of chapterBeginnings) {
 }
 assert.equal(stopPositions[1].props.style[1].top - stopPositions[0].props.style[1].top, 142,
   "normal checkpoint density is unchanged outside chapter boundaries");
+// The background now spans the complete fixed screen, behind the header,
+// card and map. It is not inside the scrolling checkpoint subtree.
 const atlasLayer = nodes(tree).find(node => node.props?.testID === "adventure-atlas-underlay");
-assert.ok(atlasLayer, "atlas underlay is mounted at screen level behind the map");
+assert.ok(atlasLayer, "Subcategory atlas underlay exists at the screen root");
 assert.equal(atlasLayer.props.pointerEvents, "none", "atlas never intercepts taps");
-assert.ok(!nodes(categoryHeader).some(node => node.props?.testID === "adventure-atlas-underlay"));
-assert.ok(!nodes(compactCard).some(node => node.props?.testID === "adventure-atlas-underlay"));
-assert.equal(nodes(nestedScroll).filter(node => node.props?.testID === "adventure-atlas-underlay").length, 0,
-  "atlas stays outside the scrolling checkpoints");
+assert.equal(tree.props.children[0].props.testID, "adventure-atlas-underlay",
+  "background is behind the fixed header, Continue card and checkpoint map");
+assert.ok(!nodes(categoryHeader).some(node => node.props?.testID === "adventure-atlas-underlay"),
+  "atlas is independent of the fixed header");
+assert.ok(!nodes(compactCard).some(node => node.props?.testID === "adventure-atlas-underlay"),
+  "atlas is independent of the Continue card");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 0,
-  "atlas is not duplicated inside the scrollable path");
+  "no oversized atlas is mounted inside the scrolling path");
+assert.equal(nodes(nestedScroll).filter(node => node.props?.testID === "adventure-atlas-underlay").length, 0,
+  "atlas stays fixed as the scroll content moves");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
   "only the active checkpoint receives a breathing halo");
 const medallionParts = lessonId => {
@@ -1042,17 +1062,17 @@ let viewportLayout = nodes(motionTree).find(node => node.props?.testID === "subc
 viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 320, height: 450 } } });
 motionTree = renderMotion({ progressLoaded: false });
 let fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
-assert.ok(fullAtlas, "measured screen mounts the atlas");
+assert.ok(fullAtlas, "measured map viewport mounts its atlas");
 assert.equal(fullAtlas.props.width, 320);
 assert.equal(fullAtlas.props.height, 450);
-assert.ok(nodes(motionTree).some(node => node.type === "AtlasBackground"),
-  "rendered atlas stays behind the path");
+assert.ok(nodes(nodes(motionTree).find(node => node.props?.testID === "adventure-atlas-underlay"))
+  .some(node => node.type === "AtlasBackground"), "rendered atlas stays in the screen-level underlay");
 viewportLayout = nodes(motionTree).find(node => node.props?.testID === "subcategory-adventure-path");
 viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 350, height: 430 } } });
 motionTree = renderMotion({ progressLoaded: false });
 fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
-assert.equal(fullAtlas.props.width, 350, "atlas follows responsive screen width");
-assert.equal(fullAtlas.props.height, 430, "atlas follows measured screen height");
+assert.equal(fullAtlas.props.width, 350, "atlas follows responsive map viewport width");
+assert.equal(fullAtlas.props.height, 430, "atlas stops at the map viewport, not the whole screen");
 let motionScroll = nodes(motionTree).find(node => node.props?.testID === "adventure-map-scroll");
 const autoCalls = adventureAnimationCalls;
 autoCalls.length = 0;
@@ -1082,9 +1102,12 @@ renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "re-rendering cannot restart the entry animation");
 
-// The Android map budget drops only distant detail, never the main geography.
+// Subcategory cartography has also moved to a cached WebP backdrop;
+// the animated halo stays in a separate native-composited view on both OSes.
 const staticAtlas = compile("src/components/AdventureAtlasBackground.tsx", {
-  react: { ...react, memo: component => component },
+  react: { ...react, memo: component => component, useEffect: () => {} },
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/subcategory.webp": "subcategory.webp",
   "react-native-svg": { ...svg, RadialGradient: "radialGradient" },
   "react-native-reanimated": {
     __esModule: true,
@@ -1101,32 +1124,41 @@ const staticAtlas = compile("src/components/AdventureAtlasBackground.tsx", {
 });
 native.Platform.OS = "ios";
 const iosAtlas = staticAtlas({ width: 360, height: 680 });
-const iosBitmap = nodes(iosAtlas).find(node => node.type === "ExpoImage");
-assert.ok(iosBitmap, "iOS renders the bundled subcategory atlas");
-assert.equal(iosBitmap.props.source, 2);
-assert.equal(iosBitmap.props.contentFit, "fill");
-assert.equal(iosBitmap.props.transition, 0);
 native.Platform.OS = "android";
 const androidAtlas = staticAtlas({ width: 360, height: 680 });
-assert.equal(nodes(androidAtlas).filter(node => node.type === "ExpoImage").length, 1,
-  "Android uses the same bundled atlas bitmap");
-assert.equal(nodes(androidAtlas).filter(node =>
-  node.props?.testID === "adventure-atlas-ambient-glow").length, 1,
-  "Android retains the bounded atmospheric glow");
+for (const rendered of [iosAtlas, androidAtlas]) {
+  assert.equal(nodes(rendered).filter(node => node.type === "Image").length, 1,
+    "both platforms use one bundled atlas image");
+  const image = nodes(rendered).find(node => node.type === "Image");
+  assert.equal(image.props.source, "subcategory.webp");
+  assert.equal(image.props.contentFit, "fill");
+  assert.equal(image.props.transition, 0);
+  assert.equal(image.props.cachePolicy, "memory-disk");
+  assert.equal(nodes(rendered).filter(node =>
+    node.props?.testID === "adventure-atlas-ambient-glow").length, 1,
+    "both platforms retain atmospheric motion in a small native view");
+}
 native.Platform.OS = "ios";
+
 const atlasSource = fs.readFileSync(path.join(root, "src/components/AdventureAtlasBackground.tsx"), "utf8");
 const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/AdventureMotion.tsx"), "utf8");
-assert.ok(atlasSource.includes("useReducedMotion"), "atlas respects reduced motion");
-assert.ok(atlasSource.includes('pointerEvents="none"'), "atlas cannot intercept lesson taps");
-assert.ok(atlasSource.includes("withRepeat("), "ambient glow retains low-frequency animation");
-assert.ok(atlasSource.includes("memo(AdventureAtlasBackground)"), "atlas remains memoized");
-assert.ok(atlasSource.includes('cachePolicy="memory-disk"'), "bundled bitmap uses local caching");
-assert.ok(atlasSource.includes('testID="adventure-atlas-ambient-glow"'));
-assert.ok(!atlasSource.includes("useAnimatedProps"), "static image has no animated SVG props");
-assert.ok(atlasSource.includes("width: width * 0.64, height: height * 0.34"),
-  "glow stays bounded to a fraction of the viewport");
-assert.equal(atlasSource.split("withRepeat(").length - 1, 1,
-  "atlas has only one continuous ambient animation");
+assert.match(atlasSource, /useReducedMotion/, "atlas respects reduced motion");
+assert.match(atlasSource, /pointerEvents="none"/, "atlas cannot intercept lesson taps");
+assert.match(atlasSource, /withRepeat\(/, "atlas has low-frequency ambient motion");
+assert.match(atlasSource, /subcategory\.webp/, "background uses exported static geography");
+assert.match(atlasSource, /contentFit="fill" transition=\{0\}/, "static chart mounts without a fade");
+assert.doesNotMatch(atlasSource, /useAnimatedProps/, "background never animates SVG attributes");
+assert.doesNotMatch(atlasSource, /styles\.tideLayer|waveStyle|translateX: tide\.value/,
+  "no viewport-sized SVG layer motion is present");
+assert.match(atlasSource, /testID="adventure-atlas-ambient-glow"/,
+  "a compact native-opacity glow replaces the full-map tide");
+assert.match(atlasSource, /const glowStyle = useAnimatedStyle/,
+  "the atlas effect animates only a small view style");
+assert.match(atlasSource, /width: width \* 0\.64, height: height \* 0\.34/,
+  "the animated atmosphere occupies only a bounded fraction of the viewport");
+assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
+assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
+  "lighting adds no animated layers beyond the ambient tide");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
 assert.match(adventureMotionSource, /width: 84, height: 84, borderRadius: 42/,

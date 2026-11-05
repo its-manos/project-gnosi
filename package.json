@@ -23,6 +23,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.14",
     "@types/react": "~19.3.0",
+    "d3-geo": "3.1.1",
     "sharp": "^0.35.5",
     "typescript": "~6.0.3"
   },
@@ -32,6 +33,12 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "atlas:world:svg": "node scripts/generate-category-world-svg.mjs",
+    "atlas:world:svg:check": "node scripts/generate-category-world-svg.mjs --check",
+    "atlas:world:export": "node scripts/export-category-world-webp.cjs",
+    "atlas:world:check": "node scripts/export-category-world-webp.cjs --check",
+    "atlas:islands:export": "node scripts/export-island-icons-webp.cjs",
+    "atlas:islands:check": "node scripts/export-island-icons-webp.cjs --check",
     "test:lesson-question-card": "node scripts/test-inline-question-card.cjs",
     "test:typed-lesson-integration": "node scripts/test-typed-lesson-integration.cjs",
     "test:section-end-questions": "node scripts/test-section-end-questions.cjs",

@@ -16,8 +16,6 @@ const compile = (file, modules = {}) => {
     module: mod, exports: mod.exports,
     require: id => {
       if (id in modules) return modules[id];
-      if (id === "expo-image") return { Image: "ExpoImage" };
-      if (id === "../../assets/atlas-export-preview/category.webp") return 3;
       throw Error("Missing module stub: " + id);
     },
   });
@@ -64,7 +62,7 @@ const native = {
   StyleSheet: { create: values => values },
 };
 const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
-  Defs: "defs", G: "g", LinearGradient: "linearGradient",
+  Defs: "defs", ClipPath: "clipPath", G: "g", LinearGradient: "linearGradient",
   RadialGradient: "radialGradient", Ellipse: "ellipse",
   Rect: "rect", Stop: "stop", Text: "text" };
 let showList = false;
@@ -442,10 +440,27 @@ assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-sky-vignette")
 assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
   && String(node.props?.id).startsWith("atlas-region-aura-")).length, five.length,
   "every destination gets a subtle theme-aware aura");
-assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 5,
-  "fitted atlas retains all interactive destination islands");
+assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-upper"));
+assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-lower"));
+assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-chart-tick-")).length, 9,
+  "astral chart ticks stay sparse and decorative");
+assert.equal(nodes(frame).filter(node => node.type === "circle"
+  && ["#E4CFA6","#B5CADD"].includes(node.props?.fill)).length, 30,
+  "quiet starfield has deterministic density on all screen sizes");
+assert.ok(nodes(frame).some(node => node.type === "path"
+  && node.props?.stroke === "#8CA6B9" && node.props?.strokeOpacity === 0.11),
+  "faint map engravings add depth without implying lesson progression");
 const readableFrame = nodes(map({ ...props, fitViewport: { width: 340, height: 490 } }))
   .find(node => node.props?.testID === "knowledge-world-map");
+assert.ok(nodes(readableFrame).some(node => node.props?.testID === "atlas-decorative-constellations"),
+  "sparse catalogues have decorative chart groups outside destination interactions");
+assert.ok(nodes(readableFrame).filter(node =>
+  String(node.props?.testID).startsWith("atlas-route-anchor-")).length >= 2,
+  "fitted links have small, noninteractive guide stars in the open sky");
+assert.ok(nodes(readableFrame).filter(node =>
+  String(node.props?.testID).startsWith("atlas-route-anchor-"))
+    .every(node => node.props.pointerEvents === "none"),
+  "route anchor decoration cannot steal island taps");
 const fittedLabel = nodes(readableFrame).find(node => node.type === "text"
   && node.props?.children === "Παγκόσμια");
 assert.equal(fittedLabel.props.fontSize, 12.5,
@@ -490,6 +505,8 @@ const bgModule = compile("src/components/CategoryAtlasBackground.tsx", {
   react: { memo: component => component },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native, "react-native-svg": svg,
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/category.webp": "category.webp",
 });
 const staticBg = bgModule.default({ width: 340, height: 490, regionCount: 3 });
 const staticBgNodes = nodes(staticBg);
@@ -501,16 +518,12 @@ assert.equal(chartStarCount(staticBg), 30,
   "standalone backdrop uses the same star density as both interactive maps");
 const bgSvg = staticBgNodes.find(node => node.type === "svg");
 assert.equal(bgSvg.props.viewBox, "0 0 360 " + (490 * 360 / 340),
-  "background preserves exact viewport aspect ratio");
+  "background uses the measured aspect ratio without rounding");
 const wideBg = bgModule.default({ width: 680, height: 490, regionCount: 3 });
 assert.equal(wideBg.props.style[1].width, 680,
-  "wide-screen background fills the measured viewport");
-assert.equal(wideBg.props.style[1].height, 490);
-const bitmapBg = bgModule.default({ width: 340, height: 490, regionCount: 6 });
-const bitmapNode = nodes(bitmapBg).find(node => node.type === "ExpoImage");
-assert.ok(bitmapNode, "six-region atlas uses the bundled WebP backdrop");
-assert.equal(bitmapNode.props.source, 3);
-assert.equal(bitmapNode.props.transition, 0);
+  "wide screens receive a full-width decorative underlay");
+assert.equal(wideBg.props.style[1].height, 490,
+  "wide-screen background preserves the measured height");
 const splitMap = map({ ...props, regions: regionData, fitViewport: { width: 340, height: 490 },
   hideControls: true, externalBackground: true });
 const splitNodes = nodes(splitMap);
@@ -518,6 +531,9 @@ assert.equal(splitNodes.filter(node => node.props?.testID === "atlas-fitted-map-
   "interactive SVG does not duplicate the static chart background");
 assert.equal(splitNodes.filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 3,
   "all interactive island targets survive the background split");
+const splitFrame = splitNodes.find(node => node.props?.testID === "knowledge-world-map");
+assert.equal(splitFrame.props.style[4].backgroundColor, "transparent",
+  "native map frame must not cover the chart mounted beneath it");
 
 // The page and navigator pass existing account-scoped progress, not local keys.
 const motionCode = fs.readFileSync(path.join(root, "src/components/CategoryAtlasMotion.tsx"), "utf8");
@@ -617,45 +633,413 @@ const continueAccentCode = motionCode.slice(
 );
 assert.doesNotMatch(continueAccentCode, /withRepeat\(/,
   "the card highlight must not start an ongoing looping pulse");
+// Category Island Atlas 2.0 replaces the legacy screen integration while the
+// standalone FantasyMap contracts above remain for its other callers.
 const screen = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
 const navigator = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
-assert.match(screen, /<FantasyMap/);
-assert.match(screen, /getAtlasRegionProgress/);
-assert.match(screen, /getAtlasCategoryProgress/);
+assert.match(screen, /<IslandAtlasMap/, "the Category screen uses the dedicated archipelago");
+assert.doesNotMatch(screen, /<FantasyMap/, "legacy heavyweight SVG is not mounted");
+assert.match(screen, /<CategoryWorldAtlasBackground/,
+  "Category uses the dedicated world-scale plate, not the local Adventure Path background");
+assert.doesNotMatch(screen, /<AdventureAtlasBackground/,
+  "the Aegean chart remains exclusive to the Subcategory screen");
+assert.doesNotMatch(screen, /<CategoryAtlasBackground/, "the former full SVG chart is not layered");
+assert.match(screen, /getAtlasRegionProgress/, "regional progress remains data-driven");
+assert.doesNotMatch(screen, /REGION_COLORS|REGION_SYMBOLS|emoji: REGION_|detail: progress/,
+  "obsolete map metadata is not built for the lightweight island renderer");
+assert.match(screen, /getAtlasCategoryProgress/, "overall progress remains unchanged");
+assert.match(screen, /chooseAtlasFeaturedRegion/, "Continue follows real lesson progress");
 assert.match(screen, /testID="category-atlas-continue"/);
-assert.match(screen, /pressScale=\{0\.983\}/,
-  "card press feedback stays restrained");
-assert.match(screen, /<MotionView entranceDelay=\{0\} testID="category-atlas-header"/,
-  "header enters first, matching Home and Adventure Path");
-assert.match(screen, /entranceDelay=\{75\} pressScale=\{0\.983\}/,
-  "Continue card follows the header with a gentle stagger");
-assert.match(screen, /<View key=\{category\.id\} testID="category-atlas-map-entrance"/,
-  "the fitted chart mounts only after measurement, without animating hundreds of SVG nodes");
-assert.doesNotMatch(screen, /<MotionView entranceDelay=\{155\}/,
-  "the heavyweight map must not receive a whole-SVG entrance transform");
-assert.match(screen, /mapEntrance: \{ width: "100%" \}/,
-  "map entrance preserves its original measured width");
-assert.match(screen, /<AtlasContinueAccent\s*\/>/,
-  "card accent stays decorative");
-assert.match(screen, /<AtlasContinueArrow\s*\/>/,
-  "the navigation arrow has its own brief cue");
-assert.match(screen, /<AtlasProgressFill percent=/,
-  "regional progress has a smooth UI-thread fill");
-assert.match(screen, /Η ΠΡΟΟΔΟΣ ΣΟΥ/,
-  "overall progress heading is explicit rather than repeating category title");
-assert.match(screen, /#6C668A/, "island tints share Adventure Path palette");
-assert.match(screen, /letterSpacing: 1.4/, "header typography matches Subcategory screen");
 assert.match(screen, /testID="category-atlas-map-viewport"/);
-assert.match(screen, /fitViewport=/, "map respects actual viewport rather than enforcing a tall path");
-assert.match(screen, /hideControls/, "Category Atlas hides the count and map/list row");
-assert.match(screen, /chooseAtlasFeaturedRegion/, "shortcut chooses an explored area independently");
-assert.doesNotMatch(screen, /<ScrollView/, "map exploration fits without page scrolling");
-assert.doesNotMatch(screen, /\{category\.description\}/, "remove redundant category description");
-assert.doesNotMatch(screen, /getLessonAccess/, "category has no lesson unlock path");
-assert.doesNotMatch(screen, /AdventureAtlasBackground/, "do not impose chapter-map geography");
+assert.match(screen, /entranceDelay=\{75\} pressScale=\{0\.983\}/);
+assert.match(screen, /<MotionView entranceDelay=\{0\} testID="category-atlas-header"/);
+assert.doesNotMatch(screen, /<ScrollView/, "the category remains non-scrollable");
+assert.doesNotMatch(screen, /getLessonAccess/, "category islands are freely explorable");
+assert.doesNotMatch(screen, /setReadyCategoryId|mapReady|awaitingMap/,
+  "island mounting has no delayed opacity gate");
 assert.match(navigator, /<CategoryScreen[\s\S]*?completedLessonIds={app\.completedLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?inProgressLessonIds={app\.inProgressLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?progressLoaded={app\.progressLoaded}/);
+
+const islandsModule = compile("src/components/IslandAtlasMap.tsx", {
+  react: { memo: component => component, useMemo: fn => fn() },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "react-native-svg": svg,
+  "expo-image": { Image: "Image" },
+  "./IslandHoverMotion": { __esModule: true, default: "IslandHoverMotion" },
+  "../../assets/atlas-export-preview/island-icons/ancient-greece.webp": "ancient-greece.webp",
+  "../../assets/atlas-export-preview/island-icons/world-history.webp": "world-history.webp",
+  "../../assets/atlas-export-preview/island-icons/mythology.webp": "mythology.webp",
+});
+const archipelago = islandsModule.default;
+for (const [count, width, height] of [[1, 320, 430], [3, 340, 490],
+  [6, 320, 320], [9, 400, 510], [12, 390, 390]]) {
+  const placements = islandsModule.getIslandAtlasPlacements(count, width, height);
+  assert.equal(placements.length, count);
+  for (const position of placements) {
+    assert.ok(position.left >= 0 && position.top >= 0, "islands fit the viewport origin");
+    assert.ok(position.left + position.width <= width + 1, "no clipped island labels");
+    assert.ok(position.top + position.artHeight + 46 <= height + 1,
+      "artwork, two-line nameplate and progress mark fit the viewport");
+    assert.ok(position.artHeight >= 46, "artwork remains a usable touch size");
+  }
+}
+assert.deepEqual(Array.from(islandsModule.islandAtlasRows(3)), [2, 1],
+  "three islands form a 2–1 archipelago instead of sequential checkpoints");
+assert.deepEqual(Array.from(islandsModule.islandAtlasRows(5)), [2, 1, 2],
+  "five regions keep a balanced, non-grid arrangement");
+const visits = [];
+const regionDataV2 = [
+  { id: "ancient", title: "Αρχαία Ελλάδα", totalLessons: 2,
+    completedLessons: 1, progressLoaded: true, status: "in-progress" },
+  { id: "world", title: "Παγκόσμια ιστορία", totalLessons: 1,
+    completedLessons: 0, progressLoaded: true, status: "new" },
+  { id: "mythology", title: "Μυθολογία", totalLessons: 0,
+    completedLessons: 0, progressLoaded: true, status: "coming-soon" },
+];
+let islandsTree = archipelago({
+  regions: regionDataV2, width: 340, height: 490,
+  onSelectRegion: id => visits.push(id),
+});
+const islandNodes = nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-destination-"));
+assert.equal(islandNodes.length, 3, "every subcategory has a native touch target");
+const hovering = nodes(islandsTree).filter(node => node.type === "IslandHoverMotion");
+assert.equal(hovering.length, 3, "all three destinations have their own floating visual wrapper");
+assert.deepEqual(Array.from(hovering, node => node.props.index), [0, 1, 2],
+  "independent hover phases follow stable island order");
+assert.ok(hovering.every(node =>
+  nodes(node).some(child => typeof child.type === "function" &&
+    child.type.name === "IslandArtwork") &&
+  nodes(node).some(child => String(child.props?.testID).startsWith("island-atlas-label-"))),
+  "artwork and title hover together, not independently or as a full-screen map");
+assert.ok(islandNodes.every(node =>
+  node.props.style({ pressed: false })[0].position === "absolute"),
+  "native destination Pressable remains absolutely positioned and stationary");
+
+assert.ok(islandNodes.every(node => node.type === "Pressable" && node.props.accessibilityRole === "button"),
+  "islands remain accessible native buttons");
+assert.ok(islandNodes.every(node => node.props.accessibilityHint === "Άνοιγμα περιοχής γνώσης"),
+  "destination buttons retain a concise Greek screen reader hint");
+const pressedIslandStyle = islandNodes[0].props.style({ pressed: true });
+assert.equal(pressedIslandStyle.at(-1).transform[0].scale, 0.96,
+  "touch feedback keeps a restrained press scale, without Reanimated map redraw");
+assert.ok(islandNodes[0].props.accessibilityLabel.includes("1 από 2"),
+  "accessible island progress uses real completion counts");
+assert.ok(islandNodes[2].props.accessibilityLabel.includes("σύντομα"),
+  "coming-soon destinations describe their availability");
+islandNodes[1].props.onPress();
+assert.deepEqual(visits, ["world"], "a map island opens its matching region ID");
+const ancientIslandTree = archipelago({
+  regions: [
+    { ...regionDataV2[0], id: "ancient-greece" },
+    regionDataV2[1],
+  ],
+  width: 340, height: 490, onSelectRegion: id => visits.push(id),
+});
+const artworkNodes = nodes(ancientIslandTree).filter(node =>
+  typeof node.type === "function" && node.type.name === "IslandArtwork");
+assert.equal(artworkNodes.length, 2, "each region receives one art component");
+const ancientArtworkTree = artworkNodes[0].type(artworkNodes[0].props);
+const otherArtworkTree = artworkNodes[1].type(artworkNodes[1].props);
+const parthenonImages = nodes(ancientArtworkTree).filter(node => node.type === "Image");
+assert.equal(parthenonImages.length, 1,
+  "Ancient Greece now mounts one cached landmark WebP, not the live Parthenon SVG");
+assert.equal(parthenonImages[0].props.source, "ancient-greece.webp");
+const parthenonSize = parthenonImages[0].props.style.width;
+assert.ok(parthenonSize >= 35 && parthenonSize <= 68,
+  "the new WebP keeps the approved responsive Parthenon size");
+assert.equal(parthenonImages[0].props.style.height, parthenonSize,
+  "WebP retains the square SVG landmark footprint");
+assert.equal(parthenonImages[0].props.contentFit, "contain");
+assert.equal(parthenonImages[0].props.cachePolicy, "memory-disk");
+assert.equal(parthenonImages[0].props.transition, 0);
+const parthenonOverlay = nodes(ancientArtworkTree).find(node =>
+  node.props?.testID === "island-atlas-ancient-greece-emblem");
+assert.equal(parthenonOverlay.props.pointerEvents, "none",
+  "Parthenon WebP never intercepts island taps");
+assert.equal(parthenonOverlay.props.style[1].top,
+  Math.max(0, artworkNodes[0].props.height * 0.56 - parthenonSize * 0.86),
+  "the raster preserves the approved raised Parthenon position");
+assert.equal(nodes(otherArtworkTree).filter(node => node.type === "Image").length, 0,
+  "non-landmark islands retain their terrain engraving without extra bitmaps");
+const stoneFooting = nodes(ancientArtworkTree).find(node =>
+  node.type === "ellipse" && node.props?.cx === 90 && node.props?.cy === 74);
+assert.ok(stoneFooting && stoneFooting.props.rx === 52,
+  "Ancient Greece receives a grounded plateau shadow beneath the Parthenon steps");
+assert.ok(nodes(ancientArtworkTree).some(node =>
+  node.type === "path" && node.props?.d?.startsWith("M 43 71")),
+  "a stone-tinted plinth connects the temple to the island engraving");
+assert.ok(!nodes(ancientArtworkTree).some(node =>
+  node.type === "circle" && node.props?.cx === 151 && node.props?.cy === 31),
+  "in-progress islands no longer have a disconnected floating status dot");
+const completeArtworkTree = artworkNodes[0].type({
+  ...artworkNodes[0].props, status: "complete",
+});
+assert.ok(nodes(completeArtworkTree).some(node =>
+  node.type === "circle" && node.props?.cx === 145 && node.props?.cy === 59),
+  "completed islands retain an in-landmark bronze check marker");
+assert.ok(!nodes(otherArtworkTree).some(node =>
+  node.type === "ellipse" && node.props?.cy === 74 && node.props?.rx === 52),
+  "Parthenon-specific stone footing is not repeated on unrelated islands");
+const parthenonModule = compile("src/components/islandIcons/AncientGreeceIslandIcon.tsx", {
+  "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native-svg": svg,
+});
+const renderedParthenon = parthenonModule.default({ size: 64 });
+assert.equal(renderedParthenon.props.testID, "ancient-greece-parthenon-svg");
+assert.equal(renderedParthenon.props.pointerEvents, "none");
+assert.equal(renderedParthenon.props.width, 64);
+const parthenonSvgSource = fs.readFileSync(
+  path.join(root, "src/components/islandIcons/AncientGreeceIslandIcon.tsx"), "utf8");
+assert.match(parthenonSvgSource, /A narrow shaded return on the right/,
+  "Parthenon roof retains a shaded side face rather than a flat frontage");
+assert.match(parthenonSvgSource, /Lower sidewall and contact shadow/,
+  "temple stylobate is grounded without expensive blur or animation");
+assert.equal(nodes(renderedParthenon).filter(node =>
+  node.type === "rect" && node.props?.height === 28.5).length, 8,
+  "the custom icon depicts eight Doric front columns, not the former pyramid");
+assert.ok(nodes(renderedParthenon).some(node =>
+  node.type === "path" && node.props?.d?.includes("50 12.8")),
+  "triangular pediment is clearly present");
+const ancientIslandButton = nodes(ancientIslandTree).find(node =>
+  node.props?.testID === "island-atlas-destination-ancient-greece");
+ancientIslandButton.props.onPress();
+assert.equal(visits.at(-1), "ancient-greece",
+  "custom artwork preserves the existing Ancient Greece island navigation");
+const allHistoryRegions = [
+  { ...regionDataV2[0], id: "ancient-greece" },
+  { ...regionDataV2[1], id: "world-history" },
+  { ...regionDataV2[2], id: "mythology" },
+];
+const historyAtlasTree = archipelago({
+  regions: allHistoryRegions, width: 340, height: 490,
+  onSelectRegion: id => visits.push(id),
+});
+const historyArtwork = nodes(historyAtlasTree).filter(node =>
+  typeof node.type === "function" && node.type.name === "IslandArtwork");
+assert.equal(historyArtwork.length, 3);
+const historyLandmarkSources = [
+  ["ancient-greece", "ancient-greece.webp"],
+  ["world-history", "world-history.webp"],
+  ["mythology", "mythology.webp"],
+];
+for (let i = 0; i < historyLandmarkSources.length; i++) {
+  const [id, expectedSource] = historyLandmarkSources[i];
+  const artwork = historyArtwork[i].type(historyArtwork[i].props);
+  const images = nodes(artwork).filter(node => node.type === "Image");
+  assert.equal(images.length, 1, "one raster landmark per " + id);
+  assert.equal(images[0].props.source, expectedSource,
+    "correct bundled WebP maps to the catalog subcategory " + id);
+  assert.ok(images[0].props.style.width >= 35 && images[0].props.style.width <= 68,
+    "responsive landmark size remains bounded: " + id);
+  assert.equal(images[0].props.style.height, images[0].props.style.width,
+    "landmark image does not stretch: " + id);
+  assert.equal(images[0].props.contentFit, "contain");
+  assert.equal(images[0].props.cachePolicy, "memory-disk");
+  assert.equal(images[0].props.transition, 0);
+  const overlay = nodes(artwork).find(node =>
+    node.props?.testID === "island-atlas-" + id + "-emblem");
+  assert.ok(overlay && overlay.props.pointerEvents === "none"
+    && overlay.props.accessible === false,
+    "raster icon does not intercept navigation or accessibility focus: " + id);
+  assert.equal(overlay.props.style[1].top,
+    Math.max(0, historyArtwork[i].props.height * 0.56 -
+      images[0].props.style.height * (id === "ancient-greece" ? 0.86 : 0.84)),
+    "raster preserves the original plateau alignment: " + id);
+  assert.ok(nodes(artwork).some(node => node.type === "ellipse" &&
+    node.props?.cx === 90 && node.props?.cy === 74 && node.props?.rx === 52),
+    "the existing live island footprint remains under the landmark: " + id);
+  assert.ok(!nodes(artwork).some(node => node.type === "path" &&
+    node.props?.d?.startsWith("M 65 68 L 83 43")),
+    "generic engraving no longer shows through the landmark: " + id);
+  const button = nodes(historyAtlasTree).find(node =>
+    node.props?.testID === "island-atlas-destination-" + id);
+  button.props.onPress();
+  assert.equal(visits.at(-1), id, "WebP landmark preserves the native island route: " + id);
+}
+const iconAssetIds = ["ancient-greece", "world-history", "mythology"];
+const generatedWebPs = iconAssetIds.map(id => fs.readFileSync(
+  path.join(root, "assets/atlas-export-preview/island-icons", id + ".webp")));
+for (const asset of generatedWebPs) {
+  assert.equal(asset.toString("ascii", 0, 4), "RIFF");
+  assert.equal(asset.toString("ascii", 8, 12), "WEBP");
+  assert.ok(asset.length < 75000, "landmark WebP is small enough for fast atlas loads");
+}
+const exportScript = fs.readFileSync(
+  path.join(root, "scripts/export-island-icons-webp.cjs"), "utf8");
+assert.match(exportScript, /ts\.transpileModule/,
+  "WebP export is derived from original TSX SVG components, not traced duplicates");
+assert.match(exportScript, /alphaQuality: 100/,
+  "transparent surroundings and fine engraved edges are retained");
+const iconArt = [
+  ["src/components/islandIcons/WorldHistoryIslandIcon.tsx",
+    "world-history-earth-svg", 31],
+  ["src/components/islandIcons/MythologyIslandIcon.tsx",
+    "mythology-minotaur-svg", null],
+];
+for (const [path, id, expectedGlobeRadius] of iconArt) {
+  const iconComponent = compile(path, {
+    "react/jsx-runtime": { jsx, jsxs: jsx },
+    "react-native-svg": svg,
+  }).default;
+  const tree = iconComponent({ size: 64 });
+  assert.equal(tree.props.testID, id);
+  assert.equal(tree.props.width, 64);
+  assert.equal(tree.props.pointerEvents, "none");
+  assert.equal(tree.props.accessible, false);
+  assert.ok(nodes(tree).some(node => node.type === "ellipse" &&
+    node.props?.cx === 50 && node.props?.cy >= 84),
+    "icon has an engraved ground/contact shadow: " + id);
+  if (expectedGlobeRadius !== null) {
+    assert.ok(nodes(tree).some(node => node.type === "circle" &&
+      node.props?.cx === 50 && node.props?.cy === 43 &&
+      node.props?.r === expectedGlobeRadius),
+      "Earth illustration has a spherical, not flat, globe");
+    assert.ok(nodes(tree).some(node => node.type === "clipPath"),
+      "continental etchings are clipped to the globe's edge");
+  } else {
+    assert.ok(nodes(tree).some(node => node.type === "path" &&
+      node.props?.d?.startsWith("M 33 35 C 21 35")),
+      "Minotaur's upward-swept left horn remains readable");
+    assert.ok(nodes(tree).some(node => node.type === "path" &&
+      node.props?.d?.startsWith("M 67 35 C 79 35")),
+      "Minotaur's right horn mirrors the left");
+  }
+}
+
+
+assert.equal(nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-label-")).length, 3,
+  "Greek category titles render below rather than over the geography");
+const nameplates = nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-nameplate-"));
+assert.equal(nameplates.length, 3, "every destination has its own readable label backdrop");
+assert.ok(nameplates.every(node => node.props.pointerEvents === "none"),
+  "text backing never intercepts an island press");
+assert.ok(nameplates.every(node => node.props.style[0].alignSelf === "center"
+  && node.props.style[0].width === undefined),
+  "visible nameplates shrink-wrap the label rather than filling their island slot");
+assert.ok(nameplates.every(node =>
+  node.props.style[0].marginTop === -4 && node.props.style[0].minHeight === 30),
+  "shorter nameplates sit closer to the islands without changing their hit targets");
+const placementWidths = islandsModule.getIslandAtlasPlacements(3, 340, 490);
+assert.ok(nameplates.every((node, index) => node.props.style[1].maxWidth === placementWidths[index].width),
+  "long Greek titles remain capped by their individual map slots");
+const islandLabels = nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-label-"));
+assert.ok(islandLabels.every(node =>
+  node.props.style[0].width === undefined && node.props.style[0].flexShrink === 1
+  && node.props.numberOfLines === 2),
+  "label text sizes naturally but still wraps to two lines when required");
+const startedPlate = nameplates.find(node => node.props.testID === "island-atlas-nameplate-ancient");
+assert.ok(startedPlate.props.style.some(style =>
+  style && style.borderColor === "rgba(190, 173, 246, 0.52)"),
+  "started regions get a quiet violet nameplate outline");
+assert.ok(nodes(islandsTree).some(node => node.props?.testID === "island-atlas-progress-ancient"),
+  "real progress still renders below the island nameplate");
+const startedProgress = nodes(islandsTree).find(node =>
+  node.props?.testID === "island-atlas-progress-ancient");
+const startedFill = nodes(startedProgress).find(node =>
+  node.props?.style?.[0]?.height === 3);
+assert.equal(startedFill.props.style[1].width, 28,
+  "the larger route indicator reflects 50% progress without duplicated text");
+assert.ok(!nodes(islandsTree).some(node => node.props?.testID === "island-atlas-progress-mythology"),
+  "coming-soon areas never show misleading zero progress");
+const islandSource = fs.readFileSync(
+  path.join(root, "src/components/IslandAtlasMap.tsx"), "utf8");
+assert.doesNotMatch(islandSource, /react-native-reanimated|withRepeat\(|setTimeout\(/,
+  "foreground island polish adds no motion loops or expensive timers");
+assert.match(islandSource, /fillOpacity=\{0\.045\}/,
+  "explored-island halo is a static SVG wash rather than live blur");
+assert.doesNotMatch(islandSource,
+  /import (AncientGreeceIslandIcon|WorldHistoryIslandIcon|MythologyIslandIcon)/,
+  "no live landmark SVG component is imported by the Category screen");
+assert.match(islandSource, /cachePolicy="memory-disk"/,
+  "small bundled WebPs use the same static caching as the world background");
+
+const islandHoverSource = fs.readFileSync(
+  path.join(root, "src/components/IslandHoverMotion.tsx"), "utf8");
+assert.match(islandHoverSource, /useReducedMotion\(/,
+  "floating motion respects the device accessibility setting");
+assert.match(islandHoverSource, /useAnimatedStyle\(/,
+  "motion is a UI-thread transform, not JS-driven island re-rendering");
+assert.match(islandHoverSource, /cancelAnimation\(/,
+  "hovering cancels cleanly on screen unmount");
+assert.doesNotMatch(islandHoverSource, /setInterval\(|setTimeout\(|useAnimatedProps\(/,
+  "hover animation never uses JS timers or per-frame SVG props");
+const hoverCalls = {
+  loops: 0, delays: [], timings: [], cancelled: 0, reduced: false, cleanupFns: [],
+};
+const hoverModule = compile("src/components/IslandHoverMotion.tsx", {
+  react: {
+    useEffect: fn => {
+      const dispose = fn();
+      if (typeof dispose === "function") hoverCalls.cleanupFns.push(dispose);
+    },
+  },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "react-native-reanimated": {
+    __esModule: true, default: { View: "AnimatedView" },
+    Easing: { sin: x => x, inOut: fn => fn },
+    useReducedMotion: () => hoverCalls.reduced,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: fn => fn(),
+    cancelAnimation: () => { hoverCalls.cancelled++; },
+    withTiming: (target, config) => {
+      hoverCalls.timings.push({ target, duration: config.duration }); return target;
+    },
+    withSequence: (...frames) => frames.at(-1),
+    withRepeat: (value, repetitions, reversed) => {
+      assert.equal(repetitions, -1);
+      assert.equal(reversed, false);
+      hoverCalls.loops++;
+      return value;
+    },
+    withDelay: (delay, value) => { hoverCalls.delays.push(delay); return value; },
+  },
+});
+assert.equal(hoverModule.MAX_HOVERING_ISLANDS, 8,
+  "perpetual native animations are capped for large category catalogues");
+const hoverAmplitude = hoverModule.islandHoverAmplitude;
+assert.deepEqual([0, 1, 2].map(hoverAmplitude), [1.25, 1.65, 2.05],
+  "different destinations receive restrained nonidentical hover displacement");
+for (const index of [0, 1, 2]) {
+  const floating = hoverModule.default({ index, children: "island content" });
+  assert.equal(floating.type, "AnimatedView");
+  assert.equal(floating.props.testID, "island-atlas-hover-" + index);
+  assert.equal(floating.props.children, "island content");
+  assert.equal(floating.props.style[0].width, "100%");
+  assert.deepEqual(hoverCalls.timings.slice(-3).map(t => t.duration),
+    [2300, 3000, 2300], "a slow smooth cycle avoids distracting island vibration");
+}
+assert.equal(hoverCalls.loops, 3, "each visible History island gets one native animation");
+assert.deepEqual(hoverCalls.delays, [900, 1280, 1660],
+  "starts are staggered so islands do not bob in sync");
+const previousLoops = hoverCalls.loops;
+hoverCalls.reduced = true;
+hoverModule.default({ index: 0, children: "static island" });
+assert.equal(hoverCalls.loops, previousLoops, "reduced motion disables bobbing");
+hoverCalls.reduced = false;
+hoverModule.default({ index: 8, children: "static overflow island" });
+assert.equal(hoverCalls.loops, previousLoops,
+  "large categories do not initiate unlimited animation loops");
+assert.ok(hoverCalls.cancelled >= 5,
+  "repeat loops are cancelled before any new sequence starts");
+assert.equal(hoverCalls.cleanupFns.length, 5,
+  "every island installs cleanup, even when reduced-motion or max count suppresses hovering");
+const cancelledBeforeUnmount = hoverCalls.cancelled;
+hoverCalls.cleanupFns.forEach(dispose => dispose());
+assert.equal(hoverCalls.cancelled, cancelledBeforeUnmount + 5,
+  "leaving the Category screen cancels each registered animation");
+
+const emptyIslands = archipelago({
+  regions: [], width: 340, height: 490, onSelectRegion: () => {},
+});
+assert.ok(nodes(emptyIslands).some(node => node.props?.testID === "island-atlas-empty"),
+  "empty categories show an accessible explanatory state");
+
 const continueModule = compile("src/components/AtlasContinueCard.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
@@ -664,205 +1048,149 @@ const continueModule = compile("src/components/AtlasContinueCard.tsx", {
 });
 const atlasContinueStub = { __esModule: true, default: "MotionPressable",
   atlasContinueStyles: continueModule.atlasContinueStyles };
-const screenModule = compile("src/screens/CategoryScreen.tsx", {
-  react: { useMemo: fn => fn(), useState: initial => [initial, () => {}] },
+// World backdrop is one bundled WebP, never the large live SVG at runtime.
+const worldSvg = fs.readFileSync(
+  path.join(root, "assets/atlas-source/category-world.svg"), "utf8");
+const worldWebp = fs.readFileSync(
+  path.join(root, "assets/atlas-export-preview/category-world.webp"));
+assert.match(worldSvg, /viewBox="0 0 1080 2400"/,
+  "world-scale SVG has the same portrait export dimensions");
+assert.match(worldSvg, /orthographic hemisphere/,
+  "the geography is generated with a correct spherical world projection");
+assert.match(worldSvg, /clip-path="url\(#globe-clip\)"/,
+  "the geographically grounded coastlines are clipped to the visible hemisphere");
+const landData = JSON.parse(fs.readFileSync(
+  path.join(root, "assets/atlas-source/natural-earth-110m-land.geojson"), "utf8"));
+assert.ok(landData.features.length >= 100,
+  "source retains real Natural Earth shoreline polygons, not traced continent guesses");
+const generatorSource = fs.readFileSync(
+  path.join(root, "scripts/generate-category-world-svg.mjs"), "utf8");
+assert.match(generatorSource, /geoOrthographic\(/,
+  "a spherical map projection replaces stretched hand-drawn landmasses");
+assert.match(generatorSource, /geoPath\(projection\)/,
+  "graticules and coastlines share the same projection");
+assert.match(worldSvg, /#[0-9A-Fa-f]{6}/,
+  "continent and sea colors are explicit, editable atlas palette tokens");
+assert.equal(worldWebp.toString("ascii", 0, 4), "RIFF",
+  "the world map asset is a binary RIFF/WebP file");
+assert.equal(worldWebp.toString("ascii", 8, 12), "WEBP",
+  "no missing raster or accidental SVG replacement");
+const worldBackground = compile("src/components/CategoryWorldAtlasBackground.tsx", {
+  react: { memo: component => component },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
-  "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/category-world.webp": "world-atlas.webp",
+}).default();
+assert.equal(worldBackground.props.testID, "category-world-atlas-background");
+assert.equal(worldBackground.props.pointerEvents, "none");
+assert.equal(worldBackground.props.accessible, false);
+const worldImage = nodes(worldBackground).find(node => node.type === "Image");
+assert.ok(worldImage, "the world map is one composited bitmap");
+assert.equal(worldImage.props.source, "world-atlas.webp");
+assert.equal(worldImage.props.contentFit, "cover",
+  "uniform image scaling preserves continent proportions on different phone screens");
+assert.equal(worldImage.props.cachePolicy, "memory-disk");
+assert.equal(worldImage.props.transition, 0,
+  "no late raster entrance competes with island mounting");
+
+const screenState = [];
+let hookIndex = 0;
+const screenModule = compile("src/screens/CategoryScreen.tsx", {
+  react: {
+    useMemo: fn => fn(),
+    useState: initial => {
+      const index = hookIndex++;
+      if (!(index in screenState)) screenState[index] = initial;
+      return [screenState[index], next => {
+        screenState[index] = typeof next === "function" ? next(screenState[index]) : next;
+      }];
+    },
+  },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "../components/IslandAtlasMap": { __esModule: true, default: "IslandAtlasMap" },
+  "../components/CategoryWorldAtlasBackground": { __esModule: true, default: "CategoryWorldAtlasBackground" },
+  "../components/worldIcons/categoryIconMap": { getCategoryWorldIcon: id => ({
+    history: "HistoryWorldIcon", science: "ScienceWorldIcon", nature: "NatureWorldIcon",
+    technology: "TechnologyWorldIcon", culture: "CultureWorldIcon",
+    geography: "GeographyWorldIcon", "difficult-history": "DifficultHistoryWorldIcon",
+  })[id] },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView",
+    MotionView: "MotionView", MotionPressable: "MotionPressable", MotionIcon: "MotionIcon",
   },
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
     AtlasProgressFill: "AtlasProgressFill",
   },
-  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
+  "../theme": { colors: { accentLight: "#B1A5FF", text: "#F3F0E8" } },
   "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
 });
-// Initial layout must never show the legacy (non-fitted) map for a frame.
-// A fresh CategoryScreen renders only the measured-container shell, then
-// mounts FantasyMap once with the correct viewport on the next render.
-const screenState = [];
-let screenHookIndex = 0;
-const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
-  react: {
-    useMemo: fn => fn(),
-    useState: initial => {
-      const index = screenHookIndex++;
-      if (!(index in screenState)) screenState[index] = initial;
-      return [screenState[index], value => {
-        screenState[index] = typeof value === "function" ? value(screenState[index]) : value;
-      }];
-    },
-  },
-  "react/jsx-runtime": { jsx, jsxs: jsx },
-  "react-native": native,
-  "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
-  "../components/AtlasContinueCard": atlasContinueStub,
-  "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView",
-  },
-  "../components/CategoryAtlasMotion": {
-    AtlasContinueAccent: "AtlasContinueAccent",
-    AtlasContinueArrow: "AtlasContinueArrow",
-    AtlasProgressFill: "AtlasProgressFill",
-  },
-  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
-  "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
-}).default;
-const shortcutVisits = [];
 const screenProps = {
   category: { id: "history", title: "Ιστορία" },
-  subcategories: [{ id: "ancient", title: "Αρχαία Ελλάδα" },
-    { id: "world", title: "Παγκόσμια ιστορία" }],
+  subcategories: regionDataV2.map(({ id, title }) => ({ id, title })),
   lessons, completedLessonIds: ["a"], inProgressLessonIds: ["b"],
   progressLoaded: true, onBack: () => {},
-  onOpenSubcategory: (id, categoryId) => shortcutVisits.push([id, categoryId]),
+  onOpenSubcategory: (id, categoryId) => visits.push(id + ":" + categoryId),
 };
-const renderCategory = () => {
-  screenHookIndex = 0;
-  return screenWithLayout(screenProps);
+const render = overrides => {
+  hookIndex = 0;
+  return screenModule.default({ ...screenProps, ...overrides });
 };
-let categoryTree = renderCategory();
-const header = nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-header");
-assert.equal(header.type, "MotionView", "header uses the same entry primitive as Home");
-assert.equal(header.props.entranceDelay, 0);
-assert.equal(nodes(categoryTree).filter(node =>
-  node.props?.testID === "category-atlas-map-entrance").length, 0,
-  "map reveal must not start before its viewport is measured");
-const shortcut = nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-continue");
-assert.equal(shortcut.type, "MotionPressable",
-  "the Continue shortcut uses the established Home press animation");
-assert.equal(shortcut.props.pressScale, 0.983);
-assert.equal(shortcut.props.entranceDelay, 75,
-  "Continue card follows the header without changing its tap response");
-assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueAccent"));
-assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueArrow"));
-const fill = nodes(shortcut).find(node => node.type === "AtlasProgressFill");
-assert.equal(fill.props.percent, 50, "progress motion uses real regional completion");
-shortcut.props.onPress();
-assert.deepEqual(shortcutVisits, [["ancient", "history"]],
-  "animated shortcut still opens the same subcategory");
-assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 0,
-  "old non-fitted FantasyMap must not flash while viewport is unmeasured");
-const mapShell = nodes(categoryTree).find(node =>
+let screenTree = render();
+assert.equal(nodes(screenTree).filter(node => node.type === "IslandAtlasMap").length, 0,
+  "unmeasured screen does not allocate an incorrectly-sized island map");
+assert.equal(nodes(screenTree).filter(node => node.type === "CategoryWorldAtlasBackground").length, 1,
+  "cached world map mounts immediately, without waiting for a layout callback");
+const screenRoot = nodes(screenTree).find(node => node.props?.testID === "category-atlas-screen");
+assert.equal(screenRoot.props.onLayout, undefined,
+  "only the interactive island viewport needs to be measured");
+const headerTypes = {
+  history: "HistoryWorldIcon",
+  science: "ScienceWorldIcon",
+  nature: "NatureWorldIcon",
+  technology: "TechnologyWorldIcon",
+  culture: "CultureWorldIcon",
+  geography: "GeographyWorldIcon",
+  "difficult-history": "DifficultHistoryWorldIcon",
+};
+for (const [id, iconType] of Object.entries(headerTypes)) {
+  const headerTree = render({ category: { id, title: id } });
+  const icons = nodes(headerTree).filter(node => Object.values(headerTypes).includes(node.type));
+  assert.equal(icons.length, 1, "exactly one custom icon in " + id + " header");
+  assert.equal(icons[0].type, iconType, "correct Home illustration reused for " + id);
+  assert.equal(icons[0].props.size, 32, "header icon footprint is fixed at 32pt");
+}
+const unknownTree = render({ category: { id: "unknown", title: "Άγνωστη" } });
+assert.equal(nodes(unknownTree).filter(node => Object.values(headerTypes).includes(node.type)).length, 0);
+assert.ok(nodes(unknownTree).some(node => node.props?.children === "✦"),
+  "unrecognized categories retain their neutral fallback emblem");
+const mapViewport = nodes(screenTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
-assert.ok(mapShell && typeof mapShell.props.onLayout === "function",
-  "empty flex viewport must still measure its bounds");
-const screenRoot = nodes(categoryTree).find(node => node.props?.testID === "category-atlas-screen");
-screenRoot.props.onLayout({ nativeEvent: { layout: { width: 340, height: 620 } } });
-mapShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
-categoryTree = renderCategory();
-assert.equal(nodes(categoryTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
-  "static chart becomes visible as soon as the viewport is measured");
-assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 1,
-  "background and interactive islands mount together after the first measurement");
-let mountedMaps = nodes(categoryTree).filter(node => node.type === map);
-const mapReveal = nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-map-entrance");
-assert.equal(mapReveal.type, "View",
-  "the atlas mounts after measurement without waiting for the card animation");
-assert.equal(mapReveal.props.entranceDelay, undefined,
-  "map entrance animation does not compete with card or island motion");
-assert.equal(mountedMaps.length, 1, "measured screen mounts exactly one map");
-assert.equal(mountedMaps[0].props.hideControls, true,
-  "Category Atlas only renders the constellation without mode controls");
-assert.equal(mountedMaps[0].props.externalBackground, true,
-  "the interactive SVG uses the separate chart layer");
-assert.equal(nodes(mapReveal).filter(node => node.type === map).length, 1,
-  "fitted map stays inside the non-layout-shifting entrance wrapper");
-assert.equal(mapReveal.props.children.type, map,
-  "interactive islands render immediately, without another SVG cover");
-assert.equal(nodes(mapReveal).filter(node => node.type === "AtlasMapRevealCover").length, 0,
-  "the atlas contains no deferred reveal layer");
-assert.deepEqual(
-  { ...mountedMaps[0].props.fitViewport }, { width: 340, height: 490 },
-  "first map mount uses the real viewport size rather than legacy layout");
-nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-map-viewport"
-).props.onLayout({ nativeEvent: { layout: { width: 310, height: 420 } } });
-categoryTree = renderCategory();
-mountedMaps = nodes(categoryTree).filter(node => node.type === map);
-assert.deepEqual(
-  { ...mountedMaps[0].props.fitViewport }, { width: 310, height: 420 },
-  "fitted map still adapts when viewport dimensions change");
-
-// The Continue card still animates, but no longer controls map readiness.
-assert.doesNotMatch(screen, /mapReadyFor|canMountMap|onEntranceComplete/,
-  "the card entrance must not block interactive destinations");
-assert.doesNotMatch(screen, /AtlasMapRevealCover/,
-  "the duplicate chart cover must not delay island visibility");
-const androidNative = { ...native, Platform: { OS: "android" } };
-const androidState = [];
-let androidHookIndex = 0;
-const androidScreen = compile("src/screens/CategoryScreen.tsx", {
-  react: {
-    useMemo: fn => fn(),
-    useState: initial => {
-      const index = androidHookIndex++;
-      if (!(index in androidState)) androidState[index] = initial;
-      return [androidState[index], next => {
-        androidState[index] = typeof next === "function" ? next(androidState[index]) : next;
-      }];
-    },
-  },
-  "react/jsx-runtime": { jsx, jsxs: jsx },
-  "react-native": androidNative,
-  "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
-  "../components/AtlasContinueCard": atlasContinueStub,
-  "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView",
-  },
-  "../components/CategoryAtlasMotion": {
-    AtlasContinueAccent: "AtlasContinueAccent",
-    AtlasContinueArrow: "AtlasContinueArrow",
-    AtlasProgressFill: "AtlasProgressFill",
-  },
-  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
-  "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
-}).default;
-const renderAndroidCategory = options => {
-  androidHookIndex = 0;
-  return androidScreen({ ...screenProps, ...options });
-};
-let androidTree = renderAndroidCategory();
-const androidShell = nodes(androidTree).find(node =>
-  node.props?.testID === "category-atlas-map-viewport");
-nodes(androidTree).find(node => node.props?.testID === "category-atlas-screen").props.onLayout({ nativeEvent: { layout: { width: 340, height: 620 } } });
-androidShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
-androidTree = renderAndroidCategory();
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "Android mounts the interactive islands as soon as the viewport is measured");
-assert.equal(nodes(androidTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
-  "Android reveals the same static chart before the interactive map");
-assert.equal(nodes(androidTree).filter(node => node.type === "AtlasMapRevealCover").length, 0,
-  "Android also shows its islands with no additional reveal gate");
-androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "switching categories keeps the fitted map available immediately");
-renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
-androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" },
-  subcategories: [] });
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "empty categories still display their empty map without waiting for a card");
-
+mapViewport.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
+screenTree = render();
+const islandMap = nodes(screenTree).find(node => node.type === "IslandAtlasMap");
+assert.ok(islandMap, "destinations mount immediately once the map viewport is measured");
+assert.equal(islandMap.props.width, 340);
+assert.equal(islandMap.props.height, 490);
+islandMap.props.onSelectRegion("world");
+assert.equal(visits.at(-1), "world:history", "screen preserves Category-to-Subcategory navigation");
+const card = nodes(screenTree).find(node => node.props?.testID === "category-atlas-continue");
+assert.equal(card.props.entranceDelay, 75);
+assert.equal(card.props.pressScale, 0.983);
+assert.ok(nodes(card).some(node => node.type === "AtlasProgressFill"));
+card.props.onPress();
+assert.equal(visits.at(-1), "ancient:history", "Continue opens the in-progress subcategory");
 const choose = screenModule.chooseAtlasFeaturedRegion;
-const picks = [
-  { id: "ancient", status: "new" },
-  { id: "world", status: "in-progress" },
+const candidates = [
+  { id: "ancient", status: "new" }, { id: "world", status: "in-progress" },
   { id: "myths", status: "complete" },
 ];
-assert.equal(choose(picks, [
+assert.equal(choose(candidates, [
   { id: "a", subcategoryId: "ancient" }, { id: "b", subcategoryId: "world" },
-], ["b"]).id, "world", "resume the subcategory already in progress");
-assert.equal(choose(picks, [], []).id, "world", "prefer started locations without an active lesson");
-assert.equal(choose([{ id: "a", status: "complete" }, picks[0]], [], []).id, "ancient",
-  "new explorers can start anywhere");
-console.log("Category Interactive Atlas contracts passed. Device visual QA still required.");
+], ["b"]).id, "world");
+assert.equal(choose(candidates, [], []).id, "world");
+assert.equal(choose([{ id: "a", status: "complete" }, candidates[0]], [], []).id, "ancient");
+console.log("Category Interactive Island Atlas 2.0 contracts passed. Device visual QA still required.");

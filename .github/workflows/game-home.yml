@@ -10,7 +10,19 @@ on:
       - "src/components/AtlasContinueCard.tsx"
       - "src/components/AtlasCard.tsx"
       - "src/components/FantasyMap.tsx"
+      - "src/components/IslandAtlasMap.tsx"
+      - "src/components/IslandHoverMotion.tsx"
+      - "src/components/CategoryWorldAtlasBackground.tsx"
+      - "assets/atlas-source/category-world.svg"
+      - "assets/atlas-source/natural-earth-110m-land.geojson"
+      - "scripts/generate-category-world-svg.mjs"
+      - "assets/atlas-export-preview/category-world.webp"
+      - "scripts/export-category-world-webp.cjs"
+      - "scripts/export-island-icons-webp.cjs"
+      - "assets/atlas-export-preview/island-icons/**"
+      - ".github/workflows/build-category-island-icons.yml"
       - "src/components/worldIcons/**"
+      - "src/components/islandIcons/**"
       - "src/components/HomeMotion.tsx"
       - "src/components/AdventureAtlasBackground.tsx"
       - "src/components/AdventureMotion.tsx"
@@ -37,6 +49,9 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm run atlas:world:svg:check
+      - run: npm run atlas:world:check
+      - run: npm run atlas:islands:check
       - run: npm run typecheck
       - run: node scripts/test-home-layout.cjs
       - run: node scripts/test-category-atlas.cjs

@@ -7,11 +7,7 @@ import { DAILY_CHALLENGE_SIZE } from "../data/questions";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { useAthensDate } from "../hooks/useAthensDate";
 import { useDailySnapshot } from "../state/LearningSession";
-import HistoryWorldIcon from "../components/worldIcons/HistoryWorldIcon";
-import {
-  CultureWorldIcon, DifficultHistoryWorldIcon, GeographyWorldIcon,
-  NatureWorldIcon, ScienceWorldIcon, TechnologyWorldIcon,
-} from "../components/worldIcons/OtherWorldIcons";
+import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
@@ -44,18 +40,6 @@ const shortLabels: Record<string, string> = {
   culture: "Τέχνες",
   geography: "Γεωγραφία",
   "difficult-history": "Δύσκολη ιστορία",
-};
-
-// Locally rendered, purely decorative artwork. All cards retain their
-// existing 32-point layout footprint and 18% visual enlargement.
-const worldIllustrations: Record<string, typeof HistoryWorldIcon> = {
-  history: HistoryWorldIcon,
-  science: ScienceWorldIcon,
-  nature: NatureWorldIcon,
-  technology: TechnologyWorldIcon,
-  culture: CultureWorldIcon,
-  geography: GeographyWorldIcon,
-  "difficult-history": DifficultHistoryWorldIcon,
 };
 
 // Visual previews only. Game routes and persistence arrive in a later phase.
@@ -241,7 +225,7 @@ export default function HomeScreen({
         </View>
         <View style={[styles.categoryGrid, tight && styles.tightCategoryGrid]}>
           {categories.map((category, index) => {
-            const WorldIllustration = worldIllustrations[category.id];
+            const WorldIllustration = getCategoryWorldIcon(category.id);
             return (
               <MotionPressable key={category.id} testID={"home-category-" + category.id}
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
