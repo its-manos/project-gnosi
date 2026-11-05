@@ -207,7 +207,7 @@ function IslandAtlasMap({ regions, width, height, onSelectRegion }: Props) {
               <Text style={styles.soon}>ΣΥΝΤΟΜΑ</Text> :
               <View pointerEvents="none" style={styles.progressRail}>
                 <View style={[styles.progressFill, {
-                  width: percent + "%",
+                  width: Math.round(38 * percent / 100),
                   backgroundColor: region.status === "complete" ? "#CEB38A" : "#AE9DFB",
                 }]} />
               </View>}
