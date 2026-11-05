@@ -3,7 +3,8 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, Vi
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
-import AppHeader from "../components/AppHeader";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
+import DailyMissionMap from "../components/DailyMissionMap";
 import ProgressBar from "../components/ProgressBar";
 import DailyMistakeReview from "../components/DailyMistakeReview";
 import DailyAnswerReview from "../components/DailyAnswerReview";
@@ -47,16 +48,19 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const canStart=selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE;
   const activeQuiz=record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
   return <View style={styles.root}><ProgressGradientBackground />
-    {activeQuiz ? <View style={styles.stageTop}>
-      <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.stageHeader} />
-    </View> : null}
+    <View style={styles.pageChrome}>
+      <ProfileSectionHeader eyebrow="ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ"
+        title={reviewing?"Ανασκόπηση":record.completed?"Η αποστολή σου":"Ημερήσιο quiz"}
+        actionLabel={reviewing?"‹ Αποτέλεσμα":"‹ Αρχική"}
+        actionAccessibilityLabel={reviewing?"Πίσω στο αποτέλεσμα":"Επιστροφή στην αρχική"}
+        onAction={reviewing?closeReview:onHome} style={styles.pageHeader}/>
+    </View>
     <ScrollView ref={scrollRef} style={styles.viewport}
       contentContainerStyle={[styles.content,activeQuiz&&styles.activeContent,!activeQuiz&&styles.pageContent]}
       onLayout={quizViewport.onLayout} onContentSizeChange={quizViewport.onContentSizeChange}
       scrollEnabled={quizViewport.scrollEnabled}
       bounces={quizViewport.scrollEnabled}
       showsVerticalScrollIndicator={false}>
-    {!activeQuiz ? <AppHeader style={styles.pageHeader} onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} /> : null}
     {isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
     :record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
     :record.completed&&review?.date===record.dateKey&&review.mode==='mistakes'?<DailyMistakeReview key={`${record.dateKey}-${record.questionIds.join('-')}`} questions={analysis.practiceQuestions} onDone={closeReview} onAdvance={scrollTop}/>
@@ -98,42 +102,35 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       <Text style={styles.tomorrow}>Νέο σετ αύριο, με την αλλαγή της ημέρας στην Ελλάδα.</Text>
       <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} secondary style={styles.returnAction}/>
     </View></QuizReveal>
-    :!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal><View style={[styles.introBody,compactIntro&&styles.introBodyCompact]}>
-      <View style={[styles.missionHeader,compactIntro&&styles.missionHeaderCompact]}>
-        <View style={[styles.heroMark,compactIntro&&styles.heroMarkCompact,denseIntro&&styles.heroMarkDense]} accessible={false}>
-          <View style={styles.heroOrbit}/>
-          <View style={styles.heroCore}><Text style={styles.heroGlyph}>✦</Text></View>
-          <View style={styles.heroSatellite}/>
+    :!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal>
+      <View style={[styles.introBody,compactIntro&&styles.introBodyCompact]}>
+        <View style={styles.introLead}>
+          <View style={styles.introCopy}>
+            <Text style={styles.eyebrow}>Η ΣΗΜΕΡΙΝΗ ΣΟΥ ΕΞΕΡΕΥΝΗΣΗ</Text>
+            <Text style={[styles.introTitle,denseIntro&&styles.introTitleDense]}>7 στάσεις γνώσης.</Text>
+            <Text style={styles.introSubtitle}>Μία νέα αποστολή κάθε μέρα.</Text>
+          </View>
+          <View style={[styles.heroMark,denseIntro&&styles.heroMarkDense]} accessible={false}>
+            <View style={styles.heroOrbitOuter}/>
+            <View style={styles.heroOrbitInner}/>
+            <View style={styles.heroCore}><Text style={styles.heroGlyph}>✦</Text></View>
+            <View style={styles.heroSatellite}/>
+            <Text style={styles.heroSmallStar}>✧</Text>
+          </View>
         </View>
-        <Text style={styles.eyebrow}>Η ΚΟΙΝΗ ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
-        <Text style={[styles.title,styles.introTitle,denseIntro&&styles.introTitleDense]}>7 ερωτήσεις. Μια νέα ανακάλυψη.</Text>
-        <Text style={[styles.body,styles.introSubtitle]}>Ίδιες ερωτήσεις για όλους. Νέα θέματα κάθε μέρα.</Text>
-      </View>
-      <View style={[styles.missionCard,compactIntro&&styles.missionCardCompact]}>
-        <View pointerEvents="none" style={styles.cardRim}/>
-        <Text style={styles.missionLabel}>Η ΣΗΜΕΡΙΝΗ ΔΙΑΔΡΟΜΗ</Text>
-        <View style={styles.difficultyRow}>
-          <View style={styles.difficultyItem}><Text style={styles.difficultyCount}>2</Text><Text style={styles.difficultyLabel}>ΕΥΚΟΛΕΣ</Text></View>
-          <View style={styles.difficultyDivider}/>
-          <View style={styles.difficultyItem}><Text style={styles.difficultyCount}>3</Text><Text style={styles.difficultyLabel}>ΜΕΣΑΙΕΣ</Text></View>
-          <View style={styles.difficultyDivider}/>
-          <View style={styles.difficultyItem}><Text style={styles.difficultyCount}>2</Text><Text style={styles.difficultyLabel}>ΔΥΣΚΟΛΕΣ</Text></View>
-        </View>
-        <View style={styles.missionFooter}>
-          <Text style={styles.bonusText}>✦  100 πόντοι / σωστή</Text>
-          <Text style={styles.note}>Η πρόοδος αποθηκεύεται</Text>
+        <Text style={styles.sharedNote}>Το ίδιο σετ για όλους, με ερωτήσεις από διαφορετικούς κόσμους.</Text>
+        <DailyMissionMap compact={compactIntro}/>
+        {!canStart?<Text style={styles.errorText}>Δεν υπάρχουν αρκετές διαθέσιμες ερωτήσεις για σήμερα.</Text>:null}
+        <View style={styles.introActions}>
+          <ActionButton label="Ξεκίνα την πρόκληση →" onPress={()=>{setSourceError(false);sourceRequest.current++;void startChallenge();}} disabled={!canStart} style={styles.actionPrimary}/>
+          <Pressable testID="daily-interests-link" style={({pressed})=>[styles.interestsLink,pressed&&styles.interestsPressed]}
+            onPress={onOpenPreferences} accessibilityRole="button" accessibilityLabel="Ρύθμιση ενδιαφερόντων">
+            <Text style={styles.interestsText}>Τα ενδιαφέροντά μου  ›</Text>
+          </Pressable>
+          <Text style={styles.introNote}>Τα ενδιαφέροντά σου διαμορφώνουν τις προτάσεις μαθημάτων μετά το quiz, όχι τις σημερινές ερωτήσεις.</Text>
         </View>
       </View>
-      {!canStart?<Text style={styles.errorText}>Δεν υπάρχουν αρκετές διαθέσιμες ερωτήσεις για σήμερα.</Text>:null}
-      <View style={styles.introActions}>
-        <ActionButton label="Ξεκίνα την πρόκληση →" onPress={()=>{setSourceError(false);sourceRequest.current++;void startChallenge();}} disabled={!canStart} style={styles.actionPrimary}/>
-        <Pressable testID="daily-interests-link" style={({pressed})=>[styles.interestsLink,pressed&&styles.interestsPressed]}
-          onPress={onOpenPreferences} accessibilityRole="button" accessibilityLabel="Ρύθμιση ενδιαφερόντων">
-          <Text style={styles.interestsText}>Τα ενδιαφέροντά μου  ›</Text>
-        </Pressable>
-      </View>
-      <Text style={styles.introNote}>Τα ενδιαφέροντά σου βοηθούν στις προτάσεις μαθημάτων, όχι στην επιλογή του σημερινού σετ.</Text>
-    </View></QuizReveal></View>
+    </QuizReveal></View>
     :currentQuestion&&questionsCompatible?<QuizReveal key={`${record.dateKey}-${currentQuestion.id}`}><View>
       <View style={styles.stageProgress}>
         <Text style={styles.eyebrow}>{record.selectionVersion?'ΗΜΕΡΗΣΙΑ ΑΠΟΣΤΟΛΗ':'ΑΠΟΘΗΚΕΥΜΕΝΗ ΑΠΟΣΤΟΛΗ'}</Text>
@@ -182,53 +179,40 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
 const styles=StyleSheet.create({
   root:{flex:1,backgroundColor:colors.background},
   viewport:{flex:1},
-  stageTop:{paddingHorizontal:16,paddingTop:6},
-  stageHeader:{marginBottom:2},
-  content:{width:'100%',maxWidth:720,alignSelf:'center',paddingHorizontal:20,paddingTop:10,paddingBottom:24},
+  pageChrome:{paddingHorizontal:profileSectionLayout.horizontal,paddingTop:profileSectionLayout.top},
+  pageHeader:{marginBottom:7},
+  content:{width:'100%',maxWidth:720,alignSelf:'center',paddingHorizontal:profileSectionLayout.horizontal,paddingTop:6,paddingBottom:22},
   pageContent:{flexGrow:1},
-  pageHeader:{marginBottom:6},
   activeContent:{flexGrow:1,justifyContent:'center',paddingHorizontal:16,paddingTop:8,paddingBottom:14},
   centerState:{alignItems:'center',justifyContent:'center',paddingTop:60,gap:16},
   eyebrow:{color:colors.accentLight,fontSize:10,lineHeight:16,fontWeight:'900',letterSpacing:1.05},
   title:{color:colors.text,fontSize:27,lineHeight:35,fontWeight:'900',textAlign:'center'},
-  body:{color:colors.textBody,fontSize:14,lineHeight:21,textAlign:'center'},
   note:{color:colors.textMuted,fontSize:11,lineHeight:16},
-  introContainer:{flexGrow:1,justifyContent:'center',paddingVertical:6},
-  introDense:{paddingVertical:0},
-  introBody:{gap:13},
-  introBodyCompact:{gap:10},
-  missionHeader:{alignItems:'center',gap:8},
-  missionHeaderCompact:{gap:6},
-  introTitle:{fontSize:25,lineHeight:33,maxWidth:440},
-  introTitleDense:{fontSize:23,lineHeight:30},
-  introSubtitle:{maxWidth:380,fontSize:13,lineHeight:19},
-  heroMark:{width:70,height:70,justifyContent:'center',alignItems:'center'},
-  heroMarkCompact:{transform:[{scale:.85}],marginVertical:-5},
-  heroMarkDense:{transform:[{scale:.75}],marginVertical:-9},
-  heroOrbit:{position:'absolute',width:76,height:76,borderRadius:38,borderWidth:1,borderColor:'#625986',transform:[{rotate:'-25deg'}]},
-  heroCore:{width:56,height:56,borderRadius:20,alignItems:'center',justifyContent:'center',
-    backgroundColor:'#343052',borderWidth:1,borderColor:'#696196'},
-  heroGlyph:{color:'#D9CEFF',fontSize:31,fontWeight:'700'},
-  heroSatellite:{position:'absolute',right:2,top:12,width:9,height:9,borderRadius:5,backgroundColor:'#81BBC1',
-    borderWidth:2,borderColor:'#141C2B'},
-  missionCard:{backgroundColor:'#1A2032',borderColor:'#3D4361',borderWidth:1,borderRadius:20,
-    paddingHorizontal:17,paddingTop:16,paddingBottom:13,gap:10,overflow:'hidden'},
-  missionCardCompact:{paddingTop:13,paddingBottom:11,gap:8},
-  cardRim:{position:'absolute',top:0,left:20,right:20,height:2,backgroundColor:'#8376B9'},
-  missionLabel:{color:'#B4A8E6',fontSize:10,fontWeight:'900',letterSpacing:1.15},
-  difficultyRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},
-  difficultyItem:{flex:1,alignItems:'center',gap:2},
-  difficultyDivider:{height:32,width:1,backgroundColor:'#394057'},
-  difficultyCount:{color:colors.text,fontSize:25,lineHeight:30,fontWeight:'900'},
-  difficultyLabel:{color:colors.textMuted,fontSize:10,lineHeight:14,fontWeight:'800',letterSpacing:.4},
-  missionFooter:{borderTopWidth:1,borderTopColor:'#343B53',paddingTop:9,
-    flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:6,flexWrap:'wrap'},
-  bonusText:{color:'#C7BAFF',fontSize:11,lineHeight:17,fontWeight:'800'},
-  introActions:{gap:1},
+  introContainer:{flexGrow:1,justifyContent:'center',paddingTop:10,paddingBottom:76},
+  introDense:{paddingTop:0,paddingBottom:12},
+  introBody:{gap:18},
+  introBodyCompact:{gap:13},
+  introLead:{flexDirection:'row',alignItems:'center',gap:10,minHeight:124},
+  introCopy:{flex:1,minWidth:0,gap:7},
+  introTitle:{color:colors.text,fontWeight:'900',fontSize:30,lineHeight:37,maxWidth:350},
+  introTitleDense:{fontSize:25,lineHeight:32},
+  introSubtitle:{color:'#D2D2DE',fontSize:14,lineHeight:21},
+  heroMark:{width:124,height:124,alignItems:'center',justifyContent:'center',flexShrink:0},
+  heroMarkDense:{transform:[{scale:.83}],marginHorizontal:-9},
+  heroOrbitOuter:{position:'absolute',width:112,height:112,borderRadius:56,borderWidth:1,borderColor:'#565C82'},
+  heroOrbitInner:{position:'absolute',width:88,height:88,borderRadius:44,borderWidth:1,borderColor:'#726A9B',transform:[{rotate:'24deg'}]},
+  heroCore:{width:61,height:61,borderRadius:19,backgroundColor:'#383455',borderWidth:1,borderColor:'#8B7DC0',
+    alignItems:'center',justifyContent:'center'},
+  heroGlyph:{color:'#E0D4FF',fontSize:34,fontWeight:'800'},
+  heroSatellite:{position:'absolute',right:9,top:19,width:10,height:10,borderRadius:5,backgroundColor:'#87C7C5',
+    borderWidth:2,borderColor:'#192137'},
+  heroSmallStar:{position:'absolute',left:3,bottom:13,color:'#D0B68F',fontSize:18},
+  sharedNote:{color:colors.textBody,fontSize:13,lineHeight:20},
+  introActions:{gap:1,marginTop:1},
   interestsLink:{minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:12},
   interestsPressed:{backgroundColor:'#272D44'},
-  interestsText:{color:'#BDB0FF',fontSize:13,lineHeight:19,fontWeight:'800'},
-  introNote:{color:colors.textMuted,fontSize:11,lineHeight:16,textAlign:'center',paddingHorizontal:6},
+  interestsText:{color:'#C5B7FF',fontSize:13,lineHeight:19,fontWeight:'800'},
+  introNote:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center',paddingHorizontal:4},
   actionPrimary:{marginTop:0},
   actionSecondary:{marginTop:0},
   resultContainer:{gap:14,paddingTop:12,paddingBottom:8},
