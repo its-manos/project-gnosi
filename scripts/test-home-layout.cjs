@@ -888,19 +888,21 @@ for (const start of chapterBeginnings) {
 }
 assert.equal(stopPositions[1].props.style[1].top - stopPositions[0].props.style[1].top, 142,
   "normal checkpoint density is unchanged outside chapter boundaries");
-const atlasLayer = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-atlas-underlay");
-assert.ok(atlasLayer, "underlay is inside the fixed map viewport");
+// The background now spans the complete fixed screen, behind the header,
+// card and map. It is not inside the scrolling checkpoint subtree.
+const atlasLayer = nodes(tree).find(node => node.props?.testID === "adventure-atlas-underlay");
+assert.ok(atlasLayer, "Subcategory atlas underlay exists at the screen root");
 assert.equal(atlasLayer.props.pointerEvents, "none", "atlas never intercepts taps");
+assert.equal(tree.props.children[0].props.testID, "adventure-atlas-underlay",
+  "background is behind the fixed header, Continue card and checkpoint map");
 assert.ok(!nodes(categoryHeader).some(node => node.props?.testID === "adventure-atlas-underlay"),
-  "atlas does not extend beneath the fixed header");
+  "atlas is independent of the fixed header");
 assert.ok(!nodes(compactCard).some(node => node.props?.testID === "adventure-atlas-underlay"),
-  "atlas does not extend beneath the Continue card");
+  "atlas is independent of the Continue card");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 0,
   "no oversized atlas is mounted inside the scrolling path");
 assert.equal(nodes(nestedScroll).filter(node => node.props?.testID === "adventure-atlas-underlay").length, 0,
   "atlas stays fixed as the scroll content moves");
-assert.equal(pinnedFrame.props.children[0].props.testID, "adventure-atlas-underlay",
-  "map underlay is drawn behind the scrolling checkpoints");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
   "only the active checkpoint receives a breathing halo");
 const medallionParts = lessonId => {
