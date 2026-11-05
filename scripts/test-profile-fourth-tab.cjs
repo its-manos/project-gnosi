@@ -57,8 +57,10 @@ assert.equal((activity.match(/title="Δραστηριότητα"/g) || []).lengt
   "Statistics should declare the activity title only once in its shared header.");
 assert.doesNotMatch(activity, /Η δραστηριότητά σου/,
   "The redundant activity heading must not return.");
-assert.doesNotMatch(activity, /MetricCard|metricsGrid/,
+assert.doesNotMatch(activity, /metricsGrid|oldMetricsGrid/,
   "Old oversized quiz KPI grid should not return.");
+assert.match(activity, /<MetricCard variant="streak"/,
+  "Compact quiz streak values use the shared metric surface, not the legacy grid.");
 assert.ok(activity.includes('stats.currentStreak') && activity.includes('stats.longestStreak') &&
   activity.includes('stats.totalCorrectAnswers') && activity.includes('history.slice(0, 10)'),
   "Expanded quiz details retain streaks, accuracy and history.");
