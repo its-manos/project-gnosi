@@ -32,11 +32,13 @@ export default function DailyChallengePreferencesScreen({
   const difficulty = initialPreferences.difficulty;
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [saveConfirmed, setSaveConfirmed] = useState(false);
   const hasChanges = topicIds.length !== initialPreferences.topicIds.length || topicIds.some(id => !initialPreferences.topicIds.includes(id));
 
 
   function toggleTopic(topicId: string) {
     setSaveError(false);
+    setSaveConfirmed(false);
     setTopicIds((current) => {
       if (current.includes(topicId)) {
         return current.length > 3 ? current.filter((id) => id !== topicId) : current;
@@ -49,9 +51,11 @@ export default function DailyChallengePreferencesScreen({
     if (topicIds.length < 3 || topicIds.length > 5 || isSaving || isLoading) return;
     setIsSaving(true);
     setSaveError(false);
+    setSaveConfirmed(false);
     try {
       const saved = await onSave({ topicIds, difficulty });
       if (!saved) setSaveError(true);
+      else setSaveConfirmed(true);
     } catch {
       setSaveError(true);
     } finally {
@@ -118,6 +122,7 @@ export default function DailyChallengePreferencesScreen({
             <Text style={styles.errorText}>Δεν αποθηκεύτηκαν οι αλλαγές. Έλεγξε τον διαθέσιμο χώρο στη συσκευή και δοκίμασε ξανά.</Text>
           ) : null}
 
+          {saveConfirmed && !hasChanges ? <MotionView entranceDelay={0} style={styles.savedNotice} accessibilityLiveRegion="polite"><Text style={styles.savedNoticeText}>✓  Οι αλλαγές αποθηκεύτηκαν</Text></MotionView> : null}
           <ActionButton
             label={isSaving ? "Αποθήκευση…" : hasChanges ? "Αποθήκευση αλλαγών" : "Οι επιλογές σου αποθηκεύτηκαν"}
             onPress={() => { void handleSave(); }}
@@ -132,6 +137,8 @@ export default function DailyChallengePreferencesScreen({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0D1827" },
+  savedNotice: { alignItems: "center", marginBottom: 5 },
+  savedNoticeText: { color: "#B8E1D5", fontSize: 12, fontWeight: "800" },
   scroll: { flex: 1 },
   contentCompact: { paddingTop: 4, paddingBottom: 8 },
   heroCompact: { padding: 12, gap: 3, marginBottom: 8 },
