@@ -26,6 +26,7 @@ const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof i
  slots=[];cursor=0;
  const Mastery=load('src/components/KnowledgeMastery.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,'../hooks/useKnowledgeModel':{useKnowledgeModel:modelHook},'./ActionButton':{__esModule:true,default:'ActionButton'},
   './HomeMotion':{MotionPressable:'MotionPressable'},
+  './SubjectProgressTile':{__esModule:true,default:'SubjectProgressTile'},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}}).default;
  tree=Mastery({onOpen:()=>backs++});assert.ok(text(tree).includes('Δεν μετρούν άρθρα'));assert.ok(nodes(tree).some(n=>n.props.accessibilityRole==='progressbar'));nodes(tree).find(n=>n.type==='ActionButton').props.onPress();assert.equal(backs,2);
  nodes(tree).find(n=>n.type==='Pressable').props.onPress();cursor=0;tree=Mastery({onOpen(){}});assert.ok(text(tree).includes('Μαθαίνεται'));
