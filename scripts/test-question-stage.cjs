@@ -37,6 +37,12 @@ assert.match(reader, /compactAnswered/, "reader uses the compact submitted-answe
 assert.match(daily, /compactAnswered/, "daily quiz uses the compact submitted-answer layout");
 assert.match(read("src/components/QuizReveal.tsx"), /translateY/, "question reveal has gentle lift");
 assert.match(read("src/components/QuizReveal.tsx"), /isReduceMotionEnabled/, "system reduced motion honored");
+assert.match(read("src/components/QuestionStageFooter.tsx"), /usePlayMotion/,
+  "footer animations use the same reduced-motion-aware preference as answer reveals");
+assert.match(read("src/components/QuestionStageFooter.tsx"), /translateY/,
+  "footer changes purpose without changing layout height");
+assert.match(read("src/components/MatchingQuestionCard.tsx"), /AnswerMotion/,
+  "matching choices get native selection feedback");
 const blank = read("src/components/FillBlankQuestionCard.tsx");
 assert.match(blank, /testID="fill-blank-sentence"/, "one prominent sentence is the question");
 assert.match(blank, /punctuationOnly/, "punctuation stays attached to the answer slot");
