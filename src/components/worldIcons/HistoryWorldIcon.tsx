@@ -35,49 +35,41 @@ export default function HistoryWorldIcon({ size = 32, displayScale = 1 }: Props)
 
       {/* The broad base and sharp apex must read as a pyramid even at 32pt. */}
       <Ellipse cx={27} cy={44.2} rx={23.2} ry={3.25} fill="#0B111B" opacity={0.35} />
-      <Path d="M27 4.8 L48 40.8 L30.5 44.2 Z"
+      <Path d="M27 4.8L48 40.8L30.5 44.2Z"
         fill="url(#history-pyramid-shaded)" stroke="#B8A88F" strokeWidth={0.82}
         strokeLinejoin="round" />
-      <Path d="M27 4.8 L30.5 44.2 L5.2 42.2 Z"
+      <Path d="M27 4.8L30.5 44.2L5.2 42.2Z"
         fill="url(#history-pyramid-sunlit)" stroke="#F4DEC0" strokeWidth={0.85}
         strokeLinejoin="round" />
-      <Path d="M27 4.8 L30.5 44.2"
+      <Path d="M27 4.8L30.5 44.2"
         stroke="#F4D7AC" strokeWidth={0.6} opacity={0.8} />
 
       {/* Slightly uneven, stacked courses define ancient cut limestone. */}
       <G fill="none" stroke="#786F62" strokeWidth={0.62} opacity={0.66}>
-        <Path d="M22.4 12.8 L27.7 12.9 L31.9 13.2" />
-        <Path d="M19.6 17.7 L28.1 17.9 L34.6 18.1" />
-        <Path d="M16.8 22.5 L28.5 22.8 L37.4 23" />
-        <Path d="M14 27.3 L28.9 27.7 L40.2 27.8" />
-        <Path d="M11 32.3 L29.4 32.7 L43.1 32.8" />
-        <Path d="M8.2 37.1 L29.9 37.5 L45.8 37.4" />
-        <Path d="M5.9 41 L30.3 41.5 L48 40.8" />
+        <Path d="M22.4 12.8L27.7 12.9L31.9 13.2" />
+        <Path d="M19.6 17.7L28.1 17.9L34.6 18.1" />
+        <Path d="M16.8 22.5L28.5 22.8L37.4 23" />
+        <Path d="M14 27.3L28.9 27.7L40.2 27.8" />
+        <Path d="M11 32.3L29.4 32.7L43.1 32.8" />
+        <Path d="M8.2 37.1L29.9 37.5L45.8 37.4" />
+        <Path d="M5.9 41L30.3 41.5L48 40.8" />
       </G>
       <G fill="none" stroke="#FFF0D3" strokeWidth={0.46} opacity={0.7}>
-        <Path d="M22.9 12.2 L27.6 12.4 M20 17.1 L27.9 17.3" />
-        <Path d="M17.2 21.9 L28.4 22.2 M14.3 26.7 L28.8 27.1" />
-        <Path d="M11.4 31.7 L29.3 32.1 M8.5 36.5 L29.8 36.9" />
+        <Path d="M22.9 12.2L27.6 12.4M20 17.1L27.9 17.3" />
+        <Path d="M17.2 21.9L28.4 22.2M14.3 26.7L28.8 27.1" />
+        <Path d="M11.4 31.7L29.3 32.1M8.5 36.5L29.8 36.9" />
       </G>
       {/* Alternating block joints, with most texture concentrated on lit face. */}
       <G stroke="#827462" strokeWidth={0.62} opacity={0.66} fill="none">
-        <Path d="M25.7 12.9 L25.7 17.8 M22.1 17.8 L22.1 22.6
-                 M26.3 22.7 L26.3 27.6 M18.3 22.5 L18.3 27.4
-                 M16.3 27.3 L16.3 32.4 M23.8 27.5 L23.8 32.5
-                 M12.8 32.4 L12.8 37.1 M20.1 32.5 L20.1 37.3
-                 M26.8 32.7 L26.8 37.5 M10.4 37.3 L10.4 41.4
-                 M16.1 37.2 L16.1 41.6 M23.5 37.4 L23.5 43.5" />
+        <Path d="M25.7 12.9L25.7 17.8M22.1 17.8L22.1 22.6M26.3 22.7L26.3 27.6M18.3 22.5L18.3 27.4M16.3 27.3L16.3 32.4M23.8 27.5L23.8 32.5M12.8 32.4L12.8 37.1M20.1 32.5L20.1 37.3M26.8 32.7L26.8 37.5M10.4 37.3L10.4 41.4M16.1 37.2L16.1 41.6M23.5 37.4L23.5 43.5" />
       </G>
       <G stroke="#5C5D56" strokeWidth={0.55} opacity={0.57} fill="none">
-        <Path d="M30.5 18 L33.1 17.9 M32.6 22.9 L32.6 27.7
-                 M35.2 27.8 L35.2 32.7 M39.5 32.7 L39.5 37.4
-                 M34.3 37.6 L34.3 42.8 M42.7 37.4 L42.7 41.7" />
+        <Path d="M30.5 18L33.1 17.9M32.6 22.9L32.6 27.7M35.2 27.8L35.2 32.7M39.5 32.7L39.5 37.4M34.3 37.6L34.3 42.8M42.7 37.4L42.7 41.7" />
       </G>
       {/* Edge chips, mineral specks and hairline fractures keep it weathered. */}
-      <Path d="M16.8 22.6 L17.6 24.1 L16.9 26.1 M23.4 32.7
-               L24.3 34.2 L23.6 35.4 M40.1 27.8 L39.5 29.7"
+      <Path d="M16.8 22.6L17.6 24.1L16.9 26.1M23.4 32.7L24.3 34.2L23.6 35.4M40.1 27.8L39.5 29.7"
         fill="none" stroke="#685F57" strokeWidth={0.48} opacity={0.68} />
-      <Path d="M7.4 40.5 L9.2 39.9 L11.1 40.5 M19.5 42.7 L21.3 42.1 L23.3 42.9"
+      <Path d="M7.4 40.5L9.2 39.9L11.1 40.5M19.5 42.7L21.3 42.1L23.3 42.9"
         fill="none" stroke="url(#history-pyramid-stone)" strokeWidth={1.05} opacity={0.83} />
       <G fill="#F8E7C6" opacity={0.68}>
         <Circle cx={23.5} cy={19.9} r={0.48} />
@@ -87,11 +79,9 @@ export default function HistoryWorldIcon({ size = 32, displayScale = 1 }: Props)
         <Circle cx={40} cy={37} r={0.4} />
       </G>
       {/* Low desert ridge gives scale without introducing another subject. */}
-      <Path d="M2.4 46.3 C9.9 44.3 14.5 45.2 19.7 46
-               C27.5 47.1 36.8 44.2 49.6 45.6 L50.3 47.8
-               C33.3 46.6 14.1 49.5 2.4 47.7 Z"
+      <Path d="M2.4 46.3C9.9 44.3 14.5 45.2 19.7 46C27.5 47.1 36.8 44.2 49.6 45.6L50.3 47.8C33.3 46.6 14.1 49.5 2.4 47.7Z"
         fill="url(#history-pyramid-sand)" opacity={0.76} />
-      <Path d="M4.3 46.4 Q13 45.3 20.4 46.6 M33.8 46.2 Q41.4 44.8 48.1 46"
+      <Path d="M4.3 46.4Q13 45.3 20.4 46.6M33.8 46.2Q41.4 44.8 48.1 46"
         stroke="#F0D2A4" strokeWidth={0.55} opacity={0.73} fill="none" />
     </Svg>
   );
