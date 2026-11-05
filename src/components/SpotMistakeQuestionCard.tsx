@@ -6,6 +6,7 @@ import type { SpotMistakeQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -15,12 +16,13 @@ type Props = {
   answer?: string;
   onSubmit: (optionId: string) => void;
   readingSize?: number;
+  compactAnswered?: boolean;
   onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Locate the false statement; selecting it only changes a local draft.
  * Scoring, sounds and saved progress happen on explicit confirmation only. */
-export default function SpotMistakeQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
+export default function SpotMistakeQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange, compactAnswered = false }: Props) {
   const [pending, setPending] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const draftRef = useRef<string | null>(null);
@@ -80,8 +82,8 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
     <Text testID="spot-mistake-subject" accessibilityRole="header" style={[styles.question, questionSize]}>
       {question.prompt}{question.prompt.trim().endsWith(":") ? "" : ":"}
     </Text>
-    <Text style={styles.hint}>Ποια πρόταση είναι λανθασμένη;</Text>
-    <View style={styles.answers}>
+    {!answered ? <Text style={styles.hint}>Ποια πρόταση είναι λανθασμένη;</Text> : null}
+    {(!answered || !compactAnswered) ? <View style={styles.answers}>
       {question.content.options.map((option, index) => {
         const selected = selectedId === option.id;
         const isFalseStatement = answered && option.id === question.content.incorrectOptionId;
@@ -106,7 +108,7 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
           </Pressable>
         </AnswerMotion>;
       })}
-    </View>
+    </View> : null}
     {!answered && !onActionChange ? <>
       <Pressable testID="spot-mistake-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: pending === null || submitting }}
@@ -118,16 +120,12 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
         <Text style={styles.confirmText}>Επιβεβαίωση απάντησης  →</Text>
       </Pressable>
     </> : null}
-    {answered ? <QuizReveal><View testID="spot-mistake-feedback" accessibilityLiveRegion="polite"
-      style={[styles.feedback, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={[styles.feedbackTitle, isCorrect ? styles.goodText : styles.badText]}>
-        {isCorrect ? "✓  Εντόπισες τη λανθασμένη δήλωση!" : "↗  Η λανθασμένη δήλωση είναι:"}
-      </Text>
-      <Text style={styles.falseStatement}>{falseOption?.text}</Text>
-      <Text style={styles.feedbackLabel}>ΤΙ ΙΣΧΥΕΙ ΣΤΗΝ ΠΡΑΓΜΑΤΙΚΟΤΗΤΑ</Text>
+    {answered ? <QuizReveal><QuestionFeedbackPanel testID="spot-mistake-feedback"
+      correct={isCorrect} explanation={question.explanation} readingSize={readingSize}
+      selection={compactAnswered ? <AnswerSummaryText>{question.content.options.find(o => o.id === answer)?.text}</AnswerSummaryText> : undefined}
+      solution={!isCorrect ? <AnswerSummaryText>{falseOption?.text}</AnswerSummaryText> : undefined}>
       <Text style={styles.solution}>{question.content.correction}</Text>
-      <Text style={styles.feedbackText}>{question.explanation}</Text>
-    </View></QuizReveal> : null}
+    </QuestionFeedbackPanel></QuizReveal> : null}
   </View>;
 }
 
