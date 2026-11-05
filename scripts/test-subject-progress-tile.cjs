@@ -65,7 +65,7 @@ assert.equal(knowledge.props.style[4].backgroundColor, "#262840");
 assert.ok(text(knowledge).includes("ΚΑΤΑΚΤΗΣΗ"));
 assert.equal(nodes(knowledge).find(n => n.type === "ProgressBarFill").props.tone, "knowledge");
 const knowledgeBadge = nodes(knowledge).find(n => n.type === "Text" && text(n) === "30%");
-assert.equal(knowledgeBadge.props.style[1], undefined);
+assert.ok(!knowledgeBadge.props.style[1], "knowledge tiles never inherit teal text styling");
 assert.equal(knowledgeBadge.props.style[0].color, "#D3C6FF");
 let pressed = 0;
 const tappable = subject({ ...base, tone: "reading", onPress: () => pressed++ });
