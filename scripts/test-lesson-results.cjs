@@ -84,7 +84,7 @@ assert.ok(!nodes(tree).some(n=>n.type==='ReportContentButton'),'no report action
 nextAction.props.onPress();assert.deepEqual(opened,[next.id]);
 assert.ok(!nodes(tree).some(n=>n.type==='ReportContentButton'),'reporting removed from results');
 named(tree,'lesson-replay-action').props.onPress();assert.equal(replay,1);
-named(tree,'lesson-review-action').props.onPress();assert.equal(weekly,1);
+assert.ok(!named(tree,'lesson-review-action'),'knowledge review button is not shown on results');
 assert.ok(!named(tree,'lesson-result-details'),'no useless expanded panel');
 for(let value=0;value<=4;value++){
  tree=render({...props,score:value,review:value===4?props.review:{status:'available',
