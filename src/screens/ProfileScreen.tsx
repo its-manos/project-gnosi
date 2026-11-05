@@ -11,6 +11,7 @@ import { playerTitle } from "../gamification/rules";
 import { MotionView, MotionXpCircle } from "../components/HomeMotion";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import AtlasCard from "../components/AtlasCard";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import SyncStatus from "../components/SyncStatus";
 import XpRules from "../components/XpRules";
 import { colors } from "../theme";
@@ -119,18 +120,12 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       onContentSizeChange={(_, next) => {
         setContentHeight(old => stableLayoutHeight(old, next));
       }}>
-      <SyncStatus quiet />
-      <MotionView entranceDelay={0} style={styles.top}>
-        <View style={styles.topCopy}>
-          <Text style={styles.eyebrow}>Η ΤΑΥΤΟΤΗΤΑ ΣΟΥ</Text>
-          <Text style={[styles.heading, veryDense && styles.headingSmall]}>Το προφίλ σου</Text>
-        </View>
-        <Pressable onPress={onAccount} accessibilityRole="button"
-          accessibilityLabel="Λογαριασμός και ρυθμίσεις"
-          style={({ pressed }) => [styles.settingsButton, pressed && styles.quickLinkPressed]}>
-          <Text style={styles.settingsText}>Ρυθμίσεις ›</Text>
-        </Pressable>
+      <MotionView entranceDelay={0}>
+        <ProfileSectionHeader eyebrow="Η ΤΑΥΤΟΤΗΤΑ ΣΟΥ" title="Το προφίλ σου"
+          actionLabel="Ρυθμίσεις ›" actionAccessibilityLabel="Λογαριασμός και ρυθμίσεις"
+          onAction={onAccount} />
       </MotionView>
+      <SyncStatus quiet />
 
       <AtlasCard entranceDelay={65} style={[styles.hero, dense && styles.heroDense]}
         testID="profile-identity">
@@ -241,17 +236,9 @@ const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, width: "100%", maxWidth: 720,
     alignSelf: "center", backgroundColor: "#0D1827", overflow: "hidden" },
   viewport: { flex: 1, minHeight: 0 },
-  content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 14, gap: 13 },
-  contentDense: { paddingTop: 6, paddingBottom: 9, gap: 9 },
+  content: { paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 14, gap: profileSectionLayout.below },
+  contentDense: { paddingBottom: 9, gap: 9 },
   contentVeryDense: { gap: 6 },
-  top: { minHeight: 45, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  topCopy: { flex: 1, minWidth: 0, gap: 1 },
-  eyebrow: { color: "#AD9FEB", fontSize: 10, lineHeight: 15, letterSpacing: 1.1, fontWeight: "900" },
-  heading: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900" },
-  headingSmall: { fontSize: 21, lineHeight: 27 },
-  settingsButton: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center",
-    backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
-  settingsText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
   hero: { minHeight: 154, flexDirection: "row", alignItems: "center", gap: 10,
     paddingHorizontal: 12, paddingVertical: 15 },
   heroDense: { minHeight: 124, paddingVertical: 10, gap: 9 },
