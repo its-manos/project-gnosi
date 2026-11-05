@@ -34,7 +34,7 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
       }]}>
       {regionCount === 6 ? (
         <Image source={atlasImage} contentFit="fill" transition={0}
-          cachePolicy="memory-disk" style={StyleSheet.absoluteFillObject} />
+          cachePolicy="memory-disk" style={StyleSheet.absoluteFill} />
       ) : <Svg width="100%" height="100%"
         viewBox={`0 0 ${MAP_WIDTH} ${mapHeight}`} preserveAspectRatio="xMidYMid meet"
         pointerEvents="none">
