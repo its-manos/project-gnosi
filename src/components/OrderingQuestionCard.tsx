@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { evaluateAnswer } from "../quiz/engine";
 import type { OrderingQuestion } from "../quiz/types";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
 import { questionCardStyles } from "./questionCardStyles";
 
@@ -12,10 +13,11 @@ type Props = {
   answer?: readonly string[];
   onSubmit: (ids: string[]) => void;
   readingSize?: number;
+  onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Accessible row reordering; item identity rather than stale position drives every move. */
-export default function OrderingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+export default function OrderingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
   const [pending, setPending] = useState<string[]>(() => question.content.items.map(item => item.id));
   useEffect(() => { setPending(question.content.items.map(item => item.id)); }, [question.id, question.version]);
   const answered = answer !== undefined;
@@ -35,6 +37,14 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
       return next;
     });
   }
+
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: false, onPress: () => onSubmit([...pending]) });
+    return () => onActionChange(null);
+  }, [answered, pending, onActionChange]);
 
   return <View style={styles.card} testID="ordering-card">
     <View pointerEvents="none" accessible={false} style={styles.rim} />
@@ -71,7 +81,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
         </View>;
       })}
     </View>
-    {!answered ? <>
+    {!answered && !onActionChange ? <>
       <Pressable testID="ordering-confirm" accessibilityRole="button" onPress={() => onSubmit([...pending])}
         style={({ pressed }) => [styles.confirm, pressed && styles.pressed]}>
         <Text style={styles.confirmText}>Επιβεβαίωση σειράς  →</Text>
