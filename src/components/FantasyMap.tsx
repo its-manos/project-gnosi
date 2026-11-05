@@ -737,25 +737,6 @@ export default function FantasyMap({
         {fitted ? <Rect testID="atlas-sky-vignette" width={MAP_WIDTH}
           height={mapHeight} fill="url(#atlas-vignette)" pointerEvents="none" /> : null}
         </> : null}
-        <G testID={fitted ? "atlas-premium-compass" : undefined}
-          opacity={fitted ? 0.83 : 0.65} pointerEvents="none">
-          {fitted ? (
-            <G>
-              <Circle cx={326} cy={30} r={18} fill="#101827" fillOpacity={0.52}
-                stroke="#BDAF8D" strokeWidth={0.55} strokeOpacity={0.6} />
-              <Circle cx={326} cy={30} r={15.3} fill="none"
-                stroke="#879CAA" strokeWidth={0.55} strokeOpacity={0.5}
-                strokeDasharray="1 4" />
-              <Path d="M326 8 V 12 M326 48 V52 M304 30 H308 M344 30 H348"
-                fill="none" stroke="#D0BF9A" strokeWidth={0.8} strokeOpacity={0.72} />
-            </G>
-          ) : <Circle cx={326} cy={30} r={13} fill="none"
-            stroke="#C9BB92" strokeWidth={0.6} />}
-          <Path d="M326 13 L330 30 L326 45 L322 30 Z"
-            fill={fitted ? "#D5C49C" : "#C9BB92"} />
-          <Path d="M312 30 L326 26 L340 30 L326 34 Z" fill="#799B9D" />
-          <SvgText x={fitted ? 297 : 305} y={23} fill="#C9BB92" fontSize={7}>Β</SvgText>
-        </G>
         {fitted ? positionedRegions.map(region => (
           <Circle key={`atlas-ambient-${region.id}`} cx={region.cx} cy={region.cy}
             r={region.rx * 1.88} fill={`url(#atlas-region-aura-${region.seed})`}
