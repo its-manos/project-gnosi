@@ -734,16 +734,16 @@ const parthenonOverlay = nodes(ancientArtworkTree).find(node =>
 assert.equal(parthenonOverlay.props.pointerEvents, "none",
   "Parthenon decoration cannot intercept island navigation");
 assert.equal(parthenonOverlay.props.style[1].top,
-  Math.max(0, artworkNodes[0].props.height * 0.62 - parthenonArt[0].props.size * 0.84),
+  Math.max(0, artworkNodes[0].props.height * 0.56 - parthenonArt[0].props.size * 0.86),
   "Parthenon steps align with the island's upper plateau");
 assert.equal(nodes(otherArtworkTree).filter(node => node.type === "AncientGreeceIslandIcon").length, 0,
   "other islands retain their own terrain engraving");
 const stoneFooting = nodes(ancientArtworkTree).find(node =>
-  node.type === "ellipse" && node.props?.cx === 90 && node.props?.cy === 78);
+  node.type === "ellipse" && node.props?.cx === 90 && node.props?.cy === 74);
 assert.ok(stoneFooting && stoneFooting.props.rx === 52,
   "Ancient Greece receives a grounded plateau shadow beneath the Parthenon steps");
 assert.ok(nodes(ancientArtworkTree).some(node =>
-  node.type === "path" && node.props?.d?.startsWith("M 43 75")),
+  node.type === "path" && node.props?.d?.startsWith("M 43 71")),
   "a stone-tinted plinth connects the temple to the island engraving");
 assert.ok(!nodes(ancientArtworkTree).some(node =>
   node.type === "circle" && node.props?.cx === 151 && node.props?.cy === 31),
@@ -755,7 +755,7 @@ assert.ok(nodes(completeArtworkTree).some(node =>
   node.type === "circle" && node.props?.cx === 145 && node.props?.cy === 59),
   "completed islands retain an in-landmark bronze check marker");
 assert.ok(!nodes(otherArtworkTree).some(node =>
-  node.type === "ellipse" && node.props?.cy === 78 && node.props?.rx === 52),
+  node.type === "ellipse" && node.props?.cy === 74 && node.props?.rx === 52),
   "Parthenon-specific stone footing is not repeated on unrelated islands");
 const parthenonModule = compile("src/components/islandIcons/AncientGreeceIslandIcon.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native-svg": svg,
