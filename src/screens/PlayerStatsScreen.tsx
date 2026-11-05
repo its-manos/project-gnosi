@@ -66,11 +66,11 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
         testID={allowScroll ? "stats-accessibility-scroll" : "stats-fixed-dashboard"}>
         {pageHeader}
 
-        <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
+        <MotionView entranceDelay={65} testID="activity-overview">
           <LearningActivityPanel todayKey={todayKey} dashboard />
         </MotionView>
 
-        <MotionView entranceDelay={115} style={styles.quizSection} testID="progress-daily">
+        <MotionView entranceDelay={115} testID="progress-daily">
           <MotionPressable
             style={styles.disclosure} pressScale={0.985}
             accessibilityRole="button"
@@ -156,8 +156,6 @@ const styles = StyleSheet.create({
   content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 18, gap: profileSectionLayout.below },
   title: { color: colors.text, fontSize: 22, lineHeight: 29, fontWeight: "900" },
   intro: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
-  activityOverview: {},
-  quizSection: {},
   disclosure: { flexDirection: "row", alignItems: "center", minHeight: 55, paddingHorizontal: 13, paddingVertical: 7, backgroundColor: "#20243C", borderWidth: 1, borderColor: "#484360", borderRadius: 18 },
 
   accountCopy: { flex: 1, gap: 4, paddingRight: 10 },
