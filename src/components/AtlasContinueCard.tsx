@@ -31,5 +31,10 @@ export const atlasContinueStyles = StyleSheet.create({
 
 // Keeps the existing native Reanimated press and entrance behavior.
 export default function AtlasContinueCard({ style, ...props }: ComponentProps<typeof MotionPressable>) {
-  return <MotionPressable {...props} style={[atlasContinueStyles.card, style]} />;
+  // Pressable style may also be a state callback; preserve both supported forms.
+  const combinedStyle: ComponentProps<typeof MotionPressable>["style"] =
+    typeof style === "function"
+      ? state => [atlasContinueStyles.card, style(state)]
+      : [atlasContinueStyles.card, style];
+  return <MotionPressable {...props} style={combinedStyle} />;
 }
