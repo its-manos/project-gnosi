@@ -117,6 +117,36 @@ for (const [name, props, confirmId, firstChoiceId, initiallyDisabled] of fixture
     tree = render();
     assert.equal(footerAction.disabled, false, name + " enables confirmation after draft");
   }
+  // Once the parent accepts an answer, full-screen cards replace the locked
+  // option grid with a single compact result. The quiz remains parent-owned.
+  const accepted = {
+    SingleChoiceQuestionCard: 0,
+    MultipleSelectQuestionCard: [1],
+    OrderingQuestionCard: ["a", "b"],
+    MatchingQuestionCard: { a: "b" },
+    SpotMistakeQuestionCard: "b",
+    FillBlankQuestionCard: "b",
+  };
+  const feedbackIds = {
+    SingleChoiceQuestionCard: "single-choice-feedback",
+    MultipleSelectQuestionCard: "multiple-select-feedback",
+    OrderingQuestionCard: "ordering-feedback",
+    MatchingQuestionCard: "matching-feedback",
+    SpotMistakeQuestionCard: "spot-mistake-feedback",
+    FillBlankQuestionCard: "fill-blank-feedback",
+  };
+  const committed = hooks.render(Component, {
+    ...props, onActionChange, compactAnswered: true, answer: accepted[name],
+  });
+  assert.equal(id(committed, firstChoiceId), undefined,
+    name + " removes locked choices from the immersive result state");
+  assert.equal(id(committed, confirmId), undefined,
+    name + " never exposes a second confirmation after scoring");
+  const feedback = id(committed, feedbackIds[name]);
+  assert.ok(feedback && feedback.type === "QuestionFeedbackPanel",
+    name + " shows the shared result panel");
+  assert.equal(feedback.props.correct, false,
+    name + " retains the correction when the committed answer is wrong");
 }
 
 const hooks = runner();
