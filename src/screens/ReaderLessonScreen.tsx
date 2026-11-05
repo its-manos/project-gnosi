@@ -17,6 +17,8 @@ import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import QuizReveal from "../components/QuizReveal";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
+import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
+import QuestionStageFooter from "../components/QuestionStageFooter";
 import LessonCover from "../components/LessonCover";
 import NextImageWarmup from "../components/NextImageWarmup";
 import SourceLink from "../components/SourceLink";
@@ -40,6 +42,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   // This is presentation state only; canonical answers and lesson progress stay parent-owned.
   const [activeBoundary, setActiveBoundary] = useState<number | null>(null);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null);
+  const stageAction = useQuestionStageAction(`${lesson.id}:${activeQuestionIndex ?? "closed"}`);
   const openingQuestion = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const sectionPositions = useRef<Record<number, number>>({});
@@ -295,7 +298,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 const answered = checkpointAnswers[questionIndex] !== undefined;
                 return interactive ? <>
                   <QuizQuestionRenderer question={interactive} questionNumber={questionIndex + 1}
-                    readingSize={readingSize} compactAnswered
+                    readingSize={readingSize} compactAnswered onActionChange={stageAction.onActionChange}
                     answer={restoreInteractiveLessonAnswer(lesson, questionIndex, checkpointAnswers[questionIndex], typedCheckpointAnswers[questionIndex])}
                     onSubmit={value => {
                       const answerIndex = projectInteractiveLessonAnswer(lesson, questionIndex, value);
@@ -313,7 +316,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                   question={question} questionNumber={questionIndex + 1}
                   selectedAnswer={checkpointAnswers[questionIndex]}
                   reportTarget={enableReporting ? lessonReportTarget(lesson, questionIndex) : undefined}
-                  readingSize={readingSize} compactAnswered
+                  readingSize={readingSize} compactAnswered onActionChange={stageAction.onActionChange}
                   onSelectAnswer={(answerIndex, correctIndex) => {
                     if (!answered && activeQuestionIndex === questionIndex) {
                       onAnswerCheckpoint(questionIndex, answerIndex, correctIndex);
@@ -321,11 +324,12 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                   }} />;
               })()}
             </View></QuizReveal>
-            {activeAnswered ? <ActionButton
-              label={activeGroup.some(i => i > activeQuestionIndex && checkpointAnswers[i] === undefined)
-                ? "Επόμενη ερώτηση →" : "Συνέχεια ανάγνωσης →"}
-              onPress={advanceQuestion} /> : null}
           </ScrollView>
+          <QuestionStageFooter action={activeAnswered ? {
+            label: activeGroup.some(i => i > activeQuestionIndex && checkpointAnswers[i] === undefined)
+              ? "Επόμενη ερώτηση →" : "Συνέχεια ανάγνωσης →",
+            disabled: false, onPress: advanceQuestion,
+          } : stageAction.action} />
         </View>
       </Modal> : null}
     </View>
@@ -391,7 +395,7 @@ const styles = StyleSheet.create({
   quizStepActive: { backgroundColor: colors.accent },
   quizViewport: { flex: 1 },
   quizContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 16,
-    paddingTop: 10, paddingBottom: 24, width: "100%", maxWidth: 640, alignSelf: "center" },
+    paddingTop: 10, paddingBottom: 14, width: "100%", maxWidth: 640, alignSelf: "center" },
   finish: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 26, gap: 10 },
   finishBody: { color: reading.text, marginTop: 8, marginBottom: 8 },
   endSources: { marginTop: 28 },
