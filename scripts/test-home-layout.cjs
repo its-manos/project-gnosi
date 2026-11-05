@@ -713,7 +713,8 @@ assert.ok(!nodes(tree).some(node => node.props?.testID === "home-xp-ring"));
 
 // Keep the detailed islands accessible on CategoryScreen even though Home is now compact.
 const categorySource = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
-assert.match(categorySource, /<FantasyMap/);
+assert.match(categorySource, /<IslandAtlasMap/,
+  "the Category screen uses its dedicated native island destinations");
 const map = compile("src/components/FantasyMap.tsx");
 const mapProps = { regions: categories.map(category => ({ id: category.id, title: category.title, emoji: category.emoji })), overview: true, onSelectRegion: id => actions.push(id) };
 const mapTree = map(mapProps);
