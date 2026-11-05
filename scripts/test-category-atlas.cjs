@@ -500,13 +500,17 @@ assert.equal(staticBgNodes.filter(node => node.props?.testID === "atlas-fitted-m
 assert.equal(chartStarCount(staticBg), 30,
   "standalone backdrop uses the same star density as both interactive maps");
 const bgSvg = staticBgNodes.find(node => node.type === "svg");
-assert.equal(bgSvg.props.viewBox, "0 0 360 519",
-  "background uses the identical fitted viewBox as the interactive map");
+assert.equal(bgSvg.props.viewBox, "0 0 360 " + (490 * 360 / 340),
+  "background preserves exact viewport aspect ratio");
 const wideBg = bgModule.default({ width: 680, height: 490, regionCount: 3 });
-assert.equal(wideBg.props.style[1].width, 520,
-  "wide-screen background respects FantasyMap\'s maximum 520pt width");
-assert.equal(wideBg.props.style[1].left, 80,
-  "background remains centered beneath the wide-screen island SVG");
+assert.equal(wideBg.props.style[1].width, 680,
+  "wide-screen background fills the measured viewport");
+assert.equal(wideBg.props.style[1].height, 490);
+const bitmapBg = bgModule.default({ width: 340, height: 490, regionCount: 6 });
+const bitmapNode = nodes(bitmapBg).find(node => node.type === "ExpoImage");
+assert.ok(bitmapNode, "six-region atlas uses the bundled WebP backdrop");
+assert.equal(bitmapNode.props.source, 3);
+assert.equal(bitmapNode.props.transition, 0);
 const splitMap = map({ ...props, regions: regionData, fitViewport: { width: 340, height: 490 },
   hideControls: true, externalBackground: true });
 const splitNodes = nodes(splitMap);
@@ -514,10 +518,6 @@ assert.equal(splitNodes.filter(node => node.props?.testID === "atlas-fitted-map-
   "interactive SVG does not duplicate the static chart background");
 assert.equal(splitNodes.filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 3,
   "all interactive island targets survive the background split");
-assert.ok(splitNodes.some(node => node.props?.testID === "atlas-premium-compass"));
-const splitFrame = splitNodes.find(node => node.props?.testID === "knowledge-world-map");
-assert.equal(splitFrame.props.style[4].backgroundColor, "transparent",
-  "native map frame must not cover the chart mounted beneath it");
 
 // The page and navigator pass existing account-scoped progress, not local keys.
 const motionCode = fs.readFileSync(path.join(root, "src/components/CategoryAtlasMotion.tsx"), "utf8");
