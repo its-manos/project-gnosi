@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { MatchingQuestion } from "../quiz/types";
 import { colors } from "../theme";
@@ -80,7 +81,8 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
         const active = selectedLeft === pair.leftId;
         const rightId = assignments[pair.leftId];
         const linked = rightId !== undefined;
-        return <Pressable key={pair.leftId} testID={`matching-left-${pair.leftId}`}
+        return <AnswerMotion key={pair.leftId} active={!answered && (active || linked)}>
+          <Pressable testID={`matching-left-${pair.leftId}`}
           accessibilityRole="button"
           accessibilityLabel={`${pair.leftLabel}, ${linked ? "αντιστοιχισμένο με " + labelsByRight.get(rightId) : "χωρίς αντιστοίχιση"}`}
           accessibilityState={{ selected: active, disabled: answered }} disabled={answered}
@@ -95,7 +97,8 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
             {linked ? <Text style={styles.linkedLabel} numberOfLines={2}>↳ {labelsByRight.get(rightId)}</Text> : null}
           </View>
           <Text style={[styles.choiceStatus, active && styles.statusActive]}>{active ? "●" : linked ? "✓" : "＋"}</Text>
-        </Pressable>;
+        </Pressable>
+        </AnswerMotion>;
       })}
     </View>
     <View style={styles.stepTitle}>
@@ -106,7 +109,8 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
       {rightOptions.map(pair => {
         const linkedId = Object.keys(assignments).find(leftId => assignments[leftId] === pair.rightId);
         const linked = linkedId !== undefined;
-        return <Pressable key={pair.rightId} testID={`matching-right-${pair.rightId}`}
+        return <AnswerMotion key={pair.rightId} active={!answered && linked}>
+          <Pressable testID={`matching-right-${pair.rightId}`}
           accessibilityRole="button"
           accessibilityLabel={pair.rightLabel}
           accessibilityState={{ selected: linked, disabled: answered || selectedLeft === null }}
@@ -117,7 +121,8 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
           <Text style={styles.rightMarker}>{linked ? positionFor(linkedId) : "○"}</Text>
           <Text style={styles.choiceTextRight}>{pair.rightLabel}</Text>
           <Text style={styles.choiceStatus}>{linked ? "✓" : "↗"}</Text>
-        </Pressable>;
+        </Pressable>
+        </AnswerMotion>;
       })}
     </View>
     </> : null}
