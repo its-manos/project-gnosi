@@ -507,6 +507,8 @@ const bgModule = compile("src/components/CategoryAtlasBackground.tsx", {
   react: { memo: component => component },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native, "react-native-svg": svg,
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/category.webp": "category.webp",
 });
 const staticBg = bgModule.default({ width: 340, height: 490, regionCount: 3 });
 const staticBgNodes = nodes(staticBg);
