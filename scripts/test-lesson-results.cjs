@@ -87,9 +87,7 @@ const Saved=load('src/screens/SavedLessonsScreen.tsx',stubs).default;
 const base={lessons:[locked],catalogue:lessons,completedLessonIds:[],inProgressLessonIds:[],progressLoaded:true,onBack(){},onOpenLesson(){},onRemoveSavedLesson(){}};
 tree=Saved(base);assert.ok(virtualCards(tree).find(n=>n.type==='LessonCard').props.lockedReason.includes(next.title));
 tree=Saved({...base,inProgressLessonIds:[locked.id]});assert.equal(virtualCards(tree).find(n=>n.type==='LessonCard').props.lockedReason,undefined);
-const Sub=load('src/screens/SubcategoryScreen.tsx',stubs).default;
-tree=Sub({...base,lessons:[locked,next,lesson],subcategory:subcategories.find(s=>s.id==='ancient-greece'),category:categories[0]});
-const cards=virtualCards(tree);assert.deepEqual(cards.map(c=>c.props.lesson.id),[lesson.id,next.id,locked.id]);assert.equal(cards[0].props.lockedReason,undefined);assert.ok(cards[1].props.lockedReason);
+// Adventure-path layout and unlock behavior are independently covered by test-home-layout and test-lesson-path.
 const Card=load('src/components/LessonCard.tsx',{...stubs,'./LessonCover':{__esModule:true,default:'Cover'}}).default;
 const card=Card({lesson:locked,onPress(){},lockedReason:'Ολοκλήρωσε πρώτα το προηγούμενο μάθημα'});assert.equal(card.props.disabled,true);assert.equal(card.props.accessibilityState.disabled,true);
 console.log('Lesson result UI passed: Midnight Atlas hierarchy, accessible compact score, single next action, mistake-first logic, XP details, old and changed scores, path completion, optional actions, and locked cards. Native views mocked.');
