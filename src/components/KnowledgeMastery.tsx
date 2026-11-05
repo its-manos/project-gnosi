@@ -6,6 +6,7 @@ import { MASTERY_LABELS } from "../knowledge/model";
 import { categories as learningCategories } from "../data/lessons";
 import ActionButton from "./ActionButton";
 import SubjectProgressTile from "./SubjectProgressTile";
+import { LearningSectionHeading, SubjectInsightPanel, SubjectShowAll } from "./LearningDetailSections";
 import { colors } from "../theme";
 
 export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false, singleColumn = false, threeColumn = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean }) {
@@ -31,7 +32,8 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
     ? Math.max(0, selectedSubject.total - selectedSubject.mastered) : 0;
   if (compact && (!ready || (!model.due.length && !active))) return null;
   return <View style={[styles.card, preview && mapOnly && styles.previewCard, detail && styles.detailCard]} testID="knowledge-mastery">
-    <Text style={[styles.label, detail && styles.detailLabel]}>{detail ? "ΟΙ ΘΕΜΑΤΙΚΕΣ ΣΟΥ" : "Ο ΧΑΡΤΗΣ ΤΗΣ ΓΝΩΣΗΣ ΣΟΥ"}</Text>
+    {detail ? <LearningSectionHeading title="ΟΙ ΘΕΜΑΤΙΚΕΣ ΣΟΥ" tone="knowledge" />
+      : <Text style={styles.label}>Ο ΧΑΡΤΗΣ ΤΗΣ ΓΝΩΣΗΣ ΣΟΥ</Text>}
     {mapOnly && !ready ? <Text style={styles.body}>Φόρτωση γνώσεων…</Text> : null}
     {!mapOnly ? <>
     <Text style={styles.heading}>{ready ? `${model.due.length} ερωτήσεις για επανάληψη` : "Φόρτωση γνώσεων…"}</Text>
@@ -61,35 +63,21 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
         {!previewCollapsed ? <Text style={styles.body}>{category.mastered} / {category.total} έννοιες κατακτημένες</Text> : null}
       </View>)
       )}
-      {detail && selectedSubject ? (
-        <View testID="knowledge-selected-subject" style={styles.subjectInsight}
-          accessibilityLiveRegion="polite">
-          <View style={styles.subjectInsightHeading}>
-            <Text style={styles.subjectInsightTitle} numberOfLines={2}>{selectedSubject.title}</Text>
-            <Text style={styles.subjectInsightValue}>{selectedSubject.mastered} / {selectedSubject.total}</Text>
-          </View>
-          <Text style={styles.subjectInsightCaption}>
-            {selectedSubject.total === 0
-              ? "Δεν υπάρχουν ακόμη καταγεγραμμένες έννοιες εδώ."
-              : remainingConcepts === 0
-                ? "Όλες οι έννοιες αυτής της θεματικής κατακτημένες."
-                : selectedSubject.mastered === 0
-                  ? "Επόμενος στόχος: η πρώτη κατακτημένη έννοια."
-                  : `Απομένουν ${remainingConcepts} έννοιες για πλήρη κατάκτηση.`}
-          </Text>
-          <Text style={styles.subjectInsightNote}>
-            Πρόοδος επαναλήψεων: {selectedSubject.percent}%
-          </Text>
-        </View>
-      ) : null}
+      {detail && selectedSubject ? <SubjectInsightPanel
+        testID="knowledge-selected-subject" tone="knowledge"
+        title={selectedSubject.title} current={selectedSubject.mastered} total={selectedSubject.total}
+        caption={selectedSubject.total === 0
+          ? "Δεν υπάρχουν ακόμη καταγεγραμμένες έννοιες εδώ."
+          : remainingConcepts === 0
+            ? "Όλες οι έννοιες αυτής της θεματικής κατακτημένες."
+            : selectedSubject.mastered === 0
+              ? "Επόμενος στόχος: η πρώτη κατακτημένη έννοια."
+              : `Απομένουν ${remainingConcepts} έννοιες για πλήρη κατάκτηση.`}
+        note={`Πρόοδος επαναλήψεων: ${selectedSubject.percent}%`} /> : null}
       {detail && rankedSubjects.length > 4 ? (
-        <Pressable testID="knowledge-all-subjects" accessibilityRole="button"
-          accessibilityState={{ expanded: allDetailSubjects }}
-          style={({ pressed }) => [styles.showAll, pressed && styles.showAllPressed]}
-          onPress={() => setAllDetailSubjects(value => !value)}>
-          <Text style={styles.showAllText}>{allDetailSubjects ? "Λιγότερες θεματικές" : `Όλες οι θεματικές (${rankedSubjects.length})`}</Text>
-          <Text style={styles.showAllArrow}>{allDetailSubjects ? "⌃" : "⌄"}</Text>
-        </Pressable>
+        <SubjectShowAll testID="knowledge-all-subjects" tone="knowledge"
+          expanded={allDetailSubjects} count={rankedSubjects.length}
+          onPress={() => setAllDetailSubjects(value => !value)} />
       ) : null}
       {mapOnly && !detail ? <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded: allSubjects }} onPress={() => setAllSubjects(v => !v)}><Text style={styles.link}>{allSubjects ? (preview ? "Πίσω στη σύνοψη −" : "Λιγότερες θεματικές −") : (preview ? "Αναλυτική εικόνα +" : "Όλες οι θεματικές +")}</Text></Pressable> : null}
       {!detail && !previewCollapsed && (!mapOnly || showHelp) ? <Text style={styles.body}>Οι μπάρες αφορούν τις έννοιες για τις οποίες υπάρχουν διαφορετικές δοκιμές, όχι ολόκληρο το γνωστικό πεδίο. Δεν μετρούν άρθρα που διάβασες. Χωρίς αρκετά στοιχεία, η ολοκλήρωση διατηρείται και η κατάκτηση περιμένει.</Text> : !previewCollapsed && !detail ? <Text style={styles.body}>Γνώση από επαναλήψεις, όχι ποσοστό άρθρων που διάβασες.</Text> : null}
@@ -105,26 +93,8 @@ const styles = StyleSheet.create({
   card: { padding: 20, gap: 14, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong },
   previewCard: { padding: 14, gap: 8, borderRadius: 18 },
   detailCard: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 11 },
-  detailLabel: { color: "#BDB1FB" },
   detailGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 },
   detailGridSingle: { flexDirection: "column" },
-  subjectInsight: {
-    backgroundColor: "#27273F", borderWidth: 1, borderColor: "#514976",
-    borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
-  },
-  subjectInsightHeading: { flexDirection: "row", alignItems: "center", gap: 8, justifyContent: "space-between" },
-  subjectInsightTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: "800" },
-  subjectInsightValue: { color: "#C4B8FF", fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
-  subjectInsightCaption: { color: colors.textBody, fontSize: 12, lineHeight: 18 },
-  subjectInsightNote: { color: "#ADA3DD", fontSize: 11, lineHeight: 16 },
-  showAll: {
-    minHeight: 46, borderRadius: 13, paddingHorizontal: 12,
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: "#22233A", borderWidth: 1, borderColor: "#414060",
-  },
-  showAllPressed: { backgroundColor: "#2F2C4A" },
-  showAllText: { color: "#BEB3FF", fontSize: 13, fontWeight: "800" },
-  showAllArrow: { color: "#BEB3FF", fontSize: 20 },
   detailDisclosure: {
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#44435D",
     marginTop: 3, paddingHorizontal: 2,
