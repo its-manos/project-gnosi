@@ -517,13 +517,13 @@ assert.equal(staticBgNodes.filter(node => node.props?.testID === "atlas-fitted-m
 assert.equal(chartStarCount(staticBg), 30,
   "standalone backdrop uses the same star density as both interactive maps");
 const bgSvg = staticBgNodes.find(node => node.type === "svg");
-assert.equal(bgSvg.props.viewBox, "0 0 360 519",
-  "background uses the identical fitted viewBox as the interactive map");
+assert.equal(bgSvg.props.viewBox, "0 0 360 " + (490 * 360 / 340),
+  "background uses the measured aspect ratio without rounding");
 const wideBg = bgModule.default({ width: 680, height: 490, regionCount: 3 });
-assert.equal(wideBg.props.style[1].width, 520,
-  "wide-screen background respects FantasyMap\'s maximum 520pt width");
-assert.equal(wideBg.props.style[1].left, 80,
-  "background remains centered beneath the wide-screen island SVG");
+assert.equal(wideBg.props.style[1].width, 680,
+  "wide screens receive a full-width decorative underlay");
+assert.equal(wideBg.props.style[1].height, 490,
+  "wide-screen background preserves the measured height");
 const splitMap = map({ ...props, regions: regionData, fitViewport: { width: 340, height: 490 },
   hideControls: true, externalBackground: true });
 const splitNodes = nodes(splitMap);
@@ -775,6 +775,10 @@ assert.deepEqual(shortcutVisits, [["ancient", "history"]],
   "animated shortcut still opens the same subcategory");
 assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 0,
   "old non-fitted FantasyMap must not flash while viewport is unmeasured");
+const screenShell = nodes(categoryTree).find(node =>
+  node.props?.testID === "category-atlas-screen");
+screenShell.props.onLayout({ nativeEvent: { layout: { width: 380, height: 730 } } });
+categoryTree = renderCategory();
 const mapShell = nodes(categoryTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 assert.ok(mapShell && typeof mapShell.props.onLayout === "function",
@@ -855,6 +859,10 @@ const renderAndroidCategory = options => {
   return androidScreen({ ...screenProps, ...options });
 };
 let androidTree = renderAndroidCategory();
+const androidRoot = nodes(androidTree).find(node =>
+  node.props?.testID === "category-atlas-screen");
+androidRoot.props.onLayout({ nativeEvent: { layout: { width: 380, height: 730 } } });
+androidTree = renderAndroidCategory();
 const androidShell = nodes(androidTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 androidShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
