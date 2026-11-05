@@ -4,6 +4,7 @@ import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { FillBlankQuestion } from "../quiz/types";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
 import { questionCardStyles } from "./questionCardStyles";
 
@@ -13,11 +14,12 @@ type Props = {
   answer?: string;
   onSubmit: (optionId: string) => void;
   readingSize?: number;
+  onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** The authored sentence is the question. Do not restate it with an extra
  * prompt, tutorial and duplicate heading above the word bank. */
-export default function FillBlankQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+export default function FillBlankQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
   const [pending, setPending] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const pendingRef = useRef<string | null>(null);
@@ -62,6 +64,14 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
     }
   }
 
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: pending === null || submitting, onPress: confirm });
+    return () => onActionChange(null);
+  }, [answered, pending, submitting, onActionChange]);
+
   return <View style={styles.card} testID="fill-blank-card">
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
@@ -86,7 +96,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
         {!punctuationOnly && after ? <Text style={[styles.passageText, sentenceSize]}>{after}</Text> : null}
       </View>
     </View>
-    {!answered ? <>
+    {!answered && !onActionChange ? <>
       <View style={styles.options}>
         {question.content.options.map((option, index) => {
           const selected = selectedId === option.id;
