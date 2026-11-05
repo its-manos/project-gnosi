@@ -7,9 +7,15 @@
 import { memo, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from "react-native-svg";
-import AncientGreeceIslandIcon from "./islandIcons/AncientGreeceIslandIcon";
-import WorldHistoryIslandIcon from "./islandIcons/WorldHistoryIslandIcon";
-import MythologyIslandIcon from "./islandIcons/MythologyIslandIcon";
+import { Image } from "expo-image";
+
+// Bundle transparent 3x-density icon WebPs. React Native Metro requires
+// literal requires, and cached images avoid mounting complex live landmark SVGs.
+const LANDMARK_IMAGES: Record<string, number> = {
+  "ancient-greece": require("../../assets/atlas-export-preview/island-icons/ancient-greece.webp"),
+  "world-history": require("../../assets/atlas-export-preview/island-icons/world-history.webp"),
+  mythology: require("../../assets/atlas-export-preview/island-icons/mythology.webp"),
+};
 
 export type IslandDestination = {
   id: string;
@@ -122,10 +128,10 @@ function IslandArtwork({ index, id, width, height, status }: {
   const suffix = id.replace(/[^a-z0-9-]/gi, "-") + "-" + index;
   const isAncientGreece = id === "ancient-greece";
   const isWorldHistory = id === "world-history";
-  const isMythology = id === "mythology";
-  const hasLandmark = isAncientGreece || isWorldHistory || isMythology;
-  // All three landmarks float above the island's contour engravings but rest
-  // on their own shallow stone foundation. These values never change layout.
+  const landmarkImage = LANDMARK_IMAGES[id];
+  const hasLandmark = Boolean(landmarkImage);
+  // Cached WebP landmarks float above the contour engravings and rest on
+  // their own shallow stone foundation. No live landmark SVG is mounted.
   const emblemSize = Math.max(35, Math.min(68, height * 0.66));
   const emblemTop = Math.max(0, height * 0.56 - emblemSize * (isAncientGreece ? 0.86 : 0.84));
 
@@ -212,9 +218,10 @@ function IslandArtwork({ index, id, width, height, status }: {
         <View testID={"island-atlas-" + id + "-emblem"}
           pointerEvents="none" accessible={false}
           style={[styles.landmarkEmblem, { top: emblemTop }]}>
-          {isAncientGreece ? <AncientGreeceIslandIcon size={emblemSize} />
-            : isWorldHistory ? <WorldHistoryIslandIcon size={emblemSize} />
-            : <MythologyIslandIcon size={emblemSize} />}
+          <Image testID={"island-atlas-landmark-webp-" + id}
+            source={landmarkImage} style={{ width: emblemSize, height: emblemSize }}
+            contentFit="contain" cachePolicy="memory-disk" transition={0}
+            accessibilityIgnoresInvertColors />
         </View>
       ) : null}
     </View>
