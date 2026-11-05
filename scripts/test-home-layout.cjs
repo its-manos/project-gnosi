@@ -747,7 +747,7 @@ const access = (lesson, catalogue, completed, inProgress) => {
   return { prerequisite, unlocked: !prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id) };
 };
 const continueModule = compile("src/components/AtlasContinueCard.tsx", {
-  "../components/HomeMotion": { MotionPressable: "Pressable" },
+  "./HomeMotion": { MotionPressable: "Pressable" },
 }, true);
 const atlasContinueStub = { __esModule: true, default: "Pressable",
   atlasContinueStyles: continueModule.atlasContinueStyles };
