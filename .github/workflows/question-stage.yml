@@ -19,6 +19,7 @@ on:
       - "scripts/test-quiz-spot-blank-cards.cjs"
       - "src/screens/DailyChallengeScreen.tsx"
       - "src/components/DailyMissionMap.tsx"
+      - "src/components/DailyJourneyTrack.tsx"
       - "src/hooks/useAdaptiveQuestionScroll.ts"
       - "scripts/test-question-stage.cjs"
       - "scripts/test-question-stage-footer.cjs"
