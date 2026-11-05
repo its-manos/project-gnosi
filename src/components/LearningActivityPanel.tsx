@@ -8,7 +8,7 @@ import { activityBuckets, activitySummary, type ActivityBucket } from "../utils/
 import { colors } from "../theme";
 import { MotionPressable, MotionView } from "./HomeMotion";
 import MetricCard from "./MetricCard";
-import { ProgressBarFill } from "./ProgressMotion";
+import SubjectProgressTile from "./SubjectProgressTile";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 
 const FIRST = "#BEA7F4", REPLAY = "#6FC7BD";
@@ -144,33 +144,14 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
       detail && styles.categoryCardDetail, detail && styles.categoryGrid,
       detail && singleColumn && styles.categoryGridSingle]}>
       {visible.map(({ category, count, total, percent }) => detail ? (
-        <MotionPressable key={category.id} testID={`reading-subject-${category.id}`}
-          pressScale={0.985}
+        <SubjectProgressTile key={category.id} tone="reading"
+          title={category.title} emoji={category.emoji}
+          completed={count} total={total} percent={percent}
+          selected={selectedCategoryId === category.id}
+          singleColumn={singleColumn} threeColumn={threeColumn}
+          testID={`reading-subject-${category.id}`}
           onPress={() => setSelectedCategoryId(value => value === category.id ? null : category.id)}
-          style={[styles.readingTile, singleColumn && styles.readingTileSingle,
-            threeColumn && !singleColumn && styles.readingTileWide,
-            count > 0 && styles.readingTileProgressing,
-            total > 0 && count === total && styles.readingTileComplete,
-            selectedCategoryId === category.id && styles.readingTileSelected]}
-          accessibilityRole="button"
-          accessibilityState={{ selected: selectedCategoryId === category.id,
-            expanded: selectedCategoryId === category.id }}
-          accessibilityLabel={`${category.title}, ${count} από ${total} ολοκληρωμένα μαθήματα, ${percent}%`}
-          accessibilityHint="Άνοιγμα σύντομης ανάλυσης της θεματικής">
-          <View style={styles.readingTileHeader}>
-            <Text style={styles.readingTileEmoji}>{category.emoji}</Text>
-            {total > 0 && count === total
-              ? <Text style={styles.readingTileCompleted}>✓</Text>
-              : count > 0 ? <Text style={styles.readingTilePercent}>{percent}%</Text> : null}
-          </View>
-          <Text style={styles.readingTileTitle} numberOfLines={2}>{category.title}</Text>
-          <Text style={[styles.readingTileCount, count === total && total > 0 && styles.readingTileCountComplete]}>
-            {count} / {total}
-          </Text>
-          <View style={styles.readingTileTrack} pointerEvents="none">
-            <ProgressBarFill tone="reading" percent={percent} />
-          </View>
-        </MotionPressable>      ) : (
+          accessibilityLabel={`${category.title}, ${count} από ${total} ολοκληρωμένα μαθήματα, ${percent}%`} />essable>      ) : (
         <View key={category.id} style={[styles.category, compact && styles.categoryCompact]}
           accessible accessibilityRole="progressbar"
           accessibilityLabel={category.title}
@@ -258,26 +239,8 @@ const styles = StyleSheet.create({
   titleCompact: { fontSize: 14, lineHeight: 20 },
   categoryCardCompact: { padding: 12, gap: 10 },
   categoryCardDetail: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 0 },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 },
   categoryGridSingle: { flexDirection: "column" },
-  readingTile: {
-    width: "48%", minWidth: 0, minHeight: 123,
-    padding: 11, gap: 3, borderRadius: 15,
-    backgroundColor: "#1F313D", borderWidth: 1, borderColor: "#35545F",
-  },
-  readingTileProgressing: { borderColor: "#4A717B", backgroundColor: "#233944" },
-  readingTileComplete: { borderColor: "#6E9A9B", backgroundColor: "#264149" },
-  readingTileSelected: { borderColor: "#9CD2D1", backgroundColor: "#2A454F" },
-  readingTileSingle: { width: "100%", minHeight: 112 },
-  readingTileWide: { width: "31%" },
-  readingTileHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  readingTileEmoji: { fontSize: 19, lineHeight: 26 },
-  readingTilePercent: { color: "#9CD2D1", fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  readingTileCompleted: { color: "#BDE4DD", fontSize: 19, lineHeight: 25, fontWeight: "900" },
-  readingTileTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800", minHeight: 19 },
-  readingTileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  readingTileCountComplete: { color: "#AFE3E2" },
-  readingTileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#334B56", overflow: "hidden" },
   readingInsight: {
     backgroundColor: "#1D3540", borderWidth: 1, borderColor: "#40626C",
     borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
