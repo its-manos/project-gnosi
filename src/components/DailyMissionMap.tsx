@@ -21,7 +21,7 @@ function DailyMissionMap({ compact = false }: { compact?: boolean }) {
 
     <View style={[styles.route,compact&&styles.routeCompact]} accessible={false} pointerEvents="none">
       <View style={styles.rail}/>
-      {stations.map((tier,index)=><View key={index} style={styles.stationSlot}>
+      {stations.map((tier,index)=><View key={index} testID={`daily-route-station-${index+1}`} style={styles.stationSlot}>
         <View style={[styles.stationHalo,tier==="easy"&&styles.easyHalo,
           tier==="medium"&&styles.mediumHalo,tier==="hard"&&styles.hardHalo]}>
           <Text style={[styles.stationStar,tier==="easy"&&styles.easyStar,
