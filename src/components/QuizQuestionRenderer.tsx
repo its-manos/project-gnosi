@@ -38,7 +38,7 @@ export default function QuizQuestionRenderer({ question, questionNumber, answer,
         onSubmit={value => onSubmit(value)} />;
     case "fill-in-the-blank":
       return <FillBlankQuestionCard key={question.id} question={question} questionNumber={questionNumber}
-        readingSize={readingSize} onActionChange={onActionChange} compactAnswered={compactAnswered} answer={typeof answer === "string" ? answer : undefined}
+        readingSize={readingSize} onActionChange={onActionChange} answer={typeof answer === "string" ? answer : undefined}
         onSubmit={value => onSubmit(value)} />;
     case "multiple-choice":
       return <SingleChoiceQuestionCard key={question.id}
