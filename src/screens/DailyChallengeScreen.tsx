@@ -24,10 +24,12 @@ import { useDailyChallenge } from "../hooks/useDailyChallenge";
 import { colors } from "../theme";
 
 type Props={onHome:()=>void;onOpenPreferences:()=>void;preferences:DailyChallengePreferences;preferencesLoaded:boolean;
-  completedLessonIds?:string[];inProgressLessonIds?:string[];onOpenLesson?:(id:string)=>void;onWeeklyReview?:()=>void};
+  completedLessonIds?:string[];inProgressLessonIds?:string[];onOpenLesson?:(id:string)=>void;onWeeklyReview?:()=>void;
+  /** Read-only dev preview: show the real intro even when today's attempt is underway. */
+  previewIntro?:boolean;onPreviewContinue?:()=>void};
 const topicTitle=(id:string)=>DAILY_CHALLENGE_TOPICS.find(t=>t.id===id)?.title??'Άλλη θεματική';
 const difficultyTitle=(id:string)=>CHALLENGE_DIFFICULTIES.find(d=>d.id===id)?.title??'Μεσαίο';
-export default function DailyChallengeScreen({onHome,onOpenPreferences,preferences,preferencesLoaded,completedLessonIds=[],inProgressLessonIds=[],onOpenLesson,onWeeklyReview}:Props) {
+export default function DailyChallengeScreen({onHome,onOpenPreferences,preferences,preferencesLoaded,completedLessonIds=[],inProgressLessonIds=[],onOpenLesson,onWeeklyReview,previewIntro=false,onPreviewContinue}:Props) {
   const {record,rewardSummary,rewardXP,isLoading,currentQuestion,selectedAnswer,correctCount,resultDetails,questionsCompatible=true,startChallenge,answerQuestion,nextQuestion}=useDailyChallenge(preferences,preferencesLoaded);
   const [sourceError,setSourceError]=useState(false),scrollRef=useRef<ComponentRef<typeof ScrollView>>(null),sourceRequest=useRef(0);
   const [review,setReview]=useState<{date:string;mode:'answers'|'mistakes'}|null>(null);
@@ -46,13 +48,13 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const closeReview=()=>{setReview(null);scrollTop();};
   async function openSource(url:string){const request=++sourceRequest.current;try{await Linking.openURL(url);if(request===sourceRequest.current)setSourceError(false);}catch{if(request===sourceRequest.current)setSourceError(true);}}
   const canStart=selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE;
-  const activeQuiz=record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
+  const activeQuiz=!previewIntro&&record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
   return <View style={styles.root}><ProgressGradientBackground />
     <View style={styles.pageChrome}>
-      <ProfileSectionHeader eyebrow="ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ"
-        title={reviewing?"Ανασκόπηση":record.completed?"Η αποστολή σου":"Ημερήσιο quiz"}
-        actionLabel={reviewing?"‹ Αποτέλεσμα":"‹ Αρχική"}
-        actionAccessibilityLabel={reviewing?"Πίσω στο αποτέλεσμα":"Επιστροφή στην αρχική"}
+      <ProfileSectionHeader eyebrow={previewIntro?"ΠΡΟΕΠΙΣΚΟΠΗΣΗ · DEV":"ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ"}
+        title={previewIntro?"Ημερήσιο quiz":reviewing?"Ανασκόπηση":record.completed?"Η αποστολή σου":"Ημερήσιο quiz"}
+        actionLabel={previewIntro?"‹ Εργαλεία":reviewing?"‹ Αποτέλεσμα":"‹ Αρχική"}
+        actionAccessibilityLabel={previewIntro?"Πίσω στα εργαλεία δοκιμών":reviewing?"Πίσω στο αποτέλεσμα":"Επιστροφή στην αρχική"}
         onAction={reviewing?closeReview:onHome} style={styles.pageHeader}/>
     </View>
     <ScrollView ref={scrollRef} style={styles.viewport}
@@ -61,10 +63,10 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       scrollEnabled={quizViewport.scrollEnabled}
       bounces={quizViewport.scrollEnabled}
       showsVerticalScrollIndicator={false}>
-    {isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
-    :record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
-    :record.completed&&review?.date===record.dateKey&&review.mode==='mistakes'?<DailyMistakeReview key={`${record.dateKey}-${record.questionIds.join('-')}`} questions={analysis.practiceQuestions} onDone={closeReview} onAdvance={scrollTop}/>
-    :record.completed?<QuizReveal><View testID="daily-results" style={styles.resultContainer}>
+    {!previewIntro&&isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
+    :!previewIntro&&record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
+    :!previewIntro&&record.completed&&review?.date===record.dateKey&&review.mode==='mistakes'?<DailyMistakeReview key={`${record.dateKey}-${record.questionIds.join('-')}`} questions={analysis.practiceQuestions} onDone={closeReview} onAdvance={scrollTop}/>
+    :!previewIntro&&record.completed?<QuizReveal><View testID="daily-results" style={styles.resultContainer}>
       <View style={styles.resultHero}>
         <View style={styles.resultSeal}><Text style={styles.resultStar}>✦</Text></View>
         <Text style={styles.eyebrow}>Η ΑΠΟΣΤΟΛΗ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
@@ -102,7 +104,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       <Text style={styles.tomorrow}>Νέο σετ αύριο, με την αλλαγή της ημέρας στην Ελλάδα.</Text>
       <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} secondary style={styles.returnAction}/>
     </View></QuizReveal>
-    :!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal>
+    :previewIntro||!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal>
       <View style={[styles.introBody,compactIntro&&styles.introBodyCompact]}>
         <View style={styles.introLead}>
           <View style={styles.introCopy}>
@@ -120,9 +122,11 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         </View>
         <Text style={styles.sharedNote}>Το ίδιο σετ για όλους, με ερωτήσεις από διαφορετικούς κόσμους.</Text>
         <DailyMissionMap compact={compactIntro}/>
-        {!canStart?<Text style={styles.errorText}>Δεν υπάρχουν αρκετές διαθέσιμες ερωτήσεις για σήμερα.</Text>:null}
+        {!previewIntro&&!canStart?<Text style={styles.errorText}>Δεν υπάρχουν αρκετές διαθέσιμες ερωτήσεις για σήμερα.</Text>:null}
         <View style={styles.introActions}>
-          <ActionButton label="Ξεκίνα την πρόκληση →" onPress={()=>{setSourceError(false);sourceRequest.current++;void startChallenge();}} disabled={!canStart} style={styles.actionPrimary}/>
+          <ActionButton label={previewIntro&&record.started?"Συνέχισε την πρόκληση →":"Ξεκίνα την πρόκληση →"}
+            onPress={()=>{if(previewIntro){onPreviewContinue?.();return;}setSourceError(false);sourceRequest.current++;void startChallenge();}}
+            disabled={previewIntro?!onPreviewContinue:!canStart} style={styles.actionPrimary}/>
           <Pressable testID="daily-interests-link" style={({pressed})=>[styles.interestsLink,pressed&&styles.interestsPressed]}
             onPress={onOpenPreferences} accessibilityRole="button" accessibilityLabel="Ρύθμιση ενδιαφερόντων">
             <Text style={styles.interestsText}>Τα ενδιαφέροντά μου  ›</Text>
