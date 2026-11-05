@@ -664,7 +664,7 @@ const islandsModule = compile("src/components/IslandAtlasMap.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "react-native-svg": svg,
-  "./worldIcons/HistoryWorldIcon": { __esModule: true, default: "HistoryWorldIcon" },
+  "./islandIcons/AncientGreeceIslandIcon": { __esModule: true, default: "AncientGreeceIslandIcon" },
 });
 const archipelago = islandsModule.default;
 for (const [count, width, height] of [[1, 320, 430], [3, 340, 490],
@@ -724,18 +724,33 @@ const artworkNodes = nodes(ancientIslandTree).filter(node =>
 assert.equal(artworkNodes.length, 2, "each region receives one art component");
 const ancientArtworkTree = artworkNodes[0].type(artworkNodes[0].props);
 const otherArtworkTree = artworkNodes[1].type(artworkNodes[1].props);
-const pyramidArt = nodes(ancientArtworkTree).filter(node => node.type === "HistoryWorldIcon");
-assert.equal(pyramidArt.length, 1,
-  "only the ancient-greece island reuses the existing Home limestone pyramid");
-assert.ok(pyramidArt[0].props.size >= 24 && pyramidArt[0].props.size <= 43,
-  "pyramid artwork scales within the island without enlarging its touch target");
-const pyramidOverlay = nodes(ancientArtworkTree).find(node =>
+const parthenonArt = nodes(ancientArtworkTree).filter(node => node.type === "AncientGreeceIslandIcon");
+assert.equal(parthenonArt.length, 1,
+  "only the Ancient Greece island uses its bespoke Parthenon");
+assert.ok(parthenonArt[0].props.size >= 35 && parthenonArt[0].props.size <= 68,
+  "Parthenon is larger and remains bounded on small devices");
+const parthenonOverlay = nodes(ancientArtworkTree).find(node =>
   node.props?.testID === "island-atlas-ancient-greece-emblem");
-assert.ok(pyramidOverlay, "pyramid is displayed as art inside the island");
-assert.equal(pyramidOverlay.props.pointerEvents, "none",
-  "pyramid decoration cannot intercept subcategory selection");
-assert.equal(nodes(otherArtworkTree).filter(node => node.type === "HistoryWorldIcon").length, 0,
-  "other islands retain their existing terrain engraving");
+assert.equal(parthenonOverlay.props.pointerEvents, "none",
+  "Parthenon decoration cannot intercept island navigation");
+assert.equal(parthenonOverlay.props.style[1].top,
+  Math.max(0, artworkNodes[0].props.height * 0.62 - parthenonArt[0].props.size * 0.84),
+  "Parthenon steps align with the island's upper plateau");
+assert.equal(nodes(otherArtworkTree).filter(node => node.type === "AncientGreeceIslandIcon").length, 0,
+  "other islands retain their own terrain engraving");
+const parthenonModule = compile("src/components/islandIcons/AncientGreeceIslandIcon.tsx", {
+  "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native-svg": svg,
+});
+const renderedParthenon = parthenonModule.default({ size: 64 });
+assert.equal(renderedParthenon.props.testID, "ancient-greece-parthenon-svg");
+assert.equal(renderedParthenon.props.pointerEvents, "none");
+assert.equal(renderedParthenon.props.width, 64);
+assert.equal(nodes(renderedParthenon).filter(node =>
+  node.type === "rect" && node.props?.height === 28.5).length, 8,
+  "the custom icon depicts eight Doric front columns, not the former pyramid");
+assert.ok(nodes(renderedParthenon).some(node =>
+  node.type === "path" && node.props?.d?.includes("50 12.8")),
+  "triangular pediment is clearly present");
 const ancientIslandButton = nodes(ancientIslandTree).find(node =>
   node.props?.testID === "island-atlas-destination-ancient-greece");
 ancientIslandButton.props.onPress();
@@ -859,7 +874,11 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "react-native": native,
   "../components/IslandAtlasMap": { __esModule: true, default: "IslandAtlasMap" },
   "../components/CategoryWorldAtlasBackground": { __esModule: true, default: "CategoryWorldAtlasBackground" },
-  "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: "HistoryWorldIcon" },
+  "../components/worldIcons/categoryIconMap": { getCategoryWorldIcon: id => ({
+    history: "HistoryWorldIcon", science: "ScienceWorldIcon", nature: "NatureWorldIcon",
+    technology: "TechnologyWorldIcon", culture: "CultureWorldIcon",
+    geography: "GeographyWorldIcon", "difficult-history": "DifficultHistoryWorldIcon",
+  })[id] },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
     MotionView: "MotionView", MotionPressable: "MotionPressable", MotionIcon: "MotionIcon",
@@ -891,16 +910,26 @@ assert.equal(nodes(screenTree).filter(node => node.type === "CategoryWorldAtlasB
 const screenRoot = nodes(screenTree).find(node => node.props?.testID === "category-atlas-screen");
 assert.equal(screenRoot.props.onLayout, undefined,
   "only the interactive island viewport needs to be measured");
-const historyHeaderArt = nodes(screenTree).filter(node => node.type === "HistoryWorldIcon");
-assert.equal(historyHeaderArt.length, 1,
-  "the Category History header reuses the Home pyramid illustration");
-assert.equal(historyHeaderArt[0].props.size, 32,
-  "the illustration fits the existing fixed header emblem slot");
-const otherCategoryTree = render({ category: { id: "science", title: "Επιστήμη" } });
-assert.equal(nodes(otherCategoryTree).filter(node => node.type === "HistoryWorldIcon").length, 0,
-  "other worlds do not incorrectly receive the History pyramid");
-assert.ok(nodes(otherCategoryTree).some(node => node.props?.children === "✦"),
-  "other category headers keep their existing neutral emblem");
+const headerTypes = {
+  history: "HistoryWorldIcon",
+  science: "ScienceWorldIcon",
+  nature: "NatureWorldIcon",
+  technology: "TechnologyWorldIcon",
+  culture: "CultureWorldIcon",
+  geography: "GeographyWorldIcon",
+  "difficult-history": "DifficultHistoryWorldIcon",
+};
+for (const [id, iconType] of Object.entries(headerTypes)) {
+  const headerTree = render({ category: { id, title: id } });
+  const icons = nodes(headerTree).filter(node => Object.values(headerTypes).includes(node.type));
+  assert.equal(icons.length, 1, "exactly one custom icon in " + id + " header");
+  assert.equal(icons[0].type, iconType, "correct Home illustration reused for " + id);
+  assert.equal(icons[0].props.size, 32, "header icon footprint is fixed at 32pt");
+}
+const unknownTree = render({ category: { id: "unknown", title: "Άγνωστη" } });
+assert.equal(nodes(unknownTree).filter(node => Object.values(headerTypes).includes(node.type)).length, 0);
+assert.ok(nodes(unknownTree).some(node => node.props?.children === "✦"),
+  "unrecognized categories retain their neutral fallback emblem");
 const mapViewport = nodes(screenTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 mapViewport.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
