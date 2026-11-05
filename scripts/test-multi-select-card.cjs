@@ -33,6 +33,7 @@ const imports = {
   '../quiz/engine': engineModule.exports,
   '../theme': { colors, reading },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
+    './QuestionFeedbackPanel': { __esModule: true, default: 'QuestionFeedbackPanel', AnswerSummaryText: 'AnswerSummaryText' },
 };
 const sharedModule = { exports: {} };
 vm.runInNewContext(transpile('src/components/questionCardStyles.ts', false), {
