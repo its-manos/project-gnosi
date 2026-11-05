@@ -195,9 +195,10 @@ const firstKnowledgeId=firstKnowledgeTile.props.testID;
 // and a restrained 7pt track without fake 0% values on an untouched account.
 assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='ΚΑΤΑΚΤΗΣΗ'),
   'each subject exposes a clear mastery progress caption');
-assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='›'),
-  'untouched subjects show a lightweight detail affordance');
-const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'&&n.props.children==='Θεματική 0');
+assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='7%'),
+  'active subjects display their actual mastery percentage in the top badge');
+const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'
+  && typeof n.props.children==='string' && n.props.children.startsWith('Θεματική '));
 assert.ok(firstTitle?.props.adjustsFontSizeToFit&&firstTitle?.props.minimumFontScale<=0.9,
   'long Greek subject labels adapt within a two-column tile');
 const knowledgeSource=require('node:fs').readFileSync('src/components/KnowledgeMastery.tsx','utf8');
@@ -214,6 +215,14 @@ nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.onPress();tree=rend
 assert.ok(!nodes(tree).some(n=>n.props.testID==='knowledge-selected-subject'),
   'tapping a selected tile collapses its short insight');
 assert.ok(!text(tileGrid).includes('0%'), 'zero subjects do not repeat 0% labels');
+// The empty-account layout uses a quiet chevron instead of four redundant 0% badges.
+const rankedFixture=model.categories;
+model={...model,categories:rankedFixture.map(category=>({...category,percent:0}))};
+const zeroTiles=nodes(nodes(renderKnowledgeTiles()).find(n=>n.props.testID==='knowledge-tile-grid'))
+  .filter(n=>n.type==='MotionPressable');
+assert.equal(zeroTiles.length,4);
+assert.ok(zeroTiles.every(tile=>nodes(tile).some(n=>n.type==='Text'&&n.props.children==='›')));
+model={...model,categories:rankedFixture};
 const showAll=nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects');
 assert.ok(showAll,'all subjects remain reachable');
 assert.equal(showAll.props.accessibilityState.expanded,false);
