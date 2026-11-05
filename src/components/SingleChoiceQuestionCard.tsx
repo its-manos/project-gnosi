@@ -97,7 +97,7 @@ export default function SingleChoiceQuestionCard({
         const chosen = selected === index;
         const correctOption = answered && index === correctIndex;
         const wrongSelection = answered && chosen && !isCorrect;
-        return <AnswerMotion key={index} active={correctOption || wrongSelection}>
+        return <AnswerMotion key={index} active={chosen || correctOption || wrongSelection}>
           <Pressable
             testID={`${testPrefix}-option-${index}`}
             accessibilityRole="radio"
