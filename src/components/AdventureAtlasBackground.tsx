@@ -194,8 +194,8 @@ function AdventureAtlasBackground({ width, height }: Props) {
           ].map((corner, index) =>
             <G key={"fret-" + index}
               transform={`translate(${corner.x} ${corner.y}) scale(${corner.sx} ${corner.sy})`}>
-              <Path d="M 0 10 H 36 V 0 H 12 V 7 H 28 V 4 H 20" />
-              <Path d="M 0 14 H 40" opacity={0.45} />
+              <Path d="M0 10H36V0H12V7H28V4H20" />
+              <Path d="M0 14H40" opacity={0.45} />
             </G>)}
         </G>
         <G fill="#C0AB8C" fontSize={8} opacity={0.32} letterSpacing={1}>
@@ -250,12 +250,11 @@ function AdventureAtlasBackground({ width, height }: Props) {
           <Circle r={39} stroke="#BBA98E" strokeWidth={0.8} fill="none" />
           <Circle r={31} stroke="#BBA98E" strokeWidth={0.55} fill="none" strokeDasharray="1 6" />
           <Circle r={9} stroke="#BBA98E" strokeWidth={0.75} fill="none" />
-          <Path d="M 0 -34 L 7 -5 L 0 0 L -7 -5 Z" fill="#BFAF92" />
-          <Path d="M 0 34 L 7 5 L 0 0 L -7 5 Z" fill="#BFAF92" fillOpacity={0.40} />
-          <Path d="M -34 0 L -5 -7 L 0 0 L -5 7 Z
-                   M 34 0 L 5 -7 L 0 0 L 5 7 Z"
+          <Path d="M0-34L7-5L0 0L-7-5Z" fill="#BFAF92" />
+          <Path d="M0 34L7 5L0 0L-7 5Z" fill="#BFAF92" fillOpacity={0.40} />
+          <Path d="M-34 0L-5-7L0 0L-5 7ZM34 0L5-7L0 0L5 7Z"
             stroke="#BFAF92" fill="none" strokeWidth={0.9} />
-          <Path d="M -24 -24 L 24 24 M 24 -24 L -24 24"
+          <Path d="M-24-24L24 24M24-24L-24 24"
             stroke="#BFAF92" strokeWidth={0.65} opacity={0.5} />
           <SvgText x={0} y={-44} textAnchor="middle" fill="#E1D1B6" fontSize={10}>N</SvgText>
         </G>
@@ -270,7 +269,7 @@ function AdventureAtlasBackground({ width, height }: Props) {
           {[{ x: 147, y: .19 }, { x: 339, y: .375 }, { x: 152, y: .816 }].map((p, n) =>
             <G key={"survey-" + n} transform={`translate(${p.x} ${h * p.y})`}>
               <Circle r={4.2} />
-              <Path d="M -9 0 H 9 M 0 -9 V 9" />
+              <Path d="M-9 0H9M0-9V9" />
             </G>)}
         </G>
         {/* Soft paper-edge falloff helps checkpoints stand out without a hard frame. */}
