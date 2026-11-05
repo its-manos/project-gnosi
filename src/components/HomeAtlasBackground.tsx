@@ -25,7 +25,7 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
           && Math.abs(previous.height - height) < 1 ? previous : { width, height });
       }}>
       <Image source={atlasImage} contentFit="fill" transition={0}
-        cachePolicy="memory-disk" style={StyleSheet.absoluteFillObject} />
+        cachePolicy="memory-disk" style={StyleSheet.absoluteFill} />
       {viewport.width > 0 && viewport.height > 0 && showAmbientMotion ? <>
         <HomeAtlasAmbientGlow width={viewport.width} height={viewport.height} />
         <HomeAtlasTwinkles width={viewport.width} height={viewport.height} />
