@@ -23,7 +23,7 @@ const navigation = read("src/navigation/AppNavigator.tsx");
 for (const [screen, source] of [["reader", reader], ["preview", preview], ["legacy", legacyQuiz]]) {
   assert.match(source, /<QuestionStageFooter/, screen + " anchors the primary button");
 }
-assert.match(navigation, /!isDailyChallengeOpen && !isDevQuizPreviewOpen && app\.screen !== "quiz"/,
+assert.match(navigation, /!isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app\.screen !== "quiz"/,
   "dedicated quiz stages hide bottom tabs while the user answers");
 assert.match(legacyQuiz, /scrollEnabled={viewport.scrollEnabled}/,
   "legacy quiz also avoids scrolling when content fits");
