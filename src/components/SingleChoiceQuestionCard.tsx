@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AnswerMotion } from "../play/motion";
 import { colors } from "../theme";
@@ -6,6 +6,7 @@ import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import type { ReportTarget } from "../utils/contentReports";
 import ReportContentButton from "./ReportContentButton";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
   onActionChange?: (action: QuestionStageAction | null) => void;
   badgeLabel?: string;
   showFeedback?: boolean;
+  feedbackExtra?: ReactNode;
   /** Keep submitted options readable in one compact summary instead of four locked rows. */
   compactAnswered?: boolean;
   combo?: number;
@@ -37,7 +39,7 @@ type Props = {
 export default function SingleChoiceQuestionCard({
   id, question, answers, correctIndex, explanation, questionNumber, answer,
   onConfirm, readingSize, badgeLabel = "ΜΙΑ ΕΠΙΛΟΓΗ", showFeedback = true, compactAnswered = false,
-  combo = 0, reportTarget, onActionChange, testID = "choice-question-card", testPrefix = "single-choice",
+  combo = 0, reportTarget, feedbackExtra, onActionChange, testID = "choice-question-card", testPrefix = "single-choice",
 }: Props) {
   const [draft, setDraft] = useState<number | null>(null);
   const draftRef = useRef<number | null>(null);
@@ -95,13 +97,7 @@ export default function SingleChoiceQuestionCard({
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text accessibilityRole="header" style={[styles.question, scaledQuestion]}>{question}</Text>
-    {answered && compactAnswered ? <View testID={`${testPrefix}-answer-summary`}
-      accessibilityLiveRegion="polite" style={[styles.answerSummary, isCorrect ? styles.summaryCorrect : styles.summaryWrong]}>
-      <Text style={[styles.summaryStatus, isCorrect ? styles.correctText : styles.wrongText]}>
-        {isCorrect ? "✓  Η ΑΠΑΝΤΗΣΗ ΣΟΥ" : "×  Η ΑΠΑΝΤΗΣΗ ΣΟΥ"}
-      </Text>
-      <Text style={styles.summaryText}>{answers[answer]}</Text>
-    </View> : <View style={styles.answers}>
+    {answered && compactAnswered ? null : <View style={styles.answers}>
       {answers.map((label, index) => {
         const chosen = selected === index;
         const correctOption = answered && index === correctIndex;
@@ -141,21 +137,15 @@ export default function SingleChoiceQuestionCard({
         pressed && draft !== null && !submitting && styles.confirmPressed]}>
       <Text style={styles.confirmText}>Επιβεβαίωση απάντησης  →</Text>
     </Pressable> : null}
-    {answered && showFeedback ? <QuizReveal><View testID={`${testPrefix}-feedback`}
-      accessibilityLiveRegion="polite"
-      style={[styles.feedback, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <View style={styles.feedbackTop}>
-        <Text style={[styles.feedbackHeading, isCorrect ? styles.correctText : styles.wrongText]}>
-          {isCorrect ? "✓  Σωστά!" : "Η σωστή απάντηση"}
-        </Text>
-        {combo > 1 ? <View style={styles.comboBadge}><Text style={styles.comboText}>✦  ΣΕΡΙ {combo}</Text></View> : null}
-      </View>
-      {!isCorrect ? <Text testID={`${testPrefix}-correction`} style={[styles.correction, scaledAnswer]}>
+    {answered && showFeedback ? <QuizReveal><QuestionFeedbackPanel
+      testID={`${testPrefix}-feedback`} correct={isCorrect}
+      explanation={explanation} combo={combo} readingSize={readingSize}
+      selection={compactAnswered ? <AnswerSummaryText>{answers[answer]}</AnswerSummaryText> : undefined}
+      solution={!isCorrect ? <Text testID={`${testPrefix}-correction`} style={[styles.correction, scaledAnswer]}>
         {answers[correctIndex]}
-      </Text> : null}
-      <Text style={styles.explanationLabel}>ΕΞΗΓΗΣΗ</Text>
-      <Text style={[styles.feedbackText, scaledAnswer]}>{explanation}</Text>
-    </View></QuizReveal> : null}
+      </Text> : undefined}>
+      {feedbackExtra}
+    </QuestionFeedbackPanel></QuizReveal> : null}
     {reportTarget ? <ReportContentButton target={reportTarget} /> : null}
   </View>;
 }
