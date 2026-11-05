@@ -99,6 +99,7 @@ for (const [name, props, confirmId, firstChoiceId, initiallyDisabled] of fixture
     "../play/motion": { AnswerMotion: "AnswerMotion" },
     "../quiz/engine": { evaluateAnswer: () => ({ correct: false }) },
     "./QuizReveal": { __esModule: true, default: "QuizReveal" },
+    './QuestionFeedbackPanel': { __esModule: true, default: 'QuestionFeedbackPanel', AnswerSummaryText: 'AnswerSummaryText' },
     "./ReportContentButton": { __esModule: true, default: "ReportContentButton" },
     "./questionCardStyles": { questionCardStyles: styles },
   }).default;
