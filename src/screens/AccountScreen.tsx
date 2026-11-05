@@ -1,6 +1,7 @@
 import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
+import QuizTypesPreviewScreen from "./QuizTypesPreviewScreen";
 import { ScrollView, StyleSheet, View, type ScrollViewInstance } from "react-native";
 import { useRef, useState } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -27,7 +28,7 @@ function SettingIcon({ id, color }: { id: string; color: string }) {
   </Svg>;
 }
 
-export default function AccountScreen({ onBack, backupControls, devControls }: { onBack: () => void; backupControls?: BackupControls; devControls?: LearningDevControls }) {
+export default function AccountScreen({ onBack, backupControls, devControls, devPreviewOpen = false, onCloseDevPreview }: { onBack: () => void; backupControls?: BackupControls; devControls?: LearningDevControls; devPreviewOpen?: boolean; onCloseDevPreview?: () => void }) {
   // Account identity does not change during background progress synchronization.
   const { store } = useLearningSession();
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
@@ -49,6 +50,8 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
     : activeSection === "privacy" ? "Δεδομένα και απόρρητο"
     : activeSection === "sync" ? "Συγχρονισμός"
     : activeSection === "dev" ? "Εργαλεία δοκιμών" : "Λογαριασμός";
+  // Keep this screen mounted so closing the preview returns to the same dev section.
+  if (__DEV__ && devPreviewOpen && onCloseDevPreview) return <QuizTypesPreviewScreen onBack={onCloseDevPreview} />;
   return <View style={styles.screen}><ProgressGradientBackground /><ScrollView ref={scrollRef} style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <ProfileSectionHeader
       eyebrow={activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}
