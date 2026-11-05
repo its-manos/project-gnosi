@@ -8,6 +8,8 @@ import { memo, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from "react-native-svg";
 import AncientGreeceIslandIcon from "./islandIcons/AncientGreeceIslandIcon";
+import WorldHistoryIslandIcon from "./islandIcons/WorldHistoryIslandIcon";
+import MythologyIslandIcon from "./islandIcons/MythologyIslandIcon";
 
 export type IslandDestination = {
   id: string;
@@ -119,10 +121,13 @@ function IslandArtwork({ index, id, width, height, status }: {
   const discovered = status === "complete" || status === "in-progress";
   const suffix = id.replace(/[^a-z0-9-]/gi, "-") + "-" + index;
   const isAncientGreece = id === "ancient-greece";
-  // Large enough to read as a temple; the stylobate sits on the upper plateau.
-  // No overflow or layout shift: just a decorative SVG over the land texture.
+  const isWorldHistory = id === "world-history";
+  const isMythology = id === "mythology";
+  const hasLandmark = isAncientGreece || isWorldHistory || isMythology;
+  // All three landmarks float above the island's contour engravings but rest
+  // on their own shallow stone foundation. These values never change layout.
   const emblemSize = Math.max(35, Math.min(68, height * 0.66));
-  const emblemTop = Math.max(0, height * 0.56 - emblemSize * 0.86);
+  const emblemTop = Math.max(0, height * 0.56 - emblemSize * (isAncientGreece ? 0.86 : 0.84));
 
   return (
     <View pointerEvents="none" accessible={false} style={{ width, height }}>
@@ -159,21 +164,24 @@ function IslandArtwork({ index, id, width, height, status }: {
         fill="none" stroke="#182B37" strokeOpacity={0.48} strokeWidth={2} />
       <Path d="M 48 80 Q 72 73 96 80 Q 117 87 138 76"
         fill="none" stroke="#CDD1C0" strokeOpacity={0.22} strokeWidth={1} />
-      {/* Stone plateau underneath the Parthenon — its shadow and engraved
-          footings belong to the landmass, not the floating icon. */}
-      {isAncientGreece ? (
+      {/* Every History destination has its own in-ground plateau; Earth is
+          cooler mineral slate, Minotaur is Cretan bronze, Parthenon limestone. */}
+      {hasLandmark ? (
         <>
           <Ellipse cx={90} cy={74} rx={52} ry={10}
             fill="#0B1E2B" opacity={0.48} />
           <Path d="M 43 71 Q 61 64 85 66 Q 114 62 139 71 L 133 77 Q 91 82 47 77 Z"
-            fill="#B6A78B" fillOpacity={0.16}
-            stroke="#E7D0AA" strokeOpacity={0.18} strokeWidth={1.1} />
+            fill={isWorldHistory ? "#8EAEB0" : "#B6A78B"} fillOpacity={0.16}
+            stroke={isWorldHistory ? "#A7CAD1" : "#E7D0AA"}
+            strokeOpacity={0.18} strokeWidth={1.1} />
           <Path d="M 54 76 Q 90 81 127 75 M 60 69 L 57 74 M 126 70 L 130 75"
-            fill="none" stroke="#D7C09A" strokeOpacity={0.26} strokeWidth={1.05} />
+            fill="none"
+            stroke={isWorldHistory ? "#9FC5CC" : "#D7C09A"}
+            strokeOpacity={0.26} strokeWidth={1.05} />
         </>
       ) : null}
       {/* Tiny engraved relief/ruin, not a cartoon emoji or a large icon. */}
-      {isAncientGreece ? null : index % 3 === 0 ? (
+      {hasLandmark ? null : index % 3 === 0 ? (
         <>
           <Path d="M 75 60 L 75 48 L 85 44 L 95 48 L 95 60 M 73 60 H 99 M 79 47 V 59 M 86 46 V 59 M 93 47 V 59"
             fill="none" stroke="#E3D1AB" strokeOpacity={0.75} strokeWidth={1.7} />
@@ -200,11 +208,13 @@ function IslandArtwork({ index, id, width, height, status }: {
         </>
       ) : null}
       </Svg>
-      {isAncientGreece ? (
-        <View testID="island-atlas-ancient-greece-emblem"
+      {hasLandmark ? (
+        <View testID={"island-atlas-" + id + "-emblem"}
           pointerEvents="none" accessible={false}
-          style={[styles.ancientGreeceEmblem, { top: emblemTop }]}>
-          <AncientGreeceIslandIcon size={emblemSize} />
+          style={[styles.landmarkEmblem, { top: emblemTop }]}>
+          {isAncientGreece ? <AncientGreeceIslandIcon size={emblemSize} />
+            : isWorldHistory ? <WorldHistoryIslandIcon size={emblemSize} />
+            : <MythologyIslandIcon size={emblemSize} />}
         </View>
       ) : null}
     </View>
@@ -287,7 +297,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   pressed: { opacity: 0.77, transform: [{ scale: 0.96 }] },
-  ancientGreeceEmblem: { position: "absolute", left: 0, right: 0, alignItems: "center", justifyContent: "center" },
+  landmarkEmblem: {
+    position: "absolute", left: 0, right: 0,
+    alignItems: "center", justifyContent: "center",
+  },
   namePlate: {
     // Size the visible plate to its actual title, not the whole island slot.
     // maxWidth is set per destination so long Greek names may wrap to 2 lines.
