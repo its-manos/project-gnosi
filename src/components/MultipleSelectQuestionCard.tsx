@@ -6,6 +6,7 @@ import type { MultipleSelectQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -15,11 +16,12 @@ type Props = {
   answer?: readonly number[];
   onSubmit: (selectedIndices: number[]) => void;
   readingSize?: number;
+  compactAnswered?: boolean;
   onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Multi-answer card with separate draft selection and confirmed feedback. */
-export default function MultipleSelectQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
+export default function MultipleSelectQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange, compactAnswered = false }: Props) {
   const [pending, setPending] = useState<number[]>([]);
   useEffect(() => { setPending([]); }, [question.id, question.version]);
   const answered = answer !== undefined;
@@ -50,11 +52,11 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
       {question.prompt}
     </Text>
-    <View style={styles.selectionBar}>
+    {(!answered || !compactAnswered) ? <View style={styles.selectionBar}>
       <Text style={styles.selectionText}>{answered ? "Η απάντησή σου" : "Οι επιλογές σου"}</Text>
       <Text style={styles.selectionCount}>{selected.length} / {question.content.answers.length}</Text>
-    </View>
-    <View style={styles.answers}>
+    </View> : null}
+    {(!answered || !compactAnswered) ? <View style={styles.answers}>
       {question.content.answers.map((label, index) => {
         const checked = selected.includes(index);
         const correctOption = answered && question.content.correctIndices.includes(index);
@@ -80,24 +82,21 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
           </Pressable>
         </AnswerMotion>;
       })}
-    </View>
+    </View> : null}
     {!answered && !onActionChange ? <Pressable testID="multiple-select-confirm" accessibilityRole="button"
       accessibilityState={{ disabled: pending.length === 0 }} disabled={pending.length === 0}
       onPress={() => { if (pending.length > 0) onSubmit([...pending]); }}
       style={({ pressed }) => [styles.confirm, pending.length === 0 && styles.confirmDisabled, pressed && styles.confirmPressed]}>
       <Text style={styles.confirmText}>Επιβεβαίωση επιλογών  →</Text>
     </Pressable> : null}
-    {answered ? <QuizReveal><View testID="multiple-select-feedback" accessibilityLiveRegion="polite"
-      style={[styles.feedback, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={[styles.feedbackHeading, isCorrect ? styles.correctHeading : styles.wrongHeading]}>
-        {isCorrect ? "✓  Σωστά!" : "↗  Δες τι κρατάμε"}
-      </Text>
-      {!isCorrect ? <View style={styles.solution}>
-        <Text style={styles.solutionHeading}>Οι σωστές επιλογές</Text>
-        {correctLabels.map((label, index) => <Text key={index} style={styles.solutionText}>✓  {label}</Text>)}
-      </View> : null}
-      <Text style={styles.feedbackText}>{question.explanation}</Text>
-    </View></QuizReveal> : null}
+    {answered ? <QuizReveal><QuestionFeedbackPanel
+      testID="multiple-select-feedback" correct={isCorrect}
+      explanation={question.explanation} readingSize={readingSize}
+      selection={compactAnswered ? <AnswerSummaryText>
+        {selected.map(i => question.content.answers[i]).join(" · ")}
+      </AnswerSummaryText> : undefined}
+      solution={!isCorrect ? <AnswerSummaryText>{correctLabels.join(" · ")}</AnswerSummaryText> : undefined}
+    /></QuizReveal> : null}
   </View>;
 }
 
