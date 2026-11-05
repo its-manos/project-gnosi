@@ -196,14 +196,13 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
           stroke="#C4A77D" strokeWidth={0.85} opacity={0.35}>
           <Circle r={65} /><Circle r={81} strokeDasharray="2 8" />
           <Circle r={98} strokeOpacity={0.38} /><Circle r={11} />
-          <Path d="M 0 -86 L 11 -11 L 0 0 L -11 -11 Z"
+          <Path d="M0-86L11-11L0 0L-11-11Z"
             fill="#D3B78D" fillOpacity={0.46} />
-          <Path d="M 0 86 L 11 11 L 0 0 L -11 11 Z"
+          <Path d="M0 86L11 11L0 0L-11 11Z"
             fill="#D3B78D" fillOpacity={0.20} />
-          <Path d="M -86 0 L -11 -11 L 0 0 L -11 11 Z
-                   M 86 0 L 11 -11 L 0 0 L 11 11 Z"
+          <Path d="M-86 0L-11-11L0 0L-11 11ZM86 0L11-11L0 0L11 11Z"
             fill="#CBB18A" fillOpacity={0.23} />
-          <Path d="M -65 -65 L 65 65 M 65 -65 L -65 65" opacity={0.42} />
+          <Path d="M-65-65L65 65M65-65L-65 65" opacity={0.42} />
         </G>
 
         {/* Survey rosettes inhabit the margins, not the touch targets. */}
@@ -211,7 +210,7 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
           {[[15, 0.31], [403, 0.49], [30, 0.77]].map(([x, y], i) =>
             <G key={`home-survey-${i}`} transform={`translate(${x} ${h * y})`}>
               <Circle r={5.2} />
-              <Path d="M -10 0 H 10 M 0 -10 V 10" />
+              <Path d="M-10 0H10M0-10V10" />
               <Circle r={1} fill="#D6BE9A" stroke="none" />
             </G>)}
         </G>
@@ -230,7 +229,7 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
         <G fill="none" stroke="#E8D0A7" strokeWidth={0.75} opacity={0.43}>
           {[[115, .065], [362, .058], [387, .75]].map(([x, y], i) =>
             <G key={`home-star-cross-${i}`} transform={`translate(${x} ${h * y})`}>
-              <Path d="M -5 0 H 5 M 0 -5 V 5" />
+              <Path d="M-5 0H5M0-5V5" />
               <Circle r={1.35} fill="#E8D0A7" stroke="none" />
             </G>)}
         </G>
