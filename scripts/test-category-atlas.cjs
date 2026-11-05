@@ -835,6 +835,7 @@ const renderAndroidCategory = options => {
 let androidTree = renderAndroidCategory();
 const androidShell = nodes(androidTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
+nodes(androidTree).find(node => node.props?.testID === "category-atlas-screen").props.onLayout({ nativeEvent: { layout: { width: 340, height: 620 } } });
 androidShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
 androidTree = renderAndroidCategory();
 assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
