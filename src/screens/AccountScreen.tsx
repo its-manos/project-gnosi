@@ -1,18 +1,17 @@
 import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
-import { ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from "react-native";
+import { ScrollView, StyleSheet, View, type ScrollViewInstance } from "react-native";
 import { useRef, useState } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
-import { MotionPressable } from "../components/HomeMotion";
+import NavigationTile from "../components/NavigationTile";
 import AccountPanel from "../components/AccountPanel";
 import SyncStatus from "../components/SyncStatus";
 import PendingReportsPanel from "../components/PendingReportsPanel";
 import type { BackupControls } from "../components/CloudBackupPanel";
 import { useLearningSession } from "../state/LearningSession";
-import { colors } from "../theme";
 
 type SettingsSection = "account" | "experience" | "privacy" | "sync" | "dev";
 
@@ -66,15 +65,10 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
         ...(store.userId ? [["sync", "Συγχρονισμός", "Κατάσταση προόδου", "#91B7FF"] as const] : []),
         ...(__DEV__ && devControls ? [["dev", "Εργαλεία δοκιμών", "Επιλογές ανάπτυξης", "#B7A5FF"] as const] : []),
       ] as const).map(([id, title, detail, accent]) => (
-        <MotionPressable key={id} entranceDelay={65 + (id === "account" ? 0 : id === "experience" ? 45 : id === "privacy" ? 90 : id === "sync" ? 135 : 180)} pressScale={0.983} accessibilityRole="button" accessibilityLabel={title}
-          style={styles.tile} onPress={() => openSection(id)}>
-          <View style={[styles.iconShell, { backgroundColor: accent + "16" }]}><SettingIcon id={id} color={accent} /></View>
-          <View style={styles.tileCopy}>
-            <Text style={styles.tileTitle}>{title}</Text>
-            <Text style={styles.tileDetail}>{detail}</Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </MotionPressable>
+        <NavigationTile key={id} variant="settings" title={title} subtitle={detail}
+          icon={<SettingIcon id={id} color={accent} />} iconBackground={accent + "16"}
+          entranceDelay={65 + (id === "account" ? 0 : id === "experience" ? 45 : id === "privacy" ? 90 : id === "sync" ? 135 : 180)}
+          onPress={() => openSection(id)} />
       ))}
     </View> : <>
       {activeSection === "account" ? <AccountPanel backupControls={backupControls} /> : null}
@@ -91,10 +85,4 @@ const styles = StyleSheet.create({
   content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 20 },
   headerSpacing: { marginBottom: profileSectionLayout.below },
   overviewContent: { flexGrow: 1 },
-  tile: { minHeight: 75, flexDirection: "row", alignItems: "center", padding: 12, marginBottom: 9, borderRadius: 17, borderWidth: 1, borderColor: "#38435C", backgroundColor: "#1A2538" },
-  iconShell: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginRight: 13 },
-  tileCopy: { flex: 1, gap: 5 },
-  tileTitle: { color: colors.text, fontSize: 15, fontWeight: "800" },
-  tileDetail: { color: colors.textMuted, fontSize: 12 },
-  chevron: { color: colors.accentLight, fontSize: 26 },
 });
