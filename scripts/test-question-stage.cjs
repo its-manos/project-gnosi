@@ -38,7 +38,6 @@ assert.match(daily, /compactAnswered/, "daily quiz uses the compact submitted-an
 assert.match(read("src/components/QuizReveal.tsx"), /translateY/, "question reveal has gentle lift");
 assert.match(read("src/components/QuizReveal.tsx"), /isReduceMotionEnabled/, "system reduced motion honored");
 const blank = read("src/components/FillBlankQuestionCard.tsx");
-const preview = read("src/screens/QuizTypesPreviewScreen.tsx");
 assert.match(blank, /testID="fill-blank-sentence"/, "one prominent sentence is the question");
 assert.match(blank, /punctuationOnly/, "punctuation stays attached to the answer slot");
 assert.doesNotMatch(blank, /style={styles\.hint}|style={styles\.wordBankHeading}/,
