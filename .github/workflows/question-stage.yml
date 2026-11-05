@@ -11,10 +11,15 @@ on:
       - "src/components/questionCardStyles.ts"
       - "src/screens/ReaderLessonScreen.tsx"
       - "src/screens/QuizTypesPreviewScreen.tsx"
+      - "src/screens/QuizScreen.tsx"
+      - "src/navigation/AppNavigator.tsx"
+      - "src/components/QuestionStageFooter.tsx"
+      - "src/hooks/useQuestionStageAction.ts"
       - "scripts/test-quiz-spot-blank-cards.cjs"
       - "src/screens/DailyChallengeScreen.tsx"
       - "src/hooks/useAdaptiveQuestionScroll.ts"
       - "scripts/test-question-stage.cjs"
+      - "scripts/test-question-stage-footer.cjs"
       - "scripts/test-quiz-reveal.cjs"
       - ".github/workflows/question-stage.yml"
   workflow_dispatch:
@@ -39,3 +44,4 @@ jobs:
       - run: node scripts/test-daily-challenge.cjs
       - run: node scripts/test-quiz-reveal.cjs
       - run: node scripts/test-question-stage.cjs
+      - run: node scripts/test-question-stage-footer.cjs
