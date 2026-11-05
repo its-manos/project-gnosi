@@ -52,7 +52,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   return <View style={styles.root}><ProgressGradientBackground />
     <View style={styles.pageChrome}>
       <ProfileSectionHeader eyebrow={previewIntro?"ΠΡΟΕΠΙΣΚΟΠΗΣΗ · DEV":"ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ"}
-        title={previewIntro?"Ημερήσιο quiz":reviewing?"Ανασκόπηση":record.completed?"Η αποστολή σου":"Ημερήσιο quiz"}
+        title={previewIntro?"Ημερήσιο quiz":reviewing?"Ανασκόπηση":record.completed?"Αποτέλεσμα":"Ημερήσιο quiz"}
         actionLabel={previewIntro?"‹ Εργαλεία":reviewing?"‹ Αποτέλεσμα":"‹ Αρχική"}
         actionAccessibilityLabel={previewIntro?"Πίσω στα εργαλεία δοκιμών":reviewing?"Πίσω στο αποτέλεσμα":"Επιστροφή στην αρχική"}
         onAction={reviewing?closeReview:onHome} style={styles.pageHeader}/>
@@ -66,21 +66,26 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
     {!previewIntro&&isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
     :!previewIntro&&record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
     :!previewIntro&&record.completed&&review?.date===record.dateKey&&review.mode==='mistakes'?<DailyMistakeReview key={`${record.dateKey}-${record.questionIds.join('-')}`} questions={analysis.practiceQuestions} onDone={closeReview} onAdvance={scrollTop}/>
-    :!previewIntro&&record.completed?<QuizReveal><View testID="daily-results" style={styles.resultContainer}>
-      <View style={styles.resultHero}>
+    :!previewIntro&&record.completed?<QuizReveal><View testID="daily-results" style={[styles.resultContainer,compactIntro&&styles.resultContainerCompact]}>
+      <View style={[styles.resultHero,compactIntro&&styles.resultHeroCompact]}>
         <View style={styles.resultHeroCopy}>
           <Text style={styles.eyebrow}>Η ΔΙΑΔΡΟΜΗ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
-          <Text style={styles.title}>{correctCount===7?'Τα πέτυχες όλα!':correctCount>=5?'Πολύ καλή διαδρομή!':'Κάθε απάντηση είναι μια νέα γνώση.'}</Text>
+          <Text style={[styles.title,compactIntro&&styles.resultTitleCompact]}>{correctCount===7?'Τα πέτυχες όλα!':correctCount>=5?'Πολύ καλή διαδρομή!':'Κάθε απάντηση είναι μια νέα γνώση.'}</Text>
         </View>
-        <View style={styles.resultSeal} accessible={false}>
+        <View style={[styles.resultSeal,compactIntro&&styles.resultSealCompact]} accessible={false}>
           <View style={styles.resultSealOrbit}/>
           <Text style={styles.resultStar}>✦</Text>
         </View>
       </View>
-      <View style={styles.scoreCard}>
+      <View style={[styles.scoreCard,compactIntro&&styles.scoreCardCompact]}>
         <View pointerEvents="none" style={styles.cardRim}/>
-        <Text style={styles.scoreLabel}>ΣΩΣΤΕΣ ΑΠΑΝΤΗΣΕΙΣ</Text>
-        <Text style={styles.bigScore}>{correctCount}<Text style={styles.scoreDenominator}> / 7</Text></Text>
+        <View style={styles.resultScoreRow}>
+          <View style={styles.resultScoreCopy}>
+            <Text style={styles.scoreLabel}>Η ΣΗΜΕΡΙΝΗ ΕΠΙΔΟΣΗ</Text>
+            <Text style={styles.scoreHint}>Σωστές απαντήσεις</Text>
+          </View>
+          <Text style={[styles.bigScore,compactIntro&&styles.bigScoreCompact]}>{correctCount}<Text style={styles.scoreDenominator}> / 7</Text></Text>
+        </View>
         <View style={styles.resultRoute}>
           <DailyJourneyTrack mode="result" shared={Boolean(record.selectionVersion)}
             correctMask={analysis.rows.map(row=>row.correct)}/>
@@ -103,14 +108,24 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       </View>:null}
       <View style={styles.actionGroup}>
         <ActionButton label="Δες όλες τις απαντήσεις →" onPress={()=>showReview('answers')} style={styles.actionPrimary}/>
-        {analysis.practiceQuestions.length?<ActionButton label={analysis.legacy?"Εξάσκηση στην τρέχουσα έκδοση →":`Επανάληψη λαθών (${analysis.practiceQuestions.length}) →`} onPress={()=>showReview('mistakes')} secondary style={styles.actionSecondary}/>:null}
+        {analysis.practiceQuestions.length?<Pressable testID="daily-mistake-action"
+          accessibilityRole="button"
+          accessibilityLabel={analysis.legacy?"Εξάσκηση στην τρέχουσα έκδοση":`Επανάληψη ${analysis.practiceQuestions.length} λαθών`}
+          onPress={()=>showReview('mistakes')} style={({pressed})=>[styles.mistakeAction,pressed&&styles.linkPressed]}>
+          <Text style={styles.mistakeActionText}>{analysis.legacy?"Εξάσκηση στην τρέχουσα έκδοση":`Επανάληψη λαθών (${analysis.practiceQuestions.length})`}  ›</Text>
+        </Pressable>:null}
       </View>
-      {recommendation&&onOpenLesson?<View style={styles.recommendCard}>
-        <Text style={styles.eyebrow}>Η ΕΠΟΜΕΝΗ ΑΝΑΚΑΛΥΨΗ</Text>
-        <Text style={styles.cardTitle}>{recommendation.title}</Text>
-        <ActionButton label={inProgressLessonIds.includes(recommendation.id)?'Συνέχισε το μάθημα →':'Άνοιξε το μάθημα →'} onPress={()=>onOpenLesson(recommendation.id)} secondary style={styles.inlineAction}/>
-      </View>:onWeeklyReview?<ActionButton label="Εβδομαδιαία επανάληψη →" onPress={onWeeklyReview} secondary style={styles.actionSecondary}/>:null}
-      <Text style={styles.tomorrow}>Νέο σετ αύριο, με την αλλαγή της ημέρας στην Ελλάδα.</Text>
+      {recommendation&&onOpenLesson?<Pressable testID="daily-recommendation"
+        onPress={()=>onOpenLesson(recommendation.id)} accessibilityRole="button"
+        accessibilityLabel={`${inProgressLessonIds.includes(recommendation.id)?'Συνέχισε':'Άνοιξε'} το μάθημα: ${recommendation.title}`}
+        style={({pressed})=>[styles.recommendCard,pressed&&styles.recommendPressed]}>
+        <View style={styles.recommendCopy}>
+          <Text style={styles.eyebrow}>Η ΕΠΟΜΕΝΗ ΑΝΑΚΑΛΥΨΗ</Text>
+          <Text style={styles.cardTitle}>{recommendation.title}</Text>
+        </View>
+        <View style={styles.recommendArrow}><Text style={styles.recommendArrowText}>›</Text></View>
+      </Pressable>:onWeeklyReview?<ActionButton label="Εβδομαδιαία επανάληψη →" onPress={onWeeklyReview} secondary style={styles.actionSecondary}/>:null}
+      <Text style={styles.tomorrow}>Νέο σετ αύριο · ώρα Ελλάδας</Text>
     </View></QuizReveal>
     :previewIntro||!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal>
       <View style={[styles.introBody,compactIntro&&styles.introBodyCompact]}>
@@ -227,37 +242,55 @@ const styles=StyleSheet.create({
   actionPrimary:{marginTop:0},
   actionSecondary:{marginTop:0},
   cardRim:{position:'absolute',top:0,left:20,right:20,height:2,backgroundColor:'#8376B9'},
-  resultContainer:{gap:14,paddingTop:12,paddingBottom:8},
-  resultHero:{flexDirection:'row',alignItems:'center',gap:12,paddingVertical:6},
-  resultHeroCopy:{flex:1,minWidth:0,gap:7},
-  resultSeal:{width:69,height:69,alignItems:'center',justifyContent:'center',borderRadius:23,
+  resultContainer:{gap:11,paddingTop:7,paddingBottom:6},
+  resultContainerCompact:{gap:9,paddingTop:3},
+  resultHero:{flexDirection:'row',alignItems:'center',gap:12,paddingVertical:4,minHeight:82},
+  resultHeroCompact:{minHeight:68,paddingVertical:0},
+  resultHeroCopy:{flex:1,minWidth:0,gap:6},
+  resultTitleCompact:{fontSize:23,lineHeight:29},
+  resultSeal:{width:64,height:64,alignItems:'center',justifyContent:'center',borderRadius:21,
     backgroundColor:'#302B4A',borderWidth:1,borderColor:'#796AAB',marginRight:4},
-  resultSealOrbit:{position:'absolute',width:84,height:84,borderRadius:42,
+  resultSealCompact:{width:56,height:56,borderRadius:19,marginRight:2},
+  resultSealOrbit:{position:'absolute',width:'116%',height:'116%',borderRadius:60,
     borderWidth:1,borderColor:'#54527D'},
-  resultStar:{color:'#DCD0FF',fontSize:33},
-  scoreCard:{alignItems:'center',padding:18,paddingTop:20,gap:4,borderRadius:22,overflow:'hidden',
+  resultStar:{color:'#DCD0FF',fontSize:30},
+  scoreCard:{alignItems:'stretch',padding:16,paddingTop:18,gap:4,borderRadius:21,overflow:'hidden',
     backgroundColor:'#1A2032',borderColor:'#444361',borderWidth:1},
-  scoreLabel:{color:'#C0B3F2',fontSize:10,lineHeight:15,fontWeight:'900',letterSpacing:1.2},
-  bigScore:{color:colors.text,fontSize:51,lineHeight:60,fontWeight:'900'},
-  scoreDenominator:{color:colors.textMuted,fontSize:24,fontWeight:'700'},
-  resultRoute:{alignSelf:'stretch',marginTop:10,paddingHorizontal:4},
-  metrics:{flexDirection:'row',alignItems:'center',alignSelf:'stretch',marginTop:8,paddingTop:14,
+  scoreCardCompact:{padding:13,paddingTop:16},
+  resultScoreRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:8},
+  resultScoreCopy:{flex:1,minWidth:0,gap:4},
+  scoreLabel:{color:'#C0B3F2',fontSize:10,lineHeight:15,fontWeight:'900',letterSpacing:1.0},
+  scoreHint:{color:colors.textBody,fontSize:12,lineHeight:18},
+  bigScore:{color:colors.text,fontSize:45,lineHeight:54,fontWeight:'900'},
+  bigScoreCompact:{fontSize:42,lineHeight:50},
+  scoreDenominator:{color:colors.textMuted,fontSize:19,fontWeight:'700'},
+  resultRoute:{alignSelf:'stretch',marginTop:4,paddingHorizontal:2},
+  metrics:{flexDirection:'row',alignItems:'center',alignSelf:'stretch',marginTop:5,paddingTop:10,
     borderTopWidth:1,borderTopColor:'#373C54'},
-  metric:{flex:1,alignItems:'center',gap:3},
-  metricDivider:{width:1,height:32,backgroundColor:'#3A4059'},
-  metricValue:{color:colors.accentLight,fontSize:22,lineHeight:29,fontWeight:'900'},
-  metricLabel:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center'},
-  legacyNote:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center',paddingTop:8},
+  metric:{flex:1,alignItems:'center',gap:1},
+  metricDivider:{width:1,height:28,backgroundColor:'#3A4059'},
+  metricValue:{color:colors.accentLight,fontSize:20,lineHeight:26,fontWeight:'900'},
+  metricLabel:{color:colors.textMuted,fontSize:10,lineHeight:15,textAlign:'center'},
+  legacyNote:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center',paddingTop:6},
   highlightRow:{backgroundColor:'#1A2030',borderRadius:16,borderWidth:1,borderColor:'#363C55',
-    padding:13,flexDirection:'row',alignItems:'center',gap:11},
-  highlightMark:{width:31,height:31,borderRadius:11,alignItems:'center',justifyContent:'center',backgroundColor:'#302B4A'},
+    padding:10,flexDirection:'row',alignItems:'center',gap:10},
+  highlightMark:{width:30,height:30,borderRadius:10,alignItems:'center',justifyContent:'center',backgroundColor:'#302B4A'},
   highlightStar:{color:colors.accentLight,fontSize:17},
-  highlightCopy:{flex:1,gap:4},
-  highlightTitle:{color:colors.text,fontSize:15,lineHeight:21,fontWeight:'800'},
-  actionGroup:{gap:9},
-  recommendCard:{padding:15,gap:7,borderRadius:18,backgroundColor:'#191F30',borderWidth:1,borderColor:'#363B54'},
-  cardTitle:{color:colors.text,fontSize:17,lineHeight:24,fontWeight:'800'},
-  inlineAction:{marginTop:3},
+  highlightCopy:{flex:1,gap:3},
+  highlightTitle:{color:colors.text,fontSize:14,lineHeight:20,fontWeight:'800'},
+  actionGroup:{gap:3},
+  mistakeAction:{minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:12},
+  linkPressed:{backgroundColor:'#262B40'},
+  mistakeActionText:{color:'#C6B7FF',fontSize:13,lineHeight:20,fontWeight:'800'},
+  recommendCard:{minHeight:73,paddingHorizontal:13,paddingVertical:11,
+    flexDirection:'row',alignItems:'center',gap:9,borderRadius:17,
+    backgroundColor:'#191F30',borderWidth:1,borderColor:'#40435D'},
+  recommendPressed:{backgroundColor:'#252A42'},
+  recommendCopy:{flex:1,minWidth:0,gap:4},
+  cardTitle:{color:colors.text,fontSize:15,lineHeight:21,fontWeight:'800'},
+  recommendArrow:{width:31,height:31,borderRadius:11,backgroundColor:'#343050',
+    borderWidth:1,borderColor:'#5F5587',alignItems:'center',justifyContent:'center'},
+  recommendArrowText:{color:'#D0C4FF',fontSize:25,lineHeight:28,fontWeight:'800'},
   tomorrow:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center'},
   combo:{color:colors.accentLight,fontSize:13,lineHeight:21,fontWeight:'800'},
   sourceLink:{paddingVertical:10},
