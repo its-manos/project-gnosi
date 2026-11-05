@@ -155,11 +155,20 @@ blank.setAnswer('assembly');
 tree = blank.render();
 assert.ok(id(tree, 'fill-blank-feedback'));
 assert.equal(id(tree, 'fill-blank-confirm'), undefined);
-assert.equal(id(tree, 'fill-blank-option-assembly').props.disabled, true, 'choices lock after scoring');
-assert.equal(id(tree, 'fill-blank-option-council').props.disabled, true);
+assert.equal(id(tree, 'fill-blank-option-assembly'), undefined, 'scored choices collapse to the sentence');
+assert.equal(id(tree, 'fill-blank-option-council'), undefined, 'no redundant locked option rows');
+assert.ok(id(tree, 'fill-blank-slot'), 'chosen phrase remains in the completed sentence');
 const wrongBlank = mount('src/components/FillBlankQuestionCard.tsx', blankQuestion);
 wrongBlank.setAnswer('council');
 tree = wrongBlank.render();
 assert.ok(id(tree, 'fill-blank-feedback'), 'wrong tile reveals the correct authored choice');
-assert.equal(id(tree, 'fill-blank-option-assembly').props.disabled, true);
-console.log('Spot-mistake and word-bank cards passed: draft selection/change, required confirmation, one-shot scoring, shared card styles, word-bank insertion and locked feedback.');
+assert.equal(id(tree, 'fill-blank-option-assembly'), undefined);
+assert.ok(nodes(id(tree, 'fill-blank-feedback')).some(n => n.props?.children === 'Εκκλησία του Δήμου'),
+  'incorrect answer reveals the right phrase');
+const blankSrc = fs.readFileSync(path.join(root, 'src/components/FillBlankQuestionCard.tsx'), 'utf8');
+assert.doesNotMatch(blankSrc, /question\.prompt\}/, 'the sentence replaces a redundant prompt');
+assert.doesNotMatch(blankSrc, /styles\.wordBankHeading|styles\.footHint|styles\.passageHeading/,
+  'no duplicate instructions or headings above the choices');
+assert.ok(nodes(id(tree, 'fill-blank-sentence')).some(n => n.type === 'View'),
+  'the source sentence retains its distinct readable blank');
+console.log('Spot-mistake and word-bank cards passed: draft/confirmation locks, one-shot scoring, compact sentence-first layout and corrected feedback.');
