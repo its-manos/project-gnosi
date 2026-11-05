@@ -36,6 +36,7 @@ const common = {
   "../components/ProgressGradientBackground": { __esModule: true, default: "GradientBackground" },
   "../components/HomeMotion": { MotionView: "MotionView", MotionPressable: "MotionPressable", MotionXpCircle: "MotionXpCircle", MotionCounter: "MotionCounter" },
   "../components/ProgressMotion": { ProgressBarFill: "ProgressBarFill", ProgressRingGlow: "ProgressRingGlow" },
+  "../components/ProgressTrack": { __esModule: true, default: "ProgressTrack" },
   "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle" },
   "../components/SyncStatus": { __esModule: true, default: "SyncStatus" },
   "../components/LearningActivityPanel": { CategoryProgress: "Categories" },

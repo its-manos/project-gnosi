@@ -8,6 +8,7 @@ import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { MotionView, MotionPressable, MotionXpCircle, MotionCounter } from "../components/HomeMotion";
 import { ProgressBarFill, ProgressRingGlow } from "../components/ProgressMotion";
+import ProgressTrack from "../components/ProgressTrack";
 import ReviewActions from "../components/ReviewActions";
 import SyncStatus from "../components/SyncStatus";
 import { colors } from "../theme";
@@ -156,9 +157,9 @@ export default function ProgressScreen({
             <Text style={styles.destinationCaption} numberOfLines={1}>έννοιες κατακτημένες</Text>
           </View>
           <View style={styles.destinationFoot}>
-            <View style={styles.destinationTrack} accessible={false}>
+            <ProgressTrack variant="destination" accessible={false}>
               <ProgressBarFill tone="knowledge" percent={knowledgeReady ? masteryPercent : 0} />
-            </View>
+            </ProgressTrack>
             <Text style={styles.destinationAction}>Δες την ανάλυση  ›</Text>
           </View>
         </MotionPressable>
@@ -181,9 +182,9 @@ export default function ProgressScreen({
             <Text style={styles.destinationCaption} numberOfLines={1}>μαθήματα ολοκληρωμένα</Text>
           </View>
           <View style={styles.destinationFoot}>
-            <View style={styles.destinationTrack} accessible={false}>
+            <ProgressTrack variant="destination" accessible={false}>
               <ProgressBarFill tone="reading" percent={lessonProgressLoaded ? percent : 0} />
-            </View>
+            </ProgressTrack>
             <Text style={[styles.destinationAction, styles.readingAction]}>Δες την ανάλυση  ›</Text>
           </View>
         </MotionPressable>
@@ -285,7 +286,6 @@ const styles = StyleSheet.create({
   readingNumber: { color: "#9CD2D1" },
   destinationCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 16 },
   destinationFoot: { gap: 8 },
-  destinationTrack: { height: 5, backgroundColor: "#333951", borderRadius: 5, overflow: "hidden" },
   destinationAction: { color: "#BAB0EF", fontSize: 11, lineHeight: 16, fontWeight: "800" },
   readingAction: { color: "#9BCBCB" },
 });

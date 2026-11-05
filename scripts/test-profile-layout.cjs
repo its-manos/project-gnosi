@@ -78,6 +78,7 @@ const common = {
   "../components/AtlasCard": { __esModule: true, default: "MotionView" },
   "../components/NavigationTile": { __esModule: true, default: "NavigationTile" },
   "../components/MetricCard": { __esModule: true, default: "MetricCard" },
+  "../components/ProgressTrack": { __esModule: true, default: "ProgressTrack" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
   "../components/HomeMotion": { MotionView: "MotionView", MotionXpCircle: "MotionXpCircle", MotionPressable: "MotionPressable" },
 };
@@ -171,6 +172,7 @@ subjectTileComponent=load('src/components/SubjectProgressTile.tsx',{
   ...common,
   './HomeMotion':{MotionPressable:'MotionPressable'},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
+  './ProgressTrack':{__esModule:true,default:'ProgressTrack'},
 }).default;
 const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,
   './ActionButton':{__esModule:true,default:'Action'},
@@ -221,8 +223,11 @@ const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'
 assert.ok(firstTitle?.props.adjustsFontSizeToFit&&firstTitle?.props.minimumFontScale<=0.9,
   'long Greek subject labels adapt within a two-column tile');
 const subjectTileSource=require('node:fs').readFileSync('src/components/SubjectProgressTile.tsx','utf8');
-assert.match(subjectTileSource,/track: \{[\s\S]*?height: 7,/,
-  'shared mastery and reading bars have visible tracks');
+const progressTrackSource=require('node:fs').readFileSync('src/components/ProgressTrack.tsx','utf8');
+assert.match(subjectTileSource,/<ProgressTrack variant="subject" tone=\{tone\}/,
+  'both mastery and reading tiles share the track surface');
+assert.match(progressTrackSource,/subject: \{[\s\S]*?height: 7,/,
+  'mastery and reading bars retain their existing visible 7pt track');
 assert.match(subjectTileSource,/single: \{ width: "100%"/,
   'small screens retain the accessible single-column fallback');
 assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);

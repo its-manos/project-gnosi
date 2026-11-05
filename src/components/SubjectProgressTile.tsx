@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { MotionPressable } from "./HomeMotion";
 import { ProgressBarFill } from "./ProgressMotion";
+import ProgressTrack from "./ProgressTrack";
 import { colors } from "../theme";
 
 export type SubjectProgressTone = "knowledge" | "reading";
@@ -70,9 +71,9 @@ export default function SubjectProgressTile({
         {completed}<Text style={[styles.countTotal, reading && styles.readingCountTotal]}> / {total}</Text>
       </Text>
     </View>
-    <View style={[styles.track, reading && styles.readingTrack]} pointerEvents="none">
+    <ProgressTrack variant="subject" tone={tone} pointerEvents="none">
       <ProgressBarFill tone={tone} percent={percent} />
-    </View>
+    </ProgressTrack>
   </MotionPressable>;
 }
 
@@ -132,9 +133,4 @@ const styles = StyleSheet.create({
   readingCountTotal: { color: "#94B5B9" },
   knowledgeCountComplete: { color: "#DAD2FF" },
   readingCountComplete: { color: "#B7ECE8" },
-  track: {
-    height: 7, borderRadius: 6, backgroundColor: "#363650", overflow: "hidden",
-    borderWidth: 1, borderColor: "#4C466D",
-  },
-  readingTrack: { backgroundColor: "#2D4650", borderColor: "#49717A" },
 });
