@@ -51,8 +51,9 @@ assert.equal(nodes(tree).filter(n=>n.type==='QuizTypesPreviewScreen').length,0,'
 assert.equal(nodes(tree).filter(n=>n.props?.testID==='daily-interests-link').length,1,'preferences use a compact accessible link');
 assert.equal(nodes(tree).find(n=>n.type==='ScrollView').props.scrollEnabled,false,'normal phone intro stays non-scrollable');
 // Athens rollover closes a previous day's answer review rather than presenting stale content.
-challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};tree=render();assert.ok(text(tree).includes('ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ'));
+challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};tree=render();
 const pageHeader=nodes(tree).find(n=>n.type==='ProfileSectionHeader');
+assert.equal(pageHeader.props.eyebrow,'ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ');
 assert.equal(pageHeader.props.title,'Ημερήσιο quiz');
 pageHeader.props.onAction();assert.equal(homes,1);
 const active={...shared.createSharedDailyRecord('2026-11-01'),answers:{}};const first=questions.find(q=>q.id===active.questionIds[0]);active.answers[0]=first.correctIndex;
