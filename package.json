@@ -37,6 +37,8 @@
     "atlas:world:svg:check": "node scripts/generate-category-world-svg.mjs --check",
     "atlas:world:export": "node scripts/export-category-world-webp.cjs",
     "atlas:world:check": "node scripts/export-category-world-webp.cjs --check",
+    "atlas:islands:export": "node scripts/export-island-icons-webp.cjs",
+    "atlas:islands:check": "node scripts/export-island-icons-webp.cjs --check",
     "test:lesson-question-card": "node scripts/test-inline-question-card.cjs",
     "test:typed-lesson-integration": "node scripts/test-typed-lesson-integration.cjs",
     "test:section-end-questions": "node scripts/test-section-end-questions.cjs",
