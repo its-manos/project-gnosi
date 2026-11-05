@@ -21,7 +21,11 @@ const Screen=load('src/screens/DailyChallengeScreen.tsx',{react,'react/jsx-runti
   './QuizTypesPreviewScreen':{__esModule:true,default:'QuizTypesPreviewScreen'}}).default;
 const props={onHome(){homes++;},onOpenPreferences(){},onOpenLesson:id=>opened.push(id),preferences:{topicIds:['history','science','culture'],difficulty:'hard'},preferencesLoaded:true};
 const render=()=>{cursor=0;return Screen(props);};const action=(t,label)=>nodes(t).find(n=>n.type==='ActionButton'&&n.props.label===label);
-let tree=render();assert.ok(text(tree).includes('5 / 7'));assert.ok(text(tree).includes('500 / 700'));assert.ok(text(tree).includes('71%'));assert.ok(text(tree).includes('XP ημέρας: 143 XP'));assert.ok(text(tree).includes('Καλύτερο σερί: 2'));assert.ok(text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'));
+let tree=render();assert.ok(text(tree).includes('5 / 7'));assert.ok(text(tree).includes('71%'));
+assert.ok(text(tree).includes('143'));assert.ok(text(tree).includes('XP ημέρας'));
+assert.ok(text(tree).includes('Καλύτερο σερί'));assert.ok(text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'));
+assert.equal(nodes(tree).filter(n=>n.type==='KnowledgeProgress').length,0,'daily results avoid duplicating global knowledge progress');
+assert.ok(!text(tree).includes('500 / 700'),'results show one clear score, not a redundant points ratio');
 action(tree,'Άνοιξε το μάθημα →').props.onPress();assert.ok(lessons.some(l=>l.id===opened[0]));
 action(tree,'Δες όλες τις απαντήσεις →').props.onPress();tree=render();let review=nodes(tree).find(n=>n.type==='DailyAnswerReview');assert.equal(review.props.rows.length,7);assert.equal(review.props.rows.filter(r=>r.correct===false).length,2);
 const Review=load('src/components/DailyAnswerReview.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'./ActionButton':{__esModule:true,default:'ActionButton'},'./SourceLink':{__esModule:true,default:'SourceLink'},'./ReportContentButton':{__esModule:true,default:'ReportContentButton'}}).default;
@@ -30,15 +34,22 @@ for(const q of record.questionIds.map(id=>questions.find(q=>q.id===id)))assert.o
 review.props.onDone();tree=render();action(tree,'Επανάληψη λαθών (2) →').props.onPress();tree=render();const drill=nodes(tree).find(n=>n.type==='DailyMistakeReview');assert.equal(drill.props.questions.length,2);drill.props.onDone();tree=render();assert.equal(JSON.stringify(record),frozen,'answer review/practice do not mutate persisted quiz/rewards');
 challenge={...challenge,resultDetails:undefined,record:{...record,selectionVersion:undefined,questionVersions:undefined}};tree=render();assert.ok(text(tree).includes('Δεν υπάρχει αποθηκευμένη ανάλυση σερί'));assert.ok(!text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'),'legacy results do not fabricate a category award');
 const oldDetails={...details,questionVersions:[...details.questionVersions]};oldDetails.questionVersions[0]='old:revision';challenge={...challenge,record,resultDetails:oldDetails};tree=render();action(tree,'Δες όλες τις απαντήσεις →').props.onPress();tree=render();review=nodes(tree).find(n=>n.type==='DailyAnswerReview');assert.equal(review.props.rows[0].question,null);assert.ok(text(Review(review.props)).includes('Η ερώτηση έχει αλλάξει'));
+// Intro prioritizes the seven-question route and keeps its personalized-preferences caveat.
+challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};
+tree=render();assert.ok(text(tree).includes('2')&&text(tree).includes('ΜΕΣΑΙΕΣ')&&text(tree).includes('ΔΥΣΚΟΛΕΣ'));
+assert.ok(text(tree).includes('Τα ενδιαφέροντά σου βοηθούν στις προτάσεις μαθημάτων'));
+assert.ok(!action(tree,'Όχι τώρα'),'top-left back navigation replaces the redundant close action');
 // Athens rollover closes a previous day's answer review rather than presenting stale content.
 challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};tree=render();assert.ok(text(tree).includes('Η ΚΟΙΝΗ ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ'));nodes(tree).find(n=>n.type==='AppHeader').props.onBack();assert.equal(homes,1);
 const active={...shared.createSharedDailyRecord('2026-11-01'),answers:{}};const first=questions.find(q=>q.id===active.questionIds[0]);active.answers[0]=first.correctIndex;
 challenge={...challenge,record:active,currentQuestion:first,selectedAnswer:first.correctIndex,correctCount:1,rewardSummary:{combo:1,highestCombo:1,rows:[{eligible:true,comboXP:0}]}};tree=render();assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.answer,first.correctIndex,
   'answered choice stays parent-owned and locked');
 assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.onActionChange !== undefined,true,
-  'daily choice registers its confirmation with the fixed footer');assert.ok(Math.abs(nodes(tree).find(n=>n.type==='ProgressBar').props.progress-100/7)<1e-10);assert.ok(text(tree).includes('Απαντημένες: 1 / 7'));
+  'daily choice registers its confirmation with the fixed footer');assert.ok(Math.abs(nodes(tree).find(n=>n.type==='ProgressBar').props.progress-100/7)<1e-10);
+assert.ok(text(tree).includes('ΕΡΩΤΗΣΗ 01 / 07'),'stage displays one compact question counter');
+assert.ok(!text(tree).includes('Απαντημένες:'),'stage no longer duplicates the progress indicator');
 const footer=nodes(tree).find(n=>n.type==='QuestionStageFooter');
 assert.equal(footer.props.action.label,'Επόμενη ερώτηση →',
   'answered daily question keeps Next visible outside the ScrollView');
 footer.props.action.onPress();assert.equal(next,1);
-console.log('Phase 3 UI passed: score/accuracy/day XP/combo, supported strongest category, unlocked lesson callback, all-answer source/explanation review, missed-only practice, legacy/revised content, rollover, answered progress and locked choices. Native views mocked.');
+console.log('Daily Atlas UI passed: compact intro, single score/progress treatment, accurate XP/combo, category highlight, lesson callback, answer review/practice, legacy/revised content, rollover and locked choice footer. Native views mocked.');
