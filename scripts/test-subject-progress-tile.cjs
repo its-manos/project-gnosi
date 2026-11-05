@@ -45,7 +45,7 @@ assert.equal(title.props.minimumFontScale, 0.86);
 const readingProgress = subject({ ...base, tone: "reading", completed: 2, percent: 33 });
 assert.ok(text(readingProgress).includes("33%"));
 assert.equal(readingProgress.props.style[4].borderColor, "#4A717B");
-const progressBadge = nodes(readingProgress).find(n => n.type === "Text" && n.props?.children === "33%");
+const progressBadge = nodes(readingProgress).find(n => n.type === "Text" && text(n) === "33%");
 assert.equal(progressBadge.props.style[1].color, "#B8E9E3");
 const completeReading = subject({ ...base, tone: "reading", completed: 6,
   percent: 100, selected: true, singleColumn: true });
@@ -64,7 +64,7 @@ assert.equal(knowledge.props.style[1].width, "31.7%");
 assert.equal(knowledge.props.style[4].backgroundColor, "#262840");
 assert.ok(text(knowledge).includes("ΚΑΤΑΚΤΗΣΗ"));
 assert.equal(nodes(knowledge).find(n => n.type === "ProgressBarFill").props.tone, "knowledge");
-const knowledgeBadge = nodes(knowledge).find(n => n.type === "Text" && n.props?.children === "30%");
+const knowledgeBadge = nodes(knowledge).find(n => n.type === "Text" && text(n) === "30%");
 assert.equal(knowledgeBadge.props.style[1], undefined);
 assert.equal(knowledgeBadge.props.style[0].color, "#D3C6FF");
 let pressed = 0;
