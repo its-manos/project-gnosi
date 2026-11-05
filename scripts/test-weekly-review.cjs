@@ -71,7 +71,7 @@ function disk(payload=doc(),userId=null){const map=new Map([['@gnosi/sync-device
  let slots=[],cursor=0;
  const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
  const jsx=(type,props)=>({type,props});
- const stubs=Object.fromEntries(['ActionButton','SingleChoiceQuestionCard','AppHeader','SyncStatus','AtlasCard','ProfileSectionHeader','ProgressGradientBackground'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
+ const stubs=Object.fromEntries(['ActionButton','SingleChoiceQuestionCard','AppHeader','SyncStatus','AtlasCard','ProfileSectionHeader','ProgressGradientBackground'].map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]));
  const Screen=load('src/screens/WeeklyReviewScreen.tsx',{...stubs,react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{ScrollView:'ScrollView',View:'View',Text:'Text',Pressable:'Pressable',ActivityIndicator:'ActivityIndicator',StyleSheet:{create:x=>x}},'../hooks/useAthensDate':{useAthensDate:()=>load('src/utils/dailyChallenge.ts').getAthensDateKey()},'../state/LearningSession':{useLearningSession:()=>({store:uiStore}),useLearningSnapshot:()=>uiStore.getSnapshot()}}).default;
  const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
  const named=(tree,id)=>nodes(tree).find(n=>n.props?.testID===id);
