@@ -30,7 +30,7 @@ export default function SubjectProgressTile({
 }: Props) {
   const reading = tone === "reading";
   const complete = total > 0 && completed === total;
-  const progressing = completed > 0 || percent > 0;
+  const progressing = reading ? completed > 0 : percent > 0;
   return <MotionPressable testID={testID} pressScale={0.985} onPress={onPress}
     style={[styles.tile, threeColumn && !singleColumn && styles.wide,
       singleColumn && styles.single,
