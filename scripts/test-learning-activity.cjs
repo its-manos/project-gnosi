@@ -99,7 +99,7 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
   let slots=[],cursor=0;
   const react={useMemo:fn=>fn(),useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],value=>{slots[i]=typeof value==='function'?value(slots[i]):value;}];}};
   const jsx=(type,props)=>({type,props});
-  const component=load('src/components/LearningActivityPanel.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{View:'View',Text:'Text',Pressable:'Pressable',StyleSheet:{create:x=>x}},'../state/LearningSession':{useLearningSnapshot:()=>reopened.getSnapshot(),useDailySnapshot:()=>({doc:{days:{}}})},
+  const component=load('src/components/LearningActivityPanel.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{View:'View',Text:'Text',Pressable:'Pressable',StyleSheet:{create:x=>x}},'../state/LearningSession':{useLearningSnapshot:()=>reopened.getSnapshot(),useLearningDataSnapshot:()=>reopened.getSnapshot(),useDailySnapshot:()=>({doc:{days:{}}}),useDailyDataSnapshot:()=>({doc:{days:{}}})},
     './HomeMotion':{MotionPressable:'MotionPressable',MotionView:'MotionView'},
     './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}});
   const nodes=tree=>tree&&typeof tree==='object'?[tree,...[tree.props?.children].flat(Infinity).flatMap(nodes)]:[];
