@@ -267,29 +267,29 @@ function IslandAtlasMap({ regions, width, height, onSelectRegion }: Props) {
                 stays at fixed geometry for accurate hit testing. */}
             <IslandHoverMotion index={index}>
               <IslandArtwork index={index} id={region.id}
-              width={position.artWidth} height={position.artHeight} status={region.status} />
-            {/* A translucent cartographic name plate keeps Greek labels readable
-                above real coastlines, without becoming another content card. */}
-            <View testID={"island-atlas-nameplate-" + region.id}
-              pointerEvents="none"
-              style={[styles.namePlate, { maxWidth: position.width },
-                region.status === "in-progress" && styles.activePlate,
-                region.status === "complete" && styles.completePlate]}>
-              <Text testID={"island-atlas-label-" + region.id}
-                style={[styles.label, region.status === "in-progress" && styles.activeLabel]}
-                numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.78}>
-                {region.title}
-              </Text>
-            </View>
-            {region.status === "coming-soon" && region.progressLoaded ?
-              <Text style={styles.soon}>ΣΥΝΤΟΜΑ</Text> :
-              <View testID={"island-atlas-progress-" + region.id}
-                pointerEvents="none" style={styles.progressRail}>
-                <View style={[styles.progressFill, {
-                  width: Math.round(56 * percent / 100),
-                  backgroundColor: region.status === "complete" ? "#CEB38A" : "#AE9DFB",
-                }]} />
-              </View>}
+                width={position.artWidth} height={position.artHeight} status={region.status} />
+              {/* A translucent cartographic nameplate keeps Greek titles
+                  legible without becoming another content card. */}
+              <View testID={"island-atlas-nameplate-" + region.id}
+                pointerEvents="none"
+                style={[styles.namePlate, { maxWidth: position.width },
+                  region.status === "in-progress" && styles.activePlate,
+                  region.status === "complete" && styles.completePlate]}>
+                <Text testID={"island-atlas-label-" + region.id}
+                  style={[styles.label, region.status === "in-progress" && styles.activeLabel]}
+                  numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.78}>
+                  {region.title}
+                </Text>
+              </View>
+              {region.status === "coming-soon" && region.progressLoaded ?
+                <Text style={styles.soon}>ΣΥΝΤΟΜΑ</Text> :
+                <View testID={"island-atlas-progress-" + region.id}
+                  pointerEvents="none" style={styles.progressRail}>
+                  <View style={[styles.progressFill, {
+                    width: Math.round(56 * percent / 100),
+                    backgroundColor: region.status === "complete" ? "#CEB38A" : "#AE9DFB",
+                  }]} />
+                </View>}
             </IslandHoverMotion>
           </Pressable>
         );
