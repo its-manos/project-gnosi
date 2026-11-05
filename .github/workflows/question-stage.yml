@@ -20,6 +20,7 @@ on:
       - "src/hooks/useAdaptiveQuestionScroll.ts"
       - "scripts/test-question-stage.cjs"
       - "scripts/test-question-stage-footer.cjs"
+      - "scripts/test-daily-phase3-ui.cjs"
       - "scripts/test-quiz-reveal.cjs"
       - ".github/workflows/question-stage.yml"
   workflow_dispatch:
@@ -42,6 +43,7 @@ jobs:
       - run: node scripts/test-reader-pilot.cjs
       - run: node scripts/test-typed-lesson-integration.cjs
       - run: node scripts/test-daily-challenge.cjs
+      - run: node scripts/test-daily-phase3-ui.cjs
       - run: node scripts/test-quiz-reveal.cjs
       - run: node scripts/test-question-stage.cjs
       - run: node scripts/test-question-stage-footer.cjs
