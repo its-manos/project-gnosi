@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
-import FantasyMap from "../components/FantasyMap";
-import CategoryAtlasBackground from "../components/CategoryAtlasBackground";
+import IslandAtlasMap from "../components/IslandAtlasMap";
+import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
 import { MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
@@ -47,8 +47,6 @@ export default function CategoryScreen({
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
   const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
-  const [readyCategoryId, setReadyCategoryId] = useState<string | null>(null);
-  const mapReady = readyCategoryId === category.id;
   const [screenViewport, setScreenViewport] = useState({ width: 0, height: 0 });
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
@@ -69,7 +67,7 @@ export default function CategoryScreen({
           : progress.completed + " / " + progress.total,
         totalLessons: progress.total,
         completedLessons: progress.completed,
-        progressLoaded: progressLoaded && progress.total > 0,
+        progressLoaded,
         status: progress.status,
       };
     }),
@@ -87,8 +85,8 @@ export default function CategoryScreen({
   const featuredPercent = featuredRegion?.totalLessons
     ? Math.round(featuredRegion.completedLessons / featuredRegion.totalLessons * 100) : 0;
 
-  // Phase 1: mirror the fixed Adventure Path shell. The existing mapped islands
-  // remain interactive until Phase 2 swaps in the dedicated island atlas.
+  // Atlas 2.0: separate cached cartography, fixed header/card and a dedicated
+  // lightweight interactive archipelago. Destinations remain freely selectable.
   return (
     <View testID="category-atlas-screen" style={styles.screen}
       onLayout={({ nativeEvent: { layout: { width, height } } }) => {
@@ -96,13 +94,12 @@ export default function CategoryScreen({
           Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1
             ? prev : { width, height });
       }}>
-      {/* Keep the static atlas and interactive destinations in the same
-          measured-layout commit; avoid an empty atlas flashing first. */}
-      {screenViewport.width > 0 && screenViewport.height > 0 &&
-        mapViewport.width > 0 && mapViewport.height > 0 ? (
-        <View pointerEvents="none" style={[styles.screenBackground, !mapReady && styles.awaitingMap]}>
-          <CategoryAtlasBackground width={screenViewport.width + 40}
-            height={screenViewport.height} regionCount={mapRegions.length} />
+      {/* Reuse the Adventure Path's cached artwork and composited ambience.
+          The background is separate from live, touchable islands. */}
+      {screenViewport.width > 0 && screenViewport.height > 0 ? (
+        <View pointerEvents="none" style={styles.screenBackground}>
+          <AdventureAtlasBackground width={screenViewport.width + 40}
+            height={screenViewport.height} />
         </View>
       ) : null}
       <MotionView entranceDelay={0} testID="category-atlas-header" style={styles.navigationHeader}>
@@ -170,19 +167,13 @@ export default function CategoryScreen({
           setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
             Math.abs(previous.height - height) < 1 ? previous : { width, height });
         }}>
-        {/* Mount destinations alongside the chart on both platforms. The
-            background must never appear as an empty map while waiting for
-            card animation callbacks or a second delayed reveal. */}
         {mapViewport.width > 0 && mapViewport.height > 0 ? (
           <View key={category.id} testID="category-atlas-map-entrance"
-            style={[styles.mapEntrance, !mapReady && styles.awaitingMap]}>
-            <FantasyMap
+            style={styles.mapEntrance}>
+            <IslandAtlasMap
               regions={mapRegions}
-              fitViewport={mapViewport}
-              hideControls externalBackground
-              onMapLayout={() => setReadyCategoryId(category.id)}
+              width={mapViewport.width} height={mapViewport.height}
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
-              emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
           </View>
         ) : null}
@@ -199,7 +190,6 @@ const styles = StyleSheet.create({
   },
   // Offset the root padding so the artwork reaches both physical edges.
   screenBackground: { position: "absolute", top: 0, bottom: 0, left: -20, right: -20 },
-  awaitingMap: { opacity: 0 },
   navigationHeader: {
     minHeight: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
@@ -220,7 +210,6 @@ const styles = StyleSheet.create({
     flex: 1, minHeight: 0, width: "100%", position: "relative",
     overflow: "hidden", marginBottom: 8, backgroundColor: "transparent",
   },
-  // Keep the interactive SVG at its measured size; card motion never blocks
-  // island mounting or animates the full SVG and its touch geometry.
+  // Only the native island hit targets are live; do not animate the whole map.
   mapEntrance: { width: "100%" },
 });
