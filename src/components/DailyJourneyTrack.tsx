@@ -14,6 +14,14 @@ function DailyJourneyTrack(props: Props) {
   const activeIndex = isResult ? -1 : Math.min(TOTAL_STATIONS - 1, Math.max(0, props.currentIndex));
   const label = isResult ? "Η ΔΙΑΔΡΟΜΗ ΣΟΥ" : "ΠΡΟΟΔΟΣ ΑΠΟΣΤΟΛΗΣ";
   const value = isResult ? "07 / 07" : `${String(activeIndex + 1).padStart(2, "0")} / 07`;
+  const resultsKnown = isResult && props.correctMask.length === TOTAL_STATIONS &&
+    props.correctMask.every(value => typeof value === "boolean");
+  const correctTotal = isResult ? props.correctMask.filter(value => value === true).length : 0;
+  const routeAnnouncement = isResult
+    ? resultsKnown
+      ? `Αποτελέσματα: ${correctTotal} σωστές, ${TOTAL_STATIONS - correctTotal} λανθασμένες απαντήσεις.`
+      : "Η διαδρομή ολοκληρώθηκε. Δεν υπάρχουν αναλυτικά αποτελέσματα για κάθε ερώτηση."
+    : `Απαντημένες: ${count} από ${TOTAL_STATIONS} ερωτήσεις.`;
 
   return <View testID={isResult ? "daily-result-route" : "daily-question-route"} style={styles.wrap}>
     <View style={styles.heading}>
@@ -21,7 +29,7 @@ function DailyJourneyTrack(props: Props) {
       <Text style={styles.counter}>{value}</Text>
     </View>
     <View style={styles.route} accessible accessibilityRole="progressbar"
-      accessibilityLabel={isResult ? "Ολοκληρωμένη διαδρομή επτά ερωτήσεων" : "Απαντημένες ερωτήσεις"}
+      accessibilityLabel={routeAnnouncement}
       accessibilityValue={{ min: 0, max: TOTAL_STATIONS, now: count }}>
       <View pointerEvents="none" style={styles.rail}/>
       {route.map(index => {
