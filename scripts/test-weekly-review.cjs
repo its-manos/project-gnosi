@@ -71,12 +71,15 @@ function disk(payload=doc(),userId=null){const map=new Map([['@gnosi/sync-device
  let slots=[],cursor=0;
  const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
  const jsx=(type,props)=>({type,props});
- const stubs=Object.fromEntries(['ActionButton','SingleChoiceQuestionCard','AppHeader','SyncStatus'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
- const Screen=load('src/screens/WeeklyReviewScreen.tsx',{...stubs,react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{ScrollView:'ScrollView',View:'View',Text:'Text',StyleSheet:{create:x=>x}},'../hooks/useAthensDate':{useAthensDate:()=>load('src/utils/dailyChallenge.ts').getAthensDateKey()},'../state/LearningSession':{useLearningSession:()=>({store:uiStore}),useLearningSnapshot:()=>uiStore.getSnapshot()}}).default;
+ const stubs=Object.fromEntries(['ActionButton','SingleChoiceQuestionCard','AppHeader','SyncStatus','AtlasCard','ProfileSectionHeader','ProgressGradientBackground'].map(n=>['../components/'+n,{__esModule:true,default:n}]));
+ const Screen=load('src/screens/WeeklyReviewScreen.tsx',{...stubs,react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{ScrollView:'ScrollView',View:'View',Text:'Text',Pressable:'Pressable',ActivityIndicator:'ActivityIndicator',StyleSheet:{create:x=>x}},'../hooks/useAthensDate':{useAthensDate:()=>load('src/utils/dailyChallenge.ts').getAthensDateKey()},'../state/LearningSession':{useLearningSession:()=>({store:uiStore}),useLearningSnapshot:()=>uiStore.getSnapshot()}}).default;
  const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
+ const named=(tree,id)=>nodes(tree).find(n=>n.props?.testID===id);
  const render=()=>{cursor=0;return Screen({onBack(){}});};
  let tree=render();let choice=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
  assert.ok(choice,'weekly review renders the shared confirmable card');
+ assert.ok(named(tree,'weekly-review-journey'),'weekly journey is visible during the session');
+ assert.ok(nodes(tree).some(n=>n.type==='ProfileSectionHeader'),'shared fixed header is used');
  assert.equal(choice.props.answers.length,4);
  const visible=slots[0].items[0],correctLabel=visible.lesson.questions[visible.questionIndex].answers[visible.lesson.questions[visible.questionIndex].correctIndex];
  assert.equal(choice.props.reportTarget.questionIndex,visible.questionIndex,'weekly reporting points at the canonical question, not its shuffled position');
@@ -85,14 +88,26 @@ function disk(payload=doc(),userId=null){const map=new Map([['@gnosi/sync-device
  assert.equal(uiStore.getSnapshot().weeklyReviews[visible.id].answerIndex,visible.lesson.questions[visible.questionIndex].correctIndex);
  choice=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
  assert.equal(choice.props.answer,choice.props.correctIndex,'stored weekly answer maps back to shuffled display index');
+ assert.equal(choice.props.questionNumber,1,'answering does not advance the displayed question number before Continue');
  nodes(tree).find(n=>n.props?.label==='Συνέχεια').props.onPress();tree=render();
  const remaining=slots[0].items[1],wrongLabel=remaining.lesson.questions[remaining.questionIndex].answers[(remaining.lesson.questions[remaining.questionIndex].correctIndex+1)%4];
  choice=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
+ assert.equal(choice.props.questionNumber,2,'the second question uses the real stable index');
  choice.props.onConfirm(choice.props.answers.indexOf(wrongLabel));tree=render();
+ assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.questionNumber,2,'question number stays put during feedback');
+ assert.ok(named(tree,'weekly-review-feedback'),'feedback is presented in a distinct Midnight Atlas surface');
  assert.equal(uiStore.getSnapshot().weeklyReviews[remaining.id].answerIndex,(remaining.lesson.questions[remaining.questionIndex].correctIndex+1)%4,
    'confirmed shuffled choice persists original answer index');
  assert.ok(!nodes(tree).some(n=>n.props?.label==='Δοκίμασε ξανά'),'weekly score cannot be retried');
  nodes(tree).find(n=>n.props?.label==='Δες το αποτέλεσμα').props.onPress();tree=render();assert.equal(nodes(tree).filter(n=>n.type==='SingleChoiceQuestionCard').length,0);assert.ok(nodes(tree).some(n=>n.props?.label==='Πίσω στην πρόοδο'));
+ assert.ok(named(tree,'weekly-review-result'),'completed review has a dedicated score card');
+ assert.ok(!named(tree,'weekly-review-corrections'),'missed answers start collapsed');
+ const correctionsToggle=named(tree,'weekly-review-corrections-toggle');
+ assert.ok(correctionsToggle && correctionsToggle.props.accessibilityState.expanded===false,'review has an accessible disclosure');
+ correctionsToggle.props.onPress();tree=render();
+ assert.ok(named(tree,'weekly-review-corrections'),'missed answers remain available on demand');
+ named(tree,'weekly-review-corrections-toggle').props.onPress();tree=render();
+ assert.ok(!named(tree,'weekly-review-corrections'),'corrections can collapse again');
  now=Date.parse('2026-11-02T10:00:00Z');tree=render();assert.equal(nodes(tree).filter(n=>n.type==='SingleChoiceQuestionCard').length,0,'midnight/week rollover blocks stale screen');
  await store.resetGuestProgress();assert.equal(Object.keys(store.getSnapshot().weeklyReviews).length,0);
  // Athens Monday boundary on the autumn DST weekend, not UTC midnight.
