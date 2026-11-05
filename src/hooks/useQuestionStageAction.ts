@@ -15,11 +15,13 @@ export function useQuestionStageAction(questionKey: string) {
   }>({ key: questionKey, action: null });
 
   const onActionChange = useCallback((action: QuestionStageAction | null) => {
-    setRegistered(previous =>
-      previous.key === questionKey && previous.action === action
-        ? previous
-        : { key: questionKey, action }
-    );
+    setRegistered(previous => {
+      // A previous card can unmount after the next one has registered. Its
+      // cleanup must never erase the new question's active confirmation.
+      if (action === null && previous.key !== questionKey) return previous;
+      if (previous.key === questionKey && previous.action === action) return previous;
+      return { key: questionKey, action };
+    });
   }, [questionKey]);
 
   return {
