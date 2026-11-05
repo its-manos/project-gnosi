@@ -24,7 +24,13 @@ const props={onHome(){homes++;},onOpenPreferences(){},onOpenLesson:id=>opened.pu
 const render=()=>{cursor=0;return Screen(props);};const action=(t,label)=>nodes(t).find(n=>n.type==='ActionButton'&&n.props.label===label);
 let tree=render();assert.ok(text(tree).includes('5 / 7'));assert.ok(text(tree).includes('71%'));
 assert.ok(text(tree).includes('143'));assert.ok(text(tree).includes('XP ημέρας'));
-assert.ok(text(tree).includes('Καλύτερο σερί'));assert.ok(text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'));
+assert.ok(text(tree).includes('Καλύτερο σερί'));assert.ok(text(tree).includes('Η ΘΕΜΑΤΙΚΗ ΠΟΥ ΞΕΧΩΡΙΣΕΣ'));
+const bestTopic=results.dailyResultAnalysis(record,questions,5,details).strongest;
+assert.ok(bestTopic,'the frozen test result has a distinct strongest topic');
+assert.ok(text(tree).includes(`Σωστές απαντήσεις: ${bestTopic.correct} από ${bestTopic.total}`),
+  'the topic card explains that its score refers only to this topic');
+assert.ok(!text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'),
+  'avoid suggesting a personal record from a single quiz');
 assert.equal(nodes(tree).filter(n=>n.type==='KnowledgeProgress').length,0,'daily results avoid duplicating global knowledge progress');
 assert.ok(!text(tree).includes('500 / 700'),'results show one clear score, not a redundant points ratio');
 const finishedTrack=nodes(tree).find(n=>n.type==='DailyJourneyTrack');
@@ -50,7 +56,7 @@ review.props.onDone();tree=render();
 const practice=nodes(tree).find(n=>n.props?.testID==='daily-mistake-action');
 assert.ok(practice.props.accessibilityRole==='button');
 practice.props.onPress();tree=render();const drill=nodes(tree).find(n=>n.type==='DailyMistakeReview');assert.equal(drill.props.questions.length,2);drill.props.onDone();tree=render();assert.equal(JSON.stringify(record),frozen,'answer review/practice do not mutate persisted quiz/rewards');
-challenge={...challenge,resultDetails:undefined,record:{...record,selectionVersion:undefined,questionVersions:undefined}};tree=render();assert.ok(text(tree).includes('Δεν υπάρχει αποθηκευμένη ανάλυση σερί'));assert.ok(!text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'),'legacy results do not fabricate a category award');
+challenge={...challenge,resultDetails:undefined,record:{...record,selectionVersion:undefined,questionVersions:undefined}};tree=render();assert.ok(text(tree).includes('Δεν υπάρχει αποθηκευμένη ανάλυση σερί'));assert.ok(!text(tree).includes('Η ΘΕΜΑΤΙΚΗ ΠΟΥ ΞΕΧΩΡΙΣΕΣ'),'legacy results do not fabricate a category award');
 assert.ok(nodes(tree).find(n=>n.type==='DailyJourneyTrack').props.correctMask.every(value=>value===null),
   'legacy results do not fabricate correctness for individual stops');
 const oldDetails={...details,questionVersions:[...details.questionVersions]};oldDetails.questionVersions[0]='old:revision';challenge={...challenge,record,resultDetails:oldDetails};tree=render();action(tree,'Δες όλες τις απαντήσεις →').props.onPress();tree=render();review=nodes(tree).find(n=>n.type==='DailyAnswerReview');assert.equal(review.props.rows[0].question,null);assert.ok(text(Review(review.props)).includes('Η ερώτηση έχει αλλάξει'));
