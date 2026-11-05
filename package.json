@@ -33,6 +33,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "atlas:world:svg": "node scripts/generate-category-world-svg.mjs",
+    "atlas:world:svg:check": "node scripts/generate-category-world-svg.mjs --check",
     "atlas:world:export": "node scripts/export-category-world-webp.cjs",
     "atlas:world:check": "node scripts/export-category-world-webp.cjs --check",
     "test:lesson-question-card": "node scripts/test-inline-question-card.cjs",
