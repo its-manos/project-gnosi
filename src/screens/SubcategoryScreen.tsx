@@ -222,7 +222,7 @@ export default function SubcategoryScreen({
               now: progressLoaded ? completed : 0 }}>
             <AdventureProgressFill percent={progressLoaded ? progressPercent : 0} />
           </View>
-        </AtlasContinueCard> : null>
+        </AtlasContinueCard> : null}
 
       {isTesting && path.length > 1 ?
         <Text style={styles.devHint}>Δοκιμή: όλοι οι σταθμοί ξεκλείδωτοι.</Text> : null}
