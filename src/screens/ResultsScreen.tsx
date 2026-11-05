@@ -1,12 +1,13 @@
-import KnowledgeProgress from "../components/KnowledgeProgress";
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { Lesson } from "../data/lessons";
-import ActionButton from "../components/ActionButton";
-import AppHeader from "../components/AppHeader";
-import LessonResultChart from "../components/LessonResultChart";
-import ReportContentButton from "../components/ReportContentButton";
-import { lessonReportTarget } from "../utils/contentReports";
+import { MotionView } from "../components/HomeMotion";
+import { ProgressBarFill } from "../components/ProgressMotion";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import ProgressTrack from "../components/ProgressTrack";
+import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
+import { playerTitle } from "../gamification/rules";
+import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
 import type { ReviewState } from "../utils/lessonReview";
 import type { lessonScores as calculateLessonScores } from "../utils/weeklyReview";
@@ -21,85 +22,265 @@ type Props = {
   review?: ReviewState; returning?: boolean; practiceComplete?: boolean; onReviewMistakes?: () => void;
 };
 
-export default function ResultsScreen({ earnedXP = 0, highestCombo = 0, lesson, score, onHome, onReadAgain, onOpenLesson, onBrowse, nextLesson, pathProgress, review, returning = false, practiceComplete = false, onReviewMistakes, lessonScores, onWeeklyReview }: Props) {
-  const [details, setDetails] = useState(false);
+/** One reward moment, two progression rails, one always-visible next step.
+ * No XP writes or scoring changes: the existing stores are the source of truth.
+ */
+export default function ResultsScreen({
+  earnedXP = 0, highestCombo = 0, lesson, score, onHome, onReadAgain,
+  onOpenLesson, onBrowse, nextLesson, pathProgress, review, returning = false,
+  practiceComplete = false, onReviewMistakes, lessonScores,
+}: Props) {
+  const { height, fontScale } = useWindowDimensions();
+  const compact = height < 950 || fontScale >= 1.18;
+  const tight = height < 790 && fontScale < 1.18;
+  // Scroll only when content genuinely overflows; flexGrow fills spare height.
+  const allowScroll = true;
+  const { profile, ready: profileReady } = useKnowledgeProfile();
   const total = getInlineQuestionCount(lesson);
+  // Older versions may not have comparable answers. Do not invent accuracy.
   const displayedScore = returning
     ? lessonScores?.best ?? (review?.status !== "changed" ? review?.result?.correctCount ?? null : null)
     : score;
-  const strongResult = displayedScore !== null && total > 0 && displayedScore / total >= 0.75;
-  const perfect = displayedScore === total && total > 0;
+  const count = displayedScore !== null && total > 0
+    ? Math.max(0, Math.min(total, displayedScore)) : null;
+  const accuracy = count === null ? null : Math.round(count / total * 100);
+  const perfect = count !== null && count === total;
+  const positive = count !== null && count / total >= 0.75;
+  const heading = returning ? "Η επίδοσή σου" : perfect ? "Άψογα!" : positive ? "Πολύ καλά!" : "Συνεχίζεις!";
+  const pathTotal = Math.max(0, pathProgress?.total ?? 0);
+  const pathCompleted = Math.max(0, Math.min(pathTotal, pathProgress?.completed ?? 0));
+  const pathPercent = pathTotal > 0 ? pathCompleted / pathTotal * 100 : 0;
+  const pathComplete = pathTotal > 0 && pathCompleted === pathTotal;
+  const required = Math.max(1, profile.required);
+  const earned = Math.max(0, Math.min(required, profile.earned));
+  const levelPercent = profileReady ? earned / required * 100 : 0;
   const canPractice = review?.status === "available" && !!onReviewMistakes;
-  const pathComplete = !!pathProgress && pathProgress.total > 0 && pathProgress.completed === pathProgress.total;
+  const awarded = !returning && earnedXP > 0;
+  const nextAction = nextLesson ? () => onOpenLesson(nextLesson.id) : onBrowse;
+  const nextLabel = nextLesson
+    ? "Επόμενο μάθημα"
+    : pathComplete ? "Νέα διαδρομή" : "Συνέχισε την εξερεύνηση";
+  const nextTitle = nextLesson?.title ?? (pathComplete ? "Διάλεξε νέα θεματική" : "Εξερεύνησε τους κόσμους");
 
-  return <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-    <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" />
-    <View style={styles.container}>
-      <Text style={styles.eyebrow}>{returning ? "ΤΟ ΜΑΘΗΜΑ ΣΟΥ" : "ΜΑΘΗΜΑ ΟΛΟΚΛΗΡΩΘΗΚΕ"}</Text>
-      <Text style={styles.title}>{returning ? "Συνέχισε την ανακάλυψη" : perfect ? "Τα πέτυχες όλα!" : strongResult ? "Τα πήγες πολύ καλά!" : "Έκανες το επόμενο βήμα"}</Text>
-      <Text style={styles.lessonTitle}>{lesson.title}</Text>
-      {displayedScore !== null ? <LessonResultChart correct={displayedScore} total={total} label={returning ? "Το καλύτερο σκορ σου" : "Αυτή η προσπάθεια"} />
-        : <Text style={styles.message}>Η ολοκλήρωση διατηρείται. Δεν υπάρχει αναλυτικό παλιότερο σκορ.</Text>}
-      {!returning ? <Text style={styles.success}>{earnedXP > 0 ? `+${earnedXP} XP` : "Τα XP αυτής της ολοκλήρωσης έχουν ήδη καταγραφεί."} · Καλύτερο σερί: {highestCombo}</Text> : null}
-      <KnowledgeProgress compact />
-      {practiceComplete ? <Text style={styles.success}>Ολοκλήρωσες την εξάσκηση στα λάθη.</Text> : null}
-      {!strongResult && canPractice && !practiceComplete ? <ActionButton label={`Εξάσκηση στα λάθη (${review.indices.length})`} onPress={onReviewMistakes} /> : null}
-      {nextLesson ? <View style={styles.next}>
-        <Text style={styles.nextLabel}>ΣΤΗΝ ΙΔΙΑ ΔΙΑΔΡΟΜΗ</Text>
-        <Text style={styles.nextTitle}>{nextLesson.title}</Text>
-        <ActionButton label="Επόμενο μάθημα" onPress={() => onOpenLesson(nextLesson.id)} secondary={(!strongResult && canPractice && !practiceComplete)} />
-      </View> : null}
-      <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} secondary={!!nextLesson || (!strongResult && canPractice && !practiceComplete)} />
-      {(strongResult || practiceComplete) && canPractice ? <ActionButton label={`Εξάσκηση στα λάθη (${review.indices.length})`} onPress={onReviewMistakes} secondary /> : null}
-      {pathProgress ? <View style={styles.pathCard}>
-        <View style={styles.pathHeading}><Text style={styles.pathTitle}>{pathProgress.title}</Text><Text style={styles.pathCount}>{pathProgress.completed} / {pathProgress.total}</Text></View>
-        <View style={styles.track} accessible accessibilityRole="progressbar" accessibilityLabel={`Πρόοδος: ${pathProgress.title}`}
-          accessibilityValue={{ min: 0, max: pathProgress.total, now: pathProgress.completed }}>
-          <View style={[styles.fill, { width: `${pathProgress.total ? Math.min(100, pathProgress.completed / pathProgress.total * 100) : 0}%` }]} />
-        </View>
-        <Text style={styles.small}>{pathComplete ? "Ολοκλήρωσες αυτή τη διαδρομή!" : nextLesson ? "Η διαδρομή συνεχίζεται." : "Συνέχισε τη διαδρομή από τη θεματική σου."}</Text>
-      </View> : null}
-      {pathComplete ? <Pressable onPress={onBrowse} accessibilityRole="button" style={styles.textButton}><Text style={styles.link}>Διάλεξε άλλη θεματική →</Text></Pressable> : null}
-      <Pressable onPress={() => setDetails(v => !v)} accessibilityRole="button" accessibilityState={{ expanded: details }} style={styles.textButton}>
-        <Text style={styles.link}>{details ? "Λιγότερες επιλογές −" : "Περισσότερες επιλογές +"}</Text>
-      </Pressable>
-      {details ? <View style={styles.details}>
-        {lessonScores?.best !== null && lessonScores?.best !== undefined ? <>
-          <Text style={styles.detailMetric}>Καλύτερο σκορ: {lessonScores.best} / {lessonScores.total}</Text>
-          <Text style={styles.small}>{lessonScores.hasDetails ? `Σωστά απαντημένες ερωτήσεις: ${lessonScores.mastered} / ${lessonScores.total}.` : "Το παλιότερο σκορ δεν τεκμηριώνει κατάκτηση εννοιών."}</Text>
-        </> : null}
-        {practiceComplete ? <Text style={styles.small}>Η εξάσκηση δεν αλλάζει το σκορ της προσπάθειας.</Text> : null}
-        {review?.status === "missing-details" || review?.status === "no-result" ? <Text style={styles.small}>Δεν έχουν αποθηκευτεί τα παλιότερα λάθη. Η ολοκλήρωση διατηρείται χωρίς να χρειάζεται επανάληψη.</Text> : null}
-        {review?.status === "changed" ? <Text style={styles.small}>Οι ερωτήσεις έχουν αλλάξει. Το παλιό σκορ δεν επανυπολογίζεται και η ολοκλήρωση διατηρείται.</Text> : null}
-        <ActionButton label="Προαιρετική επανάληψη μαθήματος" onPress={onReadAgain} secondary />
-        <Text style={styles.small}>Το καλύτερο σκορ σου διατηρείται.</Text>
-        {onWeeklyReview ? <><ActionButton label="Νέες δοκιμές κατανόησης" onPress={onWeeklyReview} secondary /><Text style={styles.small}>Το μάθημα ολοκληρώθηκε. Η κατανόηση ελέγχεται με διαφορετικές περιπτώσεις, όταν υπάρχουν διαθέσιμες.</Text></> : null}
-        <ReportContentButton target={lessonReportTarget(lesson)} />
-      </View> : null}
+  return <View style={styles.root} testID="lesson-results-screen">
+    <ProgressGradientBackground />
+    <View style={styles.chrome}>
+      <ProfileSectionHeader eyebrow="ΜΑΘΗΜΑ" title="Αποτελέσματα"
+        actionLabel="Αρχική" actionAccessibilityLabel="Επιστροφή στην αρχική"
+        onAction={onHome} style={styles.header} />
     </View>
-  </ScrollView>;
+
+    <ScrollView style={styles.viewport} contentContainerStyle={[styles.content, compact && styles.contentCompact, tight && styles.contentTight]}
+      scrollEnabled={allowScroll} bounces={false} showsVerticalScrollIndicator={false}>
+      <MotionView entranceDelay={45} testID="lesson-result-hero"
+        style={[styles.hero, compact && styles.heroCompact, tight && styles.heroTight]}>
+        <View style={[styles.medal, compact && styles.medalCompact, tight && styles.medalTight]} accessible
+          accessibilityLabel={count === null ? "Ολοκληρωμένο μάθημα, χωρίς συγκρίσιμο παλιότερο σκορ"
+            : count + " από " + total + " σωστές απαντήσεις"}>
+          <View style={[styles.medalHalo, compact && styles.medalHaloCompact, tight && styles.medalHaloTight, perfect && styles.medalHaloPerfect]} pointerEvents="none" />
+          <View style={[styles.medalCore, compact && styles.medalCoreCompact, tight && styles.medalCoreTight, perfect && styles.medalCorePerfect]}>
+            <Text style={[styles.medalNumber, compact && styles.medalNumberCompact]}>{count ?? "✓"}</Text>
+            {count !== null ? <Text style={styles.medalTotal}>/ {total}</Text> : null}
+          </View>
+          <View style={[styles.medalSpark, tight && styles.medalSparkTight]} pointerEvents="none"><Text style={styles.sparkGlyph}>✦</Text></View>
+        </View>
+        <View style={styles.heroCopy}>
+          <Text style={styles.eyebrow}>{returning ? "ΟΛΟΚΛΗΡΩΜΕΝΟ ΜΑΘΗΜΑ" : "ΑΠΟΣΤΟΛΗ ΟΛΟΚΛΗΡΩΘΗΚΕ"}</Text>
+          <Text style={[styles.heroTitle, compact && styles.heroTitleCompact]}>{heading}</Text>
+          <Text style={styles.lessonTitle} numberOfLines={3}>{lesson.title}</Text>
+        </View>
+      </MotionView>
+
+      <MotionView entranceDelay={105} testID="lesson-result-score"
+        style={[styles.rewardBar, compact && styles.rewardBarCompact, tight && styles.rewardBarTight]}>
+        <View style={styles.rewardColumn}>
+          <Text style={styles.rewardValue} numberOfLines={1}>
+            <Text style={styles.xpSymbol}>✦ </Text>
+            {awarded ? "+" + earnedXP : profileReady ? profile.totalXP.toLocaleString("el-GR") : "—"}
+          </Text>
+          <Text style={styles.rewardLabel}>{awarded ? "XP ΚΕΡΔΙΣΕΣ" : "ΣΥΝΟΛΙΚΑ XP"}</Text>
+        </View>
+        <View style={styles.rewardDivider} />
+        {accuracy === null ?
+          <View style={styles.rewardColumn}><Text style={styles.rewardValue}>—</Text>
+            <Text style={styles.rewardLabel}>ΠΑΛΙΟ ΣΚΟΡ</Text></View> :
+          <View style={styles.rewardColumn}>
+            <Text style={styles.rewardValue}>{accuracy}%</Text>
+            <Text style={styles.rewardLabel}>ΑΚΡΙΒΕΙΑ</Text>
+          </View>}
+        {!returning ? <>
+          <View style={styles.rewardDivider} />
+          <View style={styles.rewardColumn}>
+            <Text style={styles.rewardValue}>{highestCombo}</Text>
+            <Text style={styles.rewardLabel}>ΣΕΡΙ ΣΩΣΤΩΝ</Text>
+          </View>
+        </> : null}
+      </MotionView>
+
+      <MotionView entranceDelay={160} testID="lesson-progression" style={[styles.progressCard, compact && styles.progressCardCompact, tight && styles.progressCardTight]}>
+        <View style={styles.progressHeader}>
+          <View style={styles.levelEmblem} accessible={false}>
+            <Text style={styles.levelEmblemText}>{profileReady ? profile.level : "—"}</Text>
+          </View>
+          <View style={styles.progressHeadCopy}>
+            <Text style={styles.eyebrow}>Ο ΕΞΕΡΕΥΝΗΤΗΣ ΣΟΥ</Text>
+            <Text style={styles.progressTitle}>{profileReady ? "Επίπεδο " + profile.level : "Επίπεδο —"}</Text>
+          </View>
+          <Text style={styles.playerTitle} numberOfLines={1}>
+            {profileReady ? playerTitle(profile.level) : "Φόρτωση…"}
+          </Text>
+        </View>
+        <View style={styles.progressRow}>
+          <Text style={styles.progressSmall}>ΠΡΟΣ ΕΠΟΜΕΝΟ ΕΠΙΠΕΔΟ</Text>
+          <Text style={styles.progressNumber}>{profileReady
+            ? profile.earned.toLocaleString("el-GR") + " / " + profile.required.toLocaleString("el-GR") + " XP"
+            : "— XP"}</Text>
+        </View>
+        <ProgressTrack variant="subject" accessible accessibilityRole="progressbar"
+          accessibilityLabel="Πρόοδος μέχρι το επόμενο επίπεδο"
+          accessibilityValue={profileReady
+            ? { min: 0, max: required, now: earned }
+            : { text: "Φόρτωση επιπέδου" }}>
+          <ProgressBarFill tone="knowledge" percent={levelPercent} />
+        </ProgressTrack>
+        {!tight ? <Text style={styles.remaining}>{profileReady
+          ? profile.remaining + " XP για το επίπεδο " + (profile.level + 1)
+          : "Φόρτωση προόδου…"}</Text> : null}
+
+        {pathProgress && pathTotal > 0 ? <>
+          <View style={[styles.progressSeparator, compact && styles.progressSeparatorCompact]} />
+          <View style={styles.progressRow} testID="lesson-path-progress">
+            <View style={styles.pathCopy}>
+              <Text style={styles.progressSmall}>ΔΙΑΔΡΟΜΗ</Text>
+              <Text style={styles.pathTitle} numberOfLines={2}>{pathProgress.title}</Text>
+            </View>
+            <Text style={styles.pathCount}>{pathCompleted} / {pathTotal}</Text>
+          </View>
+          <ProgressTrack variant="subject" tone="reading" accessible accessibilityRole="progressbar"
+            accessibilityLabel={"Ολοκλήρωση διαδρομής " + pathProgress.title}
+            accessibilityValue={{ min: 0, max: pathTotal, now: pathCompleted }}>
+            <ProgressBarFill tone="reading" percent={pathPercent} />
+          </ProgressTrack>
+          {pathComplete ? <Text style={styles.pathComplete}>✓ Διαδρομή ολοκληρώθηκε</Text> : null}
+        </> : null}
+      </MotionView>
+
+      {practiceComplete ? <Text style={styles.practiceDone} accessibilityLiveRegion="polite">
+        ✓ Ολοκλήρωσες την εξάσκηση στα λάθη.
+      </Text> : null}
+
+      <View testID="lesson-result-tools" style={[styles.tools, compact && styles.toolsCompact]}>
+        {canPractice && onReviewMistakes ? <Pressable testID="lesson-practice-action"
+          accessibilityRole="button" accessibilityLabel={"Εξάσκηση στα λάθη (" + review.indices.length + ")"}
+          onPress={onReviewMistakes}
+          style={({ pressed }) => [styles.tool, styles.practiceTool, pressed && styles.toolPressed]}>
+          <Text style={styles.toolText}>Εξάσκηση ({review.indices.length})</Text>
+        </Pressable> : null}
+        <Pressable testID="lesson-replay-action" accessibilityRole="button"
+          accessibilityLabel="Ξαναδιάβασε το μάθημα" onPress={onReadAgain}
+          style={({ pressed }) => [styles.tool, pressed && styles.toolPressed]}>
+          <Text style={styles.toolText}>Ξαναδιάβασε</Text>
+        </Pressable>
+      </View>
+      <AtlasContinueCard entranceDelay={70}
+        testID={nextLesson ? "lesson-next-action" : "lesson-browse-action"}
+        accessibilityRole="button" accessibilityLabel={nextLesson
+          ? "Συνέχισε στο επόμενο μάθημα: " + nextLesson.title
+          : pathComplete ? "Διάλεξε νέα θεματική" : "Συνέχισε την εξερεύνηση"}
+        onPress={nextAction} style={styles.atlasContinue}>
+        <View style={atlasContinueStyles.body}>
+          <View style={atlasContinueStyles.copy}>
+            <Text style={atlasContinueStyles.eyebrow}>{nextLabel.toUpperCase()}</Text>
+            <Text style={atlasContinueStyles.title} numberOfLines={2}>{nextTitle}</Text>
+          </View>
+          <View style={atlasContinueStyles.action} accessible={false}>
+            <Text style={styles.continueGlyph}>{nextLesson ? "▶" : "›"}</Text>
+          </View>
+        </View>
+      </AtlasContinueCard>
+    </ScrollView>
+
+
+  </View>;
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 36, width: "100%", maxWidth: 560, alignSelf: "center" },
-  container: { paddingTop: 12, paddingBottom: 8 },
-  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 16, fontWeight: "800", letterSpacing: 1.2, textAlign: "center", marginBottom: 8 },
-  title: { color: colors.text, fontSize: 27, lineHeight: 35, fontWeight: "900", textAlign: "center" },
-  lessonTitle: { color: colors.textMuted, fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 10 },
-  message: { color: colors.textMuted, fontSize: 14, lineHeight: 22, textAlign: "center", marginVertical: 24 },
-  success: { color: colors.success, fontSize: 14, lineHeight: 22, textAlign: "center", marginBottom: 16 },
-  pathCard: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 16, gap: 10, marginTop: 22, marginBottom: 4 },
-  pathHeading: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", gap: 8 },
-  pathTitle: { color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: "700", flexGrow: 1, flexShrink: 1 },
-  pathCount: { color: colors.accentLight, fontSize: 13, lineHeight: 21, fontWeight: "700" },
-  track: { height: 5, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden" },
-  fill: { height: "100%", backgroundColor: colors.accentLight, borderRadius: 3 },
-  small: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
-  next: { marginTop: 18 },
-  nextLabel: { color: colors.accentLight, fontSize: 10, lineHeight: 16, fontWeight: "800", letterSpacing: 0.8 },
-  nextTitle: { color: colors.text, fontSize: 16, lineHeight: 23, fontWeight: "600", marginTop: 5 },
-  textButton: { minHeight: 44, paddingVertical: 12, justifyContent: "center", alignItems: "center", marginTop: 6 },
-  link: { color: colors.accentLight, fontSize: 13, lineHeight: 21, textAlign: "center", fontWeight: "600" },
-  details: { marginTop: 8, padding: 16, gap: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 16 },
-  detailMetric: { color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "700" },
+  root: { flex: 1, backgroundColor: colors.background },
+  chrome: { paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top },
+  header: { marginBottom: 4 },
+  viewport: { flex: 1 },
+  content: { width: "100%", maxWidth: 640, alignSelf: "center", flexGrow: 1,
+    justifyContent: "space-evenly", paddingHorizontal: 18, paddingTop: 6, paddingBottom: 10, gap: 10 },
+  contentCompact: { paddingTop: 0, paddingBottom: 4, gap: 7 },
+  contentTight: { gap: 4 },
+  eyebrow: { color: "#C2B5F4", fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 0.75 },
+  hero: { flexDirection: "row", alignItems: "center", gap: 19, paddingVertical: 15, paddingHorizontal: 10 },
+  heroCompact: { paddingVertical: 5, gap: 10 },
+  heroTight: { paddingVertical: 2, gap: 8 },
+  medalCompact: { width: 82, height: 82 },
+  medalTight: { width: 68, height: 68 },
+  medalHaloCompact: { width: 80, height: 80, borderRadius: 40 },
+  medalHaloTight: { width: 66, height: 66, borderRadius: 33 },
+  medalCoreCompact: { width: 68, height: 68, borderRadius: 34 },
+  medalCoreTight: { width: 57, height: 57, borderRadius: 29 },
+  medalSparkTight: { width: 21, height: 21, borderRadius: 11 },
+  medal: { width: 112, height: 112, flexShrink: 0, alignItems: "center", justifyContent: "center" },
+  medalHalo: { position: "absolute", width: 106, height: 106, borderRadius: 53,
+    borderWidth: 2, borderColor: "#8C7DBB", backgroundColor: "#26243E" },
+  medalHaloPerfect: { borderColor: "#D1BB83" },
+  medalCore: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, borderColor: "#7163A2",
+    backgroundColor: "#343052", alignItems: "center", justifyContent: "center" },
+  medalCorePerfect: { borderColor: "#C7AC70", backgroundColor: "#423A49" },
+  medalNumber: { color: "#F6F0FF", fontSize: 37, lineHeight: 43, fontWeight: "900", includeFontPadding: false },
+  medalNumberCompact: { fontSize: 34, lineHeight: 40 },
+  medalTotal: { color: "#BAAEE1", fontSize: 13, lineHeight: 18, fontWeight: "800" },
+  medalSpark: { position: "absolute", top: 2, right: 0, width: 27, height: 27, borderRadius: 14,
+    borderWidth: 1, borderColor: "#C4AFE8", alignItems: "center", justifyContent: "center", backgroundColor: "#302A4C" },
+  sparkGlyph: { color: "#E4CFFF", fontSize: 16, lineHeight: 21 },
+  heroCopy: { flex: 1, minWidth: 0, gap: 6 },
+  heroTitle: { color: colors.text, fontSize: 27, lineHeight: 34, fontWeight: "900" },
+  heroTitleCompact: { fontSize: 23, lineHeight: 29 },
+  lessonTitle: { color: colors.textBody, fontSize: 13, lineHeight: 20, fontWeight: "600" },
+  rewardBar: { flexDirection: "row", alignItems: "center", borderRadius: 18,
+    backgroundColor: "#24233D", borderWidth: 1, borderColor: "#605782",
+    paddingHorizontal: 8, paddingVertical: 13, minHeight: 82 },
+  rewardBarCompact: { paddingVertical: 7, minHeight: 62 },
+  rewardBarTight: { paddingVertical: 5, minHeight: 56 },
+  rewardColumn: { flex: 1, minWidth: 0, alignItems: "center", justifyContent: "center", gap: 4 },
+  rewardValue: { color: "#F3E7BC", fontSize: 23, lineHeight: 30, fontWeight: "900",
+    fontVariant: ["tabular-nums"], includeFontPadding: false },
+  xpSymbol: { color: "#E9CB82", fontSize: 18 },
+  rewardLabel: { color: "#C2B5E4", fontSize: 9, lineHeight: 14, fontWeight: "900", textAlign: "center", letterSpacing: 0.45 },
+  rewardDivider: { width: 1, height: 33, backgroundColor: "#534C71" },
+  progressCard: { paddingHorizontal: 15, paddingVertical: 14, gap: 9, borderRadius: 20,
+    backgroundColor: "#1B2034", borderWidth: 1, borderColor: "#41415F" },
+  progressCardCompact: { paddingVertical: 10, gap: 6 },
+  progressCardTight: { paddingVertical: 7, gap: 4 },
+  progressHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  levelEmblem: { width: 41, height: 41, borderRadius: 14, backgroundColor: "#38305B",
+    borderWidth: 1, borderColor: "#7967B7", alignItems: "center", justifyContent: "center" },
+  levelEmblemText: { color: "#E4D8FF", fontSize: 21, lineHeight: 29, fontWeight: "900" },
+  progressHeadCopy: { flex: 1, minWidth: 0, gap: 2 },
+  progressTitle: { color: colors.text, fontSize: 16, lineHeight: 23, fontWeight: "900" },
+  playerTitle: { color: "#BAAAE9", fontSize: 11, lineHeight: 18, fontWeight: "800", flexShrink: 1 },
+  progressRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  progressSmall: { color: colors.textMuted, fontSize: 9, lineHeight: 15, letterSpacing: 0.35, fontWeight: "900" },
+  progressNumber: { color: "#D4C7FF", fontSize: 12, lineHeight: 18, fontWeight: "900" },
+  remaining: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
+  progressSeparator: { height: 1, backgroundColor: "#3D3F58", marginVertical: 2 },
+  progressSeparatorCompact: { marginVertical: 0 },
+  pathCopy: { flex: 1, minWidth: 0, gap: 2 },
+  pathTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800" },
+  pathCount: { color: "#A6DAD1", fontSize: 13, lineHeight: 19, fontWeight: "900", flexShrink: 0 },
+  pathComplete: { color: "#A0D9C5", fontSize: 11, lineHeight: 17, fontWeight: "800" },
+  practiceDone: { color: "#9FDFC8", fontSize: 12, lineHeight: 18, textAlign: "center", fontWeight: "700" },
+  tools: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7 },
+  toolsCompact: { gap: 5 },
+  tool: { minHeight: 44, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center",
+    borderRadius: 12, borderWidth: 1, borderColor: "#46415E", backgroundColor: "#202338" },
+  practiceTool: { borderColor: "#426F6F", backgroundColor: "#1D3037" },
+  toolPressed: { backgroundColor: "#353150" },
+  toolText: { color: "#D3C6FF", fontSize: 12, lineHeight: 19, fontWeight: "800" },
+  atlasContinue: { width: "100%", maxWidth: 640, alignSelf: "center" },
+  continueGlyph: { color: "#FFFFFF", fontSize: 22, lineHeight: 29, fontWeight: "900", marginLeft: 2 },
 });

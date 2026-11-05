@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - "src/screens/ProgressScreen.tsx"
+      - "src/screens/ResultsScreen.tsx"
+      - "src/screens/WeeklyReviewScreen.tsx"
+      - "scripts/test-weekly-review.cjs"
+      - "scripts/test-lesson-results.cjs"
       - "src/components/ProgressGradientBackground.tsx"
       - "src/components/ProgressMotion.tsx"
       - "src/components/ProgressTrack.tsx"
@@ -64,6 +68,8 @@ jobs:
       - run: npm run typecheck
       - run: node scripts/test-navigation-rules.cjs
       - run: node scripts/test-progress-layout.cjs
+      - run: node scripts/test-lesson-results.cjs
+      - run: node scripts/test-weekly-review.cjs
       - run: node scripts/test-progress-track.cjs
       - run: node scripts/test-profile-layout.cjs
       - run: node scripts/test-learning-detail-sections.cjs
