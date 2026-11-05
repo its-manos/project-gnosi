@@ -12,17 +12,17 @@ const react = { useState(initial) {
   return [states[i], next => { states[i] = typeof next === "function" ? next(states[i]) : next; }];
 } };
 const native = { View: "View", Text: "Text", Pressable: "Pressable", StyleSheet: { create: value => value } };
-const module = { exports: {} };
+const loadedModule = { exports: {} };
 vm.runInNewContext(ts.transpileModule(source, { compilerOptions: {
   jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020,
-} }).outputText, { module, exports: module.exports, require: name => {
+} }).outputText, { module: loadedModule, exports: loadedModule.exports, require: name => {
   if (name === "react") return react;
   if (name === "react/jsx-runtime") return { jsx, jsxs: jsx };
   if (name === "react-native") return native;
   if (name === "../theme") return { colors: { success: "#4A9", error: "#F77", accentLight: "#BAF", text: "#FFF", textMuted: "#AAA", textBody: "#DDD" } };
   throw Error("unexpected feedback import " + name);
 } });
-const { default: Panel, explanationTeaser } = module.exports;
+const { default: Panel, explanationTeaser } = loadedModule.exports;
 const nodes = t => t && typeof t === "object" ? [t, ...[t.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const byId = (t, label) => nodes(t).find(n => n.props?.testID === label);
 const render = props => { index = 0; return Panel(props); };
