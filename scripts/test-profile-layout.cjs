@@ -2,7 +2,8 @@ const assert = require("node:assert/strict"), { load } = require("./helpers/load
 const jsx = (type, props) => ({ type, props });
 // Resolve only the new pure category tile in the headless JSX renderer.
 let subjectTileComponent;
-const resolveTile = tree => tree && tree.type === subjectTileComponent
+const resolveTile = tree => tree && typeof tree === "object"
+  && typeof subjectTileComponent === "function" && tree.type === subjectTileComponent
   ? tree.type(tree.props) : tree;
 const nodes = tree => {
   const node = resolveTile(tree);
