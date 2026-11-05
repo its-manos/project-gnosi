@@ -719,19 +719,23 @@ const ancientIslandTree = archipelago({
   ],
   width: 340, height: 490, onSelectRegion: id => visits.push(id),
 });
-const pyramidArt = nodes(ancientIslandTree).filter(node => node.type === "HistoryWorldIcon");
+const artworkNodes = nodes(ancientIslandTree).filter(node =>
+  typeof node.type === "function" && node.type.name === "IslandArtwork");
+assert.equal(artworkNodes.length, 2, "each region receives one art component");
+const ancientArtworkTree = artworkNodes[0].type(artworkNodes[0].props);
+const otherArtworkTree = artworkNodes[1].type(artworkNodes[1].props);
+const pyramidArt = nodes(ancientArtworkTree).filter(node => node.type === "HistoryWorldIcon");
 assert.equal(pyramidArt.length, 1,
   "only the ancient-greece island reuses the existing Home limestone pyramid");
 assert.ok(pyramidArt[0].props.size >= 24 && pyramidArt[0].props.size <= 43,
   "pyramid artwork scales within the island without enlarging its touch target");
-const pyramidOverlay = nodes(ancientIslandTree).find(node =>
+const pyramidOverlay = nodes(ancientArtworkTree).find(node =>
   node.props?.testID === "island-atlas-ancient-greece-emblem");
 assert.ok(pyramidOverlay, "pyramid is displayed as art inside the island");
 assert.equal(pyramidOverlay.props.pointerEvents, "none",
   "pyramid decoration cannot intercept subcategory selection");
-assert.ok(!nodes(islandsTree).some(node =>
-  node.props?.testID === "island-atlas-ancient-greece-emblem"),
-  "other island IDs keep their existing terrain engraving");
+assert.equal(nodes(otherArtworkTree).filter(node => node.type === "HistoryWorldIcon").length, 0,
+  "other islands retain their existing terrain engraving");
 const ancientIslandButton = nodes(ancientIslandTree).find(node =>
   node.props?.testID === "island-atlas-destination-ancient-greece");
 ancientIslandButton.props.onPress();
