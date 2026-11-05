@@ -219,8 +219,11 @@ const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'
 assert.ok(firstTitle?.props.adjustsFontSizeToFit&&firstTitle?.props.minimumFontScale<=0.9,
   'long Greek subject labels adapt within a two-column tile');
 const subjectTileSource=require('node:fs').readFileSync('src/components/SubjectProgressTile.tsx','utf8');
-assert.match(subjectTileSource,/track: \{[\s\S]*?height: 7,/,
-  'shared mastery and reading bars have visible tracks');
+const progressTrackSource=require('node:fs').readFileSync('src/components/ProgressTrack.tsx','utf8');
+assert.match(subjectTileSource,/<ProgressTrack variant="subject" tone=\{tone\}/,
+  'both mastery and reading tiles share the track surface');
+assert.match(progressTrackSource,/subject: \{[\s\S]*?height: 7,/,
+  'mastery and reading bars retain their existing visible 7pt track');
 assert.match(subjectTileSource,/single: \{ width: "100%"/,
   'small screens retain the accessible single-column fallback');
 assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);
