@@ -233,7 +233,9 @@ const Reading=load('src/components/LearningActivityPanel.tsx',{
   ...common,
   '../state/LearningSession':{
     useLearningSnapshot:()=>readingSnapshot,
+    useLearningDataSnapshot:()=>readingSnapshot,
     useDailySnapshot:()=>daily,
+    useDailyDataSnapshot:()=>daily,
   },
   '../utils/dailySyncDocument':{dailyHistory:()=>[]},
   '../utils/learningActivity':{activityBuckets:()=>[],activitySummary:()=>({})},
