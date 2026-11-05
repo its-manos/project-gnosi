@@ -3,6 +3,8 @@
  * The viewBox and artwork exactly match the embedded FantasyMap backdrop.
  */
 import { memo } from "react";
+import { Image } from "expo-image";
+const atlasImage = require("../../assets/atlas-export-preview/category.webp");
 import { StyleSheet, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 
@@ -22,15 +24,18 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
   const regions = { length: regionCount };
   // Match FantasyMap's compact row allocation (3 regions use two rows).
   const rows = regionCount === 3 ? 2 : Math.max(1, Math.ceil(regionCount / 3));
-  const renderedWidth = Math.min(520, width);
-  const mapHeight = Math.max(180, Math.round(height * MAP_WIDTH / renderedWidth));
-  const renderedHeight = mapHeight * renderedWidth / MAP_WIDTH;
+  // Root background: match the measured viewport exactly, without the
+  // former 520pt map cap or an intermediate rounded height.
+  const mapHeight = height * MAP_WIDTH / width;
   return (
     <View testID="category-atlas-static-background" pointerEvents="none"
       accessible={false} style={[styles.background, {
-        left: (width - renderedWidth) / 2, width: renderedWidth, height: renderedHeight,
+        width, height,
       }]}>
-      <Svg width="100%" height="100%"
+      {regionCount === 6 ? (
+        <Image source={atlasImage} contentFit="fill" transition={0}
+          cachePolicy="memory-disk" style={StyleSheet.absoluteFill} />
+      ) : <Svg width="100%" height="100%"
         viewBox={`0 0 ${MAP_WIDTH} ${mapHeight}`} preserveAspectRatio="xMidYMid meet"
         pointerEvents="none">
         <Defs>
@@ -211,7 +216,7 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
         {fitted ? <Rect testID="atlas-sky-vignette" width={MAP_WIDTH}
           height={mapHeight} fill="url(#atlas-vignette)" pointerEvents="none" /> : null}
 
-      </Svg>
+      </Svg>}
     </View>
   );
 }
@@ -219,6 +224,5 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
 export default memo(CategoryAtlasBackground);
 
 const styles = StyleSheet.create({
-  // FantasyMap itself is centred and capped at 520pt on wide screens.
-  background: { position: "absolute", top: 0, overflow: "hidden" },
+  background: { position: "absolute", top: 0, left: 0, overflow: "hidden" },
 });

@@ -47,6 +47,9 @@ export default function CategoryScreen({
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
   const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
+  const [readyCategoryId, setReadyCategoryId] = useState<string | null>(null);
+  const mapReady = readyCategoryId === category.id;
+  const [screenViewport, setScreenViewport] = useState({ width: 0, height: 0 });
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
     [lessons, category.id, completedLessonIds, progressLoaded],
@@ -85,7 +88,21 @@ export default function CategoryScreen({
     ? Math.round(featuredRegion.completedLessons / featuredRegion.totalLessons * 100) : 0;
 
   return (
-    <View testID="category-atlas-screen" style={styles.screen}>
+    <View testID="category-atlas-screen" style={styles.screen}
+      onLayout={({ nativeEvent: { layout: { width, height } } }) => {
+        if (width > 0 && height > 0) setScreenViewport(prev =>
+          Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1
+            ? prev : { width, height });
+      }}>
+      {/* Keep the static atlas and interactive destinations in the same
+          measured-layout commit; avoid an empty atlas flashing first. */}
+      {screenViewport.width > 0 && screenViewport.height > 0 &&
+        mapViewport.width > 0 && mapViewport.height > 0 ? (
+        <View pointerEvents="none" style={[styles.screenBackground, !mapReady && styles.awaitingMap]}>
+          <CategoryAtlasBackground width={screenViewport.width + 40}
+            height={screenViewport.height} regionCount={mapRegions.length} />
+        </View>
+      ) : null}
       <MotionView entranceDelay={0} testID="category-atlas-header" style={styles.navigationHeader}>
         <Pressable testID="category-atlas-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στους κόσμους γνώσης"
@@ -157,21 +174,17 @@ export default function CategoryScreen({
           setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
             Math.abs(previous.height - height) < 1 ? previous : { width, height });
         }}>
-        {/* Static cartography is independent of the map's interaction tree. */}
-        {mapViewport.width > 0 && mapViewport.height > 0 ? (
-          <CategoryAtlasBackground width={mapViewport.width} height={mapViewport.height}
-            regionCount={mapRegions.length} />
-        ) : null}
         {/* Mount destinations alongside the chart on both platforms. The
             background must never appear as an empty map while waiting for
             card animation callbacks or a second delayed reveal. */}
         {mapViewport.width > 0 && mapViewport.height > 0 ? (
           <View key={category.id} testID="category-atlas-map-entrance"
-            style={styles.mapEntrance}>
+            style={[styles.mapEntrance, !mapReady && styles.awaitingMap]}>
             <FantasyMap
               regions={mapRegions}
               fitViewport={mapViewport}
               hideControls externalBackground
+              onMapLayout={() => setReadyCategoryId(category.id)}
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
               emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
@@ -188,6 +201,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 6, gap: 9, backgroundColor: "#101827",
     overflow: "hidden",
   },
+  // Offset the root padding so the artwork reaches both physical edges.
+  screenBackground: { position: "absolute", top: 0, bottom: 0, left: -20, right: -20 },
+  awaitingMap: { opacity: 0 },
   navigationHeader: {
     minHeight: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
@@ -208,7 +224,7 @@ const styles = StyleSheet.create({
   progressCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   mapViewport: {
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
-    marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",
+    marginBottom: 8,
   },
   // Keep the interactive SVG at its measured size; card motion never blocks
   // island mounting or animates the full SVG and its touch geometry.
