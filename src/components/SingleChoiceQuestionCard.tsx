@@ -20,6 +20,8 @@ type Props = {
   readingSize?: number;
   badgeLabel?: string;
   showFeedback?: boolean;
+  /** Keep submitted options readable in one compact summary instead of four locked rows. */
+  compactAnswered?: boolean;
   combo?: number;
   reportTarget?: ReportTarget;
   testID?: string;
@@ -32,7 +34,7 @@ type Props = {
  */
 export default function SingleChoiceQuestionCard({
   id, question, answers, correctIndex, explanation, questionNumber, answer,
-  onConfirm, readingSize, badgeLabel = "ΜΙΑ ΕΠΙΛΟΓΗ", showFeedback = true,
+  onConfirm, readingSize, badgeLabel = "ΜΙΑ ΕΠΙΛΟΓΗ", showFeedback = true, compactAnswered = false,
   combo = 0, reportTarget, testID = "choice-question-card", testPrefix = "single-choice",
 }: Props) {
   const [draft, setDraft] = useState<number | null>(null);
@@ -84,7 +86,13 @@ export default function SingleChoiceQuestionCard({
     </View>
     <Text accessibilityRole="header" style={[styles.question, scaledQuestion]}>{question}</Text>
     <Text style={styles.hint}>Διάλεξε μία απάντηση και επιβεβαίωσέ την.</Text>
-    <View style={styles.answers}>
+    {answered && compactAnswered ? <View testID={`${testPrefix}-answer-summary`}
+      accessibilityLiveRegion="polite" style={[styles.answerSummary, isCorrect ? styles.summaryCorrect : styles.summaryWrong]}>
+      <Text style={[styles.summaryStatus, isCorrect ? styles.correctText : styles.wrongText]}>
+        {isCorrect ? "✓  Η ΑΠΑΝΤΗΣΗ ΣΟΥ" : "×  Η ΑΠΑΝΤΗΣΗ ΣΟΥ"}
+      </Text>
+      <Text style={styles.summaryText}>{answers[answer]}</Text>
+    </View> : <View style={styles.answers}>
       {answers.map((label, index) => {
         const chosen = selected === index;
         const correctOption = answered && index === correctIndex;
@@ -113,7 +121,7 @@ export default function SingleChoiceQuestionCard({
           </Pressable>
         </AnswerMotion>;
       })}
-    </View>
+    </View>}
     {!answered ? <Pressable
       testID={`${testPrefix}-confirm`}
       accessibilityRole="button"
@@ -145,6 +153,11 @@ export default function SingleChoiceQuestionCard({
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
+  answerSummary: { gap: 5, borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11 },
+  summaryCorrect: { backgroundColor: colors.successSurface, borderColor: colors.success },
+  summaryWrong: { backgroundColor: colors.errorSurface, borderColor: colors.error },
+  summaryStatus: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
+  summaryText: { color: colors.text, fontWeight: "800", fontSize: 15, lineHeight: 23 },
   letterBox: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
     alignItems: "center", justifyContent: "center", flexShrink: 0 },
   letterSelected: { backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.accent },
