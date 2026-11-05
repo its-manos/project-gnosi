@@ -1,12 +1,13 @@
 import { stableLayoutHeight } from "../utils/screenLayout";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, AppState, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useDailySnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
 import { colors } from "../theme";
 
@@ -48,20 +49,15 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
     () => calculateDailyChallengeProgress(history, todayKey),
     [history, todayKey],
   );
+  const pageHeader = <ProfileSectionHeader eyebrow="Ο ΧΩΡΟΣ ΣΟΥ" title="Δραστηριότητα"
+    actionLabel="‹ Προφίλ" actionAccessibilityLabel="Πίσω στο προφίλ"
+    onAction={onBack} style={styles.headerSpacing} />;
 
   return (
     <View style={styles.screen} testID="player-stats-screen" onLayout={event => { const next = event.nativeEvent.layout.height; if (next > 0) setViewportHeight(previous => stableLayoutHeight(previous, next)); }}>
       <ProgressGradientBackground />
       {allowScroll ? <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="stats-accessibility-scroll">
-        <View style={styles.top}>
-          <View style={styles.topCopy}>
-            <Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text>
-            <Text style={styles.topTitle}>Δραστηριότητα</Text>
-          </View>
-          <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}>
-            <Text style={styles.backText}>‹ Προφίλ</Text>
-          </Pressable>
-        </View>
+        {pageHeader}
 
         <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
           <LearningActivityPanel todayKey={todayKey} dashboard />
@@ -144,15 +140,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
           ) : null}
         </MotionView>
       </ScrollView> : <View style={[styles.content, styles.fixedContent]} testID="stats-fixed-dashboard">
-        <View style={styles.top}>
-          <View style={styles.topCopy}>
-            <Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text>
-            <Text style={styles.topTitle}>Δραστηριότητα</Text>
-          </View>
-          <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}>
-            <Text style={styles.backText}>‹ Προφίλ</Text>
-          </Pressable>
-        </View>
+        {pageHeader}
         <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
           <LearningActivityPanel todayKey={todayKey} dashboard />
         </MotionView>
@@ -174,15 +162,9 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: "#101827" },
-  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 6, paddingBottom: 18 },
-  fixedContent: { flex: 1, minHeight: 0, justifyContent: "space-evenly" },
-  top: { minHeight: 45, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 13 },
-  topCopy: { flex: 1, gap: 1 },
-  topTitle: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900" },
-  backButton: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center", backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
-  backPressed: { backgroundColor: "#2D304A" },
-  backText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
-  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 1.1 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 18 },
+  fixedContent: { flex: 1, minHeight: 0, justifyContent: "space-between" },
+  headerSpacing: { marginBottom: profileSectionLayout.below },
   title: { color: colors.text, fontSize: 22, lineHeight: 29, fontWeight: "900" },
   intro: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
   activityOverview: { marginBottom: 8 },

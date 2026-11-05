@@ -62,6 +62,7 @@ const common = {
   "../utils/dailyChallenge": { getAthensDateKey: () => "2026-10-30" },
   "../utils/dailySyncDocument": { dailyHistory: () => history },
   "../components/AppHeader": { __esModule: true, default: "Header" },
+  "../components/ProfileSectionHeader": { __esModule: true, default: "SectionHeader", profileSectionLayout: { horizontal: 18, top: 8, below: 13 } },
   "../components/SyncStatus": { __esModule: true, default: "Sync" },
   "../components/ProgressGradientBackground": { __esModule: true, default: "Gradient" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
@@ -79,6 +80,9 @@ const renderProfile = () => { cursor = 0; return Profile(profileProps); };
 let tree = renderProfile();
 assert.ok(text(tree).includes("επισκέπτης"), "Guest identity remains visible");
 assert.ok(nodes(tree).some(n => n.props?.testID === "profile-identity"));
+const profileHeader = nodes(tree).find(n => n.type === "SectionHeader");
+assert.equal(profileHeader?.props.title, "Το προφίλ σου");
+assert.equal(profileHeader.props.onAction, profileProps.onAccount);
 assert.ok(nodes(tree).some(n => n.props?.testID === "profile-achievements"));
 assert.ok(nodes(tree).some(n => n.type === "MotionXpCircle"), "Level retains its progress ring");
 const pressProfile = label => {
@@ -108,8 +112,8 @@ const render = () => { cursor = 0; return Stats({ onBack() {} }); };
 tree = render();
 const activity = nodes(tree).find(n => n.type === "Activity");
 assert.ok(activity && activity.props.dashboard === true, "Stats should lead with the compact weekly chart");
-assert.equal(nodes(tree).filter(n => n.props?.children === "Δραστηριότητα").length, 1,
-  "Statistics should have one consistent page title");
+assert.equal(nodes(tree).filter(n => n.type === "SectionHeader" && n.props?.title === "Δραστηριότητα").length, 1,
+  "Statistics should use one shared page header");
 assert.ok(!text(tree).includes("Η δραστηριότητά σου"), "Redundant activity introduction should be removed");
 assert.ok(!nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
 assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"), "Default Statistics overview should not scroll");
