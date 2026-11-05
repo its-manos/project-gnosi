@@ -6,6 +6,7 @@ import type { FillBlankQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -125,14 +126,10 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
           pressed && pending !== null && !submitting && styles.confirmPressed]}>
         <Text style={styles.confirmText}>Επιβεβαίωση  →</Text>
       </Pressable> : null}
-    </> : <QuizReveal><View testID="fill-blank-feedback" accessibilityLiveRegion="polite"
-      style={[styles.feedback, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={[styles.feedbackTitle, isCorrect ? styles.goodText : styles.badText]}>
-        {isCorrect ? "✓  Σωστά!" : "Η σωστή συμπλήρωση"}
-      </Text>
-      {!isCorrect ? <Text style={styles.solution}>{correctOption?.text}</Text> : null}
-      <Text style={styles.explanation}>{question.explanation}</Text>
-    </View></QuizReveal>}
+    </> : <QuizReveal><QuestionFeedbackPanel testID="fill-blank-feedback"
+      correct={isCorrect} explanation={question.explanation} readingSize={readingSize}
+      solution={!isCorrect ? <AnswerSummaryText>{correctOption?.text}</AnswerSummaryText> : undefined}
+    /></QuizReveal>}
   </View>;
 }
 
