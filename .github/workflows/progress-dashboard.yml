@@ -17,6 +17,8 @@ on:
       - "src/state/DailyStore.ts"
       - "src/hooks/useKnowledgeProfile.ts"
       - "src/screens/ProfileScreen.tsx"
+      - "src/screens/PlayerStatsScreen.tsx"
+      - "src/components/ProfileSectionHeader.tsx"
       - "src/screens/AccountScreen.tsx"
       - "src/screens/DailyChallengePreferencesScreen.tsx"
       - "src/components/BottomNavigation.tsx"
@@ -28,6 +30,8 @@ on:
       - "scripts/test-progress-layout.cjs"
       - "scripts/test-navigation-rules.cjs"
       - "scripts/test-profile-layout.cjs"
+      - "scripts/test-profile-section-header.cjs"
+      - "scripts/test-profile-fourth-tab.cjs"
       - "scripts/test-learning-activity.cjs"
       - "scripts/test-category-completion.cjs"
       - "scripts/test-knowledge-review-ui.cjs"
@@ -49,6 +53,8 @@ jobs:
       - run: node scripts/test-navigation-rules.cjs
       - run: node scripts/test-progress-layout.cjs
       - run: node scripts/test-profile-layout.cjs
+      - run: node scripts/test-profile-section-header.cjs
+      - run: node scripts/test-profile-fourth-tab.cjs
       - run: node scripts/test-learning-activity.cjs
       - run: node scripts/test-category-completion.cjs
       - run: node scripts/test-knowledge-review-ui.cjs
