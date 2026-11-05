@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     fontWeight: "900", letterSpacing: 0.15,
   },
   categoryCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
-remove unused styles  mapViewport: {
+  mapViewport: {
     flex: 1, minHeight: 0, width: "100%", position: "relative",
     overflow: "hidden", marginBottom: 8, backgroundColor: "transparent",
   },
