@@ -119,8 +119,9 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       {analysis.strongest?<View style={styles.highlightRow}>
         <View style={styles.highlightMark}><Text style={styles.highlightStar}>✦</Text></View>
         <View style={styles.highlightCopy}>
-          <Text style={styles.eyebrow}>ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ</Text>
-          <Text style={styles.highlightTitle}>{topicTitle(analysis.strongest.id)} · {analysis.strongest.correct}/{analysis.strongest.total}</Text>
+          <Text style={styles.eyebrow}>Η ΘΕΜΑΤΙΚΗ ΠΟΥ ΞΕΧΩΡΙΣΕΣ</Text>
+          <Text style={styles.highlightTitle}>{topicTitle(analysis.strongest.id)}</Text>
+          <Text style={styles.highlightDetail}>Σωστές απαντήσεις: {analysis.strongest.correct} από {analysis.strongest.total}</Text>
         </View>
       </View>:null}
       <View style={styles.actionGroup}>
@@ -295,6 +296,7 @@ const styles=StyleSheet.create({
   highlightStar:{color:colors.accentLight,fontSize:17},
   highlightCopy:{flex:1,gap:3},
   highlightTitle:{color:colors.text,fontSize:14,lineHeight:20,fontWeight:'800'},
+  highlightDetail:{color:colors.textMuted,fontSize:12,lineHeight:18},
   actionGroup:{gap:3},
   mistakeAction:{minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:12},
   linkPressed:{backgroundColor:'#262B40'},
