@@ -33,7 +33,8 @@ export default function ResultsScreen({
   const { height, fontScale } = useWindowDimensions();
   const compact = height < 950 || fontScale >= 1.18;
   const tight = height < 790 && fontScale < 1.18;
-  const allowScroll = fontScale >= 1.18 || height < 690;
+  // Scroll only when content genuinely overflows; flexGrow fills spare height.
+  const allowScroll = true;
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const total = getInlineQuestionCount(lesson);
   // Older versions may not have comparable answers. Do not invent accuracy.
@@ -214,9 +215,9 @@ const styles = StyleSheet.create({
   chrome: { paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top },
   header: { marginBottom: 4 },
   viewport: { flex: 1 },
-  content: { width: "100%", maxWidth: 640, alignSelf: "center",
-    paddingHorizontal: 18, paddingTop: 6, paddingBottom: 15, gap: 12 },
-  contentCompact: { paddingTop: 0, paddingBottom: 5, gap: 7, justifyContent: "space-evenly" },
+  content: { width: "100%", maxWidth: 640, alignSelf: "center", flexGrow: 1,
+    justifyContent: "space-evenly", paddingHorizontal: 18, paddingTop: 6, paddingBottom: 10, gap: 10 },
+  contentCompact: { paddingTop: 0, paddingBottom: 4, gap: 7 },
   contentTight: { gap: 4 },
   eyebrow: { color: "#C2B5F4", fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 0.75 },
   hero: { flexDirection: "row", alignItems: "center", gap: 19, paddingVertical: 15, paddingHorizontal: 10 },
@@ -288,17 +289,7 @@ const styles = StyleSheet.create({
   toolText: { color: "#D3C6FF", fontSize: 12, lineHeight: 19, fontWeight: "800" },
   atlasContinue: { width: "100%", maxWidth: 640, alignSelf: "center" },
   footer: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 10,
-    backgroundColor: "#111626", borderTopWidth: 1, borderTopColor: "#34314B" },
+    backgroundColor: "transparent" },
   footerCompact: { paddingTop: 5, paddingBottom: 5 },
-  continueActionCompact: { minHeight: 58, paddingVertical: 6 },
-  continueAction: { minHeight: 67, borderRadius: 17, paddingHorizontal: 13, paddingVertical: 10,
-    flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#AD9DFF",
-    borderWidth: 1, borderColor: "#D7CAFF" },
-  continuePressed: { backgroundColor: "#C3B8FF", transform: [{ scale: 0.991 }] },
-  continueCopy: { flex: 1, minWidth: 0, gap: 3 },
-  continueEyebrow: { color: "#33264A", fontSize: 9, lineHeight: 14, fontWeight: "900", letterSpacing: 1 },
-  continueTitle: { color: "#1C1733", fontSize: 16, lineHeight: 22, fontWeight: "900" },
-  continueGlyphBox: { width: 40, height: 40, borderRadius: 13, flexShrink: 0,
-    backgroundColor: "#8672D3", alignItems: "center", justifyContent: "center" },
   continueGlyph: { color: "#FFFFFF", fontSize: 22, lineHeight: 29, fontWeight: "900", marginLeft: 2 },
 });
