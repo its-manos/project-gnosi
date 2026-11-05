@@ -22,8 +22,8 @@ export default function LessonCover({ lesson, style }: { lesson: Lesson; style: 
           <Circle cx={305} cy={-10} r={160} fill="none" stroke="#F2E6CB" strokeOpacity={0.18} />
           <Circle cx={305} cy={-10} r={120} fill="none" stroke="#F2E6CB" strokeOpacity={0.18} />
           <G opacity={0.15}>
-            <Path d="M0 150 Q90 80 200 145 T400 110 L400 200 H0Z" fill="#101820" />
-            <Path d="M0 190 Q130 90 260 170 T400 160" fill="none" stroke="#F2E6CB" strokeWidth={2} />
+            <Path d="M0 150q90-70 200-5t200-35v90H0Z" fill="#101820" />
+            <Path d="M0 190q130-100 260-20t140-10" fill="none" stroke="#F2E6CB" strokeWidth={2} />
           </G>
         </Svg>
       </View>

@@ -252,9 +252,9 @@ function AdventureAtlasBackground({ width, height }: Props) {
           <Circle r={9} stroke="#BBA98E" strokeWidth={0.75} fill="none" />
           <Path d="M0-34L7-5L0 0L-7-5Z" fill="#BFAF92" />
           <Path d="M0 34L7 5L0 0L-7 5Z" fill="#BFAF92" fillOpacity={0.40} />
-          <Path d="M-34 0L-5-7L0 0L-5 7ZM34 0L5-7L0 0L5 7Z"
+          <Path d="m-34 0 29-7 5 7-5 7Zm68 0L5-7 0 0l5 7Z"
             stroke="#BFAF92" fill="none" strokeWidth={0.9} />
-          <Path d="M-24-24L24 24M24-24L-24 24"
+          <Path d="m-24-24 48 48m0-48-48 48"
             stroke="#BFAF92" strokeWidth={0.65} opacity={0.5} />
           <SvgText x={0} y={-44} textAnchor="middle" fill="#E1D1B6" fontSize={10}>N</SvgText>
         </G>

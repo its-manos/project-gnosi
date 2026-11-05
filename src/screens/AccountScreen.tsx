@@ -21,9 +21,9 @@ function SettingIcon({ id, color }: { id: string; color: string }) {
     {id === "account" ? <>
       <Circle cx={12} cy={8} r={3.3} stroke={color} strokeWidth={1.8} />
       <Path d="M5 20v-1.5c0-3.3 2.7-5.2 7-5.2s7 1.9 7 5.2V20" stroke={color} strokeWidth={1.8} fill="none" />
-    </> : id === "experience" ? <Path d="M12 2.5 14.6 9.4 21.5 12l-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6L12 2.5Z" stroke={color} strokeWidth={1.8} fill="none" />
-    : id === "privacy" ? <Path d="M12 2.5 20 6v5.5c0 4.8-3.3 8-8 10-4.7-2-8-5.2-8-10V6l8-3.5Zm-3.5 9.5 2.3 2.3 4.8-5" stroke={color} strokeWidth={1.8} fill="none" />
-    : id === "sync" ? <Path d="M19 9a7.5 7.5 0 0 0-13-2.5L4 9m0-5v5h5M5 15a7.5 7.5 0 0 0 13 2.5l2-2.5m0 5v-5h-5" stroke={color} strokeWidth={1.8} fill="none" />
+    </> : id === "experience" ? <Path d="m12 2.5 2.6 6.9 6.9 2.6-6.9 2.6-2.6 6.9-2.6-6.9L2.5 12l6.9-2.6z" stroke={color} strokeWidth={1.8} fill="none" />
+    : id === "privacy" ? <Path d="M12 2.5 20 6v5.5c0 4.8-3.3 8-8 10-4.7-2-8-5.2-8-10V6zM8.5 12l2.3 2.3 4.8-5" stroke={color} strokeWidth={1.8} fill="none" />
+    : id === "sync" ? <Path d="M19 9A7.5 7.5 0 0 0 6 6.5L4 9m0-5v5h5m-4 6a7.5 7.5 0 0 0 13 2.5l2-2.5m0 5v-5h-5" stroke={color} strokeWidth={1.8} fill="none" />
     : <><Circle cx={12} cy={12} r={4} stroke={color} strokeWidth={1.8}/><Path d="M12 2v4m0 12v4M2 12h4m12 0h4M5 5l3 3m8 8 3 3m0-14-3 3m-8 8-3 3" stroke={color} strokeWidth={1.8}/></>}
   </Svg>;
 }

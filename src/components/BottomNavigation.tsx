@@ -55,7 +55,7 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
 
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M6 3.5h12v17l-6-3.8-6 3.8z" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }

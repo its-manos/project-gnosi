@@ -326,7 +326,7 @@ export default function SubcategoryScreen({
                             disabled && styles.nodeInsetLocked]} /> : null}
                       {done ? <Text style={styles.nodeCheck}>✓</Text>
                         : disabled ? <Svg width={23} height={25} viewBox="0 0 24 24">
-                          <Path d="M6.5 10V7.5a5.5 5.5 0 0 1 11 0V10M5.5 10h13v10h-13z"
+                          <Path d="M6.5 10V7.5a5.5 5.5 0 0 1 11 0V10m-12 0h13v10h-13z"
                             stroke="#8993A8" strokeWidth={1.8} strokeLinejoin="round" fill="none" />
                           <Circle cx={12} cy={15} r={1.4} fill="#8993A8" />
                         </Svg>

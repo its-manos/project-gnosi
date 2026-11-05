@@ -200,7 +200,7 @@ function HomeAtlasBackground({ showAmbientMotion = true }: { showAmbientMotion?:
             fill="#D3B78D" fillOpacity={0.46} />
           <Path d="M0 86L11 11L0 0L-11 11Z"
             fill="#D3B78D" fillOpacity={0.20} />
-          <Path d="M-86 0L-11-11L0 0L-11 11ZM86 0L11-11L0 0L11 11Z"
+          <Path d="m-86 0 75-11L0 0l-11 11ZM86 0 11-11 0 0l11 11Z"
             fill="#CBB18A" fillOpacity={0.23} />
           <Path d="M-65-65L65 65M65-65L-65 65" opacity={0.42} />
         </G>
