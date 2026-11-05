@@ -5,6 +5,7 @@ import type { MatchingQuestion } from "../quiz/types";
 import { colors } from "../theme";
 import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -13,11 +14,12 @@ type Props = {
   answer?: Readonly<Record<string, string>>;
   onSubmit: (pairs: Record<string, string>) => void;
   readingSize?: number;
+  compactAnswered?: boolean;
   onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Full-width two-stage pairing remains readable with long Greek labels. */
-export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
+export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange, compactAnswered = false }: Props) {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pending, setPending] = useState<Record<string, string>>({});
   useEffect(() => { setSelectedLeft(null); setPending({}); }, [question.id, question.version]);
@@ -62,6 +64,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
+    {(!answered || !compactAnswered) ? <>
     <Text style={styles.hint}>Πάτησε μια έννοια και έπειτα το ταίρι της.</Text>
     <View style={styles.progressLine}>
       <Text style={styles.progressLabel}>ΖΕΥΓΑΡΙΑ</Text>
@@ -117,6 +120,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
         </Pressable>;
       })}
     </View>
+    </> : null}
     {!answered && !onActionChange ? <>
       <Pressable testID="matching-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: !ready }} disabled={!ready}
@@ -125,15 +129,14 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
         <Text style={styles.confirmText}>Επιβεβαίωση ζευγαριών  →</Text>
       </Pressable>
     </> : null}
-    {answered ? <QuizReveal><View testID="matching-feedback" accessibilityLiveRegion="polite"
-      style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={[styles.feedbackTitle, correct ? styles.correctTitle : styles.wrongTitle]}>
-        {correct ? "✓  Σωστή αντιστοίχιση!" : "↗  Οι σωστές αντιστοιχίσεις"}
-      </Text>
-      {!correct ? <View style={styles.solutions}>{pairs.map(pair =>
-        <Text key={pair.leftId} style={styles.solutionText}>✓  {pair.leftLabel} → {pair.rightLabel}</Text>)}</View> : null}
-      <Text style={styles.feedbackText}>{question.explanation}</Text>
-    </View></QuizReveal> : null}
+    {answered ? <QuizReveal><QuestionFeedbackPanel testID="matching-feedback"
+      correct={correct} explanation={question.explanation} readingSize={readingSize}
+      selection={compactAnswered ? <AnswerSummaryText>{pairs.map(pair =>
+        `${pair.leftLabel} → ${labelsByRight.get(assignments[pair.leftId]) ?? "—"}`).join("\n")}
+      </AnswerSummaryText> : undefined}
+      solution={!correct ? <AnswerSummaryText>{pairs.map(pair =>
+        `${pair.leftLabel} → ${pair.rightLabel}`).join("\n")}</AnswerSummaryText> : undefined}
+    /></QuizReveal> : null}
   </View>;
 }
 
