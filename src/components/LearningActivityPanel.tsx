@@ -151,7 +151,8 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
           singleColumn={singleColumn} threeColumn={threeColumn}
           testID={`reading-subject-${category.id}`}
           onPress={() => setSelectedCategoryId(value => value === category.id ? null : category.id)}
-          accessibilityLabel={`${category.title}, ${count} από ${total} ολοκληρωμένα μαθήματα, ${percent}%`} />essable>      ) : (
+          accessibilityLabel={`${category.title}, ${count} από ${total} ολοκληρωμένα μαθήματα, ${percent}%`} />
+      ) : (
         <View key={category.id} style={[styles.category, compact && styles.categoryCompact]}
           accessible accessibilityRole="progressbar"
           accessibilityLabel={category.title}
