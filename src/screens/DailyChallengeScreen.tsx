@@ -1,5 +1,6 @@
 import { useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import AppHeader from "../components/AppHeader";
@@ -9,6 +10,8 @@ import DailyAnswerReview from "../components/DailyAnswerReview";
 import QuizReveal from "../components/QuizReveal";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
+import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
+import QuestionStageFooter from "../components/QuestionStageFooter";
 import KnowledgeProgress from "../components/KnowledgeProgress";
 import { dailyReportTarget } from "../utils/contentReports";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
@@ -31,6 +34,8 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const [review,setReview]=useState<{date:string;mode:'answers'|'mistakes'}|null>(null);
   const [previewOpen,setPreviewOpen]=useState(false);
   const quizViewport=useAdaptiveQuestionScroll();
+  const insets=useSafeAreaInsets();
+  const stageAction=useQuestionStageAction(currentQuestion?.id??"inactive");
   const analysis=dailyResultAnalysis(record,questions,correctCount,resultDetails);
   const recommendation=recommendDailyLesson(analysis.rows,lessons,completedLessonIds,inProgressLessonIds,preferences);
   const reviewing=record.completed&&review?.date===record.dateKey;
@@ -48,13 +53,16 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
     return <QuizTypesPreviewScreen onBack={() => setPreviewOpen(false)} />;
   }
   return <View style={styles.root}><ProgressGradientBackground />
+    {activeQuiz ? <View style={styles.stageTop}>
+      <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.stageHeader} />
+    </View> : null}
     <ScrollView ref={scrollRef} style={styles.viewport}
       contentContainerStyle={[styles.content,activeQuiz&&styles.activeContent]}
       onLayout={quizViewport.onLayout} onContentSizeChange={quizViewport.onContentSizeChange}
       scrollEnabled={!activeQuiz||quizViewport.scrollEnabled}
       bounces={!activeQuiz||quizViewport.scrollEnabled}
       showsVerticalScrollIndicator={false}>
-    <AppHeader onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} />
+    {!activeQuiz ? <AppHeader onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} /> : null}
     {typeof __DEV__ !== "undefined" && __DEV__ && !activeQuiz ? <ActionButton label="Δοκίμασε τα νέα είδη ερωτήσεων (dev)" secondary onPress={() => setPreviewOpen(true)} /> : null}
     {accountScoped&&!activeQuiz?<Text style={styles.note}>Η πρόοδός σου συγχρονίζεται στις συσκευές σου.</Text>:null}
     {isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
@@ -125,6 +133,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         answer={selectedAnswer === null ? undefined : selectedAnswer}
         onConfirm={index => answerQuestion(index)}
         showFeedback={false}
+        onActionChange={stageAction.onActionChange}
         compactAnswered
         reportTarget={dailyReportTarget(currentQuestion)}
         testID="daily-choice-card"
@@ -138,15 +147,22 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         {rewardSummary?.rows[record.currentIndex]?.eligible===false?<Text style={styles.note}>Η ερώτηση έχει ήδη ανταμειφθεί. Συνεχίζει να μετρά στο σημερινό σκορ.</Text>:null}
         <Pressable onPress={()=>void openSource(currentQuestion.sourceUrl)} accessibilityRole="link" style={styles.sourceLink}><Text style={styles.sourceLinkText}>Πηγή: {currentQuestion.sourceTitle} ↗</Text></Pressable>
         {sourceError?<Text style={styles.errorText}>Δεν ήταν δυνατό το άνοιγμα της πηγής.</Text>:null}
-        <ActionButton label={record.currentIndex===6?'Δες το αποτέλεσμα →':'Επόμενη ερώτηση →'} onPress={()=>{sourceRequest.current++;setSourceError(false);void nextQuestion();scrollTop();}}/>
         <Text style={styles.note}>Σωστές μέχρι τώρα: {correctCount} · {correctCount*100} πόντοι</Text>
       </View></QuizReveal>:null}
     </View></QuizReveal>
     :<View style={styles.centerState}><Text style={styles.errorText}>{questionsCompatible?'Δεν ήταν δυνατή η φόρτωση της πρόκλησης.':'Οι ερωτήσεις ενημερώθηκαν από τότε που ξεκίνησες. Οι απαντήσεις σου διατηρήθηκαν· αυτή η έκδοση δεν μπορεί να συνεχίσει με διαφορετικές ερωτήσεις.'}</Text><ActionButton label="Επιστροφή στην αρχική" onPress={onHome}/></View>}
-    </ScrollView></View>;
+    </ScrollView>
+    {activeQuiz ? <QuestionStageFooter bottomInset={insets.bottom} action={selectedAnswer!==null ? {
+      label: record.currentIndex===6 ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →",
+      disabled: false,
+      onPress: () => { sourceRequest.current++; setSourceError(false); void nextQuestion(); scrollTop(); },
+    } : stageAction.action} /> : null}
+  </View>;
 }
 const styles=StyleSheet.create({
   root:{flex:1,backgroundColor:colors.background},viewport:{flex:1},
+  stageTop:{paddingHorizontal:16,paddingTop:6},
+  stageHeader:{marginBottom:2},
   activeContent:{flexGrow:1,paddingHorizontal:16,paddingTop:8,paddingBottom:14},
   content:{width:'100%',maxWidth:720,alignSelf:'center',paddingHorizontal:20,paddingTop:12,paddingBottom:44},
   centerState:{alignItems:'center',justifyContent:'center',paddingTop:60,gap:16},introContainer:{paddingTop:20,gap:10},
