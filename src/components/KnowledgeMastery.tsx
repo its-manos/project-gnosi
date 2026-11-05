@@ -51,7 +51,7 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
               selected={selected} singleColumn={singleColumn} threeColumn={threeColumn}
               testID={`knowledge-subject-${category.id}`}
               onPress={() => setSelectedSubjectId(id => id === category.id ? null : category.id)}
-              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`} />;nPressable>;
+              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`} />;
           })}
         </View>
       ) : (
