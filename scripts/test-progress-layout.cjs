@@ -192,6 +192,13 @@ assert.ok(node(tree, "learning-insights-screen"));
 assert.ok(nodes(tree).some(n => n.type === "GradientBackground"),
   "learning details reuse the same static Midnight Atlas gradient");
 assert.ok(node(tree, "insights-overview"), "detail page leads with a compact mastery overview");
+const overviewShell = node(tree, "insights-overview").props.style[0];
+assert.equal(overviewShell.minHeight, 112, "both overview cards have matching compact height");
+assert.equal(overviewShell.justifyContent, "center", "both progress summaries stay vertically balanced");
+assert.equal(nodes(node(tree, "insights-overview")).filter(n => n.type === "Text").length, 4,
+  "overview card has only its label, actual/total values and ring percent");
+assert.equal(node(tree, "insights-review-action"), undefined,
+  "the overview is strictly informational, with no action button");
 assert.ok(text(node(tree, "insights-overview")).includes("4 / 12"),
   "overview uses actual mastered concepts, not read lesson count");
 assert.ok(nodes(node(tree, "insights-ring")).some(n => n.type === "MotionXpCircle"
@@ -212,6 +219,12 @@ tree = renderInsights();
 assert.ok(node(tree, "learning-insights-reading"));
 assert.ok(text(node(tree, "insights-overview")).includes("7 / " + lessons.length),
   "reading overview retains real completed lesson count");
+assert.equal(node(tree, "insights-overview").props.style[0], overviewShell,
+  "reading and knowledge use the exact same dimensions and layout");
+assert.equal(node(tree, "insights-overview").props.style[1].backgroundColor, "#192A35",
+  "reading retains its original teal-themed surface");
+assert.equal(nodes(node(tree, "insights-overview")).filter(n => n.type === "Text").length, 4,
+  "reading overview also shows no explanatory subtitle or button");
 assert.ok(nodes(node(tree, "insights-ring")).some(n => n.type === "MotionXpCircle"
   && n.props.stroke === "#8BCACB"), "reading uses a distinct teal progress ring");
 assert.ok(nodes(tree).some(n => n.type === "Categories"), "reading detail is available");
@@ -255,8 +268,10 @@ insightProps.completedLessons = [];
 tree = renderInsights();
 assert.ok(text(tree).includes("Τα ολοκληρωμένα μαθήματα θα εμφανιστούν εδώ."));
 assert.ok(!button(tree, "Ολοκληρωμένα μαθήματα"), "fresh account cannot open a nonexistent list");
-assert.ok(text(node(tree, "insights-overview")).includes("Το πρώτο σου μάθημα"),
-  "fresh accounts see a purposeful reading empty state");
+assert.ok(!text(node(tree, "insights-overview")).includes("Το πρώτο σου μάθημα"),
+  "fresh reading overview remains clean with no conditional explanation");
+assert.equal(node(tree, "insights-ring").props.accessibilityValue.now, 0,
+  "empty reading progress stays accessible without explanatory text");
 slots = []; cursor = 0;
 insightProps.initialView = "knowledge";
 tree = renderInsights();
@@ -272,14 +287,15 @@ tree = renderInsights();
 assert.equal(node(tree, "insights-ring").props.accessibilityValue.now, 0);
 assert.ok(!nodes(node(tree, "insights-ring")).some(n => n.type === "MotionXpCircle"),
   "zero mastery does not draw a visible rounded arc-cap dot");
-assert.ok(text(node(tree, "insights-overview")).includes("πρώτη κατάκτηση"),
-  "zero state uses concise, intentional guidance");
+assert.ok(!text(node(tree, "insights-overview")).includes("πρώτη κατάκτηση"),
+  "empty mastery overview avoids a redundant hint");
 knowledge.due = [{}, {}, {}];
 tree = renderInsights();
-const reviewAction = node(tree, "insights-review-action");
-assert.ok(reviewAction, "due knowledge questions have a direct next-step shortcut");
-reviewAction.props.onPress();
-assert.equal(review, 2, "due review shortcut opens the existing knowledge review route");
+assert.equal(node(tree, "insights-review-action"), undefined,
+  "review availability must not add an action row to the top card");
+assert.equal(nodes(tree).find(n => n.type === "Mastery").props.onOpen,
+  insightProps.onKnowledgeReview,
+  "the established KnowledgeMastery review route remains wired for the rest of the screen");
 knowledge.due = [];
 knowledge.categories = existingCategories;
 
