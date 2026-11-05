@@ -10,6 +10,8 @@ on:
       - "src/components/AtlasContinueCard.tsx"
       - "src/components/AtlasCard.tsx"
       - "src/components/FantasyMap.tsx"
+      - "src/components/HomeAtlasBackground.tsx"
+      - "src/components/CategoryAtlasBackground.tsx"
       - "src/components/worldIcons/**"
       - "src/components/HomeMotion.tsx"
       - "src/components/AdventureAtlasBackground.tsx"
@@ -23,6 +25,8 @@ on:
       - "scripts/test-home-layout.cjs"
       - "scripts/test-category-atlas.cjs"
       - "scripts/test-atlas-card-primitives.cjs"
+      - "scripts/optimize-inline-svg.cjs"
+      - "scripts/svgo-paths.config.mjs"
       - ".github/workflows/game-home.yml"
   workflow_dispatch:
 
@@ -37,6 +41,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm run svg:check
       - run: npm run typecheck
       - run: node scripts/test-home-layout.cjs
       - run: node scripts/test-category-atlas.cjs
