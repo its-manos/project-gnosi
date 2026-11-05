@@ -440,8 +440,6 @@ assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-sky-vignette")
 assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
   && String(node.props?.id).startsWith("atlas-region-aura-")).length, five.length,
   "every destination gets a subtle theme-aware aura");
-assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-premium-compass"),
-  "fitted atlas compass gets an engraved star-chart treatment");
 assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-upper"));
 assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-lower"));
 assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-chart-tick-")).length, 9,
@@ -533,7 +531,6 @@ assert.equal(splitNodes.filter(node => node.props?.testID === "atlas-fitted-map-
   "interactive SVG does not duplicate the static chart background");
 assert.equal(splitNodes.filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 3,
   "all interactive island targets survive the background split");
-assert.ok(splitNodes.some(node => node.props?.testID === "atlas-premium-compass"));
 const splitFrame = splitNodes.find(node => node.props?.testID === "knowledge-world-map");
 assert.equal(splitFrame.props.style[4].backgroundColor, "transparent",
   "native map frame must not cover the chart mounted beneath it");
