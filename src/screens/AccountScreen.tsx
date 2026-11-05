@@ -31,8 +31,10 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
   // Account identity does not change during background progress synchronization.
   const { store } = useLearningSession();
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   const goBack = () => activeSection ? setActiveSection(null) : onBack();
-  return <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={activeSection !== null} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
+  return <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <View style={styles.top}>
       <View style={styles.topCopy}>
         <Text style={styles.eyebrow}>{activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}</Text>
