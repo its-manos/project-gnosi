@@ -10,6 +10,7 @@ on:
       - "src/components/AtlasContinueCard.tsx"
       - "src/components/AtlasCard.tsx"
       - "src/components/FantasyMap.tsx"
+      - "src/components/IslandAtlasMap.tsx"
       - "src/components/worldIcons/**"
       - "src/components/HomeMotion.tsx"
       - "src/components/AdventureAtlasBackground.tsx"
