@@ -46,6 +46,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
   }
 
   return <View style={styles.card} testID="matching-card">
+    <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⇄  ΑΝΤΙΣΤΟΙΧΙΣΗ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
