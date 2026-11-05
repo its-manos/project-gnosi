@@ -9,6 +9,7 @@ const subject = load("src/components/SubjectProgressTile.tsx", {
   },
   "./HomeMotion": { MotionPressable: "MotionPressable" },
   "./ProgressMotion": { ProgressBarFill: "ProgressBarFill" },
+  "./ProgressTrack": { __esModule: true, default: "ProgressTrack" },
 }).default;
 const nodes = tree => tree && typeof tree === "object"
   ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
@@ -34,8 +35,10 @@ assert.ok(text(zeroReading).includes("ΜΑΘΗΜΑΤΑ"));
 assert.ok(text(zeroReading).includes("0 / 6"));
 assert.ok(text(zeroReading).includes("›"));
 assert.ok(!text(zeroReading).includes("0%"), "new reader has no fake completion badge");
-const readingTrack = nodes(zeroReading).find(n => n.type === "View" && n.props?.style?.[0]?.height === 7);
-assert.equal(readingTrack.props.style[1].borderColor, "#49717A");
+const readingTrack = nodes(zeroReading).find(n => n.type === "ProgressTrack");
+assert.equal(readingTrack.props.variant, "subject");
+assert.equal(readingTrack.props.tone, "reading");
+assert.equal(readingTrack.props.pointerEvents, "none");
 assert.equal(nodes(readingTrack).find(n => n.type === "ProgressBarFill").props.tone, "reading");
 const title = nodes(zeroReading).find(n => n.type === "Text" && n.props?.children === base.title);
 assert.equal(title.props.numberOfLines, 2);
@@ -64,6 +67,7 @@ assert.equal(knowledge.props.style[1].width, "31.7%");
 assert.equal(knowledge.props.style[4].backgroundColor, "#262840");
 assert.ok(text(knowledge).includes("ΚΑΤΑΚΤΗΣΗ"));
 assert.equal(nodes(knowledge).find(n => n.type === "ProgressBarFill").props.tone, "knowledge");
+assert.equal(nodes(knowledge).find(n => n.type === "ProgressTrack").props.tone, "knowledge");
 const knowledgeBadge = nodes(knowledge).find(n => n.type === "Text" && text(n) === "30%");
 assert.ok(!knowledgeBadge.props.style[1], "knowledge tiles never inherit teal text styling");
 assert.equal(knowledgeBadge.props.style[0].color, "#D3C6FF");
