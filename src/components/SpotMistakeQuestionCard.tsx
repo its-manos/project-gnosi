@@ -77,7 +77,7 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
         const selected = selectedId === option.id;
         const isFalseStatement = answered && option.id === question.content.incorrectOptionId;
         const wrongSelection = answered && selected && !isFalseStatement;
-        return <AnswerMotion key={option.id} active={isFalseStatement || wrongSelection}>
+        return <AnswerMotion key={option.id} active={selected || isFalseStatement || wrongSelection}>
           <Pressable testID={`spot-mistake-option-${option.id}`}
             accessibilityRole="radio"
             accessibilityLabel={`${String.fromCharCode(65 + index)}. ${option.text}`}
