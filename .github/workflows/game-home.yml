@@ -18,6 +18,7 @@ on:
       - "assets/atlas-export-preview/category-world.webp"
       - "scripts/export-category-world-webp.cjs"
       - "src/components/worldIcons/**"
+      - "src/components/islandIcons/**"
       - "src/components/HomeMotion.tsx"
       - "src/components/AdventureAtlasBackground.tsx"
       - "src/components/AdventureMotion.tsx"
