@@ -1,7 +1,10 @@
 import QuizReveal from "../components/QuizReveal";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import QuestionStageFooter from "../components/QuestionStageFooter";
+import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Lesson } from "../data/lessons";
-import ActionButton from "../components/ActionButton";
 import AnswerOption from "../components/AnswerOption";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
@@ -22,11 +25,20 @@ type Props = {
 
 export default function QuizScreen({ combo = 0, lesson, questionIndex, selectedAnswer, score, onBack, onChooseAnswer, onNextQuestion }: Props) {
   const question = lesson.questions[questionIndex];
+  const insets = useSafeAreaInsets();
+  const viewport = useAdaptiveQuestionScroll();
   const isCorrect = selectedAnswer === question.correctIndex;
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <AppHeader onBack={onBack} backLabel="ΑΡΘΡΟ" />
+    <View style={styles.root}>
+      <ProgressGradientBackground />
+      <View style={styles.chrome}>
+        <AppHeader onBack={onBack} backLabel="ΑΡΘΡΟ" style={styles.fixedHeader} />
+      </View>
+      <ScrollView style={styles.viewport} contentContainerStyle={styles.content}
+        onLayout={viewport.onLayout} onContentSizeChange={viewport.onContentSizeChange}
+        scrollEnabled={viewport.scrollEnabled} bounces={viewport.scrollEnabled}
+        showsVerticalScrollIndicator={false}>
       <Text style={styles.eyebrow}>ΕΛΕΓΧΟΣ ΓΝΩΣΕΩΝ</Text>
       <Text style={styles.title}>{lesson.title}</Text>
       <View style={styles.progressRow}>
@@ -56,20 +68,27 @@ export default function QuizScreen({ combo = 0, lesson, questionIndex, selectedA
         <QuizReveal><View style={styles.feedback}>
           <Text style={styles.feedbackTitle}>{isCorrect ? "Σωστά! 🎉" : "Όχι ακριβώς!"}</Text>
           <Text style={styles.body}>{question.explanation}</Text>
-          <ActionButton
-            label={questionIndex === lesson.questions.length - 1 ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →"}
-            onPress={() => onNextQuestion(lesson.questions.length)}
-          />
           {combo > 1 ? <Text style={styles.scoreNote}>ΣΕΡΙ {combo}</Text> : null}
           <Text style={styles.scoreNote}>Σωστές απαντήσεις μέχρι τώρα: {score}</Text>
         </View></QuizReveal>
       )}
-    </ScrollView>
+      </ScrollView>
+      <QuestionStageFooter bottomInset={insets.bottom} action={{
+        label: questionIndex === lesson.questions.length - 1 ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →",
+        disabled: selectedAnswer === null,
+        onPress: () => onNextQuestion(lesson.questions.length),
+      }} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  root: { flex: 1, backgroundColor: colors.background },
+  viewport: { flex: 1 },
+  chrome: { paddingHorizontal: 16, paddingTop: 6 },
+  fixedHeader: { marginBottom: 2 },
+  content: { flexGrow: 1, justifyContent: "center", width: "100%", maxWidth: 720,
+    alignSelf: "center", paddingHorizontal: 16, paddingTop: 10, paddingBottom: 16 },
   eyebrow: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4, lineHeight: 16, marginBottom: 12 },
   title: { color: colors.text, fontSize: 30, fontWeight: "900", lineHeight: 38, marginBottom: 10 },
   progressRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between", alignItems: "center", marginTop: 18, marginBottom: 11 },
