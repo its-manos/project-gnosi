@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import IslandAtlasMap from "../components/IslandAtlasMap";
-import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
+import CategoryWorldAtlasBackground from "../components/CategoryWorldAtlasBackground";
 import { MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
@@ -47,7 +47,6 @@ export default function CategoryScreen({
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
   const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
-  const [screenViewport, setScreenViewport] = useState({ width: 0, height: 0 });
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
     [lessons, category.id, completedLessonIds, progressLoaded],
@@ -88,20 +87,12 @@ export default function CategoryScreen({
   // Atlas 2.0: separate cached cartography, fixed header/card and a dedicated
   // lightweight interactive archipelago. Destinations remain freely selectable.
   return (
-    <View testID="category-atlas-screen" style={styles.screen}
-      onLayout={({ nativeEvent: { layout: { width, height } } }) => {
-        if (width > 0 && height > 0) setScreenViewport(prev =>
-          Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1
-            ? prev : { width, height });
-      }}>
-      {/* Reuse the Adventure Path's cached artwork and composited ambience.
-          The background is separate from live, touchable islands. */}
-      {screenViewport.width > 0 && screenViewport.height > 0 ? (
-        <View pointerEvents="none" style={styles.screenBackground}>
-          <AdventureAtlasBackground width={screenViewport.width + 40}
-            height={screenViewport.height} />
-        </View>
-      ) : null}
+    <View testID="category-atlas-screen" style={styles.screen}>
+      {/* World-scale background is independent of the Adventure Path's Aegean
+          chart. This static layer never delays or intercepts island taps. */}
+      <View pointerEvents="none" style={styles.screenBackground}>
+        <CategoryWorldAtlasBackground />
+      </View>
       <MotionView entranceDelay={0} testID="category-atlas-header" style={styles.navigationHeader}>
         <MotionPressable testID="category-atlas-back" pressScale={0.95} onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στους κόσμους γνώσης"
