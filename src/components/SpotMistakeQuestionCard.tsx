@@ -62,6 +62,7 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
   }
 
   return <View testID="spot-mistake-card" style={styles.card}>
+    <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⌕  ΒΡΕΣ ΤΟ ΛΑΘΟΣ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
