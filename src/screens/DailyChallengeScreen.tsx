@@ -1,5 +1,5 @@
 import { useRef, useState, type ComponentRef } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
@@ -20,7 +20,6 @@ import { dailyResultAnalysis, recommendDailyLesson } from "../utils/dailyResults
 import { selectSharedDailyQuestions } from "../utils/sharedDailyChallenge";
 import { dailyXP } from "../utils/knowledgeScoring";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
-import QuizTypesPreviewScreen from "./QuizTypesPreviewScreen";
 import { colors } from "../theme";
 
 type Props={onHome:()=>void;onOpenPreferences:()=>void;preferences:DailyChallengePreferences;preferencesLoaded:boolean;
@@ -31,9 +30,11 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const {record,rewardSummary,rewardXP,isLoading,currentQuestion,selectedAnswer,correctCount,resultDetails,questionsCompatible=true,startChallenge,answerQuestion,nextQuestion}=useDailyChallenge(preferences,preferencesLoaded);
   const [sourceError,setSourceError]=useState(false),scrollRef=useRef<ComponentRef<typeof ScrollView>>(null),sourceRequest=useRef(0);
   const [review,setReview]=useState<{date:string;mode:'answers'|'mistakes'}|null>(null);
-  const [previewOpen,setPreviewOpen]=useState(false);
   const quizViewport=useAdaptiveQuestionScroll();
   const insets=useSafeAreaInsets();
+  const {height:windowHeight,fontScale}=useWindowDimensions();
+  const compactIntro=windowHeight<900||fontScale>=1.2;
+  const denseIntro=windowHeight<740||fontScale>=1.4;
   const stageAction=useQuestionStageAction(currentQuestion?.id??"inactive");
   const analysis=dailyResultAnalysis(record,questions,correctCount,resultDetails);
   const recommendation=recommendDailyLesson(analysis.rows,lessons,completedLessonIds,inProgressLessonIds,preferences);
@@ -45,10 +46,6 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   async function openSource(url:string){const request=++sourceRequest.current;try{await Linking.openURL(url);if(request===sourceRequest.current)setSourceError(false);}catch{if(request===sourceRequest.current)setSourceError(true);}}
   const canStart=selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE;
   const activeQuiz=record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
-  // Do not touch any persisted daily quiz record during the development pilot.
-  if (typeof __DEV__ !== "undefined" && __DEV__ && previewOpen) {
-    return <QuizTypesPreviewScreen onBack={() => setPreviewOpen(false)} />;
-  }
   return <View style={styles.root}><ProgressGradientBackground />
     {activeQuiz ? <View style={styles.stageTop}>
       <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.stageHeader} />
@@ -60,7 +57,6 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       bounces={quizViewport.scrollEnabled}
       showsVerticalScrollIndicator={false}>
     {!activeQuiz ? <AppHeader style={styles.pageHeader} onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} /> : null}
-    {typeof __DEV__ !== "undefined" && __DEV__ && !activeQuiz ? <ActionButton label="Δοκίμασε τα νέα είδη ερωτήσεων (dev)" secondary onPress={() => setPreviewOpen(true)} /> : null}
     {isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
     :record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
     :record.completed&&review?.date===record.dateKey&&review.mode==='mistakes'?<DailyMistakeReview key={`${record.dateKey}-${record.questionIds.join('-')}`} questions={analysis.practiceQuestions} onDone={closeReview} onAdvance={scrollTop}/>
@@ -102,18 +98,18 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       <Text style={styles.tomorrow}>Νέο σετ αύριο, με την αλλαγή της ημέρας στην Ελλάδα.</Text>
       <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} secondary style={styles.returnAction}/>
     </View></QuizReveal>
-    :!record.started?<View testID="daily-intro" style={styles.introContainer}><QuizReveal><View style={styles.introBody}>
-      <View style={styles.missionHeader}>
-        <View style={styles.heroMark} accessible={false}>
+    :!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal><View style={[styles.introBody,compactIntro&&styles.introBodyCompact]}>
+      <View style={[styles.missionHeader,compactIntro&&styles.missionHeaderCompact]}>
+        <View style={[styles.heroMark,compactIntro&&styles.heroMarkCompact,denseIntro&&styles.heroMarkDense]} accessible={false}>
           <View style={styles.heroOrbit}/>
           <View style={styles.heroCore}><Text style={styles.heroGlyph}>✦</Text></View>
           <View style={styles.heroSatellite}/>
         </View>
         <Text style={styles.eyebrow}>Η ΚΟΙΝΗ ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ</Text>
-        <Text style={styles.title}>7 ερωτήσεις. Κάθε μέρα κάτι νέο.</Text>
-        <Text style={styles.body}>Το ίδιο σημερινό σετ για όλους, από διαφορετικές θεματικές.</Text>
+        <Text style={[styles.title,styles.introTitle,denseIntro&&styles.introTitleDense]}>7 ερωτήσεις. Μια νέα ανακάλυψη.</Text>
+        <Text style={[styles.body,styles.introSubtitle]}>Ίδιες ερωτήσεις για όλους. Νέα θέματα κάθε μέρα.</Text>
       </View>
-      <View style={styles.missionCard}>
+      <View style={[styles.missionCard,compactIntro&&styles.missionCardCompact]}>
         <View pointerEvents="none" style={styles.cardRim}/>
         <Text style={styles.missionLabel}>Η ΣΗΜΕΡΙΝΗ ΔΙΑΔΡΟΜΗ</Text>
         <View style={styles.difficultyRow}>
@@ -131,9 +127,12 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       {!canStart?<Text style={styles.errorText}>Δεν υπάρχουν αρκετές διαθέσιμες ερωτήσεις για σήμερα.</Text>:null}
       <View style={styles.introActions}>
         <ActionButton label="Ξεκίνα την πρόκληση →" onPress={()=>{setSourceError(false);sourceRequest.current++;void startChallenge();}} disabled={!canStart} style={styles.actionPrimary}/>
-        <ActionButton label="Τα ενδιαφέροντά μου" onPress={onOpenPreferences} secondary style={styles.actionSecondary}/>
+        <Pressable testID="daily-interests-link" style={({pressed})=>[styles.interestsLink,pressed&&styles.interestsPressed]}
+          onPress={onOpenPreferences} accessibilityRole="button" accessibilityLabel="Ρύθμιση ενδιαφερόντων">
+          <Text style={styles.interestsText}>Τα ενδιαφέροντά μου  ›</Text>
+        </Pressable>
       </View>
-      <Text style={styles.introNote}>Τα ενδιαφέροντά σου βοηθούν στις προτάσεις μαθημάτων, όχι στην επιλογή του σημερινού σετ. Νέο σετ κάθε μέρα (ώρα Ελλάδας).</Text>
+      <Text style={styles.introNote}>Τα ενδιαφέροντά σου βοηθούν στις προτάσεις μαθημάτων, όχι στην επιλογή του σημερινού σετ.</Text>
     </View></QuizReveal></View>
     :currentQuestion&&questionsCompatible?<QuizReveal key={`${record.dateKey}-${currentQuestion.id}`}><View>
       <View style={styles.stageProgress}>
@@ -194,30 +193,42 @@ const styles=StyleSheet.create({
   title:{color:colors.text,fontSize:27,lineHeight:35,fontWeight:'900',textAlign:'center'},
   body:{color:colors.textBody,fontSize:14,lineHeight:21,textAlign:'center'},
   note:{color:colors.textMuted,fontSize:11,lineHeight:16},
-  introContainer:{flexGrow:1,justifyContent:'center',paddingVertical:8},
-  introBody:{gap:16},
-  missionHeader:{alignItems:'center',gap:9},
-  heroMark:{width:80,height:80,justifyContent:'center',alignItems:'center',marginBottom:2},
+  introContainer:{flexGrow:1,justifyContent:'center',paddingVertical:6},
+  introDense:{paddingVertical:0},
+  introBody:{gap:13},
+  introBodyCompact:{gap:10},
+  missionHeader:{alignItems:'center',gap:8},
+  missionHeaderCompact:{gap:6},
+  introTitle:{fontSize:25,lineHeight:33,maxWidth:440},
+  introTitleDense:{fontSize:23,lineHeight:30},
+  introSubtitle:{maxWidth:380,fontSize:13,lineHeight:19},
+  heroMark:{width:70,height:70,justifyContent:'center',alignItems:'center'},
+  heroMarkCompact:{transform:[{scale:.85}],marginVertical:-5},
+  heroMarkDense:{transform:[{scale:.75}],marginVertical:-9},
   heroOrbit:{position:'absolute',width:76,height:76,borderRadius:38,borderWidth:1,borderColor:'#625986',transform:[{rotate:'-25deg'}]},
   heroCore:{width:56,height:56,borderRadius:20,alignItems:'center',justifyContent:'center',
     backgroundColor:'#343052',borderWidth:1,borderColor:'#696196'},
   heroGlyph:{color:'#D9CEFF',fontSize:31,fontWeight:'700'},
   heroSatellite:{position:'absolute',right:2,top:12,width:9,height:9,borderRadius:5,backgroundColor:'#81BBC1',
     borderWidth:2,borderColor:'#141C2B'},
-  missionCard:{backgroundColor:'#1A2032',borderColor:'#3D4361',borderWidth:1,borderRadius:22,
-    paddingHorizontal:18,paddingTop:18,paddingBottom:14,gap:12,overflow:'hidden'},
+  missionCard:{backgroundColor:'#1A2032',borderColor:'#3D4361',borderWidth:1,borderRadius:20,
+    paddingHorizontal:17,paddingTop:16,paddingBottom:13,gap:10,overflow:'hidden'},
+  missionCardCompact:{paddingTop:13,paddingBottom:11,gap:8},
   cardRim:{position:'absolute',top:0,left:20,right:20,height:2,backgroundColor:'#8376B9'},
   missionLabel:{color:'#B4A8E6',fontSize:10,fontWeight:'900',letterSpacing:1.15},
   difficultyRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},
   difficultyItem:{flex:1,alignItems:'center',gap:2},
   difficultyDivider:{height:32,width:1,backgroundColor:'#394057'},
-  difficultyCount:{color:colors.text,fontSize:28,lineHeight:34,fontWeight:'900'},
+  difficultyCount:{color:colors.text,fontSize:25,lineHeight:30,fontWeight:'900'},
   difficultyLabel:{color:colors.textMuted,fontSize:10,lineHeight:14,fontWeight:'800',letterSpacing:.4},
-  missionFooter:{borderTopWidth:1,borderTopColor:'#343B53',paddingTop:11,
+  missionFooter:{borderTopWidth:1,borderTopColor:'#343B53',paddingTop:9,
     flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:6,flexWrap:'wrap'},
   bonusText:{color:'#C7BAFF',fontSize:11,lineHeight:17,fontWeight:'800'},
-  introActions:{gap:9},
-  introNote:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center',paddingHorizontal:7},
+  introActions:{gap:1},
+  interestsLink:{minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:12},
+  interestsPressed:{backgroundColor:'#272D44'},
+  interestsText:{color:'#BDB0FF',fontSize:13,lineHeight:19,fontWeight:'800'},
+  introNote:{color:colors.textMuted,fontSize:11,lineHeight:16,textAlign:'center',paddingHorizontal:6},
   actionPrimary:{marginTop:0},
   actionSecondary:{marginTop:0},
   resultContainer:{gap:14,paddingTop:12,paddingBottom:8},
