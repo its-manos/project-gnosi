@@ -18,7 +18,6 @@ import Svg, {
 type Props = { width: number; height: number };
 function AdventureAtlasBackground({ width, height }: Props) {
   const reduced = useReducedMotion();
-  const androidLite = Platform.OS === "android";
   const glow = useSharedValue(0.07);
   // 420 map-units wide at every device width, with an exact aspect-ratio
   // match. No aspectFill, crop or non-uniform stretch on either platform.
@@ -39,7 +38,7 @@ function AdventureAtlasBackground({ width, height }: Props) {
   return (
     <View pointerEvents="none" accessible={false} style={styles.underlay}>
       <Image source={atlasImage} contentFit="fill" transition={0}
-        cachePolicy="memory-disk" style={StyleSheet.absoluteFillObject} />
+        cachePolicy="memory-disk" style={StyleSheet.absoluteFill} />
 
       {/* Only this small, separately composited glow changes opacity. */}
       <Animated.View testID="adventure-atlas-ambient-glow" pointerEvents="none"
