@@ -1,4 +1,4 @@
-import { useRef, useState, type ComponentRef } from "react";
+import { useMemo, useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
@@ -29,7 +29,9 @@ type Props={onHome:()=>void;onOpenPreferences:()=>void;preferences:DailyChalleng
   previewIntro?:boolean;onPreviewContinue?:()=>void};
 const topicTitle=(id:string)=>DAILY_CHALLENGE_TOPICS.find(t=>t.id===id)?.title??'Άλλη θεματική';
 const difficultyTitle=(id:string)=>CHALLENGE_DIFFICULTIES.find(d=>d.id===id)?.title??'Μεσαίο';
-export default function DailyChallengeScreen({onHome,onOpenPreferences,preferences,preferencesLoaded,completedLessonIds=[],inProgressLessonIds=[],onOpenLesson,onWeeklyReview,previewIntro=false,onPreviewContinue}:Props) {
+// Avoid a new empty array on every render when the caller omits optional progress.
+const EMPTY_LESSON_IDS: string[] = [];
+export default function DailyChallengeScreen({onHome,onOpenPreferences,preferences,preferencesLoaded,completedLessonIds=EMPTY_LESSON_IDS,inProgressLessonIds=EMPTY_LESSON_IDS,onOpenLesson,onWeeklyReview,previewIntro=false,onPreviewContinue}:Props) {
   const {record,rewardSummary,rewardXP,isLoading,currentQuestion,selectedAnswer,correctCount,resultDetails,questionsCompatible=true,startChallenge,answerQuestion,nextQuestion}=useDailyChallenge(preferences,preferencesLoaded);
   const [sourceError,setSourceError]=useState(false),scrollRef=useRef<ComponentRef<typeof ScrollView>>(null),sourceRequest=useRef(0);
   const [review,setReview]=useState<{date:string;mode:'answers'|'mistakes'}|null>(null);
@@ -39,15 +41,30 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const compactIntro=windowHeight<900||fontScale>=1.2;
   const denseIntro=windowHeight<740||fontScale>=1.4;
   const stageAction=useQuestionStageAction(currentQuestion?.id??"inactive");
-  const analysis=dailyResultAnalysis(record,questions,correctCount,resultDetails);
-  const recommendation=recommendDailyLesson(analysis.rows,lessons,completedLessonIds,inProgressLessonIds,preferences);
+  // A source-link failure or footer update must not recompute the whole
+  // frozen seven-question result and sort the lesson catalogue.
+  const analysis=useMemo(
+    ()=>dailyResultAnalysis(record,questions,correctCount,resultDetails),
+    [record,correctCount,resultDetails],
+  );
+  const resultMask=useMemo(()=>analysis.rows.map(row=>row.correct),[analysis.rows]);
+  const recommendation=useMemo(
+    ()=>record.completed&&!previewIntro
+      ? recommendDailyLesson(analysis.rows,lessons,completedLessonIds,inProgressLessonIds,preferences)
+      : null,
+    [record.completed,previewIntro,analysis.rows,completedLessonIds,inProgressLessonIds,preferences],
+  );
   const reviewing=record.completed&&review?.date===record.dateKey;
   const answeredCount=Object.keys(record.answers).length;
   const scrollTop=()=>scrollRef.current?.scrollTo({y:0,animated:false});
   const showReview=(mode:'answers'|'mistakes')=>{setReview({date:record.dateKey,mode});sourceRequest.current++;setSourceError(false);scrollTop();};
   const closeReview=()=>{setReview(null);scrollTop();};
   async function openSource(url:string){const request=++sourceRequest.current;try{await Linking.openURL(url);if(request===sourceRequest.current)setSourceError(false);}catch{if(request===sourceRequest.current)setSourceError(true);}}
-  const canStart=selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE;
+  // Selecting the shared set is only needed before the attempt starts.
+  const canStart=useMemo(
+    ()=>!record.started&&selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE,
+    [record.dateKey,record.started],
+  );
   const activeQuiz=!previewIntro&&record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
   return <View style={styles.root}><ProgressGradientBackground />
     <View style={styles.pageChrome}>
@@ -88,7 +105,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         </View>
         <View style={styles.resultRoute}>
           <DailyJourneyTrack mode="result" shared={Boolean(record.selectionVersion)}
-            correctMask={analysis.rows.map(row=>row.correct)}/>
+            correctMask={resultMask}/>
         </View>
         <View style={styles.metrics}>
           <View style={styles.metric}><Text style={styles.metricValue}>{analysis.accuracyPercent}%</Text><Text style={styles.metricLabel}>Ακρίβεια</Text></View>
