@@ -25,6 +25,10 @@ const common = {
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
   '../components/QuizReveal': { __esModule: true, default: 'QuizReveal' },
+  '../components/QuestionStageFooter': { __esModule: true, default: 'QuestionStageFooter' },
+  '../hooks/useQuestionStageAction': { useQuestionStageAction: () => ({
+    action: null, onActionChange: () => {},
+  }) },
   '../components/ProgressGradientBackground': { __esModule: true, default: 'ProgressGradientBackground' },
   '../hooks/useAdaptiveQuestionScroll': { useAdaptiveQuestionScroll: () => ({
     scrollEnabled: false, onLayout: () => {}, onContentSizeChange: () => {},
@@ -68,6 +72,8 @@ function reset(answers = {}) {
 function render() { stateIndex=0; refIndex=0; return Reader(props); }
 const nodes = t => t && typeof t === 'object' ? [t, ...[t.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const byId = (t,id) => nodes(t).find(n => n.props?.testID === id);
+const footerAction = t => nodes(byId(t, 'reader-question-screen')).find(n =>
+  n.type === 'QuestionStageFooter')?.props.action;
 const press = (t,label) => nodes(t).find(n => n.type === 'Pressable' && n.props.accessibilityLabel === label).props.onPress();
 const lay = (n,y) => n.props.onLayout({ nativeEvent: { layout: { y } } });
 function openGate(t) {
@@ -135,9 +141,9 @@ for(let i=0;i<total;i++) {
       [i]:{questionVersion:q.props.question.version,value:typedValue},
     }} : {}) }; tree=render();
   assert.equal(nodes(tree).find(n => n.props?.accessibilityRole === 'progressbar').props.accessibilityValue.now,i+1);
-  const advance=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='ActionButton' && (n.props.label.includes('Επόμενη ερώτηση') || n.props.label.includes('Συνέχεια ανάγνωσης')));
-  assert.ok(advance,'answer feedback remains visible until the learner advances');
-  advance.props.onPress(); tree=render();
+  const advance = footerAction(tree);
+  assert.ok(advance && !advance.disabled, 'footer keeps Continue accessible after confirmation');
+  advance.onPress(); tree=render();
   if(i<total-1) assert.ok(byId(tree,`reader-paragraph-${progress.getReadingQuestionPlacements(lesson)[i].afterParagraphNumber+1}`) ||
     progress.getReadingQuestionPlacements(lesson)[i].afterParagraphNumber === progress.getReadingQuestionPlacements(lesson)[i+1].afterParagraphNumber,
     'Any confirmed answer unlocks the next paragraph or next same-section question.');
@@ -203,15 +209,16 @@ assert.ok(nodes(tree).some(n=>n.type==='Text'&&n.props.children==='Ερώτησ�
 props={...props,checkpointAnswers:{0:grouped.questions[0].correctIndex}};
 tree=render();
 assert.ok(byId(tree,'reader-modal-question-0'),'feedback stays on the first question until Continue');
-const nextInGroup=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='ActionButton'&&n.props.label==='Επόμενη ερώτηση →');
-assert.ok(nextInGroup); nextInGroup.props.onPress(); tree=render();
+const nextInGroup = footerAction(tree);
+assert.equal(nextInGroup?.label, 'Επόμενη ερώτηση →');
+nextInGroup.onPress(); tree=render();
 assert.ok(byId(tree,'reader-modal-question-1'),'the second question replaces the first');
 assert.ok(nodes(tree).some(n=>n.type==='Text'&&n.props.children==='Ερώτηση 2 / 2'));
 assert.ok(!byId(tree,'reader-paragraph-7'),'reading cannot skip the second question');
 assert.equal(progress.getReadingResumeParagraphNumber(grouped,props.checkpointAnswers),6,
  'resume returns to the active question at this ending');
-assert.ok(!nodes(byId(tree,'reader-question-screen')).some(n=>n.type==='ActionButton'&&n.props.label==='Συνέχεια ανάγνωσης →'),
- 'no premature continue button between questions sharing a section ending');
+assert.notEqual(footerAction(tree)?.label, 'Συνέχεια ανάγνωσης →',
+ 'no premature continue action between questions sharing a section ending');
 props={...props,checkpointAnswers:{0:grouped.questions[0].correctIndex,1:grouped.questions[1].correctIndex}};
 tree=render();
 assert.ok(byId(tree,'reader-paragraph-7'),'subsequent text unlocks only after both confirmations');
@@ -358,9 +365,8 @@ for(const [index,type,value] of piloted){
  tree=render();
  const restored=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
  assert.deepEqual(JSON.parse(JSON.stringify(restored.props.answer)),value,'same typed response restored');
- const advance=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='ActionButton'&&
-   (n.props.label==='Επόμενη ερώτηση →'||n.props.label==='Συνέχεια ανάγνωσης →'));
- assert.ok(advance); advance.props.onPress();
+ const advance = footerAction(tree);
+ assert.ok(advance && !advance.disabled); advance.onPress();
 }
 assert.ok(byId(tree,'reader-finish'),'all structured answers unlock the original finish gate');
 props={...props,enableReporting:false}; tree=render();
