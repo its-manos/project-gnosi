@@ -79,10 +79,12 @@ export function getIslandAtlasPlacements(count: number, width: number, height: n
   for (let row = 0; row < rows.length; row++) {
     const columns = rows[row];
     const columnWidth = width / columns;
-    const artHeight = Math.max(46, Math.min(112, rowHeight - 42));
+    // Reserve room for a two-line name plate and the progress mark on shorter
+    // screens. An island must not overlap the label in the row below.
+    const artHeight = Math.max(46, Math.min(112, rowHeight - 49));
     const artWidth = Math.max(58, Math.min(163, columnWidth - 12, artHeight * 1.50));
     const widthForLabel = Math.min(columnWidth - 4, Math.max(artWidth + 16, 94));
-    const blockHeight = artHeight + 37;
+    const blockHeight = artHeight + 46;
     for (let col = 0; col < columns; col++) {
       const drift = Math.min(6, Math.max(0, (rowHeight - blockHeight) / 4));
       const xDrift = ((row + col) % 2 === 0 ? -1 : 1) * Math.min(7, columnWidth * 0.035);
@@ -113,6 +115,7 @@ function IslandArtwork({ index, id, width, height, status }: {
   const shore = SHORELINES[index % SHORELINES.length];
   const engraved = status === "complete" ? "#E7C99B"
     : status === "in-progress" ? "#C1B2F7" : "#95AAB6";
+  const discovered = status === "complete" || status === "in-progress";
   const suffix = id.replace(/[^a-z0-9-]/gi, "-") + "-" + index;
 
   return (
@@ -125,14 +128,24 @@ function IslandArtwork({ index, id, width, height, status }: {
           <Stop offset="1" stopColor={colors[2]} />
         </LinearGradient>
       </Defs>
-      <Ellipse cx={90} cy={68} rx={84} ry={43} fill="none"
-        stroke="#98B7BE" strokeOpacity={0.13} strokeWidth={1.2} />
+      {/* Atmospheric halo is static: no native blur/shadow or animated SVG. */}
+      {discovered ? <Ellipse cx={90} cy={68} rx={87} ry={45}
+        fill={engraved} fillOpacity={0.045}
+        stroke={engraved} strokeOpacity={0.27} strokeWidth={1.4} /> : null}
+      <Ellipse cx={90} cy={68} rx={83} ry={42} fill="none"
+        stroke="#98B7BE" strokeOpacity={0.15} strokeWidth={1} />
       <Ellipse cx={90} cy={68} rx={76} ry={39} fill="none"
         stroke="#C7B79D" strokeOpacity={0.15} strokeWidth={0.7} />
       <Path d={shore} fill="#0A1A26" opacity={0.70}
         transform="translate(0 6)" />
       <Path d={shore} fill={"url(#island-land-" + suffix + ")"}
-        stroke={engraved} strokeOpacity={0.76} strokeWidth={1.7} strokeLinejoin="round" />
+        stroke={engraved} strokeOpacity={discovered ? 0.92 : 0.62}
+        strokeWidth={discovered ? 1.9 : 1.55} strokeLinejoin="round" />
+      {/* A few contour strokes suggest relief without increasing redraw cost. */}
+      <Path d="M 30 56 Q 52 31 77 40 T 126 40 Q 143 45 149 56"
+        fill="none" stroke="#E0CFB2" strokeOpacity={0.16} strokeWidth={1.1} />
+      <Path d="M 39 82 Q 61 90 85 85 T 128 82"
+        fill="none" stroke="#0B2634" strokeOpacity={0.36} strokeWidth={1.3} />
       <Path d="M 32 61 Q 50 43 70 52 T 109 47 Q 129 48 143 65"
         fill="none" stroke="#E9D9BC" strokeOpacity={0.35} strokeWidth={1.1} />
       <Path d="M 37 70 Q 61 56 80 68 T 132 67"
@@ -182,7 +195,8 @@ function IslandAtlasMap({ regions, width, height, onSelectRegion }: Props) {
       {regions.map((region, index) => {
         const position = placements[index];
         const percent = region.progressLoaded && region.totalLessons > 0
-          ? Math.round(region.completedLessons / region.totalLessons * 100) : 0;
+          ? Math.max(0, Math.min(100,
+              Math.round(region.completedLessons / region.totalLessons * 100))) : 0;
         const statusText = !region.progressLoaded ? ", φόρτωση προόδου"
           : region.status === "coming-soon" ? ", σύντομα"
           : ", " + region.completedLessons + " από " + region.totalLessons + " μαθήματα";
@@ -195,19 +209,29 @@ function IslandAtlasMap({ regions, width, height, onSelectRegion }: Props) {
             }, pressed && styles.pressed]}
             accessibilityRole="button"
             accessibilityLabel={region.title + statusText}
+            accessibilityHint="Άνοιγμα περιοχής γνώσης"
             onPress={() => onSelectRegion(region.id)}>
             <IslandArtwork index={index} id={region.id}
               width={position.artWidth} height={position.artHeight} status={region.status} />
-            <Text testID={"island-atlas-label-" + region.id}
-              style={[styles.label, region.status === "in-progress" && styles.activeLabel]}
-              numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.78}>
-              {region.title}
-            </Text>
+            {/* A translucent cartographic name plate keeps Greek labels readable
+                above real coastlines, without becoming another content card. */}
+            <View testID={"island-atlas-nameplate-" + region.id}
+              pointerEvents="none"
+              style={[styles.namePlate,
+                region.status === "in-progress" && styles.activePlate,
+                region.status === "complete" && styles.completePlate]}>
+              <Text testID={"island-atlas-label-" + region.id}
+                style={[styles.label, region.status === "in-progress" && styles.activeLabel]}
+                numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.78}>
+                {region.title}
+              </Text>
+            </View>
             {region.status === "coming-soon" && region.progressLoaded ?
               <Text style={styles.soon}>ΣΥΝΤΟΜΑ</Text> :
-              <View pointerEvents="none" style={styles.progressRail}>
+              <View testID={"island-atlas-progress-" + region.id}
+                pointerEvents="none" style={styles.progressRail}>
                 <View style={[styles.progressFill, {
-                  width: Math.round(38 * percent / 100),
+                  width: Math.round(56 * percent / 100),
                   backgroundColor: region.status === "complete" ? "#CEB38A" : "#AE9DFB",
                 }]} />
               </View>}
@@ -229,22 +253,30 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   pressed: { opacity: 0.77, transform: [{ scale: 0.96 }] },
+  namePlate: {
+    width: "100%", minHeight: 32, paddingHorizontal: 4, paddingVertical: 2,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(10, 23, 38, 0.68)",
+    borderRadius: 9, borderWidth: 1, borderColor: "rgba(166, 176, 183, 0.18)",
+  },
+  activePlate: { borderColor: "rgba(190, 173, 246, 0.52)" },
+  completePlate: { borderColor: "rgba(213, 184, 137, 0.46)" },
   label: {
-    width: "100%", minHeight: 28,
+    width: "100%", minHeight: 26,
     textAlign: "center", textAlignVertical: "center",
-    color: "#E1E5EB", fontSize: 11.5, lineHeight: 14,
+    color: "#E6E8EB", fontSize: 11.5, lineHeight: 14,
     fontWeight: "800", letterSpacing: 0.1,
-    textShadowColor: "#08121F", textShadowRadius: 5, textShadowOffset: { width: 0, height: 1 },
+    textShadowColor: "#08121F", textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 },
   },
   activeLabel: { color: "#D8CAFF" },
   progressRail: {
-    marginTop: 2, width: 38, height: 2, borderRadius: 2,
-    backgroundColor: "#405063", overflow: "hidden",
+    marginTop: 5, width: 56, height: 3, borderRadius: 2,
+    backgroundColor: "rgba(143, 159, 177, 0.28)", overflow: "hidden",
   },
-  progressFill: { height: 2, borderRadius: 2 },
+  progressFill: { height: 3, borderRadius: 2 },
   soon: {
-    color: "#98A7B4", fontSize: 8, letterSpacing: 0.8,
-    fontWeight: "900", lineHeight: 10,
+    color: "#ADB9C4", fontSize: 8, letterSpacing: 0.8,
+    fontWeight: "900", lineHeight: 10, marginTop: 4,
   },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, gap: 8 },
   emptyTitle: { color: "#E4D9F9", fontSize: 17, fontWeight: "800", textAlign: "center" },
