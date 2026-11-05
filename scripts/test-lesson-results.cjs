@@ -13,7 +13,10 @@ let slots=[],cursor=0;
 const jsx=(type,props)=>({type,props});
 const react={useMemo:fn=>fn(),useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
 const native=Object.fromEntries(['View','Text','Pressable','ScrollView','FlatList','TextInput'].map(n=>[n,n]));native.StyleSheet={create:x=>x};native.Keyboard={dismiss(){}};
-const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,...Object.fromEntries(['KnowledgeProgress','ActionButton','AppHeader','LessonResultChart','ReportContentButton','LessonCard','LessonCover'].map(n=>['../components/'+n,{__esModule:true,default:n}]))};
+const componentStubs=['KnowledgeProgress','ActionButton','AppHeader','LessonResultChart','ReportContentButton','LessonCard','LessonCover',
+ 'AtlasCard','ProfileSectionHeader','ProgressGradientBackground','ProgressTrack'];
+const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,
+ ...Object.fromEntries(componentStubs.map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]))};
 const {lessons,categories,subcategories}=load('src/data/lessons.ts');
 const {getSubcategoryPath}=load('src/utils/lessonPath.ts');
 const Screen=load('src/screens/ResultsScreen.tsx',stubs).default;
@@ -23,34 +26,59 @@ assert.equal(lesson.questions.length,4,'results fixture requires an actual four-
 const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
 const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(' '):t&&typeof t==='object'?text(t.props?.children):'';
 const action=(tree,label)=>nodes(tree).find(n=>n.type==='ActionButton'&&n.props.label===label);
+const named=(tree,id)=>nodes(tree).find(n=>n.props?.testID===id);
 const virtualCards=tree=>{const list=nodes(tree).find(n=>n.type==='FlatList');assert.ok(list,'expected a virtualized lesson list');return list.props.data.flatMap((item,index)=>nodes(list.props.renderItem({item,index})).filter(n=>n.type==='LessonCard'));};
 const render=(component,props)=>{cursor=0;return component(props);};
 let home=0,drill=0,replay=0,weekly=0,browse=0;const opened=[];
 const props={lesson,score:4,nextLesson:next,pathProgress:{title:'Αρχαία Ελλάδα',completed:1,total:4},onHome:()=>home++,onReadAgain:()=>replay++,onReviewMistakes:()=>drill++,onWeeklyReview:()=>weekly++,onOpenLesson:id=>opened.push(id),onBrowse:()=>browse++,lessonScores:{best:4,mastered:4,total:4,hasDetails:true},review:{status:'perfect',indices:[],result:{questionCount:4,correctCount:4}}};
 let tree=render(Screen,props);
-assert.ok(text(tree).includes('Τα πέτυχες όλα!'));assert.ok(!action(tree,'Πλήρης επανάληψη μαθήματος'));
+assert.ok(text(tree).includes('Τα πέτυχες όλα!'));
+assert.ok(named(tree,'lesson-results-screen')&&named(tree,'lesson-result-hero'));
+assert.ok(nodes(tree).some(n=>n.type==='ProfileSectionHeader'),'result shares fixed Midnight Atlas header');
+assert.ok(nodes(tree).some(n=>n.type==='ProgressGradientBackground'));
+assert.ok(!nodes(tree).some(n=>n.type==='LessonResultChart'),'oversized score donut removed');
+assert.ok(!nodes(tree).some(n=>n.type==='KnowledgeProgress'),'XP detail card stays out of main result');
 assert.ok(!nodes(tree).some(n=>n.type==='ReportContentButton'),'secondary details are collapsed');
-assert.ok(text(tree).split(/\s+/).length<100,'primary result stays concise');
-action(tree,'Επόμενο μάθημα').props.onPress();assert.deepEqual(opened,[next.id]);
-action(tree,'Επιστροφή στην αρχική').props.onPress();assert.equal(home,1);
-assert.ok(!action(tree,'Επόμενο μάθημα').props.secondary,'next is primary on success');
-assert.ok(nodes(tree).findIndex(n=>n.props?.label==='Επόμενο μάθημα')<nodes(tree).findIndex(n=>n.props?.accessibilityRole==='progressbar'),'actions precede supplementary path chart');
-nodes(tree).find(n=>n.type==='Pressable'&&n.props.accessibilityState?.expanded===false).props.onPress();tree=render(Screen,props);
-action(tree,'Προαιρετική επανάληψη μαθήματος').props.onPress();assert.equal(replay,1);action(tree,'Νέες δοκιμές κατανόησης').props.onPress();assert.equal(weekly,1);
+const header=nodes(tree).find(n=>n.type==='ProfileSectionHeader');
+header.props.onAction();assert.equal(home,1);
+named(tree,'lesson-next-action').props.onPress();assert.deepEqual(opened,[next.id]);
+assert.equal(named(tree,'lesson-result-score').type,'AtlasCard');
+assert.ok(named(tree,'lesson-path-progress'),'compact path progress survives');
+assert.ok(!action(tree,'Επιστροφή στην αρχική'),'no duplicate Home CTA');
+assert.ok(!nodes(tree).some(n=>n.type==='ActionButton'),'completed result has a single next-lesson destination');
+named(tree,'lesson-result-details').props.onPress();tree=render(Screen,props);
+assert.ok(nodes(tree).some(n=>n.type==='KnowledgeProgress'));
+action(tree,'Προαιρετική επανάληψη μαθήματος').props.onPress();assert.equal(replay,1);
+action(tree,'Νέες δοκιμές κατανόησης').props.onPress();assert.equal(weekly,1);
 assert.ok(nodes(tree).some(n=>n.type==='ReportContentButton'),'reporting remains available');
 for(let score=0;score<=4;score++){
  slots=[];const p={...props,score,review:score===4?props.review:{status:'available',indices:Array.from({length:4-score},(_,i)=>i),result:{questionCount:4,correctCount:score}}};tree=render(Screen,p);
- const chart=nodes(tree).find(n=>n.type==='LessonResultChart');assert.equal(chart.props.correct,score);assert.equal(chart.props.total,4);
- assert.ok(action(tree,'Επόμενο μάθημα'));assert.ok(action(tree,'Επιστροφή στην αρχική'));
+ const card=named(tree,'lesson-result-score');assert.ok(card);
+ assert.ok(nodes(card).some(n=>n.props?.accessibilityRole==='progressbar'),'known result has accessible accuracy');
+ const scoreRow=nodes(card).find(n=>n.type==='View'&&n.props?.accessibilityLabel?.includes('σωστές απαντήσεις'));
+ assert.ok(scoreRow.props.accessibilityLabel.includes(score+' από 4'));
+ assert.ok(named(tree,'lesson-next-action'));
  assert.equal(text(tree).includes('Τα πέτυχες όλα!'),score===4);
- if(score<4){const practice=action(tree,`Εξάσκηση στα λάθη (${4-score})`);assert.ok(practice);practice.props.onPress();}
- if(score<3)assert.equal(!!action(tree,`Εξάσκηση στα λάθη (${4-score})`).props.secondary,false,'practice is primary for a low score');
+ if(score<3){
+  const practice=action(tree,'Εξάσκηση στα λάθη ('+(4-score)+') →');assert.ok(practice,'mistake practice is the primary action on low scores');
+  assert.ok(!practice.props.secondary);practice.props.onPress();
+ }else{
+  assert.ok(!action(tree,'Εξάσκηση στα λάθη ('+(4-score)+') →'));
+ }
 }
-assert.equal(drill,4);
-slots=[];tree=render(Screen,{...props,score:1,returning:true,review:{...props.review,result:{questionCount:4,correctCount:1}}});assert.equal(nodes(tree).find(n=>n.type==='LessonResultChart').props.correct,4,'returning uses best, not latest');
-slots=[];tree=render(Screen,{...props,returning:true,lessonScores:{best:null,mastered:0,total:4,hasDetails:false},review:{status:'changed',indices:[],result:{correctCount:4,questionCount:4}}});assert.ok(!nodes(tree).some(n=>n.type==='LessonResultChart'),'changed historical quiz is not displayed as a current result');
-slots=[];tree=render(Screen,{...props,nextLesson:null,pathProgress:{title:'Μυθολογία',completed:1,total:1}});assert.ok(!action(tree,'Επόμενο μάθημα'));assert.ok(text(tree).includes('Ολοκλήρωσες αυτή τη διαδρομή!'));
-nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Διάλεξε άλλη θεματική')).props.onPress();assert.equal(browse,1);
+assert.equal(drill,3);
+slots=[];tree=render(Screen,{...props,score:1,returning:true,review:{...props.review,result:{questionCount:4,correctCount:1}}});
+assert.ok(nodes(named(tree,'lesson-result-score')).some(n=>n.props?.accessibilityLabel?.includes('4 από 4')),'returning uses best not latest');
+assert.ok(!text(named(tree,'lesson-result-score')).includes('XP απονομής'),'returning does not imply a new XP reward');
+slots=[];tree=render(Screen,{...props,returning:true,lessonScores:{best:null,mastered:0,total:4,hasDetails:false},review:{status:'changed',indices:[],result:{correctCount:4,questionCount:4}}});
+assert.ok(text(tree).includes('δεν υπάρχει συγκρίσιμος αναλυτικός βαθμός'),'changed historical quiz is not fabricated');
+assert.ok(!nodes(named(tree,'lesson-result-score')).some(n=>n.props?.accessibilityRole==='progressbar'));
+slots=[];tree=render(Screen,{...props,nextLesson:null,pathProgress:{title:'Μυθολογία',completed:1,total:1}});
+assert.ok(!named(tree,'lesson-next-action'));assert.ok(text(tree).includes('Ολοκλήρωσες αυτή τη διαδρομή!'));
+action(tree,'Διάλεξε άλλη θεματική →').props.onPress();assert.equal(browse,1);
+slots=[];tree=render(Screen,{...props,score:1,nextLesson:null,pathProgress:{title:'Μυθολογία',completed:1,total:1},review:{status:'available',indices:[0,1,2],result:{questionCount:4,correctCount:1}}});
+assert.ok(action(tree,'Εξάσκηση στα λάθη (3) →'));
+assert.ok(action(tree,'Διάλεξε άλλη θεματική →').props.secondary,'browse stays secondary when mistake practice is primary');
 // Exercise the actual chart output, including zero/full results and screen-reader text.
 const Chart=load('src/components/LessonResultChart.tsx',{...stubs,'react-native-svg':{__esModule:true,default:'Svg',Circle:'Circle'}}).default;
 for(const correct of [0,1,3,4]){const graph=Chart({correct,total:4,label:'Αυτή η προσπάθεια'});assert.ok(graph.props.accessibilityLabel.includes(`${correct} από 4`));for(const circle of nodes(graph).filter(n=>n.type==='Circle'&&n.props.strokeDasharray))assert.ok(!circle.props.strokeDasharray.includes('NaN'));assert.equal(nodes(graph).filter(n=>n.type==='Circle').length,correct?2:1);}
@@ -64,6 +92,5 @@ tree=Sub({...base,lessons:[locked,next,lesson],subcategory:subcategories.find(s=
 const cards=virtualCards(tree);assert.deepEqual(cards.map(c=>c.props.lesson.id),[lesson.id,next.id,locked.id]);assert.equal(cards[0].props.lockedReason,undefined);assert.ok(cards[1].props.lockedReason);
 const Card=load('src/components/LessonCard.tsx',{...stubs,'./LessonCover':{__esModule:true,default:'Cover'}}).default;
 const card=Card({lesson:locked,onPress(){},lockedReason:'Ολοκλήρωσε πρώτα το προηγούμενο μάθημα'});assert.equal(card.props.disabled,true);assert.equal(card.props.accessibilityState.disabled,true);
-console.log('Lesson result UI passed: brief copy, exact score chart, success/low-score priorities, next/home callbacks, persistent mistake practice, collapsed replay/weekly/report options, best-vs-latest, changed/legacy results, final lesson and locked saved/subcategory cards. Native views mocked.');
+console.log('Lesson result UI passed: Midnight Atlas hierarchy, accessible compact score, single next action, mistake-first logic, XP details, old and changed scores, path completion, optional actions, and locked cards. Native views mocked.');
 
-assert.equal(nodes(render(Screen,props)).filter(n=>n.type==='KnowledgeProgress').length,1,'exactly one XP card on the result screen');
