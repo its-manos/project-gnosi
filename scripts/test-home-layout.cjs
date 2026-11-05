@@ -877,19 +877,15 @@ for (const start of chapterBeginnings) {
 }
 assert.equal(stopPositions[1].props.style[1].top - stopPositions[0].props.style[1].top, 142,
   "normal checkpoint density is unchanged outside chapter boundaries");
-const atlasLayer = nodes(pinnedFrame).find(node => node.props?.testID === "adventure-atlas-underlay");
-assert.ok(atlasLayer, "underlay is inside the fixed map viewport");
+const atlasLayer = nodes(tree).find(node => node.props?.testID === "adventure-atlas-underlay");
+assert.ok(atlasLayer, "atlas underlay is mounted at screen level behind the map");
 assert.equal(atlasLayer.props.pointerEvents, "none", "atlas never intercepts taps");
-assert.ok(!nodes(categoryHeader).some(node => node.props?.testID === "adventure-atlas-underlay"),
-  "atlas does not extend beneath the fixed header");
-assert.ok(!nodes(compactCard).some(node => node.props?.testID === "adventure-atlas-underlay"),
-  "atlas does not extend beneath the Continue card");
-assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 0,
-  "no oversized atlas is mounted inside the scrolling path");
+assert.ok(!nodes(categoryHeader).some(node => node.props?.testID === "adventure-atlas-underlay"));
+assert.ok(!nodes(compactCard).some(node => node.props?.testID === "adventure-atlas-underlay"));
 assert.equal(nodes(nestedScroll).filter(node => node.props?.testID === "adventure-atlas-underlay").length, 0,
-  "atlas stays fixed as the scroll content moves");
-assert.equal(pinnedFrame.props.children[0].props.testID, "adventure-atlas-underlay",
-  "map underlay is drawn behind the scrolling checkpoints");
+  "atlas stays outside the scrolling checkpoints");
+assert.equal(nodes(mapFrame).filter(node => node.type === "AtlasBackground").length, 0,
+  "atlas is not duplicated inside the scrollable path");
 assert.equal(nodes(mapFrame).filter(node => node.type === "AdventureActiveHalo").length, 1,
   "only the active checkpoint receives a breathing halo");
 const medallionParts = lessonId => {
@@ -1103,60 +1099,34 @@ const staticAtlas = compile("src/components/AdventureAtlasBackground.tsx", {
     withTiming: target => target,
   },
 });
-const islandCount = tree => nodes(tree).filter(node => node.type === "g"
-  && typeof node.props?.transform === "string"
-  && /^translate\([^)]*\) rotate\(/.test(node.props.transform)).length;
 native.Platform.OS = "ios";
 const iosAtlas = staticAtlas({ width: 360, height: 680 });
-assert.equal(islandCount(iosAtlas), 30, "iPhone retains all island silhouettes");
+const iosBitmap = nodes(iosAtlas).find(node => node.type === "ExpoImage");
+assert.ok(iosBitmap, "iOS renders the bundled subcategory atlas");
+assert.equal(iosBitmap.props.source, 2);
+assert.equal(iosBitmap.props.contentFit, "fill");
+assert.equal(iosBitmap.props.transition, 0);
 native.Platform.OS = "android";
 const androidAtlas = staticAtlas({ width: 360, height: 680 });
-assert.equal(islandCount(androidAtlas), 20,
-  "Android omits ten tiny islets but keeps all important landmasses");
+assert.equal(nodes(androidAtlas).filter(node => node.type === "ExpoImage").length, 1,
+  "Android uses the same bundled atlas bitmap");
 assert.equal(nodes(androidAtlas).filter(node =>
   node.props?.testID === "adventure-atlas-ambient-glow").length, 1,
-  "Android retains atmospheric movement in a compact native view");
+  "Android retains the bounded atmospheric glow");
 native.Platform.OS = "ios";
-
 const atlasSource = fs.readFileSync(path.join(root, "src/components/AdventureAtlasBackground.tsx"), "utf8");
 const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/AdventureMotion.tsx"), "utf8");
-assert.match(atlasSource, /useReducedMotion/, "atlas respects reduce motion");
-assert.match(atlasSource, /pointerEvents="none"/, "atlas cannot intercept lesson taps");
-assert.match(atlasSource, /withRepeat\(/, "atlas has low-frequency ambient motion");
-assert.match(atlasSource, /const west =/, "atlas has a recognisable western mainland coastline");
-assert.match(atlasSource, /const east =/, "atlas has an eastern Anatolian coastline");
-assert.match(atlasSource, /const crete =/, "Crete anchors the southern map");
-assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptical");
-assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
-assert.doesNotMatch(atlasSource, /styles\.tideLayer|waveStyle|translateX: tide\.value/,
-  "the full-screen tide SVG must not animate transforms or opacity");
-assert.match(atlasSource, /testID="adventure-atlas-ambient-glow"/,
-  "a compact native-opacity glow replaces the viewport-sized animated tide");
-assert.match(atlasSource, /const glowStyle = useAnimatedStyle/,
-  "the atlas effect animates only a view style, not SVG element props");
-assert.doesNotMatch(atlasSource, /useAnimatedProps/,
-  "Adventure background never updates SVG attributes per frame");
-assert.match(atlasSource, /strokeDasharray="3 16" opacity=\{0\.30\}/,
-  "the original sea-current contours remain visible as static SVG paths");
-assert.match(atlasSource, /width: width \* 0\.64, height: height \* 0\.34/,
-  "the animated atmosphere occupies only a bounded fraction of the viewport");
-assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
-assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
-const islandDefinitions = atlasSource.split("const islands: Isle[] = [")[1]?.split("];")[0];
-assert.ok(islandDefinitions, "atlas retains a static island definition list");
-assert.ok((islandDefinitions.match(/{ x: /g) || []).length >= 30,
-  "small archipelagos add geographic detail without extra animated layers");
-assert.match(atlasSource, /key={"fret-" \+ index}/,
-  "Greek-key corner patterns are static atlas engravings");
-assert.match(atlasSource, /Fine chart bearings/,
-  "subtle nautical bearings remain underneath lesson routes");
-
-assert.match(atlasSource, /RadialGradient id="adventure-atlas-ambient"/,
-  "static center light adds visual depth");
-assert.match(atlasSource, /RadialGradient id="adventure-atlas-vignette"/,
-  "static edge vignette focuses the path");
-assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
-  "lighting adds no animated layers beyond the existing ambient tide");
+assert.ok(atlasSource.includes("useReducedMotion"), "atlas respects reduced motion");
+assert.ok(atlasSource.includes('pointerEvents="none"'), "atlas cannot intercept lesson taps");
+assert.ok(atlasSource.includes("withRepeat("), "ambient glow retains low-frequency animation");
+assert.ok(atlasSource.includes("memo(AdventureAtlasBackground)"), "atlas remains memoized");
+assert.ok(atlasSource.includes('cachePolicy="memory-disk"'), "bundled bitmap uses local caching");
+assert.ok(atlasSource.includes('testID="adventure-atlas-ambient-glow"'));
+assert.ok(!atlasSource.includes("useAnimatedProps"), "static image has no animated SVG props");
+assert.ok(atlasSource.includes("width: width * 0.64, height: height * 0.34"),
+  "glow stays bounded to a fraction of the viewport");
+assert.equal(atlasSource.split("withRepeat(").length - 1, 1,
+  "atlas has only one continuous ambient animation");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
 assert.match(adventureMotionSource, /width: 84, height: 84, borderRadius: 42/,
