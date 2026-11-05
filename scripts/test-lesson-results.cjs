@@ -22,6 +22,7 @@ let profile={level:5,earned:240,required:500,remaining:260,totalXP:1140};
 const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,
  '../hooks/useKnowledgeProfile':{useKnowledgeProfile:()=>({profile,ready:profileReady})},
  '../components/HomeMotion':{MotionView:'MotionView'},
+ '../components/AtlasContinueCard':{__esModule:true,default:'AtlasContinueCard',atlasContinueStyles:{body:{},copy:{},eyebrow:{},title:{},action:{}}},
  '../components/ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
  ...Object.fromEntries(componentStubs.map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]))};
 const {lessons}=load('src/data/lessons.ts');
@@ -72,9 +73,11 @@ const scroll=nodes(tree).find(n=>n.type==='ScrollView');assert.ok(scroll);
 assert.ok(!nodes(scroll).some(n=>n.props?.testID==='lesson-next-action'),'not buried inside scroll');
 const nextAction=named(tree,'lesson-next-action');
 assert.ok(nextAction.props.accessibilityLabel.includes(next.title),'next lesson is named');
+assert.equal(nextAction.type,'AtlasContinueCard');
 assert.ok(text(nextAction).includes(next.title)&&text(nextAction).includes('▶'));
+assert.ok(!nodes(tree).some(n=>n.type==='ReportContentButton'),'no report action on results');
 nextAction.props.onPress();assert.deepEqual(opened,[next.id]);
-assert.ok(nodes(tree).some(n=>n.type==='ReportContentButton'),'reporting remains accessible');
+assert.ok(!nodes(tree).some(n=>n.type==='ReportContentButton'),'reporting removed from results');
 named(tree,'lesson-replay-action').props.onPress();assert.equal(replay,1);
 named(tree,'lesson-review-action').props.onPress();assert.equal(weekly,1);
 assert.ok(!named(tree,'lesson-result-details'),'no useless expanded panel');
@@ -128,5 +131,5 @@ tree=Saved({...base,inProgressLessonIds:[locked.id]});assert.equal(virtualCards(
 // Adventure-path layout and unlock behavior are independently covered by test-home-layout and test-lesson-path.
 const Card=load('src/components/LessonCard.tsx',{...stubs,'./LessonCover':{__esModule:true,default:'Cover'}}).default;
 const card=Card({lesson:locked,onPress(){},lockedReason:'Ολοκλήρωσε πρώτα το προηγούμενο μάθημα'});assert.equal(card.props.disabled,true);assert.equal(card.props.accessibilityState.disabled,true);
-console.log('Lesson results passed: game medal, current/legacy scores, XP rewards, animated progress, always-visible next CTA, mistake/replay/review links, path completion and saved access. Native views mocked.');
+console.log('Lesson results passed: game medal, shared Atlas Continue card, no report action, current/legacy scores, XP rewards, animated progress, always-visible next CTA, mistake/replay/review links, path completion and saved access. Native views mocked.');
 
