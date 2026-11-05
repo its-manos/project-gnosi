@@ -667,14 +667,14 @@ const islandsModule = compile("src/components/IslandAtlasMap.tsx", {
 });
 const archipelago = islandsModule.default;
 for (const [count, width, height] of [[1, 320, 430], [3, 340, 490],
-  [6, 320, 320], [9, 400, 510]]) {
+  [6, 320, 320], [9, 400, 510], [12, 390, 390]]) {
   const placements = islandsModule.getIslandAtlasPlacements(count, width, height);
   assert.equal(placements.length, count);
   for (const position of placements) {
     assert.ok(position.left >= 0 && position.top >= 0, "islands fit the viewport origin");
     assert.ok(position.left + position.width <= width + 1, "no clipped island labels");
-    assert.ok(position.top + position.artHeight + 37 <= height + 1,
-      "island artwork and text fit the available vertical space");
+    assert.ok(position.top + position.artHeight + 46 <= height + 1,
+      "artwork, two-line nameplate and progress mark fit the viewport");
     assert.ok(position.artHeight >= 46, "artwork remains a usable touch size");
   }
 }
@@ -700,15 +700,45 @@ const islandNodes = nodes(islandsTree).filter(node =>
 assert.equal(islandNodes.length, 3, "every subcategory has a native touch target");
 assert.ok(islandNodes.every(node => node.type === "Pressable" && node.props.accessibilityRole === "button"),
   "islands remain accessible native buttons");
+assert.ok(islandNodes.every(node => node.props.accessibilityHint === "Άνοιγμα περιοχής γνώσης"),
+  "destination buttons retain a concise Greek screen reader hint");
+const pressedIslandStyle = islandNodes[0].props.style({ pressed: true });
+assert.equal(pressedIslandStyle.at(-1).transform[0].scale, 0.96,
+  "touch feedback keeps a restrained press scale, without Reanimated map redraw");
 assert.ok(islandNodes[0].props.accessibilityLabel.includes("1 από 2"),
   "accessible island progress uses real completion counts");
 assert.ok(islandNodes[2].props.accessibilityLabel.includes("σύντομα"),
   "coming-soon destinations describe their availability");
 islandNodes[1].props.onPress();
 assert.deepEqual(visits, ["world"], "a map island opens its matching region ID");
-assert.ok(nodes(islandsTree).filter(node =>
-  node.props?.testID?.startsWith("island-atlas-label-")).length === 3,
+assert.equal(nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-label-")).length, 3,
   "Greek category titles render below rather than over the geography");
+const nameplates = nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-nameplate-"));
+assert.equal(nameplates.length, 3, "every destination has its own readable label backdrop");
+assert.ok(nameplates.every(node => node.props.pointerEvents === "none"),
+  "text backing never intercepts an island press");
+const startedPlate = nameplates.find(node => node.props.testID === "island-atlas-nameplate-ancient");
+assert.ok(startedPlate.props.style.some(style =>
+  style && style.borderColor === "rgba(190, 173, 246, 0.52)"),
+  "started regions get a quiet violet nameplate outline");
+assert.ok(nodes(islandsTree).some(node => node.props?.testID === "island-atlas-progress-ancient"),
+  "real progress still renders below the island nameplate");
+const startedProgress = nodes(islandsTree).find(node =>
+  node.props?.testID === "island-atlas-progress-ancient");
+const startedFill = nodes(startedProgress).find(node =>
+  node.props?.style?.[0]?.height === 3);
+assert.equal(startedFill.props.style[1].width, 28,
+  "the larger route indicator reflects 50% progress without duplicated text");
+assert.ok(!nodes(islandsTree).some(node => node.props?.testID === "island-atlas-progress-mythology"),
+  "coming-soon areas never show misleading zero progress");
+const islandSource = fs.readFileSync(
+  path.join(root, "src/components/IslandAtlasMap.tsx"), "utf8");
+assert.doesNotMatch(islandSource, /react-native-reanimated|withRepeat\(|setTimeout\(/,
+  "foreground island polish adds no motion loops or expensive timers");
+assert.match(islandSource, /fillOpacity=\{0\.045\}/,
+  "explored-island halo is a static SVG wash rather than live blur");
 const emptyIslands = archipelago({
   regions: [], width: 340, height: 490, onSelectRegion: () => {},
 });
