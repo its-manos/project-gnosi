@@ -763,7 +763,8 @@ assert.equal(worldBackground.props.accessible, false);
 const worldImage = nodes(worldBackground).find(node => node.type === "Image");
 assert.ok(worldImage, "the world map is one composited bitmap");
 assert.equal(worldImage.props.source, "world-atlas.webp");
-assert.equal(worldImage.props.contentFit, "fill");
+assert.equal(worldImage.props.contentFit, "cover",
+  "uniform image scaling preserves continent proportions on different phone screens");
 assert.equal(worldImage.props.cachePolicy, "memory-disk");
 assert.equal(worldImage.props.transition, 0,
   "no late raster entrance competes with island mounting");
