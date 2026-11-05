@@ -689,7 +689,7 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView",
+    MotionPressable: "MotionPressable", MotionView: "MotionView", MotionIcon: "MotionIcon",
   },
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
@@ -721,7 +721,7 @@ const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView",
+    MotionPressable: "MotionPressable", MotionView: "MotionView", MotionIcon: "MotionIcon",
   },
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
@@ -749,6 +749,12 @@ const header = nodes(categoryTree).find(node =>
   node.props?.testID === "category-atlas-header");
 assert.equal(header.type, "MotionView", "header uses the same entry primitive as Home");
 assert.equal(header.props.entranceDelay, 0);
+const backButton = nodes(categoryTree).find(node => node.props?.testID === "category-atlas-back");
+assert.equal(backButton.type, "MotionPressable",
+  "Category uses the same native back-button feedback as Adventure Path");
+assert.equal(backButton.props.pressScale, 0.95);
+assert.ok(nodes(header).some(node => node.type === "MotionIcon"),
+  "Category header shares the understated animated mark");
 assert.equal(nodes(categoryTree).filter(node =>
   node.props?.testID === "category-atlas-map-entrance").length, 0,
   "map reveal must not start before its viewport is measured");
@@ -761,6 +767,8 @@ assert.equal(shortcut.props.entranceDelay, 75,
   "Continue card follows the header without changing its tap response");
 assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueAccent"));
 assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueArrow"));
+assert.equal(nodes(shortcut).filter(node => node.props?.style?.fontSize === 10).length, 0,
+  "the Category Continue card omits the redundant lesson-count caption");
 const fill = nodes(shortcut).find(node => node.type === "AtlasProgressFill");
 assert.equal(fill.props.percent, 50, "progress motion uses real regional completion");
 shortcut.props.onPress();
@@ -833,7 +841,7 @@ const androidScreen = compile("src/screens/CategoryScreen.tsx", {
   "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView",
+    MotionPressable: "MotionPressable", MotionView: "MotionView", MotionIcon: "MotionIcon",
   },
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
