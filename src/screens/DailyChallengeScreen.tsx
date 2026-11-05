@@ -132,23 +132,25 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         badgeLabel={`${topicTitle(currentQuestion.categoryId)} · ${difficultyTitle(currentQuestion.difficulty)}`}
         answer={selectedAnswer === null ? undefined : selectedAnswer}
         onConfirm={index => answerQuestion(index)}
-        showFeedback={false}
         onActionChange={stageAction.onActionChange}
+        combo={rewardSummary?.combo ?? 0}
+        feedbackExtra={selectedAnswer !== null ? <>
+          {rewardSummary?.rows[record.currentIndex]?.eligible === false ?
+            <Text style={styles.note}>Η απάντηση έχει ήδη ανταμειφθεί.</Text> : null}
+          {rewardSummary?.combo && rewardSummary.combo > 1 ?
+            <Text style={styles.combo}>+{rewardSummary.rows[record.currentIndex]?.comboXP ?? 0} XP μπόνους</Text> : null}
+          <Pressable onPress={() => void openSource(currentQuestion.sourceUrl)}
+            accessibilityRole="link" style={styles.sourceLink}>
+            <Text style={styles.sourceLinkText}>Πηγή: {currentQuestion.sourceTitle} ↗</Text>
+          </Pressable>
+          {sourceError ? <Text style={styles.errorText}>Δεν ήταν δυνατό το άνοιγμα της πηγής.</Text> : null}
+        </> : undefined}
         compactAnswered
         reportTarget={dailyReportTarget(currentQuestion)}
         testID="daily-choice-card"
         testPrefix="daily-choice"
       />
-      {selectedAnswer!==null?<QuizReveal><View style={styles.feedback} accessibilityLiveRegion="polite">
-        <Text style={styles.feedbackTitle}>{isCorrect?'Σωστά — το κράτησες!':'Μια νέα γνώση για σήμερα.'}</Text>
-        {!isCorrect?<Text style={styles.bodyStrong}>Σωστή απάντηση: {currentQuestion.answers[currentQuestion.correctIndex]}</Text>:null}
-        <Text style={styles.body}>{currentQuestion.explanation}</Text>
-        {rewardSummary&&rewardSummary.combo>1?<Text style={styles.combo}>ΣΕΡΙ {rewardSummary.combo} · +{rewardSummary.rows[record.currentIndex]?.comboXP??0} XP μπόνους</Text>:null}
-        {rewardSummary?.rows[record.currentIndex]?.eligible===false?<Text style={styles.note}>Η ερώτηση έχει ήδη ανταμειφθεί. Συνεχίζει να μετρά στο σημερινό σκορ.</Text>:null}
-        <Pressable onPress={()=>void openSource(currentQuestion.sourceUrl)} accessibilityRole="link" style={styles.sourceLink}><Text style={styles.sourceLinkText}>Πηγή: {currentQuestion.sourceTitle} ↗</Text></Pressable>
-        {sourceError?<Text style={styles.errorText}>Δεν ήταν δυνατό το άνοιγμα της πηγής.</Text>:null}
-        <Text style={styles.note}>Σωστές μέχρι τώρα: {correctCount} · {correctCount*100} πόντοι</Text>
-      </View></QuizReveal>:null}
+    </View></QuizReveal>:null}
     </View></QuizReveal>
     :<View style={styles.centerState}><Text style={styles.errorText}>{questionsCompatible?'Δεν ήταν δυνατή η φόρτωση της πρόκλησης.':'Οι ερωτήσεις ενημερώθηκαν από τότε που ξεκίνησες. Οι απαντήσεις σου διατηρήθηκαν· αυτή η έκδοση δεν μπορεί να συνεχίσει με διαφορετικές ερωτήσεις.'}</Text><ActionButton label="Επιστροφή στην αρχική" onPress={onHome}/></View>}
     </ScrollView>
