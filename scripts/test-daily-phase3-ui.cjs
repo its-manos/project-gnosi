@@ -108,13 +108,14 @@ assert.ok(!dailySource.includes('QuizTypesPreviewScreen')&&!dailySource.includes
 assert.match(devSource,/onPress=\{onOpenQuestionPreview\}/,'dev section owns question pilot entry');
 assert.match(settingsSource,/devPreviewOpen && onCloseDevPreview/,'settings keeps preview navigation inside mounted section');
 assert.match(navigationSource,/if \(isDevQuizPreviewOpen\) \{ setIsDevQuizPreviewOpen\(false\); return true; \}/,'Android Back exits preview before settings');
-assert.match(navigationSource,/!isDevQuizPreviewOpen && app\.screen !== "quiz"/,'full-screen pilot hides bottom tabs');
+assert.match(navigationSource,/!isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app\.screen !== "quiz"/,
+  'both developer previews hide bottom tabs');
 assert.match(previewSource,/backLabel="ΕΡΓΑΛΕΙΑ"/,'pilot returns to dev settings');
 assert.match(devSource,/onPress=\{onOpenDailyIntroPreview\}/,'dev settings expose intro preview');
 assert.match(settingsSource,/if \(__DEV__ && dailyIntroPreview\)/,'intro preview is dev-only');
 assert.match(settingsSource,/<DailyChallengeScreen previewIntro/,'settings reuse real intro screen, not a copy');
 assert.match(navigationSource,/if \(isDevDailyIntroPreviewOpen\) \{ setIsDevDailyIntroPreviewOpen\(false\); return true; \}/,
   'Android Back exits daily intro preview before settings');
-assert.match(navigationSource,/!isDevDailyIntroPreviewOpen && app\.screen !== "quiz"/,
-  'bottom tab bar hidden in full-screen intro preview');
+assert.match(navigationSource,/setIsDevDailyIntroPreviewOpen\(false\);/,
+  'intro preview navigation can restore settings');
 console.log('Daily Atlas UI passed: compact intro, single score/progress treatment, accurate XP/combo, category highlight, lesson callback, answer review/practice, legacy/revised content, rollover and locked choice footer. Native views mocked.');
