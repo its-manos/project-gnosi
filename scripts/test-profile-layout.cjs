@@ -1,9 +1,17 @@
 const assert = require("node:assert/strict"), { load } = require("./helpers/load-typescript.cjs");
 const jsx = (type, props) => ({ type, props });
-const nodes = tree => tree && typeof tree === "object" ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
+// Resolve only the new pure category tile in the headless JSX renderer.
+let subjectTileComponent;
+const resolveTile = tree => tree && tree.type === subjectTileComponent
+  ? tree.type(tree.props) : tree;
+const nodes = tree => {
+  const node = resolveTile(tree);
+  return node && typeof node === "object"
+    ? [node, ...[node.props?.children].flat(Infinity).flatMap(nodes)] : [];
+};
 const text = tree => typeof tree === "string" || typeof tree === "number"
   ? String(tree) : Array.isArray(tree) ? tree.map(text).join("")
-  : tree && typeof tree === "object" ? text(tree.props?.children) : "";
+  : tree && typeof tree === "object" ? text(resolveTile(tree).props?.children) : "";
 
 let slots = [], cursor = 0;
 const react = {
@@ -155,9 +163,15 @@ learning={...learning,knowledgeSession:null};model={...model,due:[]};pending=[{i
 ready=false;tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0);ready=true;
 // The default learning map limits subjects without removing access to any subject or help.
 model={...model,categories:Array.from({length:8},(_,i)=>({id:String(i),title:'Θεματική '+i,percent:i,mastered:0,total:10}))};slots=[];cursor=0;
+subjectTileComponent=load('src/components/SubjectProgressTile.tsx',{
+  ...common,
+  './HomeMotion':{MotionPressable:'MotionPressable'},
+  './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
+}).default;
 const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,
   './ActionButton':{__esModule:true,default:'Action'},
   './HomeMotion':{MotionPressable:'MotionPressable'},
+  './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}}).default;
 const renderMap=()=>{cursor=0;return Map({onOpen(){},mapOnly:true});};tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0,'no duplicate review CTA');assert.ok(!text(tree).includes('τρεις σωστές'));
 nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).props.onPress();tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8);
@@ -201,11 +215,11 @@ const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'
   && typeof n.props.children==='string' && n.props.children.startsWith('Θεματική '));
 assert.ok(firstTitle?.props.adjustsFontSizeToFit&&firstTitle?.props.minimumFontScale<=0.9,
   'long Greek subject labels adapt within a two-column tile');
-const knowledgeSource=require('node:fs').readFileSync('src/components/KnowledgeMastery.tsx','utf8');
-assert.match(knowledgeSource,/tileTrack: \{[\s\S]*?height: 7,/,
-  'mastery bars have more visible tracks without moving to a heavy chart');
-assert.match(knowledgeSource,/detailTileSingle: \{ width: "100%"/,
-  'small screens retain their accessible single-column fallback');
+const subjectTileSource=require('node:fs').readFileSync('src/components/SubjectProgressTile.tsx','utf8');
+assert.match(subjectTileSource,/track: \{[\s\S]*?height: 7,/,
+  'shared mastery and reading bars have visible tracks');
+assert.match(subjectTileSource,/single: \{ width: "100%"/,
+  'small screens retain the accessible single-column fallback');
 assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);
 firstKnowledgeTile.props.onPress();tree=renderKnowledgeTiles();
 assert.equal(nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.accessibilityState.selected,true);
@@ -273,6 +287,7 @@ const Reading=load('src/components/LearningActivityPanel.tsx',{
   '../utils/dailyChallenge':{getAthensDateKey:()=> '2026-10-30'},
   './HomeMotion':{MotionPressable:'MotionPressable'},
   './MetricCard':{__esModule:true,default:'MetricCard'},
+  './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
 }).CategoryProgress;
 slots=[];cursor=0;
