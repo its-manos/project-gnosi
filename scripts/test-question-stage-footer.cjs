@@ -121,7 +121,7 @@ for (const [name, props, confirmId, firstChoiceId, initiallyDisabled] of fixture
 const hooks = runner();
 const { useQuestionStageAction } = compile("src/hooks/useQuestionStageAction.ts", {
   react: hooks.react,
-}).useQuestionStageAction ? compile("src/hooks/useQuestionStageAction.ts", {react:hooks.react}) : {};
+});
 assert.equal(typeof useQuestionStageAction, "function");
 let stage = hooks.render(useQuestionStageAction, "q1");
 assert.equal(stage.action, null);
@@ -137,6 +137,6 @@ stage = hooks.render(useQuestionStageAction, "q2");
 assert.equal(stage.action.label, "Next");
 onFirst(null);
 stage = hooks.render(useQuestionStageAction, "q2");
-assert.equal(stage.action, null, "cleanup cannot leave a stale tap visible");
+assert.equal(stage.action.label, "Next", "old question cleanup cannot clear the new action");
 
 console.log("Question footer passed: all six formats register actions, no duplicate CTA, and question keys clear old actions.");
