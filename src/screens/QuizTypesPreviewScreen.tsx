@@ -99,7 +99,7 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
       </View> : <>
         <QuizReveal key={question.id}>
           <QuizQuestionRenderer question={question} questionNumber={step} answer={answer} onSubmit={submit}
-            onActionChange={stageAction.onActionChange} />
+            onActionChange={stageAction.onActionChange} compactAnswered />
         </QuizReveal>
       </>}
     </ScrollView>
