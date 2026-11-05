@@ -1,3 +1,4 @@
+import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
@@ -39,7 +40,7 @@ export default function ProgressScreen({
 
   // Measure inside the app's safe area, ABOVE the bottom navigation.
   // Normal devices render a fixed page, not a tall, rubber-band ScrollView.
-  const availableHeight = viewportHeight || windowHeight - 130;
+  const availableHeight = availableScreenHeight(viewportHeight, windowHeight);
   const roomy = availableHeight >= 760;
   const dense = availableHeight < 650;
   const veryDense = availableHeight < 600;
@@ -56,7 +57,7 @@ export default function ProgressScreen({
   const masteryPercent = totalConcepts ? Math.round(mastered / totalConcepts * 100) : 0;
   const onViewportLayout = (event: { nativeEvent: { layout: { height: number } } }) => {
     const next = event.nativeEvent.layout.height;
-    if (next > 0) setViewportHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
+    if (next > 0) setViewportHeight(previous => stableLayoutHeight(previous, next));
   };
   const contentStyle = [
     styles.content, roomy && styles.contentRoomy,

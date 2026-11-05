@@ -66,6 +66,7 @@ function compile(file, extra = {}, returnModule = false, globals = {}) {
   }).outputText;
   const imports = {
     react, "react/jsx-runtime": { jsx, jsxs: jsx },
+    "../utils/screenLayout": { availableScreenHeight: (viewport, window) => viewport > 0 ? viewport : Math.max(0, window - 130) },
     "react-native": native, "react-native-svg": svg,
     "react-native-reanimated": reanimated,
     // The shared FantasyMap is compiled in isolation here; map-only motion
@@ -696,13 +697,13 @@ assert.match(dailyHighlightSource, /if \(reduced \|\| !active\) return null/,
 assert.doesNotMatch(dailyHighlightSource, /withRepeat\(/,
   "Daily Quiz highlight must not pulse indefinitely");
 
-// The compact bottom navigation preserves all three destinations.
+// The compact bottom navigation preserves all four destinations.
 const bottomNav = compile("src/components/BottomNavigation.tsx", {
   "react-native-safe-area-context": { useSafeAreaInsets: () => ({ bottom: 34 }) },
 });
 const bottomTree = bottomNav({ currentScreen: "home", onNavigate: destination => actions.push("nav:" + destination) });
 const tabs = nodes(bottomTree).filter(node => node.props?.accessibilityRole === "tab");
-assert.equal(tabs.length, 3);
+assert.equal(tabs.length, 4);
 assert.equal(tabs[0].props.accessibilityState.selected, true);
 assert.equal(tabs[1].props.accessibilityState.selected, false);
 tabs[1].props.onPress();

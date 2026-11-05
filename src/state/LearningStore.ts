@@ -45,8 +45,35 @@ export class LearningStore {
     this.key = `@gnosi/learning-v2/${userId ?? "guest"}`;
     this.snapshot = this.makeSnapshot();
   }
-  private makeSnapshot(): LearningSnapshot { return { ready: this.ready, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: syncBackup(this.doc), activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId }; }
+  // Sync status changes often without modifying progress. Reuse the parsed
+  // backup until progress/bookmarks actually change, keeping selectors stable.
+  private backupCache: { progress: SyncDocument["progress"]; bookmarks: SyncDocument["bookmarks"]; value: LearningBackup } | null = null;
+  private makeSnapshot(): LearningSnapshot {
+    const { progress, bookmarks } = this.doc;
+    if (!this.backupCache || this.backupCache.progress !== progress || this.backupCache.bookmarks !== bookmarks) {
+      this.backupCache = { progress, bookmarks, value: syncBackup(this.doc) };
+    }
+    return { ready: this.ready, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: this.backupCache.value, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId };
+  }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
+  // Data-only subscribers should not render on sync status/error transitions.
+  // Cache the selected snapshot identity for useSyncExternalStore.
+  private dataSnapshot: LearningSnapshot | null = null;
+  getDataSnapshot = (): LearningSnapshot => {
+    const current = this.snapshot;
+    const previous = this.dataSnapshot;
+    if (previous &&
+      previous.ready === current.ready &&
+      previous.backup === current.backup &&
+      previous.activity === current.activity &&
+      previous.weeklyReviews === current.weeklyReviews &&
+      previous.rewards === current.rewards &&
+      previous.knowledgeReviews === current.knowledgeReviews &&
+      previous.knowledgeSession === current.knowledgeSession &&
+      previous.userId === current.userId) return previous;
+    this.dataSnapshot = current;
+    return current;
+  };
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   async start(): Promise<void> {

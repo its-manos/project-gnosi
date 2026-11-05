@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { categories, lessons } from "../data/lessons";
-import { useDailySnapshot, useLearningSnapshot } from "../state/LearningSession";
+import { lessons } from "../data/lessons";
+import { categoryCompletionRows } from "../utils/categoryCompletion";
+import { useDailyDataSnapshot, useLearningDataSnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { activityBuckets, activitySummary, type ActivityBucket } from "../utils/learningActivity";
 import { colors } from "../theme";
-import { MotionPressable } from "./HomeMotion";
+import { MotionPressable, MotionView } from "./HomeMotion";
 import { ProgressBarFill } from "./ProgressMotion";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 
@@ -20,83 +21,112 @@ function MiniMetric({ label, value, detail }: { label: string; value: string; de
   return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text><Text style={styles.small}>{detail}</Text></View>;
 }
 
-export default function LearningActivityPanel({ todayKey, compact = false }: { todayKey: string; compact?: boolean }) {
-  const snapshot = useLearningSnapshot(), daily = useDailySnapshot();
+function DashboardMetric({ label, value, detail, index }: { label: string; value: string; detail: string; index: number }) {
+  return <MotionView entranceDelay={80 + index * 65} style={styles.dashboardMetric}>
+    <View pointerEvents="none" accessible={false} style={[styles.metricAccent, index === 1 && styles.metricAccentReplay, index === 2 && styles.metricAccentDays]} />
+    <Text style={styles.dashboardValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{value}</Text>
+    <Text style={styles.dashboardLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{label}</Text>
+    <Text style={styles.dashboardDetail} numberOfLines={1}>{detail}</Text>
+  </MotionView>;
+}
+
+export default function LearningActivityPanel({ todayKey, compact = false, dashboard = false }: { todayKey: string; compact?: boolean; dashboard?: boolean }) {
+  const snapshot = useLearningDataSnapshot(), daily = useDailyDataSnapshot();
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
   const [selectedKey, setSelectedKey] = useState("");
   const dailyDates = useMemo(() => dailyHistory(daily.doc).map(row => row.dateKey), [daily.doc]);
   const summary = useMemo(() => activitySummary(snapshot.activity, snapshot.backup.completedIds, dailyDates, todayKey, [...Object.values(snapshot.weeklyReviews ?? {}).map(answer => getAthensDateKey(new Date(answer.at))), ...Object.values(snapshot.knowledgeReviews ?? {}).flatMap(dates => Object.keys(dates))]), [snapshot.activity, snapshot.backup.completedIds, snapshot.weeklyReviews, snapshot.knowledgeReviews, dailyDates, todayKey]);
   const buckets = useMemo(() => activityBuckets(snapshot.activity, todayKey, mode), [snapshot.activity, todayKey, mode]);
   const selected = buckets.find(bucket => bucket.key === selectedKey) ?? buckets[buckets.length - 1];
-  const max = Math.max(1, ...buckets.map(bucket => bucket.first + bucket.replay));
-  const total = buckets.reduce((sum, bucket) => sum + bucket.first + bucket.replay, 0);
+  // Derive the chart scale and total together; avoid two separate bucket scans.
+  const { max, total } = useMemo(() => buckets.reduce(
+    (result, bucket) => {
+      const count = bucket.first + bucket.replay;
+      result.max = Math.max(result.max, count);
+      result.total += count;
+      return result;
+    },
+    { max: 1, total: 0 },
+  ), [buckets]);
   const switchMode = (value: "daily" | "weekly") => { setMode(value); setSelectedKey(""); };
+  const barHeight = dashboard ? 88 : 120;
 
-  return <View style={styles.section}>
-    <Text style={styles.title}>Η δραστηριότητά σου</Text>
-    {compact ? <Text style={styles.small}>Αυτή την εβδομάδα: {summary.firstThisWeek} νέα μαθήματα · {summary.replaysThisWeek} επαναλήψεις</Text> : null}
-    {!compact ? <View style={styles.metrics}>
+
+  return <View style={[styles.section, dashboard && styles.sectionDashboard]}>
+    {!dashboard ? <Text style={styles.title}>Η δραστηριότητά σου</Text> : null}
+    {compact && !dashboard ? <Text style={styles.small}>Αυτή την εβδομάδα: {summary.firstThisWeek} νέα μαθήματα · {summary.replaysThisWeek} επαναλήψεις</Text> : null}
+    {dashboard ? <>
+      <Text style={styles.dashboardHeading}>Αυτή την εβδομάδα</Text>
+      <View style={styles.dashboardMetrics} testID="activity-dashboard-metrics">
+        <DashboardMetric label="Νέα μαθήματα" value={String(summary.firstThisWeek)} detail="εβδομάδα" index={0} />
+        <DashboardMetric label="Επαναλήψεις" value={String(summary.replaysThisWeek)} detail="εβδομάδα" index={1} />
+        <DashboardMetric label="Ενεργές ημέρες" value={String(summary.activeDays)} detail="συνολικά" index={2} />
+      </View>
+    </> : !compact ? <View style={styles.metrics}>
       <MiniMetric label="ΝΕΑ ΜΑΘΗΜΑΤΑ" value={String(summary.firstThisWeek)} detail="αυτή την εβδομάδα" />
       <MiniMetric label="ΠΛΗΡΕΙΣ ΕΠΑΝΑΛΗΨΕΙΣ" value={String(summary.replaysThisWeek)} detail="αυτή την εβδομάδα" />
       <MiniMetric label="ΕΝΕΡΓΕΣ ΗΜΕΡΕΣ" value={String(summary.activeDays)} detail="συνολικά" />
       <MiniMetric label="ΑΚΡΙΒΕΙΑ ΜΑΘΗΜΑΤΩΝ" value={summary.accuracy === null ? "—" : `${summary.accuracy}%`} detail={summary.questions ? `${summary.correct} / ${summary.questions} σωστές` : "θα εμφανιστεί με την πρώτη ολοκλήρωση"} />
     </View> : null}
-    <View style={styles.chartCard}>
-      <Text style={styles.chartTitle}>Ο ρυθμός σου</Text>
-      <View style={styles.switchRow}>
+    <View style={[styles.chartCard, dashboard && styles.chartCardDashboard]} testID="activity-chart">
+      <View style={dashboard ? styles.dashboardChartHeader : undefined}>
+      <Text style={[styles.chartTitle, dashboard && styles.chartTitleDashboard]}>Ο ρυθμός σου</Text>
+      <View style={[styles.switchRow, dashboard && styles.switchRowDashboard]}>
         {(["daily", "weekly"] as const).map(value => <Pressable key={value} onPress={() => switchMode(value)} accessibilityRole="button"
-          accessibilityState={{ selected: mode === value }} style={[styles.switchButton, mode === value && styles.switchSelected]}>
-          <Text style={[styles.switchText, mode === value && styles.switchTextSelected]}>{value === "daily" ? "Ανά ημέρα" : "Ανά εβδομάδα"}</Text>
+          accessibilityState={{ selected: mode === value }} style={[styles.switchButton, dashboard && styles.switchButtonDashboard, mode === value && styles.switchSelected]}>
+          <Text style={[styles.switchText, dashboard && styles.switchTextDashboard, mode === value && styles.switchTextSelected]}>{value === "daily" ? "Ανά ημέρα" : "Ανά εβδομάδα"}</Text>
         </Pressable>)}
       </View>
-      <Text style={styles.period}>{mode === "daily" ? "Τελευταίες 7 ημέρες" : "Τελευταίες 8 εβδομάδες · από Δευτέρα"}</Text>
-      <View style={styles.chart}>
-        <View style={styles.axis} accessible={false}><Text style={styles.axisText}>{max}</Text><Text style={styles.axisText}>0</Text></View>
+      </View>
+      {!dashboard ? <Text style={styles.period}>{mode === "daily" ? "Τελευταίες 7 ημέρες" : "Τελευταίες 8 εβδομάδες · από Δευτέρα"}</Text> : null}
+      <View style={[styles.chart, dashboard && styles.chartDashboard]}>
+        <View style={[styles.axis, dashboard && styles.axisDashboard]} accessible={false}><Text style={styles.axisText}>{max}</Text><Text style={styles.axisText}>0</Text></View>
         <View style={styles.bars}>
-          {buckets.map(bucket => {
+          {buckets.map((bucket, index) => {
             const count = bucket.first + bucket.replay, active = bucket.key === selected.key;
-            return <Pressable key={bucket.key} onPress={() => setSelectedKey(bucket.key)} accessibilityRole="button"
+            return <MotionPressable key={`${mode}-${bucket.key}`} entranceDelay={dashboard ? 80 + index * 48 : undefined} pressScale={0.985} onPress={() => setSelectedKey(bucket.key)} accessibilityRole="button"
               accessibilityState={{ selected: active }} accessibilityLabel={`${rangeLabel(bucket)}: ${bucket.first} πρώτες ολοκληρώσεις, ${bucket.replay} επαναλήψεις`}
-              style={[styles.column, active && styles.selectedColumn]}>
-              <View style={styles.barArea}>
-                <Text style={styles.barNumber}>{count}</Text>
+              style={[styles.column, dashboard && styles.columnDashboard, active && styles.selectedColumn, dashboard && active && styles.selectedColumnDashboard]}>
+              <View style={[styles.barArea, dashboard && styles.barAreaDashboard]}>
+                <Text style={[styles.barNumber, dashboard && styles.barNumberDashboard]}>{count}</Text>
                 <View style={styles.stack}>
-                  {bucket.replay > 0 ? <View style={[styles.replayBar, { height: 120 * bucket.replay / max }]} /> : null}
-                  {bucket.first > 0 ? <View style={[styles.firstBar, { height: 120 * bucket.first / max }]} /> : null}
+                  {bucket.replay > 0 ? <View style={[styles.replayBar, { height: barHeight * bucket.replay / max }]} /> : null}
+                  {bucket.first > 0 ? <View style={[styles.firstBar, { height: barHeight * bucket.first / max }]} /> : null}
                   {count === 0 ? <View style={styles.zeroBar} /> : null}
                 </View>
               </View>
-              <Text style={[styles.barLabel, active && styles.activeLabel]}>{new Date(`${bucket.key}T12:00:00Z`).getUTCDate()}{"\n"}{new Intl.DateTimeFormat("el-GR", { month: "short", timeZone: "UTC" }).format(new Date(`${bucket.key}T12:00:00Z`)).replace(".", "")}</Text>
-            </Pressable>;
+              <Text style={[styles.barLabel, dashboard && styles.barLabelDashboard, active && styles.activeLabel]}>{new Date(`${bucket.key}T12:00:00Z`).getUTCDate()}{"\n"}{new Intl.DateTimeFormat("el-GR", { month: "short", timeZone: "UTC" }).format(new Date(`${bucket.key}T12:00:00Z`)).replace(".", "")}</Text>
+            </MotionPressable>;
           })}
         </View>
       </View>
-      <View style={styles.legend}>
+      <View style={[styles.legend, dashboard && styles.legendDashboard]}>
         <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: FIRST }]} /><Text style={styles.small}>Πρώτες ολοκληρώσεις</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: REPLAY }]} /><Text style={styles.small}>Πλήρεις επαναλήψεις</Text></View>
       </View>
-      <View style={styles.selection} accessibilityLiveRegion="polite">
-        <Text style={styles.selectionTitle}>{rangeLabel(selected)}</Text>
-        <Text style={styles.small}>{selected.first} νέα μαθήματα · {selected.replay} πλήρεις επαναλήψεις</Text>
+      <View style={[styles.selection, dashboard && styles.selectionDashboard]} accessibilityLiveRegion="polite">
+        <Text style={[styles.selectionTitle, dashboard && styles.selectionTitleDashboard]}>{rangeLabel(selected)}</Text>
+        {dashboard ? <Text style={styles.dashboardSelectedSummary}>{selected.first} νέα · {selected.replay} επαναλήψεις</Text> : <Text style={styles.small}>{selected.first} νέα μαθήματα · {selected.replay} πλήρεις επαναλήψεις</Text>}
       </View>
       {!total ? <Text style={styles.hint}>Ολοκλήρωσε ένα μάθημα για να ξεκινήσεις.</Text> : null}
     </View>
-    {compact ? <Text style={styles.small}>{summary.activeDays} ενεργές ημέρες · Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}</Text> : null}
+    {dashboard ? <Text style={styles.dashboardAccuracy} testID="activity-accuracy">
+      Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}
+      {summary.questions > 0 ? ` · ${summary.correct} / ${summary.questions} σωστές` : ""}
+    </Text> : null}
+    {compact && !dashboard ? <Text style={styles.small}>{summary.activeDays} ενεργές ημέρες · Ακρίβεια μαθημάτων: {summary.accuracy === null ? "—" : `${summary.accuracy}%`}</Text> : null}
     {summary.undatedCount > 0 ? <Text style={styles.legacyNote}>{summary.undatedCount} παλιότερα μαθήματα χωρίς ημερομηνία — εκτός γραφήματος.</Text> : null}
   </View>;
 }
 
 export function CategoryProgress({ compact = false, detail = false, singleColumn = false, threeColumn = false }: { compact?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean } = {}) {
-  const snapshot = useLearningSnapshot();
+  const snapshot = useLearningDataSnapshot();
   const [expanded, setExpanded] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const completed = new Set(snapshot.backup.completedIds);
-  const rows = categories.map((category, index) => {
-    const items = lessons.filter(lesson => lesson.categoryId === category.id);
-    const count = items.filter(lesson => completed.has(lesson.id)).length;
-    const percent = items.length ? Math.round(count / items.length * 100) : 0;
-    return { category, index, count, total: items.length, percent };
-  });
+  const rows = useMemo(
+    () => categoryCompletionRows(snapshot.backup.completedIds),
+    [snapshot.backup.completedIds],
+  );
   // The detail screen begins with subjects already explored. Stable ties retain
   // catalogue order, and every subject is accessible via the disclosure.
   const ranked = compact || detail
@@ -193,6 +223,34 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
 }
 
 const styles = StyleSheet.create({
+  sectionDashboard: { marginTop: 0, marginBottom: 0, gap: 7 },
+  dashboardChartHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  switchRowDashboard: { flex: 1, maxWidth: 176, borderRadius: 9, padding: 2, gap: 2 },
+  switchButtonDashboard: { minHeight: 30, paddingVertical: 4, paddingHorizontal: 3, borderRadius: 7 },
+  switchTextDashboard: { fontSize: 10, lineHeight: 15 },
+  axisDashboard: { paddingTop: 20, paddingBottom: 30 },
+  columnDashboard: { paddingTop: 0, paddingBottom: 2 },
+  barNumberDashboard: { fontSize: 9, lineHeight: 13, marginBottom: 2 },
+  barLabelDashboard: { fontSize: 9, lineHeight: 13, marginTop: 3 },
+  legendDashboard: { gap: 9 },
+  selectionDashboard: { paddingTop: 7, gap: 1 },
+  selectionTitleDashboard: { fontSize: 11, lineHeight: 16 },
+  dashboardSelectedSummary: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
+  dashboardHeading: { color: colors.textBody, fontSize: 12, lineHeight: 18, fontWeight: "800" },
+  dashboardMetrics: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  dashboardMetric: { flexGrow: 1, flexShrink: 1, flexBasis: "30%", minWidth: 88, minHeight: 62, paddingHorizontal: 11, paddingVertical: 8, justifyContent: "center", gap: 1, borderWidth: 1, borderColor: "#4A4566", borderRadius: 15, backgroundColor: "#20243C" },
+  metricAccent: { position: "absolute", left: 11, top: 0, width: 32, height: 2, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: FIRST, opacity: 0.8 },
+  metricAccentReplay: { backgroundColor: REPLAY },
+  metricAccentDays: { backgroundColor: "#9B9EDB" },
+  dashboardValue: { color: colors.accentLight, fontSize: 25, lineHeight: 30, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  dashboardLabel: { color: colors.text, fontSize: 10, lineHeight: 13, fontWeight: "800" },
+  dashboardDetail: { color: colors.textMuted, fontSize: 9, lineHeight: 12 },
+  dashboardAccuracy: { color: colors.textMuted, fontSize: 11, lineHeight: 17, paddingHorizontal: 3, marginTop: 3 },
+  chartCardDashboard: { padding: 13, gap: 8, borderColor: "#44415E", backgroundColor: "#1D2337" },
+  chartTitleDashboard: { fontSize: 15, lineHeight: 20, fontWeight: "800" },
+  chartDashboard: { paddingTop: 0 },
+  barAreaDashboard: { height: 112 },
+  selectedColumnDashboard: { backgroundColor: "#302C49", borderWidth: 1, borderColor: "#635784", paddingHorizontal: 0 },
   section: { marginTop: 14, marginBottom: 14, gap: 12 },
   sectionCompact: { marginTop: 0, marginBottom: 0, gap: 8 },
   sectionDetail: { marginTop: 0, marginBottom: 0, gap: 10 },

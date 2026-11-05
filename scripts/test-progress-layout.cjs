@@ -29,7 +29,8 @@ const knowledge = { due: [], categories: [
   { id: "science", mastered: 1, total: 4 },
 ] };
 const common = {
-  react, "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native": native,
+  react, "react/jsx-runtime": { jsx, jsxs: jsx },
+  "../utils/screenLayout": { availableScreenHeight: (viewport, window) => viewport > 0 ? viewport : Math.max(0, window - 130), stableLayoutHeight: (old, next) => next > 0 && Math.abs(old - next) >= 1 ? next : old }, "react-native": native,
   "../components/KnowledgeMastery": { __esModule: true, default: "Mastery" },
   "../components/ReviewActions": { __esModule: true, default: "ReviewActions" },
   "../components/ProgressGradientBackground": { __esModule: true, default: "GradientBackground" },

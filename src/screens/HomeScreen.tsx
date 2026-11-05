@@ -1,3 +1,4 @@
+import { availableScreenHeight } from "../utils/screenLayout";
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
@@ -81,7 +82,7 @@ export default function HomeScreen({
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [extraDensity, setExtraDensity] = useState(0);
-  const availableHeight = viewportHeight || Math.max(0, height - 130);
+  const availableHeight = availableScreenHeight(viewportHeight, height);
   const baseDensity = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
   const density = Math.max(baseDensity, extraDensity);
   const compact = density >= 1;

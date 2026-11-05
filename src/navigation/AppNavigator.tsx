@@ -1,4 +1,5 @@
 import ProfileScreen from "../screens/ProfileScreen";
+import { backDestination, requiresLearningExitConfirmation } from "./navigationRules";
 import PlayerStatsScreen from "../screens/PlayerStatsScreen";
 import KnowledgeReviewScreen from "../screens/KnowledgeReviewScreen";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
@@ -10,7 +11,7 @@ import { getLessonAccess, getNextPathLesson, getSubcategoryPath } from "../utils
 import { devLessonsUnlocked, setDevLessonUnlockAll } from "../utils/devLessonAccess";
 import { welcomeLessonCandidates } from "../utils/welcomeLesson";
 import { useAthensDate } from "../hooks/useAthensDate";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, BackHandler, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
@@ -118,20 +119,33 @@ export default function AppNavigator() {
     () => getSubcategoryPath(lessons, app.activeSubcategoryId),
     [app.activeSubcategoryId]
   );
-  const savedLessons = useMemo(
-    () => lessons.filter((lesson) => bookmarks.savedLessonIds.includes(lesson.id)),
-    [bookmarks.savedLessonIds]
-  );
+  // Catalogue order is stable; Set membership avoids scanning saved/completed
+  // ID arrays once for every lesson whenever these lists change.
+  const savedLessons = useMemo(() => {
+    const savedIds = new Set(bookmarks.savedLessonIds);
+    return lessons.filter(lesson => savedIds.has(lesson.id));
+  }, [bookmarks.savedLessonIds]);
+  const completedIds = useMemo(() => new Set(app.completedLessonIds), [app.completedLessonIds]);
   const completedLessons = useMemo(
-    () => lessons.filter((lesson) => app.completedLessonIds.includes(lesson.id)),
-    [app.completedLessonIds]
+    () => lessons.filter(lesson => completedIds.has(lesson.id)),
+    [completedIds],
+  );
+  const completedSubcategoryCount = useMemo(
+    () => subcategoryLessons.reduce((count, lesson) => count + Number(completedIds.has(lesson.id)), 0),
+    [subcategoryLessons, completedIds],
   );
   const inProgressLesson = lessons.find(
     (lesson) => lesson.id === app.inProgressLessonId
   ) ?? null;
 
-  const discovery = getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate);
-  const nextLesson = activeLesson ? getNextPathLesson(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds) : null;
+  const discovery = useMemo(
+    () => getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate),
+    [app.completedLessonIds, app.inProgressLessonIds, discoveryDate],
+  );
+  const nextLesson = useMemo(
+    () => activeLesson ? getNextPathLesson(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds) : null,
+    [activeLesson, app.completedLessonIds, app.inProgressLessonIds],
+  );
 
   const currentScreen = app.screen;
   const setAppScreen = app.setScreen;
@@ -147,12 +161,7 @@ export default function AppNavigator() {
       return;
     }
 
-    const isInUnfinishedLearningFlow =
-      currentScreen === "lesson" || currentScreen === "quiz";
-    const isLeavingLearningFlow =
-      destination !== "lesson" && destination !== "quiz";
-
-    if (isInUnfinishedLearningFlow && isLeavingLearningFlow) {
+    if (requiresLearningExitConfirmation(currentScreen, destination)) {
       const message = currentScreen === "lesson"
         ? `Βρίσκεσαι στη μέση του «${activeLessonTitle}». Οι απαντήσεις που έχεις ήδη δώσει αποθηκεύονται στη συσκευή σου. Μπορείς να επιστρέψεις από την αρχική με την επιλογή «Συνέχισε από εκεί που έμεινες».`
         : `Βρίσκεσαι στη μέση του quiz «${activeLessonTitle}». Η τρέχουσα προσπάθεια του ξεχωριστού quiz δεν αποθηκεύεται ακόμη. Αν φύγεις, θα χρειαστεί να το ξεκινήσεις ξανά.`;
@@ -178,28 +187,30 @@ export default function AppNavigator() {
     setAppScreen(destination);
   };
 
-  // Use the same leave guard as the on-screen controls for Android system Back.
-  useEffect(() => {
-    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (welcome.visible || welcome.loading) return false;
-      if (isDailyPreferencesOpen) { closeDailyPreferences(); return true; }
-      if (isDailyChallengeOpen) { setIsDailyChallengeOpen(false); return true; }
-      if (app.screen === "home") return false;
-      if (app.screen === "review") { app.endMistakeReview(); return true; }
-      const destination: AppScreen = app.screen === "account" ? accountOrigin
-        : app.screen === "profile" ? profileOrigin
-        : app.screen === "player-stats" ? "profile"
-        : app.screen === "knowledge-review" ? knowledgeOrigin
-        : app.screen === "learning-insights" ? "progress"
-        : app.screen === "weekly-review" ? "progress"
-        : app.screen === "lesson" || app.screen === "results" ? app.lessonBackScreen
-        : app.screen === "quiz" ? "lesson"
-        : app.screen === "subcategory" ? "category" : "home";
-      navigateTo(destination);
-      return true;
+  // Keep the native listener stable across progress, animation and state renders.
+  // Read the latest navigation state at press time to avoid stale closures.
+  const hardwareBackRef = useRef<() => boolean>(() => false);
+  hardwareBackRef.current = () => {
+    if (welcome.visible || welcome.loading) return false;
+    if (isDailyPreferencesOpen) { closeDailyPreferences(); return true; }
+    if (isDailyChallengeOpen) { setIsDailyChallengeOpen(false); return true; }
+    if (app.screen === "home") return false;
+    if (app.screen === "review") { app.endMistakeReview(); return true; }
+    const destination = backDestination(app.screen, {
+      account: accountOrigin,
+      profile: profileOrigin,
+      knowledge: knowledgeOrigin,
+      lesson: app.lessonBackScreen,
     });
+    navigateTo(destination);
+    return true;
+  };
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress", () => hardwareBackRef.current(),
+    );
     return () => subscription.remove();
-  });
+  }, []);
 
   const analyticsScreen: AnalyticsScreen = welcome.visible ? "welcome"
     : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" || app.screen === "learning-insights" ? "progress" : app.screen;
@@ -285,7 +296,7 @@ export default function AppNavigator() {
         onAccount={() => openAccount("profile")} onInterests={() => openDailyPreferences("profile")} onGuide={welcome.open} />;
       break;
     case "player-stats":
-      screenContent = <PlayerStatsScreen onBack={() => app.setScreen("profile")} completedLessons={completedLessons} totalLessonCount={lessons.length} lessonProgressLoaded={app.progressLoaded} />;
+      screenContent = <PlayerStatsScreen onBack={() => app.setScreen("profile")} />;
       break;
     case "account":
       screenContent = <AccountScreen onBack={() => app.setScreen(accountOrigin)}
@@ -436,7 +447,7 @@ export default function AppNavigator() {
           onHome={() => navigateTo("home")}
           onReadAgain={app.restartLesson}
           nextLesson={nextLesson}
-          pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: subcategoryLessons.filter(l => app.completedLessonIds.includes(l.id)).length }}
+          pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: completedSubcategoryCount }}
           onOpenLesson={app.openLesson}
           onBrowse={() => navigateTo("category")}
         />
@@ -457,10 +468,15 @@ export default function AppNavigator() {
         {screenContent}
       </SafeAreaView>
       {!welcome.visible ? <BottomNavigation
-        currentScreen={isDailyChallengeOpen ? "home" : app.screen === "profile" ? profileOrigin : app.screen === "player-stats" ? profileOrigin : app.screen === "account" ? accountOrigin === "profile" ? profileOrigin : accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
+        currentScreen={isDailyChallengeOpen ? "home" : app.screen === "account" ? accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
           setIsDailyChallengeOpen(false);
+          // A bottom-tab visit is a root destination. Deep links from Home or
+          // Progress still remember their origin for Android system Back.
+          if (destination === "profile" && app.screen !== "profile") {
+            setProfileOrigin(app.screen === "progress" || app.screen === "learning-insights" ? "progress" : "home");
+          }
           navigateTo(destination);
         }}
       /> : null}

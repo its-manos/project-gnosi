@@ -1,24 +1,139 @@
-const assert=require('node:assert/strict'),{load}=require('./helpers/load-typescript.cjs');
-const jsx=(type,props)=>({type,props}),nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
-const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
-let slots=[],cursor=0;const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useMemo:fn=>fn(),useEffect(){}};
-const native={View:'View',Text:'Text',Pressable:'Pressable',ScrollView:'ScrollView',ActivityIndicator:'Spinner',StyleSheet:{create:x=>x}};
-const {lessons}=load('src/data/lessons.ts'),{quizFingerprint}=load('src/utils/learningActivity.ts');
-let learning={ready:true,userId:null,backup:{completedIds:[lessons[0].id]},activity:{a:{lessonId:lessons[0].id,at:Date.parse('2026-10-22T12:00:00Z'),wasCompleted:false,correctCount:2,questionCount:4,quizKey:quizFingerprint(lessons[0].questions),missedQuestionIndices:[1,3]}},weeklyReviews:{}};
-let history=[{dateKey:'2026-10-30',correctCount:5,score:500},{dateKey:'2026-10-29',correctCount:4,score:400}],daily={ready:true,doc:{}};
-const common={react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state/LearningSession':{useLearningSnapshot:()=>learning,useDailySnapshot:()=>daily,useLearningSession:()=>({email:learning.userId?'player@example.test':null})},'../hooks/useAthensDate':{useAthensDate:()=> '2026-10-30'},'../utils/dailySyncDocument':{dailyHistory:()=>history},'../components/AppHeader':{__esModule:true,default:'Header'},'../components/SyncStatus':{__esModule:true,default:'Sync'},'../components/KnowledgeProgress':{__esModule:true,default:'XP'}};
-const Profile=load('src/screens/ProfileScreen.tsx',common).default;let calls=[];
-let tree=Profile({onBack(){},onStats:()=>calls.push('stats'),onAccount:()=>calls.push('account'),onInterests:()=>calls.push('interests'),onGuide:()=>calls.push('guide')});
-assert.ok(text(tree).includes('επισκέπτης'));assert.ok(nodes(tree).some(n=>n.type==='XP'));assert.ok(!nodes(tree).some(n=>n.type==='UsageSharing'));
-for(const link of nodes(tree).filter(n=>typeof n.type==='function'))link.type(link.props).props.onPress();assert.deepEqual(calls,['stats','account','interests','guide']);
-learning={...learning,userId:'user'};tree=Profile({});assert.ok(text(tree).includes('player@example.test'));
-const Stats=load('src/screens/PlayerStatsScreen.tsx',{...common,'../utils/dailyChallenge':{getAthensDateKey:()=> '2026-10-30'},'../components/LearningActivityPanel':{__esModule:true,default:'Activity'}}).default;
-slots=[];const render=()=>{cursor=0;return Stats({onBack(){},completedLessons:[lessons[0]],totalLessonCount:lessons.length,lessonProgressLoaded:true});};tree=render();
-assert.ok(nodes(tree).some(n=>n.type==='Activity'));assert.ok(nodes(tree).some(n=>n.props.label==='ΣΩΣΤΑ ΑΠΑΝΤΗΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ'&&n.props.value==='2'));assert.ok(!nodes(tree).some(n=>n.props.testID==='progress-daily-details'));
-nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Οι καθημερινές προκλήσεις σου')).props.onPress();tree=render();assert.ok(text(tree).includes('5 / 7 σωστές απαντήσεις'));
-const old={...learning.activity.a};delete old.missedQuestionIndices;learning={...learning,activity:{old}};tree=render();assert.equal(nodes(tree).find(n=>n.props.label==='ΣΩΣΤΑ ΑΠΑΝΤΗΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ').props.value,'0');assert.ok(text(tree).includes('Παλιότερα σκορ'));
-history=[];tree=render();assert.ok(text(tree).includes('ΣΥΝΟΛΙΚΗ ΑΚΡΙΒΕΙΑ—'),'no accuracy invented for fresh history');
-console.log('Profile/statistics passed: guest/account identity, live XP component reuse, settings/interests/guide/stats actions, retained activity/daily-history detail, honest legacy scores and empty accuracy. Native views mocked.');
+const assert = require("node:assert/strict"), { load } = require("./helpers/load-typescript.cjs");
+const jsx = (type, props) => ({ type, props });
+const nodes = tree => tree && typeof tree === "object" ? [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)] : [];
+const text = tree => typeof tree === "string" || typeof tree === "number"
+  ? String(tree) : Array.isArray(tree) ? tree.map(text).join("")
+  : tree && typeof tree === "object" ? text(tree.props?.children) : "";
+
+let slots = [], cursor = 0;
+const react = {
+  useState: init => {
+    const i = cursor++;
+    if (!(i in slots)) slots[i] = typeof init === "function" ? init() : init;
+    return [slots[i], value => { slots[i] = typeof value === "function" ? value(slots[i]) : value; }];
+  },
+  useMemo: fn => fn(),
+  useEffect() {},
+};
+let screenWidth = 390;
+const native = {
+  View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
+  ActivityIndicator: "Spinner", StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: screenWidth, height: 810, fontScale: 1 }),
+  useWindowDimensions: () => ({ width: screenWidth, height: 810, fontScale: 1 }),
+};
+const { lessons } = load("src/data/lessons.ts");
+const { quizFingerprint } = load("src/utils/learningActivity.ts");
+let learning = {
+  ready: true, userId: null,
+  backup: { completedIds: [lessons[0].id] },
+  activity: {
+    a: { lessonId: lessons[0].id, at: Date.parse("2026-10-22T12:00:00Z"),
+      wasCompleted: false, correctCount: 2, questionCount: 4,
+      quizKey: quizFingerprint(lessons[0].questions), missedQuestionIndices: [1, 3] },
+  },
+  weeklyReviews: {},
+};
+let history = [
+  { dateKey: "2026-10-30", correctCount: 5, score: 500 },
+  { dateKey: "2026-10-29", correctCount: 4, score: 400 },
+];
+let daily = { ready: true, doc: {} };
+const player = {
+  level: 2, earned: 120, required: 200, totalXP: 320,
+  badges: [
+    { id: "first", title: "Πρώτη γνώση", unlocked: true, current: 1, target: 1 },
+    { id: "curious", title: "Περιέργεια", unlocked: false, current: 1, target: 3 },
+  ],
+  learningXP: 300, challengeXP: 20, recallXP: 0, explorationXP: 0,
+};
+const common = {
+  react, "react/jsx-runtime": { jsx, jsxs: jsx },
+  "../utils/screenLayout": { availableScreenHeight: (viewport, window) => viewport > 0 ? viewport : Math.max(0, window - 130), stableLayoutHeight: (old, next) => next > 0 && Math.abs(old - next) >= 1 ? next : old }, "react-native": native,
+  "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle", Path: "Path" },
+  "../state/LearningSession": {
+    useLearningSnapshot: () => learning,
+    useLearningDataSnapshot: () => learning,
+    useDailySnapshot: () => daily,
+    useDailyDataSnapshot: () => daily,
+    useLearningSession: () => ({ email: learning.userId ? "player@example.test" : null }),
+  },
+  "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => ({ profile: player, ready: true }) },
+  "../gamification/rules": { playerTitle: level => "Παίκτης " + level },
+  "../utils/dailyChallenge": { getAthensDateKey: () => "2026-10-30" },
+  "../utils/dailySyncDocument": { dailyHistory: () => history },
+  "../components/AppHeader": { __esModule: true, default: "Header" },
+  "../components/SyncStatus": { __esModule: true, default: "Sync" },
+  "../components/ProgressGradientBackground": { __esModule: true, default: "Gradient" },
+  "../components/XpRules": { __esModule: true, default: "XpRules" },
+  "../components/HomeMotion": { MotionView: "MotionView", MotionXpCircle: "MotionXpCircle", MotionPressable: "MotionPressable" },
+};
+let calls = [];
+const profileProps = {
+  onBack() {}, onStats: () => calls.push("stats"),
+  onAccount: () => calls.push("account"),
+  onInterests: () => calls.push("interests"),
+  onGuide: () => calls.push("guide"),
+};
+const Profile = load("src/screens/ProfileScreen.tsx", common).default;
+const renderProfile = () => { cursor = 0; return Profile(profileProps); };
+let tree = renderProfile();
+assert.ok(text(tree).includes("επισκέπτης"), "Guest identity remains visible");
+assert.ok(nodes(tree).some(n => n.props?.testID === "profile-identity"));
+assert.ok(nodes(tree).some(n => n.props?.testID === "profile-achievements"));
+assert.ok(nodes(tree).some(n => n.type === "MotionXpCircle"), "Level retains its progress ring");
+const pressProfile = label => {
+  const item = nodes(tree).find(n => typeof n.type === "function" && n.type.name === "QuickLink" && n.props?.title === label);
+  assert.ok(item, "Profile shortcut should exist: " + label);
+  const button = item.type(item.props);
+  assert.equal(button.type, "Pressable", "Shortcut should render a pressable control");
+  button.props.onPress();
+};
+for (const label of ["Δραστηριότητα", "Λογαριασμός", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
+assert.deepEqual(calls, ["stats", "account", "interests", "guide"]);
+const xpHelp = nodes(tree).find(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;");
+assert.ok(xpHelp && !xpHelp.props.accessibilityState.expanded);
+xpHelp.props.onPress();
+tree = renderProfile();
+assert.ok(nodes(tree).some(n => n.type === "XpRules"), "Shared XP rules remain available");
+learning = { ...learning, userId: "user" };
+tree = renderProfile();
+assert.ok(text(tree).includes("player@example.test"), "Account identity updates");
+
+const Stats = load("src/screens/PlayerStatsScreen.tsx", {
+  ...common,
+  "../components/LearningActivityPanel": { __esModule: true, default: "Activity" },
+}).default;
+slots = [];
+const render = () => { cursor = 0; return Stats({ onBack() {} }); };
+tree = render();
+const activity = nodes(tree).find(n => n.type === "Activity");
+assert.ok(activity && activity.props.dashboard === true, "Stats should lead with the compact weekly chart");
+assert.equal(nodes(tree).filter(n => n.props?.children === "Δραστηριότητα").length, 1,
+  "Statistics should have one consistent page title");
+assert.ok(!text(tree).includes("Η δραστηριότητά σου"), "Redundant activity introduction should be removed");
+assert.ok(!nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
+assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"), "Default Statistics overview should not scroll");
+screenWidth = 320;
+tree = render();
+assert.ok(nodes(tree).some(n => n.props?.testID === "stats-accessibility-scroll"),
+  "Narrow screens should use the scrollable statistics layout to avoid clipping");
+screenWidth = 390;
+tree = render();
+assert.ok(!nodes(tree).some(n => n.type === "ScrollView"), "Normal viewport stays fixed");
+const quizToggle = nodes(tree).find(n => n.type === "MotionPressable" && text(n).includes("Καθημερινά quiz"));
+assert.ok(quizToggle, "Quiz details stay discoverable");
+quizToggle.props.onPress();
+tree = render();
+assert.ok(nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
+assert.ok(text(tree).includes("5 / 7 σωστές απαντήσεις"), "Quiz history remains accessible");
+assert.ok(text(tree).includes("ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ"), "Historical streak record remains accessible");
+assert.ok(text(tree).includes("ΑΚΡΙΒΕΙΑ QUIZ"), "Quiz accuracy remains accessible");
+history = [];
+tree = render();
+assert.ok(text(tree).includes("Η πρώτη σου πρόκληση σε περιμένει"));
+assert.ok(text(tree).includes("ΑΚΡΙΒΕΙΑ QUIZ—"), "Fresh history should not invent accuracy");
+console.log("Profile/Statistics fourth-tab tests passed: player identity, XP, achievements, links, activity hierarchy, expandable quiz history and empty accuracy.");
+
 // One review action, optional practice/weekly links, and no stray numeric zero.
 let model={due:[],practice:[],categories:[],topics:[]},ready=true;
 const modelHook={'../hooks/useKnowledgeModel':{useKnowledgeModel:()=>({model,today:'2026-10-30',ready})}};
@@ -119,7 +234,9 @@ const Reading=load('src/components/LearningActivityPanel.tsx',{
   ...common,
   '../state/LearningSession':{
     useLearningSnapshot:()=>readingSnapshot,
+    useLearningDataSnapshot:()=>readingSnapshot,
     useDailySnapshot:()=>daily,
+    useDailyDataSnapshot:()=>daily,
   },
   '../utils/dailySyncDocument':{dailyHistory:()=>[]},
   '../utils/learningActivity':{activityBuckets:()=>[],activitySummary:()=>({})},

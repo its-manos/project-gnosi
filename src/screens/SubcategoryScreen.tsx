@@ -103,11 +103,14 @@ export default function SubcategoryScreen({
   const autoFocusedRef = useRef<string | null>(null);
   const userInteractedRef = useRef(false);
   const path = useMemo(() => getSubcategoryPath(lessons, subcategory.id), [lessons, subcategory.id]);
-  const completed = path.filter(lesson => completedLessonIds.includes(lesson.id)).length;
-  const nextLesson = path.find(lesson => !completedLessonIds.includes(lesson.id) &&
-    inProgressLessonIds.includes(lesson.id) &&
+  const completedIds = useMemo(() => new Set(completedLessonIds), [completedLessonIds]);
+  const inProgressIds = useMemo(() => new Set(inProgressLessonIds), [inProgressLessonIds]);
+  const completed = useMemo(() => path.reduce((count, lesson) => count + Number(completedIds.has(lesson.id)), 0), [path, completedIds]);
+  // Preserve the existing unlock policy while avoiding repeated linear ID lookups.
+  const nextLesson = path.find(lesson => !completedIds.has(lesson.id) &&
+    inProgressIds.has(lesson.id) &&
     getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds).unlocked)
-    ?? path.find(lesson => !completedLessonIds.includes(lesson.id) &&
+    ?? path.find(lesson => !completedIds.has(lesson.id) &&
       getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds).unlocked);
   const nextIndex = nextLesson ? path.findIndex(lesson => lesson.id === nextLesson.id) : -1;
   const isAncientGreece = subcategory.id === "ancient-greece";
@@ -115,15 +118,15 @@ export default function SubcategoryScreen({
   // Labels can extend slightly past the 148pt checkpoint touch target without
   // crossing the map edge, even in the outermost 27% / 72% lanes.
   const labelWidth = Math.min(170, mapWidth * 0.51);
-  const points = path.map((_lesson, index) => pointFor(index, mapWidth, isAncientGreece));
+  const points = useMemo(() => path.map((_lesson, index) => pointFor(index, mapWidth, isAncientGreece)), [path, mapWidth, isAncientGreece]);
   const mapHeight = points.length ? points[points.length - 1].y + 115 : 0;
-  const segments = points.slice(1).map((point, index) => ({
+  const segments = useMemo(() => points.slice(1).map((point, index) => ({
     d: segmentBetween(points[index], point),
-    done: completedLessonIds.includes(path[index].id) &&
-      completedLessonIds.includes(path[index + 1].id),
+    done: completedIds.has(path[index].id) &&
+      completedIds.has(path[index + 1].id),
     toNext: path[index + 1].id === nextLesson?.id &&
-      completedLessonIds.includes(path[index].id),
-  }));
+      completedIds.has(path[index].id),
+  })), [points, path, completedIds, nextLesson?.id]);
   const progressPercent = path.length ? Math.round(completed / path.length * 100) : 0;
   const isTesting = devLessonsUnlocked();
 
@@ -288,8 +291,8 @@ export default function SubcategoryScreen({
           {path.map((lesson, index) => {
             const point = points[index];
             const access = getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds);
-            const done = completedLessonIds.includes(lesson.id);
-            const started = inProgressLessonIds.includes(lesson.id) && !done;
+            const done = completedIds.has(lesson.id);
+            const started = inProgressIds.has(lesson.id) && !done;
             const disabled = !progressLoaded || !access.unlocked;
             const active = progressLoaded && nextLesson?.id === lesson.id;
             const chapter = isAncientGreece ? ancientGreeceChapters[index] : undefined;

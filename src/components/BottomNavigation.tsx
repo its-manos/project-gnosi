@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AppScreen } from "../hooks/useLearningApp";
 import { colors } from "../theme";
 
-type NavigationTarget = "home" | "progress" | "saved";
+type NavigationTarget = "home" | "progress" | "saved" | "profile";
 
 type Props = {
   currentScreen: AppScreen;
@@ -21,6 +21,7 @@ const tabs: Tab[] = [
   { key: "home", label: "Αρχική", accessibilityLabel: "Επιστροφή στην αρχική" },
   { key: "progress", label: "Πρόοδος", accessibilityLabel: "Πρόοδος μαθημάτων και καθημερινών quiz" },
   { key: "saved", label: "Αποθηκευμένα", accessibilityLabel: "Αποθηκευμένα άρθρα" },
+  { key: "profile", label: "Προφίλ", accessibilityLabel: "Το προφίλ μου" },
 ];
 
 function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
@@ -42,6 +43,16 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
     );
   }
 
+  if (name === "profile") {
+    return (
+      <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+        <Circle cx={12} cy={8} r={3.5} stroke={color} strokeWidth={1.8} />
+        <Path d="M5 20v-1.4c0-3.1 2.8-5.1 7-5.1s7 2 7 5.1V20" stroke={color}
+          strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    );
+  }
+
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <Path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
@@ -51,7 +62,8 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
 
 function activeTabForScreen(screen: AppScreen): NavigationTarget | null {
   if (["home", "category", "subcategory", "lesson", "quiz", "results", "review"].includes(screen)) return "home";
-  if (["progress", "learning-insights", "account", "weekly-review"].includes(screen)) return "progress";
+  if (["progress", "learning-insights", "weekly-review", "knowledge-review"].includes(screen)) return "progress";
+  if (["profile", "player-stats", "account"].includes(screen)) return "profile";
   if (screen === "saved") return "saved";
   return null;
 }
@@ -80,7 +92,8 @@ export default function BottomNavigation({ currentScreen, onNavigate }: Props) {
             accessibilityState={{ selected }}
           >
             <TabIcon name={tab.key} color={iconColor} />
-            <Text style={[styles.label, selected && styles.labelSelected]}>
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78}
+              style={[styles.label, selected && styles.labelSelected]}>
               {tab.label}
             </Text>
           </Pressable>
@@ -96,7 +109,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-around",
     minHeight: 60,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingTop: 6,
     backgroundColor: "#0E111C",
     borderTopWidth: 1,
@@ -109,7 +122,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 3,
     borderRadius: 12,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
   },
   tabSelected: {
     backgroundColor: "rgba(168, 155, 255, 0.16)",
@@ -120,6 +133,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.textMuted,
     fontSize: 10,
+    textAlign: "center",
     fontWeight: "600",
   },
   labelSelected: {
