@@ -64,6 +64,7 @@ const common = {
   "../components/AppHeader": { __esModule: true, default: "Header" },
   "../components/SyncStatus": { __esModule: true, default: "Sync" },
   "../components/ProgressGradientBackground": { __esModule: true, default: "Gradient" },
+  "../components/AtlasCard": { __esModule: true, default: "MotionView" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
   "../components/HomeMotion": { MotionView: "MotionView", MotionXpCircle: "MotionXpCircle", MotionPressable: "MotionPressable" },
 };
