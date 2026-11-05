@@ -50,7 +50,7 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
         const checked = selected.includes(index);
         const correctOption = answered && question.content.correctIndices.includes(index);
         const wrongSelection = answered && checked && !correctOption;
-        return <AnswerMotion key={index} active={correctOption || wrongSelection}>
+        return <AnswerMotion key={index} active={checked || correctOption || wrongSelection}>
           <Pressable
             testID={`multiple-select-option-${index}`}
             accessibilityRole="checkbox"
