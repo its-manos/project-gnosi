@@ -249,6 +249,7 @@ const Reading=load('src/components/LearningActivityPanel.tsx',{
   '../utils/learningActivity':{activityBuckets:()=>[],activitySummary:()=>({})},
   '../utils/dailyChallenge':{getAthensDateKey:()=> '2026-10-30'},
   './HomeMotion':{MotionPressable:'MotionPressable'},
+  './MetricCard':{__esModule:true,default:'MetricCard'},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
 }).CategoryProgress;
 slots=[];cursor=0;
