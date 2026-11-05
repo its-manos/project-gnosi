@@ -22,8 +22,8 @@ function CategoryAtlasBackground({ width, height, regionCount }: Props) {
   const regions = { length: regionCount };
   // Match FantasyMap's compact row allocation (3 regions use two rows).
   const rows = regionCount === 3 ? 2 : Math.max(1, Math.ceil(regionCount / 3));
-  const renderedWidth = Math.min(520, width);
-  const mapHeight = Math.max(180, Math.round(height * MAP_WIDTH / renderedWidth));
+  const renderedWidth = width;
+  const mapHeight = height * MAP_WIDTH / renderedWidth;
   const renderedHeight = mapHeight * renderedWidth / MAP_WIDTH;
   return (
     <View testID="category-atlas-static-background" pointerEvents="none"
