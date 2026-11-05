@@ -91,13 +91,14 @@ export default function DailyChallengePreferencesScreen({
                   key={topic.id}
                   entranceDelay={55 + DAILY_CHALLENGE_TOPICS.indexOf(topic) * 32}
                   pressScale={0.975}
-                  style={[styles.topicCard, compact && styles.topicCardCompact, selected && styles.topicCardSelected, disabled && styles.topicCardDisabled]}
+                  style={[styles.topicCard, compact && styles.topicCardCompact, selected && styles.topicCardSelected, selected && styles.topicCardGlow, disabled && styles.topicCardDisabled]}
                   onPress={() => toggleTopic(topic.id)}
                   disabled={disabled || isSaving}
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: selected, disabled: disabled || isSaving }}
                   accessibilityLabel={`${topic.title}. ${topic.description}`}
                 >
+                  {selected ? <View pointerEvents="none" style={styles.selectionAccent} /> : null}
                   <View style={styles.topicTopRow}>
                     <Text style={[styles.topicEmoji, compact && styles.topicEmojiCompact]}>{topic.emoji}</Text>
                     <View style={[styles.checkmark, selected && styles.checkmarkSelected]}>
@@ -156,6 +157,8 @@ const styles = StyleSheet.create({
   topicGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 },
   topicCard: { flexBasis: "46%", minHeight: 80, flexGrow: 1, backgroundColor: "#1A2538", borderColor: "#38435C", borderWidth: 1, borderRadius: 15, padding: 10 },
   topicCardSelected: { backgroundColor: "#2A2948", borderColor: "#B2A3FF", borderWidth: 1.5 },
+  topicCardGlow: { shadowColor: "#A99AFF", shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
+  selectionAccent: { position: "absolute", top: 0, left: 14, width: 42, height: 2, backgroundColor: "#B2A3FF", borderRadius: 2 },
   topicCardDisabled: { opacity: 0.45 },
   topicTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 },
   topicEmoji: { fontSize: 23 },
