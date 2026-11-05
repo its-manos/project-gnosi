@@ -755,6 +755,8 @@ const mapShell = nodes(categoryTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 assert.ok(mapShell && typeof mapShell.props.onLayout === "function",
   "empty flex viewport must still measure its bounds");
+const screenRoot = nodes(categoryTree).find(node => node.props?.testID === "category-atlas-screen");
+screenRoot.props.onLayout({ nativeEvent: { layout: { width: 340, height: 620 } } });
 mapShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
 categoryTree = renderCategory();
 assert.equal(nodes(categoryTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
