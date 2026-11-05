@@ -23,7 +23,13 @@ const common = {
   '../play/preferences': { motionAllowed: () => true, playPreferences: { getSnapshot: () => ({}) } },
   '../play/soundStatus': { requestPracticeCue: kind => openingCues.push(kind) },
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
-  './QuizReveal': { __esModule: true, default: 'QuizReveal' }, '../state/BetaAnalytics': {useBetaAnalytics: () => ({analytics:{progress:async value => {analyticsScrollEvents.push(value);}}})}, react, './ReportContentButton': { __esModule: true, default: 'ReportContentButton' }, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
+  './QuizReveal': { __esModule: true, default: 'QuizReveal' },
+  '../components/QuizReveal': { __esModule: true, default: 'QuizReveal' },
+  '../components/ProgressGradientBackground': { __esModule: true, default: 'ProgressGradientBackground' },
+  '../hooks/useAdaptiveQuestionScroll': { useAdaptiveQuestionScroll: () => ({
+    scrollEnabled: false, onLayout: () => {}, onContentSizeChange: () => {},
+  }) },
+  '../state/BetaAnalytics': {useBetaAnalytics: () => ({analytics:{progress:async value => {analyticsScrollEvents.push(value);}}})}, react, './ReportContentButton': { __esModule: true, default: 'ReportContentButton' }, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
   'react-native-svg': { __esModule: true, default: 'Svg', Path: 'Path' },
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) } };
 function compile(file, imports = {}) {
