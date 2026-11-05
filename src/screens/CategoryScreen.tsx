@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { Category, Lesson, Subcategory } from "../data/lessons";
 import FantasyMap from "../components/FantasyMap";
 import CategoryAtlasBackground from "../components/CategoryAtlasBackground";
-import { MotionView } from "../components/HomeMotion";
+import { MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { AtlasContinueAccent, AtlasContinueArrow, AtlasProgressFill } from "../components/CategoryAtlasMotion";
 import { colors } from "../theme";
@@ -87,6 +87,8 @@ export default function CategoryScreen({
   const featuredPercent = featuredRegion?.totalLessons
     ? Math.round(featuredRegion.completedLessons / featuredRegion.totalLessons * 100) : 0;
 
+  // Phase 1: mirror the fixed Adventure Path shell. The existing mapped islands
+  // remain interactive until Phase 2 swaps in the dedicated island atlas.
   return (
     <View testID="category-atlas-screen" style={styles.screen}
       onLayout={({ nativeEvent: { layout: { width, height } } }) => {
@@ -104,17 +106,17 @@ export default function CategoryScreen({
         </View>
       ) : null}
       <MotionView entranceDelay={0} testID="category-atlas-header" style={styles.navigationHeader}>
-        <Pressable testID="category-atlas-back" onPress={onBack} style={styles.backButton}
+        <MotionPressable testID="category-atlas-back" pressScale={0.95} onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στους κόσμους γνώσης"
           hitSlop={8}>
           <Text style={styles.backText}>‹ ΠΙΣΩ</Text>
-        </Pressable>
+        </MotionPressable>
         <Text testID="category-atlas-title" style={styles.categoryTitle}
-          numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
           {category.title.toLocaleUpperCase("el-GR")}
         </Text>
         <View style={styles.headerMark} accessible={false}>
-          <Text style={styles.sparkle}>✦</Text>
+          <MotionIcon index={0}><Text style={styles.sparkle}>✦</Text></MotionIcon>
         </View>
       </MotionView>
 
@@ -150,12 +152,6 @@ export default function CategoryScreen({
             <View style={atlasContinueStyles.action} accessible={false}>
               <AtlasContinueArrow />
             </View>
-          </View>
-          <View style={styles.progressSummary}>
-            <Text style={styles.progressCaption}>Πρόοδος περιοχής</Text>
-            <Text style={styles.progressCaption}>{progressLoaded
-              ? featuredRegion.completedLessons + " / " + featuredRegion.totalLessons + " μαθήματα"
-              : "Φόρτωση…"}</Text>
           </View>
           <View testID="category-atlas-progress" style={atlasContinueStyles.progressTrack}
             accessible accessibilityRole="progressbar"
@@ -220,11 +216,9 @@ const styles = StyleSheet.create({
     fontWeight: "900", letterSpacing: 0.15,
   },
   categoryCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
-  progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  progressCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
-  mapViewport: {
-    flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
-    marginBottom: 8,
+remove unused styles  mapViewport: {
+    flex: 1, minHeight: 0, width: "100%", position: "relative",
+    overflow: "hidden", marginBottom: 8, backgroundColor: "transparent",
   },
   // Keep the interactive SVG at its measured size; card motion never blocks
   // island mounting or animates the full SVG and its touch geometry.
