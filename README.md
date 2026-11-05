@@ -158,6 +158,17 @@ The optional **npm run beta:updates:setup** command updates linked-project confi
 
 For iOS distribution, **npm run beta:ios** and the EAS submit workflow require Apple-side configuration and credentials; a build profile alone does not publish an app. Follow [Private beta / build guide](docs/private-beta.md) and recheck its historical notes against the current source.
 
+## SVG path optimization
+
+Gnosi's vector maps and world icons are written with `react-native-svg` inside TSX; there are currently no standalone `.svg` files to optimize. To run the pinned SVGO path-data pass on **literal** `<Path d="...">` values:
+
+~~~bash
+npm run svg:optimize # rewrite paths only when SVGO makes them shorter
+npm run svg:check    # verify no additional path savings (CI uses this)
+~~~
+
+The optimizer leaves JSX expressions, responsive/generated paths, gradients, node structure, animated props and touch targets unchanged. It uses `svgo@4.0.0` through npm on demand, so no app runtime dependency or lockfile change is required. Check the visual result on **both Android and iOS**, especially delicate icon strokes. This is source-size optimization, not a guaranteed reduction in SVG rendering cost.
+
 ## Contributing and maintenance
 
 1. Branch from current **main**; keep documentation, content and code changes reviewable.
