@@ -460,7 +460,7 @@ const staticAtlasSource = fs.readFileSync(
   path.join(root, "src/components/HomeAtlasBackground.tsx"), "utf8");
 assert.ok(!/withRepeat\(|withTiming\(|useSharedValue\(|setInterval\(/.test(staticAtlasSource),
   "all time-based motion stays isolated outside the static chart");
-assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\\)/,
+assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\)/,
   "dashboard updates should not redraw the atlas");
 assert.match(staticAtlasSource, /absoluteFill/,
   "atlas stays fixed outside the scrollable dashboard");
