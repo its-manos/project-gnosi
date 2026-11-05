@@ -47,6 +47,8 @@ export default function CategoryScreen({
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
   const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
+  const [readyCategoryId, setReadyCategoryId] = useState<string | null>(null);
+  const mapReady = readyCategoryId === category.id;
   const [screenViewport, setScreenViewport] = useState({ width: 0, height: 0 });
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
@@ -96,7 +98,7 @@ export default function CategoryScreen({
           measured-layout commit; avoid an empty atlas flashing first. */}
       {screenViewport.width > 0 && screenViewport.height > 0 &&
         mapViewport.width > 0 && mapViewport.height > 0 ? (
-        <View pointerEvents="none" style={styles.screenBackground}>
+        <View pointerEvents="none" style={[styles.screenBackground, !mapReady && styles.awaitingMap]}>
           <CategoryAtlasBackground width={screenViewport.width + 40}
             height={screenViewport.height} regionCount={mapRegions.length} />
         </View>
@@ -177,11 +179,12 @@ export default function CategoryScreen({
             card animation callbacks or a second delayed reveal. */}
         {mapViewport.width > 0 && mapViewport.height > 0 ? (
           <View key={category.id} testID="category-atlas-map-entrance"
-            style={styles.mapEntrance}>
+            style={[styles.mapEntrance, !mapReady && styles.awaitingMap]}>
             <FantasyMap
               regions={mapRegions}
               fitViewport={mapViewport}
               hideControls externalBackground
+              onMapLayout={() => setReadyCategoryId(category.id)}
               onSelectRegion={subcategoryId => onOpenSubcategory(subcategoryId, category.id)}
               emptyMessage="Αυτός ο κόσμος δεν έχει ακόμη χαρτογραφημένες περιοχές."
             />
@@ -200,6 +203,7 @@ const styles = StyleSheet.create({
   },
   // Offset the root padding so the artwork reaches both physical edges.
   screenBackground: { position: "absolute", top: 0, bottom: 0, left: -20, right: -20 },
+  awaitingMap: { opacity: 0 },
   navigationHeader: {
     minHeight: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
