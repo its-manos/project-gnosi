@@ -30,8 +30,8 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
     {activeSection === null ? <View testID="account-settings-dashboard">
       <MotionView entranceDelay={0} style={styles.heading}>
         <View style={styles.headingTop}><Text style={styles.headingSymbol}>✦</Text><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text></View>
-        <Text style={styles.title}>Ρυθμίσεις</Text>
-        <Text style={styles.subtitle}>Διαχειρίσου την εμπειρία σου.</Text>
+        <Text style={styles.title}>Οι επιλογές σου</Text>
+        <Text style={styles.subtitle}>Προσάρμοσε τη Γνώση στα μέτρα σου.</Text>
       </MotionView>
       {([
         ["account", "Λογαριασμός", "Σύνδεση, εγγραφή και αντίγραφα", "◉", "#B7A5FF"],
@@ -72,14 +72,10 @@ const styles = StyleSheet.create({
   backText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
   overviewContent: { flexGrow: 1 },
   heading: { gap: 7, marginBottom: 14, borderRadius: 22, borderWidth: 1, borderColor: "#555078", backgroundColor: "#20243C", padding: 18, overflow: "hidden" },
-  headingGlow: { position: "absolute", width: 190, height: 190, borderRadius: 95, backgroundColor: "#302D56", right: -60, top: -100 },
   headingTop: { flexDirection: "row", alignItems: "center", gap: 9 },
   eyebrow: { color: colors.accentLight, fontSize: 10, fontWeight: "800", letterSpacing: 1.7 },
   title: { color: colors.text, fontSize: 27, lineHeight: 34, fontWeight: "900" },
   subtitle: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
-  section: { marginBottom: 16 },
-  sectionTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: "800", marginBottom: 2 },
-  body: { color: colors.textBody, fontSize: 14, lineHeight: 23, marginBottom: 16 },
   tile: { minHeight: 75, flexDirection: "row", alignItems: "center", padding: 12, marginBottom: 9, borderRadius: 17, borderWidth: 1, borderColor: "#38435C", backgroundColor: "#1A2538" },
   headingSymbol: { color: "#B7A5FF", fontSize: 20 },
   tileSymbol: { fontSize: 24, fontWeight: "700" },
