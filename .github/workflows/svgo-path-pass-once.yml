@@ -19,6 +19,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run svg:optimize
+      - run: npm run svg:check
       - run: npm run typecheck
       - name: Commit path-only optimizations on the feature branch
         run: |
