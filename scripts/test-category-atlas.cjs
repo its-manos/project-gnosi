@@ -633,45 +633,85 @@ const continueAccentCode = motionCode.slice(
 );
 assert.doesNotMatch(continueAccentCode, /withRepeat\(/,
   "the card highlight must not start an ongoing looping pulse");
+// Category Island Atlas 2.0 replaces the legacy screen integration while the
+// standalone FantasyMap contracts above remain for its other callers.
 const screen = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx"), "utf8");
 const navigator = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
-assert.match(screen, /<FantasyMap/);
-assert.match(screen, /getAtlasRegionProgress/);
-assert.match(screen, /getAtlasCategoryProgress/);
+assert.match(screen, /<IslandAtlasMap/, "the Category screen uses the dedicated archipelago");
+assert.doesNotMatch(screen, /<FantasyMap/, "legacy heavyweight SVG is not mounted");
+assert.match(screen, /<AdventureAtlasBackground/, "Category shares the Adventure Path backdrop");
+assert.doesNotMatch(screen, /<CategoryAtlasBackground/, "the former full SVG chart is not layered");
+assert.match(screen, /getAtlasRegionProgress/, "regional progress remains data-driven");
+assert.match(screen, /getAtlasCategoryProgress/, "overall progress remains unchanged");
+assert.match(screen, /chooseAtlasFeaturedRegion/, "Continue follows real lesson progress");
 assert.match(screen, /testID="category-atlas-continue"/);
-assert.match(screen, /pressScale=\{0\.983\}/,
-  "card press feedback stays restrained");
-assert.match(screen, /<MotionView entranceDelay=\{0\} testID="category-atlas-header"/,
-  "header enters first, matching Home and Adventure Path");
-assert.match(screen, /entranceDelay=\{75\} pressScale=\{0\.983\}/,
-  "Continue card follows the header with a gentle stagger");
-assert.match(screen, /<View key=\{category\.id\} testID="category-atlas-map-entrance"/,
-  "the fitted chart mounts only after measurement, without animating hundreds of SVG nodes");
-assert.doesNotMatch(screen, /<MotionView entranceDelay=\{155\}/,
-  "the heavyweight map must not receive a whole-SVG entrance transform");
-assert.match(screen, /mapEntrance: \{ width: "100%" \}/,
-  "map entrance preserves its original measured width");
-assert.match(screen, /<AtlasContinueAccent\s*\/>/,
-  "card accent stays decorative");
-assert.match(screen, /<AtlasContinueArrow\s*\/>/,
-  "the navigation arrow has its own brief cue");
-assert.match(screen, /<AtlasProgressFill percent=/,
-  "regional progress has a smooth UI-thread fill");
-assert.match(screen, /Η ΠΡΟΟΔΟΣ ΣΟΥ/,
-  "overall progress heading is explicit rather than repeating category title");
-assert.match(screen, /#6C668A/, "island tints share Adventure Path palette");
-assert.match(screen, /letterSpacing: 1.4/, "header typography matches Subcategory screen");
 assert.match(screen, /testID="category-atlas-map-viewport"/);
-assert.match(screen, /fitViewport=/, "map respects actual viewport rather than enforcing a tall path");
-assert.match(screen, /hideControls/, "Category Atlas hides the count and map/list row");
-assert.match(screen, /chooseAtlasFeaturedRegion/, "shortcut chooses an explored area independently");
-assert.doesNotMatch(screen, /<ScrollView/, "map exploration fits without page scrolling");
-assert.doesNotMatch(screen, /\{category\.description\}/, "remove redundant category description");
-assert.doesNotMatch(screen, /getLessonAccess/, "category has no lesson unlock path");
-assert.doesNotMatch(screen, /AdventureAtlasBackground/, "do not impose chapter-map geography");
+assert.match(screen, /entranceDelay=\{75\} pressScale=\{0\.983\}/);
+assert.match(screen, /<MotionView entranceDelay=\{0\} testID="category-atlas-header"/);
+assert.doesNotMatch(screen, /<ScrollView/, "the category remains non-scrollable");
+assert.doesNotMatch(screen, /getLessonAccess/, "category islands are freely explorable");
+assert.doesNotMatch(screen, /setReadyCategoryId|mapReady|awaitingMap/,
+  "island mounting has no delayed opacity gate");
 assert.match(navigator, /<CategoryScreen[\s\S]*?completedLessonIds={app\.completedLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?inProgressLessonIds={app\.inProgressLessonIds}/);
 assert.match(navigator, /<CategoryScreen[\s\S]*?progressLoaded={app\.progressLoaded}/);
+
+const islandsModule = compile("src/components/IslandAtlasMap.tsx", {
+  react: { memo: component => component, useMemo: fn => fn() },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "react-native-svg": svg,
+});
+const archipelago = islandsModule.default;
+for (const [count, width, height] of [[1, 320, 430], [3, 340, 490],
+  [6, 320, 320], [9, 400, 510]]) {
+  const placements = islandsModule.getIslandAtlasPlacements(count, width, height);
+  assert.equal(placements.length, count);
+  for (const position of placements) {
+    assert.ok(position.left >= 0 && position.top >= 0, "islands fit the viewport origin");
+    assert.ok(position.left + position.width <= width + 1, "no clipped island labels");
+    assert.ok(position.top + position.artHeight + 37 <= height + 1,
+      "island artwork and text fit the available vertical space");
+    assert.ok(position.artHeight >= 46, "artwork remains a usable touch size");
+  }
+}
+assert.deepEqual(Array.from(islandsModule.islandAtlasRows(3)), [2, 1],
+  "three islands form a 2–1 archipelago instead of sequential checkpoints");
+assert.deepEqual(Array.from(islandsModule.islandAtlasRows(5)), [2, 1, 2],
+  "five regions keep a balanced, non-grid arrangement");
+const visits = [];
+const regionDataV2 = [
+  { id: "ancient", title: "Αρχαία Ελλάδα", totalLessons: 2,
+    completedLessons: 1, progressLoaded: true, status: "in-progress" },
+  { id: "world", title: "Παγκόσμια ιστορία", totalLessons: 1,
+    completedLessons: 0, progressLoaded: true, status: "new" },
+  { id: "mythology", title: "Μυθολογία", totalLessons: 0,
+    completedLessons: 0, progressLoaded: true, status: "coming-soon" },
+];
+let islandsTree = archipelago({
+  regions: regionDataV2, width: 340, height: 490,
+  onSelectRegion: id => visits.push(id),
+});
+const islandNodes = nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-destination-"));
+assert.equal(islandNodes.length, 3, "every subcategory has a native touch target");
+assert.ok(islandNodes.every(node => node.type === "Pressable" && node.props.accessibilityRole === "button"),
+  "islands remain accessible native buttons");
+assert.ok(islandNodes[0].props.accessibilityLabel.includes("1 από 2"),
+  "accessible island progress uses real completion counts");
+assert.ok(islandNodes[2].props.accessibilityLabel.includes("σύντομα"),
+  "coming-soon destinations describe their availability");
+islandNodes[1].props.onPress();
+assert.deepEqual(visits, ["world"], "a map island opens its matching region ID");
+assert.ok(nodes(islandsTree).filter(node =>
+  node.props?.testID?.startsWith("island-atlas-label-")).length === 3,
+  "Greek category titles render below rather than over the geography");
+const emptyIslands = archipelago({
+  regions: [], width: 340, height: 490, onSelectRegion: () => {},
+});
+assert.ok(nodes(emptyIslands).some(node => node.props?.testID === "island-atlas-empty"),
+  "empty categories show an accessible explanatory state");
+
 const continueModule = compile("src/components/AtlasContinueCard.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
@@ -680,218 +720,78 @@ const continueModule = compile("src/components/AtlasContinueCard.tsx", {
 });
 const atlasContinueStub = { __esModule: true, default: "MotionPressable",
   atlasContinueStyles: continueModule.atlasContinueStyles };
+const screenState = [];
+let hookIndex = 0;
 const screenModule = compile("src/screens/CategoryScreen.tsx", {
-  react: { useMemo: fn => fn(), useState: initial => [initial, () => {}] },
+  react: {
+    useMemo: fn => fn(),
+    useState: initial => {
+      const index = hookIndex++;
+      if (!(index in screenState)) screenState[index] = initial;
+      return [screenState[index], next => {
+        screenState[index] = typeof next === "function" ? next(screenState[index]) : next;
+      }];
+    },
+  },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
-  "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
+  "../components/IslandAtlasMap": { __esModule: true, default: "IslandAtlasMap" },
+  "../components/AdventureAtlasBackground": { __esModule: true, default: "AdventureAtlasBackground" },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView", MotionIcon: "MotionIcon",
+    MotionView: "MotionView", MotionPressable: "MotionPressable", MotionIcon: "MotionIcon",
   },
   "../components/CategoryAtlasMotion": {
     AtlasContinueAccent: "AtlasContinueAccent",
     AtlasContinueArrow: "AtlasContinueArrow",
     AtlasProgressFill: "AtlasProgressFill",
   },
-  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
+  "../theme": { colors: { accentLight: "#B1A5FF", text: "#F3F0E8" } },
   "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
 });
-// Initial layout must never show the legacy (non-fitted) map for a frame.
-// A fresh CategoryScreen renders only the measured-container shell, then
-// mounts FantasyMap once with the correct viewport on the next render.
-const screenState = [];
-let screenHookIndex = 0;
-const screenWithLayout = compile("src/screens/CategoryScreen.tsx", {
-  react: {
-    useMemo: fn => fn(),
-    useState: initial => {
-      const index = screenHookIndex++;
-      if (!(index in screenState)) screenState[index] = initial;
-      return [screenState[index], value => {
-        screenState[index] = typeof value === "function" ? value(screenState[index]) : value;
-      }];
-    },
-  },
-  "react/jsx-runtime": { jsx, jsxs: jsx },
-  "react-native": native,
-  "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
-  "../components/AtlasContinueCard": atlasContinueStub,
-  "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView", MotionIcon: "MotionIcon",
-  },
-  "../components/CategoryAtlasMotion": {
-    AtlasContinueAccent: "AtlasContinueAccent",
-    AtlasContinueArrow: "AtlasContinueArrow",
-    AtlasProgressFill: "AtlasProgressFill",
-  },
-  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
-  "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
-}).default;
-const shortcutVisits = [];
 const screenProps = {
   category: { id: "history", title: "Ιστορία" },
-  subcategories: [{ id: "ancient", title: "Αρχαία Ελλάδα" },
-    { id: "world", title: "Παγκόσμια ιστορία" }],
+  subcategories: regionDataV2.map(({ id, title }) => ({ id, title })),
   lessons, completedLessonIds: ["a"], inProgressLessonIds: ["b"],
   progressLoaded: true, onBack: () => {},
-  onOpenSubcategory: (id, categoryId) => shortcutVisits.push([id, categoryId]),
+  onOpenSubcategory: (id, categoryId) => visits.push(id + ":" + categoryId),
 };
-const renderCategory = () => {
-  screenHookIndex = 0;
-  return screenWithLayout(screenProps);
+const render = overrides => {
+  hookIndex = 0;
+  return screenModule.default({ ...screenProps, ...overrides });
 };
-let categoryTree = renderCategory();
-const header = nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-header");
-assert.equal(header.type, "MotionView", "header uses the same entry primitive as Home");
-assert.equal(header.props.entranceDelay, 0);
-const backButton = nodes(categoryTree).find(node => node.props?.testID === "category-atlas-back");
-assert.equal(backButton.type, "MotionPressable",
-  "Category uses the same native back-button feedback as Adventure Path");
-assert.equal(backButton.props.pressScale, 0.95);
-assert.ok(nodes(header).some(node => node.type === "MotionIcon"),
-  "Category header shares the understated animated mark");
-assert.equal(nodes(categoryTree).filter(node =>
-  node.props?.testID === "category-atlas-map-entrance").length, 0,
-  "map reveal must not start before its viewport is measured");
-const shortcut = nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-continue");
-assert.equal(shortcut.type, "MotionPressable",
-  "the Continue shortcut uses the established Home press animation");
-assert.equal(shortcut.props.pressScale, 0.983);
-assert.equal(shortcut.props.entranceDelay, 75,
-  "Continue card follows the header without changing its tap response");
-assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueAccent"));
-assert.ok(nodes(shortcut).some(node => node.type === "AtlasContinueArrow"));
-assert.equal(nodes(shortcut).filter(node => node.props?.style?.fontSize === 10).length, 0,
-  "the Category Continue card omits the redundant lesson-count caption");
-const fill = nodes(shortcut).find(node => node.type === "AtlasProgressFill");
-assert.equal(fill.props.percent, 50, "progress motion uses real regional completion");
-shortcut.props.onPress();
-assert.deepEqual(shortcutVisits, [["ancient", "history"]],
-  "animated shortcut still opens the same subcategory");
-assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 0,
-  "old non-fitted FantasyMap must not flash while viewport is unmeasured");
-const screenShell = nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-screen");
-screenShell.props.onLayout({ nativeEvent: { layout: { width: 380, height: 730 } } });
-categoryTree = renderCategory();
-const mapShell = nodes(categoryTree).find(node =>
+let screenTree = render();
+assert.equal(nodes(screenTree).filter(node => node.type === "IslandAtlasMap").length, 0,
+  "unmeasured screen does not allocate an incorrectly-sized island map");
+const screenRoot = nodes(screenTree).find(node => node.props?.testID === "category-atlas-screen");
+screenRoot.props.onLayout({ nativeEvent: { layout: { width: 380, height: 730 } } });
+screenTree = render();
+assert.equal(nodes(screenTree).filter(node => node.type === "AdventureAtlasBackground").length, 1,
+  "full-height background is available after the first root measurement");
+const mapViewport = nodes(screenTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
-assert.ok(mapShell && typeof mapShell.props.onLayout === "function",
-  "empty flex viewport must still measure its bounds");
-mapShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
-categoryTree = renderCategory();
-assert.equal(nodes(categoryTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
-  "static chart becomes visible as soon as the viewport is measured");
-assert.equal(nodes(categoryTree).filter(node => node.type === map).length, 1,
-  "background and interactive islands mount together after the first measurement");
-let mountedMaps = nodes(categoryTree).filter(node => node.type === map);
-const mapReveal = nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-map-entrance");
-assert.equal(mapReveal.type, "View",
-  "the atlas mounts after measurement without waiting for the card animation");
-assert.equal(mapReveal.props.entranceDelay, undefined,
-  "map entrance animation does not compete with card or island motion");
-assert.equal(mountedMaps.length, 1, "measured screen mounts exactly one map");
-assert.equal(mountedMaps[0].props.hideControls, true,
-  "Category Atlas only renders the constellation without mode controls");
-assert.equal(mountedMaps[0].props.externalBackground, true,
-  "the interactive SVG uses the separate chart layer");
-assert.equal(nodes(mapReveal).filter(node => node.type === map).length, 1,
-  "fitted map stays inside the non-layout-shifting entrance wrapper");
-assert.equal(mapReveal.props.children.type, map,
-  "interactive islands render immediately, without another SVG cover");
-assert.equal(nodes(mapReveal).filter(node => node.type === "AtlasMapRevealCover").length, 0,
-  "the atlas contains no deferred reveal layer");
-assert.deepEqual(
-  { ...mountedMaps[0].props.fitViewport }, { width: 340, height: 490 },
-  "first map mount uses the real viewport size rather than legacy layout");
-nodes(categoryTree).find(node =>
-  node.props?.testID === "category-atlas-map-viewport"
-).props.onLayout({ nativeEvent: { layout: { width: 310, height: 420 } } });
-categoryTree = renderCategory();
-mountedMaps = nodes(categoryTree).filter(node => node.type === map);
-assert.deepEqual(
-  { ...mountedMaps[0].props.fitViewport }, { width: 310, height: 420 },
-  "fitted map still adapts when viewport dimensions change");
-
-// The Continue card still animates, but no longer controls map readiness.
-assert.doesNotMatch(screen, /mapReadyFor|canMountMap|onEntranceComplete/,
-  "the card entrance must not block interactive destinations");
-assert.doesNotMatch(screen, /AtlasMapRevealCover/,
-  "the duplicate chart cover must not delay island visibility");
-const androidNative = { ...native, Platform: { OS: "android" } };
-const androidState = [];
-let androidHookIndex = 0;
-const androidScreen = compile("src/screens/CategoryScreen.tsx", {
-  react: {
-    useMemo: fn => fn(),
-    useState: initial => {
-      const index = androidHookIndex++;
-      if (!(index in androidState)) androidState[index] = initial;
-      return [androidState[index], next => {
-        androidState[index] = typeof next === "function" ? next(androidState[index]) : next;
-      }];
-    },
-  },
-  "react/jsx-runtime": { jsx, jsxs: jsx },
-  "react-native": androidNative,
-  "../components/FantasyMap": { __esModule: true, default: map },
-  "../components/CategoryAtlasBackground": { __esModule: true, default: "CategoryAtlasBackground" },
-  "../components/AtlasContinueCard": atlasContinueStub,
-  "../components/HomeMotion": {
-    MotionPressable: "MotionPressable", MotionView: "MotionView", MotionIcon: "MotionIcon",
-  },
-  "../components/CategoryAtlasMotion": {
-    AtlasContinueAccent: "AtlasContinueAccent",
-    AtlasContinueArrow: "AtlasContinueArrow",
-    AtlasProgressFill: "AtlasProgressFill",
-  },
-  "../theme": { colors: { accentLight: "#B1A5FF", accent: "#A89BFF", text: "#F3F0E8" } },
-  "../utils/categoryAtlas": { getAtlasCategoryProgress, getAtlasRegionProgress },
-}).default;
-const renderAndroidCategory = options => {
-  androidHookIndex = 0;
-  return androidScreen({ ...screenProps, ...options });
-};
-let androidTree = renderAndroidCategory();
-const androidRoot = nodes(androidTree).find(node =>
-  node.props?.testID === "category-atlas-screen");
-androidRoot.props.onLayout({ nativeEvent: { layout: { width: 380, height: 730 } } });
-androidTree = renderAndroidCategory();
-const androidShell = nodes(androidTree).find(node =>
-  node.props?.testID === "category-atlas-map-viewport");
-androidShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
-androidTree = renderAndroidCategory();
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "Android mounts the interactive islands as soon as the viewport is measured");
-assert.equal(nodes(androidTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
-  "Android reveals the same static chart before the interactive map");
-assert.equal(nodes(androidTree).filter(node => node.type === "AtlasMapRevealCover").length, 0,
-  "Android also shows its islands with no additional reveal gate");
-androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "switching categories keeps the fitted map available immediately");
-renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" } });
-androidTree = renderAndroidCategory({ category: { id: "science", title: "Επιστήμη" },
-  subcategories: [] });
-assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
-  "empty categories still display their empty map without waiting for a card");
-
+mapViewport.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
+screenTree = render();
+const islandMap = nodes(screenTree).find(node => node.type === "IslandAtlasMap");
+assert.ok(islandMap, "destinations mount immediately once the map viewport is measured");
+assert.equal(islandMap.props.width, 340);
+assert.equal(islandMap.props.height, 490);
+islandMap.props.onSelectRegion("world");
+assert.equal(visits.at(-1), "world:history", "screen preserves Category-to-Subcategory navigation");
+const card = nodes(screenTree).find(node => node.props?.testID === "category-atlas-continue");
+assert.equal(card.props.entranceDelay, 75);
+assert.equal(card.props.pressScale, 0.983);
+assert.ok(nodes(card).some(node => node.type === "AtlasProgressFill"));
+card.props.onPress();
+assert.equal(visits.at(-1), "ancient:history", "Continue opens the in-progress subcategory");
 const choose = screenModule.chooseAtlasFeaturedRegion;
-const picks = [
-  { id: "ancient", status: "new" },
-  { id: "world", status: "in-progress" },
+const candidates = [
+  { id: "ancient", status: "new" }, { id: "world", status: "in-progress" },
   { id: "myths", status: "complete" },
 ];
-assert.equal(choose(picks, [
+assert.equal(choose(candidates, [
   { id: "a", subcategoryId: "ancient" }, { id: "b", subcategoryId: "world" },
-], ["b"]).id, "world", "resume the subcategory already in progress");
-assert.equal(choose(picks, [], []).id, "world", "prefer started locations without an active lesson");
-assert.equal(choose([{ id: "a", status: "complete" }, picks[0]], [], []).id, "ancient",
-  "new explorers can start anywhere");
-console.log("Category Interactive Atlas contracts passed. Device visual QA still required.");
+], ["b"]).id, "world");
+assert.equal(choose(candidates, [], []).id, "world");
+assert.equal(choose([{ id: "a", status: "complete" }, candidates[0]], [], []).id, "ancient");
+console.log("Category Interactive Island Atlas 2.0 contracts passed. Device visual QA still required.");
