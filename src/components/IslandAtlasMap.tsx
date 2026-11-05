@@ -217,7 +217,7 @@ function IslandAtlasMap({ regions, width, height, onSelectRegion }: Props) {
                 above real coastlines, without becoming another content card. */}
             <View testID={"island-atlas-nameplate-" + region.id}
               pointerEvents="none"
-              style={[styles.namePlate,
+              style={[styles.namePlate, { maxWidth: position.width },
                 region.status === "in-progress" && styles.activePlate,
                 region.status === "complete" && styles.completePlate]}>
               <Text testID={"island-atlas-label-" + region.id}
@@ -254,7 +254,9 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.77, transform: [{ scale: 0.96 }] },
   namePlate: {
-    width: "100%", minHeight: 32, paddingHorizontal: 4, paddingVertical: 2,
+    // Size the visible plate to its actual title, not the whole island slot.
+    // maxWidth is set per destination so long Greek names may wrap to 2 lines.
+    alignSelf: "center", minHeight: 32, paddingHorizontal: 9, paddingVertical: 2,
     alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(10, 23, 38, 0.68)",
     borderRadius: 9, borderWidth: 1, borderColor: "rgba(166, 176, 183, 0.18)",
@@ -262,7 +264,7 @@ const styles = StyleSheet.create({
   activePlate: { borderColor: "rgba(190, 173, 246, 0.52)" },
   completePlate: { borderColor: "rgba(213, 184, 137, 0.46)" },
   label: {
-    width: "100%", minHeight: 26,
+    flexShrink: 1, minHeight: 26,
     textAlign: "center", textAlignVertical: "center",
     color: "#E6E8EB", fontSize: 11.5, lineHeight: 14,
     fontWeight: "800", letterSpacing: 0.1,
