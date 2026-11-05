@@ -124,7 +124,9 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         <DailyMissionMap compact={compactIntro}/>
         {!previewIntro&&!canStart?<Text style={styles.errorText}>Δεν υπάρχουν αρκετές διαθέσιμες ερωτήσεις για σήμερα.</Text>:null}
         <View style={styles.introActions}>
-          <ActionButton label={previewIntro&&record.started?"Συνέχισε την πρόκληση →":"Ξεκίνα την πρόκληση →"}
+          <ActionButton label={previewIntro
+              ? record.completed?"Δες το αποτέλεσμα →":record.started?"Συνέχισε την πρόκληση →":"Άνοιξε την πραγματική πρόκληση →"
+              : "Ξεκίνα την πρόκληση →"}
             onPress={()=>{if(previewIntro){onPreviewContinue?.();return;}setSourceError(false);sourceRequest.current++;void startChallenge();}}
             disabled={previewIntro?!onPreviewContinue:!canStart} style={styles.actionPrimary}/>
           <Pressable testID="daily-interests-link" style={({pressed})=>[styles.interestsLink,pressed&&styles.interestsPressed]}
