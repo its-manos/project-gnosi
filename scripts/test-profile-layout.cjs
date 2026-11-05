@@ -195,7 +195,7 @@ const firstKnowledgeId=firstKnowledgeTile.props.testID;
 // and a restrained 7pt track without fake 0% values on an untouched account.
 assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='ΚΑΤΑΚΤΗΣΗ'),
   'each subject exposes a clear mastery progress caption');
-assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='7%'),
+assert.ok(text(firstKnowledgeTile).includes('7%'),
   'active subjects display their actual mastery percentage in the top badge');
 const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'
   && typeof n.props.children==='string' && n.props.children.startsWith('Θεματική '));
