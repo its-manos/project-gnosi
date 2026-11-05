@@ -16,6 +16,8 @@ const compile = (file, modules = {}) => {
     module: mod, exports: mod.exports,
     require: id => {
       if (id in modules) return modules[id];
+      if (id === "expo-image") return { Image: "ExpoImage" };
+      if (id === "../../assets/atlas-export-preview/category.webp") return 3;
       throw Error("Missing module stub: " + id);
     },
   });
