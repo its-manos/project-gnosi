@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import ActionButton from "../components/ActionButton";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { MotionView, MotionPressable } from "../components/HomeMotion";
@@ -22,6 +22,9 @@ export default function DailyChallengePreferencesScreen({
   onSave,
   onCancel,
 }: Props) {
+  const { height, fontScale } = useWindowDimensions();
+  const compact = height < 780 || fontScale > 1.1;
+  const veryCompact = height < 690;
   const [topicIds, setTopicIds] = useState<string[]>(initialPreferences.topicIds);
   const difficulty = initialPreferences.difficulty;
   const [isSaving, setIsSaving] = useState(false);
@@ -54,16 +57,16 @@ export default function DailyChallengePreferencesScreen({
   }
 
   return (
-    <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={veryCompact || fontScale > 1.2 || isLoading || saveError} contentContainerStyle={[styles.content, compact && styles.contentCompact]} showsVerticalScrollIndicator={false}>
       <View style={styles.top}>
         <View style={styles.topCopy}><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text><Text style={styles.topTitle}>Ενδιαφέροντα</Text></View>
         <Pressable accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" onPress={onCancel} style={styles.backButton}><Text style={styles.backText}>‹ Προφίλ</Text></Pressable>
       </View>
-      <MotionView entranceDelay={0} style={styles.hero}>
+      <MotionView entranceDelay={0} style={[styles.hero, compact && styles.heroCompact]}>
         <View style={styles.heroAccent} />
         <Text style={styles.heroEyebrow}>✦  ΟΙ ΕΠΙΛΟΓΕΣ ΣΟΥ</Text>
         <Text style={styles.heroTitle}>Τι σε συναρπάζει;</Text>
-        <Text style={styles.heroBody}>Επίλεξε 3–5 θέματα για πιο προσωπικές προτάσεις μαθημάτων.</Text>
+        <Text style={[styles.heroBody, compact && styles.heroBodyCompact]}>Επίλεξε 3–5 θέματα για πιο προσωπικές προτάσεις μαθημάτων.</Text>
       </MotionView>
 
       {isLoading ? (
@@ -79,7 +82,7 @@ export default function DailyChallengePreferencesScreen({
           </View>
           <Text style={styles.helper}>Η καθημερινή πρόκληση παραμένει ίδια για όλους.</Text>
 
-          <View style={styles.topicGrid}>
+          <View style={[styles.topicGrid, compact && styles.topicGridCompact]}>
             {DAILY_CHALLENGE_TOPICS.map((topic) => {
               const selected = topicIds.includes(topic.id);
               const disabled = !selected && topicIds.length >= 5;
@@ -88,7 +91,7 @@ export default function DailyChallengePreferencesScreen({
                   key={topic.id}
                   entranceDelay={55 + DAILY_CHALLENGE_TOPICS.indexOf(topic) * 32}
                   pressScale={0.975}
-                  style={[styles.topicCard, selected && styles.topicCardSelected, disabled && styles.topicCardDisabled]}
+                  style={[styles.topicCard, compact && styles.topicCardCompact, selected && styles.topicCardSelected, disabled && styles.topicCardDisabled]}
                   onPress={() => toggleTopic(topic.id)}
                   disabled={disabled || isSaving}
                   accessibilityRole="checkbox"
@@ -96,7 +99,7 @@ export default function DailyChallengePreferencesScreen({
                   accessibilityLabel={`${topic.title}. ${topic.description}`}
                 >
                   <View style={styles.topicTopRow}>
-                    <Text style={styles.topicEmoji}>{topic.emoji}</Text>
+                    <Text style={[styles.topicEmoji, compact && styles.topicEmojiCompact]}>{topic.emoji}</Text>
                     <View style={[styles.checkmark, selected && styles.checkmarkSelected]}>
                       {selected ? <Text style={styles.checkmarkText}>✓</Text> : null}
                     </View>
@@ -116,10 +119,7 @@ export default function DailyChallengePreferencesScreen({
             onPress={() => { void handleSave(); }}
             disabled={isSaving || isLoading || !hasChanges || topicIds.length < 3 || topicIds.length > 5}
           />
-          <ActionButton label="Πίσω στο προφίλ" onPress={onCancel} secondary disabled={isSaving} />
-          <Text style={styles.footerNote}>
-            Οι επιλογές σου ενημερώνουν τις προτάσεις μαθημάτων. Οι ερωτήσεις της κοινής πρόκλησης παραμένουν ίδιες για όλους.
-          </Text>
+
         </>
       )}
     </ScrollView></View>
@@ -129,6 +129,12 @@ export default function DailyChallengePreferencesScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0D1827" },
   scroll: { flex: 1 },
+  contentCompact: { paddingTop: 4, paddingBottom: 8 },
+  heroCompact: { padding: 12, gap: 3, marginBottom: 8 },
+  heroBodyCompact: { lineHeight: 16 },
+  topicGridCompact: { gap: 6, marginBottom: 8 },
+  topicCardCompact: { minHeight: 66, padding: 8 },
+  topicEmojiCompact: { fontSize: 19 },
   top: { minHeight: 45, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 13 },
   topCopy: { flex: 1, gap: 1 },
   topTitle: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900" },
