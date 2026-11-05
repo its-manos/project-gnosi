@@ -38,6 +38,7 @@ function mount(file, question) {
     '../quiz/engine': engine.exports,
     '../theme': { colors },
     './QuizReveal': { __esModule: true, default: 'QuizReveal' },
+    './QuestionFeedbackPanel': { __esModule: true, default: 'QuestionFeedbackPanel', AnswerSummaryText: 'AnswerSummaryText' },
   };
   const sharedModule = { exports: {} };
   vm.runInNewContext(transpile('src/components/questionCardStyles.ts'), {
@@ -163,8 +164,8 @@ wrongBlank.setAnswer('council');
 tree = wrongBlank.render();
 assert.ok(id(tree, 'fill-blank-feedback'), 'wrong tile reveals the correct authored choice');
 assert.equal(id(tree, 'fill-blank-option-assembly'), undefined);
-assert.ok(nodes(id(tree, 'fill-blank-feedback')).some(n => n.props?.children === 'Εκκλησία του Δήμου'),
-  'incorrect answer reveals the right phrase');
+assert.equal(id(tree, 'fill-blank-feedback').props.solution.props.children,
+  'Εκκλησία του Δήμου', 'incorrect answer reveals the authored correct phrase');
 const blankSrc = fs.readFileSync(path.join(root, 'src/components/FillBlankQuestionCard.tsx'), 'utf8');
 assert.doesNotMatch(blankSrc, /question\.prompt\}/, 'the sentence replaces a redundant prompt');
 assert.doesNotMatch(blankSrc, /styles\.wordBankHeading|styles\.footHint|styles\.passageHeading/,
