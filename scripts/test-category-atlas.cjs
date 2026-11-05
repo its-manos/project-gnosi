@@ -665,6 +665,7 @@ const islandsModule = compile("src/components/IslandAtlasMap.tsx", {
   "react-native": native,
   "react-native-svg": svg,
   "expo-image": { Image: "Image" },
+  "./IslandHoverMotion": { __esModule: true, default: "IslandHoverMotion" },
   "../../assets/atlas-export-preview/island-icons/ancient-greece.webp": "ancient-greece.webp",
   "../../assets/atlas-export-preview/island-icons/world-history.webp": "world-history.webp",
   "../../assets/atlas-export-preview/island-icons/mythology.webp": "mythology.webp",
@@ -702,6 +703,19 @@ let islandsTree = archipelago({
 const islandNodes = nodes(islandsTree).filter(node =>
   node.props?.testID?.startsWith("island-atlas-destination-"));
 assert.equal(islandNodes.length, 3, "every subcategory has a native touch target");
+const hovering = nodes(islandsTree).filter(node => node.type === "IslandHoverMotion");
+assert.equal(hovering.length, 3, "all three destinations have their own floating visual wrapper");
+assert.deepEqual(Array.from(hovering, node => node.props.index), [0, 1, 2],
+  "independent hover phases follow stable island order");
+assert.ok(hovering.every(node =>
+  nodes(node).some(child => typeof child.type === "function" &&
+    child.type.name === "IslandArtwork") &&
+  nodes(node).some(child => String(child.props?.testID).startsWith("island-atlas-label-"))),
+  "artwork and title hover together, not independently or as a full-screen map");
+assert.ok(islandNodes.every(node =>
+  node.props.style({ pressed: false })[0].position === "absolute"),
+  "native destination Pressable remains absolutely positioned and stationary");
+
 assert.ok(islandNodes.every(node => node.type === "Pressable" && node.props.accessibilityRole === "button"),
   "islands remain accessible native buttons");
 assert.ok(islandNodes.every(node => node.props.accessibilityHint === "Άνοιγμα περιοχής γνώσης"),
@@ -941,6 +955,72 @@ assert.doesNotMatch(islandSource,
   "no live landmark SVG component is imported by the Category screen");
 assert.match(islandSource, /cachePolicy="memory-disk"/,
   "small bundled WebPs use the same static caching as the world background");
+
+const islandHoverSource = fs.readFileSync(
+  path.join(root, "src/components/IslandHoverMotion.tsx"), "utf8");
+assert.match(islandHoverSource, /useReducedMotion\(/,
+  "floating motion respects the device accessibility setting");
+assert.match(islandHoverSource, /useAnimatedStyle\(/,
+  "motion is a UI-thread transform, not JS-driven island re-rendering");
+assert.match(islandHoverSource, /cancelAnimation\(/,
+  "hovering cancels cleanly on screen unmount");
+assert.doesNotMatch(islandHoverSource, /setInterval\(|setTimeout\(|useAnimatedProps\(/,
+  "hover animation never uses JS timers or per-frame SVG props");
+const hoverCalls = { loops: 0, delays: [], timings: [], cancelled: 0, reduced: false };
+const hoverModule = compile("src/components/IslandHoverMotion.tsx", {
+  react: {
+    useEffect: fn => { fn(); },
+  },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "react-native-reanimated": {
+    __esModule: true, default: { View: "AnimatedView" },
+    Easing: { sin: x => x, inOut: fn => fn },
+    useReducedMotion: () => hoverCalls.reduced,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: fn => fn(),
+    cancelAnimation: () => { hoverCalls.cancelled++; },
+    withTiming: (target, config) => {
+      hoverCalls.timings.push({ target, duration: config.duration }); return target;
+    },
+    withSequence: (...frames) => frames.at(-1),
+    withRepeat: (value, repetitions, reversed) => {
+      assert.equal(repetitions, -1);
+      assert.equal(reversed, false);
+      hoverCalls.loops++;
+      return value;
+    },
+    withDelay: (delay, value) => { hoverCalls.delays.push(delay); return value; },
+  },
+});
+assert.equal(hoverModule.MAX_HOVERING_ISLANDS, 8,
+  "perpetual native animations are capped for large category catalogues");
+const hoverAmplitude = hoverModule.islandHoverAmplitude;
+assert.deepEqual([0, 1, 2].map(hoverAmplitude), [1.25, 1.65, 2.05],
+  "different destinations receive restrained nonidentical hover displacement");
+for (const index of [0, 1, 2]) {
+  const floating = hoverModule.default({ index, children: "island content" });
+  assert.equal(floating.type, "AnimatedView");
+  assert.equal(floating.props.testID, "island-atlas-hover-" + index);
+  assert.equal(floating.props.children, "island content");
+  assert.equal(floating.props.style[0].width, "100%");
+  assert.deepEqual(hoverCalls.timings.slice(-3).map(t => t.duration),
+    [2300, 3000, 2300], "a slow smooth cycle avoids distracting island vibration");
+}
+assert.equal(hoverCalls.loops, 3, "each visible History island gets one native animation");
+assert.deepEqual(hoverCalls.delays, [900, 1280, 1660],
+  "starts are staggered so islands do not bob in sync");
+const previousLoops = hoverCalls.loops;
+hoverCalls.reduced = true;
+hoverModule.default({ index: 0, children: "static island" });
+assert.equal(hoverCalls.loops, previousLoops, "reduced motion disables bobbing");
+hoverCalls.reduced = false;
+hoverModule.default({ index: 8, children: "static overflow island" });
+assert.equal(hoverCalls.loops, previousLoops,
+  "large categories do not initiate unlimited animation loops");
+assert.ok(hoverCalls.cancelled >= 5,
+  "repeat loops are cancelled before any new sequence starts");
+
 const emptyIslands = archipelago({
   regions: [], width: 340, height: 490, onSelectRegion: () => {},
 });
