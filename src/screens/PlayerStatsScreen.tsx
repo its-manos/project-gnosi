@@ -6,6 +6,7 @@ import { dailyHistory } from "../utils/dailySyncDocument";
 import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
+import MetricCard from "../components/MetricCard";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
@@ -90,14 +91,14 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
               ) : (
                 <>
                   <View style={styles.streakRow}>
-                    <View style={styles.streakCard}>
+                    <MetricCard variant="streak">
                       <Text style={styles.metricLabel}>ΤΡΕΧΟΝ ΣΕΡΙ QUIZ</Text>
                       <Text style={styles.streakValue}>{stats.currentStreak}<Text style={styles.streakUnit}> ημέρες</Text></Text>
-                    </View>
-                    <View style={styles.streakCard}>
+                    </MetricCard>
+                    <MetricCard variant="streak">
                       <Text style={styles.metricLabel}>ΜΕΓΑΛΥΤΕΡΟ ΣΕΡΙ</Text>
                       <Text style={styles.streakValue}>{stats.longestStreak}<Text style={styles.streakUnit}> ημέρες</Text></Text>
-                    </View>
+                    </MetricCard>
                   </View>
 
                   <View style={styles.accuracyCard}>
@@ -177,7 +178,6 @@ const styles = StyleSheet.create({
   muted: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   dailyDetails: { paddingTop: 10, paddingBottom: 12 },
   streakRow: { flexDirection: "row", gap: 9 },
-  streakCard: { flex: 1, minWidth: 0, minHeight: 83, padding: 13, justifyContent: "space-between", backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 15 },
   metricLabel: { color: colors.textMuted, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 0.45 },
   streakValue: { color: colors.accentLight, fontSize: 26, lineHeight: 34, fontWeight: "900", fontVariant: ["tabular-nums"] },
   streakUnit: { color: colors.textMuted, fontSize: 11, fontWeight: "600" },
