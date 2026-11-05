@@ -69,6 +69,34 @@ const footer=nodes(tree).find(n=>n.type==='QuestionStageFooter');
 assert.equal(footer.props.action.label,'Επόμενη ερώτηση →',
   'answered daily question keeps Next visible outside the ScrollView');
 footer.props.action.onPress();assert.equal(next,1);
+// Preview the exact intro after today's attempt has already started. This is read-only.
+let previewContinues=0,previewCloses=0,liveStarts=0;
+challenge={...challenge,startChallenge:async()=>{liveStarts++;}};
+const savedStarted=JSON.stringify(challenge.record);
+const renderPreview=()=>{cursor=0;return Screen({...props,previewIntro:true,
+  onHome:()=>{previewCloses++;},onPreviewContinue:()=>{previewContinues++;}});};
+tree=renderPreview();
+assert.equal(nodes(tree).filter(n=>n.props?.testID==='daily-intro').length,1,
+  'the intro preview takes precedence over an in-progress daily attempt');
+assert.equal(nodes(tree).filter(n=>n.type==='DailyMissionMap').length,1,
+  'preview shares the real seven-stop intro component');
+assert.equal(nodes(tree).filter(n=>n.type==='SingleChoiceQuestionCard').length,0,
+  'preview does not display the saved live question');
+assert.equal(nodes(tree).filter(n=>n.type==='QuestionStageFooter').length,0,
+  'preview cannot submit a live quiz answer');
+assert.equal(nodes(tree).find(n=>n.type==='ProfileSectionHeader').props.eyebrow,'ΠΡΟΕΠΙΣΚΟΠΗΣΗ · DEV');
+action(tree,'Συνέχισε την πρόκληση →').props.onPress();
+assert.equal(previewContinues,1,'preview CTA hands control to the real quiz');
+assert.equal(liveStarts,0,'preview CTA does not start or reset a daily attempt');
+nodes(tree).find(n=>n.type==='ProfileSectionHeader').props.onAction();
+assert.equal(previewCloses,1,'preview returns to developer settings');
+assert.equal(JSON.stringify(challenge.record),savedStarted,'preview does not mutate stored answers');
+const savedCompleted=JSON.stringify(record);
+challenge={...challenge,record,currentQuestion:null,selectedAnswer:null,correctCount:5};
+tree=renderPreview();
+assert.equal(nodes(tree).filter(n=>n.props?.testID==='daily-intro').length,1,
+  'preview remains available after all seven answers are completed');
+assert.equal(JSON.stringify(challenge.record),savedCompleted);
 // The dev-only question pilot belongs in Settings > Εργαλεία δοκιμών, not the learner quiz.
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
 const dailySource=read('src/screens/DailyChallengeScreen.tsx');
@@ -82,4 +110,11 @@ assert.match(settingsSource,/devPreviewOpen && onCloseDevPreview/,'settings keep
 assert.match(navigationSource,/if \(isDevQuizPreviewOpen\) \{ setIsDevQuizPreviewOpen\(false\); return true; \}/,'Android Back exits preview before settings');
 assert.match(navigationSource,/!isDevQuizPreviewOpen && app\.screen !== "quiz"/,'full-screen pilot hides bottom tabs');
 assert.match(previewSource,/backLabel="ΕΡΓΑΛΕΙΑ"/,'pilot returns to dev settings');
+assert.match(devSource,/onPress=\{onOpenDailyIntroPreview\}/,'dev settings expose intro preview');
+assert.match(settingsSource,/if \(__DEV__ && dailyIntroPreview\)/,'intro preview is dev-only');
+assert.match(settingsSource,/<DailyChallengeScreen previewIntro/,'settings reuse real intro screen, not a copy');
+assert.match(navigationSource,/if \(isDevDailyIntroPreviewOpen\) \{ setIsDevDailyIntroPreviewOpen\(false\); return true; \}/,
+  'Android Back exits daily intro preview before settings');
+assert.match(navigationSource,/!isDevDailyIntroPreviewOpen && app\.screen !== "quiz"/,
+  'bottom tab bar hidden in full-screen intro preview');
 console.log('Daily Atlas UI passed: compact intro, single score/progress treatment, accurate XP/combo, category highlight, lesson callback, answer review/practice, legacy/revised content, rollover and locked choice footer. Native views mocked.');
