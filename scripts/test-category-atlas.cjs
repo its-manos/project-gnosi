@@ -676,7 +676,7 @@ assert.match(navigator, /<CategoryScreen[\s\S]*?progressLoaded={app\.progressLoa
 const continueModule = compile("src/components/AtlasContinueCard.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
-  "../components/HomeMotion": { MotionPressable: "MotionPressable" },
+  "./HomeMotion": { MotionPressable: "MotionPressable" },
   "../theme": { colors: { accent: "#A89BFF", text: "#F3F0E8" } },
 });
 const atlasContinueStub = { __esModule: true, default: "MotionPressable",
