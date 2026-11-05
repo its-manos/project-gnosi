@@ -6,7 +6,6 @@ import { useState } from "react";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { MotionView, MotionPressable } from "../components/HomeMotion";
 import AccountPanel from "../components/AccountPanel";
-import AppHeader from "../components/AppHeader";
 import SyncStatus from "../components/SyncStatus";
 import PendingReportsPanel from "../components/PendingReportsPanel";
 import type { BackupControls } from "../components/CloudBackupPanel";
@@ -19,7 +18,15 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
   const [activeSection, setActiveSection] = useState<"account" | "experience" | "privacy" | "sync" | "dev" | null>(null);
   const goBack = () => activeSection ? setActiveSection(null) : onBack();
   return <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={activeSection !== null} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
-    <AppHeader onBack={goBack} />
+    <View style={styles.top}>
+      <View style={styles.topCopy}>
+        <Text style={styles.eyebrow}>{activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}</Text>
+        <Text style={styles.topTitle}>{activeSection ? "Ρυθμίσεις" : "Λογαριασμός"}</Text>
+      </View>
+      <Pressable onPress={goBack} accessibilityRole="button" accessibilityLabel={activeSection ? "Πίσω στις ρυθμίσεις" : "Πίσω στο προφίλ"} style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}>
+        <Text style={styles.backText}>‹ {activeSection ? "Ρυθμίσεις" : "Προφίλ"}</Text>
+      </Pressable>
+    </View>
     {activeSection === null ? <View testID="account-settings-dashboard">
       <MotionView entranceDelay={0} style={styles.heading}>
         <View style={styles.headingTop}><Text style={styles.headingSymbol}>✦</Text><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text></View>
@@ -56,9 +63,15 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0D1827" },
   scroll: { flex: 1 },
-  content: { width: "100%", maxWidth: 640, alignSelf: "center", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 44 },
+  content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 8, paddingBottom: 20 },
+  top: { minHeight: 45, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 13 },
+  topCopy: { flex: 1, gap: 1 },
+  topTitle: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900" },
+  backButton: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center", backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
+  backPressed: { backgroundColor: "#2D304A" },
+  backText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
   overviewContent: { flexGrow: 1 },
-  heading: { gap: 9, marginTop: 8, marginBottom: 20, borderRadius: 22, borderWidth: 1, borderColor: "#393D5D", backgroundColor: "#20233B", padding: 20, overflow: "hidden" },
+  heading: { gap: 7, marginBottom: 14, borderRadius: 22, borderWidth: 1, borderColor: "#555078", backgroundColor: "#20243C", padding: 18, overflow: "hidden" },
   headingGlow: { position: "absolute", width: 190, height: 190, borderRadius: 95, backgroundColor: "#302D56", right: -60, top: -100 },
   headingTop: { flexDirection: "row", alignItems: "center", gap: 9 },
   eyebrow: { color: colors.accentLight, fontSize: 10, fontWeight: "800", letterSpacing: 1.7 },
@@ -67,7 +80,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: 16 },
   sectionTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: "800", marginBottom: 2 },
   body: { color: colors.textBody, fontSize: 14, lineHeight: 23, marginBottom: 16 },
-  tile: { minHeight: 79, flexDirection: "row", alignItems: "center", padding: 14, marginBottom: 10, borderRadius: 17, borderWidth: 1, borderColor: "#3A4059", backgroundColor: "#1D2637" },
+  tile: { minHeight: 75, flexDirection: "row", alignItems: "center", padding: 12, marginBottom: 9, borderRadius: 17, borderWidth: 1, borderColor: "#38435C", backgroundColor: "#1A2538" },
   headingSymbol: { color: "#B7A5FF", fontSize: 20 },
   tileSymbol: { fontSize: 24, fontWeight: "700" },
   iconShell: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginRight: 13 },
