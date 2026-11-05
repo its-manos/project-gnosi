@@ -8,6 +8,7 @@ import { memo, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from "react-native-svg";
 import { Image } from "expo-image";
+import IslandHoverMotion from "./IslandHoverMotion";
 
 // Bundle transparent 3x-density icon WebPs. React Native Metro requires
 // literal requires, and cached images avoid mounting complex live landmark SVGs.
@@ -262,7 +263,10 @@ function IslandAtlasMap({ regions, width, height, onSelectRegion }: Props) {
             accessibilityLabel={region.title + statusText}
             accessibilityHint="Άνοιγμα περιοχής γνώσης"
             onPress={() => onSelectRegion(region.id)}>
-            <IslandArtwork index={index} id={region.id}
+            {/* The whole visual group gently hovers, while the native Pressable
+                stays at fixed geometry for accurate hit testing. */}
+            <IslandHoverMotion index={index}>
+              <IslandArtwork index={index} id={region.id}
               width={position.artWidth} height={position.artHeight} status={region.status} />
             {/* A translucent cartographic name plate keeps Greek labels readable
                 above real coastlines, without becoming another content card. */}
@@ -286,6 +290,7 @@ function IslandAtlasMap({ regions, width, height, onSelectRegion }: Props) {
                   backgroundColor: region.status === "complete" ? "#CEB38A" : "#AE9DFB",
                 }]} />
               </View>}
+            </IslandHoverMotion>
           </Pressable>
         );
       })}
