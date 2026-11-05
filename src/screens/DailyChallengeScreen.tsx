@@ -5,7 +5,7 @@ import ActionButton from "../components/ActionButton";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import DailyMissionMap from "../components/DailyMissionMap";
-import ProgressBar from "../components/ProgressBar";
+import DailyJourneyTrack from "../components/DailyJourneyTrack";
 import DailyMistakeReview from "../components/DailyMistakeReview";
 import DailyAnswerReview from "../components/DailyAnswerReview";
 import QuizReveal from "../components/QuizReveal";
@@ -68,14 +68,23 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
     :!previewIntro&&record.completed&&review?.date===record.dateKey&&review.mode==='mistakes'?<DailyMistakeReview key={`${record.dateKey}-${record.questionIds.join('-')}`} questions={analysis.practiceQuestions} onDone={closeReview} onAdvance={scrollTop}/>
     :!previewIntro&&record.completed?<QuizReveal><View testID="daily-results" style={styles.resultContainer}>
       <View style={styles.resultHero}>
-        <View style={styles.resultSeal}><Text style={styles.resultStar}>✦</Text></View>
-        <Text style={styles.eyebrow}>Η ΑΠΟΣΤΟΛΗ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
-        <Text style={styles.title}>{correctCount===7?'Τα πέτυχες όλα!':correctCount>=5?'Πολύ καλή διαδρομή!':'Κάθε απάντηση είναι μια νέα γνώση.'}</Text>
+        <View style={styles.resultHeroCopy}>
+          <Text style={styles.eyebrow}>Η ΔΙΑΔΡΟΜΗ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
+          <Text style={styles.title}>{correctCount===7?'Τα πέτυχες όλα!':correctCount>=5?'Πολύ καλή διαδρομή!':'Κάθε απάντηση είναι μια νέα γνώση.'}</Text>
+        </View>
+        <View style={styles.resultSeal} accessible={false}>
+          <View style={styles.resultSealOrbit}/>
+          <Text style={styles.resultStar}>✦</Text>
+        </View>
       </View>
       <View style={styles.scoreCard}>
         <View pointerEvents="none" style={styles.cardRim}/>
         <Text style={styles.scoreLabel}>ΣΩΣΤΕΣ ΑΠΑΝΤΗΣΕΙΣ</Text>
         <Text style={styles.bigScore}>{correctCount}<Text style={styles.scoreDenominator}> / 7</Text></Text>
+        <View style={styles.resultRoute}>
+          <DailyJourneyTrack mode="result" shared={Boolean(record.selectionVersion)}
+            correctMask={analysis.rows.map(row=>row.correct)}/>
+        </View>
         <View style={styles.metrics}>
           <View style={styles.metric}><Text style={styles.metricValue}>{analysis.accuracyPercent}%</Text><Text style={styles.metricLabel}>Ακρίβεια</Text></View>
           <View style={styles.metricDivider}/>
@@ -102,7 +111,6 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         <ActionButton label={inProgressLessonIds.includes(recommendation.id)?'Συνέχισε το μάθημα →':'Άνοιξε το μάθημα →'} onPress={()=>onOpenLesson(recommendation.id)} secondary style={styles.inlineAction}/>
       </View>:onWeeklyReview?<ActionButton label="Εβδομαδιαία επανάληψη →" onPress={onWeeklyReview} secondary style={styles.actionSecondary}/>:null}
       <Text style={styles.tomorrow}>Νέο σετ αύριο, με την αλλαγή της ημέρας στην Ελλάδα.</Text>
-      <ActionButton label="Επιστροφή στην αρχική" onPress={onHome} secondary style={styles.returnAction}/>
     </View></QuizReveal>
     :previewIntro||!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal>
       <View style={[styles.introBody,compactIntro&&styles.introBodyCompact]}>
@@ -138,11 +146,8 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
       </View>
     </QuizReveal></View>
     :currentQuestion&&questionsCompatible?<QuizReveal key={`${record.dateKey}-${currentQuestion.id}`}><View>
-      <View style={styles.stageProgress}>
-        <Text style={styles.eyebrow}>{record.selectionVersion?'ΗΜΕΡΗΣΙΑ ΑΠΟΣΤΟΛΗ':'ΑΠΟΘΗΚΕΥΜΕΝΗ ΑΠΟΣΤΟΛΗ'}</Text>
-        <Text style={styles.stageCounter}>ΕΡΩΤΗΣΗ {String(record.currentIndex+1).padStart(2,'0')} / 07</Text>
-      </View>
-      <ProgressBar progress={answeredCount/7*100} label="Απαντημένες ερωτήσεις" />
+      <DailyJourneyTrack mode="question" answeredCount={answeredCount}
+        currentIndex={record.currentIndex} shared={Boolean(record.selectionVersion)}/>
       <SingleChoiceQuestionCard
         key={`${record.dateKey}:${currentQuestion.id}`}
         id={`${record.dateKey}:${currentQuestion.id}`}
@@ -192,7 +197,7 @@ const styles=StyleSheet.create({
   activeContent:{flexGrow:1,justifyContent:'center',paddingHorizontal:16,paddingTop:8,paddingBottom:14},
   centerState:{alignItems:'center',justifyContent:'center',paddingTop:60,gap:16},
   eyebrow:{color:colors.accentLight,fontSize:10,lineHeight:16,fontWeight:'900',letterSpacing:1.05},
-  title:{color:colors.text,fontSize:27,lineHeight:35,fontWeight:'900',textAlign:'center'},
+  title:{color:colors.text,fontSize:26,lineHeight:33,fontWeight:'900'},
   note:{color:colors.textMuted,fontSize:11,lineHeight:16},
   introContainer:{flexGrow:1,justifyContent:'center',paddingTop:10,paddingBottom:76},
   introDense:{paddingTop:0,paddingBottom:12},
@@ -223,15 +228,19 @@ const styles=StyleSheet.create({
   actionSecondary:{marginTop:0},
   cardRim:{position:'absolute',top:0,left:20,right:20,height:2,backgroundColor:'#8376B9'},
   resultContainer:{gap:14,paddingTop:12,paddingBottom:8},
-  resultHero:{alignItems:'center',gap:8},
-  resultSeal:{width:50,height:50,alignItems:'center',justifyContent:'center',borderRadius:17,
-    backgroundColor:'#302B4A',borderWidth:1,borderColor:'#655C92'},
-  resultStar:{color:'#D0C5FF',fontSize:26},
+  resultHero:{flexDirection:'row',alignItems:'center',gap:12,paddingVertical:6},
+  resultHeroCopy:{flex:1,minWidth:0,gap:7},
+  resultSeal:{width:69,height:69,alignItems:'center',justifyContent:'center',borderRadius:23,
+    backgroundColor:'#302B4A',borderWidth:1,borderColor:'#796AAB',marginRight:4},
+  resultSealOrbit:{position:'absolute',width:84,height:84,borderRadius:42,
+    borderWidth:1,borderColor:'#54527D'},
+  resultStar:{color:'#DCD0FF',fontSize:33},
   scoreCard:{alignItems:'center',padding:18,paddingTop:20,gap:4,borderRadius:22,overflow:'hidden',
     backgroundColor:'#1A2032',borderColor:'#444361',borderWidth:1},
   scoreLabel:{color:'#C0B3F2',fontSize:10,lineHeight:15,fontWeight:'900',letterSpacing:1.2},
   bigScore:{color:colors.text,fontSize:51,lineHeight:60,fontWeight:'900'},
   scoreDenominator:{color:colors.textMuted,fontSize:24,fontWeight:'700'},
+  resultRoute:{alignSelf:'stretch',marginTop:10,paddingHorizontal:4},
   metrics:{flexDirection:'row',alignItems:'center',alignSelf:'stretch',marginTop:8,paddingTop:14,
     borderTopWidth:1,borderTopColor:'#373C54'},
   metric:{flex:1,alignItems:'center',gap:3},
@@ -250,9 +259,6 @@ const styles=StyleSheet.create({
   cardTitle:{color:colors.text,fontSize:17,lineHeight:24,fontWeight:'800'},
   inlineAction:{marginTop:3},
   tomorrow:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center'},
-  returnAction:{marginTop:0},
-  stageProgress:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',gap:8,marginBottom:12},
-  stageCounter:{color:colors.text,fontSize:11,lineHeight:16,fontWeight:'900',letterSpacing:.6},
   combo:{color:colors.accentLight,fontSize:13,lineHeight:21,fontWeight:'800'},
   sourceLink:{paddingVertical:10},
   sourceLinkText:{color:colors.accentLight,fontSize:12,lineHeight:19,textDecorationLine:'underline'},
