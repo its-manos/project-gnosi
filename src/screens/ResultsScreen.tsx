@@ -110,7 +110,7 @@ export default function ResultsScreen({
           <View style={styles.rewardDivider} />
           <View style={styles.rewardColumn}>
             <Text style={styles.rewardValue}>{highestCombo}</Text>
-            <Text style={styles.rewardLabel}>ΣΕΡΙ</Text>
+            <Text style={styles.rewardLabel}>ΣΕΡΙ ΣΩΣΤΩΝ</Text>
           </View>
         </> : null}
       </MotionView>
