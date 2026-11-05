@@ -639,7 +639,10 @@ const screen = fs.readFileSync(path.join(root, "src/screens/CategoryScreen.tsx")
 const navigator = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
 assert.match(screen, /<IslandAtlasMap/, "the Category screen uses the dedicated archipelago");
 assert.doesNotMatch(screen, /<FantasyMap/, "legacy heavyweight SVG is not mounted");
-assert.match(screen, /<AdventureAtlasBackground/, "Category shares the Adventure Path backdrop");
+assert.match(screen, /<CategoryWorldAtlasBackground/,
+  "Category uses the dedicated world-scale plate, not the local Adventure Path background");
+assert.doesNotMatch(screen, /<AdventureAtlasBackground/,
+  "the Aegean chart remains exclusive to the Subcategory screen");
 assert.doesNotMatch(screen, /<CategoryAtlasBackground/, "the former full SVG chart is not layered");
 assert.match(screen, /getAtlasRegionProgress/, "regional progress remains data-driven");
 assert.match(screen, /getAtlasCategoryProgress/, "overall progress remains unchanged");
@@ -720,6 +723,39 @@ const continueModule = compile("src/components/AtlasContinueCard.tsx", {
 });
 const atlasContinueStub = { __esModule: true, default: "MotionPressable",
   atlasContinueStyles: continueModule.atlasContinueStyles };
+// World backdrop is one bundled WebP, never the large live SVG at runtime.
+const worldSvg = fs.readFileSync(
+  path.join(root, "assets/atlas-source/category-world.svg"), "utf8");
+const worldWebp = fs.readFileSync(
+  path.join(root, "assets/atlas-export-preview/category-world.webp"));
+assert.match(worldSvg, /viewBox="0 0 1080 2400"/,
+  "world-scale SVG has the same portrait export dimensions");
+assert.match(worldSvg, /North America|South America|Africa|Continental Asia/,
+  "the source depicts a broader world than the local Aegean lesson map");
+assert.match(worldSvg, /#[0-9A-Fa-f]{6}/,
+  "continent and sea colors are explicit, editable atlas palette tokens");
+assert.equal(worldWebp.toString("ascii", 0, 4), "RIFF",
+  "the world map asset is a binary RIFF/WebP file");
+assert.equal(worldWebp.toString("ascii", 8, 12), "WEBP",
+  "no missing raster or accidental SVG replacement");
+const worldBackground = compile("src/components/CategoryWorldAtlasBackground.tsx", {
+  react: { memo: component => component },
+  "react/jsx-runtime": { jsx, jsxs: jsx },
+  "react-native": native,
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/category-world.webp": "world-atlas.webp",
+}).default();
+assert.equal(worldBackground.props.testID, "category-world-atlas-background");
+assert.equal(worldBackground.props.pointerEvents, "none");
+assert.equal(worldBackground.props.accessible, false);
+const worldImage = nodes(worldBackground).find(node => node.type === "Image");
+assert.ok(worldImage, "the world map is one composited bitmap");
+assert.equal(worldImage.props.source, "world-atlas.webp");
+assert.equal(worldImage.props.contentFit, "fill");
+assert.equal(worldImage.props.cachePolicy, "memory-disk");
+assert.equal(worldImage.props.transition, 0,
+  "no late raster entrance competes with island mounting");
+
 const screenState = [];
 let hookIndex = 0;
 const screenModule = compile("src/screens/CategoryScreen.tsx", {
@@ -736,7 +772,7 @@ const screenModule = compile("src/screens/CategoryScreen.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "../components/IslandAtlasMap": { __esModule: true, default: "IslandAtlasMap" },
-  "../components/AdventureAtlasBackground": { __esModule: true, default: "AdventureAtlasBackground" },
+  "../components/CategoryWorldAtlasBackground": { __esModule: true, default: "CategoryWorldAtlasBackground" },
   "../components/AtlasContinueCard": atlasContinueStub,
   "../components/HomeMotion": {
     MotionView: "MotionView", MotionPressable: "MotionPressable", MotionIcon: "MotionIcon",
@@ -763,11 +799,11 @@ const render = overrides => {
 let screenTree = render();
 assert.equal(nodes(screenTree).filter(node => node.type === "IslandAtlasMap").length, 0,
   "unmeasured screen does not allocate an incorrectly-sized island map");
+assert.equal(nodes(screenTree).filter(node => node.type === "CategoryWorldAtlasBackground").length, 1,
+  "cached world map mounts immediately, without waiting for a layout callback");
 const screenRoot = nodes(screenTree).find(node => node.props?.testID === "category-atlas-screen");
-screenRoot.props.onLayout({ nativeEvent: { layout: { width: 380, height: 730 } } });
-screenTree = render();
-assert.equal(nodes(screenTree).filter(node => node.type === "AdventureAtlasBackground").length, 1,
-  "full-height background is available after the first root measurement");
+assert.equal(screenRoot.props.onLayout, undefined,
+  "only the interactive island viewport needs to be measured");
 const mapViewport = nodes(screenTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 mapViewport.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
