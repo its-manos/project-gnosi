@@ -5,8 +5,7 @@ import { useLearningSnapshot } from "../state/LearningSession";
 import { MASTERY_LABELS } from "../knowledge/model";
 import { categories as learningCategories } from "../data/lessons";
 import ActionButton from "./ActionButton";
-import { MotionPressable } from "./HomeMotion";
-import { ProgressBarFill } from "./ProgressMotion";
+import SubjectProgressTile from "./SubjectProgressTile";
 import { colors } from "../theme";
 
 export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false, singleColumn = false, threeColumn = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean }) {
@@ -46,46 +45,13 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
           {focusedSubjects.map(category => {
             const emoji = learningCategories.find(item => item.id === category.id)?.emoji ?? "✦";
             const selected = selectedSubjectId === category.id;
-            const complete = category.total > 0 && category.mastered === category.total;
-            const progressing = category.percent > 0;
-            return <MotionPressable key={category.id} testID={`knowledge-subject-${category.id}`}
-              pressScale={0.985} onPress={() => setSelectedSubjectId(id => id === category.id ? null : category.id)}
-              style={[styles.detailTile, singleColumn && styles.detailTileSingle,
-                threeColumn && !singleColumn && styles.detailTileWide,
-                progressing && styles.detailTileProgressing,
-                complete && styles.detailTileComplete,
-                selected && styles.detailTileSelected]}
-              accessibilityRole="button"
-              accessibilityState={{ selected, expanded: selected }}
-              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`}
-              accessibilityHint="Άνοιγμα σύντομης ανάλυσης της θεματικής">
-              <View style={styles.tileTop}>
-                <View style={[styles.tileIcon, (progressing || complete) && styles.tileIconActive]}
-                  accessible={false}>
-                  <Text style={styles.tileEmoji}>{emoji}</Text>
-                </View>
-                {complete
-                  ? <View style={[styles.tileState, styles.tileStateComplete]} accessible={false}>
-                      <Text style={styles.tileCompleted}>✓</Text>
-                    </View>
-                  : progressing
-                    ? <View style={styles.tileState} accessible={false}>
-                        <Text style={styles.tilePercent}>{category.percent}%</Text>
-                      </View>
-                    : <Text style={styles.tileChevron} accessible={false}>›</Text>}
-              </View>
-              <Text style={styles.tileTitle} numberOfLines={2} adjustsFontSizeToFit
-                minimumFontScale={0.86}>{category.title}</Text>
-              <View style={styles.tileFoot}>
-                <Text style={styles.tileFootLabel}>ΚΑΤΑΚΤΗΣΗ</Text>
-                <Text style={[styles.tileCount, complete && styles.tileCountComplete]}>
-                  {category.mastered}<Text style={styles.tileCountTotal}> / {category.total}</Text>
-                </Text>
-              </View>
-              <View style={styles.tileTrack} pointerEvents="none">
-                <ProgressBarFill tone="knowledge" percent={category.percent} />
-              </View>
-            </MotionPressable>;
+            return <SubjectProgressTile key={category.id}
+              tone="knowledge" title={category.title} emoji={emoji}
+              completed={category.mastered} total={category.total} percent={category.percent}
+              selected={selected} singleColumn={singleColumn} threeColumn={threeColumn}
+              testID={`knowledge-subject-${category.id}`}
+              onPress={() => setSelectedSubjectId(id => id === category.id ? null : category.id)}
+              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`} />;nPressable>;
           })}
         </View>
       ) : (
@@ -142,48 +108,6 @@ const styles = StyleSheet.create({
   detailLabel: { color: "#BDB1FB" },
   detailGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 },
   detailGridSingle: { flexDirection: "column" },
-  detailTile: {
-    width: "48.5%", minWidth: 0, minHeight: 137,
-    paddingHorizontal: 12, paddingTop: 11, paddingBottom: 12, borderRadius: 17,
-    backgroundColor: "#22263B", borderWidth: 1, borderColor: "#42435F",
-    gap: 7, justifyContent: "space-between", overflow: "hidden",
-  },
-  detailTileProgressing: { borderColor: "#625B91", backgroundColor: "#262840" },
-  detailTileComplete: { borderColor: "#8277AD", backgroundColor: "#2D2A44" },
-  detailTileSelected: { borderColor: "#C2B5FF", backgroundColor: "#332E50" },
-  detailTileSingle: { width: "100%", minHeight: 118 },
-  detailTileWide: { width: "31.7%" },
-  tileTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  tileIcon: {
-    width: 34, height: 34, borderRadius: 11, alignItems: "center", justifyContent: "center",
-    backgroundColor: "#31324F", borderWidth: 1, borderColor: "#494563",
-  },
-  tileIconActive: { backgroundColor: "#3A355B", borderColor: "#7367A4" },
-  tileEmoji: { fontSize: 20, lineHeight: 28 },
-  tileState: {
-    minWidth: 38, height: 25, paddingHorizontal: 6, alignItems: "center",
-    justifyContent: "center", backgroundColor: "#363150",
-    borderColor: "#5C5389", borderWidth: 1, borderRadius: 9,
-  },
-  tileStateComplete: { minWidth: 26, backgroundColor: "#3D375F" },
-  tilePercent: { color: "#D3C6FF", fontSize: 11, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  tileCompleted: { color: "#DDD2FF", fontSize: 17, lineHeight: 20, fontWeight: "900" },
-  tileChevron: { color: "#938CB6", fontSize: 25, lineHeight: 28, paddingHorizontal: 4 },
-  tileTitle: {
-    color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "900",
-    minHeight: 38, textAlignVertical: "center",
-  },
-  tileFoot: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 },
-  tileFootLabel: { color: "#B2ADD0", fontSize: 9, lineHeight: 13,
-    fontWeight: "900", letterSpacing: 0.65, flexShrink: 1 },
-  tileCount: { color: "#E3D9FF", fontSize: 13, lineHeight: 17,
-    fontWeight: "900", fontVariant: ["tabular-nums"] },
-  tileCountTotal: { color: "#AAA9C3", fontSize: 12, fontWeight: "700" },
-  tileCountComplete: { color: "#DAD2FF" },
-  tileTrack: {
-    height: 7, borderRadius: 6, backgroundColor: "#363650", overflow: "hidden",
-    borderWidth: 1, borderColor: "#4C466D",
-  },
   subjectInsight: {
     backgroundColor: "#27273F", borderWidth: 1, borderColor: "#514976",
     borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
