@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   passage: { backgroundColor: "#20263A", padding: 14, borderRadius: 15,
     borderLeftWidth: 2, borderLeftColor: "#8276BB", marginBottom: 16 },
   sentence: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 },
-  passageText: { color: colors.text, fontSize: 18, lineHeight: 28, fontWeight: "750", flexShrink: 1 },
+  passageText: { color: colors.text, fontSize: 18, lineHeight: 28, fontWeight: "700", flexShrink: 1 },
   slotTail: { flexDirection: "row", alignItems: "center", gap: 4, maxWidth: "100%" },
   slot: { minHeight: 44, maxWidth: "100%", paddingHorizontal: 12, paddingVertical: 9,
     borderWidth: 1, borderColor: colors.accent, backgroundColor: "#353052",
