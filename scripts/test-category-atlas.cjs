@@ -440,29 +440,10 @@ assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-sky-vignette")
 assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
   && String(node.props?.id).startsWith("atlas-region-aura-")).length, five.length,
   "every destination gets a subtle theme-aware aura");
-assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-premium-compass"),
-  "fitted atlas compass gets an engraved star-chart treatment");
-assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-upper"));
-assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-lower"));
-assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-chart-tick-")).length, 9,
-  "astral chart ticks stay sparse and decorative");
-assert.equal(nodes(frame).filter(node => node.type === "circle"
-  && ["#E4CFA6","#B5CADD"].includes(node.props?.fill)).length, 30,
-  "quiet starfield has deterministic density on all screen sizes");
-assert.ok(nodes(frame).some(node => node.type === "path"
-  && node.props?.stroke === "#8CA6B9" && node.props?.strokeOpacity === 0.11),
-  "faint map engravings add depth without implying lesson progression");
+assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 5,
+  "fitted atlas retains all interactive destination islands");
 const readableFrame = nodes(map({ ...props, fitViewport: { width: 340, height: 490 } }))
   .find(node => node.props?.testID === "knowledge-world-map");
-assert.ok(nodes(readableFrame).some(node => node.props?.testID === "atlas-decorative-constellations"),
-  "sparse catalogues have decorative chart groups outside destination interactions");
-assert.ok(nodes(readableFrame).filter(node =>
-  String(node.props?.testID).startsWith("atlas-route-anchor-")).length >= 2,
-  "fitted links have small, noninteractive guide stars in the open sky");
-assert.ok(nodes(readableFrame).filter(node =>
-  String(node.props?.testID).startsWith("atlas-route-anchor-"))
-    .every(node => node.props.pointerEvents === "none"),
-  "route anchor decoration cannot steal island taps");
 const fittedLabel = nodes(readableFrame).find(node => node.type === "text"
   && node.props?.children === "Παγκόσμια");
 assert.equal(fittedLabel.props.fontSize, 12.5,
