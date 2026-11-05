@@ -422,70 +422,38 @@ const atlas = compile("src/components/HomeAtlasBackground.tsx", {
   },
 });
 let atlasTree = atlas();
-assert.equal(nodes(atlasTree).filter(node => node.type === "svg").length, 0,
-  "an unmeasured Home viewport must not flash an incorrectly sized atlas");
 assert.equal(atlasTree.props.testID, "home-atlas-background");
 assert.equal(atlasTree.props.pointerEvents, "none", "atlas cannot intercept card taps");
 assert.equal(atlasTree.props.accessible, false, "decorative atlas stays out of the accessibility tree");
+assert.equal(nodes(atlasTree).filter(node => node.type === "ExpoImage").length, 1,
+  "bundled atlas bitmap mounts immediately, without waiting for viewport measurement");
+const imageNode = nodes(atlasTree).find(node => node.type === "ExpoImage");
+assert.equal(imageNode.props.source, 1, "Home uses its bundled WebP atlas");
+assert.equal(imageNode.props.contentFit, "fill");
+assert.equal(imageNode.props.transition, 0, "the static atlas does not fade in");
+assert.equal(imageNode.props.cachePolicy, "memory-disk");
+assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
+  "ambient overlays wait until viewport is measured");
 atlasTree.props.onLayout({ nativeEvent: { layout: { width: 390, height: 844 } } });
 atlasTree = atlas();
-let atlasSvg = nodes(atlasTree).find(node => node.type === "svg");
-assert.ok(atlasSvg, "static cartography renders on the first measured viewport update");
-assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasReveal").length, 0,
-  "the SVG has no delayed fade or mounting wrapper");
-assert.equal(atlasTree.props.children[0].type, "svg",
-  "the static map is a direct child of the Home underlay");
-assert.equal(atlasSvg.props.width, 390);
-assert.equal(atlasSvg.props.height, 844);
-assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (844 * 420 / 390),
-  "aspect-ratio matched atlas does not crop or stretch");
-assert.equal(atlasSvg.props.pointerEvents, "none");
-assert.ok(nodes(atlasSvg).filter(node => node.type === "radialGradient").length >= 4,
-  "celestial atmosphere has layered, static gradient depth");
-assert.ok(nodes(atlasSvg).some(node => node.type === "radialGradient"
-  && node.props.id === "home-atlas-lantern"),
-  "a restrained static warm halo balances the cool Midnight Atlas light");
-assert.ok(nodes(atlasSvg).some(node => node.type === "g"
-  && node.props.strokeDasharray === "3 12" && node.props.opacity === 0.16),
-  "fine survey arcs remain static and secondary to the dashboard");
-assert.ok(nodes(atlasSvg).filter(node => node.type === "path").length >= 45,
-  "atlas includes coastline relief, bearings, and engraved compass details");
-assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 27,
-  "atlas contains a deterministic star chart and instrument rings");
-assert.ok(!nodes(atlasSvg).some(node => node.type === "image"),
-  "Home background contains no stretched bitmap or network image");
-assert.equal(nodes(atlasSvg).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
-  "the chart SVG never contains animated gradient or path props");
+assert.equal(nodes(atlasTree).filter(node => node.type === "ExpoImage").length, 1,
+  "measuring viewport must not remount duplicate static cartography");
 assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasAmbientGlow").length, 1,
-  "one small compositor-friendly atmosphere overlay is animated");
+  "measured viewport enables one ambient glow overlay");
 assert.equal(nodes(atlasTree).filter(node => node.type === "HomeAtlasTwinkles").length, 1,
-  "star twinkles are isolated from the static SVG");
+  "measured viewport enables one twinkle overlay");
 const motionlessAtlas = atlas({ showAmbientMotion: false });
-assert.equal(nodes(motionlessAtlas).filter(node => node.type === "svg").length, 1,
-  "static diagnostic mode retains the full cartography");
-assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0,
-  "static diagnostic mode mounts no ambient glow");
-assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasTwinkles").length, 0,
-  "static diagnostic mode mounts no twinkle views");
-assert.ok(nodes(atlasSvg).some(node => node.type === "path"
-  && node.props.strokeDasharray === "2 18" && node.props.strokeOpacity === 0.13),
-  "the chart bearing is present but never animates its dash props");
-assert.ok(nodes(atlasSvg).filter(node => node.type === "circle").length >= 31,
-  "the richer static chart keeps engraved navigation marks");
-atlasTree.props.onLayout({ nativeEvent: { layout: { width: 844, height: 390 } } });
-atlasSvg = nodes(atlas()).find(node => node.type === "svg");
-assert.equal(atlasSvg.props.viewBox, "0 0 420 " + (390 * 420 / 844),
-  "landscape rotation recomputes geometry without retaining portrait crop");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "ExpoImage").length, 1,
+  "disabling motion retains the static atlas");
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasAmbientGlow").length, 0);
+assert.equal(nodes(motionlessAtlas).filter(node => node.type === "HomeAtlasTwinkles").length, 0);
 const staticAtlasSource = fs.readFileSync(
   path.join(root, "src/components/HomeAtlasBackground.tsx"), "utf8");
-assert.ok(!/withRepeat\(|withTiming\(|useSharedValue\(|setInterval\(/.test(staticAtlasSource),
-  "all time-based motion stays isolated outside the static SVG geometry");
-assert.match(staticAtlasSource, /memo\(HomeAtlasBackground\)/,
-  "dashboard updates should not redraw the atlas");
-assert.match(staticAtlasSource, /absoluteFill/,
-  "atlas stays fixed outside the scrollable dashboard");
-assert.doesNotMatch(staticAtlasSource, /setTimeout|setInterval|HomeAtlasReveal|atlasReady/,
-  "Home background mounts directly after measurement without deferred work");
+assert.ok(!/withRepeat\\(|withTiming\\(|useSharedValue\\(|setInterval\\(/.test(staticAtlasSource),
+  "all time-based motion stays isolated outside the static image");
+assert.match(staticAtlasSource, /memo\\(HomeAtlasBackground\\)/);
+assert.match(staticAtlasSource, /absoluteFill/);
+assert.doesNotMatch(staticAtlasSource, /setTimeout|setInterval|HomeAtlasReveal|atlasReady/);
 
 // Verify reduced motion without a simulator: the new effects animate only
 // native view opacity and do not animate any SVG property on each frame.
