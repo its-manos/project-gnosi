@@ -37,15 +37,17 @@ export default function IslandHoverMotion({
   useEffect(() => {
     cancelAnimation(displacement);
     displacement.value = 0;
-    if (reduced || index >= MAX_HOVERING_ISLANDS) return;
+    if (!reduced && index < MAX_HOVERING_ISLANDS) {
+      const amplitude = islandHoverAmplitude(index);
+      displacement.value = withDelay(900 + index * 380, withRepeat(withSequence(
+        withTiming(-amplitude, { duration: 2300, easing }),
+        withTiming(amplitude, { duration: 3000, easing }),
+        withTiming(0, { duration: 2300, easing }),
+      ), -1, false));
+    }
 
-    const amplitude = islandHoverAmplitude(index);
-    displacement.value = withDelay(900 + index * 380, withRepeat(withSequence(
-      withTiming(-amplitude, { duration: 2300, easing }),
-      withTiming(amplitude, { duration: 3000, easing }),
-      withTiming(0, { duration: 2300, easing }),
-    ), -1, false));
-
+    // Always return cleanup, including reduced-motion and capped islands.
+    // The amplitude, delay, timings and visual movement remain unchanged.
     return () => cancelAnimation(displacement);
   }, [index, reduced, displacement]);
 
