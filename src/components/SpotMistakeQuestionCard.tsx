@@ -4,6 +4,7 @@ import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { SpotMistakeQuestion } from "../quiz/types";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
 import { questionCardStyles } from "./questionCardStyles";
 
@@ -14,11 +15,12 @@ type Props = {
   answer?: string;
   onSubmit: (optionId: string) => void;
   readingSize?: number;
+  onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Locate the false statement; selecting it only changes a local draft.
  * Scoring, sounds and saved progress happen on explicit confirmation only. */
-export default function SpotMistakeQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+export default function SpotMistakeQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
   const [pending, setPending] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const draftRef = useRef<string | null>(null);
@@ -61,6 +63,14 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
     }
   }
 
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: pending === null || submitting, onPress: confirm });
+    return () => onActionChange(null);
+  }, [answered, pending, submitting, onActionChange]);
+
   return <View testID="spot-mistake-card" style={styles.card}>
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
@@ -97,7 +107,7 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
         </AnswerMotion>;
       })}
     </View>
-    {!answered ? <>
+    {!answered && !onActionChange ? <>
       <Pressable testID="spot-mistake-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: pending === null || submitting }}
         disabled={pending === null || submitting}
