@@ -1,4 +1,5 @@
 import type { LessonQuestion } from "../data/lessons";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import type { ReportTarget } from "../utils/contentReports";
 import SingleChoiceQuestionCard from "./SingleChoiceQuestionCard";
 
@@ -9,6 +10,8 @@ type Props = {
   selectedAnswer: number | undefined;
   onSelectAnswer: (answerIndex: number, correctIndex: number) => void;
   readingSize?: number;
+  compactAnswered?: boolean;
+  onActionChange?: (action: QuestionStageAction | null) => void;
   reportTarget?: ReportTarget;
 };
 
@@ -17,7 +20,7 @@ type Props = {
  * questions. The choice is saved only after explicit confirmation. */
 export default function InlineQuestionCard({
   combo = 0, question, questionNumber, selectedAnswer,
-  onSelectAnswer, readingSize, reportTarget,
+  onSelectAnswer, readingSize, compactAnswered = false, onActionChange, reportTarget,
 }: Props) {
   return <SingleChoiceQuestionCard
     id={question.id ?? `${reportTarget?.itemId ?? "lesson"}:q${questionNumber}`}
@@ -29,6 +32,8 @@ export default function InlineQuestionCard({
     answer={selectedAnswer}
     onConfirm={index => onSelectAnswer(index, question.correctIndex)}
     readingSize={readingSize}
+    compactAnswered={compactAnswered}
+    onActionChange={onActionChange}
     badgeLabel="ΣΤΑΣΗ ΓΝΩΣΗΣ"
     combo={combo}
     reportTarget={reportTarget}

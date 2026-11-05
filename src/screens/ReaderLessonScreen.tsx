@@ -14,6 +14,11 @@ import ActionButton from "../components/ActionButton";
 import ArticleFigure from "../components/ArticleFigure";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
+import QuizReveal from "../components/QuizReveal";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
+import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
+import QuestionStageFooter from "../components/QuestionStageFooter";
 import LessonCover from "../components/LessonCover";
 import NextImageWarmup from "../components/NextImageWarmup";
 import SourceLink from "../components/SourceLink";
@@ -29,6 +34,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   onToggleSaved, checkpointAnswers, typedCheckpointAnswers = {}, enableReporting = true, onAnswerCheckpoint, onFinishLesson, onBack }: Props) {
   const { analytics } = useBetaAnalytics();
   const safeArea = useSafeAreaInsets();
+  const quizViewport = useAdaptiveQuestionScroll();
   const lastSeenParagraph = useRef(0);
   const [readingSize, setReadingSize] = useState(18);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -36,6 +42,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   // This is presentation state only; canonical answers and lesson progress stay parent-owned.
   const [activeBoundary, setActiveBoundary] = useState<number | null>(null);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null);
+  const stageAction = useQuestionStageAction(`${lesson.id}:${activeQuestionIndex ?? "closed"}`);
   const openingQuestion = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const sectionPositions = useRef<Record<number, number>>({});
@@ -259,6 +266,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
         statusBarTranslucent navigationBarTranslucent onRequestClose={onBack}>
         <View style={[styles.quizScreen, { paddingTop: safeArea.top, paddingBottom: safeArea.bottom }]}
           testID="reader-question-screen">
+          <ProgressGradientBackground />
           <View style={styles.quizTopbar}>
             <Pressable accessibilityRole="button" accessibilityLabel="Έξοδος από το μάθημα"
               onPress={onBack} style={styles.control}>
@@ -275,9 +283,14 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
             {activeGroup.map((index, position) => <View key={index}
               style={[styles.quizStep, position <= activePosition && styles.quizStepActive]} />)}
           </View> : null}
-          <ScrollView key={`${lesson.id}:${activeQuestionIndex}`} contentContainerStyle={styles.quizContent}
+          <ScrollView key={`${lesson.id}:${activeQuestionIndex}`} style={styles.quizViewport}
+            testID="reader-question-viewport"
+            contentContainerStyle={styles.quizContent}
+            onLayout={quizViewport.onLayout}
+            onContentSizeChange={quizViewport.onContentSizeChange}
+            scrollEnabled={quizViewport.scrollEnabled} bounces={quizViewport.scrollEnabled}
             keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <View testID={`reader-modal-question-${activeQuestionIndex}`}>
+            <QuizReveal><View testID={`reader-modal-question-${activeQuestionIndex}`}>
               {(() => {
                 const questionIndex = activeQuestionIndex;
                 const question = lesson.questions[questionIndex];
@@ -285,7 +298,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 const answered = checkpointAnswers[questionIndex] !== undefined;
                 return interactive ? <>
                   <QuizQuestionRenderer question={interactive} questionNumber={questionIndex + 1}
-                    readingSize={readingSize}
+                    readingSize={readingSize} compactAnswered onActionChange={stageAction.onActionChange}
                     answer={restoreInteractiveLessonAnswer(lesson, questionIndex, checkpointAnswers[questionIndex], typedCheckpointAnswers[questionIndex])}
                     onSubmit={value => {
                       const answerIndex = projectInteractiveLessonAnswer(lesson, questionIndex, value);
@@ -303,19 +316,20 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                   question={question} questionNumber={questionIndex + 1}
                   selectedAnswer={checkpointAnswers[questionIndex]}
                   reportTarget={enableReporting ? lessonReportTarget(lesson, questionIndex) : undefined}
-                  readingSize={readingSize}
+                  readingSize={readingSize} compactAnswered onActionChange={stageAction.onActionChange}
                   onSelectAnswer={(answerIndex, correctIndex) => {
                     if (!answered && activeQuestionIndex === questionIndex) {
                       onAnswerCheckpoint(questionIndex, answerIndex, correctIndex);
                     }
                   }} />;
               })()}
-            </View>
-            {activeAnswered ? <ActionButton
-              label={activeGroup.some(i => i > activeQuestionIndex && checkpointAnswers[i] === undefined)
-                ? "Επόμενη ερώτηση →" : "Συνέχεια ανάγνωσης →"}
-              onPress={advanceQuestion} /> : null}
+            </View></QuizReveal>
           </ScrollView>
+          <QuestionStageFooter action={activeAnswered ? {
+            label: activeGroup.some(i => i > activeQuestionIndex && checkpointAnswers[i] === undefined)
+              ? "Επόμενη ερώτηση →" : "Συνέχεια ανάγνωσης →",
+            disabled: false, onPress: advanceQuestion,
+          } : stageAction.action} />
         </View>
       </Modal> : null}
     </View>
@@ -371,15 +385,17 @@ const styles = StyleSheet.create({
   checkpoint: { marginBottom: 28, borderWidth: 1, borderColor: reading.border, backgroundColor: reading.surface, borderRadius: 16, padding: 18 },
   gateTitle: { color: reading.heading, fontSize: 19, lineHeight: 28, fontWeight: "700" },
   quizScreen: { flex: 1, backgroundColor: colors.background },
-  quizTopbar: { paddingHorizontal: 14, paddingTop: 16, paddingBottom: 12, flexDirection: "row", flexWrap: "wrap",
+  quizTopbar: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 8, flexDirection: "row", flexWrap: "wrap",
     justifyContent: "space-between", alignItems: "center", gap: 6, borderBottomWidth: 1, borderColor: colors.border },
   quizExit: { color: colors.text, fontSize: 15, fontWeight: "700" },
   quizBrand: { color: colors.accentLight, fontSize: 10, letterSpacing: 0.8, fontWeight: "800" },
   quizCount: { color: colors.textMuted, fontSize: 12, fontWeight: "700" },
-  quizSteps: { flexDirection: "row", gap: 5, marginHorizontal: 22, marginTop: 14 },
+  quizSteps: { flexDirection: "row", gap: 5, marginHorizontal: 22, marginTop: 9 },
   quizStep: { height: 4, borderRadius: 3, backgroundColor: colors.border, flex: 1 },
   quizStepActive: { backgroundColor: colors.accent },
-  quizContent: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 64, width: "100%", maxWidth: 640, alignSelf: "center" },
+  quizViewport: { flex: 1 },
+  quizContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 16,
+    paddingTop: 10, paddingBottom: 14, width: "100%", maxWidth: 640, alignSelf: "center" },
   finish: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 26, gap: 10 },
   finishBody: { color: reading.text, marginTop: 8, marginBottom: 8 },
   endSources: { marginTop: 28 },

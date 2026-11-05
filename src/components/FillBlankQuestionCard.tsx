@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { FillBlankQuestion } from "../quiz/types";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -13,147 +15,161 @@ type Props = {
   answer?: string;
   onSubmit: (optionId: string) => void;
   readingSize?: number;
+  onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
-/** A word bank fills a visible slot, with one explicit confirmation. */
-export default function FillBlankQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+/** The authored sentence is the question. Do not restate it with an extra
+ * prompt, tutorial and duplicate heading above the word bank. */
+export default function FillBlankQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange }: Props) {
   const [pending, setPending] = useState<string | null>(null);
-  useEffect(() => { setPending(null); }, [question.id, question.version]);
+  const [submitting, setSubmitting] = useState(false);
+  const pendingRef = useRef<string | null>(null);
+  const submittingRef = useRef(false);
+  useEffect(() => {
+    pendingRef.current = null;
+    submittingRef.current = false;
+    setPending(null);
+    setSubmitting(false);
+  }, [question.id, question.version]);
+
   const answered = answer !== undefined;
   const selectedId = answered ? answer : pending;
   const selectedOption = question.content.options.find(option => option.id === selectedId);
   const correctOption = question.content.options.find(option => option.id === question.content.correctOptionId);
   const isCorrect = answered && evaluateAnswer(question, answer).correct;
-  const sentenceSize = readingSize ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined;
+  const sentenceSize = readingSize !== undefined && readingSize !== 18
+    ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined;
+  const before = question.content.before.trim();
+  const after = question.content.after.trim();
+  const punctuationOnly = /^[.,;:!?…·]+$/.test(after);
 
+  function choose(id: string) {
+    if (answered || submittingRef.current) return;
+    pendingRef.current = id;
+    setPending(id);
+  }
   function confirm() {
-    if (!answered && pending !== null) onSubmit(pending);
+    const id = pendingRef.current;
+    if (answered || submittingRef.current || id === null ||
+      !question.content.options.some(option => option.id === id)) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      void Promise.resolve(onSubmit(id)).catch(() => {
+        submittingRef.current = false;
+        setSubmitting(false);
+      });
+    } catch {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
   }
 
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: pending === null || submitting, onPress: confirm });
+    return () => onActionChange(null);
+  }, [answered, pending, submitting, onActionChange]);
+
   return <View style={styles.card} testID="fill-blank-card">
+    <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.badge}><Text style={styles.badgeText}>✎  ΣΥΜΠΛΗΡΩΣΕ ΤΟ ΚΕΝΟ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
-    <Text style={[styles.prompt, readingSize !== undefined && readingSize !== 18 ? sentenceSize : undefined]}>{question.prompt}</Text>
-    <Text style={styles.hint}>Διάλεξε μία λέξη ή φράση από τις επιλογές για να ολοκληρώσεις την πρόταση.</Text>
-    <View style={styles.passage}>
-      <Text style={styles.passageHeading}>Η ΠΡΟΤΑΣΗ</Text>
+    <View testID="fill-blank-sentence" style={styles.passage} accessible
+      accessibilityRole="header"
+      accessibilityLabel={`${before} ${selectedOption?.text ?? "κενό"} ${after}`}>
       <View style={styles.sentence}>
-        {question.content.before.trim() ? <Text style={[styles.passageText, sentenceSize]}>{question.content.before.trim()}</Text> : null}
-        <View testID="fill-blank-slot" style={[styles.slot,
-          answered && (isCorrect ? styles.slotCorrect : styles.slotWrong),
-          !answered && pending !== null && styles.slotFilled]}>
-          <Text style={[styles.slotText, selectedOption && styles.slotTextFilled]}>
-            {selectedOption ? selectedOption.text : "Επίλεξε απάντηση…"}
-          </Text>
+        {before ? <Text style={[styles.passageText, sentenceSize]}>{before}</Text> : null}
+        <View style={styles.slotTail}>
+          <View testID="fill-blank-slot" style={[styles.slot,
+            answered && (isCorrect ? styles.slotCorrect : styles.slotWrong),
+            !answered && pending !== null && styles.slotFilled]}>
+            <Text style={[styles.slotText, selectedOption && styles.slotTextFilled]}>
+              {selectedOption ? selectedOption.text : "________"}
+            </Text>
+          </View>
+          {punctuationOnly ? <Text style={[styles.passageText, sentenceSize]}>{after}</Text> : null}
         </View>
-        {question.content.after.trim() ? <Text style={[styles.passageText, sentenceSize]}>{question.content.after.trim()}</Text> : null}
+        {!punctuationOnly && after ? <Text style={[styles.passageText, sentenceSize]}>{after}</Text> : null}
       </View>
     </View>
-    <View style={styles.wordBankHeading}>
-      <Text style={styles.inputLabel}>ΕΠΙΛΕΞΕ ΓΙΑ ΤΟ ΚΕΝΟ</Text>
-      <Text style={styles.wordBankCounter}>{question.content.options.length} ΕΠΙΛΟΓΕΣ</Text>
-    </View>
-    <View style={styles.options}>
-      {question.content.options.map((option, index) => {
-        const selected = selectedId === option.id;
-        const isRightOption = answered && option.id === question.content.correctOptionId;
-        const wrongSelection = answered && selected && !isRightOption;
-        return <AnswerMotion key={option.id} active={isRightOption || wrongSelection}>
-          <Pressable testID={`fill-blank-option-${option.id}`}
-            accessibilityRole="button"
-            accessibilityLabel={option.text}
-            accessibilityState={{ selected, disabled: answered }}
-            disabled={answered}
-            onPress={() => setPending(option.id)}
-            style={({ pressed }) => [styles.option, selected && styles.selected,
-              isRightOption && styles.optionCorrect, wrongSelection && styles.optionWrong,
-              pressed && !answered && styles.pressed]}>
-            <View style={[styles.optionNumber, selected && styles.numberSelected]}>
-              <Text style={styles.optionNumberText}>{String.fromCharCode(65 + index)}</Text>
-            </View>
-            <Text style={styles.optionText}>{option.text}</Text>
-            <Text style={[styles.optionMark, isRightOption && styles.markCorrect,
-              wrongSelection && styles.markWrong]}>{isRightOption ? "✓" : wrongSelection ? "×" : selected ? "●" : "○"}</Text>
-          </Pressable>
-        </AnswerMotion>;
-      })}
-    </View>
     {!answered ? <>
-      <Text style={styles.footHint}>Μπορείς να αλλάξεις την επιλογή σου πριν επιβεβαιώσεις.</Text>
-      <Pressable testID="fill-blank-confirm" accessibilityRole="button"
-        accessibilityState={{ disabled: pending === null }} disabled={pending === null}
-        onPress={confirm}
-        style={({ pressed }) => [styles.confirm, pending === null && styles.disabled, pressed && styles.pressed]}>
-        <Text style={styles.confirmText}>Επιβεβαίωση απάντησης  →</Text>
-      </Pressable>
-    </> : null}
-    {answered ? <QuizReveal><View testID="fill-blank-feedback" accessibilityLiveRegion="polite"
-      style={[styles.feedback, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={[styles.feedbackTitle, isCorrect ? styles.goodText : styles.badText]}>
-        {isCorrect ? "✓  Συμπλήρωσες σωστά το κενό!" : "↗  Η σωστή συμπλήρωση"}
-      </Text>
-      {!isCorrect ? <View style={styles.solutionBox}>
-        <Text style={styles.solutionLabel}>ΣΩΣΤΗ ΕΠΙΛΟΓΗ</Text>
-        <Text style={styles.solution}>{correctOption?.text}</Text>
-      </View> : null}
-      <Text style={styles.explanation}>{question.explanation}</Text>
-    </View></QuizReveal> : null}
+      <View style={styles.options}>
+        {question.content.options.map((option, index) => {
+          const selected = selectedId === option.id;
+          return <AnswerMotion key={option.id} active={selected}>
+            <Pressable testID={`fill-blank-option-${option.id}`}
+              accessibilityRole="button" accessibilityLabel={option.text}
+              accessibilityState={{ selected, disabled: submitting }}
+              disabled={submitting}
+              onPress={() => choose(option.id)}
+              style={({ pressed }) => [styles.option, selected && styles.selected,
+                pressed && !submitting && styles.pressed]}>
+              <View style={[styles.optionNumber, selected && styles.numberSelected]}>
+                <Text style={styles.optionNumberText}>{String.fromCharCode(65 + index)}</Text>
+              </View>
+              <Text style={styles.optionText}>{option.text}</Text>
+              {selected ? <Text style={styles.optionMark}>✓</Text> : null}
+            </Pressable>
+          </AnswerMotion>;
+        })}
+      </View>
+      {!onActionChange ? <Pressable testID="fill-blank-confirm" accessibilityRole="button"
+        accessibilityState={{ disabled: pending === null || submitting }}
+        disabled={pending === null || submitting} onPress={confirm}
+        style={({ pressed }) => [styles.confirm,
+          (pending === null || submitting) && styles.confirmDisabled,
+          pressed && pending !== null && !submitting && styles.confirmPressed]}>
+        <Text style={styles.confirmText}>Επιβεβαίωση  →</Text>
+      </Pressable> : null}
+    </> : <QuizReveal><QuestionFeedbackPanel testID="fill-blank-feedback"
+      correct={isCorrect} explanation={question.explanation} readingSize={readingSize}
+      solution={!isCorrect ? <AnswerSummaryText>{correctOption?.text}</AnswerSummaryText> : undefined}
+    /></QuizReveal>}
   </View>;
 }
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
-  card: questionCardStyles.card,
-  topLine: questionCardStyles.topLine,
   badge: questionCardStyles.typeBadge,
   badgeText: questionCardStyles.typeLabel,
-  counter: questionCardStyles.counter,
-  prompt: questionCardStyles.question,
-  hint: questionCardStyles.hint,
-  passage: { backgroundColor: colors.surfaceRaised, padding: 16, borderRadius: 16,
-    borderWidth: 1, borderColor: colors.border, gap: 11, marginBottom: 23 },
-  passageHeading: { color: colors.textMuted, fontSize: 10, letterSpacing: 0.8, fontWeight: "900" },
-  sentence: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 7 },
-  passageText: { color: colors.text, fontSize: 17, lineHeight: 27, fontWeight: "700", flexShrink: 1 },
+  passage: { backgroundColor: "#20263A", padding: 14, borderRadius: 15,
+    borderLeftWidth: 2, borderLeftColor: "#8276BB", marginBottom: 16 },
+  sentence: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 },
+  passageText: { color: colors.text, fontSize: 18, lineHeight: 28, fontWeight: "700", flexShrink: 1 },
+  slotTail: { flexDirection: "row", alignItems: "center", gap: 4, maxWidth: "100%" },
   slot: { minHeight: 44, maxWidth: "100%", paddingHorizontal: 12, paddingVertical: 9,
-    borderWidth: 1, borderColor: colors.accent, backgroundColor: colors.accentSurface,
-    borderStyle: "dashed", borderRadius: 10, justifyContent: "center" },
+    borderWidth: 1, borderColor: colors.accent, backgroundColor: "#353052",
+    borderStyle: "dashed", borderRadius: 11, justifyContent: "center" },
   slotFilled: { borderStyle: "solid" },
   slotCorrect: { borderColor: colors.success, borderStyle: "solid", backgroundColor: colors.successSurface },
   slotWrong: { borderColor: colors.error, borderStyle: "solid", backgroundColor: colors.errorSurface },
-  slotText: { color: colors.accentLight, fontSize: 14, lineHeight: 21, fontWeight: "700", flexShrink: 1 },
-  slotTextFilled: { color: colors.text, fontWeight: "800" },
-  wordBankHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 11 },
-  inputLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.8 },
-  wordBankCounter: { color: colors.accentLight, fontSize: 10, fontWeight: "800" },
+  slotText: { color: colors.accentLight, fontSize: 15, lineHeight: 22, fontWeight: "800", flexShrink: 1 },
+  slotTextFilled: { color: colors.text },
   options: questionCardStyles.answers,
   option: questionCardStyles.answer,
   selected: questionCardStyles.selected,
-  optionCorrect: questionCardStyles.answerCorrect,
-  optionWrong: questionCardStyles.answerWrong,
   pressed: questionCardStyles.pressed,
   optionNumber: { height: 28, width: 28, borderRadius: 8, alignItems: "center", justifyContent: "center",
     flexShrink: 0, backgroundColor: colors.accentSurface },
-  numberSelected: { backgroundColor: "#504782" },
+  numberSelected: { backgroundColor: "#514785" },
   optionNumberText: { color: colors.text, fontWeight: "900", fontSize: 13 },
   optionText: questionCardStyles.answerText,
-  optionMark: { color: colors.textMuted, fontSize: 18, fontWeight: "900" },
-  markCorrect: { color: colors.success },
-  markWrong: { color: colors.error },
-  footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19, marginTop: 13 },
+  optionMark: { color: colors.accentLight, fontSize: 19, fontWeight: "900" },
   confirm: questionCardStyles.confirm,
-  disabled: questionCardStyles.confirmDisabled,
+  confirmDisabled: questionCardStyles.confirmDisabled,
+  confirmPressed: questionCardStyles.confirmPressed,
   confirmText: questionCardStyles.confirmText,
   feedback: questionCardStyles.feedback,
   feedbackCorrect: questionCardStyles.feedbackCorrect,
   feedbackWrong: questionCardStyles.feedbackWrong,
-  feedbackTitle: { fontSize: 16, lineHeight: 23, fontWeight: "900" },
+  feedbackTitle: { fontSize: 17, lineHeight: 24, fontWeight: "900" },
   goodText: { color: colors.success },
   badText: { color: colors.error },
-  solutionBox: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 6 },
-  solutionLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
-  solution: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: "800" },
+  solution: { color: colors.text, fontSize: 16, lineHeight: 23, fontWeight: "800" },
   explanation: questionCardStyles.feedbackText,
 });

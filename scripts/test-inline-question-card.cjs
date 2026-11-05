@@ -45,6 +45,7 @@ const imports = {
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
   '../theme': theme,
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
+    './QuestionFeedbackPanel': { __esModule: true, default: 'QuestionFeedbackPanel', AnswerSummaryText: 'AnswerSummaryText' },
   './ReportContentButton': { __esModule: true, default: 'ReportContentButton' },
   './questionCardStyles': { questionCardStyles: sharedStyles },
 };
@@ -123,15 +124,16 @@ assert.equal(byId(tree, 'lesson-question-confirm'), undefined);
 assert.equal(byId(tree, 'lesson-question-option-1').props.disabled, true);
 assert.ok(byId(tree, 'lesson-question-feedback'));
 assert.equal(byId(tree, 'lesson-question-correction'), undefined);
-assert.ok(nodes(tree).some(n => n.type === 'Text' && textChildren(n.props.children) === '✦  ΣΕΡΙ 2'),
-  'combo is visible for committed answers');
+assert.equal(byId(tree, 'lesson-question-feedback').props.combo, 2,
+  'the committed combo is forwarded into the shared result panel');
 
 props = { ...props, selectedAnswer: 0 };
 resetHooks();
 tree = render();
 assert.equal(flatStyle(byId(tree, 'lesson-question-option-0')).borderColor, theme.colors.error);
 assert.equal(flatStyle(byId(tree, 'lesson-question-option-1')).borderColor, theme.colors.success);
-assert.equal(byId(tree, 'lesson-question-correction').props.children, question.answers[1]);
+assert.equal(byId(tree, 'lesson-question-feedback').props.solution.props.children,
+  question.answers[1], 'wrong answers expose their correct choice in the result panel');
 byId(tree, 'lesson-question-option-0').props.onPress();
 assert.equal(events.length, 1, 'restored wrong answer cannot be submitted twice');
 props = { ...props, selectedAnswer: undefined, readingSize: 24 };

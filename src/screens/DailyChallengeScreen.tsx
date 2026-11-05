@@ -1,5 +1,6 @@
 import { useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import AppHeader from "../components/AppHeader";
@@ -7,6 +8,10 @@ import ProgressBar from "../components/ProgressBar";
 import DailyMistakeReview from "../components/DailyMistakeReview";
 import DailyAnswerReview from "../components/DailyAnswerReview";
 import QuizReveal from "../components/QuizReveal";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
+import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
+import QuestionStageFooter from "../components/QuestionStageFooter";
 import KnowledgeProgress from "../components/KnowledgeProgress";
 import { dailyReportTarget } from "../utils/contentReports";
 import { DAILY_CHALLENGE_SIZE, questions } from "../data/questions";
@@ -28,6 +33,9 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const [sourceError,setSourceError]=useState(false),scrollRef=useRef<ComponentRef<typeof ScrollView>>(null),sourceRequest=useRef(0);
   const [review,setReview]=useState<{date:string;mode:'answers'|'mistakes'}|null>(null);
   const [previewOpen,setPreviewOpen]=useState(false);
+  const quizViewport=useAdaptiveQuestionScroll();
+  const insets=useSafeAreaInsets();
+  const stageAction=useQuestionStageAction(currentQuestion?.id??"inactive");
   const analysis=dailyResultAnalysis(record,questions,correctCount,resultDetails);
   const recommendation=recommendDailyLesson(analysis.rows,lessons,completedLessonIds,inProgressLessonIds,preferences);
   const reviewing=record.completed&&review?.date===record.dateKey;
@@ -39,14 +47,24 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   async function openSource(url:string){const request=++sourceRequest.current;try{await Linking.openURL(url);if(request===sourceRequest.current)setSourceError(false);}catch{if(request===sourceRequest.current)setSourceError(true);}}
   const misses=analysis.rows.filter(r=>r.correct===false&&r.question);
   const canStart=selectSharedDailyQuestions(record.dateKey).length===DAILY_CHALLENGE_SIZE;
+  const activeQuiz=record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
   // Do not touch any persisted daily quiz record during the development pilot.
   if (typeof __DEV__ !== "undefined" && __DEV__ && previewOpen) {
     return <QuizTypesPreviewScreen onBack={() => setPreviewOpen(false)} />;
   }
-  return <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-    <AppHeader onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} />
-    {typeof __DEV__ !== "undefined" && __DEV__ ? <ActionButton label="Δοκίμασε τα νέα είδη ερωτήσεων (dev)" secondary onPress={() => setPreviewOpen(true)} /> : null}
-    {accountScoped?<Text style={styles.note}>Η πρόοδός σου συγχρονίζεται στις συσκευές σου.</Text>:null}
+  return <View style={styles.root}><ProgressGradientBackground />
+    {activeQuiz ? <View style={styles.stageTop}>
+      <AppHeader onBack={onHome} backLabel="ΑΡΧΙΚΗ" style={styles.stageHeader} />
+    </View> : null}
+    <ScrollView ref={scrollRef} style={styles.viewport}
+      contentContainerStyle={[styles.content,activeQuiz&&styles.activeContent]}
+      onLayout={quizViewport.onLayout} onContentSizeChange={quizViewport.onContentSizeChange}
+      scrollEnabled={!activeQuiz||quizViewport.scrollEnabled}
+      bounces={!activeQuiz||quizViewport.scrollEnabled}
+      showsVerticalScrollIndicator={false}>
+    {!activeQuiz ? <AppHeader onBack={reviewing?closeReview:onHome} backLabel={reviewing?'ΑΠΟΤΕΛΕΣΜΑ':'ΑΡΧΙΚΗ'} /> : null}
+    {typeof __DEV__ !== "undefined" && __DEV__ && !activeQuiz ? <ActionButton label="Δοκίμασε τα νέα είδη ερωτήσεων (dev)" secondary onPress={() => setPreviewOpen(true)} /> : null}
+    {accountScoped&&!activeQuiz?<Text style={styles.note}>Η πρόοδός σου συγχρονίζεται στις συσκευές σου.</Text>:null}
     {isLoading?<View style={styles.centerState}><ActivityIndicator color={colors.accentLight} size="large"/><Text style={styles.note}>Φόρτωση της σημερινής πρόκλησης…</Text></View>
     :record.completed&&review?.date===record.dateKey&&review.mode==='answers'?<DailyAnswerReview rows={analysis.rows} legacy={analysis.legacy} onDone={closeReview}/>
     :record.completed&&review?.date===record.dateKey&&review.mode==='mistakes'?<DailyMistakeReview key={`${record.dateKey}-${record.questionIds.join('-')}`} questions={analysis.practiceQuestions} onDone={closeReview} onAdvance={scrollTop}/>
@@ -114,27 +132,39 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         badgeLabel={`${topicTitle(currentQuestion.categoryId)} · ${difficultyTitle(currentQuestion.difficulty)}`}
         answer={selectedAnswer === null ? undefined : selectedAnswer}
         onConfirm={index => answerQuestion(index)}
-        showFeedback={false}
+        onActionChange={stageAction.onActionChange}
+        combo={rewardSummary?.combo ?? 0}
+        feedbackExtra={selectedAnswer !== null ? <>
+          {rewardSummary?.rows[record.currentIndex]?.eligible === false ?
+            <Text style={styles.note}>Η απάντηση έχει ήδη ανταμειφθεί.</Text> : null}
+          {rewardSummary?.combo && rewardSummary.combo > 1 ?
+            <Text style={styles.combo}>+{rewardSummary.rows[record.currentIndex]?.comboXP ?? 0} XP μπόνους</Text> : null}
+          <Pressable onPress={() => void openSource(currentQuestion.sourceUrl)}
+            accessibilityRole="link" style={styles.sourceLink}>
+            <Text style={styles.sourceLinkText}>Πηγή: {currentQuestion.sourceTitle} ↗</Text>
+          </Pressable>
+          {sourceError ? <Text style={styles.errorText}>Δεν ήταν δυνατό το άνοιγμα της πηγής.</Text> : null}
+        </> : undefined}
+        compactAnswered
         reportTarget={dailyReportTarget(currentQuestion)}
         testID="daily-choice-card"
         testPrefix="daily-choice"
       />
-      {selectedAnswer!==null?<QuizReveal><View style={styles.feedback} accessibilityLiveRegion="polite">
-        <Text style={styles.feedbackTitle}>{isCorrect?'Σωστά — το κράτησες!':'Μια νέα γνώση για σήμερα.'}</Text>
-        {!isCorrect?<Text style={styles.bodyStrong}>Σωστή απάντηση: {currentQuestion.answers[currentQuestion.correctIndex]}</Text>:null}
-        <Text style={styles.body}>{currentQuestion.explanation}</Text>
-        {rewardSummary&&rewardSummary.combo>1?<Text style={styles.combo}>ΣΕΡΙ {rewardSummary.combo} · +{rewardSummary.rows[record.currentIndex]?.comboXP??0} XP μπόνους</Text>:null}
-        {rewardSummary?.rows[record.currentIndex]?.eligible===false?<Text style={styles.note}>Η ερώτηση έχει ήδη ανταμειφθεί. Συνεχίζει να μετρά στο σημερινό σκορ.</Text>:null}
-        <Pressable onPress={()=>void openSource(currentQuestion.sourceUrl)} accessibilityRole="link" style={styles.sourceLink}><Text style={styles.sourceLinkText}>Πηγή: {currentQuestion.sourceTitle} ↗</Text></Pressable>
-        {sourceError?<Text style={styles.errorText}>Δεν ήταν δυνατό το άνοιγμα της πηγής.</Text>:null}
-        <ActionButton label={record.currentIndex===6?'Δες το αποτέλεσμα →':'Επόμενη ερώτηση →'} onPress={()=>{sourceRequest.current++;setSourceError(false);void nextQuestion();scrollTop();}}/>
-        <Text style={styles.note}>Σωστές μέχρι τώρα: {correctCount} · {correctCount*100} πόντοι</Text>
-      </View></QuizReveal>:null}
     </View></QuizReveal>
     :<View style={styles.centerState}><Text style={styles.errorText}>{questionsCompatible?'Δεν ήταν δυνατή η φόρτωση της πρόκλησης.':'Οι ερωτήσεις ενημερώθηκαν από τότε που ξεκίνησες. Οι απαντήσεις σου διατηρήθηκαν· αυτή η έκδοση δεν μπορεί να συνεχίσει με διαφορετικές ερωτήσεις.'}</Text><ActionButton label="Επιστροφή στην αρχική" onPress={onHome}/></View>}
-  </ScrollView>;
+    </ScrollView>
+    {activeQuiz ? <QuestionStageFooter bottomInset={insets.bottom} action={selectedAnswer!==null ? {
+      label: record.currentIndex===6 ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →",
+      disabled: false,
+      onPress: () => { sourceRequest.current++; setSourceError(false); void nextQuestion(); scrollTop(); },
+    } : stageAction.action} /> : null}
+  </View>;
 }
 const styles=StyleSheet.create({
+  root:{flex:1,backgroundColor:colors.background},viewport:{flex:1},
+  stageTop:{paddingHorizontal:16,paddingTop:6},
+  stageHeader:{marginBottom:2},
+  activeContent:{flexGrow:1,justifyContent:'center',paddingHorizontal:16,paddingTop:8,paddingBottom:14},
   content:{width:'100%',maxWidth:720,alignSelf:'center',paddingHorizontal:20,paddingTop:12,paddingBottom:44},
   centerState:{alignItems:'center',justifyContent:'center',paddingTop:60,gap:16},introContainer:{paddingTop:20,gap:10},
   heroMark:{width:64,height:64,alignSelf:'center',alignItems:'center',justifyContent:'center',borderRadius:22,backgroundColor:colors.accentSurface,marginBottom:14},heroGlyph:{color:colors.accentLight,fontSize:34},
@@ -145,9 +175,9 @@ const styles=StyleSheet.create({
   bigScore:{color:colors.text,fontSize:52,lineHeight:65,fontWeight:'900'},scoreMeta:{color:colors.textBody,fontSize:12,lineHeight:20,textAlign:'center'},
   metrics:{flexDirection:'row',flexWrap:'wrap',justifyContent:'space-around',gap:16,alignSelf:'stretch',paddingVertical:12},metric:{alignItems:'center',minWidth:72,gap:4},metricValue:{color:colors.accentLight,fontSize:23,lineHeight:31,fontWeight:'900'},
   resultContainer:{gap:10,paddingTop:18},tomorrow:{color:colors.textMuted,fontSize:12,lineHeight:20,textAlign:'center',marginVertical:8},missedItem:{borderTopWidth:1,borderTopColor:colors.border,paddingTop:12,gap:6},
-  progressRow:{flexDirection:'row',flexWrap:'wrap',justifyContent:'space-between',gap:10,marginTop:16,marginBottom:8},counter:{color:colors.accentLight,fontSize:12,lineHeight:20,fontWeight:'800'},
-  dots:{flexDirection:'row',justifyContent:'space-between',gap:6,marginTop:16},dot:{width:30,height:30,borderRadius:15,alignItems:'center',justifyContent:'center',backgroundColor:colors.surfaceSoft,borderWidth:1,borderColor:colors.border},dotCurrent:{borderColor:colors.accentLight},dotCorrect:{backgroundColor:'#17372F'},dotWrong:{backgroundColor:'#40232E'},dotText:{color:colors.text,fontSize:11,fontWeight:'800'},
+  progressRow:{flexDirection:'row',flexWrap:'wrap',justifyContent:'space-between',gap:10,marginTop:10,marginBottom:6},counter:{color:colors.accentLight,fontSize:12,lineHeight:20,fontWeight:'800'},
+  dots:{flexDirection:'row',justifyContent:'space-between',gap:6,marginTop:10},dot:{width:30,height:30,borderRadius:15,alignItems:'center',justifyContent:'center',backgroundColor:colors.surfaceSoft,borderWidth:1,borderColor:colors.border},dotCurrent:{borderColor:colors.accentLight},dotCorrect:{backgroundColor:'#17372F'},dotWrong:{backgroundColor:'#40232E'},dotText:{color:colors.text,fontSize:11,fontWeight:'800'},
   questionCard:{backgroundColor:colors.surface,borderWidth:1,borderColor:colors.border,borderRadius:20,padding:20,gap:12,marginTop:22,marginBottom:18},question:{color:colors.text,fontSize:22,lineHeight:32,fontWeight:'800'},answers:{gap:10},
-  feedback:{backgroundColor:colors.surfaceSoft,borderWidth:1,borderColor:colors.border,borderRadius:20,padding:18,gap:10,marginTop:18},feedbackTitle:{color:colors.text,fontSize:19,lineHeight:27,fontWeight:'900'},combo:{color:colors.accentLight,fontSize:13,lineHeight:21,fontWeight:'800'},
+  feedback:{backgroundColor:"#1B2235",borderWidth:1,borderColor:"#4E4B70",borderRadius:20,padding:14,gap:8,marginTop:10},feedbackTitle:{color:colors.text,fontSize:19,lineHeight:27,fontWeight:'900'},combo:{color:colors.accentLight,fontSize:13,lineHeight:21,fontWeight:'800'},
   sourceLink:{paddingVertical:10},sourceLinkText:{color:colors.accentLight,fontSize:12,lineHeight:19,textDecorationLine:'underline'},errorText:{color:colors.error,fontSize:13,lineHeight:22,marginVertical:12},
 });

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { MatchingQuestion } from "../quiz/types";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuizReveal from "./QuizReveal";
+import QuestionFeedbackPanel, { AnswerSummaryText } from "./QuestionFeedbackPanel";
 import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
@@ -12,10 +15,12 @@ type Props = {
   answer?: Readonly<Record<string, string>>;
   onSubmit: (pairs: Record<string, string>) => void;
   readingSize?: number;
+  compactAnswered?: boolean;
+  onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
 /** Full-width two-stage pairing remains readable with long Greek labels. */
-export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize }: Props) {
+export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange, compactAnswered = false }: Props) {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pending, setPending] = useState<Record<string, string>>({});
   useEffect(() => { setSelectedLeft(null); setPending({}); }, [question.id, question.version]);
@@ -45,29 +50,39 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
     setSelectedLeft(null);
   }
 
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: !ready, onPress: () => { if (ready) onSubmit({ ...pending }); } });
+    return () => onActionChange(null);
+  }, [answered, pending, ready, onActionChange]);
+
   return <View style={styles.card} testID="matching-card">
+    <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⇄  ΑΝΤΙΣΤΟΙΧΙΣΗ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
-    <Text style={styles.hint}>Επίλεξε πρώτα μια έννοια και μετά τη σχετική περιγραφή. Μπορείς να αλλάξεις οποιοδήποτε ζευγάρι.</Text>
+    {(!answered || !compactAnswered) ? <>
+    <Text style={styles.hint}>Πάτησε μια έννοια και έπειτα το ταίρι της.</Text>
     <View style={styles.progressLine}>
-      <Text style={styles.progressLabel}>ΣΥΝΔΕΔΕΜΕΝΑ ΖΕΥΓΑΡΙΑ</Text>
+      <Text style={styles.progressLabel}>ΖΕΥΓΑΡΙΑ</Text>
       <Text style={styles.progressCount}>{count} / {pairs.length}</Text>
     </View>
     <View style={styles.track}><View style={[styles.fill, { width: `${pairs.length ? count / pairs.length * 100 : 0}%` }]} /></View>
     <View style={styles.stepTitle}>
       <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>1</Text></View>
       <Text style={styles.stepHeading}>Διάλεξε έννοια</Text>
-      <Text style={styles.stepMeta}>{selectedLeft ? "ΕΠΙΛΕΧΘΗΚΕ" : "ΠΑΤΗΣΕ ΓΙΑ ΕΠΙΛΟΓΗ"}</Text>
     </View>
     <View style={styles.options}>
       {pairs.map(pair => {
         const active = selectedLeft === pair.leftId;
         const rightId = assignments[pair.leftId];
         const linked = rightId !== undefined;
-        return <Pressable key={pair.leftId} testID={`matching-left-${pair.leftId}`}
+        return <AnswerMotion key={pair.leftId} active={!answered && (active || linked)}>
+          <Pressable testID={`matching-left-${pair.leftId}`}
           accessibilityRole="button"
           accessibilityLabel={`${pair.leftLabel}, ${linked ? "αντιστοιχισμένο με " + labelsByRight.get(rightId) : "χωρίς αντιστοίχιση"}`}
           accessibilityState={{ selected: active, disabled: answered }} disabled={answered}
@@ -82,19 +97,20 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
             {linked ? <Text style={styles.linkedLabel} numberOfLines={2}>↳ {labelsByRight.get(rightId)}</Text> : null}
           </View>
           <Text style={[styles.choiceStatus, active && styles.statusActive]}>{active ? "●" : linked ? "✓" : "＋"}</Text>
-        </Pressable>;
+        </Pressable>
+        </AnswerMotion>;
       })}
     </View>
     <View style={styles.stepTitle}>
       <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>2</Text></View>
       <Text style={styles.stepHeading}>Βρες το ταίρι</Text>
-      <Text style={styles.stepMeta}>{selectedLeft ? "ΕΠΙΛΕΞΕ ΕΔΩ" : "ΠΡΩΤΑ ΕΝΝΟΙΑ"}</Text>
     </View>
     <View style={styles.options}>
       {rightOptions.map(pair => {
         const linkedId = Object.keys(assignments).find(leftId => assignments[leftId] === pair.rightId);
         const linked = linkedId !== undefined;
-        return <Pressable key={pair.rightId} testID={`matching-right-${pair.rightId}`}
+        return <AnswerMotion key={pair.rightId} active={!answered && linked}>
+          <Pressable testID={`matching-right-${pair.rightId}`}
           accessibilityRole="button"
           accessibilityLabel={pair.rightLabel}
           accessibilityState={{ selected: linked, disabled: answered || selectedLeft === null }}
@@ -105,12 +121,12 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
           <Text style={styles.rightMarker}>{linked ? positionFor(linkedId) : "○"}</Text>
           <Text style={styles.choiceTextRight}>{pair.rightLabel}</Text>
           <Text style={styles.choiceStatus}>{linked ? "✓" : "↗"}</Text>
-        </Pressable>;
+        </Pressable>
+        </AnswerMotion>;
       })}
     </View>
-    {!answered ? <>
-      <Text style={styles.footHint}>{ready ? "Όλα τα ζευγάρια συνδέθηκαν. Έλεγξέ τα πριν συνεχίσεις." :
-        selectedLeft ? "Τώρα επίλεξε μία περιγραφή από το δεύτερο βήμα." : "Μπορείς να ξαναπατήσεις μια έννοια για να αλλάξεις το ταίρι της."}</Text>
+    </> : null}
+    {!answered && !onActionChange ? <>
       <Pressable testID="matching-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: !ready }} disabled={!ready}
         onPress={() => { if (ready) onSubmit({ ...pending }); }}
@@ -118,15 +134,14 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
         <Text style={styles.confirmText}>Επιβεβαίωση ζευγαριών  →</Text>
       </Pressable>
     </> : null}
-    {answered ? <QuizReveal><View testID="matching-feedback" accessibilityLiveRegion="polite"
-      style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <Text style={[styles.feedbackTitle, correct ? styles.correctTitle : styles.wrongTitle]}>
-        {correct ? "✓  Σωστή αντιστοίχιση!" : "↗  Οι σωστές αντιστοιχίσεις"}
-      </Text>
-      {!correct ? <View style={styles.solutions}>{pairs.map(pair =>
-        <Text key={pair.leftId} style={styles.solutionText}>✓  {pair.leftLabel} → {pair.rightLabel}</Text>)}</View> : null}
-      <Text style={styles.feedbackText}>{question.explanation}</Text>
-    </View></QuizReveal> : null}
+    {answered ? <QuizReveal><QuestionFeedbackPanel testID="matching-feedback"
+      correct={correct} explanation={question.explanation} readingSize={readingSize}
+      selection={compactAnswered ? <AnswerSummaryText>{pairs.map(pair =>
+        `${pair.leftLabel} → ${labelsByRight.get(assignments[pair.leftId]) ?? "—"}`).join("\n")}
+      </AnswerSummaryText> : undefined}
+      solution={!correct ? <AnswerSummaryText>{pairs.map(pair =>
+        `${pair.leftLabel} → ${pair.rightLabel}`).join("\n")}</AnswerSummaryText> : undefined}
+    /></QuizReveal> : null}
   </View>;
 }
 

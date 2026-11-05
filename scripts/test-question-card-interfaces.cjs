@@ -42,7 +42,9 @@ function mount(file, question) {
     react, 'react/jsx-runtime': { jsx, jsxs: jsx },
     'react-native': { Pressable: 'Pressable', Text: 'Text', View: 'View', StyleSheet: { create: x => x } },
     '../quiz/engine': engine, '../theme': { colors, reading },
+    '../play/motion': { AnswerMotion: 'AnswerMotion' },
     './QuizReveal': { __esModule: true, default: 'QuizReveal' },
+    './QuestionFeedbackPanel': { __esModule: true, default: 'QuestionFeedbackPanel', AnswerSummaryText: 'AnswerSummaryText' },
   };
   const shared = { exports: {} };
   vm.runInNewContext(code('src/components/questionCardStyles.ts'), {
