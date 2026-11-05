@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import ActionButton from "./ActionButton";
 import { colors } from "../theme";
-export type LearningDevControls = { canResetLessonProgress: boolean; lessonProgressLoaded: boolean; onResetLessonProgressForDevelopment: () => Promise<void>; allLessonsUnlockedForTesting: boolean; onToggleAllLessonsForTesting: () => void; onOpenQuestionPreview: () => void };
-export default function LearningDevTools({ canResetLessonProgress, lessonProgressLoaded, onResetLessonProgressForDevelopment, allLessonsUnlockedForTesting, onToggleAllLessonsForTesting, onOpenQuestionPreview }: LearningDevControls) {
+export type LearningDevControls = { canResetLessonProgress: boolean; lessonProgressLoaded: boolean; onResetLessonProgressForDevelopment: () => Promise<void>; allLessonsUnlockedForTesting: boolean; onToggleAllLessonsForTesting: () => void; onOpenQuestionPreview: () => void; onOpenDailyIntroPreview: () => void };
+export default function LearningDevTools({ canResetLessonProgress, lessonProgressLoaded, onResetLessonProgressForDevelopment, allLessonsUnlockedForTesting, onToggleAllLessonsForTesting, onOpenQuestionPreview, onOpenDailyIntroPreview }: LearningDevControls) {
   const [isResetting, setIsResetting] = useState(false);
   function confirmResetLessonProgress() {
     if (!__DEV__ || !lessonProgressLoaded || isResetting) return;
@@ -34,6 +34,10 @@ export default function LearningDevTools({ canResetLessonProgress, lessonProgres
   return <>
       {__DEV__ ? (
         <View style={styles.devTools}>
+          <Text style={styles.devLabel}>ΠΡΟΕΠΙΣΚΟΠΗΣΗ ΗΜΕΡΗΣΙΑΣ ΠΡΟΚΛΗΣΗΣ</Text>
+          <Text style={styles.devDescription}>Δες την αρχική οθόνη της ημερήσιας πρόκλησης χωρίς να μηδενιστούν οι απαντήσεις, τα XP ή το σερί σου.</Text>
+          <ActionButton label="Προβολή αρχικής καθημερινού quiz →" onPress={onOpenDailyIntroPreview} secondary />
+          <View style={styles.rule} />
           <Text style={styles.devLabel}>ΕΡΓΑΣΤΗΡΙΟ ΕΡΩΤΗΣΕΩΝ</Text>
           <Text style={styles.devDescription}>Δοκίμασε τα είδη ερωτήσεων χωρίς να αλλάξει η καθημερινή πρόκληση ή η αποθηκευμένη πρόοδός σου.</Text>
           <ActionButton label="Δοκιμή ειδών ερωτήσεων →" onPress={onOpenQuestionPreview} secondary />
