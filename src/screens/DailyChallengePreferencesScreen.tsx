@@ -33,7 +33,8 @@ export default function DailyChallengePreferencesScreen({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
-  const hasChanges = topicIds.length !== initialPreferences.topicIds.length || topicIds.some(id => !initialPreferences.topicIds.includes(id));
+  const [savedTopicIds, setSavedTopicIds] = useState<string[]>(initialPreferences.topicIds);
+  const hasChanges = topicIds.length !== savedTopicIds.length || topicIds.some(id => !savedTopicIds.includes(id));
 
 
   function toggleTopic(topicId: string) {
@@ -55,7 +56,10 @@ export default function DailyChallengePreferencesScreen({
     try {
       const saved = await onSave({ topicIds, difficulty });
       if (!saved) setSaveError(true);
-      else setSaveConfirmed(true);
+      else {
+        setSavedTopicIds([...topicIds]);
+        setSaveConfirmed(true);
+      }
     } catch {
       setSaveError(true);
     } finally {
