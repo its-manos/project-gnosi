@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AnswerMotion } from "../play/motion";
 import { colors } from "../theme";
+import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
 import type { ReportTarget } from "../utils/contentReports";
 import ReportContentButton from "./ReportContentButton";
 import QuizReveal from "./QuizReveal";
@@ -18,6 +19,7 @@ type Props = {
   answer?: number;
   onConfirm: (index: number) => void | Promise<unknown>;
   readingSize?: number;
+  onActionChange?: (action: QuestionStageAction | null) => void;
   badgeLabel?: string;
   showFeedback?: boolean;
   /** Keep submitted options readable in one compact summary instead of four locked rows. */
@@ -35,7 +37,7 @@ type Props = {
 export default function SingleChoiceQuestionCard({
   id, question, answers, correctIndex, explanation, questionNumber, answer,
   onConfirm, readingSize, badgeLabel = "ΜΙΑ ΕΠΙΛΟΓΗ", showFeedback = true, compactAnswered = false,
-  combo = 0, reportTarget, testID = "choice-question-card", testPrefix = "single-choice",
+  combo = 0, reportTarget, onActionChange, testID = "choice-question-card", testPrefix = "single-choice",
 }: Props) {
   const [draft, setDraft] = useState<number | null>(null);
   const draftRef = useRef<number | null>(null);
@@ -77,6 +79,14 @@ export default function SingleChoiceQuestionCard({
       setSubmitting(false);
     }
   }
+
+  // In an immersive question stage the caller owns the footer location.
+  // The card still owns its draft and confirmation guard.
+  useEffect(() => {
+    if (!onActionChange) return;
+    onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: draft === null || submitting, onPress: confirm });
+    return () => onActionChange(null);
+  }, [answered, draft, submitting, onActionChange]);
 
   return <View style={styles.card} testID={testID}>
     <View pointerEvents="none" accessible={false} style={styles.rim} />
@@ -121,7 +131,7 @@ export default function SingleChoiceQuestionCard({
         </AnswerMotion>;
       })}
     </View>}
-    {!answered ? <Pressable
+    {!answered && !onActionChange ? <Pressable
       testID={`${testPrefix}-confirm`}
       accessibilityRole="button"
       accessibilityState={{ disabled: draft === null || submitting }}
