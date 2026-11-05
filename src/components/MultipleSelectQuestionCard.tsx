@@ -40,7 +40,6 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
       {question.prompt}
     </Text>
-    <Text style={styles.hint}>Διάλεξε όλες τις απαντήσεις που θεωρείς σωστές.</Text>
     <View style={styles.selectionBar}>
       <Text style={styles.selectionText}>{answered ? "Η απάντησή σου" : "Οι επιλογές σου"}</Text>
       <Text style={styles.selectionCount}>{selected.length} / {question.content.answers.length}</Text>
