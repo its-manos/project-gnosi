@@ -67,11 +67,10 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⌕  ΒΡΕΣ ΤΟ ΛΑΘΟΣ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
-    <Text style={styles.eyebrow}>ΤΟ ΘΕΜΑ</Text>
     <Text testID="spot-mistake-subject" accessibilityRole="header" style={[styles.question, questionSize]}>
       {question.prompt}{question.prompt.trim().endsWith(":") ? "" : ":"}
     </Text>
-    <Text style={styles.hint}>Ποια από τις παρακάτω προτάσεις είναι <Text style={styles.highlight}>λανθασμένη</Text>;</Text>
+    <Text style={styles.hint}>Ποια πρόταση είναι λανθασμένη;</Text>
     <View style={styles.answers}>
       {question.content.options.map((option, index) => {
         const selected = selectedId === option.id;
@@ -99,7 +98,6 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
       })}
     </View>
     {!answered ? <>
-      <Text style={styles.footHint}>Μπορείς να αλλάξεις την επιλογή σου πριν επιβεβαιώσεις.</Text>
       <Pressable testID="spot-mistake-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: pending === null || submitting }}
         disabled={pending === null || submitting}
