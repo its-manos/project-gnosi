@@ -37,6 +37,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
   }
 
   return <View style={styles.card} testID="ordering-card">
+    <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>↕  ΣΩΣΤΗ ΣΕΙΡΑ</Text></View>
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
