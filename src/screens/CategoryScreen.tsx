@@ -47,7 +47,6 @@ export default function CategoryScreen({
   progressLoaded, onBack, onOpenSubcategory,
 }: Props) {
   const [mapViewport, setMapViewport] = useState({ width: 0, height: 0 });
-  const [screenViewport, setScreenViewport] = useState({ width: 0, height: 0 });
   const categoryProgress = useMemo(
     () => getAtlasCategoryProgress(lessons, category.id, completedLessonIds, progressLoaded),
     [lessons, category.id, completedLessonIds, progressLoaded],
@@ -86,19 +85,7 @@ export default function CategoryScreen({
     ? Math.round(featuredRegion.completedLessons / featuredRegion.totalLessons * 100) : 0;
 
   return (
-    <View testID="category-atlas-screen" style={styles.screen}
-      onLayout={event => {
-        const { width, height } = event.nativeEvent.layout;
-        if (width <= 0 || height <= 0) return;
-        setScreenViewport(previous => Math.abs(previous.width - width) < 1 &&
-          Math.abs(previous.height - height) < 1 ? previous : { width, height });
-      }}>
-      {screenViewport.width > 0 && screenViewport.height > 0 ? (
-        <View pointerEvents="none" accessible={false} style={styles.fullScreenAtlas}>
-          <CategoryAtlasBackground width={screenViewport.width} height={screenViewport.height}
-            regionCount={mapRegions.length} />
-        </View>
-      ) : null}
+    <View testID="category-atlas-screen" style={styles.screen}>
       <MotionView entranceDelay={0} testID="category-atlas-header" style={styles.navigationHeader}>
         <Pressable testID="category-atlas-back" onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στους κόσμους γνώσης"
@@ -170,6 +157,11 @@ export default function CategoryScreen({
           setMapViewport(previous => Math.abs(previous.width - width) < 1 &&
             Math.abs(previous.height - height) < 1 ? previous : { width, height });
         }}>
+        {/* Static cartography is independent of the map's interaction tree. */}
+        {mapViewport.width > 0 && mapViewport.height > 0 ? (
+          <CategoryAtlasBackground width={mapViewport.width} height={mapViewport.height}
+            regionCount={mapRegions.length} />
+        ) : null}
         {/* Mount destinations alongside the chart on both platforms. The
             background must never appear as an empty map while waiting for
             card animation callbacks or a second delayed reveal. */}
@@ -214,10 +206,9 @@ const styles = StyleSheet.create({
   categoryCount: { color: "#C9C3E0", fontSize: 12, fontWeight: "900" },
   progressSummary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   progressCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
-  fullScreenAtlas: { ...StyleSheet.absoluteFillObject },
   mapViewport: {
     flex: 1, minHeight: 0, width: "100%", overflow: "hidden",
-    marginBottom: 8,
+    marginBottom: 8, borderTopWidth: 1, borderColor: "#25273A",
   },
   // Keep the interactive SVG at its measured size; card motion never blocks
   // island mounting or animates the full SVG and its touch geometry.
