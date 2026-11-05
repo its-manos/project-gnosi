@@ -6,7 +6,7 @@ let slots=[],cursor=0,next=0,homes=0,opened=[];
 const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:initial=>{const i=cursor++;return slots[i]??={current:initial};}};
 const native={View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x},useWindowDimensions:()=>({width:390,height:844,fontScale:1})};
 const stubs=Object.fromEntries(['QuizReveal','KnowledgeProgress','DailyAnswerReview','DailyMistakeReview',
-  'ActionButton','AnswerOption','ProfileSectionHeader','DailyMissionMap','ProgressBar','ReportContentButton',
+  'ActionButton','AnswerOption','ProfileSectionHeader','DailyMissionMap','DailyJourneyTrack','ReportContentButton',
   'SingleChoiceQuestionCard','ProgressGradientBackground','QuestionStageFooter']
   .map(n=>['../components/'+n,{__esModule:true,default:n}]));
 const record={...shared.createSharedDailyRecord('2026-10-31'),currentIndex:6,completed:true};
@@ -27,6 +27,11 @@ assert.ok(text(tree).includes('143'));assert.ok(text(tree).includes('XP ημέρ
 assert.ok(text(tree).includes('Καλύτερο σερί'));assert.ok(text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'));
 assert.equal(nodes(tree).filter(n=>n.type==='KnowledgeProgress').length,0,'daily results avoid duplicating global knowledge progress');
 assert.ok(!text(tree).includes('500 / 700'),'results show one clear score, not a redundant points ratio');
+const finishedTrack=nodes(tree).find(n=>n.type==='DailyJourneyTrack');
+assert.equal(finishedTrack.props.mode,'result','results show the finished seven-stop route');
+assert.equal(finishedTrack.props.correctMask.filter(Boolean).length,5,'route uses frozen scored answers');
+assert.equal(finishedTrack.props.correctMask.filter(v=>v===false).length,2,'route distinguishes the two missed stops');
+assert.ok(!action(tree,'Επιστροφή στην αρχική'),'fixed shared header replaces duplicate home action');
 action(tree,'Άνοιξε το μάθημα →').props.onPress();assert.ok(lessons.some(l=>l.id===opened[0]));
 action(tree,'Δες όλες τις απαντήσεις →').props.onPress();tree=render();let review=nodes(tree).find(n=>n.type==='DailyAnswerReview');assert.equal(review.props.rows.length,7);assert.equal(review.props.rows.filter(r=>r.correct===false).length,2);
 const Review=load('src/components/DailyAnswerReview.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'./ActionButton':{__esModule:true,default:'ActionButton'},'./SourceLink':{__esModule:true,default:'SourceLink'},'./ReportContentButton':{__esModule:true,default:'ReportContentButton'}}).default;
@@ -34,6 +39,8 @@ const reviewed=Review(review.props);assert.equal(nodes(reviewed).filter(n=>n.typ
 for(const q of record.questionIds.map(id=>questions.find(q=>q.id===id)))assert.ok(text(reviewed).includes(q.explanation));
 review.props.onDone();tree=render();action(tree,'Επανάληψη λαθών (2) →').props.onPress();tree=render();const drill=nodes(tree).find(n=>n.type==='DailyMistakeReview');assert.equal(drill.props.questions.length,2);drill.props.onDone();tree=render();assert.equal(JSON.stringify(record),frozen,'answer review/practice do not mutate persisted quiz/rewards');
 challenge={...challenge,resultDetails:undefined,record:{...record,selectionVersion:undefined,questionVersions:undefined}};tree=render();assert.ok(text(tree).includes('Δεν υπάρχει αποθηκευμένη ανάλυση σερί'));assert.ok(!text(tree).includes('ΚΑΛΥΤΕΡΗ ΕΠΙΔΟΣΗ ΣΗΜΕΡΑ'),'legacy results do not fabricate a category award');
+assert.ok(nodes(tree).find(n=>n.type==='DailyJourneyTrack').props.correctMask.every(value=>value===null),
+  'legacy results do not fabricate correctness for individual stops');
 const oldDetails={...details,questionVersions:[...details.questionVersions]};oldDetails.questionVersions[0]='old:revision';challenge={...challenge,record,resultDetails:oldDetails};tree=render();action(tree,'Δες όλες τις απαντήσεις →').props.onPress();tree=render();review=nodes(tree).find(n=>n.type==='DailyAnswerReview');assert.equal(review.props.rows[0].question,null);assert.ok(text(Review(review.props)).includes('Η ερώτηση έχει αλλάξει'));
 // Intro prioritizes the seven-question route and keeps its personalized-preferences caveat.
 challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};
@@ -61,14 +68,31 @@ const active={...shared.createSharedDailyRecord('2026-11-01'),answers:{}};const 
 challenge={...challenge,record:active,currentQuestion:first,selectedAnswer:first.correctIndex,correctCount:1,rewardSummary:{combo:1,highestCombo:1,rows:[{eligible:true,comboXP:0}]}};tree=render();assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.answer,first.correctIndex,
   'answered choice stays parent-owned and locked');
 assert.equal(nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard').props.onActionChange !== undefined,true,
-  'daily choice registers its confirmation with the fixed footer');assert.ok(Math.abs(nodes(tree).find(n=>n.type==='ProgressBar').props.progress-100/7)<1e-10);
-assert.ok(text(tree).includes('ΕΡΩΤΗΣΗ 01 / 07'),'stage displays one compact question counter');
+  'daily choice registers its confirmation with the fixed footer');
+const questionTrack=nodes(tree).find(n=>n.type==='DailyJourneyTrack');
+assert.equal(questionTrack.props.mode,'question');
+assert.equal(questionTrack.props.answeredCount,1);
+assert.equal(questionTrack.props.currentIndex,0);
+assert.equal(nodes(tree).filter(n=>n.type==='ProgressBar').length,0,'route replaces the old progress bar');
+assert.ok(text(tree).includes('ΕΡΩΤΗΣΗ 01 / 07')===false,'question card owns the question number; route owns progress');
 assert.ok(!text(tree).includes('Απαντημένες:'),'stage no longer duplicates the progress indicator');
 assert.equal(nodes(tree).find(n=>n.type==='ProfileSectionHeader').props.title,'Ημερήσιο quiz');
 const footer=nodes(tree).find(n=>n.type==='QuestionStageFooter');
 assert.equal(footer.props.action.label,'Επόμενη ερώτηση →',
   'answered daily question keeps Next visible outside the ScrollView');
 footer.props.action.onPress();assert.equal(next,1);
+// The journey component remains passive and accurately maps current/legacy completion.
+const Journey=load('src/components/DailyJourneyTrack.tsx',{
+  react:{memo:fn=>fn},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,
+}).default;
+const stageJourney=Journey({mode:'question',answeredCount:1,currentIndex:1,shared:true});
+assert.equal(nodes(stageJourney).filter(n=>/^daily-journey-stop-/.test(n.props?.testID??'')).length,7);
+assert.equal(nodes(stageJourney).find(n=>n.props?.accessibilityRole==='progressbar').props.accessibilityValue.now,1);
+const resultJourney=Journey({mode:'result',correctMask:[true,true,false,true,false,true,true],shared:true});
+assert.equal(nodes(resultJourney).find(n=>n.props?.accessibilityRole==='progressbar').props.accessibilityValue.now,7);
+assert.ok(text(resultJourney).includes('✓')&&text(resultJourney).includes('×'),'frozen result shows both outcomes');
+const legacyJourney=Journey({mode:'result',correctMask:Array(7).fill(null),shared:false});
+assert.ok(!text(legacyJourney).includes('✓')&&!text(legacyJourney).includes('×'),'older results stay neutral when answer keys are unknown');
 // Preview the exact intro after today's attempt has already started. This is read-only.
 let previewContinues=0,previewCloses=0,liveStarts=0;
 challenge={...challenge,startChallenge:async()=>{liveStarts++;}};
