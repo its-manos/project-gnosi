@@ -1,6 +1,6 @@
 import { stableLayoutHeight } from "../utils/screenLayout";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, AppState, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useDailySnapshot } from "../state/LearningSession";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { getAthensDateKey } from "../utils/dailyChallenge";
@@ -8,8 +8,6 @@ import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
-import AppHeader from "../components/AppHeader";
-import SyncStatus from "../components/SyncStatus";
 import { colors } from "../theme";
 
 function formatDate(dateKey: string): string {
@@ -55,13 +53,15 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
     <View style={styles.screen} testID="player-stats-screen" onLayout={event => { const next = event.nativeEvent.layout.height; if (next > 0) setViewportHeight(previous => stableLayoutHeight(previous, next)); }}>
       <ProgressGradientBackground />
       {allowScroll ? <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="stats-accessibility-scroll">
-        <AppHeader onBack={onBack} />
-        <SyncStatus quiet />
-        <MotionView entranceDelay={0} style={styles.heading}>
-          <Text style={styles.eyebrow}>Ο ΡΥΘΜΟΣ ΣΟΥ</Text>
-          <Text style={styles.title}>Η δραστηριότητά σου</Text>
-          <Text style={styles.intro}>Η συνέπειά σου, μέρα με τη μέρα.</Text>
-        </MotionView>
+        <View style={styles.top}>
+          <View style={styles.topCopy}>
+            <Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text>
+            <Text style={styles.topTitle}>Δραστηριότητα</Text>
+          </View>
+          <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}>
+            <Text style={styles.backText}>‹ Προφίλ</Text>
+          </Pressable>
+        </View>
 
         <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
           <LearningActivityPanel todayKey={todayKey} dashboard />
@@ -144,12 +144,15 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
           ) : null}
         </MotionView>
       </ScrollView> : <View style={[styles.content, styles.fixedContent]} testID="stats-fixed-dashboard">
-        <AppHeader onBack={onBack} />
-        <SyncStatus quiet />
-        <MotionView entranceDelay={0} style={styles.heading}>
-          <Text style={styles.eyebrow}>Ο ΡΥΘΜΟΣ ΣΟΥ</Text>
-          <Text style={styles.title}>Η δραστηριότητά σου</Text>
-        </MotionView>
+        <View style={styles.top}>
+          <View style={styles.topCopy}>
+            <Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text>
+            <Text style={styles.topTitle}>Δραστηριότητα</Text>
+          </View>
+          <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}>
+            <Text style={styles.backText}>‹ Προφίλ</Text>
+          </Pressable>
+        </View>
         <MotionView entranceDelay={65} style={styles.activityOverview} testID="activity-overview">
           <LearningActivityPanel todayKey={todayKey} dashboard />
         </MotionView>
@@ -173,7 +176,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: "#101827" },
   content: { width: "100%", maxWidth: 720, alignSelf: "center", paddingHorizontal: 18, paddingTop: 6, paddingBottom: 18 },
   fixedContent: { flex: 1, minHeight: 0, justifyContent: "space-evenly" },
-  heading: { gap: 2, marginTop: 1, marginBottom: 7 },
+  top: { minHeight: 45, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 13 },
+  topCopy: { flex: 1, gap: 1 },
+  topTitle: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900" },
+  backButton: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center", backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },
+  backPressed: { backgroundColor: "#2D304A" },
+  backText: { color: "#C2B4FF", fontSize: 12, fontWeight: "800" },
   eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 1.1 },
   title: { color: colors.text, fontSize: 22, lineHeight: 29, fontWeight: "900" },
   intro: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
