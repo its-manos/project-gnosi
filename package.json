@@ -47,7 +47,9 @@
     "beta:update:ios": "npx eas-cli@latest update --channel beta --platform ios --environment preview",
     "images:commons:status": "node scripts/bundle-commons-images.cjs --dry-run",
     "images:commons:bundle": "node scripts/bundle-commons-images.cjs --apply",
-    "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify"
+    "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify",
+    "svg:optimize": "node scripts/optimize-inline-svg.cjs --write",
+    "svg:check": "node scripts/optimize-inline-svg.cjs --check"
   },
   "private": true
 }
