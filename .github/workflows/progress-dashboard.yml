@@ -28,10 +28,13 @@ on:
       - "src/components/ActionButton.tsx"
       - "src/components/KnowledgeMastery.tsx"
       - "src/components/LearningActivityPanel.tsx"
+      - "src/components/NavigationTile.tsx"
+      - "src/components/MetricCard.tsx"
       - "src/utils/categoryCompletion.ts"
       - "scripts/test-progress-layout.cjs"
       - "scripts/test-navigation-rules.cjs"
       - "scripts/test-profile-layout.cjs"
+      - "scripts/test-shared-navigation-metrics.cjs"
       - "scripts/test-atlas-card-primitives.cjs"
       - "scripts/test-profile-section-header.cjs"
       - "scripts/test-profile-fourth-tab.cjs"
@@ -56,6 +59,7 @@ jobs:
       - run: node scripts/test-navigation-rules.cjs
       - run: node scripts/test-progress-layout.cjs
       - run: node scripts/test-profile-layout.cjs
+      - run: node scripts/test-shared-navigation-metrics.cjs
       - run: node scripts/test-atlas-card-primitives.cjs
       - run: node scripts/test-profile-section-header.cjs
       - run: node scripts/test-profile-fourth-tab.cjs
