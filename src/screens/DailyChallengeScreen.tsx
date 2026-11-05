@@ -163,7 +163,7 @@ const styles=StyleSheet.create({
   root:{flex:1,backgroundColor:colors.background},viewport:{flex:1},
   stageTop:{paddingHorizontal:16,paddingTop:6},
   stageHeader:{marginBottom:2},
-  activeContent:{flexGrow:1,paddingHorizontal:16,paddingTop:8,paddingBottom:14},
+  activeContent:{flexGrow:1,justifyContent:'center',paddingHorizontal:16,paddingTop:8,paddingBottom:14},
   content:{width:'100%',maxWidth:720,alignSelf:'center',paddingHorizontal:20,paddingTop:12,paddingBottom:44},
   centerState:{alignItems:'center',justifyContent:'center',paddingTop:60,gap:16},introContainer:{paddingTop:20,gap:10},
   heroMark:{width:64,height:64,alignSelf:'center',alignItems:'center',justifyContent:'center',borderRadius:22,backgroundColor:colors.accentSurface,marginBottom:14},heroGlyph:{color:colors.accentLight,fontSize:34},
