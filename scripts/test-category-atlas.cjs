@@ -62,7 +62,7 @@ const native = {
   StyleSheet: { create: values => values },
 };
 const svg = { __esModule: true, default: "svg", Circle: "circle", Path: "path",
-  Defs: "defs", G: "g", LinearGradient: "linearGradient",
+  Defs: "defs", ClipPath: "clipPath", G: "g", LinearGradient: "linearGradient",
   RadialGradient: "radialGradient", Ellipse: "ellipse",
   Rect: "rect", Stop: "stop", Text: "text" };
 let showList = false;
@@ -665,6 +665,8 @@ const islandsModule = compile("src/components/IslandAtlasMap.tsx", {
   "react-native": native,
   "react-native-svg": svg,
   "./islandIcons/AncientGreeceIslandIcon": { __esModule: true, default: "AncientGreeceIslandIcon" },
+  "./islandIcons/WorldHistoryIslandIcon": { __esModule: true, default: "WorldHistoryIslandIcon" },
+  "./islandIcons/MythologyIslandIcon": { __esModule: true, default: "MythologyIslandIcon" },
 });
 const archipelago = islandsModule.default;
 for (const [count, width, height] of [[1, 320, 430], [3, 340, 490],
@@ -781,6 +783,87 @@ const ancientIslandButton = nodes(ancientIslandTree).find(node =>
 ancientIslandButton.props.onPress();
 assert.equal(visits.at(-1), "ancient-greece",
   "custom artwork preserves the existing Ancient Greece island navigation");
+const allHistoryRegions = [
+  { ...regionDataV2[0], id: "ancient-greece" },
+  { ...regionDataV2[1], id: "world-history" },
+  { ...regionDataV2[2], id: "mythology" },
+];
+const historyAtlasTree = archipelago({
+  regions: allHistoryRegions, width: 340, height: 490,
+  onSelectRegion: id => visits.push(id),
+});
+const historyArtwork = nodes(historyAtlasTree).filter(node =>
+  typeof node.type === "function" && node.type.name === "IslandArtwork");
+assert.equal(historyArtwork.length, 3);
+const historyLandmarkTypes = [
+  ["ancient-greece", "AncientGreeceIslandIcon"],
+  ["world-history", "WorldHistoryIslandIcon"],
+  ["mythology", "MythologyIslandIcon"],
+];
+for (let i = 0; i < historyLandmarkTypes.length; i++) {
+  const [id, expectedType] = historyLandmarkTypes[i];
+  const artwork = historyArtwork[i].type(historyArtwork[i].props);
+  const mounted = nodes(artwork).filter(node => historyLandmarkTypes.some(pair => pair[1] === node.type));
+  assert.equal(mounted.length, 1, "one unique illustrated landmark for " + id);
+  assert.equal(mounted[0].type, expectedType, "correct subcategory-specific icon: " + id);
+  assert.ok(mounted[0].props.size >= 35 && mounted[0].props.size <= 68,
+    "small-screen landmark size is bounded: " + id);
+  const overlay = nodes(artwork).find(node =>
+    node.props?.testID === "island-atlas-" + id + "-emblem");
+  assert.ok(overlay && overlay.props.pointerEvents === "none"
+    && overlay.props.accessible === false,
+    "decorative landmark cannot intercept navigation or focus: " + id);
+  assert.equal(overlay.props.style[1].top,
+    Math.max(0, historyArtwork[i].props.height * 0.56 -
+      mounted[0].props.size * (id === "ancient-greece" ? 0.86 : 0.84)),
+    "raised landmark rests on the same plateau as the Parthenon: " + id);
+  assert.ok(nodes(artwork).some(node => node.type === "ellipse" &&
+    node.props?.cx === 90 && node.props?.cy === 74 && node.props?.rx === 52),
+    "landmark contact shadow is integrated into the island: " + id);
+  assert.ok(!nodes(artwork).some(node => node.type === "path" &&
+    node.props?.d?.startsWith("M 65 68 L 83 43")),
+    "generic mountain symbol does not show through the landmark: " + id);
+  const button = nodes(historyAtlasTree).find(node =>
+    node.props?.testID === "island-atlas-destination-" + id);
+  button.props.onPress();
+  assert.equal(visits.at(-1), id, "island remains navigable: " + id);
+}
+const iconArt = [
+  ["src/components/islandIcons/WorldHistoryIslandIcon.tsx",
+    "world-history-earth-svg", 31],
+  ["src/components/islandIcons/MythologyIslandIcon.tsx",
+    "mythology-minotaur-svg", null],
+];
+for (const [path, id, expectedGlobeRadius] of iconArt) {
+  const iconComponent = compile(path, {
+    "react/jsx-runtime": { jsx, jsxs: jsx },
+    "react-native-svg": svg,
+  }).default;
+  const tree = iconComponent({ size: 64 });
+  assert.equal(tree.props.testID, id);
+  assert.equal(tree.props.width, 64);
+  assert.equal(tree.props.pointerEvents, "none");
+  assert.equal(tree.props.accessible, false);
+  assert.ok(nodes(tree).some(node => node.type === "ellipse" &&
+    node.props?.cx === 50 && node.props?.cy >= 84),
+    "icon has an engraved ground/contact shadow: " + id);
+  if (expectedGlobeRadius !== null) {
+    assert.ok(nodes(tree).some(node => node.type === "circle" &&
+      node.props?.cx === 50 && node.props?.cy === 43 &&
+      node.props?.r === expectedGlobeRadius),
+      "Earth illustration has a spherical, not flat, globe");
+    assert.ok(nodes(tree).some(node => node.type === "clipPath"),
+      "continental etchings are clipped to the globe's edge");
+  } else {
+    assert.ok(nodes(tree).some(node => node.type === "path" &&
+      node.props?.d?.startsWith("M 33 35 C 21 35")),
+      "Minotaur's upward-swept left horn remains readable");
+    assert.ok(nodes(tree).some(node => node.type === "path" &&
+      node.props?.d?.startsWith("M 67 35 C 79 35")),
+      "Minotaur's right horn mirrors the left");
+  }
+}
+
 
 assert.equal(nodes(islandsTree).filter(node =>
   node.props?.testID?.startsWith("island-atlas-label-")).length, 3,
