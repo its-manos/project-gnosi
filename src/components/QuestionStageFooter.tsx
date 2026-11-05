@@ -1,7 +1,8 @@
-import { StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, StyleSheet, View } from "react-native";
+import { usePlayMotion } from "../play/motion";
 import ActionButton from "./ActionButton";
 import type { QuestionStageAction } from "../hooks/useQuestionStageAction";
-import { colors } from "../theme";
 
 type Props = {
   action: QuestionStageAction | null;
@@ -9,16 +10,44 @@ type Props = {
   bottomInset?: number;
 };
 
-/** Outside the scrolling question content: always in reach, never obscured by
- * longer explanations or large accessibility text. */
+/** Fixed footer: confirm and continue never change its height or block the
+ * question. Animate only a change of purpose, not enabled/disabled updates. */
 export default function QuestionStageFooter({ action, bottomInset = 12 }: Props) {
+  const motionEnabled = usePlayMotion();
+  const mode = action && !action.label.startsWith("Επιβεβαίωση") ? "continue" : "confirm";
+  const previousMode = useRef(mode);
+  const [opacity] = useState(() => new Animated.Value(1));
+  const [offset] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    const changed = previousMode.current !== mode;
+    previousMode.current = mode;
+    if (!changed || !motionEnabled) {
+      opacity.setValue(1);
+      offset.setValue(0);
+      return;
+    }
+    opacity.setValue(0.82);
+    offset.setValue(4);
+    const animation = Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 165, useNativeDriver: true, isInteraction: false }),
+      Animated.timing(offset, { toValue: 0, duration: 195, useNativeDriver: true, isInteraction: false }),
+    ]);
+    animation.start();
+    return () => {
+      animation.stop();
+      opacity.setValue(1);
+      offset.setValue(0);
+    };
+  }, [mode, motionEnabled, opacity, offset]);
+
   return <View testID="question-stage-footer"
     style={[styles.shell, { paddingBottom: Math.max(12, bottomInset) }]}>
-    <View style={styles.content}>
+    <Animated.View style={[styles.content, { opacity, transform: [{ translateY: offset }] }]}>
       <ActionButton label={action?.label ?? "Επιβεβαίωση →"}
         disabled={!action || action.disabled}
         onPress={action?.onPress ?? (() => {})} style={styles.action} />
-    </View>
+    </Animated.View>
   </View>;
 }
 
