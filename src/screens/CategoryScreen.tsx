@@ -94,7 +94,7 @@ export default function CategoryScreen({
       }}>
       {screenViewport.width > 0 && screenViewport.height > 0 ? (
         <View pointerEvents="none" style={styles.screenBackground}>
-          <CategoryAtlasBackground width={screenViewport.width}
+          <CategoryAtlasBackground width={screenViewport.width + 40}
             height={screenViewport.height} regionCount={mapRegions.length} />
         </View>
       ) : null}
@@ -195,7 +195,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 6, gap: 9, backgroundColor: "#101827",
     overflow: "hidden",
   },
-  screenBackground: { ...StyleSheet.absoluteFillObject },
+  // Offset the root padding so the artwork reaches both physical edges.
+  screenBackground: { position: "absolute", top: 0, bottom: 0, left: -20, right: -20 },
   navigationHeader: {
     minHeight: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
