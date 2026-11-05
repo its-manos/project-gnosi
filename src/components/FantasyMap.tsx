@@ -302,11 +302,11 @@ function AncientGreekTemple({ x, y, scale = 1 }: { x: number; y: number; scale?:
       transform={`translate(${x} ${y}) scale(${scale})`}
       opacity={0.94}>
       {/* A grounded stone silhouette and three stepped foundation courses. */}
-      <Path d="M4 33 L48 33 L51 36 L1 36 Z" fill="#132B36" opacity={0.5} />
+      <Path d="M4 33L48 33L51 36L1 36Z" fill="#132B36" opacity={0.5} />
       <Rect x={4.5} y={30.6} width={43} height={1.8} rx={0.3} fill="#D8C9A9" opacity={0.65} />
       <Rect x={2.7} y={32.6} width={46.6} height={1.5} rx={0.25} fill="#F2DFC0" opacity={0.72} />
       <Rect x={0.7} y={34.6} width={50.6} height={1.3} rx={0.25} fill="#B9A886" opacity={0.65} />
-      <Path d="M5 30 L47 30" stroke="#FFF2D6" strokeWidth={0.5} opacity={0.65} />
+      <Path d="M5 30L47 30" stroke="#FFF2D6" strokeWidth={0.5} opacity={0.65} />
 
       {/* Six Doric columns with individual flutes, bases and capitals. */}
       {columns.map((left, index) => (
@@ -334,24 +334,24 @@ function AncientGreekTemple({ x, y, scale = 1 }: { x: number; y: number; scale?:
             fill="none" stroke="#5D615C" strokeWidth={0.48} />
         </G>
       ))}
-      <Path d="M3.1 12.6 H48.9 M4.8 17.8 H47.2"
+      <Path d="M3.1 12.6H48.9M4.8 17.8H47.2"
         stroke="#FFF0D2" strokeWidth={1.1} opacity={0.86} />
 
       {/* The pitched pediment has a tympanum and carved inner cornice. */}
-      <Path d="M2.5 12.3 L26 1.8 L49.5 12.3 Z"
+      <Path d="M2.5 12.3L26 1.8L49.5 12.3Z"
         fill="#D3C19F" fillOpacity={0.58} stroke="#FFE6BB"
         strokeOpacity={0.96} strokeWidth={1.15} strokeLinejoin="round" />
-      <Path d="M8.6 10.9 L26 4.3 L43.4 10.9 Z"
+      <Path d="M8.6 10.9L26 4.3L43.4 10.9Z"
         fill="#2B3A42" fillOpacity={0.51} stroke="#E5D2AD"
         strokeWidth={0.6} strokeOpacity={0.77} />
-      <Path d="M13 9.8 L26 5.8 L39 9.8"
+      <Path d="M13 9.8L26 5.8L39 9.8"
         fill="none" stroke="#F9E4BF" strokeWidth={0.5} opacity={0.57} />
-      <Path d="M25.4 6.8 L24.4 8.9 L26 8.3 L27.8 8.9 L26.6 6.8 Z"
+      <Path d="M25.4 6.8L24.4 8.9L26 8.3L27.8 8.9L26.6 6.8Z"
         fill="#EBD4AB" opacity={0.79} />
       {/* Fine acroteria and a few weathered joints, not cartoon outlines. */}
-      <Path d="M25.9 1.7 L25.9 0 M2.5 12.3 L1.2 11.4 M49.5 12.3 L50.8 11.4"
+      <Path d="M25.9 1.7L25.9 0M2.5 12.3L1.2 11.4M49.5 12.3L50.8 11.4"
         fill="none" stroke="#EEDDC0" strokeWidth={0.7} opacity={0.74} />
-      <Path d="M10.6 14.3 L11.1 16 M40.6 14.4 L40.2 16.5 M19 33 L23 33"
+      <Path d="M10.6 14.3L11.1 16M40.6 14.4L40.2 16.5M19 33L23 33"
         stroke="#534E52" strokeWidth={0.45} opacity={0.37} />
     </G>
   );
@@ -742,14 +742,14 @@ export default function FantasyMap({
               <Circle cx={326} cy={30} r={15.3} fill="none"
                 stroke="#879CAA" strokeWidth={0.55} strokeOpacity={0.5}
                 strokeDasharray="1 4" />
-              <Path d="M326 8 V 12 M326 48 V52 M304 30 H308 M344 30 H348"
+              <Path d="M326 8V12M326 48V52M304 30H308M344 30H348"
                 fill="none" stroke="#D0BF9A" strokeWidth={0.8} strokeOpacity={0.72} />
             </G>
           ) : <Circle cx={326} cy={30} r={13} fill="none"
             stroke="#C9BB92" strokeWidth={0.6} />}
-          <Path d="M326 13 L330 30 L326 45 L322 30 Z"
+          <Path d="M326 13L330 30L326 45L322 30Z"
             fill={fitted ? "#D5C49C" : "#C9BB92"} />
-          <Path d="M312 30 L326 26 L340 30 L326 34 Z" fill="#799B9D" />
+          <Path d="M312 30L326 26L340 30L326 34Z" fill="#799B9D" />
           <SvgText x={fitted ? 297 : 305} y={23} fill="#C9BB92" fontSize={7}>Β</SvgText>
         </G>
         {fitted ? positionedRegions.map(region => (
