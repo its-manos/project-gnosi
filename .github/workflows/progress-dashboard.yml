@@ -27,6 +27,7 @@ on:
       - "src/components/ReviewActions.tsx"
       - "src/components/ActionButton.tsx"
       - "src/components/KnowledgeMastery.tsx"
+      - "src/components/LearningDetailSections.tsx"
       - "src/components/SubjectProgressTile.tsx"
       - "src/components/LearningActivityPanel.tsx"
       - "src/components/NavigationTile.tsx"
@@ -35,6 +36,7 @@ on:
       - "scripts/test-progress-layout.cjs"
       - "scripts/test-navigation-rules.cjs"
       - "scripts/test-profile-layout.cjs"
+      - "scripts/test-learning-detail-sections.cjs"
       - "scripts/test-subject-progress-tile.cjs"
       - "scripts/test-shared-navigation-metrics.cjs"
       - "scripts/test-atlas-card-primitives.cjs"
@@ -61,6 +63,7 @@ jobs:
       - run: node scripts/test-navigation-rules.cjs
       - run: node scripts/test-progress-layout.cjs
       - run: node scripts/test-profile-layout.cjs
+      - run: node scripts/test-learning-detail-sections.cjs
       - run: node scripts/test-subject-progress-tile.cjs
       - run: node scripts/test-shared-navigation-metrics.cjs
       - run: node scripts/test-atlas-card-primitives.cjs
