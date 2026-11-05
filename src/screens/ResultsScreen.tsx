@@ -5,10 +5,9 @@ import { ProgressBarFill } from "../components/ProgressMotion";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import ProgressTrack from "../components/ProgressTrack";
-import ReportContentButton from "../components/ReportContentButton";
+import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { playerTitle } from "../gamification/rules";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
-import { lessonReportTarget } from "../utils/contentReports";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
 import type { ReviewState } from "../utils/lessonReview";
 import type { lessonScores as calculateLessonScores } from "../utils/weeklyReview";
@@ -187,24 +186,25 @@ export default function ResultsScreen({
           <Text style={styles.toolText}>Δοκιμές γνώσης</Text>
         </Pressable> : null}
       </View>
-      <View style={styles.report}><ReportContentButton target={lessonReportTarget(lesson)} /></View>
     </ScrollView>
 
     <View style={[styles.footer, compact && styles.footerCompact]} testID="lesson-results-sticky-footer">
-      <Pressable testID={nextLesson ? "lesson-next-action" : "lesson-browse-action"}
+      <AtlasContinueCard entranceDelay={70}
+        testID={nextLesson ? "lesson-next-action" : "lesson-browse-action"}
         accessibilityRole="button" accessibilityLabel={nextLesson
           ? "Συνέχισε στο επόμενο μάθημα: " + nextLesson.title
           : pathComplete ? "Διάλεξε νέα θεματική" : "Συνέχισε την εξερεύνηση"}
-        onPress={nextAction}
-        style={({ pressed }) => [styles.continueAction, compact && styles.continueActionCompact, pressed && styles.continuePressed]}>
-        <View style={styles.continueCopy}>
-          <Text style={styles.continueEyebrow}>{nextLabel.toUpperCase()}</Text>
-          <Text style={styles.continueTitle} numberOfLines={2}>{nextTitle}</Text>
+        onPress={nextAction} style={styles.atlasContinue}>
+        <View style={atlasContinueStyles.body}>
+          <View style={atlasContinueStyles.copy}>
+            <Text style={atlasContinueStyles.eyebrow}>{nextLabel.toUpperCase()}</Text>
+            <Text style={atlasContinueStyles.title} numberOfLines={2}>{nextTitle}</Text>
+          </View>
+          <View style={atlasContinueStyles.action} accessible={false}>
+            <Text style={styles.continueGlyph}>{nextLesson ? "▶" : "›"}</Text>
+          </View>
         </View>
-        <View style={styles.continueGlyphBox} accessible={false}>
-          <Text style={styles.continueGlyph}>{nextLesson ? "▶" : "›"}</Text>
-        </View>
-      </Pressable>
+      </AtlasContinueCard>
     </View>
   </View>;
 }
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   practiceTool: { borderColor: "#426F6F", backgroundColor: "#1D3037" },
   toolPressed: { backgroundColor: "#353150" },
   toolText: { color: "#D3C6FF", fontSize: 12, lineHeight: 19, fontWeight: "800" },
-  report: { alignItems: "center" },
+  atlasContinue: { width: "100%", maxWidth: 640, alignSelf: "center" },
   footer: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 10,
     backgroundColor: "#111626", borderTopWidth: 1, borderTopColor: "#34314B" },
   footerCompact: { paddingTop: 5, paddingBottom: 5 },
