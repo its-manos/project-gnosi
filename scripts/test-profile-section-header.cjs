@@ -40,9 +40,13 @@ for (const file of screens) {
   assert.match(source, /profileSectionLayout\.horizontal/);
   assert.match(source, /profileSectionLayout\.top/);
 }
-assert.match(read("src/screens/PlayerStatsScreen.tsx"),
-  /fixedContent: \{[^\n]*justifyContent: "space-between"/,
-  "Statistics must keep its header at the top, not space-evenly inset");
+const statsSource = read("src/screens/PlayerStatsScreen.tsx");
+assert.doesNotMatch(statsSource, /fixedContent:|headerSpacing:/,
+  "Statistics must not distribute spare height across the dashboard");
+assert.match(statsSource, /content: \{[^\n]*gap: profileSectionLayout\.below/,
+  "Statistics should use the shared vertical spacing below its header");
+assert.match(statsSource, /scrollEnabled=\{allowScroll\}/,
+  "Statistics should scroll only when content or accessibility requires it");
 assert.doesNotMatch(read("src/screens/DailyChallengePreferencesScreen.tsx"),
   /contentCompact: \{[^\n]*paddingTop/,
   "Compact Interests must not vertically offset its header");
