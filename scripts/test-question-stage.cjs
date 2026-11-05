@@ -17,6 +17,16 @@ for (const file of [
   assert.match(read("src/components/" + file), /style={styles.rim}/, file + " uses common surface");
 }
 const reader = read("src/screens/ReaderLessonScreen.tsx");
+const preview = read("src/screens/QuizTypesPreviewScreen.tsx");
+const legacyQuiz = read("src/screens/QuizScreen.tsx");
+const navigation = read("src/navigation/AppNavigator.tsx");
+for (const [screen, source] of [["reader", reader], ["preview", preview], ["legacy", legacyQuiz]]) {
+  assert.match(source, /<QuestionStageFooter/, screen + " anchors the primary button");
+}
+assert.match(navigation, /!isDailyChallengeOpen && app\.screen !== "quiz"/,
+  "dedicated quiz stages hide bottom tabs while the user answers");
+assert.match(legacyQuiz, /scrollEnabled={viewport.scrollEnabled}/,
+  "legacy quiz also avoids scrolling when content fits");
 const daily = read("src/screens/DailyChallengeScreen.tsx");
 for (const [name, source] of [["reader", reader], ["daily", daily]]) {
   assert.match(source, /onLayout={quizViewport.onLayout}/, name + " measures viewport");
