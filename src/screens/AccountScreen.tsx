@@ -13,6 +13,8 @@ import type { BackupControls } from "../components/CloudBackupPanel";
 import { useLearningSession } from "../state/LearningSession";
 import { colors } from "../theme";
 
+type SettingsSection = "account" | "experience" | "privacy" | "sync" | "dev";
+
 function SettingIcon({ id, color }: { id: string; color: string }) {
   return <Svg width={23} height={23} viewBox="0 0 24 24" fill="none" accessible={false}>
     {id === "account" ? <>
@@ -28,7 +30,7 @@ function SettingIcon({ id, color }: { id: string; color: string }) {
 export default function AccountScreen({ onBack, backupControls, devControls }: { onBack: () => void; backupControls?: BackupControls; devControls?: LearningDevControls }) {
   // Account identity does not change during background progress synchronization.
   const { store } = useLearningSession();
-  const [activeSection, setActiveSection] = useState<"account" | "experience" | "privacy" | "sync" | "dev" | null>(null);
+  const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
   const goBack = () => activeSection ? setActiveSection(null) : onBack();
   return <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={activeSection !== null} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <View style={styles.top}>
@@ -53,7 +55,7 @@ export default function AccountScreen({ onBack, backupControls, devControls }: {
         ["privacy", "Δεδομένα και απόρρητο", "Κοινοποίηση και αναφορές", "◇", "#D9B77D"],
         ...(store.userId ? [["sync", "Συγχρονισμός", "Κατάσταση προόδου", "↻", "#91B7FF"]] : []),
         ...(__DEV__ && devControls ? [["dev", "Εργαλεία δοκιμών", "Επιλογές ανάπτυξης", "⚙", "#B7A5FF"]] : []),
-      ] as const).map(([id, title, detail, icon, accent]) => (
+      ] as ReadonlyArray<readonly [SettingsSection, string, string, string, string]>).map(([id, title, detail, icon, accent]) => (
         <MotionPressable key={id} entranceDelay={65 + (id === "account" ? 0 : id === "experience" ? 45 : id === "privacy" ? 90 : id === "sync" ? 135 : 180)} pressScale={0.983} accessibilityRole="button" accessibilityLabel={title}
           style={styles.tile} onPress={() => setActiveSection(id)}>
           <View style={[styles.iconShell, { backgroundColor: accent + "16" }]}><SettingIcon id={id} color={accent} /></View>
