@@ -52,16 +52,15 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
-    <Text style={styles.hint}>Επίλεξε πρώτα μια έννοια και μετά τη σχετική περιγραφή. Μπορείς να αλλάξεις οποιοδήποτε ζευγάρι.</Text>
+    <Text style={styles.hint}>Πάτησε μια έννοια και έπειτα το ταίρι της.</Text>
     <View style={styles.progressLine}>
-      <Text style={styles.progressLabel}>ΣΥΝΔΕΔΕΜΕΝΑ ΖΕΥΓΑΡΙΑ</Text>
+      <Text style={styles.progressLabel}>ΖΕΥΓΑΡΙΑ</Text>
       <Text style={styles.progressCount}>{count} / {pairs.length}</Text>
     </View>
     <View style={styles.track}><View style={[styles.fill, { width: `${pairs.length ? count / pairs.length * 100 : 0}%` }]} /></View>
     <View style={styles.stepTitle}>
       <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>1</Text></View>
       <Text style={styles.stepHeading}>Διάλεξε έννοια</Text>
-      <Text style={styles.stepMeta}>{selectedLeft ? "ΕΠΙΛΕΧΘΗΚΕ" : "ΠΑΤΗΣΕ ΓΙΑ ΕΠΙΛΟΓΗ"}</Text>
     </View>
     <View style={styles.options}>
       {pairs.map(pair => {
@@ -89,7 +88,6 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
     <View style={styles.stepTitle}>
       <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>2</Text></View>
       <Text style={styles.stepHeading}>Βρες το ταίρι</Text>
-      <Text style={styles.stepMeta}>{selectedLeft ? "ΕΠΙΛΕΞΕ ΕΔΩ" : "ΠΡΩΤΑ ΕΝΝΟΙΑ"}</Text>
     </View>
     <View style={styles.options}>
       {rightOptions.map(pair => {
@@ -110,8 +108,6 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
       })}
     </View>
     {!answered ? <>
-      <Text style={styles.footHint}>{ready ? "Όλα τα ζευγάρια συνδέθηκαν. Έλεγξέ τα πριν συνεχίσεις." :
-        selectedLeft ? "Τώρα επίλεξε μία περιγραφή από το δεύτερο βήμα." : "Μπορείς να ξαναπατήσεις μια έννοια για να αλλάξεις το ταίρι της."}</Text>
       <Pressable testID="matching-confirm" accessibilityRole="button"
         accessibilityState={{ disabled: !ready }} disabled={!ready}
         onPress={() => { if (ready) onSubmit({ ...pending }); }}
