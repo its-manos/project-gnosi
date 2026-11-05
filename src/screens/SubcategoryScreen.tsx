@@ -355,14 +355,13 @@ const styles = StyleSheet.create({
     alignSelf: "center", paddingHorizontal: 20, paddingTop: 6, gap: 9,
     backgroundColor: "#101827", overflow: "hidden",
   },
-  atlasUnderlay: { ...StyleSheet.absoluteFill },
+  fullScreenAtlas: { ...StyleSheet.absoluteFillObject },
   mapViewport: {
     flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
     // A small outside gap separates the atlas from the fixed bottom navigation.
     // Margin (not padding) keeps the atlas and scroll bounds aligned to the viewport.
     marginBottom: 8,
-    backgroundColor: "#101827",
-    borderTopWidth: 1, borderColor: "#25273A",
+    backgroundColor: "transparent",
   },
   mapScroll: { flex: 1 },
   mapScrollContent: { alignItems: "center", paddingBottom: MAP_BOTTOM_PADDING },
