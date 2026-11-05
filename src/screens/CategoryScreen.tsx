@@ -92,7 +92,10 @@ export default function CategoryScreen({
           Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1
             ? prev : { width, height });
       }}>
-      {screenViewport.width > 0 && screenViewport.height > 0 ? (
+      {/* Keep the static atlas and interactive destinations in the same
+          measured-layout commit; avoid an empty atlas flashing first. */}
+      {screenViewport.width > 0 && screenViewport.height > 0 &&
+        mapViewport.width > 0 && mapViewport.height > 0 ? (
         <View pointerEvents="none" style={styles.screenBackground}>
           <CategoryAtlasBackground width={screenViewport.width + 40}
             height={screenViewport.height} regionCount={mapRegions.length} />
