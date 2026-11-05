@@ -60,15 +60,28 @@ export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = fa
               accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`}
               accessibilityHint="Άνοιγμα σύντομης ανάλυσης της θεματικής">
               <View style={styles.tileTop}>
-                <Text style={styles.tileEmoji}>{emoji}</Text>
+                <View style={[styles.tileIcon, (progressing || complete) && styles.tileIconActive]}
+                  accessible={false}>
+                  <Text style={styles.tileEmoji}>{emoji}</Text>
+                </View>
                 {complete
-                  ? <Text style={styles.tileCompleted}>✓</Text>
-                  : progressing ? <Text style={styles.tilePercent}>{category.percent}%</Text> : null}
+                  ? <View style={[styles.tileState, styles.tileStateComplete]} accessible={false}>
+                      <Text style={styles.tileCompleted}>✓</Text>
+                    </View>
+                  : progressing
+                    ? <View style={styles.tileState} accessible={false}>
+                        <Text style={styles.tilePercent}>{category.percent}%</Text>
+                      </View>
+                    : <Text style={styles.tileChevron} accessible={false}>›</Text>}
               </View>
-              <Text style={styles.tileTitle} numberOfLines={2}>{category.title}</Text>
-              <Text style={[styles.tileCount, complete && styles.tileCountComplete]}>
-                {category.mastered} / {category.total}
-              </Text>
+              <Text style={styles.tileTitle} numberOfLines={2} adjustsFontSizeToFit
+                minimumFontScale={0.86}>{category.title}</Text>
+              <View style={styles.tileFoot}>
+                <Text style={styles.tileFootLabel}>ΚΑΤΑΚΤΗΣΗ</Text>
+                <Text style={[styles.tileCount, complete && styles.tileCountComplete]}>
+                  {category.mastered}<Text style={styles.tileCountTotal}> / {category.total}</Text>
+                </Text>
+              </View>
               <View style={styles.tileTrack} pointerEvents="none">
                 <ProgressBarFill tone="knowledge" percent={category.percent} />
               </View>
@@ -127,27 +140,50 @@ const styles = StyleSheet.create({
   previewCard: { padding: 14, gap: 8, borderRadius: 18 },
   detailCard: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 11 },
   detailLabel: { color: "#BDB1FB" },
-  detailGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 },
+  detailGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 },
   detailGridSingle: { flexDirection: "column" },
   detailTile: {
-    width: "48%", minWidth: 0, minHeight: 123,
-    padding: 11, borderRadius: 15,
-    backgroundColor: "#24273F", borderWidth: 1, borderColor: "#3E3C61",
-    gap: 3,
+    width: "48.5%", minWidth: 0, minHeight: 137,
+    paddingHorizontal: 12, paddingTop: 11, paddingBottom: 12, borderRadius: 17,
+    backgroundColor: "#22263B", borderWidth: 1, borderColor: "#42435F",
+    gap: 7, justifyContent: "space-between", overflow: "hidden",
   },
-  detailTileProgressing: { borderColor: "#5F568C", backgroundColor: "#282840" },
-  detailTileComplete: { borderColor: "#7D79A7", backgroundColor: "#302D49" },
-  detailTileSelected: { borderColor: "#C2B5FF", backgroundColor: "#302C4B" },
-  detailTileSingle: { width: "100%", minHeight: 112 },
-  detailTileWide: { width: "31%" },
+  detailTileProgressing: { borderColor: "#625B91", backgroundColor: "#262840" },
+  detailTileComplete: { borderColor: "#8277AD", backgroundColor: "#2D2A44" },
+  detailTileSelected: { borderColor: "#C2B5FF", backgroundColor: "#332E50" },
+  detailTileSingle: { width: "100%", minHeight: 118 },
+  detailTileWide: { width: "31.7%" },
   tileTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  tileEmoji: { fontSize: 19, lineHeight: 26 },
-  tilePercent: { color: "#B3A5FB", fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  tileCompleted: { color: "#D8D0FF", fontSize: 19, lineHeight: 25, fontWeight: "900" },
-  tileTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800", minHeight: 19 },
-  tileCount: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  tileCountComplete: { color: "#D1C6FF" },
-  tileTrack: { height: 5, marginTop: 5, borderRadius: 5, backgroundColor: "#383B58", overflow: "hidden" },
+  tileIcon: {
+    width: 34, height: 34, borderRadius: 11, alignItems: "center", justifyContent: "center",
+    backgroundColor: "#31324F", borderWidth: 1, borderColor: "#494563",
+  },
+  tileIconActive: { backgroundColor: "#3A355B", borderColor: "#7367A4" },
+  tileEmoji: { fontSize: 20, lineHeight: 28 },
+  tileState: {
+    minWidth: 38, height: 25, paddingHorizontal: 6, alignItems: "center",
+    justifyContent: "center", backgroundColor: "#363150",
+    borderColor: "#5C5389", borderWidth: 1, borderRadius: 9,
+  },
+  tileStateComplete: { minWidth: 26, backgroundColor: "#3D375F" },
+  tilePercent: { color: "#D3C6FF", fontSize: 11, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  tileCompleted: { color: "#DDD2FF", fontSize: 17, lineHeight: 20, fontWeight: "900" },
+  tileChevron: { color: "#938CB6", fontSize: 25, lineHeight: 28, paddingHorizontal: 4 },
+  tileTitle: {
+    color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "900",
+    minHeight: 38, textAlignVertical: "center",
+  },
+  tileFoot: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 },
+  tileFootLabel: { color: "#B2ADD0", fontSize: 9, lineHeight: 13,
+    fontWeight: "900", letterSpacing: 0.65, flexShrink: 1 },
+  tileCount: { color: "#E3D9FF", fontSize: 13, lineHeight: 17,
+    fontWeight: "900", fontVariant: ["tabular-nums"] },
+  tileCountTotal: { color: "#AAA9C3", fontSize: 12, fontWeight: "700" },
+  tileCountComplete: { color: "#DAD2FF" },
+  tileTrack: {
+    height: 7, borderRadius: 6, backgroundColor: "#363650", overflow: "hidden",
+    borderWidth: 1, borderColor: "#4C466D",
+  },
   subjectInsight: {
     backgroundColor: "#27273F", borderWidth: 1, borderColor: "#514976",
     borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 5,
