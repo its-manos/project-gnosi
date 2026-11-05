@@ -25,6 +25,9 @@ export default function DailyChallengePreferencesScreen({
   const { height, fontScale } = useWindowDimensions();
   const compact = height < 780 || fontScale > 1.1;
   const veryCompact = height < 690;
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+  const needsScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1;
   const [topicIds, setTopicIds] = useState<string[]>(initialPreferences.topicIds);
   const difficulty = initialPreferences.difficulty;
   const [isSaving, setIsSaving] = useState(false);
@@ -57,7 +60,7 @@ export default function DailyChallengePreferencesScreen({
   }
 
   return (
-    <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} scrollEnabled={veryCompact || fontScale > 1.2 || isLoading || saveError} contentContainerStyle={[styles.content, compact && styles.contentCompact]} showsVerticalScrollIndicator={false}>
+    <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, nextHeight) => setContentHeight(Math.round(nextHeight))} scrollEnabled={needsScroll || veryCompact || fontScale > 1.2 || isLoading || saveError} contentContainerStyle={[styles.content, compact && styles.contentCompact]} showsVerticalScrollIndicator={false}>
       <View style={styles.top}>
         <View style={styles.topCopy}><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text><Text style={styles.topTitle}>Ενδιαφέροντα</Text></View>
         <Pressable accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" onPress={onCancel} style={styles.backButton}><Text style={styles.backText}>‹ Προφίλ</Text></Pressable>
