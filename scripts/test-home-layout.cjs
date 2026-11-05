@@ -1055,16 +1055,16 @@ const renderMotion = extra => {
 let motionTree = renderMotion({ progressLoaded: false });
 // Native layout supplies the visible scroll pane's dimensions (not the whole
 // screen or 4300-point content). Verify screen/viewport resize independently.
-let viewportLayout = nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport");
+let viewportLayout = nodes(motionTree).find(node => node.props?.testID === "subcategory-adventure-path");
 viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 320, height: 450 } } });
 motionTree = renderMotion({ progressLoaded: false });
 let fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
 assert.ok(fullAtlas, "measured map viewport mounts its atlas");
 assert.equal(fullAtlas.props.width, 320);
 assert.equal(fullAtlas.props.height, 450);
-assert.ok(nodes(nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport"))
-  .some(node => node.type === "AtlasBackground"), "rendered atlas stays in the fixed viewport");
-viewportLayout = nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport");
+assert.ok(nodes(nodes(motionTree).find(node => node.props?.testID === "adventure-atlas-underlay"))
+  .some(node => node.type === "AtlasBackground"), "rendered atlas stays in the screen-level underlay");
+viewportLayout = nodes(motionTree).find(node => node.props?.testID === "subcategory-adventure-path");
 viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 350, height: 430 } } });
 motionTree = renderMotion({ progressLoaded: false });
 fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
@@ -1099,9 +1099,12 @@ renderMotion({ progressLoaded: true });
 motionState.effects[1]();
 assert.equal(autoCalls.length, 1, "re-rendering cannot restart the entry animation");
 
-// The Android map budget drops only distant detail, never the main geography.
+// Subcategory cartography has also moved to a cached WebP backdrop;
+// the animated halo stays in a separate native-composited view on both OSes.
 const staticAtlas = compile("src/components/AdventureAtlasBackground.tsx", {
-  react: { ...react, memo: component => component },
+  react: { ...react, memo: component => component, useEffect: () => {} },
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/subcategory.webp": "subcategory.webp",
   "react-native-svg": { ...svg, RadialGradient: "radialGradient" },
   "react-native-reanimated": {
     __esModule: true,
@@ -1116,60 +1119,43 @@ const staticAtlas = compile("src/components/AdventureAtlasBackground.tsx", {
     withTiming: target => target,
   },
 });
-const islandCount = tree => nodes(tree).filter(node => node.type === "g"
-  && typeof node.props?.transform === "string"
-  && /^translate\([^)]*\) rotate\(/.test(node.props.transform)).length;
 native.Platform.OS = "ios";
 const iosAtlas = staticAtlas({ width: 360, height: 680 });
-assert.equal(islandCount(iosAtlas), 30, "iPhone retains all island silhouettes");
 native.Platform.OS = "android";
 const androidAtlas = staticAtlas({ width: 360, height: 680 });
-assert.equal(islandCount(androidAtlas), 20,
-  "Android omits ten tiny islets but keeps all important landmasses");
-assert.equal(nodes(androidAtlas).filter(node =>
-  node.props?.testID === "adventure-atlas-ambient-glow").length, 1,
-  "Android retains atmospheric movement in a compact native view");
+for (const rendered of [iosAtlas, androidAtlas]) {
+  assert.equal(nodes(rendered).filter(node => node.type === "Image").length, 1,
+    "both platforms use one bundled atlas image");
+  const image = nodes(rendered).find(node => node.type === "Image");
+  assert.equal(image.props.source, "subcategory.webp");
+  assert.equal(image.props.contentFit, "fill");
+  assert.equal(image.props.transition, 0);
+  assert.equal(image.props.cachePolicy, "memory-disk");
+  assert.equal(nodes(rendered).filter(node =>
+    node.props?.testID === "adventure-atlas-ambient-glow").length, 1,
+    "both platforms retain atmospheric motion in a small native view");
+}
 native.Platform.OS = "ios";
 
 const atlasSource = fs.readFileSync(path.join(root, "src/components/AdventureAtlasBackground.tsx"), "utf8");
 const adventureMotionSource = fs.readFileSync(path.join(root, "src/components/AdventureMotion.tsx"), "utf8");
-assert.match(atlasSource, /useReducedMotion/, "atlas respects reduce motion");
+assert.match(atlasSource, /useReducedMotion/, "atlas respects reduced motion");
 assert.match(atlasSource, /pointerEvents="none"/, "atlas cannot intercept lesson taps");
 assert.match(atlasSource, /withRepeat\(/, "atlas has low-frequency ambient motion");
-assert.match(atlasSource, /const west =/, "atlas has a recognisable western mainland coastline");
-assert.match(atlasSource, /const east =/, "atlas has an eastern Anatolian coastline");
-assert.match(atlasSource, /const crete =/, "Crete anchors the southern map");
-assert.match(atlasSource, /islandOutline/, "island silhouettes are non-elliptical");
-assert.match(atlasSource, /geography\.depths/, "sea-floor contours reinforce the basin");
+assert.match(atlasSource, /subcategory\.webp/, "background uses exported static geography");
+assert.match(atlasSource, /contentFit="fill" transition=\{0\}/, "static chart mounts without a fade");
+assert.doesNotMatch(atlasSource, /useAnimatedProps/, "background never animates SVG attributes");
 assert.doesNotMatch(atlasSource, /styles\.tideLayer|waveStyle|translateX: tide\.value/,
-  "the full-screen tide SVG must not animate transforms or opacity");
+  "no viewport-sized SVG layer motion is present");
 assert.match(atlasSource, /testID="adventure-atlas-ambient-glow"/,
-  "a compact native-opacity glow replaces the viewport-sized animated tide");
+  "a compact native-opacity glow replaces the full-map tide");
 assert.match(atlasSource, /const glowStyle = useAnimatedStyle/,
-  "the atlas effect animates only a view style, not SVG element props");
-assert.doesNotMatch(atlasSource, /useAnimatedProps/,
-  "Adventure background never updates SVG attributes per frame");
-assert.match(atlasSource, /strokeDasharray="3 16" opacity=\{0\.30\}/,
-  "the original sea-current contours remain visible as static SVG paths");
+  "the atlas effect animates only a small view style");
 assert.match(atlasSource, /width: width \* 0\.64, height: height \* 0\.34/,
   "the animated atmosphere occupies only a bounded fraction of the viewport");
-assert.match(atlasSource, /const h = height \* 420 \/ width/, "atlas maintains exact device aspect ratio");
 assert.match(atlasSource, /memo\(AdventureAtlasBackground\)/, "atlas is memoized across progress updates");
-const islandDefinitions = atlasSource.split("const islands: Isle[] = [")[1]?.split("];")[0];
-assert.ok(islandDefinitions, "atlas retains a static island definition list");
-assert.ok((islandDefinitions.match(/{ x: /g) || []).length >= 30,
-  "small archipelagos add geographic detail without extra animated layers");
-assert.match(atlasSource, /key={"fret-" \+ index}/,
-  "Greek-key corner patterns are static atlas engravings");
-assert.match(atlasSource, /Fine chart bearings/,
-  "subtle nautical bearings remain underneath lesson routes");
-
-assert.match(atlasSource, /RadialGradient id="adventure-atlas-ambient"/,
-  "static center light adds visual depth");
-assert.match(atlasSource, /RadialGradient id="adventure-atlas-vignette"/,
-  "static edge vignette focuses the path");
 assert.equal((atlasSource.match(/withRepeat\(/g) || []).length, 1,
-  "lighting adds no animated layers beyond the existing ambient tide");
+  "lighting adds no animated layers beyond the ambient tide");
 assert.match(adventureMotionSource, /useReducedMotion/, "motion accents respect reduce motion");
 assert.match(adventureMotionSource, /withRepeat\(/, "current lesson has a breathing halo");
 assert.match(adventureMotionSource, /width: 84, height: 84, borderRadius: 42/,
