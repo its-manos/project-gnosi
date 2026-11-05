@@ -77,7 +77,6 @@ export default function DailyChallengePreferencesScreen({
         <View style={styles.heroAccent} />
         <Text style={styles.heroEyebrow}>✦  ΟΙ ΕΠΙΛΟΓΕΣ ΣΟΥ</Text>
         <Text style={styles.heroTitle}>Τι σε συναρπάζει;</Text>
-        <Text style={[styles.heroBody, compact && styles.heroBodyCompact]}>Επίλεξε 3–5 θέματα για πιο προσωπικές προτάσεις μαθημάτων.</Text>
       </MotionView>
 
       {isLoading ? (
@@ -91,7 +90,6 @@ export default function DailyChallengePreferencesScreen({
             <Text style={styles.sectionTitle}>Τα ενδιαφέροντά σου</Text>
             <Text style={styles.counter}>{topicIds.length} / 5</Text>
           </View>
-          <Text style={styles.helper}>Η καθημερινή πρόκληση παραμένει ίδια για όλους.</Text>
 
           <View style={[styles.topicGrid, compact && styles.topicGridCompact]}>
             {DAILY_CHALLENGE_TOPICS.map((topic) => {
@@ -121,6 +119,7 @@ export default function DailyChallengePreferencesScreen({
               );
             })}
           </View>
+          <Text style={styles.helper}>Επίλεξε 3–5 θέματα για πιο προσωπικές προτάσεις μαθημάτων. Η καθημερινή πρόκληση παραμένει ίδια για όλους.</Text>
 
           {saveError ? (
             <Text style={styles.errorText}>Δεν αποθηκεύτηκαν οι αλλαγές. Έλεγξε τον διαθέσιμο χώρο στη συσκευή και δοκίμασε ξανά.</Text>
