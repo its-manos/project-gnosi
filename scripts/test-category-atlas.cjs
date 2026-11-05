@@ -738,6 +738,25 @@ assert.equal(parthenonOverlay.props.style[1].top,
   "Parthenon steps align with the island's upper plateau");
 assert.equal(nodes(otherArtworkTree).filter(node => node.type === "AncientGreeceIslandIcon").length, 0,
   "other islands retain their own terrain engraving");
+const stoneFooting = nodes(ancientArtworkTree).find(node =>
+  node.type === "ellipse" && node.props?.cx === 90 && node.props?.cy === 78);
+assert.ok(stoneFooting && stoneFooting.props.rx === 52,
+  "Ancient Greece receives a grounded plateau shadow beneath the Parthenon steps");
+assert.ok(nodes(ancientArtworkTree).some(node =>
+  node.type === "path" && node.props?.d?.startsWith("M 43 75")),
+  "a stone-tinted plinth connects the temple to the island engraving");
+assert.ok(!nodes(ancientArtworkTree).some(node =>
+  node.type === "circle" && node.props?.cx === 151 && node.props?.cy === 31),
+  "in-progress islands no longer have a disconnected floating status dot");
+const completeArtworkTree = artworkNodes[0].type({
+  ...artworkNodes[0].props, status: "complete",
+});
+assert.ok(nodes(completeArtworkTree).some(node =>
+  node.type === "circle" && node.props?.cx === 145 && node.props?.cy === 59),
+  "completed islands retain an in-landmark bronze check marker");
+assert.ok(!nodes(otherArtworkTree).some(node =>
+  node.type === "ellipse" && node.props?.cy === 78 && node.props?.rx === 52),
+  "Parthenon-specific stone footing is not repeated on unrelated islands");
 const parthenonModule = compile("src/components/islandIcons/AncientGreeceIslandIcon.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx }, "react-native-svg": svg,
 });
@@ -745,6 +764,12 @@ const renderedParthenon = parthenonModule.default({ size: 64 });
 assert.equal(renderedParthenon.props.testID, "ancient-greece-parthenon-svg");
 assert.equal(renderedParthenon.props.pointerEvents, "none");
 assert.equal(renderedParthenon.props.width, 64);
+const parthenonSvgSource = fs.readFileSync(
+  path.join(root, "src/components/islandIcons/AncientGreeceIslandIcon.tsx"), "utf8");
+assert.match(parthenonSvgSource, /A narrow shaded return on the right/,
+  "Parthenon roof retains a shaded side face rather than a flat frontage");
+assert.match(parthenonSvgSource, /Lower sidewall and contact shadow/,
+  "temple stylobate is grounded without expensive blur or animation");
 assert.equal(nodes(renderedParthenon).filter(node =>
   node.type === "rect" && node.props?.height === 28.5).length, 8,
   "the custom icon depicts eight Doric front columns, not the former pyramid");
@@ -768,6 +793,9 @@ assert.ok(nameplates.every(node => node.props.pointerEvents === "none"),
 assert.ok(nameplates.every(node => node.props.style[0].alignSelf === "center"
   && node.props.style[0].width === undefined),
   "visible nameplates shrink-wrap the label rather than filling their island slot");
+assert.ok(nameplates.every(node =>
+  node.props.style[0].marginTop === -4 && node.props.style[0].minHeight === 30),
+  "shorter nameplates sit closer to the islands without changing their hit targets");
 const placementWidths = islandsModule.getIslandAtlasPlacements(3, 340, 490);
 assert.ok(nameplates.every((node, index) => node.props.style[1].maxWidth === placementWidths[index].width),
   "long Greek titles remain capped by their individual map slots");
