@@ -29,6 +29,8 @@ type Props = {
   /** Static chart is rendered behind this interactive SVG as its own layer. */
   externalBackground?: boolean;
   onControlsHeightChange?: (height: number) => void;
+  /** Fires once the interactive SVG has completed native layout. */
+  onMapLayout?: () => void;
 };
 
 type Point = { x: number; y: number };
@@ -410,6 +412,7 @@ export default function FantasyMap({
   hideControls = false,
   externalBackground = false,
   onControlsHeightChange,
+  onMapLayout,
 }: Props) {
   const [showList, setShowList] = useState(false);
   const [controlsHeight, setControlsHeight] = useState(50);
@@ -521,6 +524,7 @@ export default function FantasyMap({
         height="100%"
         viewBox={`0 0 ${MAP_WIDTH} ${mapHeight}`}
         preserveAspectRatio="xMidYMid meet"
+        onLayout={onMapLayout}
         accessibilityLabel="Διαδραστικός φανταστικός χάρτης γνώσης"
       >
         <Defs>
