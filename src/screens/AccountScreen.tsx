@@ -2,6 +2,8 @@ import PlayFeedbackSettings from "../components/PlayFeedbackSettings";
 import UsageSharing from "../components/UsageSharing";
 import LearningDevTools, { type LearningDevControls } from "../components/LearningDevTools";
 import QuizTypesPreviewScreen from "./QuizTypesPreviewScreen";
+import DailyChallengeScreen from "./DailyChallengeScreen";
+import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { ScrollView, StyleSheet, View, type ScrollViewInstance } from "react-native";
 import { useRef, useState } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -15,6 +17,8 @@ import type { BackupControls } from "../components/CloudBackupPanel";
 import { useLearningSession } from "../state/LearningSession";
 
 type SettingsSection = "account" | "experience" | "privacy" | "sync" | "dev";
+type DailyIntroPreview = { preferences: DailyChallengePreferences; preferencesLoaded: boolean;
+  onClose: () => void; onContinue: () => void; onOpenPreferences: () => void };
 
 function SettingIcon({ id, color }: { id: string; color: string }) {
   return <Svg width={23} height={23} viewBox="0 0 24 24" fill="none" accessible={false}>
@@ -28,7 +32,7 @@ function SettingIcon({ id, color }: { id: string; color: string }) {
   </Svg>;
 }
 
-export default function AccountScreen({ onBack, backupControls, devControls, devPreviewOpen = false, onCloseDevPreview }: { onBack: () => void; backupControls?: BackupControls; devControls?: LearningDevControls; devPreviewOpen?: boolean; onCloseDevPreview?: () => void }) {
+export default function AccountScreen({ onBack, backupControls, devControls, devPreviewOpen = false, onCloseDevPreview, dailyIntroPreview }: { onBack: () => void; backupControls?: BackupControls; devControls?: LearningDevControls; devPreviewOpen?: boolean; onCloseDevPreview?: () => void; dailyIntroPreview?: DailyIntroPreview }) {
   // Account identity does not change during background progress synchronization.
   const { store } = useLearningSession();
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
@@ -52,6 +56,10 @@ export default function AccountScreen({ onBack, backupControls, devControls, dev
     : activeSection === "dev" ? "Εργαλεία δοκιμών" : "Λογαριασμός";
   // Keep this screen mounted so closing the preview returns to the same dev section.
   if (__DEV__ && devPreviewOpen && onCloseDevPreview) return <QuizTypesPreviewScreen onBack={onCloseDevPreview} />;
+  if (__DEV__ && dailyIntroPreview) return <DailyChallengeScreen previewIntro
+    onHome={dailyIntroPreview.onClose} onPreviewContinue={dailyIntroPreview.onContinue}
+    onOpenPreferences={dailyIntroPreview.onOpenPreferences}
+    preferences={dailyIntroPreview.preferences} preferencesLoaded={dailyIntroPreview.preferencesLoaded} />;
   return <View style={styles.screen}><ProgressGradientBackground /><ScrollView ref={scrollRef} style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <ProfileSectionHeader
       eyebrow={activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}
