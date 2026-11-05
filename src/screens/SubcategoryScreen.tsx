@@ -170,19 +170,7 @@ export default function SubcategoryScreen({
     subcategory.id, nextIndex, mapHeight, path.length]);
 
   return (
-    <View testID="subcategory-adventure-path" style={styles.screen}
-      onLayout={event => {
-        const { width, height } = event.nativeEvent.layout;
-        if (width <= 0 || height <= 0) return;
-        setAtlasSize(previous => previous &&
-          Math.abs(previous.width - width) < 1 && Math.abs(previous.height - height) < 1
-          ? previous : { width, height });
-      }}>
-      <View testID="adventure-atlas-underlay" pointerEvents="none"
-        accessible={false} style={styles.fullScreenAtlas}>
-        {atlasSize && atlasSize.width > 0 && atlasSize.height > 0 ?
-          <AdventureAtlasBackground width={atlasSize.width} height={atlasSize.height} /> : null}
-      </View>
+    <View testID="subcategory-adventure-path" style={styles.screen}>
       <MotionView entranceDelay={0} testID="adventure-category-header" style={styles.navigationHeader}>
         <MotionPressable testID="adventure-back" pressScale={0.95} onPress={onBack} style={styles.backButton}
           accessibilityRole="button" accessibilityLabel="Επιστροφή στην κατηγορία"
@@ -247,7 +235,20 @@ export default function SubcategoryScreen({
           <Text style={styles.emptyTitle}>Νέες αποστολές έρχονται</Text>
           <Text style={styles.finishedCopy}>Εξερεύνησε έναν άλλο κόσμο μέχρι τότε.</Text>
         </View> :
-        <View testID="adventure-map-viewport" style={styles.mapViewport}>
+        <View testID="adventure-map-viewport" style={styles.mapViewport}
+          onLayout={event => {
+            const { width, height } = event.nativeEvent.layout;
+            if (width <= 0 || height <= 0) return;
+            setAtlasSize(previous => previous &&
+              Math.abs(previous.width - width) < 1 && Math.abs(previous.height - height) < 1
+              ? previous : { width, height });
+          }}>
+          {/* The atlas is fixed within the map viewport, not in the scrollable path. */}
+          <View testID="adventure-atlas-underlay" pointerEvents="none"
+            accessible={false} style={styles.atlasUnderlay}>
+            {atlasSize && atlasSize.width > 0 && atlasSize.height > 0 ?
+              <AdventureAtlasBackground width={atlasSize.width} height={atlasSize.height} /> : null}
+          </View>
           <Animated.ScrollView ref={scrollRef} testID="adventure-map-scroll"
             style={styles.mapScroll} contentContainerStyle={styles.mapScrollContent}
             showsVerticalScrollIndicator={false} bounces={false}
@@ -355,13 +356,14 @@ const styles = StyleSheet.create({
     alignSelf: "center", paddingHorizontal: 20, paddingTop: 6, gap: 9,
     backgroundColor: "#101827", overflow: "hidden",
   },
-  fullScreenAtlas: { ...StyleSheet.absoluteFillObject },
+  atlasUnderlay: { ...StyleSheet.absoluteFill },
   mapViewport: {
     flex: 1, minHeight: 0, position: "relative", overflow: "hidden",
     // A small outside gap separates the atlas from the fixed bottom navigation.
     // Margin (not padding) keeps the atlas and scroll bounds aligned to the viewport.
     marginBottom: 8,
-    backgroundColor: "transparent",
+    backgroundColor: "#101827",
+    borderTopWidth: 1, borderColor: "#25273A",
   },
   mapScroll: { flex: 1 },
   mapScrollContent: { alignItems: "center", paddingBottom: MAP_BOTTOM_PADDING },
