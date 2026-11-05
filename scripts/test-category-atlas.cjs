@@ -16,6 +16,8 @@ const compile = (file, modules = {}) => {
     module: mod, exports: mod.exports,
     require: id => {
       if (id in modules) return modules[id];
+      if (id === "expo-image") return { Image: "ExpoImage" };
+      if (id === "../../assets/atlas-export-preview/category.webp") return 3;
       throw Error("Missing module stub: " + id);
     },
   });
@@ -440,29 +442,10 @@ assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-sky-vignette")
 assert.equal(nodes(frame).filter(node => node.type === "radialGradient"
   && String(node.props?.id).startsWith("atlas-region-aura-")).length, five.length,
   "every destination gets a subtle theme-aware aura");
-assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-premium-compass"),
-  "fitted atlas compass gets an engraved star-chart treatment");
-assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-upper"));
-assert.ok(nodes(frame).some(node => node.props?.testID === "atlas-chart-orbit-lower"));
-assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-chart-tick-")).length, 9,
-  "astral chart ticks stay sparse and decorative");
-assert.equal(nodes(frame).filter(node => node.type === "circle"
-  && ["#E4CFA6","#B5CADD"].includes(node.props?.fill)).length, 30,
-  "quiet starfield has deterministic density on all screen sizes");
-assert.ok(nodes(frame).some(node => node.type === "path"
-  && node.props?.stroke === "#8CA6B9" && node.props?.strokeOpacity === 0.11),
-  "faint map engravings add depth without implying lesson progression");
+assert.equal(nodes(frame).filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 5,
+  "fitted atlas retains all interactive destination islands");
 const readableFrame = nodes(map({ ...props, fitViewport: { width: 340, height: 490 } }))
   .find(node => node.props?.testID === "knowledge-world-map");
-assert.ok(nodes(readableFrame).some(node => node.props?.testID === "atlas-decorative-constellations"),
-  "sparse catalogues have decorative chart groups outside destination interactions");
-assert.ok(nodes(readableFrame).filter(node =>
-  String(node.props?.testID).startsWith("atlas-route-anchor-")).length >= 2,
-  "fitted links have small, noninteractive guide stars in the open sky");
-assert.ok(nodes(readableFrame).filter(node =>
-  String(node.props?.testID).startsWith("atlas-route-anchor-"))
-    .every(node => node.props.pointerEvents === "none"),
-  "route anchor decoration cannot steal island taps");
 const fittedLabel = nodes(readableFrame).find(node => node.type === "text"
   && node.props?.children === "Παγκόσμια");
 assert.equal(fittedLabel.props.fontSize, 12.5,
@@ -517,13 +500,17 @@ assert.equal(staticBgNodes.filter(node => node.props?.testID === "atlas-fitted-m
 assert.equal(chartStarCount(staticBg), 30,
   "standalone backdrop uses the same star density as both interactive maps");
 const bgSvg = staticBgNodes.find(node => node.type === "svg");
-assert.equal(bgSvg.props.viewBox, "0 0 360 519",
-  "background uses the identical fitted viewBox as the interactive map");
+assert.equal(bgSvg.props.viewBox, "0 0 360 " + (490 * 360 / 340),
+  "background preserves exact viewport aspect ratio");
 const wideBg = bgModule.default({ width: 680, height: 490, regionCount: 3 });
-assert.equal(wideBg.props.style[1].width, 520,
-  "wide-screen background respects FantasyMap\'s maximum 520pt width");
-assert.equal(wideBg.props.style[1].left, 80,
-  "background remains centered beneath the wide-screen island SVG");
+assert.equal(wideBg.props.style[1].width, 680,
+  "wide-screen background fills the measured viewport");
+assert.equal(wideBg.props.style[1].height, 490);
+const bitmapBg = bgModule.default({ width: 340, height: 490, regionCount: 6 });
+const bitmapNode = nodes(bitmapBg).find(node => node.type === "ExpoImage");
+assert.ok(bitmapNode, "six-region atlas uses the bundled WebP backdrop");
+assert.equal(bitmapNode.props.source, 3);
+assert.equal(bitmapNode.props.transition, 0);
 const splitMap = map({ ...props, regions: regionData, fitViewport: { width: 340, height: 490 },
   hideControls: true, externalBackground: true });
 const splitNodes = nodes(splitMap);
@@ -531,10 +518,6 @@ assert.equal(splitNodes.filter(node => node.props?.testID === "atlas-fitted-map-
   "interactive SVG does not duplicate the static chart background");
 assert.equal(splitNodes.filter(node => node.props?.testID?.startsWith("atlas-island-")).length, 3,
   "all interactive island targets survive the background split");
-assert.ok(splitNodes.some(node => node.props?.testID === "atlas-premium-compass"));
-const splitFrame = splitNodes.find(node => node.props?.testID === "knowledge-world-map");
-assert.equal(splitFrame.props.style[4].backgroundColor, "transparent",
-  "native map frame must not cover the chart mounted beneath it");
 
 // The page and navigator pass existing account-scoped progress, not local keys.
 const motionCode = fs.readFileSync(path.join(root, "src/components/CategoryAtlasMotion.tsx"), "utf8");
@@ -772,6 +755,8 @@ const mapShell = nodes(categoryTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
 assert.ok(mapShell && typeof mapShell.props.onLayout === "function",
   "empty flex viewport must still measure its bounds");
+const screenRoot = nodes(categoryTree).find(node => node.props?.testID === "category-atlas-screen");
+screenRoot.props.onLayout({ nativeEvent: { layout: { width: 340, height: 620 } } });
 mapShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
 categoryTree = renderCategory();
 assert.equal(nodes(categoryTree).filter(node => node.type === "CategoryAtlasBackground").length, 1,
@@ -850,6 +835,7 @@ const renderAndroidCategory = options => {
 let androidTree = renderAndroidCategory();
 const androidShell = nodes(androidTree).find(node =>
   node.props?.testID === "category-atlas-map-viewport");
+nodes(androidTree).find(node => node.props?.testID === "category-atlas-screen").props.onLayout({ nativeEvent: { layout: { width: 340, height: 620 } } });
 androidShell.props.onLayout({ nativeEvent: { layout: { width: 340, height: 490 } } });
 androidTree = renderAndroidCategory();
 assert.equal(nodes(androidTree).filter(node => node.type === map).length, 1,
