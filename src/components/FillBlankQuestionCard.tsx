@@ -61,7 +61,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
         const selected = selectedId === option.id;
         const isRightOption = answered && option.id === question.content.correctOptionId;
         const wrongSelection = answered && selected && !isRightOption;
-        return <AnswerMotion key={option.id} active={isRightOption || wrongSelection}>
+        return <AnswerMotion key={option.id} active={selected || isRightOption || wrongSelection}>
           <Pressable testID={`fill-blank-option-${option.id}`}
             accessibilityRole="button"
             accessibilityLabel={option.text}
