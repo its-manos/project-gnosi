@@ -645,6 +645,8 @@ assert.doesNotMatch(screen, /<AdventureAtlasBackground/,
   "the Aegean chart remains exclusive to the Subcategory screen");
 assert.doesNotMatch(screen, /<CategoryAtlasBackground/, "the former full SVG chart is not layered");
 assert.match(screen, /getAtlasRegionProgress/, "regional progress remains data-driven");
+assert.doesNotMatch(screen, /REGION_COLORS|REGION_SYMBOLS|emoji: REGION_|detail: progress/,
+  "obsolete map metadata is not built for the lightweight island renderer");
 assert.match(screen, /getAtlasCategoryProgress/, "overall progress remains unchanged");
 assert.match(screen, /chooseAtlasFeaturedRegion/, "Continue follows real lesson progress");
 assert.match(screen, /testID="category-atlas-continue"/);
@@ -966,10 +968,15 @@ assert.match(islandHoverSource, /cancelAnimation\(/,
   "hovering cancels cleanly on screen unmount");
 assert.doesNotMatch(islandHoverSource, /setInterval\(|setTimeout\(|useAnimatedProps\(/,
   "hover animation never uses JS timers or per-frame SVG props");
-const hoverCalls = { loops: 0, delays: [], timings: [], cancelled: 0, reduced: false };
+const hoverCalls = {
+  loops: 0, delays: [], timings: [], cancelled: 0, reduced: false, cleanupFns: [],
+};
 const hoverModule = compile("src/components/IslandHoverMotion.tsx", {
   react: {
-    useEffect: fn => { fn(); },
+    useEffect: fn => {
+      const dispose = fn();
+      if (typeof dispose === "function") hoverCalls.cleanupFns.push(dispose);
+    },
   },
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
@@ -1020,6 +1027,12 @@ assert.equal(hoverCalls.loops, previousLoops,
   "large categories do not initiate unlimited animation loops");
 assert.ok(hoverCalls.cancelled >= 5,
   "repeat loops are cancelled before any new sequence starts");
+assert.equal(hoverCalls.cleanupFns.length, 5,
+  "every island installs cleanup, even when reduced-motion or max count suppresses hovering");
+const cancelledBeforeUnmount = hoverCalls.cancelled;
+hoverCalls.cleanupFns.forEach(dispose => dispose());
+assert.equal(hoverCalls.cancelled, cancelledBeforeUnmount + 5,
+  "leaving the Category screen cancels each registered animation");
 
 const emptyIslands = archipelago({
   regions: [], width: 340, height: 490, onSelectRegion: () => {},
