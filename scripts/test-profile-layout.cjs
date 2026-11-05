@@ -77,6 +77,7 @@ const common = {
   "../components/AtlasCard": { __esModule: true, default: "MotionView" },
   "../components/NavigationTile": { __esModule: true, default: "NavigationTile" },
   "../components/MetricCard": { __esModule: true, default: "MetricCard" },
+  "../components/ProgressTrack": { __esModule: true, default: "ProgressTrack" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
   "../components/HomeMotion": { MotionView: "MotionView", MotionXpCircle: "MotionXpCircle", MotionPressable: "MotionPressable" },
 };
@@ -168,6 +169,7 @@ subjectTileComponent=load('src/components/SubjectProgressTile.tsx',{
   ...common,
   './HomeMotion':{MotionPressable:'MotionPressable'},
   './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
+  './ProgressTrack':{__esModule:true,default:'ProgressTrack'},
 }).default;
 const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,
   './ActionButton':{__esModule:true,default:'Action'},
