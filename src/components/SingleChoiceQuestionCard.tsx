@@ -85,7 +85,6 @@ export default function SingleChoiceQuestionCard({
       <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
     </View>
     <Text accessibilityRole="header" style={[styles.question, scaledQuestion]}>{question}</Text>
-    <Text style={styles.hint}>Διάλεξε μία απάντηση και επιβεβαίωσέ την.</Text>
     {answered && compactAnswered ? <View testID={`${testPrefix}-answer-summary`}
       accessibilityLiveRegion="polite" style={[styles.answerSummary, isCorrect ? styles.summaryCorrect : styles.summaryWrong]}>
       <Text style={[styles.summaryStatus, isCorrect ? styles.correctText : styles.wrongText]}>
