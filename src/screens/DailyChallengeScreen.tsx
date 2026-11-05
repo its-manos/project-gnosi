@@ -215,6 +215,7 @@ const styles=StyleSheet.create({
   introNote:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center',paddingHorizontal:4},
   actionPrimary:{marginTop:0},
   actionSecondary:{marginTop:0},
+  cardRim:{position:'absolute',top:0,left:20,right:20,height:2,backgroundColor:'#8376B9'},
   resultContainer:{gap:14,paddingTop:12,paddingBottom:8},
   resultHero:{alignItems:'center',gap:8},
   resultSeal:{width:50,height:50,alignItems:'center',justifyContent:'center',borderRadius:17,
