@@ -32,7 +32,9 @@ export default function ResultsScreen({
   practiceComplete = false, onReviewMistakes, lessonScores, onWeeklyReview,
 }: Props) {
   const { height, fontScale } = useWindowDimensions();
-  const compact = height < 770 || fontScale >= 1.18;
+  const compact = height < 950 || fontScale >= 1.18;
+  const tight = height < 790 && fontScale < 1.18;
+  const allowScroll = fontScale >= 1.18 || height < 690;
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const total = getInlineQuestionCount(lesson);
   // Older versions may not have comparable answers. Do not invent accuracy.
@@ -68,19 +70,19 @@ export default function ResultsScreen({
         onAction={onHome} style={styles.header} />
     </View>
 
-    <ScrollView style={styles.viewport} contentContainerStyle={[styles.content, compact && styles.contentCompact]}
-      bounces={false} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.viewport} contentContainerStyle={[styles.content, compact && styles.contentCompact, tight && styles.contentTight]}
+      scrollEnabled={allowScroll} bounces={false} showsVerticalScrollIndicator={false}>
       <MotionView entranceDelay={45} testID="lesson-result-hero"
-        style={[styles.hero, compact && styles.heroCompact]}>
-        <View style={styles.medal} accessible
+        style={[styles.hero, compact && styles.heroCompact, tight && styles.heroTight]}>
+        <View style={[styles.medal, compact && styles.medalCompact, tight && styles.medalTight]} accessible
           accessibilityLabel={count === null ? "Ολοκληρωμένο μάθημα, χωρίς συγκρίσιμο παλιότερο σκορ"
             : count + " από " + total + " σωστές απαντήσεις"}>
-          <View style={[styles.medalHalo, perfect && styles.medalHaloPerfect]} pointerEvents="none" />
-          <View style={[styles.medalCore, perfect && styles.medalCorePerfect]}>
+          <View style={[styles.medalHalo, compact && styles.medalHaloCompact, tight && styles.medalHaloTight, perfect && styles.medalHaloPerfect]} pointerEvents="none" />
+          <View style={[styles.medalCore, compact && styles.medalCoreCompact, tight && styles.medalCoreTight, perfect && styles.medalCorePerfect]}>
             <Text style={[styles.medalNumber, compact && styles.medalNumberCompact]}>{count ?? "✓"}</Text>
             {count !== null ? <Text style={styles.medalTotal}>/ {total}</Text> : null}
           </View>
-          <View style={styles.medalSpark} pointerEvents="none"><Text style={styles.sparkGlyph}>✦</Text></View>
+          <View style={[styles.medalSpark, tight && styles.medalSparkTight]} pointerEvents="none"><Text style={styles.sparkGlyph}>✦</Text></View>
         </View>
         <View style={styles.heroCopy}>
           <Text style={styles.eyebrow}>{returning ? "ΟΛΟΚΛΗΡΩΜΕΝΟ ΜΑΘΗΜΑ" : "ΑΠΟΣΤΟΛΗ ΟΛΟΚΛΗΡΩΘΗΚΕ"}</Text>
@@ -90,7 +92,7 @@ export default function ResultsScreen({
       </MotionView>
 
       <MotionView entranceDelay={105} testID="lesson-result-score"
-        style={[styles.rewardBar, compact && styles.rewardBarCompact]}>
+        style={[styles.rewardBar, compact && styles.rewardBarCompact, tight && styles.rewardBarTight]}>
         <View style={styles.rewardColumn}>
           <Text style={styles.rewardValue} numberOfLines={1}>
             <Text style={styles.xpSymbol}>✦ </Text>
@@ -115,7 +117,7 @@ export default function ResultsScreen({
         </> : null}
       </MotionView>
 
-      <MotionView entranceDelay={160} testID="lesson-progression" style={styles.progressCard}>
+      <MotionView entranceDelay={160} testID="lesson-progression" style={[styles.progressCard, compact && styles.progressCardCompact, tight && styles.progressCardTight]}>
         <View style={styles.progressHeader}>
           <View style={styles.levelEmblem} accessible={false}>
             <Text style={styles.levelEmblemText}>{profileReady ? profile.level : "—"}</Text>
@@ -141,12 +143,12 @@ export default function ResultsScreen({
             : { text: "Φόρτωση επιπέδου" }}>
           <ProgressBarFill tone="knowledge" percent={levelPercent} />
         </ProgressTrack>
-        <Text style={styles.remaining}>{profileReady
+        {!tight ? <Text style={styles.remaining}>{profileReady
           ? profile.remaining + " XP για το επίπεδο " + (profile.level + 1)
-          : "Φόρτωση προόδου…"}</Text>
+          : "Φόρτωση προόδου…"}</Text> : null}
 
         {pathProgress && pathTotal > 0 ? <>
-          <View style={styles.progressSeparator} />
+          <View style={[styles.progressSeparator, compact && styles.progressSeparatorCompact]} />
           <View style={styles.progressRow} testID="lesson-path-progress">
             <View style={styles.pathCopy}>
               <Text style={styles.progressSmall}>ΔΙΑΔΡΟΜΗ</Text>
@@ -167,7 +169,7 @@ export default function ResultsScreen({
         ✓ Ολοκλήρωσες την εξάσκηση στα λάθη.
       </Text> : null}
 
-      <View testID="lesson-result-tools" style={styles.tools}>
+      <View testID="lesson-result-tools" style={[styles.tools, compact && styles.toolsCompact]}>
         {canPractice && onReviewMistakes ? <Pressable testID="lesson-practice-action"
           accessibilityRole="button" accessibilityLabel={"Εξάσκηση στα λάθη (" + review.indices.length + ")"}
           onPress={onReviewMistakes}
@@ -185,16 +187,17 @@ export default function ResultsScreen({
           <Text style={styles.toolText}>Δοκιμές γνώσης</Text>
         </Pressable> : null}
       </View>
-      <View style={styles.report}><ReportContentButton target={lessonReportTarget(lesson)} /></View>
+      {allowScroll ? <View style={styles.report}><ReportContentButton target={lessonReportTarget(lesson)} /></View> : null}
     </ScrollView>
 
-    <View style={styles.footer} testID="lesson-results-sticky-footer">
+    <View style={[styles.footer, compact && styles.footerCompact]} testID="lesson-results-sticky-footer">
+      {!allowScroll ? <View style={styles.footerReport}><ReportContentButton target={lessonReportTarget(lesson)} /></View> : null}
       <Pressable testID={nextLesson ? "lesson-next-action" : "lesson-browse-action"}
         accessibilityRole="button" accessibilityLabel={nextLesson
           ? "Συνέχισε στο επόμενο μάθημα: " + nextLesson.title
           : pathComplete ? "Διάλεξε νέα θεματική" : "Συνέχισε την εξερεύνηση"}
         onPress={nextAction}
-        style={({ pressed }) => [styles.continueAction, pressed && styles.continuePressed]}>
+        style={({ pressed }) => [styles.continueAction, compact && styles.continueActionCompact, pressed && styles.continuePressed]}>
         <View style={styles.continueCopy}>
           <Text style={styles.continueEyebrow}>{nextLabel.toUpperCase()}</Text>
           <Text style={styles.continueTitle} numberOfLines={2}>{nextTitle}</Text>
@@ -214,10 +217,19 @@ const styles = StyleSheet.create({
   viewport: { flex: 1 },
   content: { width: "100%", maxWidth: 640, alignSelf: "center",
     paddingHorizontal: 18, paddingTop: 6, paddingBottom: 15, gap: 12 },
-  contentCompact: { paddingTop: 2, gap: 8 },
+  contentCompact: { paddingTop: 0, paddingBottom: 5, gap: 7, justifyContent: "space-evenly" },
+  contentTight: { gap: 4 },
   eyebrow: { color: "#C2B5F4", fontSize: 10, lineHeight: 15, fontWeight: "900", letterSpacing: 0.75 },
   hero: { flexDirection: "row", alignItems: "center", gap: 19, paddingVertical: 15, paddingHorizontal: 10 },
-  heroCompact: { paddingVertical: 9, gap: 13 },
+  heroCompact: { paddingVertical: 5, gap: 10 },
+  heroTight: { paddingVertical: 2, gap: 8 },
+  medalCompact: { width: 82, height: 82 },
+  medalTight: { width: 68, height: 68 },
+  medalHaloCompact: { width: 80, height: 80, borderRadius: 40 },
+  medalHaloTight: { width: 66, height: 66, borderRadius: 33 },
+  medalCoreCompact: { width: 68, height: 68, borderRadius: 34 },
+  medalCoreTight: { width: 57, height: 57, borderRadius: 29 },
+  medalSparkTight: { width: 21, height: 21, borderRadius: 11 },
   medal: { width: 112, height: 112, flexShrink: 0, alignItems: "center", justifyContent: "center" },
   medalHalo: { position: "absolute", width: 106, height: 106, borderRadius: 53,
     borderWidth: 2, borderColor: "#8C7DBB", backgroundColor: "#26243E" },
@@ -238,7 +250,8 @@ const styles = StyleSheet.create({
   rewardBar: { flexDirection: "row", alignItems: "center", borderRadius: 18,
     backgroundColor: "#24233D", borderWidth: 1, borderColor: "#605782",
     paddingHorizontal: 8, paddingVertical: 13, minHeight: 82 },
-  rewardBarCompact: { paddingVertical: 9, minHeight: 70 },
+  rewardBarCompact: { paddingVertical: 7, minHeight: 62 },
+  rewardBarTight: { paddingVertical: 5, minHeight: 56 },
   rewardColumn: { flex: 1, minWidth: 0, alignItems: "center", justifyContent: "center", gap: 4 },
   rewardValue: { color: "#F3E7BC", fontSize: 23, lineHeight: 30, fontWeight: "900",
     fontVariant: ["tabular-nums"], includeFontPadding: false },
@@ -247,6 +260,8 @@ const styles = StyleSheet.create({
   rewardDivider: { width: 1, height: 33, backgroundColor: "#534C71" },
   progressCard: { paddingHorizontal: 15, paddingVertical: 14, gap: 9, borderRadius: 20,
     backgroundColor: "#1B2034", borderWidth: 1, borderColor: "#41415F" },
+  progressCardCompact: { paddingVertical: 10, gap: 6 },
+  progressCardTight: { paddingVertical: 7, gap: 4 },
   progressHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   levelEmblem: { width: 41, height: 41, borderRadius: 14, backgroundColor: "#38305B",
     borderWidth: 1, borderColor: "#7967B7", alignItems: "center", justifyContent: "center" },
@@ -259,12 +274,14 @@ const styles = StyleSheet.create({
   progressNumber: { color: "#D4C7FF", fontSize: 12, lineHeight: 18, fontWeight: "900" },
   remaining: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   progressSeparator: { height: 1, backgroundColor: "#3D3F58", marginVertical: 2 },
+  progressSeparatorCompact: { marginVertical: 0 },
   pathCopy: { flex: 1, minWidth: 0, gap: 2 },
   pathTitle: { color: colors.text, fontSize: 13, lineHeight: 19, fontWeight: "800" },
   pathCount: { color: "#A6DAD1", fontSize: 13, lineHeight: 19, fontWeight: "900", flexShrink: 0 },
   pathComplete: { color: "#A0D9C5", fontSize: 11, lineHeight: 17, fontWeight: "800" },
   practiceDone: { color: "#9FDFC8", fontSize: 12, lineHeight: 18, textAlign: "center", fontWeight: "700" },
   tools: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7 },
+  toolsCompact: { gap: 5 },
   tool: { minHeight: 44, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center",
     borderRadius: 12, borderWidth: 1, borderColor: "#46415E", backgroundColor: "#202338" },
   practiceTool: { borderColor: "#426F6F", backgroundColor: "#1D3037" },
@@ -273,6 +290,9 @@ const styles = StyleSheet.create({
   report: { alignItems: "center" },
   footer: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 10,
     backgroundColor: "#111626", borderTopWidth: 1, borderTopColor: "#34314B" },
+  footerCompact: { paddingTop: 5, paddingBottom: 5 },
+  footerReport: { position: "absolute", right: 18, top: -25 },
+  continueActionCompact: { minHeight: 58, paddingVertical: 6 },
   continueAction: { minHeight: 67, borderRadius: 17, paddingHorizontal: 13, paddingVertical: 10,
     flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#AD9DFF",
     borderWidth: 1, borderColor: "#D7CAFF" },
