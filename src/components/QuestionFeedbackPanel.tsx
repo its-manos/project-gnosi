@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme";
-import QuizReveal from "./QuizReveal";
 
 /** Keep a whole first sentence when feasible. Never mutate persisted editorial copy. */
 export function explanationTeaser(value: string, maxLength = 150): string {
@@ -90,7 +89,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9, paddingVertical: 5, fontSize: 10, fontWeight: "900" },
   detail: { gap: 5 },
   label: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.55 },
-  selectionText: { color: colors.text, fontSize: 15, lineHeight: 23, fontWeight: "750" },
+  selectionText: { color: colors.text, fontSize: 15, lineHeight: 23, fontWeight: "700" },
   takeaway: { gap: 5 },
   description: { color: colors.textBody, fontSize: 14, lineHeight: 22 },
   toggle: { minHeight: 44, alignSelf: "flex-start", justifyContent: "center", paddingRight: 16 },
