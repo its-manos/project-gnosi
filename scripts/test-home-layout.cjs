@@ -1038,21 +1038,21 @@ const renderMotion = extra => {
 let motionTree = renderMotion({ progressLoaded: false });
 // Native layout supplies the visible scroll pane's dimensions (not the whole
 // screen or 4300-point content). Verify screen/viewport resize independently.
-let viewportLayout = nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport");
+let viewportLayout = nodes(motionTree).find(node => node.props?.testID === "subcategory-adventure-path");
 viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 320, height: 450 } } });
 motionTree = renderMotion({ progressLoaded: false });
 let fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
-assert.ok(fullAtlas, "measured map viewport mounts its atlas");
+assert.ok(fullAtlas, "measured screen mounts the atlas");
 assert.equal(fullAtlas.props.width, 320);
 assert.equal(fullAtlas.props.height, 450);
-assert.ok(nodes(nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport"))
-  .some(node => node.type === "AtlasBackground"), "rendered atlas stays in the fixed viewport");
-viewportLayout = nodes(motionTree).find(node => node.props?.testID === "adventure-map-viewport");
+assert.ok(nodes(motionTree).some(node => node.type === "AtlasBackground"),
+  "rendered atlas stays behind the path");
+viewportLayout = nodes(motionTree).find(node => node.props?.testID === "subcategory-adventure-path");
 viewportLayout.props.onLayout({ nativeEvent: { layout: { width: 350, height: 430 } } });
 motionTree = renderMotion({ progressLoaded: false });
 fullAtlas = nodes(motionTree).find(node => node.type === "AtlasBackground");
-assert.equal(fullAtlas.props.width, 350, "atlas follows responsive map viewport width");
-assert.equal(fullAtlas.props.height, 430, "atlas stops at the map viewport, not the whole screen");
+assert.equal(fullAtlas.props.width, 350, "atlas follows responsive screen width");
+assert.equal(fullAtlas.props.height, 430, "atlas follows measured screen height");
 let motionScroll = nodes(motionTree).find(node => node.props?.testID === "adventure-map-scroll");
 const autoCalls = adventureAnimationCalls;
 autoCalls.length = 0;
