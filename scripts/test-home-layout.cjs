@@ -112,20 +112,22 @@ let daily = { ready: true, doc: { days: { "2026-11-03": {
 } } } };
 const HistoryWorldIcon = compile("src/components/worldIcons/HistoryWorldIcon.tsx");
 const otherWorlds = compile("src/components/worldIcons/OtherWorldIcons.tsx", {}, true);
-const worldArtwork = {
-  history: HistoryWorldIcon,
-  science: otherWorlds.ScienceWorldIcon,
-  nature: otherWorlds.NatureWorldIcon,
-  technology: otherWorlds.TechnologyWorldIcon,
-  culture: otherWorlds.CultureWorldIcon,
-  geography: otherWorlds.GeographyWorldIcon,
-  "difficult-history": otherWorlds.DifficultHistoryWorldIcon,
-};
+const categoryIconModule = compile("src/components/worldIcons/categoryIconMap.ts", {
+  "./HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
+  "./OtherWorldIcons": otherWorlds,
+}, true);
+const worldArtwork = categoryIconModule.categoryWorldIcons;
+assert.equal(Object.keys(worldArtwork).length, 7, "exactly seven shared world icons");
+for (const [id, Component] of Object.entries(worldArtwork)) {
+  assert.equal(categoryIconModule.getCategoryWorldIcon(id), Component,
+    "shared category map resolves " + id);
+}
+assert.equal(categoryIconModule.getCategoryWorldIcon("unknown"), undefined,
+  "unknown worlds preserve their original fallback");
 // Compile the streak badge separately to assert its ring and inner caption.
 const HomeStreakBadge = compile("src/components/HomeStreakBadge.tsx");
 const home = compile("src/screens/HomeScreen.tsx", {
-  "../components/worldIcons/HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
-  "../components/worldIcons/OtherWorldIcons": otherWorlds,
+  "../components/worldIcons/categoryIconMap": categoryIconModule,
   "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
   "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
