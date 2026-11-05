@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
-import AppHeader from "../components/AppHeader";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import { MotionView, MotionPressable } from "../components/HomeMotion";
 import {
   DAILY_CHALLENGE_TOPICS,
   type DailyChallengePreferences,
@@ -52,13 +53,17 @@ export default function DailyChallengePreferencesScreen({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <AppHeader onBack={onCancel} backLabel="ΠΙΣΩ" />
-
-      <Text style={styles.title}>Τα ενδιαφέροντά σου</Text>
-      <Text style={styles.body}>
-        Διάλεξε θέματα για τις προτάσεις μαθημάτων μετά το quiz. Η καθημερινή πρόκληση έχει το ίδιο σετ ερωτήσεων για όλους.
-      </Text>
+    <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.top}>
+        <View style={styles.topCopy}><Text style={styles.eyebrow}>Ο ΧΩΡΟΣ ΣΟΥ</Text><Text style={styles.topTitle}>Ενδιαφέροντα</Text></View>
+        <Pressable accessibilityRole="button" accessibilityLabel="Πίσω στο προφίλ" onPress={onCancel} style={styles.backButton}><Text style={styles.backText}>‹ Προφίλ</Text></Pressable>
+      </View>
+      <MotionView entranceDelay={0} style={styles.hero}>
+        <View style={styles.heroAccent} />
+        <Text style={styles.heroEyebrow}>✦  ΟΙ ΕΠΙΛΟΓΕΣ ΣΟΥ</Text>
+        <Text style={styles.heroTitle}>Τι σε συναρπάζει;</Text>
+        <Text style={styles.heroBody}>Επίλεξε 3–5 θέματα για πιο προσωπικές προτάσεις μαθημάτων.</Text>
+      </MotionView>
 
       {isLoading ? (
         <View style={styles.loading}>
@@ -71,15 +76,17 @@ export default function DailyChallengePreferencesScreen({
             <Text style={styles.sectionTitle}>Τα ενδιαφέροντά σου</Text>
             <Text style={styles.counter}>{topicIds.length} / 5</Text>
           </View>
-          <Text style={styles.helper}>Επίλεξε 3–5 θέματα.</Text>
+          <Text style={styles.helper}>Η καθημερινή πρόκληση παραμένει ίδια για όλους.</Text>
 
           <View style={styles.topicGrid}>
             {DAILY_CHALLENGE_TOPICS.map((topic) => {
               const selected = topicIds.includes(topic.id);
               const disabled = !selected && topicIds.length >= 5;
               return (
-                <Pressable
+                <MotionPressable
                   key={topic.id}
+                  entranceDelay={55 + DAILY_CHALLENGE_TOPICS.indexOf(topic) * 32}
+                  pressScale={0.975}
                   style={[styles.topicCard, selected && styles.topicCardSelected, disabled && styles.topicCardDisabled]}
                   onPress={() => toggleTopic(topic.id)}
                   disabled={disabled || isSaving}
@@ -94,7 +101,7 @@ export default function DailyChallengePreferencesScreen({
                     </View>
                   </View>
                   <Text style={styles.topicTitle}>{topic.title}</Text>
-                </Pressable>
+                </MotionPressable>
               );
             })}
           </View>
@@ -114,7 +121,7 @@ export default function DailyChallengePreferencesScreen({
           </Text>
         </>
       )}
-    </ScrollView>
+    </ScrollView></View>
   );
 }
 
