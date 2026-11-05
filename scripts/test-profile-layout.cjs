@@ -108,8 +108,9 @@ const render = () => { cursor = 0; return Stats({ onBack() {} }); };
 tree = render();
 const activity = nodes(tree).find(n => n.type === "Activity");
 assert.ok(activity && activity.props.dashboard === true, "Stats should lead with the compact weekly chart");
-assert.equal(nodes(tree).filter(n => n.props?.children === "Η δραστηριότητά σου").length, 1,
-  "Statistics should only have one activity heading");
+assert.equal(nodes(tree).filter(n => n.props?.children === "Δραστηριότητα").length, 1,
+  "Statistics should have one consistent page title");
+assert.ok(!text(tree).includes("Η δραστηριότητά σου"), "Redundant activity introduction should be removed");
 assert.ok(!nodes(tree).some(n => n.props?.testID === "progress-daily-details"));
 assert.ok(nodes(tree).some(n => n.props?.testID === "stats-fixed-dashboard"), "Default Statistics overview should not scroll");
 screenWidth = 320;
