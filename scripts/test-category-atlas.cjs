@@ -664,9 +664,10 @@ const islandsModule = compile("src/components/IslandAtlasMap.tsx", {
   "react/jsx-runtime": { jsx, jsxs: jsx },
   "react-native": native,
   "react-native-svg": svg,
-  "./islandIcons/AncientGreeceIslandIcon": { __esModule: true, default: "AncientGreeceIslandIcon" },
-  "./islandIcons/WorldHistoryIslandIcon": { __esModule: true, default: "WorldHistoryIslandIcon" },
-  "./islandIcons/MythologyIslandIcon": { __esModule: true, default: "MythologyIslandIcon" },
+  "expo-image": { Image: "Image" },
+  "../../assets/atlas-export-preview/island-icons/ancient-greece.webp": "ancient-greece.webp",
+  "../../assets/atlas-export-preview/island-icons/world-history.webp": "world-history.webp",
+  "../../assets/atlas-export-preview/island-icons/mythology.webp": "mythology.webp",
 });
 const archipelago = islandsModule.default;
 for (const [count, width, height] of [[1, 320, 430], [3, 340, 490],
@@ -726,20 +727,27 @@ const artworkNodes = nodes(ancientIslandTree).filter(node =>
 assert.equal(artworkNodes.length, 2, "each region receives one art component");
 const ancientArtworkTree = artworkNodes[0].type(artworkNodes[0].props);
 const otherArtworkTree = artworkNodes[1].type(artworkNodes[1].props);
-const parthenonArt = nodes(ancientArtworkTree).filter(node => node.type === "AncientGreeceIslandIcon");
-assert.equal(parthenonArt.length, 1,
-  "only the Ancient Greece island uses its bespoke Parthenon");
-assert.ok(parthenonArt[0].props.size >= 35 && parthenonArt[0].props.size <= 68,
-  "Parthenon is larger and remains bounded on small devices");
+const parthenonImages = nodes(ancientArtworkTree).filter(node => node.type === "Image");
+assert.equal(parthenonImages.length, 1,
+  "Ancient Greece now mounts one cached landmark WebP, not the live Parthenon SVG");
+assert.equal(parthenonImages[0].props.source, "ancient-greece.webp");
+const parthenonSize = parthenonImages[0].props.style.width;
+assert.ok(parthenonSize >= 35 && parthenonSize <= 68,
+  "the new WebP keeps the approved responsive Parthenon size");
+assert.equal(parthenonImages[0].props.style.height, parthenonSize,
+  "WebP retains the square SVG landmark footprint");
+assert.equal(parthenonImages[0].props.contentFit, "contain");
+assert.equal(parthenonImages[0].props.cachePolicy, "memory-disk");
+assert.equal(parthenonImages[0].props.transition, 0);
 const parthenonOverlay = nodes(ancientArtworkTree).find(node =>
   node.props?.testID === "island-atlas-ancient-greece-emblem");
 assert.equal(parthenonOverlay.props.pointerEvents, "none",
-  "Parthenon decoration cannot intercept island navigation");
+  "Parthenon WebP never intercepts island taps");
 assert.equal(parthenonOverlay.props.style[1].top,
-  Math.max(0, artworkNodes[0].props.height * 0.56 - parthenonArt[0].props.size * 0.86),
-  "Parthenon steps align with the island's upper plateau");
-assert.equal(nodes(otherArtworkTree).filter(node => node.type === "AncientGreeceIslandIcon").length, 0,
-  "other islands retain their own terrain engraving");
+  Math.max(0, artworkNodes[0].props.height * 0.56 - parthenonSize * 0.86),
+  "the raster preserves the approved raised Parthenon position");
+assert.equal(nodes(otherArtworkTree).filter(node => node.type === "Image").length, 0,
+  "non-landmark islands retain their terrain engraving without extra bitmaps");
 const stoneFooting = nodes(ancientArtworkTree).find(node =>
   node.type === "ellipse" && node.props?.cx === 90 && node.props?.cy === 74);
 assert.ok(stoneFooting && stoneFooting.props.rx === 52,
@@ -795,39 +803,59 @@ const historyAtlasTree = archipelago({
 const historyArtwork = nodes(historyAtlasTree).filter(node =>
   typeof node.type === "function" && node.type.name === "IslandArtwork");
 assert.equal(historyArtwork.length, 3);
-const historyLandmarkTypes = [
-  ["ancient-greece", "AncientGreeceIslandIcon"],
-  ["world-history", "WorldHistoryIslandIcon"],
-  ["mythology", "MythologyIslandIcon"],
+const historyLandmarkSources = [
+  ["ancient-greece", "ancient-greece.webp"],
+  ["world-history", "world-history.webp"],
+  ["mythology", "mythology.webp"],
 ];
-for (let i = 0; i < historyLandmarkTypes.length; i++) {
-  const [id, expectedType] = historyLandmarkTypes[i];
+for (let i = 0; i < historyLandmarkSources.length; i++) {
+  const [id, expectedSource] = historyLandmarkSources[i];
   const artwork = historyArtwork[i].type(historyArtwork[i].props);
-  const mounted = nodes(artwork).filter(node => historyLandmarkTypes.some(pair => pair[1] === node.type));
-  assert.equal(mounted.length, 1, "one unique illustrated landmark for " + id);
-  assert.equal(mounted[0].type, expectedType, "correct subcategory-specific icon: " + id);
-  assert.ok(mounted[0].props.size >= 35 && mounted[0].props.size <= 68,
-    "small-screen landmark size is bounded: " + id);
+  const images = nodes(artwork).filter(node => node.type === "Image");
+  assert.equal(images.length, 1, "one raster landmark per " + id);
+  assert.equal(images[0].props.source, expectedSource,
+    "correct bundled WebP maps to the catalog subcategory " + id);
+  assert.ok(images[0].props.style.width >= 35 && images[0].props.style.width <= 68,
+    "responsive landmark size remains bounded: " + id);
+  assert.equal(images[0].props.style.height, images[0].props.style.width,
+    "landmark image does not stretch: " + id);
+  assert.equal(images[0].props.contentFit, "contain");
+  assert.equal(images[0].props.cachePolicy, "memory-disk");
+  assert.equal(images[0].props.transition, 0);
   const overlay = nodes(artwork).find(node =>
     node.props?.testID === "island-atlas-" + id + "-emblem");
   assert.ok(overlay && overlay.props.pointerEvents === "none"
     && overlay.props.accessible === false,
-    "decorative landmark cannot intercept navigation or focus: " + id);
+    "raster icon does not intercept navigation or accessibility focus: " + id);
   assert.equal(overlay.props.style[1].top,
     Math.max(0, historyArtwork[i].props.height * 0.56 -
-      mounted[0].props.size * (id === "ancient-greece" ? 0.86 : 0.84)),
-    "raised landmark rests on the same plateau as the Parthenon: " + id);
+      images[0].props.style.height * (id === "ancient-greece" ? 0.86 : 0.84)),
+    "raster preserves the original plateau alignment: " + id);
   assert.ok(nodes(artwork).some(node => node.type === "ellipse" &&
     node.props?.cx === 90 && node.props?.cy === 74 && node.props?.rx === 52),
-    "landmark contact shadow is integrated into the island: " + id);
+    "the existing live island footprint remains under the landmark: " + id);
   assert.ok(!nodes(artwork).some(node => node.type === "path" &&
     node.props?.d?.startsWith("M 65 68 L 83 43")),
-    "generic mountain symbol does not show through the landmark: " + id);
+    "generic engraving no longer shows through the landmark: " + id);
   const button = nodes(historyAtlasTree).find(node =>
     node.props?.testID === "island-atlas-destination-" + id);
   button.props.onPress();
-  assert.equal(visits.at(-1), id, "island remains navigable: " + id);
+  assert.equal(visits.at(-1), id, "WebP landmark preserves the native island route: " + id);
 }
+const iconAssetIds = ["ancient-greece", "world-history", "mythology"];
+const generatedWebPs = iconAssetIds.map(id => fs.readFileSync(
+  path.join(root, "assets/atlas-export-preview/island-icons", id + ".webp")));
+for (const asset of generatedWebPs) {
+  assert.equal(asset.toString("ascii", 0, 4), "RIFF");
+  assert.equal(asset.toString("ascii", 8, 12), "WEBP");
+  assert.ok(asset.length < 75000, "landmark WebP is small enough for fast atlas loads");
+}
+const exportScript = fs.readFileSync(
+  path.join(root, "scripts/export-island-icons-webp.cjs"), "utf8");
+assert.match(exportScript, /ts\.transpileModule/,
+  "WebP export is derived from original TSX SVG components, not traced duplicates");
+assert.match(exportScript, /alphaQuality: 100/,
+  "transparent surroundings and fine engraved edges are retained");
 const iconArt = [
   ["src/components/islandIcons/WorldHistoryIslandIcon.tsx",
     "world-history-earth-svg", 31],
@@ -908,6 +936,11 @@ assert.doesNotMatch(islandSource, /react-native-reanimated|withRepeat\(|setTimeo
   "foreground island polish adds no motion loops or expensive timers");
 assert.match(islandSource, /fillOpacity=\{0\.045\}/,
   "explored-island halo is a static SVG wash rather than live blur");
+assert.doesNotMatch(islandSource,
+  /import (AncientGreeceIslandIcon|WorldHistoryIslandIcon|MythologyIslandIcon)/,
+  "no live landmark SVG component is imported by the Category screen");
+assert.match(islandSource, /cachePolicy="memory-disk"/,
+  "small bundled WebPs use the same static caching as the world background");
 const emptyIslands = archipelago({
   regions: [], width: 340, height: 490, onSelectRegion: () => {},
 });
