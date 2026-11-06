@@ -10,7 +10,7 @@ type NavigationAnalyticsState = {
   lesson: Lesson | undefined;
   resultMode: "finished" | "returning";
   answeredCount: number;
-  welcome: { visible: boolean; loading: boolean; replay: boolean };
+  welcome: { visible: boolean; loading: boolean; replay: boolean; phase?: string };
   dailyChallengeOpen: boolean;
   dailyPreferencesOpen: boolean;
 };
@@ -18,10 +18,11 @@ type NavigationAnalyticsState = {
 function analyticsScreenFor(
   screen: AppScreen,
   welcomeVisible: boolean,
+  welcomePhase: string | undefined,
   dailyChallengeOpen: boolean,
   dailyPreferencesOpen: boolean,
 ): AnalyticsScreen | null {
-  if (welcomeVisible) return "welcome";
+  if (welcomeVisible && (welcomePhase !== "lesson" || (screen !== "lesson" && screen !== "results"))) return "welcome";
   if (screen === "quick-quiz") return null;
   if (dailyPreferencesOpen) return "daily-preferences";
   if (dailyChallengeOpen) return "daily";
@@ -40,7 +41,7 @@ export function useNavigationAnalytics({
   screen, lesson, resultMode, answeredCount, welcome, dailyChallengeOpen, dailyPreferencesOpen,
 }: NavigationAnalyticsState) {
   const { analytics, enabled } = useBetaAnalytics();
-  const analyticsScreen = analyticsScreenFor(screen, welcome.visible, dailyChallengeOpen, dailyPreferencesOpen);
+  const analyticsScreen = analyticsScreenFor(screen, welcome.visible, welcome.phase, dailyChallengeOpen, dailyPreferencesOpen);
   const lessonId = lesson?.id;
 
   useEffect(() => {
@@ -77,7 +78,7 @@ export function useNavigationAnalytics({
 
   return {
     trackWelcomeCompleted() {
-      void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: 4, replay: welcome.replay });
+      void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: 3, replay: welcome.replay });
     },
     trackWelcomeSkipped(step: number) {
       void analytics.track("onboarding_skipped", { screen: "welcome", onboarding_step: step, replay: welcome.replay });
