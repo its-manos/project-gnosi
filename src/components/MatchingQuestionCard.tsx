@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { MatchingQuestion } from "../quiz/types";
@@ -19,15 +19,16 @@ type Props = {
   onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
-/** Show one list at a time so long labels can use the full card width. */
+/** A stable board uses the same number on both ends of each draft pair. */
 export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange, compactAnswered = false }: Props) {
+  const { fontScale } = useWindowDimensions();
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pending, setPending] = useState<Record<string, string>>({});
   useEffect(() => { setSelectedLeft(null); setPending({}); }, [question.id, question.version]);
   const answered = answer !== undefined;
   const assignments = answered ? answer : pending;
   const pairs = question.content.pairs;
-  const activePair = pairs.find(pair => pair.leftId === selectedLeft);
+  const stackColumns = fontScale >= 1.3 || (readingSize ?? 18) >= 22;
   const choiceSize = readingSize !== undefined && readingSize !== 18
     ? { fontSize: Math.max(14, readingSize - 1), lineHeight: Math.round(readingSize * 1.5) } : undefined;
   const rightOptions = [...pairs].reverse();
@@ -69,60 +70,58 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
     </View>
     <Text accessibilityRole="header" style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     {(!answered || !compactAnswered) ? <>
-      <View style={styles.stepTitle}>
-        <Text style={styles.stepHeading}>{answered ? "Έννοιες" : activePair ? "Βρες το ταίρι" : "Διάλεξε έννοια"}</Text>
-        <Text style={styles.progressCount} accessibilityLabel={`${count} από ${pairs.length} ζευγάρια`}>{count} / {pairs.length}</Text>
+      <View style={styles.boardHeader}>
+        <Text style={styles.instruction} accessibilityLiveRegion="polite">
+          {answered ? "Τα ζευγάρια σου" : selectedLeft ? "Βρες το ταίρι της" : "Διάλεξε μια έννοια"}
+        </Text>
+        <Text style={styles.progressCount} accessibilityLabel={`${count} από ${pairs.length} ζευγάρια`}>
+          {count} / {pairs.length}
+        </Text>
       </View>
-      {activePair && !answered ? <Pressable testID="matching-change-concept" accessibilityRole="button"
-        accessibilityLabel={`Άλλαξε έννοια. Επιλεγμένη έννοια: ${activePair.leftLabel}`}
-        onPress={() => setSelectedLeft(null)} style={({ pressed }) => [styles.activePair, pressed && styles.pressed]}>
-        <Text style={styles.changeGlyph} accessible={false}>‹</Text>
-        <Text style={[styles.choiceTextRight, choiceSize]}>{activePair.leftLabel}</Text>
-      </Pressable> : null}
-      {!activePair || answered ? <View style={styles.options}>
-        {pairs.map(pair => {
-          const rightId = assignments[pair.leftId];
-          const linked = rightId !== undefined;
-          return <AnswerMotion key={pair.leftId} active={!answered && linked}>
-            <Pressable testID={`matching-left-${pair.leftId}`}
-              accessibilityRole="button"
-              accessibilityLabel={`${pair.leftLabel}, ${linked ? "αντιστοιχισμένο με " + labelsByRight.get(rightId) : "χωρίς αντιστοίχιση"}`}
-              accessibilityState={{ disabled: answered }} disabled={answered}
-              onPress={() => setSelectedLeft(pair.leftId)}
-              style={({ pressed }) => [styles.choice, linked && styles.linked,
-                pressed && !answered && styles.pressed]}>
-              <View style={[styles.number, linked && styles.numberLinked]}>
-                <Text style={styles.numberText}>{positionFor(pair.leftId)}</Text>
-              </View>
-              <View style={styles.choiceContent}>
-                <Text style={[styles.choiceText, choiceSize]}>{pair.leftLabel}</Text>
-                {linked ? <Text style={styles.linkedLabel}>↳ {labelsByRight.get(rightId)}</Text> : null}
-              </View>
-              <Text style={styles.choiceStatus}>{linked ? "✓" : "＋"}</Text>
-            </Pressable>
-          </AnswerMotion>;
-        })}
-      </View> : null}
-      {activePair || answered ? <View style={styles.options}>
-        {rightOptions.map(pair => {
-          const linkedId = Object.keys(assignments).find(leftId => assignments[leftId] === pair.rightId);
-          const linked = linkedId !== undefined;
-          return <AnswerMotion key={pair.rightId} active={!answered && linked}>
-            <Pressable testID={`matching-right-${pair.rightId}`}
-              accessibilityRole="button"
-              accessibilityLabel={pair.rightLabel}
-              accessibilityState={{ selected: linked, disabled: answered || selectedLeft === null }}
-              disabled={answered || selectedLeft === null}
-              onPress={() => assign(pair.rightId)}
-              style={({ pressed }) => [styles.choice, linked && styles.linked,
-                pressed && styles.pressed]}>
-              <Text style={styles.rightMarker}>{linked ? positionFor(linkedId) : "○"}</Text>
-              <Text style={[styles.choiceTextRight, choiceSize]}>{pair.rightLabel}</Text>
-              <Text style={styles.choiceStatus}>{linked ? "✓" : "↗"}</Text>
-            </Pressable>
-          </AnswerMotion>;
-        })}
-      </View> : null}
+      <View style={styles.board} testID="matching-board">
+        <View style={[styles.column, stackColumns && styles.fullColumn]} testID="matching-concepts">
+          <Text style={styles.columnTitle}>Έννοιες</Text>
+          {pairs.map((pair, index) => {
+            const rightId = assignments[pair.leftId];
+            const linked = rightId !== undefined;
+            const selected = selectedLeft === pair.leftId;
+            return <AnswerMotion key={pair.leftId} active={!answered && selected}>
+              <Pressable testID={`matching-left-${pair.leftId}`}
+                accessibilityRole="button"
+                accessibilityLabel={linked ? `${pair.leftLabel}, ζευγάρι με ${labelsByRight.get(rightId)}` : pair.leftLabel}
+                accessibilityState={{ selected, disabled: answered }} disabled={answered}
+                onPress={() => setSelectedLeft(current => current === pair.leftId ? null : pair.leftId)}
+                style={({ pressed }) => [styles.tile, linked && styles.paired, selected && styles.selected,
+                  pressed && styles.pressed]}>
+                <Text accessible={false} style={[styles.marker, linked && styles.pairedMarker]}>{index + 1}</Text>
+                <Text style={[styles.tileLabel, choiceSize]}>{pair.leftLabel}</Text>
+              </Pressable>
+            </AnswerMotion>;
+          })}
+        </View>
+        <View style={[styles.column, stackColumns && styles.fullColumn]} testID="matching-options">
+          <Text style={styles.columnTitle}>Επιλογές</Text>
+          {rightOptions.map(pair => {
+            const linkedId = Object.keys(assignments).find(leftId => assignments[leftId] === pair.rightId);
+            const linked = linkedId !== undefined;
+            const disabled = answered || selectedLeft === null;
+            return <AnswerMotion key={pair.rightId} active={!answered && linked}>
+              <Pressable testID={`matching-right-${pair.rightId}`}
+                accessibilityRole="button"
+                accessibilityLabel={linked ? `${pair.rightLabel}, ζευγάρι ${positionFor(linkedId)}` : pair.rightLabel}
+                accessibilityState={{ selected: linked, disabled }} disabled={disabled}
+                onPress={() => assign(pair.rightId)}
+                style={({ pressed }) => [styles.tile, linked && styles.paired,
+                  !disabled && !linked && styles.available, pressed && styles.pressed]}>
+                <Text accessible={false} style={[styles.marker, linked && styles.pairedMarker]}>
+                  {linked ? positionFor(linkedId) : "·"}
+                </Text>
+                <Text style={[styles.tileLabel, choiceSize]}>{pair.rightLabel}</Text>
+              </Pressable>
+            </AnswerMotion>;
+          })}
+        </View>
+      </View>
     </> : null}
     {!answered && !onActionChange ? <>
       <Pressable testID="matching-confirm" accessibilityRole="button"
@@ -151,38 +150,21 @@ const styles = StyleSheet.create({
   typeLabel: questionCardStyles.typeLabel,
   counter: questionCardStyles.counter,
   question: questionCardStyles.question,
+  boardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    gap: 8, marginBottom: 10, flexWrap: "wrap" },
+  instruction: { color: colors.textBody, fontSize: 13, fontWeight: "700", flexShrink: 1 },
   progressCount: { color: colors.accentLight, fontWeight: "900", fontSize: 12 },
-  stepTitle: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    gap: 8, marginBottom: 8, flexWrap: "wrap" },
-  stepHeading: { color: colors.text, fontSize: 14, fontWeight: "800", flexShrink: 1 },
-  options: { ...questionCardStyles.answers, marginBottom: 6 },
-  choice: questionCardStyles.answer,
-  activePair: { ...questionCardStyles.answer, minHeight: 44, marginBottom: 8,
-    borderColor: colors.accent, backgroundColor: colors.accentSurface },
-  changeGlyph: { color: colors.accentLight, fontSize: 23, fontWeight: "800", width: 29, textAlign: "center" },
-  linked: { borderColor: "#65648A", backgroundColor: "#24243A" },
-  pressed: questionCardStyles.pressed,
-  number: { width: 29, height: 29, alignItems: "center", justifyContent: "center",
-    backgroundColor: colors.accentSurface, borderRadius: 9, flexShrink: 0 },
-  numberLinked: { backgroundColor: "#25433D" },
-  numberText: { color: colors.text, fontWeight: "900", fontSize: 13 },
-  choiceContent: { flex: 1, minWidth: 0, gap: 4 },
-  choiceText: { color: colors.text, fontWeight: "700", fontSize: 14, lineHeight: 20 },
-  linkedLabel: { color: colors.accentLight, fontSize: 12, lineHeight: 18 },
-  choiceTextRight: { flex: 1, minWidth: 0, color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: "600" },
-  rightMarker: { color: colors.accentLight, fontSize: 16, fontWeight: "900", width: 29, textAlign: "center" },
-  choiceStatus: { color: colors.textMuted, fontSize: 19, fontWeight: "900" },
-  footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
-  confirm: questionCardStyles.confirm,
+  board: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  column: { flexBasis: 130, flexGrow: 1, maxWidth: "100%", gap: 6 },
+  fullColumn: { flexBasis: "100%" },
+  columnTitle: { color: colors.textMuted, fontSize: 12, fontWeight: "800" },
+  tile: { ...questionCardStyles.answer, minHeight: 54, gap: 6, paddingHorizontal: 7 },
+  available: { borderColor: colors.borderStrong },
+  paired: { backgroundColor: "#23363D", borderColor: "#46626A" },
+  selected: { backgroundColor: colors.accentSurface, borderColor: colors.accent },
+  marker: { color: colors.accentLight, backgroundColor: colors.accentSurface, fontSize: 12,
+    fontWeight: "900", minWidth: 21, textAlign: "center", paddingHorizontal: 3, paddingVertical: 3, borderRadius: 6 },
+  pairedMarker: { color: "#B5DED9", backgroundColor: "#34545B" },
+  tileLabel: { ...questionCardStyles.answerText, fontSize: 14, lineHeight: 20, minWidth: 0 },
   disabled: questionCardStyles.confirmDisabled,
-  confirmText: questionCardStyles.confirmText,
-  feedback: questionCardStyles.feedback,
-  feedbackCorrect: questionCardStyles.feedbackCorrect,
-  feedbackWrong: questionCardStyles.feedbackWrong,
-  feedbackTitle: { fontSize: 17, fontWeight: "900" },
-  correctTitle: { color: colors.success },
-  wrongTitle: { color: colors.error },
-  solutions: { borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 10, gap: 9 },
-  solutionText: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
-  feedbackText: questionCardStyles.feedbackText,
 });

@@ -36,7 +36,9 @@ const titleOnly = NavigationTile({
   title: "Ενδιαφέροντα", icon: jsx("SparkleIcon", {}), onPress: () => {},
 });
 assert.equal(titleOnly.props.accessibilityLabel, "Ενδιαφέροντα");
-assert.equal(nodes(titleOnly).find(n => n.props?.children === "Ενδιαφέροντα").props.numberOfLines, undefined);
+const titleOnlyText = nodes(titleOnly).find(n => n.props?.children === "Ενδιαφέροντα");
+assert.equal(titleOnlyText.props.numberOfLines, 1);
+assert.equal(titleOnlyText.props.adjustsFontSizeToFit, true);
 assert.ok(!nodes(titleOnly).some(n => n.type === "Text" && n.props?.children === undefined));
 
 const settings = NavigationTile({

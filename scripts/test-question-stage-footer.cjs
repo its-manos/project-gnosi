@@ -11,7 +11,7 @@ const compiled = file => ts.transpileModule(source(file), { compilerOptions: {
   module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX,
 } }).outputText;
 const jsx = (type, props) => ({ type, props: props ?? {} });
-const native = { View: "View", Text: "Text", Pressable: "Pressable",
+const native = { useWindowDimensions: () => ({ fontScale: 1 }), View: "View", Text: "Text", Pressable: "Pressable",
   StyleSheet: { create: styles => styles } };
 const theme = { colors: {
   surface: "#222", surfaceRaised: "#333", border: "#555", borderStrong: "#666",

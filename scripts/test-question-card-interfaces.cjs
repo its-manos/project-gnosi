@@ -28,7 +28,7 @@ const treeNodes = tree => tree && typeof tree === 'object' ?
   [tree, ...[tree.props?.children].flat(Infinity).flatMap(treeNodes)] : [];
 const id = (tree, name) => treeNodes(tree).find(node => node.props?.testID === name);
 
-function mount(file, question) {
+function mount(file, question, fontScale = 1) {
   let states = [], cursor = 0;
   const react = {
     useState: initial => {
@@ -40,7 +40,7 @@ function mount(file, question) {
   };
   const imports = {
     react, 'react/jsx-runtime': { jsx, jsxs: jsx },
-    'react-native': { Pressable: 'Pressable', Text: 'Text', View: 'View', StyleSheet: { create: x => x } },
+    'react-native': { useWindowDimensions: () => ({ fontScale }), Pressable: 'Pressable', Text: 'Text', View: 'View', StyleSheet: { create: x => x } },
     '../quiz/engine': engine, '../theme': { colors, reading },
     '../play/motion': { AnswerMotion: 'AnswerMotion' },
     './QuizReveal': { __esModule: true, default: 'QuizReveal' },
@@ -93,18 +93,25 @@ const matching = {
 const m = mount('src/components/MatchingQuestionCard.tsx', matching);
 tree = m.render();
 assert.equal(id(tree, 'matching-confirm').props.disabled, true);
-assert.equal(id(tree, 'matching-right-x'), undefined, 'show concepts first');
+assert.ok(id(tree, 'matching-board'));
+assert.equal(id(tree, 'matching-right-x').props.disabled, true, 'show both groups before choosing');
+assert.equal(id(tree, 'matching-concepts').props.style[1], false, 'use the board at standard text size');
+const largeMatching = mount('src/components/MatchingQuestionCard.tsx', matching, 1.5).render();
+assert.equal(id(largeMatching, 'matching-concepts').props.style[1].flexBasis, '100%', 'large text gets a full-width column');
 id(tree, 'matching-left-a').props.onPress();
 tree = m.render();
 assert.equal(id(tree, 'matching-right-x').props.disabled, false);
-assert.equal(id(tree, 'matching-left-b'), undefined, 'the matching choices get the full card');
-id(tree, 'matching-change-concept').props.onPress();
+assert.equal(id(tree, 'matching-left-a').props.accessibilityState.selected, true);
+assert.ok(id(tree, 'matching-left-b'), 'concepts stay in place while choosing');
+id(tree, 'matching-left-a').props.onPress();
 tree = m.render();
-assert.ok(id(tree, 'matching-left-b'), 'the learner can change concepts before pairing');
+assert.equal(id(tree, 'matching-right-x').props.disabled, true, 'tap again to clear the selection');
 id(tree, 'matching-left-a').props.onPress();
 tree = m.render();
 id(tree, 'matching-right-x').props.onPress();
 tree = m.render();
+const marker = tile => treeNodes(tile).find(n => n.type === 'Text' && n.props.accessible === false).props.children;
+assert.equal(marker(id(tree, 'matching-left-a')), marker(id(tree, 'matching-right-x')), 'paired tiles share their number');
 assert.equal(id(tree, 'matching-confirm').props.disabled, true);
 id(tree, 'matching-left-b').props.onPress();
 tree = m.render();
