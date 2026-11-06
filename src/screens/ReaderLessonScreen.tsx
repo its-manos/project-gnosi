@@ -78,7 +78,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
     ...section,
     start: 1 + lesson.sections.slice(0, index).reduce((count, previous) => count + previous.paragraphs.length, 0),
   }));
-  const textStyle = { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.75) };
+  const textStyle = { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.7) };
 
   // Opening is intentionally an explicit learner action; scrolling never starts a quiz.
   function openQuestions(boundary: number, questionIndex: number) {
@@ -142,7 +142,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <Pressable style={styles.control} onPress={onBack} accessibilityRole="button" accessibilityLabel="Επιστροφή στα άρθρα">
             <Text style={styles.controlText}>‹ Πίσω</Text>
           </Pressable>
-          <Text style={styles.brand}>ΑΝΑΓΝΩΣΗ</Text>
+          <View style={styles.brandMark} accessible={false}>
+            <View style={styles.brandDot} />
+            <Text style={styles.brand}>ΑΝΑΓΝΩΣΗ</Text>
+          </View>
           <View style={styles.tools}>
             {enableReporting ? <ReportContentButton target={lessonReportTarget(lesson)} iconOnly /> : null}
             <Pressable style={[styles.control, settingsOpen && styles.active]} onPress={() => setSettingsOpen(v => !v)}
@@ -195,7 +198,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           const last = Math.max(0, ...seen);
           if (last > lastSeenParagraph.current) { lastSeenParagraph.current = last; void analytics.progress({ last_paragraph: last }); }
         }}>
-        <Text style={styles.eyebrow}>{category.title} / {subcategory.title}</Text>
+        <View style={styles.articleLabel}>
+          <View style={styles.articleLabelDot} accessible={false} />
+          <Text style={styles.eyebrow}>{category.title} / {subcategory.title}</Text>
+        </View>
         <Text accessibilityRole="header" style={styles.title}>{lesson.title}</Text>
         <View style={styles.metadata}>
           <Text style={styles.small}>{lesson.readingMinutes}′ ανάγνωση · {sections.length} ενότητες</Text>
@@ -204,6 +210,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
             <Text style={styles.link}>{lesson.sources.length} πηγές {sourcesOpen ? "−" : "+"}</Text>
           </Pressable>
         </View>
+        <View style={styles.titleRule} accessible={false} />
         {sourcesOpen ? <View style={styles.sources} testID="reader-sources">
           <ReaderSources lesson={lesson} />
         </View> : null}
@@ -225,7 +232,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
             sectionPositions.current[sectionIndex] = event.nativeEvent.layout.y;
             flushScroll();
           }}>
-            <Text style={styles.sectionNumber}>ΕΝΟΤΗΤΑ {sectionIndex + 1} / {sections.length}</Text>
+            <View style={styles.sectionKicker}>
+              <View style={styles.sectionPin} accessible={false} />
+              <Text style={styles.sectionNumber}>ΕΝΟΤΗΤΑ {sectionIndex + 1} / {sections.length}</Text>
+            </View>
             <Text accessibilityRole="header" style={styles.sectionTitle}>{section.title}</Text>
             {section.paragraphs.map((paragraph, i) => {
               const number = section.start + i;
@@ -243,10 +253,14 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
                 {hasGate ? <View testID={`reader-checkpoint-${firstPending.questionIndex}`}
                   style={styles.checkpoint}>
+                  <View style={styles.checkpointKicker}>
+                    <View style={styles.checkpointDot} accessible={false} />
+                    <Text style={styles.checkpointEyebrow}>ΣΤΑΣΗ ΓΝΩΣΗΣ</Text>
+                  </View>
                   <Text style={styles.gateTitle}>Έτοιμος να δοκιμάσεις όσα έμαθες;</Text>
                   <Text style={styles.readingHint}>
-                    Μπορείς να ξαναδιαβάσεις την ενότητα πριν απαντήσεις. Οι ερωτήσεις
-                    θα ανοίξουν μόνο όταν το επιλέξεις.
+                    Μπορείς να ξαναδιαβάσεις πριν απαντήσεις. Οι ερωτήσεις
+                    ανοίγουν μόνο όταν το επιλέξεις.
                     {pendingGroup.length > 1 ? ` Σε περιμένουν ${pendingGroup.length} ερωτήσεις.` : ""}
                   </Text>
                   <ActionButton label="Έτοιμος για ερωτήσεις →"
@@ -340,53 +354,82 @@ function ReaderSources({ lesson }: { lesson: Props["lesson"] }) {
 }
 
 const styles = StyleSheet.create({
+  // Keep the article an opaque, quiet surface. Only navigation and
+  // milestones carry the Midnight Atlas accents.
   root: { flex: 1, backgroundColor: reading.background },
-  chrome: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10, borderBottomWidth: 1, borderColor: reading.border, backgroundColor: reading.background },
-  topbar: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 4 },
-  brand: { color: reading.muted, fontSize: 10, letterSpacing: 1.2, flexShrink: 1 },
+  chrome: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12, borderBottomWidth: 1,
+    borderColor: reading.border, backgroundColor: reading.background },
+  topbar: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
+    justifyContent: "space-between", gap: 4 },
+  brandMark: { flexDirection: "row", alignItems: "center", gap: 7, flexShrink: 1 },
+  brandDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: reading.accent },
+  brand: { color: reading.heading, fontSize: 10, fontWeight: "800", letterSpacing: 1.2, flexShrink: 1 },
   tools: { flexDirection: "row", alignItems: "center", gap: 6 },
-  control: { minHeight: 44, minWidth: 44, paddingHorizontal: 10, justifyContent: "center", alignItems: "center", borderRadius: 10 },
+  control: { minHeight: 44, minWidth: 44, paddingHorizontal: 10,
+    justifyContent: "center", alignItems: "center", borderRadius: 12 },
   controlText: { color: reading.heading, fontSize: 16, fontWeight: "600" },
   active: { backgroundColor: reading.surface },
   disabled: { opacity: 0.4 },
-  settings: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, paddingVertical: 6 },
+  settings: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
+    justifyContent: "space-between", gap: 8, paddingVertical: 6 },
   small: { color: reading.muted, fontSize: 12, lineHeight: 20 },
-  progressLine: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 12, marginTop: 4, marginBottom: 6 },
-  track: { height: 3, borderRadius: 2, overflow: "hidden", backgroundColor: reading.border },
-  fill: { height: 3, backgroundColor: "#C3B79B" },
+  progressLine: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between",
+    gap: 12, marginTop: 4, marginBottom: 8 },
+  track: { height: 4, borderRadius: 3, overflow: "hidden", backgroundColor: reading.border },
+  fill: { height: 4, backgroundColor: reading.accent },
   viewport: { flex: 1 },
-  content: { paddingHorizontal: 22, paddingTop: 28, paddingBottom: 44, width: "100%", maxWidth: 640, alignSelf: "center" },
-  eyebrow: { color: "#C7B899", fontSize: 11, lineHeight: 19, letterSpacing: 0.5, marginBottom: 12 },
-  title: { color: reading.heading, fontSize: 32, lineHeight: 41, fontWeight: "700", letterSpacing: -0.3, marginBottom: 12 },
-  metadata: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 16 },
+  content: { paddingHorizontal: 24, paddingTop: 30, paddingBottom: 52,
+    width: "100%", maxWidth: 620, alignSelf: "center" },
+  articleLabel: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 13 },
+  articleLabelDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
+  eyebrow: { color: reading.accent, fontSize: 11, lineHeight: 19, letterSpacing: 0.45, flexShrink: 1 },
+  title: { color: reading.heading, fontSize: 32, lineHeight: 41,
+    fontWeight: "700", letterSpacing: -0.3, marginBottom: 12 },
+  metadata: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
+    justifyContent: "space-between", gap: 8, marginBottom: 16 },
+  titleRule: { width: 56, height: 2, borderRadius: 2, backgroundColor: reading.border, marginBottom: 25 },
   sourceControl: { minHeight: 44, justifyContent: "center", paddingHorizontal: 4 },
-  link: { color: colors.accentLight, fontSize: 12, lineHeight: 20 },
-  intro: { color: reading.heading, marginBottom: 26 },
-  sources: { backgroundColor: reading.surface, borderRadius: 16, borderWidth: 1, borderColor: reading.border, padding: 16, marginBottom: 24, gap: 8 },
+  link: { color: reading.accent, fontSize: 12, lineHeight: 20 },
+  // Lead paragraph is visually distinct without sacrificing its type size.
+  intro: { color: reading.heading, borderLeftWidth: 2, borderLeftColor: "#615B87",
+    paddingLeft: 17, marginBottom: 28 },
+  sources: { backgroundColor: reading.surface, borderRadius: 16, borderWidth: 1,
+    borderColor: reading.border, padding: 16, marginBottom: 24, gap: 8 },
   cardTitle: { color: reading.heading, fontSize: 22, lineHeight: 31, fontWeight: "700" },
-  note: { backgroundColor: "#292720", padding: 16, borderRadius: 12, marginBottom: 24, gap: 8 },
-  noteText: { color: "#D2C8B7" },
-  coverBlock: { marginBottom: 20 },
-  // Keep cover height predictable before the image loads; its crop mode remains per-lesson.
-  cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 14 },
+  note: { backgroundColor: reading.surface, borderLeftWidth: 3, borderLeftColor: reading.accent,
+    borderRadius: 12, padding: 18, marginBottom: 24, gap: 8 },
+  noteText: { color: reading.text },
+  coverBlock: { marginBottom: 28 },
+  // Reserve cover space before remote images load and keep native image zoom.
+  cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 15 },
   caption: { color: reading.muted, fontSize: 12, lineHeight: 20, marginTop: 10 },
   creditControl: { minHeight: 44, justifyContent: "center", paddingVertical: 8 },
-  readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 26 },
-  section: { paddingTop: 20, borderTopWidth: 1, borderColor: reading.border, marginBottom: 20 },
-  sectionNumber: { color: "#C7B899", fontSize: 10, lineHeight: 18, letterSpacing: 1, marginBottom: 8 },
-  sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "600", marginBottom: 22 },
+  readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 20 },
+  section: { paddingTop: 24, borderTopWidth: 1, borderColor: reading.border, marginBottom: 22 },
+  sectionKicker: { flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 10 },
+  sectionPin: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
+  sectionNumber: { color: reading.accent, fontSize: 10, lineHeight: 18, letterSpacing: 1 },
+  sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "700", marginBottom: 22 },
   paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 24 },
-  checkpoint: { marginBottom: 28, borderWidth: 1, borderColor: reading.border, backgroundColor: reading.surface, borderRadius: 16, padding: 18 },
-  gateTitle: { color: reading.heading, fontSize: 19, lineHeight: 28, fontWeight: "700" },
+  checkpoint: { marginBottom: 28, borderWidth: 1, borderLeftWidth: 3,
+    borderColor: reading.border, borderLeftColor: reading.accent,
+    backgroundColor: reading.surface, borderRadius: 16, padding: 18 },
+  checkpointKicker: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 9 },
+  checkpointDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
+  checkpointEyebrow: { color: reading.accent, fontSize: 10,
+    lineHeight: 17, fontWeight: "800", letterSpacing: 1.1 },
+  gateTitle: { color: reading.heading, fontSize: 19, lineHeight: 28,
+    fontWeight: "700", marginBottom: 8 },
   quizScreen: { flex: 1, backgroundColor: colors.background },
   quizHeader: { width: "100%", maxWidth: 640, alignSelf: "center", paddingTop: profileSectionLayout.top,
     paddingHorizontal: profileSectionLayout.horizontal, gap: 8 },
   quizViewport: { flex: 1 },
   quizContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: profileSectionLayout.horizontal,
     paddingVertical: 4, width: "100%", maxWidth: 640, alignSelf: "center" },
-  finish: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 26, gap: 10 },
+  finish: { borderWidth: 1, borderColor: reading.border, borderRadius: 20,
+    backgroundColor: reading.surface, padding: 21, marginTop: 8, gap: 10 },
   finishBody: { color: reading.text, marginTop: 8, marginBottom: 8 },
-  endSources: { marginTop: 28 },
+  endSources: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 20, marginTop: 20 },
   sourceList: { gap: 8 },
   locked: { color: reading.muted, fontSize: 13, lineHeight: 22, paddingTop: 12, paddingBottom: 20 },
 });
