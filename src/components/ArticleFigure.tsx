@@ -1,4 +1,5 @@
 import ZoomableLessonImage from "./ZoomableLessonImage";
+import ExpandableImageCaption from "./ExpandableImageCaption";
 import {
   Linking,
   Pressable,
@@ -31,7 +32,7 @@ export default function ArticleFigure({ figure }: Props) {
 
       </ZoomableLessonImage>
 
-      <Text style={styles.caption}>{figure.caption}</Text>
+      <ExpandableImageCaption caption={figure.caption} />
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={`Άνοιγμα πηγής εικόνας: ${figure.credit}`}
@@ -55,12 +56,6 @@ const styles = StyleSheet.create({
   // Reserve the space before remote images load to avoid changing scroll positions.
   // Contain preserves the whole photo/diagram, even when its source is portrait.
   image: { width: "100%", aspectRatio: 4 / 3, minHeight: 210, maxHeight: 340 },
-  caption: {
-    color: reading.muted,
-    fontSize: 13,
-    lineHeight: 21,
-    marginTop: 9,
-  },
   credit: {
     color: reading.accent,
     fontSize: 12,
