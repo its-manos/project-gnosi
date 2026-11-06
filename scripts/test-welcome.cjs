@@ -147,10 +147,15 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
    'Category cards share the gentle entrance and press response');
  assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,true,'A world must be selected');
  press(tree,data.categories.find(c=>c.id==='science').title);tree=draw();
- assert.ok(JSON.stringify(tree).includes('Αρχαία Ελλάδα'),'Temporary fixed lesson is explicit');
+ assert.ok(!JSON.stringify(tree).includes('Η ΠΡΩΤΗ ΣΟΥ ΔΙΑΔΡΟΜΗ'),
+   'Final step no longer shows the lesson-preview card');
+ assert.ok(!JSON.stringify(tree).includes('Διάλεξε ποιον κόσμο'),
+   'Final step no longer shows the explanatory paragraph');
+ assert.ok(nodes(tree).some(n=>n.props?.testID==='welcome-category-science'),
+   'Category choices stay interactive');
  assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,false);
  button(tree,'Ξεκίνα το πρώτο μάθημα →').props.onPress();await flush();
- assert.equal(category,'science','Keep selected world while previewing Ancient Greece');
+ assert.equal(category,'science','Selected category still persists when entering the introduction');
  assert.equal(phase,'lesson');
  press(tree,'Παράλειψη οδηγού');await flush();assert.equal(skips,1);endUi();
  // Stored milestones resume even when activity has already been created.
