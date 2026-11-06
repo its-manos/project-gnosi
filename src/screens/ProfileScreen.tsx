@@ -25,6 +25,7 @@ type Props = {
   onStats: () => void;
   onAccount: () => void;
   onInterests: () => void;
+  onSaved: () => void;
   onGuide: () => void;
 };
 
