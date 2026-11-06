@@ -48,6 +48,7 @@ jobs:
       - run: npm run test:section-end-questions
       - run: node scripts/test-reader-pilot.cjs
       - run: node scripts/test-reader-visual-hierarchy.cjs
+      - run: node scripts/test-reader-resume-anchors.cjs
       - run: node scripts/test-expandable-image-caption.cjs
       - run: node scripts/test-reader-text-size.cjs
       - run: node scripts/test-article-images.cjs
