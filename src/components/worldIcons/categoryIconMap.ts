@@ -10,9 +10,10 @@ import {
   NatureWorldIcon,
   ScienceWorldIcon,
   TechnologyWorldIcon,
+  type WorldIconId,
 } from "./CategoryArtworkIcons";
 
-export const categoryWorldIcons: Record<string, typeof HistoryWorldIcon> = {
+export const categoryWorldIcons: Record<WorldIconId, typeof HistoryWorldIcon> = {
   history: HistoryWorldIcon,
   science: ScienceWorldIcon,
   nature: NatureWorldIcon,

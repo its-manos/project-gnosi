@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 
 export type WorldIconProps = { size?: number; displayScale?: number };
-type IconId =
+export type WorldIconId =
   | "history"
   | "science"
   | "nature"
