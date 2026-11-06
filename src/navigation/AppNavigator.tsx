@@ -2,9 +2,7 @@ import ProfileScreen from "../screens/ProfileScreen";
 import { backDestination, requiresLearningExitConfirmation } from "./navigationRules";
 import PlayerStatsScreen from "../screens/PlayerStatsScreen";
 import KnowledgeReviewScreen from "../screens/KnowledgeReviewScreen";
-import { useBetaAnalytics } from "../state/BetaAnalytics";
-import type { AnalyticsScreen } from "../utils/betaAnalytics";
-import { getInlineQuestionCount } from "../utils/lessonProgress";
+import { useNavigationAnalytics } from "./useNavigationAnalytics";
 import { parseLearningBackup } from "../utils/learningBackup";
 import { getHomeDiscovery } from "../utils/readingDiscovery";
 import { getLessonAccess, getNextPathLesson, getSubcategoryPath } from "../utils/lessonPath";
@@ -52,7 +50,6 @@ export default function AppNavigator() {
     setDevLessonUnlockAll(!devLessonsUnlocked());
     setAllLessonsUnlockedForTesting(devLessonsUnlocked());
   }
-  const { analytics, enabled: usageEnabled } = useBetaAnalytics();
   const discoveryDate = useAthensDate();
   const bookmarks = useSavedLessons();
   const dailyPreferences = useDailyChallengePreferences();
@@ -90,24 +87,6 @@ export default function AppNavigator() {
     if (saved) setIsDailyPreferencesOpen(false);
     return saved;
   }, [savePreferences]);
-
-  async function completeWelcome(preferences: DailyChallengePreferences, destination: WelcomeDestination, lessonId?: string) {
-    const selectedLesson = destination === "lesson" ? lessons.find(l => l.id === lessonId) : null;
-    if (destination === "lesson" && (!selectedLesson || !getLessonAccess(selectedLesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked)) return false;
-    const completed = await finishWelcome(dailyStore, preferences, destination, welcome.isCurrent, welcome.complete);
-    if (!completed || !welcome.isCurrent()) return false;
-    void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: 4, replay: welcome.replay });
-    setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(destination === "daily");
-    if (selectedLesson) app.openLesson(selectedLesson.id);
-    else app.setScreen("home");
-    return true;
-  }
-  async function skipWelcome(step = 1) {
-    if (await welcome.skip()) {
-      void analytics.track("onboarding_skipped", { screen: "welcome", onboarding_step: step, replay: welcome.replay });
-      app.setScreen("home"); setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(false);
-    }
-  }
 
   const activeCategory =
     categories.find((item) => item.id === app.activeCategoryId) ?? categories[0];
@@ -234,30 +213,33 @@ export default function AppNavigator() {
     return () => subscription.remove();
   }, []);
 
-  // The beta analytics endpoint only accepts its published screen names.
-  const analyticsScreen: AnalyticsScreen | null = welcome.visible ? "welcome"
-    : app.screen === "quick-quiz" ? null : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" || app.screen === "learning-insights" ? "progress" : app.screen;
-  const answeredForAnalytics = Object.keys(app.checkpointAnswers).length;
-  const analyticsLessonId = activeLesson?.id;
-  useEffect(() => {
-    if (!welcome.loading && usageEnabled && analyticsScreen) void analytics.view(analyticsScreen);
-  }, [analytics, usageEnabled, welcome.loading, analyticsScreen]);
-  useEffect(() => {
-    if (!usageEnabled || welcome.loading) return;
-    if ((analyticsScreen === "lesson" || analyticsScreen === "quiz") && activeLesson) {
-      void analytics.lesson({ screen: analyticsScreen, lesson_id: activeLesson.id, category_id: activeLesson.categoryId,
-        subcategory_id: activeLesson.subcategoryId, answered_count: answeredForAnalytics, total_questions: getInlineQuestionCount(activeLesson) });
-    } else if (analyticsScreen === "results" && app.resultMode === "finished") {
-      void analytics.completeLesson();
-    } else void analytics.lesson(null);
-    // Counts are updated separately, so checkpoints do not create new visits.
-  }, [analytics, usageEnabled, welcome.loading, analyticsScreen, analyticsLessonId]);
-  useEffect(() => {
-    if (usageEnabled && (analyticsScreen === "lesson" || analyticsScreen === "quiz")) {
-      void analytics.progress({ answered_count: answeredForAnalytics });
+  const { trackWelcomeCompleted, trackWelcomeSkipped } = useNavigationAnalytics({
+    screen: app.screen,
+    lesson: activeLesson,
+    resultMode: app.resultMode,
+    answeredCount: Object.keys(app.checkpointAnswers).length,
+    welcome,
+    dailyChallengeOpen: isDailyChallengeOpen,
+    dailyPreferencesOpen: isDailyPreferencesOpen,
+  });
+
+  async function completeWelcome(preferences: DailyChallengePreferences, destination: WelcomeDestination, lessonId?: string) {
+    const selectedLesson = destination === "lesson" ? lessons.find(l => l.id === lessonId) : null;
+    if (destination === "lesson" && (!selectedLesson || !getLessonAccess(selectedLesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked)) return false;
+    const completed = await finishWelcome(dailyStore, preferences, destination, welcome.isCurrent, welcome.complete);
+    if (!completed || !welcome.isCurrent()) return false;
+    trackWelcomeCompleted();
+    setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(destination === "daily");
+    if (selectedLesson) app.openLesson(selectedLesson.id);
+    else app.setScreen("home");
+    return true;
+  }
+  async function skipWelcome(step = 1) {
+    if (await welcome.skip()) {
+      trackWelcomeSkipped(step);
+      app.setScreen("home"); setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(false);
     }
-  }, [analytics, usageEnabled, analyticsScreen, answeredForAnalytics]);
-  useEffect(() => () => { void analytics.lesson(null, "account_change"); }, [analytics]);
+  }
 
   if (welcome.loading) return <SafeAreaView style={styles.welcomeLoading}><ActivityIndicator color="#B1A5FF" /><Text style={styles.welcomeLoadingText}>Φόρτωση…</Text></SafeAreaView>;
 

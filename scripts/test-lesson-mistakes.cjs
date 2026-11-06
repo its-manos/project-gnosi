@@ -20,7 +20,7 @@ const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 function disk(){const map=new Map([['@gnosi/sync-device-id','phone']]);return{map,getItem:async k=>map.get(k)??null,setItem:async(k,v)=>{map.set(k,v);}};}
 function harness(store){
  let slots=[],cursor=0,deps=[],effects=[];
- const react={useRef:init=>{const i=cursor++;if(!(i in slots))slots[i]={current:init};return slots[i];},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect:(fn,d)=>{const i=cursor++;if(!deps[i]||d.some((v,j)=>v!==deps[i][j])){deps[i]=d;effects.push(fn);}}};
+ const react={useMemo:fn=>fn(),useRef:init=>{const i=cursor++;if(!(i in slots))slots[i]={current:init};return slots[i];},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect:(fn,d)=>{const i=cursor++;if(!deps[i]||d.some((v,j)=>v!==deps[i][j])){deps[i]=d;effects.push(fn);}}};
  const hook=compile('src/hooks/useLearningApp.ts',{react,'../data/lessons':data,'../state/LearningSession':{useLearningSession:()=>({store}),useLearningSnapshot:()=>store.getSnapshot()}}).useLearningApp;
  return()=>{cursor=0;const result=hook();const next=effects;effects=[];next.forEach(fn=>fn());return result;};
 }

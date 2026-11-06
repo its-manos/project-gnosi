@@ -11,11 +11,12 @@ function load(file,overrides={}){
 }
 const data=load('src/data/lessons.ts'),paths=load('src/utils/lessonPath.ts'),discovery=load('src/utils/readingDiscovery.ts'),{LearningStore}=load('src/state/LearningStore.ts');
 const {quizFingerprint}=load('src/utils/learningActivity.ts');
+const {adaptInteractiveLessonQuestion}=load('src/quiz/adapters.ts');
 const plain=x=>JSON.parse(JSON.stringify(x));
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 function harness(store){
  const slots=[],deps=[];let cursor=0,effects=[];
- const react={useRef:init=>{const i=cursor++;if(!(i in slots))slots[i]={current:init};return slots[i];},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect:(fn,d)=>{const i=cursor++;if(!deps[i]||d.some((v,j)=>v!==deps[i][j])){deps[i]=d;effects.push(fn);}}};
+ const react={useMemo:fn=>fn(),useRef:init=>{const i=cursor++;if(!(i in slots))slots[i]={current:init};return slots[i];},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect:(fn,d)=>{const i=cursor++;if(!deps[i]||d.some((v,j)=>v!==deps[i][j])){deps[i]=d;effects.push(fn);}}};
  const hook=load('src/hooks/useLearningApp.ts',{react,'../state/LearningSession':{useLearningSession:()=>({store}),useLearningSnapshot:()=>store.getSnapshot()}}).useLearningApp;
  return()=>{cursor=0;const app=hook();const pending=effects;effects=[];pending.forEach(f=>f());return app;};
 }
@@ -43,7 +44,14 @@ function harness(store){
  const render=harness(store);let app=render();app.openLesson(second.id);assert.equal(app.screen,'home','tap before hydration waits');
  await store.start();app=render();app=render();assert.equal(app.screen,'subcategory','queued locked route cannot bypass gate');
  app.openLesson(first.id);app=render();assert.equal(app.screen,'lesson');
- for(let i=0;i<first.questions.length;i++){app.answerCheckpoint(i,(first.questions[i].correctIndex+1)%4,first.questions[i].correctIndex);app=render();}
+ for(let i=0;i<first.questions.length;i++){
+  const {answers,correctIndex,presentation}=first.questions[i];
+  const wrongIndex=answers.findIndex((_,index)=>index!==correctIndex);
+  const typedValue=presentation?.type==='multiple-select'
+   ? [answers.findIndex((_,index)=>!presentation.correctIndices.includes(index))]
+   : undefined;
+  app.answerCheckpoint(i,wrongIndex,correctIndex,typedValue);app=render();
+ }
  app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.equal(app.score,0);
  assert.equal(paths.getNextPathLesson(first,data.lessons,app.completedLessonIds).id,second.id,'completion unlocks next even at zero score');
  app.openLesson(third.id);app=render();assert.equal(app.screen,'subcategory','cannot skip a prerequisite');
@@ -52,8 +60,14 @@ function harness(store){
  await store.flushLocal();
  const reopened=new LearningStore(null,storage);stores.push(reopened);await reopened.start();
  assert.ok(paths.getLessonAccess(second,data.lessons,reopened.getSnapshot().backup.completedIds).unlocked,'unlock persists offline restart');
- // Emulate an old app's unfinished later lesson; adding a bookmark never does this.
- reopened.answer(third.id,{checkpointAnswers:{0:third.questions[0].correctIndex},quizKey:quizFingerprint(third.questions),score:1,updatedAt:Date.now(),replayOfCompletedLesson:false});await reopened.flushLocal();
+ // Saved progress in a later lesson remains resumable, even before its prerequisite.
+ const checkpoint=adaptInteractiveLessonQuestion(third,0);
+ assert.equal(checkpoint.type,'ordering');
+ reopened.answer(third.id,{
+  checkpointAnswers:{0:third.questions[0].correctIndex},
+  typedCheckpointAnswers:{0:{questionVersion:checkpoint.version,value:checkpoint.content.correctOrder}},
+  quizKey:quizFingerprint(third.questions),score:1,updatedAt:Date.now(),replayOfCompletedLesson:false,
+ });await reopened.flushLocal();
  const resumed=harness(reopened);let old=resumed();old.openLesson(third.id);old=resumed();assert.equal(old.screen,'lesson');assert.equal(old.checkpointAnswers[0],third.questions[0].correctIndex);
  assert.ok(!paths.getLessonAccess(fourth,data.lessons,old.completedLessonIds,old.inProgressLessonIds).unlocked,'started predecessor is insufficient');
  const other=new LearningStore('different-account',storage);stores.push(other);await other.start();assert.ok(!paths.getLessonAccess(second,data.lessons,other.getSnapshot().backup.completedIds).unlocked,'unlock cannot leak between accounts');

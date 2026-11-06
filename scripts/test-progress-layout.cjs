@@ -319,9 +319,8 @@ assert.equal(nodes(tree).find(n => n.type === "Categories").props.singleColumn, 
 assert.equal(nodes(tree).find(n => n.type === "Categories").props.threeColumn, false);
 fontScale = 1; windowWidth = 390;
 
-// Existing analytics allowlist and Android Back contract must recognize the new route.
+// The navigator and Android Back contract must recognize the new route.
 const routeSource = fs.readFileSync(require("node:path").join(__dirname, "../src/navigation/AppNavigator.tsx"), "utf8");
 assert.match(routeSource, /case "learning-insights"/);
 assert.match(routeSource, /app\.screen === "learning-insights" \? "progress"/);
-assert.match(routeSource, /app\.screen === "player-stats" \|\| app\.screen === "learning-insights"/);
 console.log("Progress responsive routing passed: fixed dashboard, adaptive compact mode, accessibility fallback, details navigation, completion access, loading/empty states and Back integration.");

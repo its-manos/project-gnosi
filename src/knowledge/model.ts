@@ -18,6 +18,13 @@ export const sourceCatalogue: KnowledgeItem[] = [
   ...questions.map(q => ({ question: adaptDailyQuestion(q), topicId: `daily-topic:${q.categoryId}:${q.subcategoryId}`, topicTitle: subcategories.find(s => s.id === q.subcategoryId && s.categoryId === q.categoryId)?.title ?? topicNames[q.subcategoryId] ?? categories.find(c => c.id === q.categoryId)?.title ?? "Γενικές γνώσεις" })),
 ];
 export const knowledgeCatalogue: KnowledgeItem[] = [...sourceCatalogue, ...masteryConcepts.flatMap(c => c.variants.map(question => ({ question, topicId: `concept:${c.id}`, topicTitle: c.title, conceptId: c.id, isAssessment: true })))];
+const lessonsById = new Map(lessons.map(lesson => [lesson.id, lesson]));
+const sourceItemsByTopic = new Map<string, KnowledgeItem[]>();
+for (const item of sourceCatalogue) {
+  const sources = sourceItemsByTopic.get(item.topicId);
+  if (sources) sources.push(item);
+  else sourceItemsByTopic.set(item.topicId, [item]);
+}
 const sourceItemsByConcept = new Map(masteryConcepts.map(c => [c.id, sourceCatalogue.filter(i => c.lessonIds.some(id => i.topicId === `unit:${id}`) || c.sourceQuestionIds.includes(i.question.id))]));
 const conceptSources = (c: ConceptDefinition) => sourceItemsByConcept.get(c.id)!;
 export const knowledgeById = new Map(knowledgeCatalogue.map(item => [item.question.id, item]));
@@ -67,24 +74,27 @@ export function scheduleConcept(definition: ConceptDefinition, exposure: Exposur
   return { definition, state, successes, due, lastDate, reviewedToday: recalls.some(r => r.date === today), novelIds, evidenceStatus, active };
 }
 
-export function buildKnowledgeModel(input: KnowledgeInput, daily: DailyDocument, today: string) {
+function buildConceptState(input: KnowledgeInput, daily: DailyDocument, today: string) {
   const exposures = new Map<string, Exposure>();
   const encounter = (id: string, date: string | null) => {
     const current = exposures.get(id);
     if (!current || (date && (!current.date || date < current.date))) exposures.set(id, { date });
   };
-  for (const id of input.completedIds) { const l = lessons.find(l => l.id === id); if (l) for (let i = 0; i < getInlineQuestionCount(l); i++) encounter(adaptLessonQuestion(l, i).id, null); }
+  for (const id of input.completedIds) {
+    for (const item of sourceItemsByTopic.get(`unit:${id}`) ?? []) encounter(item.question.id, null);
+  }
   // A recorded obsolete revision must not be silently reseeded from completion.
   const datedLessons = new Set<string>();
   for (const event of Object.values(input.activity)) {
-    const date = getAthensDateKey(new Date(event.at)), lesson = lessons.find(l => l.id === event.lessonId);
+    const date = getAthensDateKey(new Date(event.at)), lesson = lessonsById.get(event.lessonId);
     if (!lesson || date > today) continue;
+    const sources = sourceItemsByTopic.get(`unit:${lesson.id}`) ?? [];
     if (!datedLessons.has(lesson.id)) {
       datedLessons.add(lesson.id);
-      for (let i = 0; i < getInlineQuestionCount(lesson); i++) exposures.delete(adaptLessonQuestion(lesson, i).id);
+      for (const item of sources) exposures.delete(item.question.id);
     }
     if (!lessonQuizMatches(lesson, event.quizKey)) continue;
-    for (let i = 0; i < Math.min(event.questionCount, getInlineQuestionCount(lesson)); i++) encounter(adaptLessonQuestion(lesson, i).id, date);
+    for (let i = 0; i < Math.min(event.questionCount, sources.length); i++) encounter(sources[i].question.id, date);
   }
   for (const day of Object.values(daily.days)) {
     if (!day.history || day.record.dateKey > today) continue;
@@ -93,11 +103,26 @@ export function buildKnowledgeModel(input: KnowledgeInput, daily: DailyDocument,
       if (q && (!day.details || day.details.questionVersions[index] === q.version)) encounter(q.id, day.details ? day.record.dateKey : null);
     });
   }
-  const concepts = masteryConcepts.map(c => {
-    const encountered = conceptSources(c).flatMap(i => exposures.has(i.question.id) ? [exposures.get(i.question.id)!] : []);
-    const dates = encountered.flatMap(e => e.date ? [e.date] : []).sort();
-    return scheduleConcept(c, encountered.length ? { date: dates[0] ?? null } : undefined, input.knowledgeReviews ?? {}, today);
+  const reviews = input.knowledgeReviews ?? {};
+  const concepts = masteryConcepts.map(concept => {
+    let firstExposure: Exposure | undefined;
+    for (const item of conceptSources(concept)) {
+      const exposure = exposures.get(item.question.id);
+      if (exposure && (!firstExposure || (exposure.date && (!firstExposure.date || exposure.date < firstExposure.date)))) {
+        firstExposure = exposure;
+      }
+    }
+    return scheduleConcept(concept, firstExposure, reviews, today);
   });
+  return { exposures, concepts, recalled: concepts.filter(concept => concept.successes > 0).length };
+}
+
+export function countRecalledConcepts(input: KnowledgeInput, daily: DailyDocument, today: string): number {
+  return buildConceptState(input, daily, today).recalled;
+}
+
+export function buildKnowledgeModel(input: KnowledgeInput, daily: DailyDocument, today: string) {
+  const { exposures, concepts, recalled } = buildConceptState(input, daily, today);
   const sourceConcept = new Map<string, ConceptKnowledge>();
   for (const c of concepts) for (const item of conceptSources(c.definition)) sourceConcept.set(item.question.id, c);
   const items: QuestionKnowledge[] = knowledgeCatalogue.map(item => {
@@ -112,8 +137,8 @@ export function buildKnowledgeModel(input: KnowledgeInput, daily: DailyDocument,
   // Voluntary practice is explicitly familiar material. It cannot consume fresh
   // scenarios or change concept evidence, even on a later date.
   const practice = items.filter(i => !i.isAssessment ? exposures.has(i.question.id) : !!input.knowledgeReviews?.[i.question.id] && Object.keys(input.knowledgeReviews[i.question.id]).some(date => date <= today)).sort((a, b) => (a.lastDate ?? "").localeCompare(b.lastDate ?? "") || a.question.id.localeCompare(b.question.id));
-  const topics = [...new Set(sourceCatalogue.map(i => i.topicId))].map(id => {
-    const sources = sourceCatalogue.filter(i => i.topicId === id), related = concepts.filter(c => conceptSources(c.definition).some(i => i.topicId === id));
+  const topics = Array.from(sourceItemsByTopic, ([id, sources]) => {
+    const related = concepts.filter(c => conceptSources(c.definition).some(i => i.topicId === id));
     const seen = sources.some(i => exposures.has(i.question.id)), active = seen || related.some(c => c.active);
     const state: MasteryState = related.length && related.every(c => c.state === "mastered") ? "mastered" : related.length && related.every(c => ["familiar", "mastered"].includes(c.state)) ? "familiar" : active ? "learning" : "new";
     const status = !active ? "Νέο" : !related.length ? (id.startsWith("unit:") ? "Ολοκληρώθηκε · χρειάζονται νέες δοκιμές" : "Συναντήθηκε · χρειάζονται νέες δοκιμές") : related.some(c => c.evidenceStatus === "needs-evidence") ? "Χρειάζονται περισσότερα στοιχεία" : MASTERY_LABELS[state];
@@ -125,5 +150,5 @@ export function buildKnowledgeModel(input: KnowledgeInput, daily: DailyDocument,
     const rows = concepts.filter(c => subject(c.definition) === id);
     return { id, title: categories.find(c => c.id === id)?.title ?? topicNames[id] ?? "Γενικές γνώσεις", percent: rows.length ? Math.round(rows.reduce((sum, c) => sum + c.successes, 0) / (rows.length * 3) * 100) : 0, mastered: rows.filter(c => c.state === "mastered").length, total: rows.length };
   });
-  return { items, due, practice, topics, categories: categoryProgress, concepts, recalled: concepts.filter(c => c.successes > 0).length, needsEvidence: topics.filter(t => t.state !== "new" && (!t.covered || t.status === "Χρειάζονται περισσότερα στοιχεία")).length };
+  return { items, due, practice, topics, categories: categoryProgress, concepts, recalled, needsEvidence: topics.filter(t => t.state !== "new" && (!t.covered || t.status === "Χρειάζονται περισσότερα στοιχεία")).length };
 }

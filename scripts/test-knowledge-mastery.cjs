@@ -1,5 +1,5 @@
 const {Buffer}=require('node:buffer'),assert=require('node:assert/strict'),{load}=require('./helpers/load-typescript.cjs');
-const {buildKnowledgeModel,scheduleConcept,knowledgeCatalogue,knowledgeById}=load('src/knowledge/model.ts');
+const {buildKnowledgeModel,countRecalledConcepts,scheduleConcept,knowledgeCatalogue,knowledgeById}=load('src/knowledge/model.ts');
 const {masteryConcepts}=load('src/knowledge/concepts.ts');
 const {parseKnowledgeReviews,mergeKnowledgeReviews,parseKnowledgeSession}=load('src/knowledge/records.ts');
 const {emptyDailyDocument}=load('src/utils/dailySyncDocument.ts'),{shiftDateKey,quizFingerprint}=load('src/utils/learningActivity.ts');
@@ -23,9 +23,11 @@ const hard={...c,variants:c.variants.map(q=>({...q,difficulty:'hard'}))},one={};
 const lesson=lessons.find(l=>l.id===c.lessonIds[0]),input={completedIds:[lesson.id],activity:{a:{lessonId:lesson.id,at:Date.parse('2026-10-20T12:00:00Z'),wasCompleted:false,correctCount:lesson.questions.length,questionCount:lesson.questions.length,quizKey:quizFingerprint(lesson.questions),missedQuestionIndices:[]}},weeklyReviews:{},knowledgeReviews:{}};
 let model=buildKnowledgeModel(input,emptyDailyDocument(),'2026-10-31');assert.equal(model.due.length,1);assert.ok(model.due[0].isAssessment);assert.ok(!lesson.questions.some(q=>q.question===model.due[0].question.prompt));assert.equal(model.recalled,0);
 model=buildKnowledgeModel({...input,knowledgeReviews:reviews},emptyDailyDocument(),'2026-10-31');assert.ok(!model.due.some(i=>i.conceptId===c.id));assert.equal(model.concepts.find(x=>x.definition.id===c.id).state,'mastered');
+assert.equal(countRecalledConcepts({...input,knowledgeReviews:reviews},emptyDailyDocument(),'2026-10-31'),model.recalled,'Profile and review use the same concept evidence');
 const legacyQuestion=knowledgeCatalogue.find(i=>i.topicId==='unit:'+lesson.id&&!i.isAssessment).question;
 const oldFacts={[legacyQuestion.id]:Object.fromEntries(['2026-10-21','2026-10-24','2026-10-31'].map(date=>[date,{version:legacyQuestion.version,answerIndex:legacyQuestion.content.correctIndex,at:Date.parse(date+'T12:00:00Z'),mode:'scheduled'}]))};
 model=buildKnowledgeModel({...input,knowledgeReviews:oldFacts},emptyDailyDocument(),'2026-10-31');assert.equal(model.recalled,0,'old repeated-answer mastery is archived, not renamed to transfer evidence');
+assert.equal(countRecalledConcepts({...input,knowledgeReviews:oldFacts},emptyDailyDocument(),'2026-10-31'),0);
 const uncovered=lessons.find(l=>!masteryConcepts.some(c=>c.lessonIds.includes(l.id)));model=buildKnowledgeModel({completedIds:[uncovered.id],activity:{},weeklyReviews:{}},emptyDailyDocument(),'2026-10-31');assert.equal(model.due.length,0);assert.ok(model.topics.find(t=>t.id==='unit:'+uncovered.id).status.includes('χρειάζονται νέες δοκιμές'));
 assert.ok(model.practice.length>0,'optional familiar practice remains available');
 model=buildKnowledgeModel({...input,activity:{a:{...input.activity.a,quizKey:'obsolete'}}},emptyDailyDocument(),'2026-10-31');assert.equal(model.due.length,0,'obsolete lesson evidence is not silently reseeded');
