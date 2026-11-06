@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Category } from "../data/lessons";
 import { DAILY_CHALLENGE_TOPICS, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
-import type { WelcomePhase } from "../utils/firstRun";
+import { WELCOME_GUIDE_STAGES, previousWelcomePhase, welcomeStepNumber, type WelcomePhase } from "../utils/firstRun";
 import { colors } from "../theme";
 import ActionButton from "../components/ActionButton";
 import AtlasCard from "../components/AtlasCard";
@@ -66,7 +66,7 @@ export default function WelcomeScreen({
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   }
 
-  const step = phase === "welcome" ? 1 : phase === "question" ? 2 : phase === "interests" ? 3 : 4;
+  const step = welcomeStepNumber(phase);
   function toggleTopic(id: string) {
     if (busy) return;
     interestsTouched.current = true;
@@ -86,13 +86,14 @@ export default function WelcomeScreen({
         ? <View style={styles.brand}><View style={styles.brandStar}><Text style={styles.brandGlyph}>✦</Text></View><Text style={styles.brandName}>ΓΝΩΣΗ</Text></View>
         : <Pressable style={styles.back} disabled={busy} accessibilityRole="button"
             accessibilityLabel="Προηγούμενο βήμα" accessibilityState={{ disabled: busy }}
-            onPress={() => void run(() => onAdvance(
-              phase === "question" ? "welcome" : phase === "interests" ? "question" : "interests",
-            ))}>
+            onPress={() => {
+              const previous = previousWelcomePhase(phase);
+              if (previous) void run(() => onAdvance(previous));
+            }}>
             <Text style={styles.backText}>‹ Πίσω</Text>
           </Pressable>}
-      <MotionCounter progressKey={String(step)} accessibilityLabel={`Βήμα ${step} από 4`}
-        style={styles.counter}>{step} / 4</MotionCounter>
+      <MotionCounter progressKey={String(step)} accessibilityLabel={`Βήμα ${step} από ${WELCOME_GUIDE_STAGES.length}`}
+        style={styles.counter}>{step} / {WELCOME_GUIDE_STAGES.length}</MotionCounter>
       <Pressable accessibilityRole="button" accessibilityLabel="Παράλειψη οδηγού"
         accessibilityState={{ disabled: busy }} disabled={busy} hitSlop={8}
         onPress={() => void run(() => onSkip(step))} style={styles.skip}>
@@ -100,7 +101,8 @@ export default function WelcomeScreen({
       </Pressable>
     </View>
     <View accessibilityLabel="Πρόοδος γνωριμίας" style={styles.track}>
-      {[1, 2, 3, 4].map(number => <View key={number} style={[styles.segment, number <= step && styles.segmentActive]} />)}
+      {WELCOME_GUIDE_STAGES.map((stage, index) => <View key={stage}
+        style={[styles.segment, index < step && styles.segmentActive]} />)}
     </View>
 
     {phase === "question" ? <OnboardingDailyQuestion
@@ -141,11 +143,11 @@ export default function WelcomeScreen({
           <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε ποιον κόσμο θα ήθελες να εξερευνήσεις. Τους υπόλοιπους μπορείς να τους γνωρίσεις όποτε θέλεις.</Text>
         </MotionView>
         <View style={styles.categoryGrid}>
-          {categories.map(category => {
+          {categories.map((category, index) => {
             const Icon = getCategoryWorldIcon(category.id);
             const active = categoryId === category.id;
             return <MotionPressable key={category.id} testID={`welcome-category-${category.id}`}
-              entranceDelay={80 + categories.indexOf(category) * 32} pressScale={0.975}
+              entranceDelay={80 + index * 32} pressScale={0.975}
               accessibilityRole="radio" accessibilityLabel={category.title}
               accessibilityState={{ selected: active, disabled: busy }} disabled={busy}
               onPress={() => setCategoryId(category.id)}
@@ -180,12 +182,12 @@ export default function WelcomeScreen({
           <Text style={styles.topicCounter} accessibilityLiveRegion="polite">{topics.length} / 5 · τουλάχιστον 3</Text>
         </MotionView>
         <View style={styles.topicGrid}>
-          {DAILY_CHALLENGE_TOPICS.map(topic => {
+          {DAILY_CHALLENGE_TOPICS.map((topic, index) => {
             const active = topics.includes(topic.id);
             const disabled = busy || (!active && topics.length >= 5);
             const Icon = getCategoryWorldIcon(topic.id);
             return <MotionPressable key={topic.id} testID={`welcome-interest-${topic.id}`}
-              entranceDelay={80 + DAILY_CHALLENGE_TOPICS.indexOf(topic) * 28} pressScale={0.975}
+              entranceDelay={80 + index * 28} pressScale={0.975}
               accessibilityRole="checkbox" accessibilityLabel={topic.title}
               accessibilityState={{ checked: active, disabled }}
               disabled={disabled} onPress={() => toggleTopic(topic.id)}
