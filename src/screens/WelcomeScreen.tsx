@@ -13,6 +13,7 @@ import UsageSharing from "../components/UsageSharing";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import OnboardingDailyQuestion from "./OnboardingDailyQuestion";
 import { WelcomeAtlasIcon, WelcomeLessonIcon, WelcomeQuizIcon } from "../components/WelcomeStepIcons";
+import { MotionCounter, MotionPressable, MotionView } from "../components/HomeMotion";
 import { onboardingLayout } from "./onboardingLayout";
 
 type Props = {
@@ -90,7 +91,8 @@ export default function WelcomeScreen({
             ))}>
             <Text style={styles.backText}>‹ Πίσω</Text>
           </Pressable>}
-      <Text accessibilityLabel={`Βήμα ${step} από 4`} style={styles.counter}>{step} / 4</Text>
+      <MotionCounter progressKey={String(step)} accessibilityLabel={`Βήμα ${step} από 4`}
+        style={styles.counter}>{step} / 4</MotionCounter>
       <Pressable accessibilityRole="button" accessibilityLabel="Παράλειψη οδηγού"
         accessibilityState={{ disabled: busy }} disabled={busy} hitSlop={8}
         onPress={() => void run(() => onSkip(step))} style={styles.skip}>
@@ -110,71 +112,85 @@ export default function WelcomeScreen({
       { paddingBottom: Math.max(onboardingLayout.minBottomPadding, insets.bottom + 18) } ]}
       showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       {phase === "welcome" ? <>
-        <View style={[styles.hero, compact && styles.heroCompact]} accessible={false}>
+        <MotionView entranceDelay={20} style={[styles.hero, compact && styles.heroCompact]} accessible={false}>
           <WelcomeAtlasIcon size={108} />
-        </View>
-        <Text style={styles.eyebrow}>ΕΝΑΣ ΚΟΣΜΟΣ ΠΕΡΙΕΡΓΕΙΑΣ</Text>
-        <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Κάθε μέρα, κάτι καινούργιο.</Text>
-        <AtlasCard style={styles.experience}>
+        </MotionView>
+        <MotionView entranceDelay={70}>
+          <Text style={styles.eyebrow}>ΕΝΑΣ ΚΟΣΜΟΣ ΠΕΡΙΕΡΓΕΙΑΣ</Text>
+          <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Κάθε μέρα, κάτι καινούργιο.</Text>
+        </MotionView>
+        <AtlasCard entranceDelay={125} style={styles.experience}>
           <View style={styles.experienceRow}><View style={styles.experienceIcon} accessible={false}><WelcomeQuizIcon /></View><View style={styles.experienceCopy}>
             <Text style={styles.experienceTitle}>01  Δοκίμασε τις γνώσεις σου</Text><Text style={styles.small}>Η πρώτη ερώτηση της σημερινής πρόκλησης.</Text></View></View>
           <View style={styles.divider} />
           <View style={styles.experienceRow}><View style={styles.experienceIcon} accessible={false}><WelcomeLessonIcon /></View><View style={styles.experienceCopy}>
             <Text style={styles.experienceTitle}>02  Ξεκίνα μια περιπέτεια</Text><Text style={styles.small}>Ένα μάθημα γεμάτο ανακαλύψεις και ερωτήσεις.</Text></View></View>
         </AtlasCard>
-        <Text style={styles.support}>Χωρίς λογαριασμό. Η πρόοδός σου αποθηκεύεται στη συσκευή σου.</Text>
-        {!replay ? <UsageSharing /> : null}
-        <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκινάμε →"} disabled={busy}
-          onPress={() => void run(() => onAdvance("question"))} />
+        <MotionView entranceDelay={165}>
+          <Text style={styles.support}>Χωρίς λογαριασμό. Η πρόοδός σου αποθηκεύεται στη συσκευή σου.</Text>
+          {!replay ? <UsageSharing /> : null}
+        </MotionView>
+        <MotionView entranceDelay={210}>
+          <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκινάμε →"} disabled={busy}
+            onPress={() => void run(() => onAdvance("question"))} />
+        </MotionView>
       </> : phase === "choose" ? <>
-        <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
-        <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε ποιον κόσμο θα ήθελες να εξερευνήσεις. Τους υπόλοιπους μπορείς να τους γνωρίσεις όποτε θέλεις.</Text>
+        <MotionView entranceDelay={25}>
+          <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
+          <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
+          <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε ποιον κόσμο θα ήθελες να εξερευνήσεις. Τους υπόλοιπους μπορείς να τους γνωρίσεις όποτε θέλεις.</Text>
+        </MotionView>
         <View style={styles.categoryGrid}>
           {categories.map(category => {
             const Icon = getCategoryWorldIcon(category.id);
             const active = categoryId === category.id;
-            return <Pressable key={category.id} testID={`welcome-category-${category.id}`}
+            return <MotionPressable key={category.id} testID={`welcome-category-${category.id}`}
+              entranceDelay={80 + categories.indexOf(category) * 32} pressScale={0.975}
               accessibilityRole="radio" accessibilityLabel={category.title}
               accessibilityState={{ selected: active, disabled: busy }} disabled={busy}
               onPress={() => setCategoryId(category.id)}
-              style={({ pressed }) => [styles.category, compact && styles.categoryCompact, narrow && styles.optionNarrow, active && styles.categorySelected, pressed && styles.categoryPressed]}>
+              style={[styles.category, compact && styles.categoryCompact, narrow && styles.optionNarrow, active && styles.categorySelected]}>
               <View style={styles.iconArea}>{Icon ? <Icon size={narrow ? 32 : 38} /> : <Text style={styles.fallbackIcon}>{category.emoji}</Text>}</View>
               <Text style={styles.categoryTitle} numberOfLines={2}>{category.title}</Text>
               <View style={[styles.topicCheck, narrow && styles.narrowCheck, active && styles.topicCheckActive]}>
                 {active ? <Text style={styles.topicCheckText}>✓</Text> : null}
               </View>
-            </Pressable>;
+            </MotionPressable>;
           })}
         </View>
-        <View style={styles.lessonPreview}>
+        <MotionView entranceDelay={190} style={styles.lessonPreview}>
           <Text style={styles.previewKicker}>Η ΠΡΩΤΗ ΣΟΥ ΔΙΑΔΡΟΜΗ</Text>
           <Text style={styles.previewTitle}>Αρχαία Ελλάδα</Text>
           <Text style={styles.small}>Το πρώτο μάθημα μάς ταξιδεύει στην Αρχαία Ελλάδα, ανεξάρτητα από τον κόσμο που διάλεξες.</Text>
           {selected ? <Text style={styles.selectedHint}>Ο κόσμος που διάλεξες: {selected.title}</Text> : null}
-        </View>
-        <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκίνα το πρώτο μάθημα →"}
-          disabled={busy || !categoryId}
-          onPress={() => { if (categoryId) void run(() => onBeginLesson(categoryId)); }} />
+        </MotionView>
+        <MotionView entranceDelay={230}>
+          <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκίνα το πρώτο μάθημα →"}
+            disabled={busy || !categoryId}
+            onPress={() => { if (categoryId) void run(() => onBeginLesson(categoryId)); }} />
+        </MotionView>
       </> : <>
-        <Text style={styles.eyebrow}>Η ΓΝΩΣΗ ΣΤΑ ΜΕΤΡΑ ΣΟΥ</Text>
-        <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Τι σου αρέσει να ανακαλύπτεις;</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε 3–5 θέματα για να βλέπεις περισσότερες σχετικές ερωτήσεις στο Γρήγορο Κουίζ και προτάσεις μαθημάτων.</Text>
-        <View style={styles.topicCount}>
+        <MotionView entranceDelay={25}>
+          <Text style={styles.eyebrow}>Η ΓΝΩΣΗ ΣΤΑ ΜΕΤΡΑ ΣΟΥ</Text>
+          <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Τι σου αρέσει να ανακαλύπτεις;</Text>
+          <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε 3–5 θέματα για να βλέπεις περισσότερες σχετικές ερωτήσεις στο Γρήγορο Κουίζ και προτάσεις μαθημάτων.</Text>
+        </MotionView>
+        <MotionView entranceDelay={55} style={styles.topicCount}>
           <Text style={styles.topicCountText}>ΤΑ ΕΝΔΙΑΦΕΡΟΝΤΑ ΣΟΥ</Text>
           <Text style={styles.topicCounter} accessibilityLiveRegion="polite">{topics.length} / 5 · τουλάχιστον 3</Text>
-        </View>
+        </MotionView>
         <View style={styles.topicGrid}>
           {DAILY_CHALLENGE_TOPICS.map(topic => {
             const active = topics.includes(topic.id);
             const disabled = busy || (!active && topics.length >= 5);
             const Icon = getCategoryWorldIcon(topic.id);
-            return <Pressable key={topic.id} testID={`welcome-interest-${topic.id}`}
+            return <MotionPressable key={topic.id} testID={`welcome-interest-${topic.id}`}
+              entranceDelay={80 + DAILY_CHALLENGE_TOPICS.indexOf(topic) * 28} pressScale={0.975}
               accessibilityRole="checkbox" accessibilityLabel={topic.title}
               accessibilityState={{ checked: active, disabled }}
               disabled={disabled} onPress={() => toggleTopic(topic.id)}
-              style={({ pressed }) => [styles.topic, compact && styles.topicCompact, narrow && styles.optionNarrow, active && styles.topicActive,
-                disabled && !active && styles.topicDisabled, pressed && styles.categoryPressed]}>
+              style={[styles.topic, compact && styles.topicCompact, narrow && styles.optionNarrow, active && styles.topicActive,
+                disabled && !active && styles.topicDisabled]}>
               <View style={styles.topicIcon} accessible={false}>
                 {Icon ? <Icon size={narrow ? 26 : 29} /> : <Text style={styles.topicEmoji}>{topic.emoji}</Text>}
               </View>
@@ -182,13 +198,14 @@ export default function WelcomeScreen({
               <View style={[styles.topicCheck, narrow && styles.narrowCheck, active && styles.topicCheckActive]}>
                 {active ? <Text style={styles.topicCheckText}>✓</Text> : null}
               </View>
-            </Pressable>;
+            </MotionPressable>;
           })}
         </View>
-        <Text style={styles.interestsNote}>Η καθημερινή πρόκληση έχει τις ίδιες 7 ερωτήσεις για όλους. Μπορείς να αλλάξεις τα ενδιαφέροντά σου από το Προφίλ.</Text>
-        <ActionButton label={busy ? "Αποθήκευση…" : "Συνέχεια →"}
-          disabled={busy || !preferencesLoaded || topics.length < 3 || topics.length > 5}
-          onPress={() => void run(() => onSaveInterests({ topicIds: topics, difficulty: preferences.difficulty }))} />
+        <MotionView entranceDelay={205}>
+          <ActionButton label={busy ? "Αποθήκευση…" : "Συνέχεια →"}
+            disabled={busy || !preferencesLoaded || topics.length < 3 || topics.length > 5}
+            onPress={() => void run(() => onSaveInterests({ topicIds: topics, difficulty: preferences.difficulty }))} />
+        </MotionView>
       </>}
       {error ? <Text style={styles.error} accessibilityLiveRegion="polite">Δεν αποθηκεύτηκε το βήμα. Δοκίμασε ξανά ή παράλειψε τον οδηγό.</Text> : null}
     </ScrollView>}
@@ -249,7 +266,6 @@ const styles = StyleSheet.create({
     flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", gap: 3 },
   narrowCheck: { position: "absolute", right: 9, top: 9 },
   categorySelected: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
-  categoryPressed: { opacity: .8 },
   iconArea: { width: 40, alignItems: "center", justifyContent: "center" },
   fallbackIcon: { fontSize: 24 },
   categoryTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800", flex: 1 },
@@ -276,6 +292,5 @@ const styles = StyleSheet.create({
     borderColor: "#77778C", justifyContent: "center", alignItems: "center", flexShrink: 0 },
   topicCheckActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   topicCheckText: { color: colors.background, fontSize: 12, fontWeight: "900" },
-  interestsNote: { color: colors.textMuted, fontSize: 12, lineHeight: 19, marginTop: 14, marginBottom: 3 },
   error: { color: colors.error, fontSize: 12, lineHeight: 20, marginTop: 12 },
 });
