@@ -44,11 +44,13 @@ assert.match(profile, /actionLabel="Ρυθμίσεις ›" actionAccessibilityL
   "Account and settings remain accessible from the Profile header.");
 assert.doesNotMatch(profile, /<QuickLink title="Λογαριασμός"/,
   "The duplicate Account tile must not return under Ο χώρος σου.");
-for (const title of ["Δραστηριότητα", "Ενδιαφέροντα", "Οδηγός"]) {
+for (const title of ["Δραστηριότητα", "Αποθηκευμένα", "Ενδιαφέροντα", "Οδηγός"]) {
   assert.ok(profile.includes(`<QuickLink title="${title}"`), title + " stays in Ο χώρος σου.");
 }
-assert.match(profile, /testID="profile-saved-link"/,
-  "The Saved lessons destination stays discoverable from Profile.");
+assert.match(profile, /title === "Αποθηκευμένα" \? "profile-saved-link"/,
+  "Saved lessons has a discoverable, tested profile tile.");
+assert.match(profile, /icon="saved" onPress=\{onSaved\}/,
+  "Saved lessons retains its existing navigation callback.");
 assert.match(routes, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
   "Saved lessons shortcut must navigate to the existing route.");
 assert.match(profile, /scrollEnabled=\{canScroll\}/,
