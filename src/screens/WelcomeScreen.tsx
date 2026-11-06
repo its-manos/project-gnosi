@@ -112,7 +112,7 @@ export default function WelcomeScreen({
       { paddingBottom: Math.max(onboardingLayout.minBottomPadding, insets.bottom + 18) } ]}
       showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       {phase === "welcome" ? <>
-        <MotionView entranceDelay={20} style={[styles.hero, compact && styles.heroCompact]} accessible={false}>
+        <MotionView key="welcome-hero" entranceDelay={20} style={[styles.hero, compact && styles.heroCompact]} accessible={false}>
           <WelcomeAtlasIcon size={108} />
         </MotionView>
         <MotionView entranceDelay={70}>
@@ -135,7 +135,7 @@ export default function WelcomeScreen({
             onPress={() => void run(() => onAdvance("question"))} />
         </MotionView>
       </> : phase === "choose" ? <>
-        <MotionView entranceDelay={25}>
+        <MotionView key="choose-heading" entranceDelay={25}>
           <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
           <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
           <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε ποιον κόσμο θα ήθελες να εξερευνήσεις. Τους υπόλοιπους μπορείς να τους γνωρίσεις όποτε θέλεις.</Text>
@@ -170,7 +170,7 @@ export default function WelcomeScreen({
             onPress={() => { if (categoryId) void run(() => onBeginLesson(categoryId)); }} />
         </MotionView>
       </> : <>
-        <MotionView entranceDelay={25}>
+        <MotionView key="interests-heading" entranceDelay={25}>
           <Text style={styles.eyebrow}>Η ΓΝΩΣΗ ΣΤΑ ΜΕΤΡΑ ΣΟΥ</Text>
           <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Τι σου αρέσει να ανακαλύπτεις;</Text>
           <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε 3–5 θέματα για να βλέπεις περισσότερες σχετικές ερωτήσεις στο Γρήγορο Κουίζ και προτάσεις μαθημάτων.</Text>
