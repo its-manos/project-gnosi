@@ -16,6 +16,7 @@ import { colors } from "../theme";
 type Props = {
   game: ReturnType<typeof useQuickQuiz>;
   scope: string;
+  preferredTopicIds?: readonly string[];
   onHome: () => void;
 };
 
@@ -44,7 +45,7 @@ function ResultStat({ value, label }: { value: string | number; label: string })
   </View>;
 }
 
-export default function QuickQuizScreen({ game, scope, onHome }: Props) {
+export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], onHome }: Props) {
   const insets = useSafeAreaInsets();
   const entered = useRef(false);
   const openingResult = useRef<string | null>(null);
@@ -56,14 +57,14 @@ export default function QuickQuizScreen({ game, scope, onHome }: Props) {
   const answer = question && round ? round.answers[question.id]?.value as number | undefined : undefined;
 
   function newRound() {
-    void update(startQuickQuiz).then(saved => { if (saved) setReview(false); }).catch(() => {});
+    void update(current => startQuickQuiz(current, Math.random, preferredTopicIds)).then(saved => { if (saved) setReview(false); }).catch(() => {});
   }
 
   useEffect(() => {
     if (entered.current || !progress) return;
     entered.current = true;
     if (progress.round?.completed) openingResult.current = progress.round.id;
-    if (!progress.round || progress.round.completed) void update(startQuickQuiz).catch(() => {});
+    if (!progress.round || progress.round.completed) void update(current => startQuickQuiz(current, Math.random, preferredTopicIds)).catch(() => {});
   }, [progress, update]);
 
   const liveQuestionId = round && !round.completed && question && answer === undefined
