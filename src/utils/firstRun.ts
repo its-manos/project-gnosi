@@ -4,9 +4,9 @@ import { createSharedDailyRecord } from "./sharedDailyChallenge";
 import type { DailyStore } from "../state/DailyStore";
 export const WELCOME_STORAGE_KEY = "@gnosi/welcome-v1";
 export const ONBOARDING_CATEGORY_KEY = "@gnosi/onboarding-category-v1";
-export type WelcomePhase = "welcome" | "question" | "choose" | "lesson";
+export type WelcomePhase = "welcome" | "question" | "choose" | "interests" | "lesson";
 export function isWelcomePhase(value: string | null): value is WelcomePhase {
-  return value === "welcome" || value === "question" || value === "choose" || value === "lesson";
+  return value === "welcome" || value === "question" || value === "choose" || value === "interests" || value === "lesson";
 }
 export const ONBOARDING_INTRO_LESSON_ID = "ancient-athens";
 export const LEGACY_WELCOME_KEYS = ["@gnosi/completed-lesson-ids", "@gnosi/in-progress-lesson-attempts", "@gnosi/saved-lesson-ids", "@gnosi/daily-challenge-v1", "@gnosi/daily-challenge-history-v1", "@gnosi/daily-challenge-preferences-v1"];
