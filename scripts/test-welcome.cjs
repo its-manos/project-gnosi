@@ -111,7 +111,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(compactScroll.props.contentContainerStyle[2].paddingTop,12);
  assert.equal(compactScroll.props.contentContainerStyle.at(-1).paddingBottom,52);
  const firstTopic=nodes(tree).find(n=>n.props?.testID==='welcome-interest-history');
- assert.ok(firstTopic.props.style.some(st=>st?.minHeight===70),'Compact tiles stay easily tappable');
+ assert.ok(firstTopic.props.style({pressed:false}).some(st=>st?.minHeight===70),'Compact tiles stay easily tappable');
  dimensions={height:830,width:390,fontScale:1};tree=draw();
  button(tree,'Συνέχεια →').props.onPress();await flush();tree=draw();
  assert.equal(phase,'choose','Interests precede the selected first-lesson category');
