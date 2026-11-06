@@ -555,13 +555,15 @@ assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, undefi
   "lesson card height follows its content");
 assert.equal(homeSections[2].props.style.flexGrow, undefined,
   "quiz cards match one another without absorbing viewport height");
-assert.equal(homeSections[3].props.style[0].flexGrow, 1,
-  "knowledge worlds can expand to use spare height");
+assert.equal(homeSections[3].props.style[0].flexGrow, undefined,
+  "knowledge worlds stay at their natural height");
 const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap");
 assert.ok(flexibleWorldGrid, "knowledge-world cards stay in the existing grid");
-assert.equal(flexibleWorldGrid.props.style[0].alignContent, "space-evenly",
-  "spare space is balanced around the category rows");
+assert.equal(flexibleWorldGrid.props.style[0].alignContent, "flex-start",
+  "category rows sit directly below the heading");
+assert.equal(flexibleWorldGrid.props.style[0].flexGrow, undefined,
+  "the grid cannot stretch into unused viewport space");
 assert.equal(flexibleWorldGrid.props.style[0].rowGap, 8,
   "world-row margins stay fixed");
 

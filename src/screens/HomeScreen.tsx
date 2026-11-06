@@ -253,7 +253,7 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Keep the action cards at their natural height. The atlas gets the remaining space.
+  // Keep every section at its natural height, including the two category rows.
   // Small viewports can still scroll after the density fallback.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
     paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
@@ -312,13 +312,13 @@ const styles = StyleSheet.create({
   quickQuizIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  worlds: { gap: 6, flexGrow: 1, paddingTop: 6 },
+  worlds: { gap: 6, paddingTop: 6 },
   sectionRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   sectionRule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(177,165,255,0.32)" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
-    flexGrow: 1, alignContent: "space-evenly", columnGap: 8, rowGap: 8 },
+    alignContent: "flex-start", columnGap: 8, rowGap: 8 },
   category: { width: "22.7%", minHeight: 96, borderRadius: 14,
     alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
   categoryPlatform: { width: 62, height: 62, borderRadius: 31,
