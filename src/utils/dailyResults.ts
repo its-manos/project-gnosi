@@ -6,7 +6,7 @@ import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import type { Lesson } from "../data/lessons";
 import { adaptDailyQuestion } from "../quiz/adapters";
 import { evaluateChoice } from "../quiz/engine";
-import { getLessonAccess, getSubcategoryPath } from "./lessonPath";
+import { createLessonAccessLookup } from "./lessonPath";
 
 /** Compact evidence, not seven copies of question text per day. */
 export type DailyResultDetails = { version:1; questionVersions:string[]; correctMask:boolean[]; categoryIds:string[]; subcategoryIds:string[] };
@@ -45,10 +45,32 @@ export function dailyResultAnalysis(record: DailyChallengeRecord, bank: readonly
   return {rows,categories,strongest,highestCombo:details?highestCorrectCombo(details.correctMask):null,accuracyPercent:Math.round(frozenCorrectCount/7*100),reviewable:rows.some(r=>r.question),practiceQuestions:rows.filter(r=>r.question&&(r.correct===false||(!versions&&legacyConsistent&&record.answers[r.index]!==r.question.correctIndex))).map(r=>r.question!),legacy:!details};
 }
 export function recommendDailyLesson(rows: ReturnType<typeof dailyResultAnalysis>['rows'], catalogue: readonly Lesson[], completed: readonly string[], inProgress: readonly string[], preferences: DailyChallengePreferences): Lesson | null {
-  const wrong=rows.filter(r=>r.correct===false),subcategories=new Set(wrong.map(r=>r.subcategoryId)),categories=new Set(wrong.map(r=>r.categoryId));
-  const rank=(l:Lesson)=>subcategories.has(l.subcategoryId)?0:categories.has(l.categoryId)?1:preferences.topicIds.includes(l.categoryId)?2:3;
-  const candidates=catalogue.filter(l=>!completed.includes(l.id)&&getLessonAccess(l,catalogue,completed,inProgress).unlocked);
-  return candidates.sort((a,b)=>rank(a)-rank(b)||Number(inProgress.includes(b.id))-Number(inProgress.includes(a.id))||getSubcategoryPath(catalogue,a.subcategoryId).findIndex(l=>l.id===a.id)-getSubcategoryPath(catalogue,b.subcategoryId).findIndex(l=>l.id===b.id)||(a.id<b.id?-1:1))[0]??null;
+  const wrong = rows.filter(row => row.correct === false);
+  const subcategories = new Set(wrong.map(row => row.subcategoryId));
+  const categories = new Set(wrong.map(row => row.categoryId));
+  const rank = (lesson: Lesson) => {
+    if (subcategories.has(lesson.subcategoryId)) return 0;
+    if (categories.has(lesson.categoryId)) return 1;
+    return preferences.topicIds.includes(lesson.categoryId) ? 2 : 3;
+  };
+  const getAccess = createLessonAccessLookup(catalogue, completed, inProgress);
+  const candidates: { lesson: Lesson; rank: number; inProgress: boolean; position: number }[] = [];
+
+  for (const lesson of catalogue) {
+    if (completed.includes(lesson.id)) continue;
+    const { unlocked, position } = getAccess(lesson);
+    if (unlocked) {
+      candidates.push({ lesson, rank: rank(lesson), inProgress: inProgress.includes(lesson.id), position });
+    }
+  }
+
+  candidates.sort((a, b) =>
+    a.rank - b.rank ||
+    Number(b.inProgress) - Number(a.inProgress) ||
+    a.position - b.position ||
+    (a.lesson.id < b.lesson.id ? -1 : 1)
+  );
+  return candidates[0]?.lesson ?? null;
 }
 /** Metadata can enrich the same winning attempt, never replace its answers/score. */
 export function enrichDailyDay<T extends {run:[number,string];record:DailyChallengeRecord;history:DailyChallengeHistoryEntry|null;details?:DailyResultDetails}>(selected:T, other:T):T {

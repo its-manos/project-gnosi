@@ -15,7 +15,10 @@ function compile(file, imports) {
   } });
   return mod.exports;
 }
-const lessonPath = compile('src/utils/lessonPath.ts', { './devLessonAccess': { devLessonsUnlocked: () => false } });
+const lessonPath = compile('src/utils/lessonPath.ts', {
+  '../data/lessonPaths': compile('src/data/lessonPaths.ts', {}),
+  './devLessonAccess': { devLessonsUnlocked: () => false },
+});
 const discovery = compile('src/utils/readingDiscovery.ts', { './lessonPath': lessonPath });
 const catalogue = Object.freeze([
   { id: 'a', categoryId: 'one', subcategoryId: 'topic-a' },

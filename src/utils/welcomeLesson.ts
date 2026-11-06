@@ -1,8 +1,14 @@
 import type { Lesson } from "../data/lessons";
-import { getLessonAccess } from "./lessonPath";
+import { createLessonAccessLookup } from "./lessonPath";
 
 export function welcomeLessonCandidates(catalogue: readonly Lesson[], completed: readonly string[], inProgress: readonly string[]): Lesson[] {
-  return catalogue.filter(l => !l.contentNote && !completed.includes(l.id) && !inProgress.includes(l.id) && getLessonAccess(l, catalogue, completed, inProgress).unlocked);
+  const getAccess = createLessonAccessLookup(catalogue, completed, inProgress);
+  return catalogue.filter(lesson =>
+    !lesson.contentNote &&
+    !completed.includes(lesson.id) &&
+    !inProgress.includes(lesson.id) &&
+    getAccess(lesson).unlocked
+  );
 }
 
 export function pickWelcomeLesson(candidates: readonly Lesson[], topicIds: readonly string[]): Lesson | null {

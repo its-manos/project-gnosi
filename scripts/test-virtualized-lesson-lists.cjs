@@ -22,6 +22,7 @@ function compile(file, imports) {
   return mod.exports;
 }
 const pathRules = compile('src/utils/lessonPath.ts', {
+  '../data/lessonPaths': compile('src/data/lessonPaths.ts', {}),
   './devLessonAccess': { devLessonsUnlocked: () => false },
 });
 const discovery = compile('src/utils/readingDiscovery.ts', { './lessonPath': pathRules });
