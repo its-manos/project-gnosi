@@ -154,8 +154,9 @@ const home = compile("src/screens/HomeScreen.tsx", {
   "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
-    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View",
-    MotionHeroAccent: "HeroAccent",
+    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "Shimmer",
+    MotionHeroAccent: "HeroAccent", MotionCardGlint: "CardGlint",
+    MotionQuizGlyph: "QuizGlyph", MotionCtaArrow: "CtaArrow",
   },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
@@ -743,6 +744,21 @@ const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
   && node.props.style[1]?.width?.endsWith("%"));
 assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
 
+// Motion accents never change card hit targets or size.
+const primaryCard = nodes(tree).find(node => node.props?.testID === "home-primary-action");
+assert.equal(nodes(primaryCard).filter(node => node.type === "CardGlint").length, 1);
+const shimmer = nodes(primaryCard).find(node => node.type === "Shimmer");
+assert.ok(shimmer, "Continue button has a rare shimmer");
+assert.equal(nodes(primaryCard).filter(node => node.type === "CtaArrow").length, 1,
+  "Continue arrow has a gentle invitation motion");
+for (const id of ["home-daily-quiz", "home-quick-quiz"]) {
+  const card = nodes(tree).find(node => node.props?.testID === id);
+  assert.equal(nodes(card).filter(node => node.type === "CardGlint").length, 1,
+    "quiz card has one accent glint");
+  assert.equal(nodes(card).filter(node => node.type === "QuizGlyph").length, 1,
+    "quiz artwork has one idle lift");
+}
+
 // Shared Continue accent behavior.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
 const heroRimSource = homeMotionSource.slice(
@@ -753,15 +769,38 @@ assert.match(heroRimSource, /pointerEvents="none"/, "Continue accent never takes
 assert.doesNotMatch(heroRimSource, /withRepeat\(/,
   "Continue accent is a one-shot highlight rather than another ambient loop");
 
-// The compact bottom navigation preserves all four destinations.
+// Every new card effect is opacity/translation only and respects accessibility
+// preferences; all decoration remains outside the accessibility/touch tree.
+for (const component of ["MotionCardGlint", "MotionQuizGlyph", "MotionCtaArrow"]) {
+  const start = homeMotionSource.indexOf("export function " + component);
+  assert.ok(start > 0, component + " exists");
+  const next = homeMotionSource.indexOf("\nexport function ", start + 1);
+  const body = homeMotionSource.slice(start, next > start ? next : undefined);
+  assert.match(body, /useReducedMotion/, component + " respects reduced motion");
+  assert.match(body, /cancelAnimation/, component + " cancels loops on exit");
+}
+assert.match(homeMotionSource, /MotionCardGlint[\s\S]*pointerEvents="none"/,
+  "card accents never intercept presses");
+const profileSource = fs.readFileSync(path.join(root, "src/screens/ProfileScreen.tsx"), "utf8");
+assert.match(profileSource, /testID="profile-saved-link"/, "saved lessons remain reachable from profile");
+const navigatorSource = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
+assert.match(navigatorSource, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
+  "profile saved shortcut opens existing saved lessons route");
+assert.match(navigatorSource, /onBack=\{\(\) => navigateTo\("profile"\)\}/,
+  "saved lessons return to their profile origin");
+
+// The compact bottom navigation shows only three primary destinations.
 const bottomNav = compile("src/components/BottomNavigation.tsx", {
   "react-native-safe-area-context": { useSafeAreaInsets: () => ({ bottom: 34 }) },
 });
 const bottomTree = bottomNav({ currentScreen: "home", onNavigate: destination => actions.push("nav:" + destination) });
 const tabs = nodes(bottomTree).filter(node => node.props?.accessibilityRole === "tab");
-assert.equal(tabs.length, 4);
+assert.equal(tabs.length, 3);
+assert.ok(!nodes(bottomTree).some(node => node.props?.children === "Αποθηκευμένα"),
+  "saved lessons have no root tab");
 assert.equal(tabs[0].props.accessibilityState.selected, true);
 assert.equal(tabs[1].props.accessibilityState.selected, false);
+assert.equal(tabs[2].props.accessibilityLabel, "Το προφίλ μου");
 tabs[1].props.onPress();
 assert.equal(actions.at(-1), "nav:progress");
 assert.ok(nodes(bottomTree).some(node => Array.isArray(node.props?.style)
