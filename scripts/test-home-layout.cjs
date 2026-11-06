@@ -691,9 +691,9 @@ const centeredGrid = nodes(tree).find(node =>
   && node.props.style[0]?.justifyContent === "center");
 assert.ok(centeredGrid, "knowledge worlds are centered with equal grid gaps");
 assert.equal(centeredGrid.props.style[0].columnGap, 8);
-assert.equal(HistoryCard.props.style({ pressed: false })[0].minHeight, 96,
-  "History destination has room for larger artwork");
 const firstWorld = nodes(tree).find(node => node.props?.testID === "home-category-history");
+assert.equal(firstWorld.props.style({ pressed: false })[0].minHeight, 96,
+  "History destination has room for larger artwork");
 const cardPercent = Number.parseFloat(firstWorld.props.style({ pressed: false })[0].width) / 100;
 for (const phoneWidth of [320, 360, 393]) {
   const available = phoneWidth - 32;
