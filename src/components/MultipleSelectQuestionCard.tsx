@@ -106,10 +106,4 @@ const styles = StyleSheet.create({
   check: { color: colors.text, fontSize: 15, fontWeight: "900" },
   statusCorrect: { color: colors.success, fontSize: 20, fontWeight: "900" },
   statusWrong: { color: colors.error, fontSize: 20, fontWeight: "900" },
-  feedbackHeading: { fontSize: 17, fontWeight: "900" },
-  correctHeading: { color: colors.success },
-  wrongHeading: { color: colors.error },
-  solution: { gap: 6, borderTopWidth: 1, borderColor: colors.borderStrong, paddingTop: 11 },
-  solutionHeading: { color: colors.text, fontSize: 12, fontWeight: "800" },
-  solutionText: { color: colors.textBody, fontSize: 13, lineHeight: 20 },
 });

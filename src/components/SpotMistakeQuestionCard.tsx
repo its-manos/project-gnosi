@@ -130,8 +130,6 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
-  eyebrow: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 1, marginBottom: 7 },
-  highlight: { color: colors.accentLight, fontWeight: "800" },
   letterBox: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
     flexShrink: 0, justifyContent: "center", alignItems: "center" },
   circleCorrect: { backgroundColor: "#205143" },
@@ -139,11 +137,5 @@ const styles = StyleSheet.create({
   letter: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
   correctIcon: { color: colors.success, fontSize: 20, fontWeight: "900" },
   wrongIcon: { color: colors.error, fontSize: 20, fontWeight: "900" },
-  footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 20, marginTop: 13 },
-  feedbackTitle: { fontSize: 16, lineHeight: 23, fontWeight: "900" },
-  goodText: { color: colors.success },
-  badText: { color: colors.error },
-  falseStatement: { color: colors.text, fontSize: 14, lineHeight: 23, fontWeight: "700" },
-  feedbackLabel: { color: colors.textMuted, fontSize: 11, fontWeight: "900", letterSpacing: 0.5, marginTop: 4 },
   solution: { color: colors.text, fontSize: 15, lineHeight: 24, fontWeight: "800" },
 });

@@ -158,11 +158,6 @@ export default function SingleChoiceQuestionCard({
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
-  answerSummary: { gap: 5, borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11 },
-  summaryCorrect: { backgroundColor: colors.successSurface, borderColor: colors.success },
-  summaryWrong: { backgroundColor: colors.errorSurface, borderColor: colors.error },
-  summaryStatus: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
-  summaryText: { color: colors.text, fontWeight: "800", fontSize: 15, lineHeight: 23 },
   letterBox: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
     alignItems: "center", justifyContent: "center", flexShrink: 0 },
   letterSelected: { backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.accent },
@@ -171,12 +166,7 @@ const styles = StyleSheet.create({
   letter: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
   correctIcon: { color: colors.success, fontSize: 20, fontWeight: "900" },
   wrongIcon: { color: colors.error, fontSize: 20, fontWeight: "900" },
-  feedbackTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 },
-  feedbackHeading: { fontSize: 17, fontWeight: "900" },
   correctText: { color: colors.success },
   wrongText: { color: colors.error },
-  comboBadge: { backgroundColor: colors.accentSurface, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6 },
-  comboText: { color: colors.accentLight, fontSize: 10, fontWeight: "900" },
   correction: { color: colors.text, fontSize: 15, lineHeight: 24, fontWeight: "800" },
-  explanationLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.7 },
 });

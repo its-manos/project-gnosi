@@ -144,12 +144,6 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
-  card: questionCardStyles.card,
-  topLine: questionCardStyles.topLine,
-  typeBadge: questionCardStyles.typeBadge,
-  typeLabel: questionCardStyles.typeLabel,
-  counter: questionCardStyles.counter,
-  question: questionCardStyles.question,
   boardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     gap: 8, marginBottom: 10, flexWrap: "wrap" },
   instruction: { color: colors.textBody, fontSize: 13, fontWeight: "700", flexShrink: 1 },
