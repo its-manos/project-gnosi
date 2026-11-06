@@ -3,15 +3,16 @@ import { quizRewardSummary } from "../gamification/rewards";
 import { adaptInteractiveLessonQuestion, adaptLessonQuestion, projectInteractiveLessonAnswer, restoreInteractiveLessonAnswer } from "../quiz/adapters";
 import ZoomableLessonImage from "../components/ZoomableLessonImage";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { requestPracticeCue } from "../play/soundStatus";
-import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import type { Props } from "./LessonScreen";
 import ActionButton from "../components/ActionButton";
 import ArticleFigure from "../components/ArticleFigure";
+import ExpandableImageCaption from "../components/ExpandableImageCaption";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import QuizReveal from "../components/QuizReveal";
@@ -29,6 +30,7 @@ import { lessonReportTarget } from "../utils/contentReports";
 import { inlineArticleMedia } from "../data/articleMedia";
 import { nextPendingFigureUrl } from "../utils/nextFigureWarmup";
 import { colors, reading } from "../theme";
+import { readerTextSize, READER_TEXT_SIZE_MIN, READER_TEXT_SIZE_MAX } from "../state/ReaderTextSize";
 import { getParagraphCount, getParagraphId, getParagraphText, getReadingQuestionPlacements, getReadingResumeParagraphNumber, getReadingVisibleParagraphLimit } from "../utils/lessonProgress";
 
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
@@ -38,7 +40,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const safeArea = useSafeAreaInsets();
   const quizViewport = useAdaptiveQuestionScroll();
   const lastSeenParagraph = useRef(0);
-  const [readingSize, setReadingSize] = useState(18);
+  const readingSize = useSyncExternalStore(readerTextSize.subscribe, readerTextSize.getSnapshot, readerTextSize.getSnapshot);
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const compactWidth = windowWidth < 370;
+  const compactHeadings = compactWidth && fontScale < 1.4;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   // This is presentation state only; canonical answers and lesson progress stay parent-owned.
@@ -165,15 +170,15 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <Text style={styles.small}>Μέγεθος κειμένου</Text>
           <View style={styles.tools}>
             <Pressable style={styles.control} accessibilityRole="button" accessibilityLabel="Μικρότερο κείμενο άρθρου"
-              disabled={readingSize <= 16} accessibilityState={{ disabled: readingSize <= 16 }}
-              onPress={() => setReadingSize(v => Math.max(16, v - 2))}>
-              <Text style={[styles.controlText, readingSize <= 16 && styles.disabled]}>Α−</Text>
+              disabled={readingSize <= READER_TEXT_SIZE_MIN} accessibilityState={{ disabled: readingSize <= READER_TEXT_SIZE_MIN }}
+              onPress={() => readerTextSize.adjust(-2)}>
+              <Text style={[styles.controlText, readingSize <= READER_TEXT_SIZE_MIN && styles.disabled]}>Α−</Text>
             </Pressable>
             <Text style={styles.small} accessibilityLiveRegion="polite">{readingSize}</Text>
             <Pressable style={styles.control} accessibilityRole="button" accessibilityLabel="Μεγαλύτερο κείμενο άρθρου"
-              disabled={readingSize >= 24} accessibilityState={{ disabled: readingSize >= 24 }}
-              onPress={() => setReadingSize(v => Math.min(24, v + 2))}>
-              <Text style={[styles.controlText, readingSize >= 24 && styles.disabled]}>Α+</Text>
+              disabled={readingSize >= READER_TEXT_SIZE_MAX} accessibilityState={{ disabled: readingSize >= READER_TEXT_SIZE_MAX }}
+              onPress={() => readerTextSize.adjust(2)}>
+              <Text style={[styles.controlText, readingSize >= READER_TEXT_SIZE_MAX && styles.disabled]}>Α+</Text>
             </Pressable>
           </View>
         </View> : null}
@@ -186,7 +191,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <View style={[styles.fill, { width: `${questionCount ? answeredCount / questionCount * 100 : 0}%` }]} />
         </View>
       </View>
-      <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={styles.content}
+      <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={[styles.content, compactWidth && styles.contentCompact]}
         scrollEnabled={activeBoundary === null}
         showsVerticalScrollIndicator={false} onContentSizeChange={flushScroll} scrollEventThrottle={500}
         onScroll={event => {
@@ -202,7 +207,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <View style={styles.articleLabelDot} accessible={false} />
           <Text style={styles.eyebrow}>{category.title} / {subcategory.title}</Text>
         </View>
-        <Text accessibilityRole="header" style={styles.title}>{lesson.title}</Text>
+        <Text accessibilityRole="header" style={[styles.title, compactHeadings && styles.titleCompact]}>{lesson.title}</Text>
         <View style={styles.metadata}>
           <Text style={styles.small}>{lesson.readingMinutes}′ ανάγνωση · {sections.length} ενότητες</Text>
           <Pressable style={styles.sourceControl} onPress={() => setSourcesOpen(v => !v)} accessibilityRole="button"
@@ -220,7 +225,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           {lesson.coverKind !== "editorial" ? <ZoomableLessonImage image={{ uri: lesson.imageUrl, caption: lesson.imageCaption, credit: lesson.imageCredit, creditUrl: lesson.imageCreditUrl }}>
             <LessonCover lesson={lesson} style={styles.cover} />
           </ZoomableLessonImage> : <LessonCover lesson={lesson} style={styles.cover} />}
-          <Text style={styles.caption}>{lesson.imageCaption}</Text>
+          <ExpandableImageCaption key={lesson.id} caption={lesson.imageCaption} />
           {lesson.coverKind !== "editorial" ? <Pressable style={styles.creditControl} accessibilityRole="link"
             accessibilityLabel={`Πηγή φωτογραφίας: ${lesson.imageCredit}`}
             onPress={() => void Linking.openURL(lesson.imageCreditUrl).catch(() => {})}>
@@ -236,7 +241,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               <View style={styles.sectionPin} accessible={false} />
               <Text style={styles.sectionNumber}>ΕΝΟΤΗΤΑ {sectionIndex + 1} / {sections.length}</Text>
             </View>
-            <Text accessibilityRole="header" style={styles.sectionTitle}>{section.title}</Text>
+            <Text accessibilityRole="header" style={[styles.sectionTitle, compactHeadings && styles.sectionTitleCompact]}>{section.title}</Text>
             {section.paragraphs.map((paragraph, i) => {
               const number = section.start + i;
               if (number > visibleLimit) return null;
@@ -250,7 +255,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               }}>
                 <Text selectable style={[styles.paragraph, textStyle]}>{getParagraphText(paragraph)}</Text>
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
-                  .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
+                  .map(figure => <ArticleFigure key={`${lesson.id}-${number}-${figure.url}`} figure={figure} />)}
                 {hasGate ? <View testID={`reader-checkpoint-${firstPending.questionIndex}`}
                   style={styles.checkpoint}>
                   <View style={styles.checkpointKicker}>
@@ -379,11 +384,13 @@ const styles = StyleSheet.create({
   viewport: { flex: 1 },
   content: { paddingHorizontal: 24, paddingTop: 30, paddingBottom: 52,
     width: "100%", maxWidth: 620, alignSelf: "center" },
+  contentCompact: { paddingHorizontal: 18 },
   articleLabel: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 13 },
   articleLabelDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
   eyebrow: { color: reading.accent, fontSize: 11, lineHeight: 19, letterSpacing: 0.45, flexShrink: 1 },
   title: { color: reading.heading, fontSize: 32, lineHeight: 41,
     fontWeight: "700", letterSpacing: -0.3, marginBottom: 12 },
+  titleCompact: { fontSize: 29, lineHeight: 38 },
   metadata: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
     justifyContent: "space-between", gap: 8, marginBottom: 16 },
   titleRule: { width: 56, height: 2, borderRadius: 2, backgroundColor: reading.border, marginBottom: 25 },
@@ -401,7 +408,6 @@ const styles = StyleSheet.create({
   coverBlock: { marginBottom: 28 },
   // Reserve cover space before remote images load and keep native image zoom.
   cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 15 },
-  caption: { color: reading.muted, fontSize: 12, lineHeight: 20, marginTop: 10 },
   creditControl: { minHeight: 44, justifyContent: "center", paddingVertical: 8 },
   readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 20 },
   section: { paddingTop: 24, borderTopWidth: 1, borderColor: reading.border, marginBottom: 22 },
@@ -409,6 +415,7 @@ const styles = StyleSheet.create({
   sectionPin: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
   sectionNumber: { color: reading.accent, fontSize: 10, lineHeight: 18, letterSpacing: 1 },
   sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "700", marginBottom: 22 },
+  sectionTitleCompact: { fontSize: 23, lineHeight: 32 },
   paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 24 },
   checkpoint: { marginBottom: 26, borderWidth: 1, borderLeftWidth: 3,
     borderColor: reading.border, borderLeftColor: reading.accent,
