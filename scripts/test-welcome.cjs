@@ -65,7 +65,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
   '../components/AtlasCard':{__esModule:true,default:'AtlasCard'},
   '../components/ProgressGradientBackground':{__esModule:true,default:'Background'},
   '../components/worldIcons/categoryIconMap':{getCategoryWorldIcon:()=>null},
-  '../components/WelcomeStepIcons':{WelcomeQuizIcon:'QuizIcon',WelcomeLessonIcon:'LessonIcon'},
+  '../components/WelcomeStepIcons':{WelcomeAtlasIcon:'AtlasIcon',WelcomeQuizIcon:'QuizIcon',WelcomeLessonIcon:'LessonIcon'},
   './OnboardingDailyQuestion':{__esModule:true,default:'OnboardingDailyQuestion'}}).default;
  let savedInterests=null;
  const props=()=>({phase,replay:false,categories:data.categories,selectedCategoryId:category,
@@ -75,6 +75,9 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  const draw=()=>ui.render(()=>Screen(props()));let tree=draw();const endUi=ui.mount();
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 1 από 4'));
  assert.ok(!JSON.stringify(tree).includes('Μικρές προκλήσεις'));
+ assert.equal(nodes(tree).filter(n=>n.type==='AtlasIcon').length,1,
+   'The main welcome emblem is the custom atlas rather than a large star');
+ assert.ok(!JSON.stringify(tree).includes('heroSymbol'),'Legacy text star does not appear as the welcome hero');
  assert.equal(nodes(tree).filter(n=>n.type==='QuizIcon'||n.type==='LessonIcon').length,2,'Branded quiz/book icons replace placeholder glyphs');
  button(tree,'Ξεκινάμε →').props.onPress();await flush();tree=draw();
  assert.ok(nodes(tree).some(n=>n.type==='OnboardingDailyQuestion'),'Play the actual first daily question, not a static illustration');
@@ -86,7 +89,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.ok(JSON.stringify(tree).includes('Αρχαία Ελλάδα'),'Temporary fixed lesson is explicit');
  button(tree,'Συνέχεια →').props.onPress();await flush();tree=draw();
  assert.equal(category,'science','Keep selected world while advancing to interests');
- assert.equal(phase,'interests');
+ assert.equal(phase,'interests','The interests page comes immediately after the world choice, before the lesson');
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 4 από 4'));
  assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,true,'At least three interests are required');
  assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,1,
