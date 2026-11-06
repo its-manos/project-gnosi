@@ -143,9 +143,24 @@ export default function AppNavigator() {
     (lesson) => lesson.id === app.inProgressLessonId
   ) ?? null;
 
-  const discovery = useMemo(
-    () => getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate),
-    [app.completedLessonIds, app.inProgressLessonIds, discoveryDate],
+  const latestAttemptAt = app.inProgressLessonId
+    ? app.lessonAttempts[app.inProgressLessonId]?.updatedAt ?? 0
+    : 0;
+  const homePathLesson = useMemo(() => {
+    // An unfinished lesson stays first if it was worked on after the last completion.
+    let latestCompletion;
+    for (const event of Object.values(app.completionEvents)) {
+      if (event.at >= latestAttemptAt && completedIds.has(event.lessonId) &&
+        (!latestCompletion || event.at > latestCompletion.at)) {
+        latestCompletion = event;
+      }
+    }
+    const finishedLesson = latestCompletion && lessons.find(lesson => lesson.id === latestCompletion.lessonId);
+    return finishedLesson ? getNextPathLesson(finishedLesson, lessons, app.completedLessonIds, app.inProgressLessonIds) : null;
+  }, [app.completionEvents, completedIds, latestAttemptAt, app.completedLessonIds, app.inProgressLessonIds, allLessonsUnlockedForTesting]);
+  const featuredLesson = useMemo(
+    () => homePathLesson ?? getHomeDiscovery(lessons, app.completedLessonIds, app.inProgressLessonIds, discoveryDate).featured,
+    [homePathLesson, app.completedLessonIds, app.inProgressLessonIds, discoveryDate],
   );
   const nextLesson = useMemo(
     () => activeLesson ? getNextPathLesson(activeLesson, lessons, app.completedLessonIds, app.inProgressLessonIds) : null,
@@ -286,10 +301,10 @@ export default function AppNavigator() {
           onOpenProfile={() => openProfile("home")}
           categories={categories}
           subcategories={subcategories}
-          featuredLesson={discovery.featured}
+          featuredLesson={featuredLesson}
           progressLoaded={app.progressLoaded}
           completedCount={app.completedLessonIds.length}
-          inProgressLesson={inProgressLesson}
+          inProgressLesson={!homePathLesson || homePathLesson.id === inProgressLesson?.id ? inProgressLesson : null}
           inProgressAnsweredCount={app.inProgressAnsweredCount}
           inProgressQuestionCount={app.inProgressQuestionCount}
           onResumeLesson={app.openLesson}

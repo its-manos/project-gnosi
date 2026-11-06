@@ -372,6 +372,7 @@ export function useLearningApp() {
     retryReviewQuestion,
     endMistakeReview,
     completedLessonIds,
+    completionEvents: snapshot.activity,
     lessonAttempts,
     mergeRestoredProgress,
     progressLoaded,

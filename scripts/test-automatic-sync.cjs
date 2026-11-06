@@ -101,6 +101,7 @@ function state(s) {return s.getSnapshot();}
  const savedRender=harness('src/hooks/useSavedLessons.ts',hookStore);let saved=savedRender();saved.toggleSavedLesson(a.id);saved=savedRender();assert.ok(saved.savedLessonIds.includes(a.id));saved.toggleSavedLesson(a.id);assert.ok(!state(hookStore).backup.savedIds.includes(a.id));
  for(let i=1;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex,pilotTyped(i));app=render();}
  app.finishInlineLesson();await flush();app=render();assert.equal(app.screen,'results');assert.ok(app.completedLessonIds.includes(a.id));assert.equal(app.lessonAttempts[a.id],undefined);
+ assert.equal(Object.values(app.completionEvents)[0].lessonId,a.id,'The navigator can continue the path of the actual finished lesson.');
  assert.equal(Object.keys(hookStore.getSnapshot().activity).length,1);
  app.finishInlineLesson();await flush();assert.equal(Object.keys(hookStore.getSnapshot().activity).length,1,'Repeated finish does not duplicate the completion run.');
  app.restartLesson();app=render();for(let i=0;i<progress.getInlineQuestionCount(a);i++){app.answerCheckpoint(i,a.questions[i].correctIndex,a.questions[i].correctIndex,pilotTyped(i));app=render();}

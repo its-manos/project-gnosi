@@ -93,7 +93,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  let latestNavEffect;
  nav.react.useEffect=fn=>{if(fn.toString().includes("hardwareBackPress"))latestNavEffect=fn;};
  const navStore=new DailyStore(null,disk());await navStore.start();
- const app={checkpointAnswers:{},resultMode:'finished',screen:'home',activeCategoryId:data.categories[0].id,activeSubcategoryId:data.subcategories[0].id,activeLessonId:data.lessons[0].id,completedLessonIds:[],lessonAttempts:{},progressLoaded:true,inProgressLessonIds:[],inProgressLessonCount:0,setScreen:s=>{app.screen=s;}};
+ const app={checkpointAnswers:{},resultMode:'finished',screen:'home',activeCategoryId:data.categories[0].id,activeSubcategoryId:data.subcategories[0].id,activeLessonId:data.lessons[0].id,completedLessonIds:[],completionEvents:{},lessonAttempts:{},progressLoaded:true,inProgressLessonIds:[],inProgressLessonCount:0,setScreen:s=>{app.screen=s;}};
  app.openLesson=id=>{const l=data.lessons.find(x=>x.id===id);app.activeLessonId=id;app.activeCategoryId=l.categoryId;app.activeSubcategoryId=l.subcategoryId;app.screen='lesson';};
  const screens=['HomeScreen','QuickQuizScreen','CategoryScreen','SubcategoryScreen','LessonScreen','QuizScreen','ResultsScreen','ReviewMistakesScreen','WeeklyReviewScreen','KnowledgeReviewScreen','ProfileScreen','PlayerStatsScreen','AccountScreen','SavedLessonsScreen','SearchScreen','DailyChallengeScreen','DailyChallengePreferencesScreen','ProgressScreen','LearningInsightsScreen','WelcomeScreen'];
  const screenImports=Object.fromEntries(screens.map(name=>['../screens/'+name,{__esModule:true,default:name}]));
@@ -114,6 +114,29 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  visible=true;routed=nav.render(()=>Navigator());const firstLessonGuide=nodes(routed).find(n=>n.type==='WelcomeScreen');const beforeLessonDaily=plain(navStore.getSnapshot().doc.days);
  const lockedLesson=lessonPaths.getSubcategoryPath(data.lessons,'ancient-greece')[1];assert.equal(await firstLessonGuide.props.onFinish(choices,'lesson',lockedLesson.id),false,'onboarding cannot bypass lesson locks');assert.equal(visible,true);
  const lessonChoice=firstLessonGuide.props.lessonCandidates[0];assert.equal(await firstLessonGuide.props.onFinish(choices,'lesson',lessonChoice.id),true);routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='LessonScreen'));assert.equal(app.activeLessonId,lessonChoice.id);assert.deepEqual(plain(navStore.getSnapshot().doc.days),beforeLessonDaily,'starting a lesson preserves an existing daily challenge');
+ // Returning from results continues the most recently worked-on lesson path.
+ const [finishedLesson, nextLesson] = lessonPaths.getSubcategoryPath(data.lessons, 'ancient-greece');
+ const other = data.lessons.find(lesson => lesson.subcategoryId !== finishedLesson.subcategoryId);
+ app.openLesson(finishedLesson.id);
+ app.screen = 'results';
+ app.completedLessonIds = [finishedLesson.id];
+ app.completionEvents = { finish: { lessonId: finishedLesson.id, at: 200 } };
+ app.inProgressLessonId = other.id;
+ app.inProgressLessonIds = [other.id];
+ app.lessonAttempts = { [other.id]: { updatedAt: 100 } };
+ routed = nav.render(() => Navigator());
+ nodes(routed).find(node => node.type === 'ResultsScreen').props.onHome();
+ const home = () => nodes(nav.render(() => Navigator())).find(node => node.type === 'HomeScreen').props;
+ assert.equal(home().featuredLesson.id, nextLesson.id, 'Home continues the finished lesson’s subcategory');
+ assert.equal(home().inProgressLesson, null, 'An older attempt does not hide the next lesson');
+ app.lessonAttempts[other.id].updatedAt = 300;
+ assert.equal(home().inProgressLesson.id, other.id, 'More recent unfinished reading takes priority');
+ app.lessonAttempts[other.id].updatedAt = 100;
+ app.completedLessonIds = lessonPaths.getSubcategoryPath(data.lessons, 'ancient-greece').map(lesson => lesson.id);
+ assert.equal(home().inProgressLesson.id, other.id, 'A completed path falls back to the unfinished lesson');
+ app.inProgressLessonId = null;
+ app.inProgressLessonIds = [];
+ assert.notEqual(home().featuredLesson.subcategoryId, finishedLesson.subcategoryId, 'A completed path falls back to discovery when nothing is in progress');
  store.stop();homeStore.stop();navStore.stop();
  console.log('Welcome checks passed: four-step order, both play modes before daily interests, 3–5 bounds, draft/back, final home destination, no automatic play, skip at every step, preserved difficulty/started quiz, duplicate taps, storage errors and navigation. Native views mocked.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
