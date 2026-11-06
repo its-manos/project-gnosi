@@ -138,10 +138,12 @@ for (const id of ["ancient-greece", "world-history", "mythology", "space", undef
   const artwork = nodes(decoration).find(node => node.props?.testID === "home-lesson-landmark");
   if (["ancient-greece", "world-history", "mythology"].includes(id)) {
     assert.equal(artwork.props.source, id, "landmark matches the selected destination");
-    assert.equal(artwork.props.style.width, 104, "the Continue landmark uses a larger silhouette");
-    assert.equal(artwork.props.style.height, 84);
-    assert.equal(artwork.props.style.right, 12);
-    assert.equal(artwork.props.style.top, 12);
+    assert.equal(artwork.props.style[0].width, 104, "the Continue landmark retains its base silhouette");
+    assert.equal(artwork.props.style[0].height, 84);
+    assert.equal(artwork.props.style[0].right, 12);
+    assert.equal(artwork.props.style[0].top, 12);
+    assert.equal(artwork.props.style[1].width, 104, "default icon scale stays 1");
+    assert.equal(artwork.props.style[1].height, 84);
     assert.ok(fs.existsSync(path.join(root, "assets/atlas-export-preview/island-icons/" + id + ".webp")));
   } else assert.equal(artwork, undefined, "unknown destinations never show an unrelated landmark");
 }
@@ -263,7 +265,7 @@ assert.equal(filledSegments(), 7, "completed daily quiz fills every segment");
 assert.equal(emptySegments(), 0);
 assert.equal(textById("home-daily-answered").props.children, "7/7",
   "completed daily quiz shows seven answered questions");
-assert.equal(textById("home-daily-answered").props.style.fontSize, 18,
+assert.equal(textById("home-daily-answered").props.style[1].fontSize, 18,
   "daily answer count leaves room for progress segments");
 assert.equal(textById("home-daily-quiz").props.accessibilityLabel.includes("7 από 7"), true);
 assert.equal(textById("home-daily-quiz").props.style({ pressed: false })[0].minHeight, 96,
@@ -570,14 +572,14 @@ assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
 assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 2,
   "the lesson card absorbs two shares of extra height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "space-between",
-  "lesson content occupies the top and bottom of the expanded card");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "center",
+  "the lesson elements are centered vertically as a group");
 assert.equal(homeSections[2].props.style.flexGrow, 1,
   "the two side-by-side quiz cards share the remaining extra height");
 for (const id of ["home-daily-quiz", "home-quick-quiz"]) {
   const quiz = nodes(homeSections[2]).find(node => node.props?.testID === id);
-  assert.equal(quiz.props.style({ pressed: false })[0].justifyContent, "space-between",
-    "each expanded quiz keeps its icon above its grouped labels");
+  assert.equal(quiz.props.style({ pressed: false })[0].justifyContent, "center",
+    "expanded quiz elements are centered vertically as a group");
   assert.equal(quiz.props.style({ pressed: false })[0].flex, 1,
     "both quizzes stretch to the same height");
 }
@@ -638,6 +640,38 @@ assert.equal(scroll.props.contentContainerStyle[1], false,
 assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
   "spacious mode expands cards without introducing large vertical gaps");
 assert.equal(scroll.props.scrollEnabled, false);
+
+// Measure actual card dimensions: increasing height scales the card contents,
+// without affecting the knowledge-world grid or viewport density.
+const tallTree = renderMeasuredHome();
+const tallHero = nodes(tallTree).find(node => node.props?.testID === "home-primary-action");
+const tallQuizzes = nodes(tallTree).find(node =>
+  node.props?.entranceDelay === 130 && node.props?.style?.flexGrow === 1);
+tallHero.props.onLayout({ nativeEvent: { layout: { height: 315 } } });
+tallQuizzes.props.onLayout({ nativeEvent: { layout: { height: 165 } } });
+const grownTree = renderMeasuredHome();
+const grownHero = nodes(grownTree).find(node => node.props?.testID === "home-primary-action");
+const heroTitle = nodes(grownHero).find(node =>
+  node.props?.children === "Μάθημα 0");
+assert.ok(heroTitle.props.style[2].fontSize > 21,
+  "longer hero card grows its lesson title instead of adding blank interior space");
+const grownBackdrop = nodes(grownHero).find(node => node.type === "HomeLessonBackdrop");
+assert.ok(grownBackdrop.props.scale > 1,
+  "the lesson landmark grows with its card");
+const quizCount = nodes(grownTree).find(node => node.props?.testID === "home-daily-answered");
+assert.ok(quizCount.props.style[1].fontSize > 18,
+  "taller quiz cards grow their progress counter");
+const grownDaily = nodes(grownTree).find(node => node.props?.testID === "home-daily-quiz");
+assert.ok(nodes(grownDaily).some(node => node.props?.children === "Καθημερινό Quiz"
+  && node.props.style[1].fontSize > 14), "taller quiz cards grow their headings");
+// Compact mode must disable the measured growth even after a tall viewport.
+scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
+const resetTree = renderMeasuredHome();
+assert.equal(nodes(resetTree).find(node => node.props?.testID === "home-daily-answered")
+  .props.style[1].fontSize, 18);
+assert.equal(nodes(resetTree).find(node => node.type === "HomeLessonBackdrop").props.scale, 1);
+scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
+scroll = scrollNode();
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
 scroll.props.onContentSizeChange(360, 680);
