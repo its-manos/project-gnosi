@@ -174,7 +174,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
             onPress={onOpenPreferences} accessibilityRole="button" accessibilityLabel="Ρύθμιση ενδιαφερόντων">
             <Text style={styles.interestsText}>Τα ενδιαφέροντά μου  ›</Text>
           </Pressable>
-          <Text style={styles.introNote}>Τα ενδιαφέροντά σου διαμορφώνουν τις προτάσεις μαθημάτων μετά το quiz, όχι τις σημερινές ερωτήσεις.</Text>
+          <Text style={styles.introNote}>Τα ενδιαφέροντά σου επηρεάζουν το Γρήγορο Κουίζ και τις προτάσεις μαθημάτων, όχι τις σημερινές ερωτήσεις.</Text>
         </View>
       </View>
     </QuizReveal></View>
