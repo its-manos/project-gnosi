@@ -9,6 +9,7 @@ import AtlasCard from "../components/AtlasCard";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import UsageSharing from "../components/UsageSharing";
+import { useBetaAnalytics } from "../state/BetaAnalytics";
 import OnboardingDailyQuestion from "./OnboardingDailyQuestion";
 
 type Props = {
@@ -27,12 +28,13 @@ export default function WelcomeScreen({
   phase, replay, categories, selectedCategoryId, preferences, preferencesLoaded,
   onAdvance, onBeginLesson, onSkip,
 }: Props) {
-  const [categoryId, setCategoryId] = useState(selectedCategoryId ?? "history");
+  const [categoryId, setCategoryId] = useState<string | null>(selectedCategoryId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const locked = useRef(false);
   const mounted = useRef(true);
   const { height, fontScale } = useWindowDimensions();
+  const { analytics, enabled: usageEnabled } = useBetaAnalytics();
   const compact = height < 750 || fontScale > 1.25;
   useEffect(() => () => { mounted.current = false; }, []);
 
@@ -45,6 +47,9 @@ export default function WelcomeScreen({
   }
 
   const step = phase === "welcome" ? 1 : phase === "question" ? 2 : 3;
+  useEffect(() => {
+    if (usageEnabled) void analytics.track("onboarding_step_viewed", { screen: "welcome", onboarding_step: step, replay });
+  }, [analytics, usageEnabled, step, replay]);
   const selected = categories.find(category => category.id === categoryId);
   return <View testID="welcome-flow" style={styles.root}>
     <ProgressGradientBackground />
@@ -112,7 +117,7 @@ export default function WelcomeScreen({
           {selected ? <Text style={styles.selectedHint}>Η επιλογή σου: {selected.title}</Text> : null}
         </View>
         <ActionButton label={busy ? "Άνοιγμα…" : "Άνοιξε το πρώτο μάθημα →"}
-          disabled={busy} onPress={() => void run(() => onBeginLesson(categoryId))} />
+          disabled={busy || !categoryId} onPress={() => { if (categoryId) void run(() => onBeginLesson(categoryId)); }} />
       </>}
       {error ? <Text style={styles.error} accessibilityLiveRegion="polite">Δεν αποθηκεύτηκε το βήμα. Δοκίμασε ξανά ή παράλειψε τον οδηγό.</Text> : null}
     </ScrollView>}
