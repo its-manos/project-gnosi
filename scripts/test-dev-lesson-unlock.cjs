@@ -13,8 +13,22 @@ try {
   assert.equal(devLessonsUnlocked(),false,'must default to normal progression');
   assert.equal(paths.getLessonAccess(first,lessons,[]).unlocked,true);
   assert.equal(paths.getLessonAccess(last,lessons,[]).unlocked,false);
+  function assertOrderedAccessMatches(unlockAll) {
+    for (const sub of subcategories) {
+      const list = paths.getSubcategoryPath(lessons, sub.id);
+      const completed = list.filter((_, index) => index % 5 === 0).map(lesson => lesson.id);
+      const inProgress = list.filter((_, index) => index % 7 === 3).map(lesson => lesson.id);
+      assert.deepEqual(
+        paths.getOrderedPathAccess(list, completed, inProgress, unlockAll),
+        list.map(lesson => paths.getLessonAccess(lesson, lessons, completed, inProgress)),
+        'Map checkpoints match individual lesson access in ' + sub.id,
+      );
+    }
+  }
+  assertOrderedAccessMatches(false);
   setDevLessonUnlockAll(true);
   assert.equal(devLessonsUnlocked(),true);
+  assertOrderedAccessMatches(true);
   for(const sub of subcategories){
     const list=paths.getSubcategoryPath(lessons,sub.id);
     assert.ok(list.every(lesson=>paths.getLessonAccess(lesson,lessons,[]).unlocked),'all published lessons unlocked in '+sub.id);
