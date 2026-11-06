@@ -182,9 +182,9 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
  assert.equal(guide.props.phase,'choose');
  // Native back should follow the reversed stage order without dropping saved preferences.
- const onBackFromCategory=latestNavEffect();
- onBackFromCategory();
+ const disposeCategoryBack=latestNavEffect();
  assert.equal(backHandler(),true);
+ disposeCategoryBack();
  await flush();
  routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
  assert.equal(guide.props.phase,'interests');
