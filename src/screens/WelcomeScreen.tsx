@@ -30,8 +30,12 @@ export default function WelcomeScreen({
   onAdvance, onBeginLesson, onSkip,
 }: Props) {
   const [categoryId, setCategoryId] = useState<string | null>(selectedCategoryId);
-  const [topics, setTopics] = useState<string[]>(() =>
-    replay ? [...preferences.topicIds] : []);
+  const [topics, setTopics] = useState<string[]>(() => {
+    if (replay) return [...preferences.topicIds];
+    const firstInterest = selectedCategoryId === "difficult-history" ? "history" : selectedCategoryId;
+    return firstInterest && DAILY_CHALLENGE_TOPICS.some(topic => topic.id === firstInterest)
+      ? [firstInterest] : [];
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const locked = useRef(false);
@@ -127,7 +131,13 @@ export default function WelcomeScreen({
         </View>
         <ActionButton label={busy ? "Συνέχεια…" : "Συνέχεια →"}
           disabled={busy || !categoryId}
-          onPress={() => { if (categoryId) void run(() => onAdvance("interests", categoryId)); }} />
+          onPress={() => {
+            if (!categoryId) return;
+            const firstInterest = categoryId === "difficult-history" ? "history" : categoryId;
+            setTopics(current => current.length || !DAILY_CHALLENGE_TOPICS.some(topic => topic.id === firstInterest)
+              ? current : [firstInterest]);
+            void run(() => onAdvance("interests", categoryId));
+          }} />
       </> : <>
         <Text style={styles.eyebrow}>Η ΓΝΩΣΗ ΣΤΑ ΜΕΤΡΑ ΣΟΥ</Text>
         <Text accessibilityRole="header" style={styles.title}>Τι σου αρέσει να ανακαλύπτεις;</Text>
