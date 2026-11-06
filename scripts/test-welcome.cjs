@@ -66,6 +66,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
   'react-native-safe-area-context':{useSafeAreaInsets:()=>({top:0,bottom:34,left:0,right:0})},
   '../components/ActionButton':{__esModule:true,default:'Button'},
   '../components/AtlasCard':{__esModule:true,default:'AtlasCard'},
+  '../components/HomeMotion':{MotionView:'View',MotionPressable:'Pressable',MotionCounter:'Text'},
   '../components/ProgressGradientBackground':{__esModule:true,default:'Background'},
   '../components/worldIcons/categoryIconMap':{getCategoryWorldIcon:()=>null},
   '../components/WelcomeStepIcons':{WelcomeAtlasIcon:'AtlasIcon',WelcomeQuizIcon:'QuizIcon',WelcomeLessonIcon:'LessonIcon'},
@@ -83,6 +84,10 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
    'The main welcome emblem is the custom atlas rather than a large star');
  assert.ok(!JSON.stringify(tree).includes('heroSymbol'),'Legacy text star does not appear as the welcome hero');
  assert.equal(nodes(tree).filter(n=>n.type==='QuizIcon'||n.type==='LessonIcon').length,2,'Branded quiz/book icons replace placeholder glyphs');
+ assert.ok(nodes(tree).some(n=>n.type==='View'&&n.props.entranceDelay===20),
+   'Welcome emblem uses the native reduced-motion-aware entrance');
+ assert.ok(nodes(tree).some(n=>n.type==='View'&&n.props.entranceDelay===210),
+   'Welcome button reveals after its content');
  const welcomeScroll=nodes(tree).find(n=>n.type==='ScrollView');
  assert.equal(welcomeScroll.props.contentContainerStyle[0].paddingHorizontal,20,
    'Welcome and question use a unified 20px gutter');
@@ -95,6 +100,10 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(phase,'interests','First daily question flows into Interests, not Category');
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 3 από 4'));
  assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox').length,topics.DAILY_CHALLENGE_TOPICS.length);
+ assert.ok(!JSON.stringify(tree).includes('Η καθημερινή πρόκληση έχει τις ίδιες 7 ερωτήσεις'),
+   'Interests has no redundant footer explanation');
+ assert.ok(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox').every(n=>n.props.entranceDelay>=80&&n.props.pressScale===0.975),
+   'Interests cards animate subtly while retaining checkbox semantics');
  assert.equal(button(tree,'Συνέχεια →').props.disabled,true,'At least three interests required');
  for(const topic of topics.DAILY_CHALLENGE_TOPICS.slice(0,5)){press(tree,topic.title);tree=draw();}
  assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,5);
@@ -111,7 +120,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(compactScroll.props.contentContainerStyle[2].paddingTop,12);
  assert.equal(compactScroll.props.contentContainerStyle.at(-1).paddingBottom,52);
  const firstTopic=nodes(tree).find(n=>n.props?.testID==='welcome-interest-history');
- assert.ok(firstTopic.props.style({pressed:false}).some(st=>st?.minHeight===70),'Compact tiles stay easily tappable');
+ assert.ok(firstTopic.props.style.some(st=>st?.minHeight===94),'Narrow cards stack vertically without clipping labels');
  dimensions={height:830,width:390,fontScale:1};tree=draw();
  button(tree,'Συνέχεια →').props.onPress();await flush();tree=draw();
  assert.equal(phase,'choose','Interests precede the selected first-lesson category');
@@ -125,6 +134,8 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(savedInterests.difficulty,initial.difficulty,'Keep existing difficulty');
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 4 από 4'));
  assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='radio').length,data.categories.length);
+ assert.ok(nodes(tree).filter(n=>n.props?.accessibilityRole==='radio').every(n=>n.props.entranceDelay>=80&&n.props.pressScale===0.975),
+   'Category cards share the gentle entrance and press response');
  assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,true,'A world must be selected');
  press(tree,data.categories.find(c=>c.id==='science').title);tree=draw();
  assert.ok(JSON.stringify(tree).includes('Αρχαία Ελλάδα'),'Temporary fixed lesson is explicit');
