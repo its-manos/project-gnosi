@@ -111,14 +111,16 @@ const pressProfile = label => {
 };
 const shortcuts = nodes(tree).filter(n => typeof n.type === "function"
   && n.type.name === "QuickLink");
-assert.equal(shortcuts.length, 3, "Only three shortcuts remain under Ο χώρος σου");
+assert.equal(shortcuts.length, 4, "Ο χώρος σου keeps a balanced four-tile grid");
+assert.deepEqual(shortcuts.map(n => n.props.title),
+  ["Δραστηριότητα", "Αποθηκευμένα", "Ενδιαφέροντα", "Οδηγός"]);
 assert.ok(!shortcuts.some(n => n.props.title === "Λογαριασμός"),
   "The redundant Account tile is removed");
-for (const label of ["Δραστηριότητα", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
-const savedShortcut = nodes(tree).find(n => n.props?.testID === "profile-saved-link");
-assert.ok(savedShortcut, "Saved lessons remain accessible from the section heading");
-savedShortcut.props.onPress();
-assert.deepEqual(calls, ["account", "stats", "interests", "guide", "saved"]);
+for (const label of ["Δραστηριότητα", "Αποθηκευμένα", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
+assert.deepEqual(calls, ["account", "stats", "saved", "interests", "guide"]);
+const savedShortcut = shortcuts.find(n => n.props.title === "Αποθηκευμένα");
+assert.equal(savedShortcut.type(savedShortcut.props).props.testID, "profile-saved-link",
+  "Saved lessons uses the same accessible shortcut component as the other tiles");
 const xpHelp = nodes(tree).find(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;");
 assert.ok(xpHelp && !xpHelp.props.accessibilityState.expanded);
 xpHelp.props.onPress();
