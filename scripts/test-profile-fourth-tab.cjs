@@ -8,8 +8,10 @@ const profile = read("src/screens/ProfileScreen.tsx");
 
 const destinations = [...tabs.matchAll(/\{ key: "(home|progress|saved|profile)", label:/g)]
   .map(match => match[1]);
-assert.deepEqual(destinations, ["home", "progress", "saved", "profile"],
-  "The bottom navbar should retain its three routes and add Profile last.");
+assert.deepEqual(destinations, ["home", "progress", "profile"],
+  "The bottom navbar should only show the three primary destinations.");
+assert.doesNotMatch(tabs, /key: "saved"/,
+  "Saved lessons should not occupy a primary tab.");
 assert.match(tabs, /\["profile", "player-stats", "account"\]/,
   "The Profile tab should remain selected in its secondary destinations.");
 assert.match(tabs, /accessibilityRole="tab"/);
@@ -32,10 +34,14 @@ assert.match(profile, /calculateDailyChallengeProgress\(dailyHistory\(daily\.doc
   "The streak must remain a daily-quiz streak, not an invented login streak.");
 assert.doesNotMatch(profile, /completedIds|completedLessons|totalLessonCount/,
   "Reading/learning completion belongs to Progress and Insights, not Profile.");
-for (const callback of ["onStats", "onAccount", "onInterests", "onGuide"]) {
+for (const callback of ["onStats", "onAccount", "onInterests", "onGuide", "onSaved"]) {
   assert.match(profile, new RegExp("onPress=\\{" + callback + "\\}"),
     "Existing Profile action must remain wired: " + callback);
 }
+assert.match(profile, /testID="profile-saved-link"/,
+  "The Saved lessons destination stays discoverable from Profile.");
+assert.match(routes, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
+  "Saved lessons shortcut must navigate to the existing route.");
 assert.match(profile, /scrollEnabled=\{canScroll\}/,
   "Default Profile layout should fit the viewport with a scroll fallback.");
 assert.match(profile, /ProgressGradientBackground/);
@@ -73,4 +79,4 @@ assert.doesNotMatch(activity, /lessonScores|mastery\.count|completedLessons|tota
   "Mastery and lesson completion belong in Progress / Learning Insights.");
 assert.ok(routes.includes('<PlayerStatsScreen onBack={() => app.setScreen("profile")} />'),
   "Player Statistics should not require learning-progress props.");
-console.log("Profile fourth-tab and activity ownership contracts passed.");
+console.log("Profile navigation and activity ownership contracts passed.");
