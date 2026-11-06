@@ -34,6 +34,7 @@ export default function ArticleFigure({ figure }: Props) {
 
       <ExpandableImageCaption caption={figure.caption} />
       <Pressable
+        style={styles.creditControl}
         accessibilityRole="link"
         accessibilityLabel={`Άνοιγμα πηγής εικόνας: ${figure.credit}`}
         onPress={() => void Linking.openURL(figure.creditUrl).catch(() => {})}
@@ -45,7 +46,7 @@ export default function ArticleFigure({ figure }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { marginTop: 4, marginBottom: 24 },
+  container: { marginTop: 2, marginBottom: 20 },
   imageFrame: {
     overflow: "hidden",
     borderRadius: 16,
@@ -56,10 +57,11 @@ const styles = StyleSheet.create({
   // Reserve the space before remote images load to avoid changing scroll positions.
   // Contain preserves the whole photo/diagram, even when its source is portrait.
   image: { width: "100%", aspectRatio: 4 / 3, minHeight: 210, maxHeight: 340 },
+  creditControl: { minHeight: 44, justifyContent: "center" },
   credit: {
     color: reading.accent,
     fontSize: 12,
     lineHeight: 18,
-    marginTop: 5,
+    marginTop: 2,
   },
 });
