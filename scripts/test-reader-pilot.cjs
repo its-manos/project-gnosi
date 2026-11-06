@@ -9,8 +9,11 @@ const root = path.join(__dirname, '..');
 const jsx = (type, props) => ({ type, props });
 let states = [], refs = [], stateIndex = 0, refIndex = 0;
 const openingCues = [];
+const fontStore = { size: 18, subscribe: () => () => {}, getSnapshot: () => fontStore.size,
+  adjust: delta => { fontStore.size = Math.max(16, Math.min(24, fontStore.size + delta)); } };
 const react = {
   useEffect: () => {},
+  useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot(),
   useState: initial => {
     const i = stateIndex++;
     if (!(i in states)) states[i] = initial;
@@ -18,7 +21,7 @@ const react = {
   },
   useRef: value => { const i = refIndex++; return refs[i] ??= { current: value }; },
 };
-const native = { useWindowDimensions: () => ({ height: 852, fontScale: 1 }), View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
+const native = { useWindowDimensions: () => ({ width: 390, height: 852, fontScale: 1 }), View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
 const analyticsScrollEvents = [];
 const common = {
   '../play/preferences': { motionAllowed: () => true, playPreferences: { getSnapshot: () => ({}) } },
@@ -37,6 +40,7 @@ const common = {
     action: null, onActionChange: () => {},
   }) },
   '../components/ProgressGradientBackground': { __esModule: true, default: 'ProgressGradientBackground' },
+  '../state/ReaderTextSize': { readerTextSize: fontStore, READER_TEXT_SIZE_MIN: 16, READER_TEXT_SIZE_MAX: 24 },
   '../hooks/useAdaptiveQuestionScroll': { useAdaptiveQuestionScroll: () => ({
     scrollEnabled: false, onLayout: () => {}, onContentSizeChange: () => {},
   }) },
@@ -74,7 +78,7 @@ const lesson = data.lessons.find(l => l.id === 'ancient-athens');
 const calls = [], scrolls = [];
 let props;
 function reset(answers = {}) {
-  states=[]; refs=[];
+  states=[]; refs=[]; fontStore.size = 18;
   props = { lesson, category: data.categories.find(c => c.id === lesson.categoryId), subcategory: data.subcategories.find(c => c.id === lesson.subcategoryId),
     isSaved:false, bookmarksLoaded:true, checkpointAnswers:answers, onToggleSaved: id => calls.push(['save',id]), onBack: () => calls.push(['back']),
     onAnswerCheckpoint: (...args) => calls.push(['answer',...args]), onFinishLesson: () => calls.push(['finish']) };
@@ -106,6 +110,8 @@ assert.equal(coverStyle.aspectRatio, 16 / 10, 'reader cover uses responsive fram
 assert.equal(coverStyle.height, undefined, 'no fixed reader cover height');
 assert.equal(coverStyle.minHeight, 180);
 assert.equal(coverStyle.maxHeight, 330);
+assert.equal(nodes(tree).find(n => n.type === 'ExpandableImageCaption').props.caption, lesson.imageCaption,
+  'cover image uses the shared expandable description component');
 const scroll = nodes(tree).find(n => n.type === 'ScrollView');
 scroll.props.ref.current = { scrollTo: args => scrolls.push(args) };
 assert.ok(byId(tree,'reader-paragraph-3')); assert.ok(!byId(tree,'reader-paragraph-4'));
@@ -117,12 +123,12 @@ const source = nodes(byId(tree,'reader-sources')).find(n => typeof n.type === 'f
 assert.equal(nodes(source.type(source.props)).filter(n => n.type === 'SourceLink').length, lesson.sources.length);
 press(tree,'Ρυθμίσεις ανάγνωσης'); tree=render();
 for(let i=0;i<6;i++) { press(tree,'Μεγαλύτερο κείμενο άρθρου'); tree=render(); }
-assert.equal(states[0],24);
+assert.equal(fontStore.getSnapshot(),24);
 assert.equal(nodes(tree).find(n => n.props?.accessibilityLabel === 'Μεγαλύτερο κείμενο άρθρου').props.disabled,true);
 assert.equal(nodes(tree).filter(n => n.type === 'QuizQuestionRenderer' || n.type === 'InlineQuestionCard').length,0,
   'the article has no visible question content before opening the modal');
 for(let i=0;i<8;i++) { press(tree,'Μικρότερο κείμενο άρθρου'); tree=render(); }
-assert.equal(states[0],16);
+assert.equal(fontStore.getSnapshot(),16);
 press(tree,'Αποθήκευση άρθρου'); press(tree,'Επιστροφή στα άρθρα');
 assert.ok(calls.some(c => c[0]==='save' && c[1]===lesson.id)); assert.ok(calls.some(c => c[0]==='back'));
 props = { ...props, bookmarksLoaded:false }; tree=render();
