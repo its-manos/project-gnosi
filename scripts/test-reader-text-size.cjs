@@ -26,13 +26,16 @@ async function main() {
   const changes = [];
   const unsub = store.subscribe(() => changes.push(store.getSnapshot()));
   assert.equal(store.getSnapshot(), 18);
+  assert.equal(store.getReadySnapshot(), false);
   await store.load();
   assert.equal(store.getSnapshot(), 22);
+  assert.equal(store.getReadySnapshot(), true);
   store.adjust(2); store.adjust(2); store.adjust(-2);
   assert.equal(store.getSnapshot(), 22, "Upper bound, lower bound and consecutive taps work");
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(writes.at(-1)?.[1], "22", "Newest setting persists last");
-  assert.equal(changes.join(","), "22,24,22", "Only meaningful changes notify subscribers");
+  assert.equal(changes.join(","), "22,22,24,22",
+    "Hydration completion must notify readers even when no further font size changes");
   unsub();
 
   let finishRead;
@@ -46,6 +49,7 @@ async function main() {
   finishRead("24");
   await load;
   assert.equal(racing.getSnapshot(), 20, "Late stored values must not override user input");
+  assert.equal(racing.getReadySnapshot(), true);
 
   for (const invalid of ["100", "17", "\"unexpected\"", "{", "null"]) {
     const bad = new ReaderTextSizeStore({
@@ -54,6 +58,7 @@ async function main() {
     });
     await bad.load();
     assert.equal(bad.getSnapshot(), 18, "Invalid stored size falls back to default");
+    assert.equal(bad.getReadySnapshot(), true);
   }
   const broken = new ReaderTextSizeStore({
     getItem: async () => { throw Error("storage offline"); },
