@@ -258,12 +258,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                     <Text style={styles.checkpointEyebrow}>ΣΤΑΣΗ ΓΝΩΣΗΣ</Text>
                   </View>
                   <Text style={styles.gateTitle}>Έτοιμος να δοκιμάσεις όσα έμαθες;</Text>
-                  <Text style={styles.readingHint}>
-                    Μπορείς να ξαναδιαβάσεις πριν απαντήσεις. Οι ερωτήσεις
-                    ανοίγουν μόνο όταν το επιλέξεις.
+                  <Text style={styles.checkpointHint}>
+                    Μπορείς να ξαναδιαβάσεις πριν ξεκινήσεις.
                     {pendingGroup.length > 1 ? ` Σε περιμένουν ${pendingGroup.length} ερωτήσεις.` : ""}
                   </Text>
-                  <ActionButton label="Έτοιμος για ερωτήσεις →"
+                  <ActionButton label="Έτοιμος για ερωτήσεις →" style={styles.checkpointButton}
                     onPress={() => openQuestions(number, firstPending.questionIndex)} />
                 </View> : null}
               </View>;
@@ -411,15 +410,18 @@ const styles = StyleSheet.create({
   sectionNumber: { color: reading.accent, fontSize: 10, lineHeight: 18, letterSpacing: 1 },
   sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "700", marginBottom: 22 },
   paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 24 },
-  checkpoint: { marginBottom: 28, borderWidth: 1, borderLeftWidth: 3,
+  checkpoint: { marginBottom: 26, borderWidth: 1, borderLeftWidth: 3,
     borderColor: reading.border, borderLeftColor: reading.accent,
-    backgroundColor: reading.surface, borderRadius: 16, padding: 18 },
-  checkpointKicker: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 9 },
+    backgroundColor: reading.surface, borderRadius: 16, padding: 14 },
+  checkpointKicker: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
   checkpointDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
   checkpointEyebrow: { color: reading.accent, fontSize: 10,
     lineHeight: 17, fontWeight: "800", letterSpacing: 1.1 },
-  gateTitle: { color: reading.heading, fontSize: 19, lineHeight: 28,
-    fontWeight: "700", marginBottom: 8 },
+  gateTitle: { color: reading.heading, fontSize: 18, lineHeight: 26,
+    fontWeight: "700", marginBottom: 4 },
+  checkpointHint: { color: reading.muted, fontSize: 13, lineHeight: 20 },
+  // Scoped override: the lesson completion CTA and all other ActionButtons stay unchanged.
+  checkpointButton: { minHeight: 48, marginTop: 10, paddingVertical: 10 },
   quizScreen: { flex: 1, backgroundColor: colors.background },
   quizHeader: { width: "100%", maxWidth: 640, alignSelf: "center", paddingTop: profileSectionLayout.top,
     paddingHorizontal: profileSectionLayout.horizontal, gap: 8 },
