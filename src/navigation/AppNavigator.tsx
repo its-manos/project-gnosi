@@ -22,7 +22,7 @@ import BottomNavigation from "../components/BottomNavigation";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { useWelcome } from "../hooks/useWelcome";
 import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
-import { ONBOARDING_INTRO_LESSON_ID, type WelcomePhase } from "../utils/firstRun";
+import { ONBOARDING_INTRO_LESSON_ID, previousWelcomePhase, type WelcomePhase } from "../utils/firstRun";
 import QuickQuizScreen from "../screens/QuickQuizScreen";
 import { useQuickQuiz } from "../hooks/useQuickQuiz";
 import HomeScreen from "../screens/HomeScreen";
@@ -191,11 +191,10 @@ export default function AppNavigator() {
   hardwareBackRef.current = () => {
     if (welcome.loading) return false;
     if (welcome.visible) {
-      if (welcome.phase === "lesson") { void welcome.advance("choose"); return true; }
-      if (welcome.phase === "choose") { void welcome.advance("interests"); return true; }
-      if (welcome.phase === "interests") { void welcome.advance("question"); return true; }
-      if (welcome.phase === "question") { void welcome.advance("welcome"); return true; }
-      return false;
+      const previous = previousWelcomePhase(welcome.phase);
+      if (!previous) return false;
+      void welcome.advance(previous);
+      return true;
     }
     if (isDevDailyIntroPreviewOpen) { setIsDevDailyIntroPreviewOpen(false); return true; }
     if (isDevQuizPreviewOpen) { setIsDevQuizPreviewOpen(false); return true; }
