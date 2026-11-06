@@ -32,6 +32,15 @@ const shortcutTitle = nodes(shortcut).find(n => n.type === "Text" && n.props?.ch
 assert.equal(shortcutTitle.props.numberOfLines, 1);
 assert.equal(shortcutTitle.props.adjustsFontSizeToFit, true);
 
+const titleOnly = NavigationTile({
+  title: "Ενδιαφέροντα", icon: jsx("SparkleIcon", {}), onPress: () => {},
+});
+assert.equal(titleOnly.props.accessibilityLabel, "Ενδιαφέροντα");
+const titleOnlyText = nodes(titleOnly).find(n => n.props?.children === "Ενδιαφέροντα");
+assert.equal(titleOnlyText.props.numberOfLines, 1);
+assert.equal(titleOnlyText.props.adjustsFontSizeToFit, true);
+assert.ok(!nodes(titleOnly).some(n => n.type === "Text" && n.props?.children === undefined));
+
 const settings = NavigationTile({
   title: "Εμπειρία μάθησης", subtitle: "Ήχος και κίνηση", icon: jsx("SparkleIcon", {}),
   onPress: () => callbacks.push("settings"), variant: "settings",

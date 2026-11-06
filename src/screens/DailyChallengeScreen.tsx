@@ -68,7 +68,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   const activeQuiz=!previewIntro&&record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
   return <View style={styles.root}><ProgressGradientBackground />
     <View style={styles.pageChrome}>
-      <ProfileSectionHeader eyebrow={previewIntro?"ΠΡΟΕΠΙΣΚΟΠΗΣΗ · DEV":"ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ"}
+      <ProfileSectionHeader
         title={previewIntro?"Ημερήσιο quiz":reviewing?"Ανασκόπηση":record.completed?"Αποτέλεσμα":"Ημερήσιο quiz"}
         actionLabel={previewIntro?"‹ Εργαλεία":reviewing?"‹ Αποτέλεσμα":"‹ Αρχική"}
         actionAccessibilityLabel={previewIntro?"Πίσω στα εργαλεία δοκιμών":reviewing?"Πίσω στο αποτέλεσμα":"Επιστροφή στην αρχική"}

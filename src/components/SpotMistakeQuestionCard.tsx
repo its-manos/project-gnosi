@@ -11,7 +11,7 @@ import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: SpotMistakeQuestion;
-  questionNumber: number;
+  questionNumber?: number;
   /** Answer accepted by the parent, not the user's unconfirmed selection. */
   answer?: string;
   onSubmit: (optionId: string) => void;
@@ -77,12 +77,11 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⌕  ΒΡΕΣ ΤΟ ΛΑΘΟΣ</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <Text testID="spot-mistake-subject" accessibilityRole="header" style={[styles.question, questionSize]}>
       {question.prompt}{question.prompt.trim().endsWith(":") ? "" : ":"}
     </Text>
-    {!answered ? <Text style={styles.hint}>Ποια πρόταση είναι λανθασμένη;</Text> : null}
     {(!answered || !compactAnswered) ? <View style={styles.answers}>
       {question.content.options.map((option, index) => {
         const selected = selectedId === option.id;
@@ -98,7 +97,7 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
             style={({ pressed }) => [styles.answer, selected && !answered && styles.selected,
               isFalseStatement && styles.answerCorrect, wrongSelection && styles.answerWrong,
               pressed && !answered && !submitting && styles.pressed]}>
-            <View style={[styles.letterCircle, isFalseStatement && styles.circleCorrect,
+            <View style={[styles.letterBox, isFalseStatement && styles.circleCorrect,
               wrongSelection && styles.circleWrong]}>
               <Text style={styles.letter}>{String.fromCharCode(65 + index)}</Text>
             </View>
@@ -131,20 +130,12 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
-  eyebrow: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 1, marginBottom: 7 },
-  highlight: { color: colors.accentLight, fontWeight: "800" },
-  letterCircle: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
+  letterBox: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
     flexShrink: 0, justifyContent: "center", alignItems: "center" },
   circleCorrect: { backgroundColor: "#205143" },
   circleWrong: { backgroundColor: "#59323B" },
   letter: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
   correctIcon: { color: colors.success, fontSize: 20, fontWeight: "900" },
   wrongIcon: { color: colors.error, fontSize: 20, fontWeight: "900" },
-  footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 20, marginTop: 13 },
-  feedbackTitle: { fontSize: 16, lineHeight: 23, fontWeight: "900" },
-  goodText: { color: colors.success },
-  badText: { color: colors.error },
-  falseStatement: { color: colors.text, fontSize: 14, lineHeight: 23, fontWeight: "700" },
-  feedbackLabel: { color: colors.textMuted, fontSize: 11, fontWeight: "900", letterSpacing: 0.5, marginTop: 4 },
   solution: { color: colors.text, fontSize: 15, lineHeight: 24, fontWeight: "800" },
 });

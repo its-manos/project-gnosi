@@ -15,11 +15,12 @@ type Props = {
   answers: readonly string[];
   correctIndex: number;
   explanation: string;
-  questionNumber: number;
+  questionNumber?: number;
   /** Committed answer from lesson/daily/preview store; never a draft. */
   answer?: number;
   onConfirm: (index: number) => void | Promise<unknown>;
   readingSize?: number;
+  commitOnSelect?: boolean;
   onActionChange?: (action: QuestionStageAction | null) => void;
   badgeLabel?: string;
   showFeedback?: boolean;
@@ -39,7 +40,7 @@ type Props = {
 export default function SingleChoiceQuestionCard({
   id, question, answers, correctIndex, explanation, questionNumber, answer,
   onConfirm, readingSize, badgeLabel = "ΜΙΑ ΕΠΙΛΟΓΗ", showFeedback = true, compactAnswered = false,
-  combo = 0, reportTarget, feedbackExtra, onActionChange, testID = "choice-question-card", testPrefix = "single-choice",
+  combo = 0, reportTarget, feedbackExtra, commitOnSelect = false, onActionChange, testID = "choice-question-card", testPrefix = "single-choice",
 }: Props) {
   const [draft, setDraft] = useState<number | null>(null);
   const draftRef = useRef<number | null>(null);
@@ -61,11 +62,14 @@ export default function SingleChoiceQuestionCard({
 
   function choose(index: number) {
     if (answered || pendingSubmit.current) return;
+    if (commitOnSelect) {
+      submit(index);
+      return;
+    }
     draftRef.current = index;
     setDraft(index);
   }
-  function confirm() {
-    const index = draftRef.current;
+  function submit(index: number | null) {
     if (answered || pendingSubmit.current || index === null || index < 0 || index >= answers.length) return;
     pendingSubmit.current = true;
     setSubmitting(true);
@@ -82,19 +86,21 @@ export default function SingleChoiceQuestionCard({
     }
   }
 
+  function confirm() { submit(draftRef.current); }
+
   // In an immersive question stage the caller owns the footer location.
   // The card still owns its draft and confirmation guard.
   useEffect(() => {
-    if (!onActionChange) return;
+    if (!onActionChange || commitOnSelect) return;
     onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: draft === null || submitting, onPress: confirm });
     return () => onActionChange(null);
-  }, [answered, draft, submitting, onActionChange]);
+  }, [answered, draft, submitting, onActionChange, commitOnSelect]);
 
   return <View style={styles.card} testID={testID}>
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>✦  {badgeLabel}</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <Text accessibilityRole="header" style={[styles.question, scaledQuestion]}>{question}</Text>
     {answered && compactAnswered ? null : <View style={styles.answers}>
@@ -127,7 +133,7 @@ export default function SingleChoiceQuestionCard({
         </AnswerMotion>;
       })}
     </View>}
-    {!answered && !onActionChange ? <Pressable
+    {!answered && !onActionChange && !commitOnSelect ? <Pressable
       testID={`${testPrefix}-confirm`}
       accessibilityRole="button"
       accessibilityState={{ disabled: draft === null || submitting }}
@@ -152,11 +158,6 @@ export default function SingleChoiceQuestionCard({
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
-  answerSummary: { gap: 5, borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11 },
-  summaryCorrect: { backgroundColor: colors.successSurface, borderColor: colors.success },
-  summaryWrong: { backgroundColor: colors.errorSurface, borderColor: colors.error },
-  summaryStatus: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
-  summaryText: { color: colors.text, fontWeight: "800", fontSize: 15, lineHeight: 23 },
   letterBox: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
     alignItems: "center", justifyContent: "center", flexShrink: 0 },
   letterSelected: { backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.accent },
@@ -165,12 +166,7 @@ const styles = StyleSheet.create({
   letter: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
   correctIcon: { color: colors.success, fontSize: 20, fontWeight: "900" },
   wrongIcon: { color: colors.error, fontSize: 20, fontWeight: "900" },
-  feedbackTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 },
-  feedbackHeading: { fontSize: 17, fontWeight: "900" },
   correctText: { color: colors.success },
   wrongText: { color: colors.error },
-  comboBadge: { backgroundColor: colors.accentSurface, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6 },
-  comboText: { color: colors.accentLight, fontSize: 10, fontWeight: "900" },
   correction: { color: colors.text, fontSize: 15, lineHeight: 24, fontWeight: "800" },
-  explanationLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.7 },
 });

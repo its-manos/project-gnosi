@@ -53,7 +53,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
     () => calculateDailyChallengeProgress(history, todayKey),
     [history, todayKey],
   );
-  const pageHeader = <ProfileSectionHeader eyebrow="Ο ΧΩΡΟΣ ΣΟΥ" title="Δραστηριότητα"
+  const pageHeader = <ProfileSectionHeader title="Δραστηριότητα"
     actionLabel="‹ Προφίλ" actionAccessibilityLabel="Πίσω στο προφίλ"
     onAction={onBack} />;
 

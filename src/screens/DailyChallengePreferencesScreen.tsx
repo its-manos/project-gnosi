@@ -71,7 +71,7 @@ export default function DailyChallengePreferencesScreen({
 
   return (
     <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, nextHeight) => setContentHeight(Math.round(nextHeight))} scrollEnabled={needsScroll || veryCompact || fontScale > 1.2 || isLoading || saveError} contentContainerStyle={[styles.content, compact && styles.contentCompact]} showsVerticalScrollIndicator={false}>
-      <ProfileSectionHeader eyebrow="Ο ΧΩΡΟΣ ΣΟΥ" title="Ενδιαφέροντα"
+      <ProfileSectionHeader title="Ενδιαφέροντα"
         actionLabel="‹ Προφίλ" actionAccessibilityLabel="Πίσω στο προφίλ"
         onAction={onCancel} style={styles.headerSpacing} />
       <AtlasCard entranceDelay={0} style={[styles.hero, compact && styles.heroCompact]}>

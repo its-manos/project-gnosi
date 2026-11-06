@@ -6,7 +6,7 @@ import { colors } from "../theme";
 type Variant = "shortcut" | "settings";
 type Props = {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   icon: ReactNode;
   onPress: () => void;
   variant?: Variant;
@@ -23,25 +23,26 @@ export default function NavigationTile({
   accessibilityLabel, iconBackground, entranceDelay, pressScale = 0.983,
 }: Props) {
   const settings = variant === "settings";
-  const label = accessibilityLabel ?? (settings ? title : title + ". " + subtitle);
+  const titleOnly = !settings && !subtitle;
+  const label = accessibilityLabel ?? (settings || !subtitle ? title : title + ". " + subtitle);
   const contents = <>
     <View accessible={false} style={[styles.icon, settings && styles.iconSettings,
       iconBackground ? { backgroundColor: iconBackground } : undefined]}>{icon}</View>
     <View style={[styles.copy, settings && styles.copySettings]}>
-      <Text style={[styles.title, settings && styles.titleSettings]}
-        numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings}>{title}</Text>
-      <Text style={[styles.subtitle, settings && styles.subtitleSettings]}
+      <Text style={[styles.title, settings && styles.titleSettings, titleOnly && styles.titleOnly]}
+        numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings} minimumFontScale={titleOnly ? 0.8 : undefined}>{title}</Text>
+      {subtitle ? <Text style={[styles.subtitle, settings && styles.subtitleSettings]}
         numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings}
-        minimumFontScale={0.82}>{subtitle}</Text>
+        minimumFontScale={0.82}>{subtitle}</Text> : null}
     </View>
-    <Text accessible={false} style={[styles.arrow, settings && styles.arrowSettings]}>›</Text>
+    <Text accessible={false} style={[styles.arrow, settings && styles.arrowSettings, titleOnly && styles.arrowCompact]}>›</Text>
   </>;
   if (settings) return <MotionPressable testID={testID} entranceDelay={entranceDelay}
     pressScale={pressScale} accessibilityRole="button" accessibilityLabel={label}
     onPress={onPress} style={[styles.base, styles.settings]}>{contents}</MotionPressable>;
   return <Pressable testID={testID} accessibilityRole="button"
     accessibilityLabel={label} onPress={onPress}
-    style={({ pressed }) => [styles.base, styles.shortcut, pressed && styles.pressed]}>
+    style={({ pressed }) => [styles.base, styles.shortcut, pressed && styles.pressed, titleOnly && styles.shortcutTitleOnly]}>
     {contents}
   </Pressable>;
 }
@@ -51,6 +52,7 @@ const styles = StyleSheet.create({
     borderColor: "#38435C", backgroundColor: "#1A2538" },
   shortcut: { width: "48.5%", flexGrow: 1, minHeight: 58, paddingHorizontal: 8,
     gap: 7, borderRadius: 15 },
+  shortcutTitleOnly: { paddingHorizontal: 7, gap: 5 },
   settings: { minHeight: 75, padding: 12, marginBottom: 9, borderRadius: 17 },
   pressed: { backgroundColor: "#2D304A" },
   icon: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
@@ -58,9 +60,11 @@ const styles = StyleSheet.create({
   copy: { flex: 1, minWidth: 0, gap: 2 },
   copySettings: { gap: 5 },
   title: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800" },
+  titleOnly: { fontSize: 13, lineHeight: 18 },
   titleSettings: { fontSize: 15 },
   subtitle: { color: colors.textMuted, fontSize: 9, lineHeight: 14 },
   subtitleSettings: { fontSize: 12 },
   arrow: { color: "#ACA0E7", fontSize: 19 },
+  arrowCompact: { fontSize: 16 },
   arrowSettings: { color: colors.accentLight, fontSize: 26 },
 });

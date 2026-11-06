@@ -11,7 +11,6 @@ export const profileSectionLayout = {
 } as const;
 
 type Props = {
-  eyebrow: string;
   title: string;
   actionLabel: string;
   actionAccessibilityLabel: string;
@@ -20,13 +19,12 @@ type Props = {
 };
 
 export default function ProfileSectionHeader({
-  eyebrow, title, actionLabel, actionAccessibilityLabel, onAction, style,
+  title, actionLabel, actionAccessibilityLabel, onAction, style,
 }: Props) {
   return (
     <View testID="profile-section-header" style={[styles.header, style]}>
       <View style={styles.copy}>
-        <Text style={styles.eyebrow} numberOfLines={1}>{eyebrow}</Text>
-        <Text style={styles.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.84}>{title}</Text>
+        <Text accessibilityRole="header" style={styles.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.84}>{title}</Text>
       </View>
       <Pressable onPress={onAction} accessibilityRole="button"
         accessibilityLabel={actionAccessibilityLabel} hitSlop={4}
@@ -39,8 +37,7 @@ export default function ProfileSectionHeader({
 
 const styles = StyleSheet.create({
   header: { minHeight: 45, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  copy: { flex: 1, minWidth: 0, gap: 1 },
-  eyebrow: { color: "#AD9FEB", fontSize: 10, lineHeight: 15, letterSpacing: 1.1, fontWeight: "900" },
+  copy: { flex: 1, minWidth: 0 },
   title: { color: colors.text, fontSize: 24, lineHeight: 31, fontWeight: "900", flexShrink: 1 },
   action: { minHeight: 44, paddingHorizontal: 11, borderRadius: 13, justifyContent: "center",
     backgroundColor: "#1D2538", borderColor: "#3D405C", borderWidth: 1 },

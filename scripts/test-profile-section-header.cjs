@@ -11,7 +11,7 @@ const Header = load("src/components/ProfileSectionHeader.tsx", {
 });
 let pressed = 0;
 const example = Header.default({
-  eyebrow: "Ο ΧΩΡΟΣ ΣΟΥ", title: "Δεδομένα και απόρρητο",
+  title: "Δεδομένα και απόρρητο",
   actionLabel: "‹ Ρυθμίσεις", actionAccessibilityLabel: "Πίσω στις ρυθμίσεις",
   onAction: () => { pressed++; },
 });
@@ -22,6 +22,7 @@ assert.equal(action.props.accessibilityLabel, "Πίσω στις ρυθμίσε�
 action.props.onPress();
 assert.equal(pressed, 1);
 const title = nodes(example).find(node => node.type === "Text" && node.props?.children === "Δεδομένα και απόρρητο");
+assert.equal(nodes(example).filter(node => node.type === "Text").length, 2, "Only the title and action are visible");
 assert.equal(title.props.numberOfLines, 2, "Long settings titles must have wrap room");
 assert.equal(title.props.adjustsFontSizeToFit, true);
 const actionStyle = action.props.style({ pressed: false })[0];

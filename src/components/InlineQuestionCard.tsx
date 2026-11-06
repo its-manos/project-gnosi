@@ -7,6 +7,7 @@ type Props = {
   combo?: number;
   question: LessonQuestion;
   questionNumber: number;
+  hideQuestionNumber?: boolean;
   selectedAnswer: number | undefined;
   onSelectAnswer: (answerIndex: number, correctIndex: number) => void;
   readingSize?: number;
@@ -19,7 +20,7 @@ type Props = {
  * parent-owned, while the exact same UI is shared across all single-choice
  * questions. The choice is saved only after explicit confirmation. */
 export default function InlineQuestionCard({
-  combo = 0, question, questionNumber, selectedAnswer,
+  combo = 0, question, questionNumber, hideQuestionNumber = false, selectedAnswer,
   onSelectAnswer, readingSize, compactAnswered = false, onActionChange, reportTarget,
 }: Props) {
   return <SingleChoiceQuestionCard
@@ -28,13 +29,13 @@ export default function InlineQuestionCard({
     answers={question.answers}
     correctIndex={question.correctIndex}
     explanation={question.explanation}
-    questionNumber={questionNumber}
+    questionNumber={hideQuestionNumber ? undefined : questionNumber}
     answer={selectedAnswer}
     onConfirm={index => onSelectAnswer(index, question.correctIndex)}
     readingSize={readingSize}
     compactAnswered={compactAnswered}
     onActionChange={onActionChange}
-    badgeLabel="ΣΤΑΣΗ ΓΝΩΣΗΣ"
+    badgeLabel="ΜΙΑ ΕΠΙΛΟΓΗ"
     combo={combo}
     reportTarget={reportTarget}
     testID="lesson-question-card"

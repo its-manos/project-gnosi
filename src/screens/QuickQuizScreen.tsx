@@ -111,7 +111,7 @@ export default function QuickQuizScreen({ game, scope, onHome }: Props) {
     (openingResult.current !== round.id || error === "save");
   return <View testID="quick-quiz-screen" style={styles.screen}>
     <ProgressGradientBackground />
-    <ProfileSectionHeader eyebrow={review ? "ΑΠΑΝΤΗΣΕΙΣ" : "ΜΙΚΤΟΣ ΓΥΡΟΣ"} title={review ? "Τα λάθη σου" : "Γρήγορο Κουίζ"}
+    <ProfileSectionHeader title={review ? "Τα λάθη σου" : "Γρήγορο Κουίζ"}
       actionLabel={review ? "‹ Αποτελέσματα" : "‹ Αρχική"}
       actionAccessibilityLabel={review ? "Επιστροφή στα αποτελέσματα" : "Επιστροφή στην αρχική"}
       onAction={review ? () => setReview(false) : onHome} style={styles.header} />

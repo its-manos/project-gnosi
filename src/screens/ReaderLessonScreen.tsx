@@ -3,7 +3,7 @@ import { quizRewardSummary } from "../gamification/rewards";
 import { adaptInteractiveLessonQuestion, adaptLessonQuestion, projectInteractiveLessonAnswer, restoreInteractiveLessonAnswer } from "../quiz/adapters";
 import ZoomableLessonImage from "../components/ZoomableLessonImage";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { requestPracticeCue } from "../play/soundStatus";
 import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ScrollViewInstance } from "react-native";
@@ -18,6 +18,8 @@ import QuizReveal from "../components/QuizReveal";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
 import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
+import QuestionStageProgress from "../components/QuestionStageProgress";
 import QuestionStageFooter from "../components/QuestionStageFooter";
 import LessonCover from "../components/LessonCover";
 import NextImageWarmup from "../components/NextImageWarmup";
@@ -63,8 +65,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const activeGroup = activeBoundary === null ? [] : placements
     .filter(p => p.afterParagraphNumber === activeBoundary)
     .map(p => p.questionIndex);
-  const activePosition = activeQuestionIndex === null ? -1 : activeGroup.indexOf(activeQuestionIndex);
   const activeAnswered = activeQuestionIndex !== null && checkpointAnswers[activeQuestionIndex] !== undefined;
+  const questionScroll = useRef<ScrollViewInstance>(null);
+  useEffect(() => {
+    if (activeAnswered) questionScroll.current?.scrollTo({ y: 0, animated: false });
+  }, [activeQuestionIndex, activeAnswered]);
   const visibleLimit = getReadingVisibleParagraphLimit(lesson, checkpointAnswers);
   const upcomingFigureUrl = nextPendingFigureUrl(lesson, visibleLimit);
   const complete = answeredCount === questionCount;
@@ -261,29 +266,18 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
         </View> : <Text style={styles.locked} testID="reader-locked">Η συνέχεια ανοίγει μετά την παραπάνω ερώτηση. Δεν χρειάζεται να απαντήσεις σωστά για να προχωρήσεις.</Text>}
       </ScrollView>
       <NextImageWarmup uri={upcomingFigureUrl} />
-      {activeBoundary !== null && activeQuestionIndex !== null && activePosition >= 0 ? <Modal
+      {activeQuestionIndex !== null && activeGroup.includes(activeQuestionIndex) ? <Modal
         visible animationType="slide" presentationStyle="fullScreen"
         statusBarTranslucent navigationBarTranslucent onRequestClose={onBack}>
-        <View style={[styles.quizScreen, { paddingTop: safeArea.top, paddingBottom: safeArea.bottom }]}
+        <View style={[styles.quizScreen, { paddingTop: safeArea.top, paddingLeft: safeArea.left, paddingRight: safeArea.right }]}
           testID="reader-question-screen">
           <ProgressGradientBackground />
-          <View style={styles.quizTopbar}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Έξοδος από το μάθημα"
-              onPress={onBack} style={styles.control}>
-              <Text style={styles.quizExit}>‹ Έξοδος</Text>
-            </Pressable>
-            <Text style={styles.quizBrand}>ΕΛΕΓΧΟΣ ΓΝΩΣΕΩΝ</Text>
-            <Text style={styles.quizCount} accessibilityLiveRegion="polite">
-              {activeGroup.length > 1 ? `Ερώτηση ${activePosition + 1} / ${activeGroup.length}` : "Ερώτηση"}
-            </Text>
+          <View style={styles.quizHeader}>
+            <ProfileSectionHeader title="Ερωτήσεις"
+              actionLabel="‹ Έξοδος" actionAccessibilityLabel="Έξοδος από το μάθημα" onAction={onBack} />
+            <QuestionStageProgress current={activeQuestionIndex + 1} total={questionCount} />
           </View>
-          {activeGroup.length > 1 ? <View style={styles.quizSteps} accessibilityRole="progressbar"
-            accessibilityLabel="Πρόοδος ερωτήσεων ενότητας"
-            accessibilityValue={{ min: 0, max: activeGroup.length, now: activePosition + 1 }}>
-            {activeGroup.map((index, position) => <View key={index}
-              style={[styles.quizStep, position <= activePosition && styles.quizStepActive]} />)}
-          </View> : null}
-          <ScrollView key={`${lesson.id}:${activeQuestionIndex}`} style={styles.quizViewport}
+          <ScrollView key={`${lesson.id}:${activeQuestionIndex}`} ref={questionScroll} style={styles.quizViewport}
             testID="reader-question-viewport"
             contentContainerStyle={styles.quizContent}
             onLayout={quizViewport.onLayout}
@@ -297,7 +291,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 const interactive = adaptInteractiveLessonQuestion(lesson, questionIndex);
                 const answered = checkpointAnswers[questionIndex] !== undefined;
                 return interactive ? <>
-                  <QuizQuestionRenderer question={interactive} questionNumber={questionIndex + 1}
+                  <QuizQuestionRenderer question={interactive}
                     readingSize={readingSize} compactAnswered onActionChange={stageAction.onActionChange}
                     answer={restoreInteractiveLessonAnswer(lesson, questionIndex, checkpointAnswers[questionIndex], typedCheckpointAnswers[questionIndex])}
                     onSubmit={value => {
@@ -313,7 +307,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 </> : <InlineQuestionCard
                   combo={quizRewardSummary(lesson.questions.slice(0, questionIndex + 1)
                     .map((_, i) => adaptLessonQuestion(lesson, i)), checkpointAnswers, "lesson").combo}
-                  question={question} questionNumber={questionIndex + 1}
+                  question={question} questionNumber={questionIndex + 1} hideQuestionNumber
                   selectedAnswer={checkpointAnswers[questionIndex]}
                   reportTarget={enableReporting ? lessonReportTarget(lesson, questionIndex) : undefined}
                   readingSize={readingSize} compactAnswered onActionChange={stageAction.onActionChange}
@@ -325,7 +319,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               })()}
             </View></QuizReveal>
           </ScrollView>
-          <QuestionStageFooter action={activeAnswered ? {
+          <QuestionStageFooter bottomInset={safeArea.bottom} action={activeAnswered ? {
             label: activeGroup.some(i => i > activeQuestionIndex && checkpointAnswers[i] === undefined)
               ? "Επόμενη ερώτηση →" : "Συνέχεια ανάγνωσης →",
             disabled: false, onPress: advanceQuestion,
@@ -385,17 +379,11 @@ const styles = StyleSheet.create({
   checkpoint: { marginBottom: 28, borderWidth: 1, borderColor: reading.border, backgroundColor: reading.surface, borderRadius: 16, padding: 18 },
   gateTitle: { color: reading.heading, fontSize: 19, lineHeight: 28, fontWeight: "700" },
   quizScreen: { flex: 1, backgroundColor: colors.background },
-  quizTopbar: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 8, flexDirection: "row", flexWrap: "wrap",
-    justifyContent: "space-between", alignItems: "center", gap: 6, borderBottomWidth: 1, borderColor: colors.border },
-  quizExit: { color: colors.text, fontSize: 15, fontWeight: "700" },
-  quizBrand: { color: colors.accentLight, fontSize: 10, letterSpacing: 0.8, fontWeight: "800" },
-  quizCount: { color: colors.textMuted, fontSize: 12, fontWeight: "700" },
-  quizSteps: { flexDirection: "row", gap: 5, marginHorizontal: 22, marginTop: 9 },
-  quizStep: { height: 4, borderRadius: 3, backgroundColor: colors.border, flex: 1 },
-  quizStepActive: { backgroundColor: colors.accent },
+  quizHeader: { width: "100%", maxWidth: 640, alignSelf: "center", paddingTop: profileSectionLayout.top,
+    paddingHorizontal: profileSectionLayout.horizontal, gap: 8 },
   quizViewport: { flex: 1 },
-  quizContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 16,
-    paddingTop: 10, paddingBottom: 14, width: "100%", maxWidth: 640, alignSelf: "center" },
+  quizContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: profileSectionLayout.horizontal,
+    paddingVertical: 4, width: "100%", maxWidth: 640, alignSelf: "center" },
   finish: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 26, gap: 10 },
   finishBody: { color: reading.text, marginTop: 8, marginBottom: 8 },
   endSources: { marginTop: 28 },

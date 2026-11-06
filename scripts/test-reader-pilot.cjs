@@ -10,6 +10,7 @@ const jsx = (type, props) => ({ type, props });
 let states = [], refs = [], stateIndex = 0, refIndex = 0;
 const openingCues = [];
 const react = {
+  useEffect: () => {},
   useState: initial => {
     const i = stateIndex++;
     if (!(i in states)) states[i] = initial;
@@ -17,7 +18,7 @@ const react = {
   },
   useRef: value => { const i = refIndex++; return refs[i] ??= { current: value }; },
 };
-const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
+const native = { useWindowDimensions: () => ({ height: 852, fontScale: 1 }), View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
 const analyticsScrollEvents = [];
 const common = {
   '../play/preferences': { motionAllowed: () => true, playPreferences: { getSnapshot: () => ({}) } },
@@ -25,6 +26,12 @@ const common = {
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
   './QuizReveal': { __esModule: true, default: 'QuizReveal' },
   '../components/QuizReveal': { __esModule: true, default: 'QuizReveal' },
+  '../components/HomeMotion': { MotionView: 'MotionView' },
+  '../components/ProgressMotion': { ProgressBarFill: 'ProgressBarFill' },
+  '../components/ProfileSectionHeader': { __esModule: true, default: 'ProfileSectionHeader', profileSectionLayout: { horizontal: 18, top: 8 } },
+  '../components/ProgressTrack': { __esModule: true, default: 'ProgressTrack' },
+  '../components/AtlasContinueCard': { __esModule: true, default: 'AtlasContinueCard', atlasContinueStyles: {} },
+  '../hooks/useKnowledgeProfile': { useKnowledgeProfile: () => ({ profile: { level: 1, earned: 0, required: 100, remaining: 100, totalXP: 0 }, ready: true }) },
   '../components/QuestionStageFooter': { __esModule: true, default: 'QuestionStageFooter' },
   '../hooks/useQuestionStageAction': { useQuestionStageAction: () => ({
     action: null, onActionChange: () => {},
@@ -35,7 +42,7 @@ const common = {
   }) },
   '../state/BetaAnalytics': {useBetaAnalytics: () => ({analytics:{progress:async value => {analyticsScrollEvents.push(value);}}})}, react, './ReportContentButton': { __esModule: true, default: 'ReportContentButton' }, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
   'react-native-svg': { __esModule: true, default: 'Svg', Path: 'Path' },
-  'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) } };
+  'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) } };
 function compile(file, imports = {}) {
   const mod = { exports: {} };
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
@@ -57,8 +64,11 @@ const rewardRules = compile('src/gamification/rules.ts');
 const rewardLogic = compile('src/gamification/rewards.ts', { '../quiz/engine': rewardEngine, './rules': rewardRules });
 const rewardAdapters = compile('src/quiz/adapters.ts', { './engine': rewardEngine });
 const nextFigureWarmup = compile('src/utils/nextFigureWarmup.ts', { '../data/articleMedia': media, './lessonProgress': progress });
-const imports = { '../utils/nextFigureWarmup': nextFigureWarmup, '../gamification/rewards': rewardLogic, '../quiz/adapters': rewardAdapters, ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
-const Reader = compile('src/screens/ReaderLessonScreen.tsx', imports).default;
+const imports = { '../gamification/rules': rewardRules, '../utils/nextFigureWarmup': nextFigureWarmup, '../gamification/rewards': rewardLogic, '../quiz/adapters': rewardAdapters, ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
+const QuestionStageProgress = compile('src/components/QuestionStageProgress.tsx', { '../theme': theme }).default;
+const Reader = compile('src/screens/ReaderLessonScreen.tsx', { ...imports,
+  '../components/QuestionStageProgress': { __esModule: true, default: 'QuestionStageProgress' },
+}).default;
 const Entry = compile('src/screens/LessonScreen.tsx', { ...imports, './ReaderLessonScreen': { __esModule: true, default: Reader } }).default;
 const lesson = data.lessons.find(l => l.id === 'ancient-athens');
 const calls = [], scrolls = [];
@@ -121,7 +131,12 @@ const total = progress.getInlineQuestionCount(lesson);
 for(let i=0;i<total;i++) {
   if (!byId(tree,'reader-question-screen')) tree=openGate(tree);
   const q=nodes(byId(tree,'reader-question-screen')).filter(n => n.type === 'InlineQuestionCard' || n.type === 'QuizQuestionRenderer').at(-1);
-  assert.equal(q.props.questionNumber,i+1);
+  const stageProgress = nodes(byId(tree,'reader-question-screen')).find(n => n.type === 'QuestionStageProgress');
+  assert.equal(stageProgress.props.current,i+1);
+  assert.equal(stageProgress.props.total,total);
+  const indicator = QuestionStageProgress(stageProgress.props);
+  assert.equal(indicator.props.accessibilityValue.text,`Ερώτηση ${i+1} από ${total}`);
+  assert.ok(q.type === 'InlineQuestionCard' ? q.props.hideQuestionNumber : q.props.questionNumber === undefined);
   const report= q.type === 'InlineQuestionCard' ? q.props.reportTarget :
     nodes(byId(tree,'reader-question-screen')).filter(n => n.type === 'ReportContentButton').at(-1).props.target;
   assert.equal(report.itemId,lesson.id);
@@ -204,7 +219,7 @@ assert.ok(!byId(tree,'reader-checkpoint-1'),'later question at the same ending s
 tree=openGate(tree);
 assert.ok(byId(tree,'reader-modal-question-0'));
 assert.ok(!byId(tree,'reader-modal-question-1'));
-assert.ok(nodes(tree).some(n=>n.type==='Text'&&n.props.children==='Ερώτηση 1 / 2'));
+assert.equal(nodes(tree).find(n=>n.type==='QuestionStageProgress').props.current,1);
 
 props={...props,checkpointAnswers:{0:grouped.questions[0].correctIndex}};
 tree=render();
@@ -213,7 +228,7 @@ const nextInGroup = footerAction(tree);
 assert.equal(nextInGroup?.label, 'Επόμενη ερώτηση →');
 nextInGroup.onPress(); tree=render();
 assert.ok(byId(tree,'reader-modal-question-1'),'the second question replaces the first');
-assert.ok(nodes(tree).some(n=>n.type==='Text'&&n.props.children==='Ερώτηση 2 / 2'));
+assert.equal(nodes(tree).find(n=>n.type==='QuestionStageProgress').props.current,2);
 assert.ok(!byId(tree,'reader-paragraph-7'),'reading cannot skip the second question');
 assert.equal(progress.getReadingResumeParagraphNumber(grouped,props.checkpointAnswers),6,
  'resume returns to the active question at this ending');
@@ -265,7 +280,7 @@ const nextLesson=lessonPath.getNextPathLesson(lesson,data.lessons,[lesson.id]);
 const Results=compile('src/screens/ResultsScreen.tsx',{...imports,'../components/LessonResultChart':{__esModule:true,default:'LessonResultChart'}}).default;
 let destination=null;
 const resultTree=Results({lesson,score:total,nextLesson,onHome:()=>{},onReadAgain:()=>{},onBrowse:()=>{},onOpenLesson:id=>{destination=id;}});
-const pick=nodes(resultTree).find(n=>n.props?.label==='Επόμενο μάθημα'); assert.ok(pick);pick.props.onPress();
+const pick=byId(resultTree,'lesson-next-action'); assert.ok(pick);pick.props.onPress();
 const next=data.lessons.find(l=>l.id===destination);
 assert.ok(next && next.id!==lesson.id);
 assert.equal(Entry({...props,lesson:next}).type,Reader);
@@ -347,7 +362,7 @@ const piloted=[
 for(const [index,type,value] of piloted){
  tree=render();
  if (!byId(tree,'reader-question-screen')) tree=openGate(tree);
- const q=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
+ const q=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer');
  assert.ok(q,'the '+type+' checkpoint appears after its paragraph');
  assert.equal(q.props.question.type,type);
  assert.equal(q.props.answer,undefined);
@@ -363,7 +378,7 @@ for(const [index,type,value] of piloted){
    typedCheckpointAnswers:{...props.typedCheckpointAnswers,[index]:{questionVersion:typed.version,value}}
  };
  tree=render();
- const restored=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer'&&n.props.questionNumber===index+1);
+ const restored=nodes(byId(tree,'reader-question-screen')).find(n=>n.type==='QuizQuestionRenderer');
  assert.deepEqual(JSON.parse(JSON.stringify(restored.props.answer)),value,'same typed response restored');
  const advance = footerAction(tree);
  assert.ok(advance && !advance.disabled); advance.onPress();
