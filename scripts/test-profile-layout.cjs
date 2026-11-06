@@ -87,6 +87,7 @@ const profileProps = {
   onBack() {}, onStats: () => calls.push("stats"),
   onAccount: () => calls.push("account"),
   onInterests: () => calls.push("interests"),
+  onSaved: () => calls.push("saved"),
   onGuide: () => calls.push("guide"),
 };
 const Profile = load("src/screens/ProfileScreen.tsx", common).default;
@@ -97,6 +98,8 @@ assert.ok(nodes(tree).some(n => n.props?.testID === "profile-identity"));
 const profileHeader = nodes(tree).find(n => n.type === "SectionHeader");
 assert.equal(profileHeader?.props.title, "Το προφίλ σου");
 assert.equal(profileHeader.props.onAction, profileProps.onAccount);
+profileHeader.props.onAction();
+assert.equal(calls.at(-1), "account", "The header Settings button still opens Account");
 assert.ok(nodes(tree).some(n => n.props?.testID === "profile-achievements"));
 assert.ok(nodes(tree).some(n => n.type === "MotionXpCircle"), "Level retains its progress ring");
 const pressProfile = label => {
@@ -106,8 +109,16 @@ const pressProfile = label => {
   assert.equal(button.type, "NavigationTile", "Shortcut should render the shared navigation tile");
   button.props.onPress();
 };
-for (const label of ["Δραστηριότητα", "Λογαριασμός", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
-assert.deepEqual(calls, ["stats", "account", "interests", "guide"]);
+const shortcuts = nodes(tree).filter(n => typeof n.type === "function"
+  && n.type.name === "QuickLink");
+assert.equal(shortcuts.length, 3, "Only three shortcuts remain under Ο χώρος σου");
+assert.ok(!shortcuts.some(n => n.props.title === "Λογαριασμός"),
+  "The redundant Account tile is removed");
+for (const label of ["Δραστηριότητα", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
+const savedShortcut = nodes(tree).find(n => n.props?.testID === "profile-saved-link");
+assert.ok(savedShortcut, "Saved lessons remain accessible from the section heading");
+savedShortcut.props.onPress();
+assert.deepEqual(calls, ["account", "stats", "interests", "guide", "saved"]);
 const xpHelp = nodes(tree).find(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;");
 assert.ok(xpHelp && !xpHelp.props.accessibilityState.expanded);
 xpHelp.props.onPress();
