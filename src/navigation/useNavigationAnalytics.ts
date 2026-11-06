@@ -78,7 +78,7 @@ export function useNavigationAnalytics({
 
   return {
     trackWelcomeCompleted() {
-      void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: 3, replay: welcome.replay });
+      void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: 4, replay: welcome.replay });
     },
     trackWelcomeSkipped(step: number) {
       void analytics.track("onboarding_skipped", { screen: "welcome", onboarding_step: step, replay: welcome.replay });
