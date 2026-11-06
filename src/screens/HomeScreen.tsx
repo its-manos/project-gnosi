@@ -61,10 +61,19 @@ export default function HomeScreen({
   // by a few points after the lesson breadcrumb was added.
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+  const [topBarHeight, setTopBarHeight] = useState(0);
+  const [worldsHeight, setWorldsHeight] = useState(0);
   const availableHeight = availableScreenHeight(viewportHeight, height);
   const density = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
+  // ScrollView content has unbounded height, so flexGrow on its children cannot
+  // reliably consume spare space. Allocate measured viewport space explicitly.
+  const cardSpace = !compact && viewportHeight > 0 && topBarHeight > 0 && worldsHeight > 0
+    ? Math.max(0, viewportHeight - topBarHeight - worldsHeight - 6 - 8 - 3 * 12)
+    : 0;
+  const heroMinHeight = cardSpace > 0 ? cardSpace * 0.68 : undefined;
+  const actionMinHeight = cardSpace > 0 ? cardSpace * 0.32 : undefined;
   // Content measurements must never change density: startup hydration and old
   // layout callbacks can otherwise latch Home into a tighter mode until remount.
   // Long titles and accessibility text remain scrollable at every density.
@@ -121,7 +130,10 @@ export default function HomeScreen({
       onContentSizeChange={(_width, nextHeight) => {
         setContentHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
       }}>
-      <MotionView entranceDelay={0} style={styles.topBar}>
+      <MotionView entranceDelay={0} style={styles.topBar} onLayout={event => {
+        const next = event.nativeEvent.layout.height;
+        setTopBarHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
+      }}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
         <View style={styles.headerStats}>
           <HomeStreakBadge streak={daily.ready ? quizStreak : null} />
@@ -143,7 +155,7 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, !compact && styles.spaciousHero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, !compact && styles.spaciousHero, heroMinHeight !== undefined && { minHeight: heroMinHeight }, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
@@ -173,8 +185,8 @@ export default function HomeScreen({
         </View>
       </MotionPressable>
 
-      <MotionView entranceDelay={130} style={[styles.actions, !compact && styles.spaciousActions]}>
-        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
+      <MotionView entranceDelay={130} style={[styles.actions, actionMinHeight !== undefined && { minHeight: actionMinHeight }]}>
+        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, !compact && styles.spaciousActionCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
@@ -194,7 +206,7 @@ export default function HomeScreen({
           <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
           <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
         </MotionPressable>
-        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
+        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, !compact && styles.spaciousActionCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
           onPress={onOpenQuickQuiz}>
           <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quickQuizHalo]} />
@@ -207,7 +219,10 @@ export default function HomeScreen({
         </MotionPressable>
       </MotionView>
 
-      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, compact && styles.compactWorlds, tight && styles.tightWorlds]}>
+      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, compact && styles.compactWorlds, tight && styles.tightWorlds]} onLayout={event => {
+        const next = event.nativeEvent.layout.height;
+        setWorldsHeight(previous => Math.abs(previous - next) < 1 ? previous : next);
+      }}>
         <View style={styles.sectionRow}>
           <Text accessibilityRole="header" style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
           <View accessible={false} pointerEvents="none" style={styles.sectionRule} />
