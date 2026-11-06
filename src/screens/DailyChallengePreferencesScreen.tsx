@@ -120,7 +120,7 @@ export default function DailyChallengePreferencesScreen({
               );
             })}
           </View>
-          <Text style={styles.helper}>Επίλεξε 3–5 θέματα για πιο προσωπικές προτάσεις μαθημάτων. Η καθημερινή πρόκληση παραμένει ίδια για όλους.</Text>
+          <Text style={styles.helper}>Διάλεξε 3–5 θέματα για το Γρήγορο Κουίζ και τις προτάσεις μαθημάτων. Η καθημερινή πρόκληση παραμένει ίδια για όλους.</Text>
 
           {saveError ? (
             <Text style={styles.errorText}>Δεν αποθηκεύτηκαν οι αλλαγές. Έλεγξε τον διαθέσιμο χώρο στη συσκευή και δοκίμασε ξανά.</Text>
