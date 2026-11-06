@@ -10,6 +10,8 @@ const source = name => fs.readFileSync(path.join(root, name), "utf8");
 const paletteSource = source("src/theme.ts");
 const reader = source("src/screens/ReaderLessonScreen.tsx");
 const figures = source("src/components/ArticleFigure.tsx");
+const captions = source("src/components/ExpandableImageCaption.tsx");
+const fontStore = source("src/state/ReaderTextSize.ts");
 const readingPalette = paletteSource.split("export const reading = {")[1]?.split("};")[0];
 assert.ok(readingPalette, "The dedicated reading palette must exist.");
 
@@ -35,9 +37,11 @@ for (const background of ["background", "surface"]) {
   }
 }
 
-assert.match(reader, /useState\(18\)/, "Keep the reader's accessible 18pt starting size.");
-assert.match(reader, /Math\.max\(16, v - 2\)/, "Do not lower the minimum reader font.");
-assert.match(reader, /Math\.min\(24, v \+ 2\)/, "Keep larger reading sizes available.");
+assert.match(fontStore, /READER_TEXT_SIZE_DEFAULT = 18/, "Keep the reader's 18pt default.");
+assert.match(fontStore, /READER_TEXT_SIZE_MIN = 16/, "Do not lower minimum reading size.");
+assert.match(fontStore, /READER_TEXT_SIZE_MAX = 24/, "Keep larger reading sizes available.");
+assert.ok(reader.includes("readerTextSize.adjust(-2)") && reader.includes("readerTextSize.adjust(2)"),
+  "Reader controls should use the persisted device preference.");
 const lineHeightRatio = Number(reader.match(/lineHeight: Math\.round\(readingSize \* ([\d.]+)\)/)?.[1]);
 assert.ok(lineHeightRatio >= 1.6 && lineHeightRatio <= 1.85,
   "Long-form line spacing must remain comfortable without excessive leading.");
@@ -58,7 +62,11 @@ assert.ok(reader.includes("style={styles.checkpointButton}"),
   "The compact override must only apply to the checkpoint button.");
 assert.ok(reader.includes("checkpointHint: { color: reading.muted, fontSize: 13, lineHeight: 20 }"),
   "Compact helper text must remain readable.");
-assert.match(figures, /fontSize: 13/, "Captions should remain comfortably legible.");
+assert.match(captions, /fontSize: 13/, "Captions should remain comfortably legible.");
+assert.ok(reader.includes("<ExpandableImageCaption key={lesson.id}"),
+  "Reader cover captions use the shared expandable component.");
+assert.ok(figures.includes("<ExpandableImageCaption caption={figure.caption}"),
+  "Inline figure captions use the shared expandable component.");
 assert.match(figures, /fontSize: 12/, "Attribution should not shrink to tiny text.");
 
 const readingViewport = reader.split("<NextImageWarmup")[0];
