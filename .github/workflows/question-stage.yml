@@ -20,6 +20,7 @@ on:
       - "src/screens/DailyChallengeScreen.tsx"
       - "src/screens/WelcomeScreen.tsx"
       - "src/screens/OnboardingDailyQuestion.tsx"
+      - "src/screens/onboardingLayout.ts"
       - "src/hooks/useWelcome.ts"
       - "src/utils/firstRun.ts"
       - "scripts/test-welcome.cjs"
