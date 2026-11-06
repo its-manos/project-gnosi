@@ -34,7 +34,7 @@ const react = {
       const index = homeScrollHookIndex++;
       const value = homeScrollState[index] ?? initial;
       return [value, next => {
-        homeScrollState[index] = typeof next === "function" ? next(homeScrollState[index]) : next;
+        homeScrollState[index] = typeof next === "function" ? next(homeScrollState[index] ?? initial) : next;
       }];
     }
     return [showList, value => { showList = typeof value === "function" ? value(showList) : value; }];
