@@ -63,7 +63,7 @@ const oldDetails={...details,questionVersions:[...details.questionVersions]};old
 // Intro prioritizes the seven-question route and keeps its personalized-preferences caveat.
 challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};
 tree=render();assert.ok(text(tree).includes('7 στάσεις γνώσης.'));
-assert.ok(text(tree).includes('διαμορφώνουν τις προτάσεις μαθημάτων'));
+assert.ok(text(tree).includes('Γρήγορο Κουίζ και τις προτάσεις μαθημάτων'));
 assert.equal(nodes(tree).filter(n=>n.type==='DailyMissionMap').length,1,'daily intro renders native station map');
 assert.equal(nodes(tree).find(n=>n.type==='DailyMissionMap').props.compact,true,'compact layout for phone dimensions');
 const mission=load('src/components/DailyMissionMap.tsx',{

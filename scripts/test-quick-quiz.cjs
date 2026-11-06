@@ -35,6 +35,18 @@ for (const question of quickQuizQuestions) {
 
 let progress = readQuickQuiz(null);
 assert.deepEqual(progress, emptyQuickQuiz());
+// Preferences affect new deals, without replacing the mixed-difficulty round.
+const personalized = startQuickQuiz(emptyQuickQuiz(), () => 0.5, ["history", "science", "nature"]);
+assert.equal(personalized.round.questions.length, 5);
+assert.ok(personalized.round.questions.filter(q => ["history", "science", "nature"].includes(q.categoryId)).length >= 3,
+  "selected interests are favored when the bank supports them");
+assert.ok(new Set(personalized.round.questions.map(q => q.categoryId)).size >= 3);
+assert.deepEqual(personalized.round.questions.map(q => q.difficulty), ["easy", "easy", "medium", "medium", "hard"]);
+const sparseInterests = startQuickQuiz(emptyQuickQuiz(), () => 0.5, ["history", "sports", "everyday"]);
+assert.ok(new Set(sparseInterests.round.questions.map(q => q.categoryId)).size >= 3,
+  "unsupported interests fall back to available subjects without losing variety");
+assert.equal(startQuickQuiz(personalized, () => 0.5, ["geography"]), personalized,
+  "changing preferences cannot replace an unfinished round");
 const shuffled = startQuickQuiz(progress, () => 0.5);
 for (const question of shuffled.round.questions) {
   const authored = bankById.get(question.id).content;

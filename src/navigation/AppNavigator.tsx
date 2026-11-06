@@ -7,7 +7,6 @@ import { parseLearningBackup } from "../utils/learningBackup";
 import { getHomeDiscovery } from "../utils/readingDiscovery";
 import { getLessonAccess, getNextPathLesson, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked, setDevLessonUnlockAll } from "../utils/devLessonAccess";
-import { welcomeLessonCandidates } from "../utils/welcomeLesson";
 import { useAthensDate } from "../hooks/useAthensDate";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, BackHandler, StyleSheet, Text, View } from "react-native";
@@ -23,7 +22,7 @@ import BottomNavigation from "../components/BottomNavigation";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { useWelcome } from "../hooks/useWelcome";
 import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
-import { finishWelcome, type WelcomeDestination } from "../utils/firstRun";
+import { ONBOARDING_INTRO_LESSON_ID, previousWelcomePhase, type WelcomePhase } from "../utils/firstRun";
 import QuickQuizScreen from "../screens/QuickQuizScreen";
 import { useQuickQuiz } from "../hooks/useQuickQuiz";
 import HomeScreen from "../screens/HomeScreen";
@@ -190,7 +189,13 @@ export default function AppNavigator() {
   // Read the latest navigation state at press time to avoid stale closures.
   const hardwareBackRef = useRef<() => boolean>(() => false);
   hardwareBackRef.current = () => {
-    if (welcome.visible || welcome.loading) return false;
+    if (welcome.loading) return false;
+    if (welcome.visible) {
+      const previous = previousWelcomePhase(welcome.phase);
+      if (!previous) return false;
+      void welcome.advance(previous);
+      return true;
+    }
     if (isDevDailyIntroPreviewOpen) { setIsDevDailyIntroPreviewOpen(false); return true; }
     if (isDevQuizPreviewOpen) { setIsDevQuizPreviewOpen(false); return true; }
     if (isDailyPreferencesOpen) { closeDailyPreferences(); return true; }
@@ -223,15 +228,41 @@ export default function AppNavigator() {
     dailyPreferencesOpen: isDailyPreferencesOpen,
   });
 
-  async function completeWelcome(preferences: DailyChallengePreferences, destination: WelcomeDestination, lessonId?: string) {
-    const selectedLesson = destination === "lesson" ? lessons.find(l => l.id === lessonId) : null;
-    if (destination === "lesson" && (!selectedLesson || !getLessonAccess(selectedLesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked)) return false;
-    const completed = await finishWelcome(dailyStore, preferences, destination, welcome.isCurrent, welcome.complete);
-    if (!completed || !welcome.isCurrent()) return false;
-    trackWelcomeCompleted();
-    setIsDailyPreferencesOpen(false); setIsDailyChallengeOpen(destination === "daily");
-    if (selectedLesson) app.openLesson(selectedLesson.id);
-    else app.setScreen("home");
+  // The onboarding lesson is an ordinary, persisted lesson attempt. Restore the
+  // route after process death rather than replacing its reader with a demo.
+  useEffect(() => {
+    if (welcome.loading || !welcome.visible || welcome.phase !== "lesson") return;
+    if (app.activeLessonId === ONBOARDING_INTRO_LESSON_ID &&
+      (app.screen === "lesson" || app.screen === "results")) return;
+    app.openLesson(ONBOARDING_INTRO_LESSON_ID);
+  }, [welcome.loading, welcome.visible, welcome.phase, app.screen, app.activeLessonId]);
+
+  const completingWelcome = useRef(false);
+  useEffect(() => {
+    if (!welcome.visible || welcome.phase !== "lesson" ||
+      app.screen !== "results" || app.activeLessonId !== ONBOARDING_INTRO_LESSON_ID ||
+      completingWelcome.current) return;
+    completingWelcome.current = true;
+    void welcome.complete().then(ok => {
+      if (ok) trackWelcomeCompleted();
+      completingWelcome.current = false;
+    }).catch(() => { completingWelcome.current = false; });
+  }, [welcome.visible, welcome.phase, app.screen, app.activeLessonId]);
+
+  async function advanceWelcome(phase: WelcomePhase, categoryId?: string) {
+    return welcome.advance(phase, categoryId);
+  }
+  async function saveWelcomeInterests(preferences: DailyChallengePreferences) {
+    // Persist choices before entering the final category selection page.
+    if (!await dailyPreferences.savePreferences(preferences)) return false;
+    return welcome.advance("choose");
+  }
+  async function beginWelcomeLesson(categoryId: string) {
+    const lesson = lessons.find(l => l.id === ONBOARDING_INTRO_LESSON_ID);
+    if (!lesson || !categories.some(category => category.id === categoryId) ||
+      !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return false;
+    if (!await welcome.advance("lesson", categoryId)) return false;
+    app.openLesson(lesson.id);
     return true;
   }
   async function skipWelcome(step = 1) {
@@ -249,10 +280,28 @@ export default function AppNavigator() {
     return null;
   }
 
-  if (welcome.visible) {
-    screenContent = <WelcomeScreen initialPreferences={dailyPreferences.preferences} replay={welcome.replay}
-      lessonCandidates={welcomeLessonCandidates(lessons, app.completedLessonIds, app.inProgressLessonIds)}
-      hasStartedChallenge={Boolean(daily.doc.days[discoveryDate]?.record.started)} onFinish={completeWelcome} onSkip={skipWelcome} />;
+  if (welcome.visible && (welcome.phase !== "lesson" || app.screen !== "results")) {
+    if (welcome.phase === "lesson") {
+      screenContent = <LessonScreen
+        category={activeCategory} subcategory={activeSubcategory} lesson={activeLesson}
+        isSaved={bookmarks.savedLessonIds.includes(activeLesson.id)}
+        bookmarksLoaded={bookmarks.isSavedLessonsLoaded}
+        onToggleSaved={bookmarks.toggleSavedLesson}
+        checkpointAnswers={app.checkpointAnswers}
+        typedCheckpointAnswers={app.typedCheckpointAnswers}
+        onAnswerCheckpoint={app.answerCheckpoint}
+        onFinishLesson={app.finishInlineLesson}
+        onBack={() => {
+          const previous = previousWelcomePhase(welcome.phase);
+          if (previous) void welcome.advance(previous);
+        }} />;
+    } else {
+      screenContent = <WelcomeScreen phase={welcome.phase} replay={welcome.replay}
+        categories={categories} selectedCategoryId={welcome.categoryId}
+        preferences={dailyPreferences.preferences} preferencesLoaded={!dailyPreferences.isLoading}
+        onAdvance={advanceWelcome} onSaveInterests={saveWelcomeInterests}
+        onBeginLesson={beginWelcomeLesson} onSkip={skipWelcome} />;
+    }
   } else if (isDailyPreferencesOpen) {
     screenContent = (
       <DailyChallengePreferencesScreen
@@ -298,7 +347,9 @@ export default function AppNavigator() {
       break;
 
     case "quick-quiz":
-      screenContent = <QuickQuizScreen game={quickQuiz} scope={daily.userId ?? "guest"} onHome={() => app.setScreen("home")} />;
+      screenContent = <QuickQuizScreen game={quickQuiz} scope={daily.userId ?? "guest"}
+        preferredTopicIds={dailyPreferences.preferences.topicIds}
+        onHome={() => app.setScreen("home")} />;
       break;
 
     case "profile":
