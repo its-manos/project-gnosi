@@ -23,5 +23,7 @@ export const categoryWorldIcons: Record<string, typeof HistoryWorldIcon> = {
 };
 
 export function getCategoryWorldIcon(categoryId: string) {
-  return categoryWorldIcons[categoryId];
+  return Object.prototype.hasOwnProperty.call(categoryWorldIcons, categoryId)
+    ? categoryWorldIcons[categoryId as WorldIconId]
+    : undefined;
 }

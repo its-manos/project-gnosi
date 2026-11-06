@@ -12,7 +12,7 @@ type IconId =
 
 // Bundled artwork is deliberately static: Metro resolves every asset at build time,
 // so opening the Home or Category screen never requires a network request.
-const artwork: Record<IconId, number> = {
+const artwork: Record<WorldIconId, number> = {
   history: require("../../../assets/category-world-icons/gnosi_history.webp"),
   science: require("../../../assets/category-world-icons/gnosi_science.webp"),
   nature: require("../../../assets/category-world-icons/gnosi_nature.webp"),
@@ -27,7 +27,7 @@ function WorldArtwork({
   size = 32,
   displayScale = 1,
   testID,
-}: WorldIconProps & { icon: IconId; testID: string }) {
+}: WorldIconProps & { icon: WorldIconId; testID: string }) {
   return (
     <Image
       testID={testID}
