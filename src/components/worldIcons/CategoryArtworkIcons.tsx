@@ -1,11 +1,11 @@
-import { Image, type ImageSourcePropType } from "react-native";
+import { Image } from "expo-image";
 
 export type WorldIconProps = { size?: number; displayScale?: number };
 type IconId = "history" | "science" | "nature" | "culture" | "technology" | "geography" | "difficult-history";
 
 // Bundled artwork is deliberately static: Metro resolves every asset at build time,
 // so opening the Home or Category screen never requires a network request.
-const artwork: Record<IconId, ImageSourcePropType> = {
+const artwork: Record<IconId, number> = {
   history: require("../../../assets/category-world-icons/gnosi_history.webp"),
   science: require("../../../assets/category-world-icons/gnosi_science.webp"),
   nature: require("../../../assets/category-world-icons/gnosi_nature.webp"),
@@ -22,8 +22,8 @@ function WorldArtwork({
     <Image
       testID={testID}
       source={artwork[icon]}
-      resizeMode="cover"
-      fadeDuration={0}
+      contentFit="cover"
+      transition={0}
       accessible={false}
       pointerEvents="none"
       accessibilityIgnoresInvertColors

@@ -120,6 +120,7 @@ const imageImports = Object.fromEntries(Object.values(iconFiles).map(file => [
   "../../../assets/category-world-icons/" + file, file,
 ]));
 const artworkComponents = compile("src/components/worldIcons/CategoryArtworkIcons.tsx", {
+  "expo-image": { Image: "Image" },
   ...imageImports,
 }, true);
 const categoryIconModule = compile("src/components/worldIcons/categoryIconMap.ts", {
@@ -323,7 +324,7 @@ assert.match(artworkSource, /accessible=\{false\}/,
   "decorative art must be hidden from accessibility");
 assert.match(artworkSource, /pointerEvents="none"/,
   "only the category card owns touch events");
-assert.match(artworkSource, /resizeMode="cover"/,
+assert.match(artworkSource, /contentFit="cover"/,
   "square art retains its aspect ratio");
 const futureCategory = { id: "future-world", title: "Νέος κόσμος", emoji: "🌟" };
 const futureTree = home({ ...props, categories: [...categories, futureCategory] });
@@ -586,7 +587,7 @@ assert.equal(compactTile.props.style({ pressed: false })[1].paddingVertical, 4);
 assert.equal(compactTile.props.style({ pressed: false })[1].gap, 4);
 const originalPlatform = nodes(compactTile).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
-assert.ok(originalPlatform, "compact Home preserves the 62pt circular category illustration");
+assert.ok(originalPlatform, "compact Home preserves the 62pt rounded category illustration");
 assert.equal(originalPlatform.props.style[0].height, 62);
 const savedCompactHeight =
   3 * (10 - 8) + (6 - 4) + (6 - 4) +
