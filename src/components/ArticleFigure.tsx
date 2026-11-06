@@ -1,4 +1,5 @@
 import ZoomableLessonImage from "./ZoomableLessonImage";
+import ExpandableImageCaption from "./ExpandableImageCaption";
 import {
   Linking,
   Pressable,
@@ -8,7 +9,7 @@ import {
 } from "react-native";
 import type { InlineArticleImage } from "../data/articleMedia";
 import ResolvedCommonsImage from "./ResolvedCommonsImage";
-import { colors } from "../theme";
+import { reading } from "../theme";
 
 type Props = { figure: InlineArticleImage };
 
@@ -31,8 +32,9 @@ export default function ArticleFigure({ figure }: Props) {
 
       </ZoomableLessonImage>
 
-      <Text style={styles.caption}>{figure.caption}</Text>
+      <ExpandableImageCaption caption={figure.caption} />
       <Pressable
+        style={styles.creditControl}
         accessibilityRole="link"
         accessibilityLabel={`Άνοιγμα πηγής εικόνας: ${figure.credit}`}
         onPress={() => void Linking.openURL(figure.creditUrl).catch(() => {})}
@@ -44,27 +46,22 @@ export default function ArticleFigure({ figure }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { marginTop: 4, marginBottom: 24 },
+  container: { marginTop: 2, marginBottom: 20 },
   imageFrame: {
     overflow: "hidden",
     borderRadius: 16,
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: reading.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: reading.border,
   },
   // Reserve the space before remote images load to avoid changing scroll positions.
   // Contain preserves the whole photo/diagram, even when its source is portrait.
   image: { width: "100%", aspectRatio: 4 / 3, minHeight: 210, maxHeight: 340 },
-  caption: {
-    color: "#B2B6C9",
-    fontSize: 12,
-    lineHeight: 19,
-    marginTop: 9,
-  },
+  creditControl: { minHeight: 44, justifyContent: "center" },
   credit: {
-    color: colors.accentLight,
-    fontSize: 10,
-    lineHeight: 16,
-    marginTop: 5,
+    color: reading.accent,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 2,
   },
 });

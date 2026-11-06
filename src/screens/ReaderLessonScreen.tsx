@@ -3,15 +3,16 @@ import { quizRewardSummary } from "../gamification/rewards";
 import { adaptInteractiveLessonQuestion, adaptLessonQuestion, projectInteractiveLessonAnswer, restoreInteractiveLessonAnswer } from "../quiz/adapters";
 import ZoomableLessonImage from "../components/ZoomableLessonImage";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { requestPracticeCue } from "../play/soundStatus";
-import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import type { Props } from "./LessonScreen";
 import ActionButton from "../components/ActionButton";
 import ArticleFigure from "../components/ArticleFigure";
+import ExpandableImageCaption from "../components/ExpandableImageCaption";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import QuizReveal from "../components/QuizReveal";
@@ -29,7 +30,9 @@ import { lessonReportTarget } from "../utils/contentReports";
 import { inlineArticleMedia } from "../data/articleMedia";
 import { nextPendingFigureUrl } from "../utils/nextFigureWarmup";
 import { colors, reading } from "../theme";
-import { getParagraphCount, getParagraphId, getParagraphText, getReadingQuestionPlacements, getReadingResumeParagraphNumber, getReadingVisibleParagraphLimit } from "../utils/lessonProgress";
+import { readerTextSize, READER_TEXT_SIZE_MIN, READER_TEXT_SIZE_MAX } from "../state/ReaderTextSize";
+import { getParagraphCount, getParagraphId, getParagraphText, getReadingQuestionPlacements, getReadingVisibleParagraphLimit } from "../utils/lessonProgress";
+import { getReaderResumeAnchor, resolveReaderScrollY, READER_SECTION_TOP_PADDING, type ReaderScrollAnchor } from "../utils/readerScrollPosition";
 
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
@@ -38,7 +41,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const safeArea = useSafeAreaInsets();
   const quizViewport = useAdaptiveQuestionScroll();
   const lastSeenParagraph = useRef(0);
-  const [readingSize, setReadingSize] = useState(18);
+  const readingSize = useSyncExternalStore(readerTextSize.subscribe, readerTextSize.getSnapshot, readerTextSize.getSnapshot);
+  const readingSizeReady = useSyncExternalStore(readerTextSize.subscribe, readerTextSize.getReadySnapshot, readerTextSize.getReadySnapshot);
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const compactWidth = windowWidth < 370;
+  const compactHeadings = compactWidth && fontScale < 1.4;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   // This is presentation state only; canonical answers and lesson progress stay parent-owned.
@@ -49,9 +56,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const scrollRef = useRef<ScrollViewInstance>(null);
   const sectionPositions = useRef<Record<number, number>>({});
   const paragraphPositions = useRef<Record<number, { sectionIndex: number; y: number }>>({});
+  const checkpointPositions = useRef<Record<number, number>>({});
   const finishPosition = useRef<number | null>(null);
-  const pendingScroll = useRef<number | "finish" | null>(null);
+  const pendingScroll = useRef<ReaderScrollAnchor | null>(null);
   const restored = useRef(false);
+  const restoreQueued = useRef(false);
   const paragraphCount = getParagraphCount(lesson);
   const placements = getReadingQuestionPlacements(lesson);
   const firstPendingQuestionIndex = placements.findIndex(p => checkpointAnswers[p.questionIndex] === undefined);
@@ -73,12 +82,12 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const visibleLimit = getReadingVisibleParagraphLimit(lesson, checkpointAnswers);
   const upcomingFigureUrl = nextPendingFigureUrl(lesson, visibleLimit);
   const complete = answeredCount === questionCount;
-  const resumeTarget = useRef(getReadingResumeParagraphNumber(lesson, checkpointAnswers));
+  const resumeTarget = useRef(getReaderResumeAnchor(lesson, checkpointAnswers));
   const sections = lesson.sections.map((section, index) => ({
     ...section,
     start: 1 + lesson.sections.slice(0, index).reduce((count, previous) => count + previous.paragraphs.length, 0),
   }));
-  const textStyle = { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.75) };
+  const textStyle = { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.7) };
 
   // Opening is intentionally an explicit learner action; scrolling never starts a quiz.
   function openQuestions(boundary: number, questionIndex: number) {
@@ -103,37 +112,51 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
     setActiveQuestionIndex(null);
     setActiveBoundary(null);
     restored.current = true;
-    pendingScroll.current = boundary < paragraphCount ? boundary + 1 : "finish";
+    pendingScroll.current = boundary < paragraphCount
+      ? { kind: "paragraph", number: boundary + 1 } : { kind: "finish" };
     requestAnimationFrame(flushScroll);
   }
 
-  function paragraphY(number: number) {
-    const position = paragraphPositions.current[number];
-    if (!position) return undefined;
-    const sectionY = sectionPositions.current[position.sectionIndex];
-    if (sectionY === undefined) return undefined;
-    // Keep the heading visible when continuing into a new section. Parent and
-    // child layout events can arrive in either order.
-    return sections[position.sectionIndex].start === number ? sectionY : sectionY + position.y;
+  function scrollY(anchor: ReaderScrollAnchor) {
+    return resolveReaderScrollY(anchor, {
+      sectionStarts: sections.map(section => section.start),
+      sectionPositions: sectionPositions.current,
+      paragraphPositions: paragraphPositions.current,
+      checkpointPositions: checkpointPositions.current,
+      finishPosition: finishPosition.current,
+    });
   }
 
   function flushScroll() {
-    const target = pendingScroll.current;
-    if (target !== null) {
-      const y = target === "finish" ? finishPosition.current : paragraphY(target);
-      if (y !== undefined && y !== null) {
+    if (pendingScroll.current !== null) {
+      const y = scrollY(pendingScroll.current);
+      if (y !== undefined && scrollRef.current) {
         pendingScroll.current = null;
-        scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: motionAllowed(playPreferences.getSnapshot()) });
+        scrollRef.current.scrollTo({ y, animated: motionAllowed(playPreferences.getSnapshot()) });
       }
       return;
     }
-    if (restored.current || resumeTarget.current === null) return;
-    const resumeSection = sections.findIndex(s => resumeTarget.current !== null && s.start >= resumeTarget.current && s.start <= visibleLimit);
-    const y = resumeSection >= 0 ? sectionPositions.current[resumeSection] : paragraphY(resumeTarget.current);
-    if (y === undefined) return;
-    restored.current = true;
-    requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: false }));
+    if (restored.current || restoreQueued.current || !readingSizeReady || resumeTarget.current === null) return;
+
+    // OnLayout callbacks can arrive before the preceding paragraphs and
+    // captions have finished reflowing. Resolve the latest coordinates in
+    // the next frame, after font preferences have hydrated.
+    restoreQueued.current = true;
+    requestAnimationFrame(() => {
+      restoreQueued.current = false;
+      if (restored.current || resumeTarget.current === null || !scrollRef.current) return;
+      const y = scrollY(resumeTarget.current);
+      if (y === undefined) return;
+      restored.current = true;
+      scrollRef.current.scrollTo({ y, animated: false });
+    });
   }
+
+  useEffect(() => {
+    // A cached font preference may finish loading after the first layout.
+    // Retry restoration even when that preference leaves dimensions unchanged.
+    if (readingSizeReady) requestAnimationFrame(flushScroll);
+  }, [readingSizeReady]);
 
   return (
     <View style={styles.root} testID="article-reader">
@@ -142,7 +165,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <Pressable style={styles.control} onPress={onBack} accessibilityRole="button" accessibilityLabel="Επιστροφή στα άρθρα">
             <Text style={styles.controlText}>‹ Πίσω</Text>
           </Pressable>
-          <Text style={styles.brand}>ΑΝΑΓΝΩΣΗ</Text>
+          <View style={styles.brandMark} accessible={false}>
+            <View style={styles.brandDot} />
+            <Text style={styles.brand}>ΑΝΑΓΝΩΣΗ</Text>
+          </View>
           <View style={styles.tools}>
             {enableReporting ? <ReportContentButton target={lessonReportTarget(lesson)} iconOnly /> : null}
             <Pressable style={[styles.control, settingsOpen && styles.active]} onPress={() => setSettingsOpen(v => !v)}
@@ -162,15 +188,15 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <Text style={styles.small}>Μέγεθος κειμένου</Text>
           <View style={styles.tools}>
             <Pressable style={styles.control} accessibilityRole="button" accessibilityLabel="Μικρότερο κείμενο άρθρου"
-              disabled={readingSize <= 16} accessibilityState={{ disabled: readingSize <= 16 }}
-              onPress={() => setReadingSize(v => Math.max(16, v - 2))}>
-              <Text style={[styles.controlText, readingSize <= 16 && styles.disabled]}>Α−</Text>
+              disabled={readingSize <= READER_TEXT_SIZE_MIN} accessibilityState={{ disabled: readingSize <= READER_TEXT_SIZE_MIN }}
+              onPress={() => readerTextSize.adjust(-2)}>
+              <Text style={[styles.controlText, readingSize <= READER_TEXT_SIZE_MIN && styles.disabled]}>Α−</Text>
             </Pressable>
             <Text style={styles.small} accessibilityLiveRegion="polite">{readingSize}</Text>
             <Pressable style={styles.control} accessibilityRole="button" accessibilityLabel="Μεγαλύτερο κείμενο άρθρου"
-              disabled={readingSize >= 24} accessibilityState={{ disabled: readingSize >= 24 }}
-              onPress={() => setReadingSize(v => Math.min(24, v + 2))}>
-              <Text style={[styles.controlText, readingSize >= 24 && styles.disabled]}>Α+</Text>
+              disabled={readingSize >= READER_TEXT_SIZE_MAX} accessibilityState={{ disabled: readingSize >= READER_TEXT_SIZE_MAX }}
+              onPress={() => readerTextSize.adjust(2)}>
+              <Text style={[styles.controlText, readingSize >= READER_TEXT_SIZE_MAX && styles.disabled]}>Α+</Text>
             </Pressable>
           </View>
         </View> : null}
@@ -183,9 +209,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <View style={[styles.fill, { width: `${questionCount ? answeredCount / questionCount * 100 : 0}%` }]} />
         </View>
       </View>
-      <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={styles.content}
+      <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={[styles.content, compactWidth && styles.contentCompact]}
         scrollEnabled={activeBoundary === null}
         showsVerticalScrollIndicator={false} onContentSizeChange={flushScroll} scrollEventThrottle={500}
+        onScrollBeginDrag={() => { restored.current = true; }}
         onScroll={event => {
           const bottom = event.nativeEvent.contentOffset.y + event.nativeEvent.layoutMeasurement.height;
           const seen = Object.entries(paragraphPositions.current).filter(([, pos]) => {
@@ -195,8 +222,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           const last = Math.max(0, ...seen);
           if (last > lastSeenParagraph.current) { lastSeenParagraph.current = last; void analytics.progress({ last_paragraph: last }); }
         }}>
-        <Text style={styles.eyebrow}>{category.title} / {subcategory.title}</Text>
-        <Text accessibilityRole="header" style={styles.title}>{lesson.title}</Text>
+        <View style={styles.articleLabel}>
+          <View style={styles.articleLabelDot} accessible={false} />
+          <Text style={styles.eyebrow}>{category.title} / {subcategory.title}</Text>
+        </View>
+        <Text accessibilityRole="header" style={[styles.title, compactHeadings && styles.titleCompact]}>{lesson.title}</Text>
         <View style={styles.metadata}>
           <Text style={styles.small}>{lesson.readingMinutes}′ ανάγνωση · {sections.length} ενότητες</Text>
           <Pressable style={styles.sourceControl} onPress={() => setSourcesOpen(v => !v)} accessibilityRole="button"
@@ -204,6 +234,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
             <Text style={styles.link}>{lesson.sources.length} πηγές {sourcesOpen ? "−" : "+"}</Text>
           </Pressable>
         </View>
+        <View style={styles.titleRule} accessible={false} />
         {sourcesOpen ? <View style={styles.sources} testID="reader-sources">
           <ReaderSources lesson={lesson} />
         </View> : null}
@@ -213,7 +244,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           {lesson.coverKind !== "editorial" ? <ZoomableLessonImage image={{ uri: lesson.imageUrl, caption: lesson.imageCaption, credit: lesson.imageCredit, creditUrl: lesson.imageCreditUrl }}>
             <LessonCover lesson={lesson} style={styles.cover} />
           </ZoomableLessonImage> : <LessonCover lesson={lesson} style={styles.cover} />}
-          <Text style={styles.caption}>{lesson.imageCaption}</Text>
+          <ExpandableImageCaption key={lesson.id} caption={lesson.imageCaption} />
           {lesson.coverKind !== "editorial" ? <Pressable style={styles.creditControl} accessibilityRole="link"
             accessibilityLabel={`Πηγή φωτογραφίας: ${lesson.imageCredit}`}
             onPress={() => void Linking.openURL(lesson.imageCreditUrl).catch(() => {})}>
@@ -225,8 +256,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
             sectionPositions.current[sectionIndex] = event.nativeEvent.layout.y;
             flushScroll();
           }}>
-            <Text style={styles.sectionNumber}>ΕΝΟΤΗΤΑ {sectionIndex + 1} / {sections.length}</Text>
-            <Text accessibilityRole="header" style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.sectionKicker}>
+              <View style={styles.sectionPin} accessible={false} />
+              <Text style={styles.sectionNumber}>ΕΝΟΤΗΤΑ {sectionIndex + 1} / {sections.length}</Text>
+            </View>
+            <Text accessibilityRole="header" style={[styles.sectionTitle, compactHeadings && styles.sectionTitleCompact]}>{section.title}</Text>
             {section.paragraphs.map((paragraph, i) => {
               const number = section.start + i;
               if (number > visibleLimit) return null;
@@ -240,16 +274,22 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               }}>
                 <Text selectable style={[styles.paragraph, textStyle]}>{getParagraphText(paragraph)}</Text>
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
-                  .map(figure => <ArticleFigure key={`${lesson.id}-${number}`} figure={figure} />)}
+                  .map(figure => <ArticleFigure key={`${lesson.id}-${number}-${figure.url}`} figure={figure} />)}
                 {hasGate ? <View testID={`reader-checkpoint-${firstPending.questionIndex}`}
-                  style={styles.checkpoint}>
+                  style={styles.checkpoint} onLayout={event => {
+                    checkpointPositions.current[number] = event.nativeEvent.layout.y;
+                    flushScroll();
+                  }}>
+                  <View style={styles.checkpointKicker}>
+                    <View style={styles.checkpointDot} accessible={false} />
+                    <Text style={styles.checkpointEyebrow}>ΣΤΑΣΗ ΓΝΩΣΗΣ</Text>
+                  </View>
                   <Text style={styles.gateTitle}>Έτοιμος να δοκιμάσεις όσα έμαθες;</Text>
-                  <Text style={styles.readingHint}>
-                    Μπορείς να ξαναδιαβάσεις την ενότητα πριν απαντήσεις. Οι ερωτήσεις
-                    θα ανοίξουν μόνο όταν το επιλέξεις.
+                  <Text style={styles.checkpointHint}>
+                    Μπορείς να ξαναδιαβάσεις πριν ξεκινήσεις.
                     {pendingGroup.length > 1 ? ` Σε περιμένουν ${pendingGroup.length} ερωτήσεις.` : ""}
                   </Text>
-                  <ActionButton label="Έτοιμος για ερωτήσεις →"
+                  <ActionButton label="Έτοιμος για ερωτήσεις →" style={styles.checkpointButton}
                     onPress={() => openQuestions(number, firstPending.questionIndex)} />
                 </View> : null}
               </View>;
@@ -340,53 +380,87 @@ function ReaderSources({ lesson }: { lesson: Props["lesson"] }) {
 }
 
 const styles = StyleSheet.create({
+  // Keep the article an opaque, quiet surface. Only navigation and
+  // milestones carry the Midnight Atlas accents.
   root: { flex: 1, backgroundColor: reading.background },
-  chrome: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10, borderBottomWidth: 1, borderColor: reading.border, backgroundColor: reading.background },
-  topbar: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 4 },
-  brand: { color: reading.muted, fontSize: 10, letterSpacing: 1.2, flexShrink: 1 },
+  chrome: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12, borderBottomWidth: 1,
+    borderColor: reading.border, backgroundColor: reading.background },
+  topbar: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
+    justifyContent: "space-between", gap: 4 },
+  brandMark: { flexDirection: "row", alignItems: "center", gap: 7, flexShrink: 1 },
+  brandDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: reading.accent },
+  brand: { color: reading.heading, fontSize: 10, fontWeight: "800", letterSpacing: 1.2, flexShrink: 1 },
   tools: { flexDirection: "row", alignItems: "center", gap: 6 },
-  control: { minHeight: 44, minWidth: 44, paddingHorizontal: 10, justifyContent: "center", alignItems: "center", borderRadius: 10 },
+  control: { minHeight: 44, minWidth: 44, paddingHorizontal: 10,
+    justifyContent: "center", alignItems: "center", borderRadius: 12 },
   controlText: { color: reading.heading, fontSize: 16, fontWeight: "600" },
   active: { backgroundColor: reading.surface },
   disabled: { opacity: 0.4 },
-  settings: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, paddingVertical: 6 },
+  settings: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
+    justifyContent: "space-between", gap: 8, paddingVertical: 6 },
   small: { color: reading.muted, fontSize: 12, lineHeight: 20 },
-  progressLine: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 12, marginTop: 4, marginBottom: 6 },
-  track: { height: 3, borderRadius: 2, overflow: "hidden", backgroundColor: reading.border },
-  fill: { height: 3, backgroundColor: "#C3B79B" },
+  progressLine: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between",
+    gap: 12, marginTop: 4, marginBottom: 8 },
+  track: { height: 4, borderRadius: 3, overflow: "hidden", backgroundColor: reading.border },
+  fill: { height: 4, backgroundColor: reading.accent },
   viewport: { flex: 1 },
-  content: { paddingHorizontal: 22, paddingTop: 28, paddingBottom: 44, width: "100%", maxWidth: 640, alignSelf: "center" },
-  eyebrow: { color: "#C7B899", fontSize: 11, lineHeight: 19, letterSpacing: 0.5, marginBottom: 12 },
-  title: { color: reading.heading, fontSize: 32, lineHeight: 41, fontWeight: "700", letterSpacing: -0.3, marginBottom: 12 },
-  metadata: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 16 },
+  content: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 46,
+    width: "100%", maxWidth: 620, alignSelf: "center" },
+  contentCompact: { paddingHorizontal: 18 },
+  articleLabel: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
+  articleLabelDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
+  eyebrow: { color: reading.accent, fontSize: 11, lineHeight: 19, letterSpacing: 0.45, flexShrink: 1 },
+  title: { color: reading.heading, fontSize: 32, lineHeight: 41,
+    fontWeight: "700", letterSpacing: -0.3, marginBottom: 12 },
+  titleCompact: { fontSize: 29, lineHeight: 38 },
+  metadata: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
+    justifyContent: "space-between", gap: 8, marginBottom: 12 },
+  titleRule: { width: 56, height: 2, borderRadius: 2, backgroundColor: reading.border, marginBottom: 22 },
   sourceControl: { minHeight: 44, justifyContent: "center", paddingHorizontal: 4 },
-  link: { color: colors.accentLight, fontSize: 12, lineHeight: 20 },
-  intro: { color: reading.heading, marginBottom: 26 },
-  sources: { backgroundColor: reading.surface, borderRadius: 16, borderWidth: 1, borderColor: reading.border, padding: 16, marginBottom: 24, gap: 8 },
+  link: { color: reading.accent, fontSize: 12, lineHeight: 20 },
+  // Lead paragraph is visually distinct without sacrificing its type size.
+  intro: { color: reading.heading, borderLeftWidth: 2, borderLeftColor: "#615B87",
+    paddingLeft: 17, marginBottom: 24 },
+  sources: { backgroundColor: reading.surface, borderRadius: 16, borderWidth: 1,
+    borderColor: reading.border, padding: 16, marginBottom: 24, gap: 8 },
   cardTitle: { color: reading.heading, fontSize: 22, lineHeight: 31, fontWeight: "700" },
-  note: { backgroundColor: "#292720", padding: 16, borderRadius: 12, marginBottom: 24, gap: 8 },
-  noteText: { color: "#D2C8B7" },
-  coverBlock: { marginBottom: 20 },
-  // Keep cover height predictable before the image loads; its crop mode remains per-lesson.
-  cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 14 },
-  caption: { color: reading.muted, fontSize: 12, lineHeight: 20, marginTop: 10 },
+  note: { backgroundColor: reading.surface, borderLeftWidth: 3, borderLeftColor: reading.accent,
+    borderRadius: 12, padding: 18, marginBottom: 24, gap: 8 },
+  noteText: { color: reading.text },
+  coverBlock: { marginBottom: 22 },
+  // Reserve cover space before remote images load and keep native image zoom.
+  cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 15 },
   creditControl: { minHeight: 44, justifyContent: "center", paddingVertical: 8 },
-  readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 26 },
-  section: { paddingTop: 20, borderTopWidth: 1, borderColor: reading.border, marginBottom: 20 },
-  sectionNumber: { color: "#C7B899", fontSize: 10, lineHeight: 18, letterSpacing: 1, marginBottom: 8 },
-  sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "600", marginBottom: 22 },
-  paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 24 },
-  checkpoint: { marginBottom: 28, borderWidth: 1, borderColor: reading.border, backgroundColor: reading.surface, borderRadius: 16, padding: 18 },
-  gateTitle: { color: reading.heading, fontSize: 19, lineHeight: 28, fontWeight: "700" },
+  readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 20 },
+  section: { paddingTop: READER_SECTION_TOP_PADDING, borderTopWidth: 1, borderColor: reading.border, marginBottom: 12 },
+  sectionKicker: { flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 8 },
+  sectionPin: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
+  sectionNumber: { color: reading.accent, fontSize: 10, lineHeight: 18, letterSpacing: 1 },
+  sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "700", marginBottom: 18 },
+  sectionTitleCompact: { fontSize: 23, lineHeight: 32 },
+  paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 22 },
+  checkpoint: { marginBottom: 26, borderWidth: 1, borderLeftWidth: 3,
+    borderColor: reading.border, borderLeftColor: reading.accent,
+    backgroundColor: reading.surface, borderRadius: 16, padding: 14 },
+  checkpointKicker: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
+  checkpointDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
+  checkpointEyebrow: { color: reading.accent, fontSize: 10,
+    lineHeight: 17, fontWeight: "800", letterSpacing: 1.1 },
+  gateTitle: { color: reading.heading, fontSize: 18, lineHeight: 26,
+    fontWeight: "700", marginBottom: 4 },
+  checkpointHint: { color: reading.muted, fontSize: 13, lineHeight: 20 },
+  // Scoped override: the lesson completion CTA and all other ActionButtons stay unchanged.
+  checkpointButton: { minHeight: 48, marginTop: 10, paddingVertical: 10 },
   quizScreen: { flex: 1, backgroundColor: colors.background },
   quizHeader: { width: "100%", maxWidth: 640, alignSelf: "center", paddingTop: profileSectionLayout.top,
     paddingHorizontal: profileSectionLayout.horizontal, gap: 8 },
   quizViewport: { flex: 1 },
   quizContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: profileSectionLayout.horizontal,
     paddingVertical: 4, width: "100%", maxWidth: 640, alignSelf: "center" },
-  finish: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 26, gap: 10 },
+  finish: { borderWidth: 1, borderColor: reading.border, borderRadius: 20,
+    backgroundColor: reading.surface, padding: 21, marginTop: 8, gap: 10 },
   finishBody: { color: reading.text, marginTop: 8, marginBottom: 8 },
-  endSources: { marginTop: 28 },
+  endSources: { borderTopWidth: 1, borderColor: reading.border, paddingTop: 20, marginTop: 20 },
   sourceList: { gap: 8 },
   locked: { color: reading.muted, fontSize: 13, lineHeight: 22, paddingTop: 12, paddingBottom: 20 },
 });

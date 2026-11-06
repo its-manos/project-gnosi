@@ -47,6 +47,11 @@ jobs:
       - run: npm run test:question-types
       - run: npm run test:section-end-questions
       - run: node scripts/test-reader-pilot.cjs
+      - run: node scripts/test-reader-visual-hierarchy.cjs
+      - run: node scripts/test-reader-resume-anchors.cjs
+      - run: node scripts/test-expandable-image-caption.cjs
+      - run: node scripts/test-reader-text-size.cjs
+      - run: node scripts/test-article-images.cjs
       - run: node scripts/test-typed-lesson-integration.cjs
       - run: node scripts/test-daily-challenge.cjs
       - run: node scripts/test-profile-section-header.cjs
