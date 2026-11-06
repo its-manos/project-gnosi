@@ -54,14 +54,29 @@ function harness(store){
 
  // The real screens expose separate actions and branch correctly on feedback.
  const jsx=(type,props)=>({type,props});
- let resultDetails=false;
- const natives={'../components/KnowledgeProgress':{default:'KnowledgeProgress',__esModule:true},react:{useState:()=>[resultDetails,v=>{resultDetails=typeof v==='function'?v(resultDetails):v;}]},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{Pressable:'Pressable',ScrollView:'ScrollView',View:'View',Text:'Text',StyleSheet:{create:x=>x}},'../components/LessonResultChart':{default:'Chart',__esModule:true},'../components/ReportContentButton':{default:'ReportContentButton',__esModule:true},'../components/ActionButton':{default:'ActionButton',__esModule:true},'../components/AppHeader':{default:'AppHeader',__esModule:true},'../components/AnswerOption':{default:'AnswerOption',__esModule:true},'../components/ReadingPick':{default:'ReadingPick',__esModule:true}};
+ const components=['ProgressGradientBackground','ProgressTrack','ReportContentButton','ActionButton','AppHeader','AnswerOption'];
+ const natives={
+  'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},
+  'react-native':{Pressable:'Pressable',ScrollView:'ScrollView',View:'View',Text:'Text',
+   StyleSheet:{create:x=>x},useWindowDimensions:()=>({height:852,fontScale:1})},
+  '../components/HomeMotion':{MotionView:'MotionView'},
+  '../components/ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
+  '../components/ProfileSectionHeader':{__esModule:true,default:'ProfileSectionHeader',profileSectionLayout:{horizontal:18,top:8,below:13}},
+  '../components/AtlasContinueCard':{__esModule:true,default:'AtlasContinueCard',atlasContinueStyles:{}},
+  '../hooks/useKnowledgeProfile':{useKnowledgeProfile:()=>({profile:{level:1,required:200,earned:0,totalXP:0},ready:true})},
+  ...Object.fromEntries(components.map(name=>['../components/'+name,{__esModule:true,default:name}])),
+ };
  const Results=compile('src/screens/ResultsScreen.tsx',natives).default,Drill=compile('src/screens/ReviewMistakesScreen.tsx',natives).default;
  const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
- const props={lesson,score:2,review:reviewUtil.lessonReview(lesson,original),recommendations:[],onReviewMistakes(){},onReadAgain(){},onHome(){},onOpenLesson(){},onBrowse(){}};
- let tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Εξάσκηση στα λάθη (2)'));assert.ok(!nodes(tree).some(n=>n.props?.label==='Προαιρετική επανάληψη μαθήματος'));
- nodes(tree).find(n=>n.type==='Pressable'&&n.props.accessibilityState?.expanded===false).props.onPress();tree=Results(props);assert.ok(nodes(tree).some(n=>n.props?.label==='Προαιρετική επανάληψη μαθήματος'),'full replay remains available under More options');resultDetails=false;
- tree=Results({...props,review:reviewUtil.lessonReview(lesson,{[key]:perfect})});assert.ok(!nodes(tree).some(n=>n.props?.label?.startsWith('Εξάσκηση στα λάθη')));
+ const props={lesson,score:2,review:reviewUtil.lessonReview(lesson,original),onReviewMistakes(){},onReadAgain(){},onHome(){},onOpenLesson(){},onBrowse(){}};
+ const action=(tree,id)=>nodes(tree).find(node=>node.props?.testID===id);
+ let tree=Results(props);
+ assert.equal(action(tree,'lesson-practice-action').props.accessibilityLabel,'Εξάσκηση στα λάθη (2)');
+ assert.equal(action(tree,'lesson-practice-action').props.onPress,props.onReviewMistakes);
+ assert.equal(action(tree,'lesson-replay-action').props.onPress,props.onReadAgain);
+ tree=Results({...props,review:reviewUtil.lessonReview(lesson,{[key]:perfect})});
+ assert.equal(action(tree,'lesson-practice-action'),undefined);
+ assert.ok(action(tree,'lesson-replay-action'));
  const drillProps={lesson,indices:[1,3],index:0,selected:null,onChoose(){},onRetry(){},onNext(){},onBack(){}};
  tree=Drill(drillProps);assert.equal(nodes(tree).filter(n=>n.type==='AnswerOption').length,4);
  tree=Drill({...drillProps,selected:(lesson.questions[1].correctIndex+1)%4});assert.equal(nodes(tree).find(n=>n.props?.label==='Δοκίμασε ξανά').props.onPress,drillProps.onRetry);

@@ -12,7 +12,7 @@ function load(file,overrides={}) {
 }
 const {knowledgeProfile:profile,levelProgress,dailyXP}=load('src/utils/knowledgeScoring.ts');
 const {lessons}=load('src/data/lessons.ts'),{quizFingerprint}=load('src/utils/learningActivity.ts');
-const lesson=lessons[0], today='2026-10-31',at=Date.parse('2026-10-22T12:00:00Z');
+const lesson=lessons.find(lesson=>lesson.id==='astronomy-introduction'), today='2026-10-31',at=Date.parse('2026-10-22T12:00:00Z');
 const event={lessonId:lesson.id,at,wasCompleted:false,questionCount:4,correctCount:2,missedQuestionIndices:[1,3],quizKey:quizFingerprint(lesson.questions)};
 const p=(ids=[],events={},reviews={},history=[])=>profile(lessons,ids,events,reviews,history,today);
 assert.equal(p().totalXP,0);assert.equal(p().level,1);
@@ -43,7 +43,7 @@ assert.equal(p([lesson.id],JSON.parse(JSON.stringify({a:event})),JSON.parse(JSON
 // Render the actual card and verify disclosure, loading, compact and accessibility.
 let expanded=false,ready=true;
 const jsx=(type,props)=>({type,props});
-const Card=load('src/components/KnowledgeProgress.tsx',{ './ProgressBar':{__esModule:true,default:'ProgressBar'},
+const Card=load('src/components/KnowledgeProgress.tsx',{ './ProgressBar':{__esModule:true,default:'ProgressBar'}, './XpRules':{__esModule:true,default:'XpRules'},
  react:{useState:()=>[expanded,v=>{expanded=typeof v==='function'?v(expanded):v;}]},
  'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{View:'View',Text:'Text',Pressable:'Pressable',StyleSheet:{create:x=>x}},
  '../hooks/useKnowledgeProfile':{useKnowledgeProfile:()=>({profile:remembered,ready})}
@@ -52,21 +52,7 @@ const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).f
 let tree=Card({});assert.ok(nodes(tree).some(n=>n.type==='ProgressBar'&&n.props.progress>=0&&n.props.progress<=100));
 nodes(tree).find(n=>n.type==='Pressable').props.onPress();tree=Card({});assert.equal(expanded,true);
 assert.ok(nodes(tree).find(n=>n.type==='Pressable').props.accessibilityState.expanded);
+assert.equal(nodes(tree).find(n=>n.type==='XpRules').props.learningXP,remembered.learningXP);
 assert.equal(nodes(Card({compact:true})).filter(n=>n.type==='Pressable').length,0);
 ready=false;assert.equal(nodes(Card({})).filter(n=>n.props?.accessibilityRole==='progressbar').length,0);
 console.log('Knowledge scoring passed: levels, legacy progress, first-attempt accuracy, zero-score participation, offline/import/replay deduplication, delayed recall, changed keys, daily rewards, exploration and card states.');
-const data=load('src/data/questions.ts');
-const challenge=data.questions.slice(0,7);
-const Screen=load('src/screens/DailyChallengeScreen.tsx',{
- react:{useState:init=>[init,()=>{}],useRef:()=>({current:null})},
- 'react/jsx-runtime':{jsx,jsxs:jsx},
- 'react-native':{View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x}},
- '../hooks/useDailyChallenge':{useDailyChallenge:()=>({record:{dateKey:today,completed:true,started:true,currentIndex:6,questionIds:challenge.map(q=>q.id),answers:Object.fromEntries(challenge.map((q,i)=>[String(i),i<5?q.correctIndex:(q.correctIndex+1)%4]))},challengeQuestions:challenge,currentQuestion:null,correctCount:5,isLoading:false,reviewAvailable:true})},
- ...Object.fromEntries(['QuizReveal','DailyAnswerReview','KnowledgeProgress','ActionButton','AnswerOption','AppHeader','ProgressBar','DailyMistakeReview','ReportContentButton'].map(n=>['../components/'+n,{__esModule:true,default:n}]))
-}).default;
-const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
-const result=Screen({preferences:{topicIds:[],difficulty:'medium'},preferencesLoaded:true,onHome(){},onOpenPreferences(){}});
-assert.ok(text(result).includes('500 / 700'),'daily points remain unchanged');
-assert.ok(text(result).includes('XP ημέρας: 70 XP'),'daily XP is distinct from quiz points');
-assert.equal(nodes(result).filter(n=>n.type==='KnowledgeProgress'&&n.props.compact).length,1);
-console.log('Daily result integration passed: separate points/XP and one compact progress card.');

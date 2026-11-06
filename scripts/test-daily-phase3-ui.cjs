@@ -99,6 +99,16 @@ const footer=nodes(tree).find(n=>n.type==='QuestionStageFooter');
 assert.equal(footer.props.action.label,'Επόμενη ερώτηση →',
   'answered daily question keeps Next visible outside the ScrollView');
 footer.props.action.onPress();assert.equal(next,1);
+const second=questions.find(q=>q.id===active.questionIds[1]);
+challenge={...challenge,
+  record:{...active,currentIndex:1,answers:{...active.answers,1:second.correctIndex}},
+  currentQuestion:second,selectedAnswer:second.correctIndex,correctCount:2,
+  rewardSummary:{combo:2,highestCombo:2,rows:[{eligible:true,comboXP:0},{eligible:true,comboXP:2}]},
+};
+tree=render();
+const streakCard=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
+assert.equal(streakCard.props.combo,2);
+assert.ok(text(streakCard.props.feedbackExtra).includes('+2 XP μπόνους'));
 // The journey component remains passive and accurately maps current/legacy completion.
 const Journey=load('src/components/DailyJourneyTrack.tsx',{
   react:{memo:fn=>fn},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,

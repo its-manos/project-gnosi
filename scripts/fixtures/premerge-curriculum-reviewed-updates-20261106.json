@@ -1,0 +1,107 @@
+{
+  "reviewedAgainst": "f80c08cf206dd789924ff62d6aa73a38587abcb1",
+  "note": "Ancient Greece editorial revisions, typed checkpoints and section-end placement. Antikythera lesson and figure revisions include the research-first upgrade (6cbec3e) and the Ancient Greece audit (89badf9). All other hashes come from the original snapshot.",
+  "lessons": {
+    "ancient-athens": {
+      "sha256": "19c00a538891811ea7b10dc4291cafab6f3aac236ec16eef5713004195e25f9c",
+      "learningSha256": "a9edebaa76da0d2f855bc7dbd7f43f64542d24680d640932639b0d0cbb354371"
+    },
+    "athens-who-voted": {
+      "sha256": "e0ad1abe661df4a821dad13f8d8cd994123386cadd53dcd4446fdb9f964ad59c",
+      "learningSha256": "9d55529e1cfb4ebfc1d812f01588d15a462139488699f96b47f29326c112981a"
+    },
+    "antikythera-gears": {
+      "sha256": "9783f26cd50285ac75149b838ed377629c06af544cb21a2e353b9ff37f30331c",
+      "learningSha256": "6aa450572992ec2a626855cd55897d84b0561e8a63d54311b2c4dfce47b41fd8",
+      "figuresSha256": "ad893b7014eca820cbae1f0213d1022f360f9c49890cbcdc2a1fec34c872311d"
+    },
+    "linear-b-decipherment": {
+      "sha256": "479cb45f3da070b07a7ce444df6ecbd67d298a63e33430905c49bdf5ede4b7ad",
+      "learningSha256": "57b2edbc5c0dd66466d83f598685021029de6fa4b951a06363beb34617b52788"
+    },
+    "greek-world-not-a-country": {
+      "sha256": "48f1c6e7bb8754ce2cf7b6bede6c494ce1de3261744388e59c2f808a9538f0f6",
+      "learningSha256": "b66feee8cda2853d25f542619a355d9d9e36b82fa269c6c253ac777b7c8007f7"
+    },
+    "greek-history-through-evidence": {
+      "sha256": "95903a023502f842e9b8ac564c8c1427cf1557b0029fa716f35c4fcafbdf3490",
+      "learningSha256": "4abbcef63cbddec9027b47ece94691195e456b5215c0b9da5a1445ce6d76ae27"
+    },
+    "greek-chronology": {
+      "sha256": "c1298b64a9713975c96c0d726bb9d783fc7af587cb122922835788d96b9cdb65",
+      "learningSha256": "8d1370d3c4f435e991a33d8d15e00508485fb23e0a4ad6e7d89f375e6132a77c"
+    },
+    "greek-geography-seas": {
+      "sha256": "1b3d4034659666a3ef53954f1134d6e60e2297f4506c54cd9855a56508d3c994",
+      "learningSha256": "02384dd8ac7285b0beadb29686c1e76ddcf1b3999c604b7a63dfe1c1632f5ad6"
+    },
+    "aegean-bronze-age": {
+      "sha256": "58e77af676322a5481231375df4687875587473a449e8381c0a21b69907cabb1",
+      "learningSha256": "8a462439d64d9dae643428acf1970a18443980d30631364bc9707e578b96c480"
+    },
+    "minoan-crete": {
+      "sha256": "b88bbc457b6b4acce5bb3ab6e01b07d86e5625dbbfa84ac63c013cb0f47c2098",
+      "learningSha256": "e57a7181980a32a838191881203998e11b9e598afdfc01b4a2303ebdfa2555d4"
+    },
+    "mycenaean-palaces": {
+      "sha256": "88e42cd6f6f6d452979864085aaf4d7123e4ab25844e5548ac3c05dab606b4c2",
+      "learningSha256": "418009b67646ac4b452c5336a952aaf27f2bba726cffd211142ac517ccaa98f4"
+    },
+    "palace-collapse": {
+      "sha256": "e548b193485d41fb81eaaa39dc792a06460334344eec8b3014e18d03f0ee2939",
+      "learningSha256": "140d49108857b64920c9a3fd08204b58d10711899a522c229b5bfbac1fd1e3a1"
+    },
+    "geometric-greece": {
+      "sha256": "14280df1a0331137ca3f67428a13d95ba9837229ede8ca3a31bf2782bf157545",
+      "learningSha256": "dbc1fd36a8409fc9aafae911be7931e9928abee8653e8c4ca14113fad81aea9a"
+    },
+    "rise-of-polis": {
+      "sha256": "e28245c65b913d40e1f3c88f9220c65d5882d076698a272ef8962ee051fe0ce8",
+      "learningSha256": "b1c948c1a387634104729af9e2c6db78004679bd41bc3725a4a8b8fe540afada"
+    },
+    "greek-settlements-networks": {
+      "sha256": "59b54213cbf4364728e79e2e1d4112b89bad4197920a38530add52e2ec30c7d3",
+      "learningSha256": "fee600e38f9d28d7c2785547903f76adb45d97a0579ae33418d4a567cb16ebb5"
+    },
+    "sparta-society": {
+      "sha256": "3c871f6bcfb5d285fb4c8ba3df1eb304933822edbad08d0032179cb81e54bb09",
+      "learningSha256": "8856bf04b85cc05b67a1a63735764e2e40e79a1edfcfa8e18a3e5e7e35bd85ff"
+    },
+    "athens-law-courts": {
+      "sha256": "54266e70a6fe65342969301e1de99a8d55348eeff4e4c1a3a5d1230246c3d933",
+      "learningSha256": "45c8ad2c1fae6100ab05056fddaa200fce9390bbe3948764e9dc275f6881d921"
+    },
+    "greek-war-hoplites": {
+      "sha256": "559cdd835013535c2b07e5f2883bcae40a12e4bd8e00c28b7fb711458f96b706",
+      "learningSha256": "d228784f9e8eeabaf2f2e3252e7f4bd8e08f9a374bad859597d71386e8dc759e"
+    },
+    "greek-sanctuaries-games": {
+      "sha256": "6b59a38ad7e9dafebc9fa0f8d1c2c69c1a2c86c9ea9a4c6b7d6e0c14384d840c",
+      "learningSha256": "a67607600608207b7b7fe15e69f72e6a8746f6edc04d1d56c1e7f9c4deb069af"
+    },
+    "persian-wars-greek-world": {
+      "sha256": "0936d8271d116954f0bfe1142fa40a96ca487a07dbffc0d2f7647fce99b27810",
+      "learningSha256": "74b402691c836c43c85e4b13c087d565825818f3efcf6549161d59e4dd570a32"
+    },
+    "athenian-empire": {
+      "sha256": "87a9c4956f24761b1180544a350b65e09ae04b58fec4b7835c9a85dcba0be4ab",
+      "learningSha256": "5567e69308261a365c878bf39760449d2ee3e64dcfc7140a55e81b6a5cde4bd9"
+    },
+    "peloponnesian-war": {
+      "sha256": "dd32f5c3fef9e2d2dd80aad6d84943c337913aefad2825ed7c44797d4fff288c",
+      "learningSha256": "2aa9265f3b3c9ca8f6d5fb372e27593ae577967fd5dbd479e38044d8b21fac17"
+    },
+    "greek-crises-fourth-century": {
+      "sha256": "a26c8b91e99c41816ee068935464900f7f1dafcbbd71666082fe3f1cf111e299",
+      "learningSha256": "2555bc6a9a0951f1f4c03f897cf8f7e0aa12f553c08b113bbd6e833ef96c903a"
+    },
+    "macedon-philip": {
+      "sha256": "daf43d8b7c082b8d1ef4a1f856c935882821d9c3a6ea161c8487857aece24185",
+      "learningSha256": "d9b3f87f83d36b2e7961ef4a24be69a7e64f75f7cfc1788f4e87f59d26d7aa7e"
+    },
+    "alexander-conquests-context": {
+      "sha256": "1abc4179afc2bcedb87f06d3c56f9dac2aacfd0a2460a9e38f372e3ec6a2d46d",
+      "learningSha256": "cfd8501bf43d53a406b779e063812a77c7830df772c7580e4eb7dffa3a4c7532"
+    }
+  }
+}
