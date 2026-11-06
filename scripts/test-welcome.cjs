@@ -59,9 +59,12 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  const previousMarks=marked;assert.equal(await first.finishWelcome(homeStore,choices,'home',()=>true,async()=>false),false);assert.equal(marked,previousMarks);
  // Four-stage playable onboarding, including interest selection.
  const ui=reactHarness();let phase='welcome',category=null,skips=0;
- const uiNative={...native,useWindowDimensions:()=>({height:830,fontScale:1})};
+ let dimensions={height:830,width:390,fontScale:1};
+ const uiNative={...native,useWindowDimensions:()=>dimensions};
  const Screen=load('src/screens/WelcomeScreen.tsx',{react:ui.react,'react/jsx-runtime':{jsx,jsxs:jsx},
-  'react-native':uiNative,'../components/ActionButton':{__esModule:true,default:'Button'},
+  'react-native':uiNative,
+  'react-native-safe-area-context':{useSafeAreaInsets:()=>({top:0,bottom:34,left:0,right:0})},
+  '../components/ActionButton':{__esModule:true,default:'Button'},
   '../components/AtlasCard':{__esModule:true,default:'AtlasCard'},
   '../components/ProgressGradientBackground':{__esModule:true,default:'Background'},
   '../components/worldIcons/categoryIconMap':{getCategoryWorldIcon:()=>null},
@@ -70,7 +73,8 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  let savedInterests=null;
  const props=()=>({phase,replay:false,categories:data.categories,selectedCategoryId:category,
   preferences:initial,preferencesLoaded:true,onAdvance:async (next,chosen)=>{phase=next;category=chosen??category;return true;},
-  onBeginLesson:async value=>{savedInterests=value;phase='lesson';return true;},
+  onSaveInterests:async value=>{savedInterests=value;phase='choose';return true;},
+  onBeginLesson:async selected=>{category=selected;phase='lesson';return true;},
   onSkip:async()=>{skips++;}});
  const draw=()=>ui.render(()=>Screen(props()));let tree=draw();const endUi=ui.mount();
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 1 από 4'));
@@ -79,45 +83,60 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
    'The main welcome emblem is the custom atlas rather than a large star');
  assert.ok(!JSON.stringify(tree).includes('heroSymbol'),'Legacy text star does not appear as the welcome hero');
  assert.equal(nodes(tree).filter(n=>n.type==='QuizIcon'||n.type==='LessonIcon').length,2,'Branded quiz/book icons replace placeholder glyphs');
+ const welcomeScroll=nodes(tree).find(n=>n.type==='ScrollView');
+ assert.equal(welcomeScroll.props.contentContainerStyle[0].paddingHorizontal,20,
+   'Welcome and question use a unified 20px gutter');
+ assert.equal(welcomeScroll.props.contentContainerStyle.at(-1).paddingBottom,52,
+   'First page respects the bottom safe area');
  button(tree,'Ξεκινάμε →').props.onPress();await flush();tree=draw();
- assert.ok(nodes(tree).some(n=>n.type==='OnboardingDailyQuestion'),'Play the actual first daily question, not a static illustration');
+ assert.ok(nodes(tree).some(n=>n.type==='OnboardingDailyQuestion'),'Play the real first daily question');
  assert.equal(nodes(tree).find(n=>n.type==='OnboardingDailyQuestion').props.preferences,initial);
  await nodes(tree).find(n=>n.type==='OnboardingDailyQuestion').props.onContinue();tree=draw();
+ assert.equal(phase,'interests','First daily question flows into Interests, not Category');
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 3 από 4'));
- assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='radio').length,data.categories.length);
- press(tree,data.categories.find(c=>c.id==='science').title);tree=draw();
- assert.ok(JSON.stringify(tree).includes('Αρχαία Ελλάδα'),'Temporary fixed lesson is explicit');
- button(tree,'Συνέχεια →').props.onPress();await flush();tree=draw();
- assert.equal(category,'science','Keep selected world while advancing to interests');
- assert.equal(phase,'interests','The interests page comes immediately after the world choice, before the lesson');
- assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 4 από 4'));
- assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,true,'At least three interests are required');
- assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,1,
-   'Selected world is carried into the interests page');
- for(const topic of topics.DAILY_CHALLENGE_TOPICS.slice(0,5)){
-  if(!nodes(tree).some(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityLabel===topic.title&&n.props.accessibilityState.checked)) {
-   press(tree,topic.title);tree=draw();
-  }
- }
+ assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox').length,topics.DAILY_CHALLENGE_TOPICS.length);
+ assert.equal(button(tree,'Συνέχεια →').props.disabled,true,'At least three interests required');
+ for(const topic of topics.DAILY_CHALLENGE_TOPICS.slice(0,5)){press(tree,topic.title);tree=draw();}
  assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,5);
  assert.ok(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&!n.props.accessibilityState.checked).every(n=>n.props.disabled));
  press(tree,topics.DAILY_CHALLENGE_TOPICS[0].title);tree=draw();
  press(tree,topics.DAILY_CHALLENGE_TOPICS[1].title);tree=draw();
  assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,3);
+ assert.equal(button(tree,'Συνέχεια →').props.disabled,false);
+ // Compact phones keep two tappable columns without losing bottom safe area.
+ dimensions={height:650,width:320,fontScale:1.2};tree=draw();
+ const compactScroll=nodes(tree).find(n=>n.type==='ScrollView');
+ assert.equal(compactScroll.props.contentContainerStyle[0].maxWidth,560);
+ assert.equal(compactScroll.props.contentContainerStyle[1].justifyContent,'flex-start');
+ assert.equal(compactScroll.props.contentContainerStyle[2].paddingTop,12);
+ assert.equal(compactScroll.props.contentContainerStyle.at(-1).paddingBottom,52);
+ const firstTopic=nodes(tree).find(n=>n.props?.testID==='welcome-interest-history');
+ assert.ok(firstTopic.props.style.some(st=>st?.minHeight===70),'Compact tiles stay easily tappable');
+ dimensions={height:830,width:390,fontScale:1};tree=draw();
+ button(tree,'Συνέχεια →').props.onPress();await flush();tree=draw();
+ assert.equal(phase,'choose','Interests precede the selected first-lesson category');
+ assert.equal(savedInterests.topicIds.length,3);
+ assert.equal(savedInterests.difficulty,initial.difficulty,'Keep existing difficulty');
+ assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 4 από 4'));
+ assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='radio').length,data.categories.length);
+ assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,true,'A world must be selected');
+ press(tree,data.categories.find(c=>c.id==='science').title);tree=draw();
+ assert.ok(JSON.stringify(tree).includes('Αρχαία Ελλάδα'),'Temporary fixed lesson is explicit');
  assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,false);
  button(tree,'Ξεκίνα το πρώτο μάθημα →').props.onPress();await flush();
- assert.equal(phase,'lesson');assert.equal(savedInterests.topicIds.length,3);
- assert.equal(savedInterests.difficulty,initial.difficulty,'Keep existing difficulty');
+ assert.equal(category,'science','Keep selected world while previewing Ancient Greece');
+ assert.equal(phase,'lesson');
  press(tree,'Παράλειψη οδηγού');await flush();assert.equal(skips,1);endUi();
  // Stored milestones resume even when activity has already been created.
  const resumeDisk=disk(),resume=welcomeHook(resumeDisk);resume.render();const stopResume=resume.mount();await flush();
  assert.equal(await resume.render().advance('question'),true);
  assert.equal(resumeDisk.map.get(first.WELCOME_STORAGE_KEY),'question');
- assert.equal(await resume.render().advance('choose'),true);
- assert.equal(await resume.render().advance('interests','science'),true);
- assert.equal(resumeDisk.map.get(first.ONBOARDING_CATEGORY_KEY),'science');
+ assert.equal(await resume.render().advance('interests'),true);
  assert.equal(resumeDisk.map.get(first.WELCOME_STORAGE_KEY),'interests');
- assert.equal(await resume.render().advance('lesson'),true);
+ assert.equal(await resume.render().advance('choose'),true);
+ assert.equal(resumeDisk.map.get(first.WELCOME_STORAGE_KEY),'choose');
+ assert.equal(await resume.render().advance('lesson','science'),true);
+ assert.equal(resumeDisk.map.get(first.ONBOARDING_CATEGORY_KEY),'science');
  stopResume();
  const resumed=welcomeHook(resumeDisk,null,true);resumed.render();const stopResumed=resumed.mount();await flush();
  assert.equal(resumed.render().phase,'lesson');assert.equal(resumed.render().categoryId,'science');
@@ -147,22 +166,23 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(await guide.props.onAdvance('question'),true);
  routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
  assert.equal(guide.props.phase,'question');
- assert.equal(await guide.props.onAdvance('choose'),true);
- routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
- const beforeLessonDaily=plain(navStore.getSnapshot().doc.days);
- assert.equal(await guide.props.onAdvance('interests','science'),true);
+ assert.equal(await guide.props.onAdvance('interests'),true);
  routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
  assert.equal(guide.props.phase,'interests');
- assert.equal(await guide.props.onBeginLesson(choices),true);
- assert.deepEqual([...navStore.getSnapshot().doc.preferences.value.topicIds].sort(),[...choices.topicIds].sort(),'Onboarding topics reach synced preferences');
+ const beforeLessonDaily=plain(navStore.getSnapshot().doc.days);
+ assert.equal(await guide.props.onSaveInterests(choices),true);
+ assert.deepEqual([...navStore.getSnapshot().doc.preferences.value.topicIds].sort(),[...choices.topicIds].sort(),'Onboarding topics reach synced preferences before choosing a category');
  assert.equal(navStore.getSnapshot().doc.preferences.value.difficulty,choices.difficulty,'Onboarding preserves difficulty');
+ routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
+ assert.equal(guide.props.phase,'choose');
+ assert.equal(await guide.props.onBeginLesson('science'),true);
  routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='LessonScreen'));
  assert.equal(app.activeLessonId,first.ONBOARDING_INTRO_LESSON_ID);
  assert.deepEqual(plain(navStore.getSnapshot().doc.days),beforeLessonDaily);
  // Skipping the guide returns to Home without resetting the daily or reader.
  await nodes(nav.render(()=>Navigator())).find(n=>n.type==='LessonScreen').props.onBack();
- routed=nav.render(()=>Navigator());assert.equal(nodes(routed).find(n=>n.type==='WelcomeScreen').props.phase,'interests');
- await nodes(routed).find(n=>n.type==='WelcomeScreen').props.onSkip(3);
+ routed=nav.render(()=>Navigator());assert.equal(nodes(routed).find(n=>n.type==='WelcomeScreen').props.phase,'choose');
+ await nodes(routed).find(n=>n.type==='WelcomeScreen').props.onSkip(4);
  routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='HomeScreen'));
  nodes(routed).find(n=>n.type==='HomeScreen').props.onOpenProfile();routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='ProfileScreen'));
  let unsubscribeBack=latestNavEffect();assert.equal(backHandler(),true);unsubscribeBack();routed=nav.render(()=>Navigator());assert.equal(app.screen,'home');
