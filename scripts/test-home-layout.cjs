@@ -314,8 +314,17 @@ for (const category of categories) {
   assert.equal(art.props.style.borderRadius, undefined, "soft edges are not clipped");
   assert.equal(art.props.style.transform[0].scale, 1.18);
   const asset = iconFiles[category.id];
-  assert.ok(fs.existsSync(path.join(root, "assets/category-world-icons", asset)),
-    "bundled artwork exists: " + asset);
+  const assetPath = path.join(root, "assets/category-world-icons", asset);
+  assert.ok(fs.existsSync(assetPath), "bundled artwork exists: " + asset);
+  // Each low-distraction illustration must retain a real alpha channel.
+  // The WebP extended header flags alpha at bit 4 and encodes a 192px canvas.
+  const iconHeader = fs.readFileSync(assetPath).subarray(0, 30);
+  assert.equal(iconHeader.toString("ascii", 0, 4), "RIFF");
+  assert.equal(iconHeader.toString("ascii", 8, 12), "WEBP");
+  assert.equal(iconHeader.toString("ascii", 12, 16), "VP8X");
+  assert.ok(iconHeader[20] & 0x10, "transparent artwork is preserved: " + asset);
+  assert.equal(iconHeader[24] | (iconHeader[25] << 8) | (iconHeader[26] << 16), 191,
+    "icon dimensions remain 192px: " + asset);
   card.props.onPress();
   assert.equal(actions.at(-1), "category:" + category.id,
     "category navigation unchanged");
