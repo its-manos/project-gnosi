@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import QuizReveal from "../components/QuizReveal";
@@ -8,6 +9,7 @@ import { useLearningSession } from "../state/LearningSession";
 import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { dailyReportTarget } from "../utils/contentReports";
 import { colors } from "../theme";
+import { onboardingLayout } from "./onboardingLayout";
 
 type Props = {
   preferences: DailyChallengePreferences;
@@ -23,6 +25,9 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
     questionsCompatible, startChallenge, answerQuestion, nextQuestion } =
     useDailyChallenge(preferences, preferencesLoaded);
   const { dailyStore } = useLearningSession();
+  const { height, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const compact = height < 790 || fontScale > 1.15;
   const attemptedDate = useRef<string | null>(null);
   const startingRef = useRef(false);
   const mountedRef = useRef(true);
@@ -73,10 +78,12 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
 
   const unavailable = !isLoading && (!questionsCompatible || startFailed);
   return <View testID="onboarding-daily-question" style={styles.root}>
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.heading}>
+    <ScrollView contentContainerStyle={[styles.content, compact && styles.contentCompact,
+      { paddingBottom: Math.max(onboardingLayout.minBottomPadding, insets.bottom + 18) }]}
+      showsVerticalScrollIndicator={false}>
+      <View style={[styles.heading, compact && styles.headingCompact]}>
         <Text style={styles.kicker}>Η ΠΡΩΤΗ ΣΟΥ ΔΟΚΙΜΑΣΙΑ  ·  01 / 07</Text>
-        <Text accessibilityRole="header" style={styles.title}>Μια ερώτηση. Μια ανακάλυψη.</Text>
+        <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Μια ερώτηση. Μια ανακάλυψη.</Text>
         <Text style={styles.copy}>Δοκίμασε την πρώτη ερώτηση της σημερινής πρόκλησης. Η απάντησή σου θα μείνει στο κανονικό quiz.</Text>
       </View>
       {alreadyPassed ? <QuizReveal><View style={styles.notice}>
@@ -95,11 +102,11 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
         {isLoading || starting || (!record.started && !unavailable)
           ? <><ActivityIndicator color={colors.accentLight}/><Text style={styles.copy}>Ετοιμάζουμε την πρώτη ερώτηση…</Text></>
           : <><Text style={styles.noticeTitle}>Η πρόκληση δεν είναι διαθέσιμη.</Text>
-            <Text style={styles.copy}>Δεν θα χάσεις την πρόοδό σου. Μπορείς να ξαναδοκιμάσεις ή να προχωρήσεις στο μάθημα.</Text>
+            <Text style={styles.copy}>Η πρόοδός σου παραμένει ασφαλής. Μπορείς να ξαναδοκιμάσεις ή να συνεχίσεις στα ενδιαφέροντά σου.</Text>
             <ActionButton secondary label="Δοκίμασε ξανά" onPress={() => { attemptedDate.current = todayKey; void beginChallenge(); }} /></>}
       </View>}
       {(alreadyPassed || answeredFirst || unavailable) ? <ActionButton
-        label={busy ? "Αποθήκευση…" : unavailable ? "Συνέχεια χωρίς ερώτηση →" : "Πάμε στην πρώτη διαδρομή →"}
+        label={busy ? "Αποθήκευση…" : unavailable ? "Συνέχεια χωρίς ερώτηση →" : "Διάλεξε τα ενδιαφέροντά σου →"}
         disabled={busy} onPress={() => void continueAfterQuestion()} /> : null}
       {answeredFirst ? <Text style={styles.tip}>Αυτή ήταν μόνο η πρώτη από 7 ερωτήσεις. Οι υπόλοιπες σε περιμένουν στην αρχική.</Text> : null}
       {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>Δεν ολοκληρώθηκε η μετάβαση. Δοκίμασε ξανά· η απάντησή σου διατηρείται.</Text> : null}
@@ -109,12 +116,16 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "transparent" },
-  content: { flexGrow: 1, width: "100%", maxWidth: 640, alignSelf: "center",
-    justifyContent: "center", paddingHorizontal: 18, paddingVertical: 18, paddingBottom: 36 },
-  heading: { gap: 12, marginBottom: 22 },
+  content: { flexGrow: 1, width: "100%", maxWidth: onboardingLayout.maxWidth, alignSelf: "center",
+    justifyContent: "center", paddingHorizontal: onboardingLayout.horizontal, paddingTop: 18 },
+  contentCompact: { justifyContent: "flex-start", paddingTop: 12 },
+  heading: { gap: 9, marginBottom: 17 },
+  headingCompact: { gap: 7, marginBottom: 12 },
   kicker: { color: colors.accentLight, fontSize: 10, lineHeight: 17, fontWeight: "900", letterSpacing: 1.1 },
-  title: { color: colors.text, fontSize: 29, lineHeight: 37, fontWeight: "900" },
-  copy: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
+  title: { color: colors.text, fontSize: onboardingLayout.titleSize,
+    lineHeight: onboardingLayout.titleLineHeight, fontWeight: "900" },
+  titleCompact: { fontSize: 25, lineHeight: 32 },
+  copy: { color: colors.textBody, fontSize: 14, lineHeight: 21 },
   notice: { borderRadius: 20, borderWidth: 1, borderColor: colors.borderStrong,
     backgroundColor: colors.surfaceRaised, padding: 20, gap: 12 },
   noticeTitle: { color: colors.text, fontSize: 20, fontWeight: "800", lineHeight: 28 },
