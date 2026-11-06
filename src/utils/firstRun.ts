@@ -3,10 +3,16 @@ import { getAthensDateKey } from "./dailyChallenge";
 import { createSharedDailyRecord } from "./sharedDailyChallenge";
 import type { DailyStore } from "../state/DailyStore";
 export const WELCOME_STORAGE_KEY = "@gnosi/welcome-v1";
+export const ONBOARDING_CATEGORY_KEY = "@gnosi/onboarding-category-v1";
+export type WelcomePhase = "welcome" | "question" | "choose" | "lesson";
+export function isWelcomePhase(value: string | null): value is WelcomePhase {
+  return value === "welcome" || value === "question" || value === "choose" || value === "lesson";
+}
+export const ONBOARDING_INTRO_LESSON_ID = "ancient-athens";
 export const LEGACY_WELCOME_KEYS = ["@gnosi/completed-lesson-ids", "@gnosi/in-progress-lesson-attempts", "@gnosi/saved-lesson-ids", "@gnosi/daily-challenge-v1", "@gnosi/daily-challenge-history-v1", "@gnosi/daily-challenge-preferences-v1"];
 export type WelcomeDestination = "daily" | "home" | "lesson";
 export function shouldShowWelcome(marker: string | null, userId: string | null, hasActivity: boolean, legacyValues: (string | null)[]): boolean {
-  return marker === null && userId === null && !hasActivity && legacyValues.every(value => value === null);
+  return isWelcomePhase(marker) || (marker === null && userId === null && !hasActivity && legacyValues.every(value => value === null));
 }
 /** Persist choices and, if requested, start a new challenge before marking setup
  * complete. Existing started/completed dates are never reset by the guide. */
