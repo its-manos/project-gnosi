@@ -221,7 +221,8 @@ export default function HomeScreen({
 
       <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
         <View style={styles.sectionRow}>
-          <Text style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
+          <Text accessibilityRole="header" style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
+          <View accessible={false} pointerEvents="none" style={styles.sectionRule} />
         </View>
         <View style={[styles.categoryGrid, tight && styles.tightCategoryGrid]}>
           {categories.map(category => {
@@ -252,13 +253,13 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Share spare height across sections while keeping each section’s contents together.
+  // Keep the action cards at their natural height. The atlas gets the remaining space.
   // Small viewports can still scroll after the density fallback.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
     paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
-  compactContent: { gap: 8, paddingBottom: 5 },
+  compactContent: { gap: 10, paddingBottom: 6 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
-  compactHero: { padding: 12, gap: 5 },
+  compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
   tightHeroTitle: { fontSize: 18, lineHeight: 23 },
   compactActionCard: { minHeight: 90, padding: 10 },
@@ -266,7 +267,7 @@ const styles = StyleSheet.create({
   compactCategory: { minHeight: 70 },
   tightCategory: { minHeight: 67, paddingVertical: 4, gap: 2 },
   tightCategoryLabel: { fontSize: 10, lineHeight: 12 },
-  tightWorlds: { gap: 6 },
+  tightWorlds: { gap: 4, paddingTop: 2 },
   tightSectionTitle: { fontSize: 16, lineHeight: 20 },
   tightCategoryGrid: { rowGap: 6 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
@@ -277,8 +278,8 @@ const styles = StyleSheet.create({
   levelCenter: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },
   levelCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
-  hero: { flexGrow: 1, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
-    overflow: "hidden", backgroundColor: "#1B2434", gap: 12, justifyContent: "center" },
+  hero: { padding: 18, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
+    overflow: "hidden", backgroundColor: "#1B2434", gap: 10 },
   heroIntro: { paddingRight: 76, gap: 3 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
@@ -292,13 +293,13 @@ const styles = StyleSheet.create({
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2, overflow: "hidden" },
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
-  actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
+  actions: { flexDirection: "row", gap: 10 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
-    padding: 12, justifyContent: "center", gap: 4, overflow: "hidden" },
+    padding: 12, justifyContent: "flex-start", gap: 4, overflow: "hidden" },
   quizCard: { backgroundColor: "#201D30", borderColor: "#514463" },
-  actionHalo: { position: "absolute", width: 110, height: 110, borderRadius: 55, right: -36, top: -54 },
-  quizHalo: { backgroundColor: "rgba(177,165,255,0.10)" },
-  quickQuizHalo: { backgroundColor: "rgba(108,224,182,0.09)" },
+  actionHalo: { position: "absolute", width: 88, height: 88, borderRadius: 44, right: -37, top: -44 },
+  quizHalo: { backgroundColor: "rgba(177,165,255,0.07)" },
+  quickQuizHalo: { backgroundColor: "rgba(108,224,182,0.06)" },
   dailySegments: { flex: 1, flexDirection: "row", gap: 2, marginHorizontal: 7, maxWidth: 58 },
   dailySegment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: "#4A405D" },
   dailySegmentFilled: { backgroundColor: colors.accentLight },
@@ -311,12 +312,13 @@ const styles = StyleSheet.create({
   quickQuizIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  worlds: { gap: 9, flexGrow: 1, justifyContent: "center" },
-  sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  worlds: { gap: 6, flexGrow: 1, paddingTop: 6 },
+  sectionRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  sectionRule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(177,165,255,0.32)" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
-    alignContent: "flex-start", columnGap: 8, rowGap: 8 },
+    flexGrow: 1, alignContent: "space-evenly", columnGap: 8, rowGap: 8 },
   category: { width: "22.7%", minHeight: 96, borderRadius: 14,
     alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
   categoryPlatform: { width: 62, height: 62, borderRadius: 31,

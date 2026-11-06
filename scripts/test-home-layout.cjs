@@ -541,7 +541,7 @@ let scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
   "dashboard content fills the usable viewport on taller screens");
 assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "free viewport height grows dashboard cards instead of the margins");
+  "dashboard sections start below the header");
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
@@ -551,21 +551,19 @@ assert.equal(homeSections.at(-1).props.testID, "home-exploration",
 
 assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 1,
-  "Continue is a flexible-height card");
-assert.equal(homeSections[2].props.style.flexGrow, 1,
-  "daily quiz and review cards expand vertically");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, undefined,
+  "lesson card height follows its content");
+assert.equal(homeSections[2].props.style.flexGrow, undefined,
+  "quiz cards match one another without absorbing viewport height");
 assert.equal(homeSections[3].props.style[0].flexGrow, 1,
   "knowledge worlds can expand to use spare height");
 const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap");
 assert.ok(flexibleWorldGrid, "knowledge-world cards stay in the existing grid");
-assert.equal(flexibleWorldGrid.props.style[0].alignContent, "flex-start",
-  "category rows stay together when the viewport grows");
+assert.equal(flexibleWorldGrid.props.style[0].alignContent, "space-evenly",
+  "spare space is balanced around the category rows");
 assert.equal(flexibleWorldGrid.props.style[0].rowGap, 8,
   "world-row margins stay fixed");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "center",
-  "the lesson heading, title and action stay grouped as the card grows");
 
 assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measurements settle");
 assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
@@ -573,7 +571,7 @@ assert.equal(scroll.props.alwaysBounceVertical, false);
 assert.equal(scroll.props.overScrollMode, "never", "disable Android overscroll glow");
 scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
 scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[1].gap, 8,
+assert.equal(scroll.props.contentContainerStyle[1].gap, 10,
   "shorter usable viewport activates compact layout even with a tall window");
 assert.equal(scroll.props.contentContainerStyle[2], false);
 scroll.props.onContentSizeChange(360, 711);
