@@ -11,8 +11,9 @@ import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
-import { MotionCounter, MotionHeroAccent, MotionIcon, MotionPressable, MotionQuizGlow, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import { MotionCounter, MotionPressable, MotionQuizGlow, MotionView, MotionXpCircle } from "../components/HomeMotion";
 import HomeAtlasBackground from "../components/HomeAtlasBackground";
+import HomeLessonBackdrop from "../components/HomeLessonBackdrop";
 import HomeStreakBadge from "../components/HomeStreakBadge";
 
 type Props = {
@@ -43,14 +44,8 @@ const shortLabels: Record<string, string> = {
   "difficult-history": "Δύσκολη ιστορία",
 };
 
-// Visual previews only. Game routes and persistence arrive in a later phase.
-const upcomingMiniGames = [
-  { id: "sudoku", title: "Sudoku", symbol: "▦" },
-  { id: "hangman", title: "Κρεμάλα", symbol: "Α _" },
-] as const;
-
 export default function HomeScreen({
-  categories, subcategories, featuredLesson, progressLoaded, completedCount,
+  categories, subcategories, featuredLesson, progressLoaded,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
   onOpenQuickQuiz, quickQuizInProgress, onOpenProfile,
@@ -150,10 +145,10 @@ export default function HomeScreen({
                 rotation={-90} origin="25, 25" /> : null}
             </Svg>
             <View pointerEvents="none" style={styles.levelCenter}>
-              <Text style={styles.levelCaption}>ΕΠ.</Text>
               <Text testID="home-level" style={styles.levelNumber} numberOfLines={1}
                 adjustsFontSizeToFit>{profileReady ? profile.level : "—"}</Text>
             </View>
+            <Text style={styles.levelCaption}>Επίπεδο</Text>
           </MotionPressable> : null}
         </View>
       </MotionView>
@@ -165,28 +160,24 @@ export default function HomeScreen({
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
             + (heroLocation ? ". " + heroLocation : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
-        <MotionHeroAccent />
-        <View style={styles.heroTop}>
+        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} />
+        <View style={styles.heroIntro}>
           <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
-          <Text style={styles.heroCount}>{heroIsResume
-            ? String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"
-            : completedCount + " ολοκληρωμένα"}</Text>
+          {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}>
+            {heroLocation}</Text> : null}
+          {heroIsResume ? <Text style={styles.heroCount}>
+            {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
+          </Text> : null}
         </View>
-        <Text style={[styles.heroTitle, tight && styles.tightHeroTitle]} numberOfLines={2}>
+        <Text style={[styles.heroTitle, tight && styles.tightHeroTitle]}>
           {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
         </Text>
-        {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}
-          numberOfLines={1} ellipsizeMode="tail">{heroLocation}</Text>
-          : !heroIsResume ? <Text style={styles.heroDescription} numberOfLines={1}>
-            {hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
-          </Text> : null}
         {heroIsResume && inProgressQuestionCount > 0 ?
           <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]}>
               <View pointerEvents="none" style={styles.trackSheen} />
             </View></View>
           : null}
         <View style={styles.heroButton}>
-          <MotionShimmer />
           <Text style={styles.heroButtonLabel}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
           <Text style={styles.heroButtonLabel}>→</Text>
         </View>
@@ -222,45 +213,26 @@ export default function HomeScreen({
       <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
         <View style={styles.sectionRow}>
           <Text style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
-          <Text style={styles.worldCount}>{categories.length} κόσμοι</Text>
         </View>
         <View style={[styles.categoryGrid, tight && styles.tightCategoryGrid]}>
-          {categories.map((category, index) => {
+          {categories.map(category => {
             const WorldIllustration = getCategoryWorldIcon(category.id);
             return (
               <MotionPressable key={category.id} testID={"home-category-" + category.id}
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
                 onPress={() => onOpenCategory(category.id)}
                 style={({ pressed }) => [styles.category, compact && styles.compactCategory, tight && styles.tightCategory, pressed && styles.pressed]}>
-                {WorldIllustration
-                  ? <MotionIcon index={index}><WorldIllustration size={32} displayScale={1.18} /></MotionIcon>
-                  : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
+                <View style={[styles.categoryPlatform, tight && styles.tightCategoryPlatform]} accessible={false} pointerEvents="none">
+                  {WorldIllustration
+                    ? <WorldIllustration size={tight ? 38 : 46} displayScale={1.18} />
+                    : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
+                </View>
                 <Text style={[styles.categoryLabel, tight && styles.tightCategoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
                   {shortLabels[category.id] ?? category.title}
                 </Text>
               </MotionPressable>
             );
           })}
-        </View>
-      </MotionView>
-
-      <MotionView entranceDelay={250} testID="home-mini-games" style={[styles.miniGames, tight && styles.tightMiniGames]}>
-        <Text style={[styles.miniGamesHeading, tight && styles.tightMiniGamesHeading]}>Μίνι παιχνίδια</Text>
-        <View style={styles.miniGamesRow}>
-          {upcomingMiniGames.map(game =>
-            <View key={game.id} testID={"home-mini-game-" + game.id}
-              style={[styles.miniGameCard, tight && styles.tightMiniGameCard]}
-              accessible accessibilityLabel={game.title + ", σύντομα διαθέσιμο"}
-              accessibilityState={{ disabled: true }}>
-              <View style={[styles.miniGameIcon, tight && styles.tightMiniGameIcon]} accessible={false}>
-                <Text style={styles.miniGameSymbol}>{game.symbol}</Text>
-              </View>
-              <View style={styles.miniGameCopy}>
-                <Text style={styles.miniGameTitle} numberOfLines={1} adjustsFontSizeToFit>{game.title}</Text>
-                <Text style={styles.miniGameSoon}>Σύντομα</Text>
-              </View>
-            </View>
-          )}
         </View>
       </MotionView>
       </ScrollView>
@@ -289,27 +261,21 @@ const styles = StyleSheet.create({
   tightWorlds: { gap: 6 },
   tightSectionTitle: { fontSize: 16, lineHeight: 20 },
   tightCategoryGrid: { rowGap: 6 },
-  tightMiniGames: { gap: 5 },
-  tightMiniGamesHeading: { fontSize: 14, lineHeight: 19 },
-  tightMiniGameCard: { minHeight: 56, paddingVertical: 6 },
-  tightMiniGameIcon: { width: 32, height: 32 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
-  logo: { color: colors.accentLight, fontSize: 21, lineHeight: 27, fontWeight: "900", letterSpacing: 2.4 },
+  logo: { color: colors.accentLight, fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 2.4 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
-  levelBadge: { width: 50, height: 50, alignItems: "center", justifyContent: "center",
-    borderRadius: 25, backgroundColor: colors.surface },
+  levelBadge: { height: 50, flexDirection: "row", alignItems: "center", gap: 5 },
   levelRing: { position: "absolute", top: 0, left: 0 },
-  levelCenter: { alignItems: "center", justifyContent: "center" },
-  levelCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 10, fontWeight: "900" },
+  levelCenter: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },
+  levelCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
-  hero: { flexGrow: 2, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#5B5070",
-    backgroundColor: "#1B2434", gap: 6, justifyContent: "space-between" },
-  heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  hero: { flexGrow: 2, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
+    overflow: "hidden", backgroundColor: "#1B2434", gap: 12, justifyContent: "space-between" },
+  heroIntro: { minHeight: 86, paddingRight: 96, gap: 6, justifyContent: "center" },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
-  heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1, textAlign: "right" },
-  heroTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "800" },
-  heroDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 16 },
-  heroLocation: { color: colors.accentLight, fontSize: 11, lineHeight: 15,
+  heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
+  heroTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "700" },
+  heroLocation: { color: "#D1C9EB", fontSize: 12, lineHeight: 17,
     fontWeight: "700" },
   track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginTop: 2 },
   trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.accentLight },
@@ -336,27 +302,16 @@ const styles = StyleSheet.create({
   worlds: { gap: 9, flexGrow: 2 },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
-  worldCount: { color: colors.textMuted, fontSize: 11 },
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
     alignContent: "stretch", flexGrow: 1, columnGap: 8, rowGap: 8 },
-  category: { width: "22.7%", minHeight: 78, backgroundColor: "#182133",
-    borderColor: colors.border, borderTopColor: "#44475D", borderWidth: 1, borderRadius: 14,
-    alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 4 },
+  category: { width: "22.7%", minHeight: 96, borderRadius: 14,
+    alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
+  categoryPlatform: { width: 62, height: 62, borderRadius: 31,
+    backgroundColor: "rgba(177,165,255,0.07)", borderWidth: 1, borderColor: "rgba(177,165,255,0.13)",
+    alignItems: "center", justifyContent: "center" },
+  tightCategoryPlatform: { width: 48, height: 48, borderRadius: 24 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
-  miniGames: { gap: 8, flexGrow: 1 },
-  miniGamesHeading: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: "800" },
-  miniGamesRow: { flexDirection: "row", gap: 10, flexGrow: 1 },
-  miniGameCard: { flex: 1, minHeight: 62, paddingHorizontal: 10, paddingVertical: 8,
-    flexDirection: "row", alignItems: "center", gap: 9, borderRadius: 14,
-    backgroundColor: colors.surface, borderColor: colors.border, borderTopColor: "#3B3C52",
-    borderWidth: 1 },
-  miniGameIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center",
-    justifyContent: "center", backgroundColor: colors.accentSurface },
-  miniGameSymbol: { color: colors.accentLight, fontSize: 18, lineHeight: 23, fontWeight: "800" },
-  miniGameCopy: { flex: 1, gap: 1 },
-  miniGameTitle: { color: colors.text, fontSize: 13, lineHeight: 18, fontWeight: "800" },
-  miniGameSoon: { color: colors.textMuted, fontSize: 10, lineHeight: 14 },
   pressed: { opacity: 0.76 },
 });
