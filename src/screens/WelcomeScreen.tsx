@@ -48,11 +48,14 @@ export default function WelcomeScreen({
   useEffect(() => () => { mounted.current = false; }, []);
   // Restore preferences when returning to Interests from a saved category
   // stage, including after a process restart. Never overwrite a user edit.
+  const savedTopicSignature = preferences.topicIds.join("|");
   useEffect(() => {
     if (preferencesLoaded && (replay || phase === "choose") && !interestsTouched.current) {
       setTopics([...preferences.topicIds]);
     }
-  }, [preferencesLoaded, replay, phase, preferences.topicIds]);
+    // Use a primitive dependency so reconstructed preference arrays do not
+    // trigger repeated hydration while the player is looking at the guide.
+  }, [preferencesLoaded, replay, phase, savedTopicSignature]);
 
   async function run(action: () => Promise<boolean | void>) {
     if (locked.current) return;
