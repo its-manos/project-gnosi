@@ -5,17 +5,26 @@ import { motionAllowed, playPreferences } from "./preferences";
 export function usePlayMotion() {
   return motionAllowed(useSyncExternalStore(playPreferences.subscribe, playPreferences.getSnapshot, playPreferences.getSnapshot));
 }
-/** A restored locked answer is already active at mount, so it never pulses. */
-export function AnswerMotion({ active, children }: { active: boolean; children: ReactNode }) {
-  const enabled = usePlayMotion(), previous = useRef(active), [scale] = useState(() => new Animated.Value(1));
+/** Pulse on a new selection or a changed value. Initial and restored states stay still. */
+export function AnswerMotion({ active = false, pulseKey, children }: {
+  active?: boolean;
+  pulseKey?: string | number;
+  children: ReactNode;
+}) {
+  const enabled = usePlayMotion();
+  const previous = useRef({ active, pulseKey });
+  const [scale] = useState(() => new Animated.Value(1));
   useEffect(() => {
-    const fresh = active && !previous.current; previous.current = active;
-    if (!enabled || !fresh) { scale.setValue(1); return; }
+    const valueChanged = pulseKey !== undefined && pulseKey !== previous.current.pulseKey;
+    const selected = active && !previous.current.active;
+    previous.current = { active, pulseKey };
+    if (!enabled || (!valueChanged && !selected)) { scale.setValue(1); return; }
     const animation = Animated.sequence([
-      Animated.timing(scale, { toValue: 1.025, duration: 90, useNativeDriver: true, isInteraction: false }),
+      Animated.timing(scale, { toValue: valueChanged ? 1.045 : 1.025, duration: 90, useNativeDriver: true, isInteraction: false }),
       Animated.timing(scale, { toValue: 1, duration: 140, useNativeDriver: true, isInteraction: false }),
     ]);
-    animation.start(); return () => { animation.stop(); scale.setValue(1); };
-  }, [active, enabled, scale]);
+    animation.start();
+    return () => { animation.stop(); scale.setValue(1); };
+  }, [active, pulseKey, enabled, scale]);
   return <Animated.View style={{ transform: [{ scale }] }}>{children}</Animated.View>;
 }

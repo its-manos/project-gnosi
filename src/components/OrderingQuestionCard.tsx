@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AnswerMotion } from "../play/motion";
 import { evaluateAnswer } from "../quiz/engine";
 import type { OrderingQuestion } from "../quiz/types";
 import { colors } from "../theme";
@@ -61,28 +62,30 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
     {(!answered || !compactAnswered) ? <View style={styles.orderList}>
       {order.map((id, index) => {
         const atCorrectPlace = answered && id === correctOrder[index];
-        return <View key={id} testID={`ordering-item-${id}`}
-          style={[styles.item, atCorrectPlace && styles.itemCorrect, answered && !atCorrectPlace && styles.itemWrong]}>
-          <View style={[styles.number, atCorrectPlace && styles.numberCorrect]}>
-            <Text style={styles.numberText}>{String(index + 1).padStart(2, "0")}</Text>
+        return <AnswerMotion key={id} pulseKey={answered ? undefined : index}>
+          <View testID={`ordering-item-${id}`}
+            style={[styles.item, atCorrectPlace && styles.itemCorrect, answered && !atCorrectPlace && styles.itemWrong]}>
+            <View style={[styles.number, atCorrectPlace && styles.numberCorrect]}>
+              <Text style={styles.numberText}>{String(index + 1).padStart(2, "0")}</Text>
+            </View>
+            <Text style={[styles.label, labelSize]}>{labels.get(id) ?? id}</Text>
+            {!answered ? <View style={styles.controls}>
+              <Pressable testID={`ordering-up-${id}`} accessibilityRole="button"
+                accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα πάνω`}
+                accessibilityState={{ disabled: index === 0 }}
+                disabled={index === 0} style={({ pressed }) => [styles.control, index === 0 && styles.disabled, pressed && styles.pressed]}
+                onPress={() => move(id, -1)}><Text style={styles.arrow}>↑</Text></Pressable>
+              <Pressable testID={`ordering-down-${id}`} accessibilityRole="button"
+                accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα κάτω`}
+                accessibilityState={{ disabled: index === order.length - 1 }}
+                disabled={index === order.length - 1}
+                style={({ pressed }) => [styles.control, index === order.length - 1 && styles.disabled, pressed && styles.pressed]}
+                onPress={() => move(id, 1)}><Text style={styles.arrow}>↓</Text></Pressable>
+            </View> : <Text style={[styles.resultMark, atCorrectPlace ? styles.correctMark : styles.wrongMark]}>
+              {atCorrectPlace ? "✓" : "×"}
+            </Text>}
           </View>
-          <Text style={[styles.label, labelSize]}>{labels.get(id) ?? id}</Text>
-          {!answered ? <View style={styles.controls}>
-            <Pressable testID={`ordering-up-${id}`} accessibilityRole="button"
-              accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα πάνω`}
-              accessibilityState={{ disabled: index === 0 }}
-              disabled={index === 0} style={({ pressed }) => [styles.control, index === 0 && styles.disabled, pressed && styles.pressed]}
-              onPress={() => move(id, -1)}><Text style={styles.arrow}>↑</Text></Pressable>
-            <Pressable testID={`ordering-down-${id}`} accessibilityRole="button"
-              accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα κάτω`}
-              accessibilityState={{ disabled: index === order.length - 1 }}
-              disabled={index === order.length - 1}
-              style={({ pressed }) => [styles.control, index === order.length - 1 && styles.disabled, pressed && styles.pressed]}
-              onPress={() => move(id, 1)}><Text style={styles.arrow}>↓</Text></Pressable>
-          </View> : <Text style={[styles.resultMark, atCorrectPlace ? styles.correctMark : styles.wrongMark]}>
-            {atCorrectPlace ? "✓" : "×"}
-          </Text>}
-        </View>;
+        </AnswerMotion>;
       })}
     </View> : null}
     {!answered && !onActionChange ? <>

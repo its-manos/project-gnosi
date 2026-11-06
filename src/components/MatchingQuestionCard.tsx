@@ -85,7 +85,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
             const rightId = assignments[pair.leftId];
             const linked = rightId !== undefined;
             const selected = selectedLeft === pair.leftId;
-            return <AnswerMotion key={pair.leftId} active={!answered && selected}>
+            return <AnswerMotion key={pair.leftId} active={!answered && selected} pulseKey={answered ? undefined : rightId}>
               <Pressable testID={`matching-left-${pair.leftId}`}
                 accessibilityRole="button"
                 accessibilityLabel={linked ? `${pair.leftLabel}, ζευγάρι με ${labelsByRight.get(rightId)}` : pair.leftLabel}
@@ -105,7 +105,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
             const linkedId = Object.keys(assignments).find(leftId => assignments[leftId] === pair.rightId);
             const linked = linkedId !== undefined;
             const disabled = answered || selectedLeft === null;
-            return <AnswerMotion key={pair.rightId} active={!answered && linked}>
+            return <AnswerMotion key={pair.rightId} pulseKey={answered ? undefined : linkedId}>
               <Pressable testID={`matching-right-${pair.rightId}`}
                 accessibilityRole="button"
                 accessibilityLabel={linked ? `${pair.rightLabel}, ζευγάρι ${positionFor(linkedId)}` : pair.rightLabel}

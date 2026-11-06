@@ -6,6 +6,7 @@ import ProfileSectionHeader, { profileSectionLayout } from "../components/Profil
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import QuestionStageFooter from "../components/QuestionStageFooter";
 import QuestionStageProgress from "../components/QuestionStageProgress";
+import QuizReveal from "../components/QuizReveal";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import SourceLink from "../components/SourceLink";
 import SyncStatus from "../components/SyncStatus";
@@ -129,7 +130,7 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
         </>
         : active ? <>
           <QuestionStageProgress current={quiz.currentIndex + 1} total={quiz.questions.length} />
-          <SingleChoiceQuestionCard key={`${saved.id}:${q.id}`} id={q.id} question={q.prompt}
+          <QuizReveal key={`${saved.id}:${q.id}`}><SingleChoiceQuestionCard id={q.id} question={q.prompt}
             answers={order.map(index => q.content.answers[index])} correctIndex={order.indexOf(q.content.correctIndex)}
             explanation={q.explanation} badgeLabel={item.topicTitle}
             answer={answer === undefined ? undefined : order.indexOf(answer)}
@@ -159,7 +160,7 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
                   {q.sources.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή τεκμηρίωσης" }} />)}
                 </> : null}
               </> : null}
-            </>} />
+            </>} /></QuizReveal>
         </> : null}
     </ScrollView>
     {active && answer !== undefined ? <QuestionStageFooter action={{

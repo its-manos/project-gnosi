@@ -11,24 +11,26 @@ type Props = {
 };
 
 /** Fixed footer: confirm and continue never change its height or block the
- * question. Animate only a change of purpose, not enabled/disabled updates. */
+ * question. Give a quiet cue when confirmation becomes available or the purpose changes. */
 export default function QuestionStageFooter({ action, bottomInset = 12 }: Props) {
   const motionEnabled = usePlayMotion();
   const mode = action && !action.label.startsWith("Επιβεβαίωση") ? "continue" : "confirm";
-  const previousMode = useRef(mode);
+  const confirmState = mode !== "confirm" || !action ? "idle" : action.disabled ? "waiting" : "ready";
+  const previous = useRef({ mode, confirmState });
   const [opacity] = useState(() => new Animated.Value(1));
   const [offset] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    const changed = previousMode.current !== mode;
-    previousMode.current = mode;
-    if (!changed || !motionEnabled) {
+    const changed = previous.current.mode !== mode;
+    const becameReady = confirmState === "ready" && previous.current.confirmState === "waiting";
+    previous.current = { mode, confirmState };
+    if ((!changed && !becameReady) || !motionEnabled) {
       opacity.setValue(1);
       offset.setValue(0);
       return;
     }
-    opacity.setValue(0.82);
-    offset.setValue(4);
+    opacity.setValue(changed ? 0.82 : 0.9);
+    offset.setValue(changed ? 4 : 2);
     const animation = Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 165, useNativeDriver: true, isInteraction: false }),
       Animated.timing(offset, { toValue: 0, duration: 195, useNativeDriver: true, isInteraction: false }),
@@ -39,7 +41,7 @@ export default function QuestionStageFooter({ action, bottomInset = 12 }: Props)
       opacity.setValue(1);
       offset.setValue(0);
     };
-  }, [mode, motionEnabled, opacity, offset]);
+  }, [mode, confirmState, motionEnabled, opacity, offset]);
 
   return <View testID="question-stage-footer"
     style={[styles.shell, { paddingBottom: Math.max(12, bottomInset) }]}>

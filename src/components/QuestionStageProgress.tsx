@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View } from "react-native";
+import { AnswerMotion } from "../play/motion";
 import { colors } from "../theme";
 
 export default function QuestionStageProgress({ current, total }: { current: number; total: number }) {
   return <View style={styles.progress} accessible accessibilityRole="progressbar"
     accessibilityLabel="Πρόοδος ερωτήσεων"
     accessibilityValue={{ min: 0, max: total, now: current, text: `Ερώτηση ${current} από ${total}` }}>
-    <Text style={styles.count}>{current} / {total}</Text>
+    <AnswerMotion pulseKey={current}><Text style={styles.count}>{current} / {total}</Text></AnswerMotion>
     <View style={styles.track}>
       {Array.from({ length: total }, (_, index) => <View key={index}
         style={[styles.segment, index + 1 < current && styles.done, index + 1 === current && styles.current]} />)}

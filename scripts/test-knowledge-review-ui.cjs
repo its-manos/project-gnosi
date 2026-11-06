@@ -10,7 +10,7 @@ const react={useEffect:()=>{},useRef:value=>({current:value}),useState:init=>{co
  const store=new LearningStore(null,{getItem:async()=>null,setItem:async()=>{}});await store.start();const daily=emptyDailyDocument();
  const modelHook=()=>({model:buildKnowledgeModel({...store.getSnapshot().backup,...store.getSnapshot()},daily,today),today,ready:store.getSnapshot().ready});
  const session={'../state/LearningSession':{useLearningSession:()=>({store}),useLearningSnapshot:store.getSnapshot,useDailySnapshot:()=>({ready:true,doc:daily})}};
- const components=Object.fromEntries(['ActionButton','AtlasCard','ProfileSectionHeader','ProgressGradientBackground','QuestionStageFooter','QuestionStageProgress','SingleChoiceQuestionCard','SyncStatus','SourceLink'].map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]));
+ const components=Object.fromEntries(['ActionButton','AtlasCard','ProfileSectionHeader','ProgressGradientBackground','QuestionStageFooter','QuestionStageProgress','QuizReveal','SingleChoiceQuestionCard','SyncStatus','SourceLink'].map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]));
  const Screen=load('src/screens/KnowledgeReviewScreen.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,...components,'../hooks/useKnowledgeModel':{useKnowledgeModel:modelHook}}).default;
  const render=()=>{cursor=0;return Screen({onBack:()=>backs++});},button=(tree,label)=>nodes(tree).find(n=>n.type==='ActionButton'&&n.props.label===label);
  const card=tree=>nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
