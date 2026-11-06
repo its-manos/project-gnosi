@@ -24,6 +24,8 @@ const restore = progress => readQuickQuiz(JSON.stringify({ version: 1, ...progre
 
 const dailyIds = new Set(daily.map(question => question.id));
 const dailyPrompts = new Set(daily.map(question => question.question));
+const bankById = new Map(quickQuizQuestions.map(question => [question.id, question]));
+assert.equal(quickQuizQuestions.length, 30);
 assert.equal(new Set(quickQuizQuestions.map(question => question.id)).size, quickQuizQuestions.length);
 for (const question of quickQuizQuestions) {
   assert.ok(!dailyIds.has(question.id) && !dailyPrompts.has(question.prompt));
@@ -33,6 +35,23 @@ for (const question of quickQuizQuestions) {
 
 let progress = readQuickQuiz(null);
 assert.deepEqual(progress, emptyQuickQuiz());
+const shuffled = startQuickQuiz(progress, () => 0.5);
+for (const question of shuffled.round.questions) {
+  const authored = bankById.get(question.id).content;
+  assert.notDeepEqual(question.content.answers, authored.answers);
+  assert.deepEqual([...question.content.answers].sort(), [...authored.answers].sort());
+  assert.equal(question.content.answers[question.content.correctIndex], authored.answers[authored.correctIndex]);
+}
+const legacyRound = {
+  ...shuffled,
+  round: { ...shuffled.round, questions: shuffled.round.questions.map(question => bankById.get(question.id)) },
+};
+const legacyToken = questionToken(legacyRound.round);
+const legacyIndex = legacyRound.round.questions[0].content.correctIndex;
+const legacyAnswered = playQuickQuiz(legacyRound, legacyRound.round.id, legacyToken, { type: "answer", value: legacyIndex });
+const resumed = startQuickQuiz(restore(legacyAnswered));
+assert.deepEqual(resumed, legacyAnswered, "pre-shuffle rounds resume with their original option order");
+assert.equal(quickQuizStreaks(resumed.round).current, 1);
 const recentlyDealt = [];
 const allDealt = new Set();
 let recalled = false;
@@ -84,4 +103,4 @@ for (let number = 1; number <= 15; number++) {
 assert.ok(recalled, "a miss returns after a gap and a correct recall clears it");
 assert.equal(allDealt.size, quickQuizQuestions.length);
 assert.throws(() => readQuickQuiz(JSON.stringify({ version: 2, ...progress })), /invalid_quick_quiz_progress/);
-console.log("Quick Quiz selection, resume, scoring, recall and duplicate guards passed.");
+console.log("Quick Quiz selection, choice shuffling, resume, scoring, recall and duplicate guards passed.");

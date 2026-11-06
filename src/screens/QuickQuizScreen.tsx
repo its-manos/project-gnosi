@@ -37,6 +37,13 @@ function QuestionSources({ question }: { question: ChoiceQuestion }) {
     source={{ ...source, publisher: source.publisher ?? "Πηγή" }} />)}</>;
 }
 
+function ResultStat({ value, label }: { value: string | number; label: string }) {
+  return <View style={styles.stat} accessible accessibilityLabel={`${label}, ${value}`}>
+    <Text style={styles.statValue}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>;
+}
+
 export default function QuickQuizScreen({ game, scope, onHome }: Props) {
   const insets = useSafeAreaInsets();
   const entered = useRef(false);
@@ -96,6 +103,8 @@ export default function QuickQuizScreen({ game, scope, onHome }: Props) {
   }
 
   const results = round?.completed ? calculateQuizResults(round) : null;
+  const streaks = round ? quickQuizStreaks(round) : null;
+  const perfect = results?.correctCount === QUICK_QUIZ_SIZE;
   // Opening from Home normally deals a new round. If saving that round fails,
   // the previous result stays available with the same retry action.
   const showResults = progress && round?.completed && results && entered.current &&
@@ -124,21 +133,31 @@ export default function QuickQuizScreen({ game, scope, onHome }: Props) {
           answer={round.answers[missed.id].value as number} onConfirm={() => {}}
           badgeLabel={categoryLabels[missed.categoryId]} compactAnswered feedbackExtra={<QuestionSources question={missed} />} />;
       }) : <View style={styles.results} testID="quick-quiz-results">
-        <View style={styles.scoreCard}>
-          <Text style={styles.eyebrow}>Ο ΓΥΡΟΣ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
+        <View style={[styles.scoreCard, perfect && styles.perfectScoreCard]}>
+          <Text accessibilityRole="header" style={[styles.eyebrow, perfect && styles.perfectLabel]}>
+            {perfect ? "ΤΕΛΕΙΟΣ ΓΥΡΟΣ" : "Ο ΓΥΡΟΣ ΣΟΥ"}
+          </Text>
           <Text style={styles.score} accessibilityLabel={`${results.correctCount} στις ${results.total} σωστές`}>
             {results.correctCount}<Text style={styles.scoreTotal}> / {results.total}</Text>
           </Text>
-          <Text style={styles.body}>Καλύτερο σερί γύρου · {quickQuizStreaks(round).best}</Text>
-        </View>
-        <View style={styles.stats}>
-          <Text style={styles.body}>Ρεκόρ σκορ · {progress.bestScore}/{QUICK_QUIZ_SIZE}</Text>
-          <Text style={styles.body}>Ρεκόρ σερί · {progress.bestStreak}</Text>
-          <Text style={styles.body}>Γύροι · {progress.roundsCompleted}</Text>
+          <View style={styles.scoreMarks} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            {round.questions.map(item => {
+              const missed = results.incorrectQuestionIds.includes(item.id);
+              return <View key={item.id} style={[styles.scoreMark, missed && styles.missedMark]}>
+                <Text style={[styles.scoreMarkText, missed && styles.missedMarkText]}>{missed ? "×" : "✓"}</Text>
+              </View>;
+            })}
+          </View>
+          <Text style={styles.body}>Καλύτερο σερί γύρου · {streaks?.best}</Text>
         </View>
         <NextButton label="Νέος γύρος" onPress={newRound} disabled={busy} />
         {results.incorrectQuestionIds.length ? <Pressable accessibilityRole="button" style={styles.review}
           onPress={() => setReview(true)}><Text style={styles.reviewText}>Δες τα λάθη σου</Text></Pressable> : null}
+        <View style={styles.stats}>
+          <ResultStat label="Ρεκόρ σκορ" value={`${progress.bestScore}/${QUICK_QUIZ_SIZE}`} />
+          <ResultStat label="Ρεκόρ σερί" value={progress.bestStreak} />
+          <ResultStat label="Γύροι" value={progress.roundsCompleted} />
+        </View>
       </View> : null}
       {round && !round.completed && question ? <>
         <View style={styles.progress}>
@@ -153,7 +172,7 @@ export default function QuickQuizScreen({ game, scope, onHome }: Props) {
         <SingleChoiceQuestionCard key={`${round.id}:${question.id}`} id={question.id} question={question.prompt}
           answers={question.content.answers} correctIndex={question.content.correctIndex}
           explanation={question.explanation} questionNumber={round.currentIndex + 1} answer={answer}
-          onConfirm={confirm} badgeLabel={categoryLabels[question.categoryId]} compactAnswered
+          onConfirm={confirm} badgeLabel={categoryLabels[question.categoryId]} compactAnswered combo={streaks?.current}
           feedbackExtra={<QuestionSources question={question} />} />
         {answer !== undefined ? <NextButton
           label={round.currentIndex + 1 === QUICK_QUIZ_SIZE ? "Αποτελέσματα" : "Επόμενη ερώτηση"}
@@ -177,10 +196,21 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.accentLight, fontSize: 11, fontWeight: "900", letterSpacing: 1 },
   results: { flex: 1, justifyContent: "center", gap: 12 },
   scoreCard: { backgroundColor: "#1B2034", borderColor: "#6A618C", borderWidth: 1, borderRadius: 20,
-    padding: 20, alignItems: "center", gap: 6 },
+    padding: 16, alignItems: "center", gap: 8 },
+  perfectScoreCard: { borderColor: "#B38A53", backgroundColor: "#292335" },
+  perfectLabel: { color: "#F3CB89" },
   score: { color: colors.text, fontSize: 52, fontWeight: "900" },
   scoreTotal: { color: colors.accentLight, fontSize: 24 },
-  stats: { backgroundColor: colors.surface, borderRadius: 16, padding: 14, gap: 6 },
+  scoreMarks: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6 },
+  scoreMark: { backgroundColor: colors.successSurface, borderRadius: 8, alignItems: "center",
+    minWidth: 30, paddingVertical: 4, paddingHorizontal: 6 },
+  scoreMarkText: { color: colors.success, fontWeight: "900" },
+  missedMark: { backgroundColor: colors.errorSurface },
+  missedMarkText: { color: colors.error },
+  stats: { backgroundColor: colors.surface, borderRadius: 16, padding: 10, flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  stat: { flexGrow: 1, alignItems: "center", gap: 3 },
+  statValue: { color: colors.text, fontSize: 17, fontWeight: "900" },
+  statLabel: { color: colors.textMuted, fontSize: 12, fontWeight: "700", textAlign: "center" },
   body: { color: colors.textBody, fontSize: 14, fontWeight: "700" },
   next: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48 },
   arrow: { color: colors.accentLight, fontSize: 20, fontWeight: "800" },

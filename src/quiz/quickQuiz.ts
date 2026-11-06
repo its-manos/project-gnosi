@@ -45,6 +45,16 @@ export function readQuickQuiz(bytes: string | null): QuickQuizProgress {
   return { round, roundsCompleted: raw.roundsCompleted, bestScore: raw.bestScore, bestStreak: raw.bestStreak, seen, missed };
 }
 
+function shuffleChoices(question: ChoiceQuestion, random: () => number): ChoiceQuestion {
+  const correctAnswer = question.content.answers[question.content.correctIndex];
+  const answers = [...question.content.answers];
+  for (let index = answers.length - 1; index > 0; index--) {
+    const swap = Math.floor(random() * (index + 1));
+    [answers[index], answers[swap]] = [answers[swap], answers[index]];
+  }
+  return { ...question, content: { ...question.content, answers, correctIndex: answers.indexOf(correctAnswer) } };
+}
+
 export function startQuickQuiz(progress: QuickQuizProgress, random = Math.random): QuickQuizProgress {
   if (progress.round && !progress.round.completed) return progress;
   const roundNumber = progress.roundsCompleted + 1;
@@ -73,7 +83,9 @@ export function startQuickQuiz(progress: QuickQuizProgress, random = Math.random
   });
   const seen = { ...progress.seen };
   for (const question of questions) seen[question.id] = roundNumber;
-  return { ...progress, seen, round: createQuizSession(`quick:${roundNumber}`, "challenge", questions) };
+  // Save the order in the round snapshot so a resumed answer keeps its meaning.
+  const dealt = questions.map(question => shuffleChoices(question, random));
+  return { ...progress, seen, round: createQuizSession(`quick:${roundNumber}`, "challenge", dealt) };
 }
 
 export function quickQuizStreaks(round: QuizSession) {
