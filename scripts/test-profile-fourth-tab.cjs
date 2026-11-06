@@ -38,6 +38,13 @@ for (const callback of ["onStats", "onAccount", "onInterests", "onGuide", "onSav
   assert.match(profile, new RegExp("onPress=\\{" + callback + "\\}"),
     "Existing Profile action must remain wired: " + callback);
 }
+assert.match(profile, /actionLabel="Ρυθμίσεις ›" actionAccessibilityLabel="Λογαριασμός και ρυθμίσεις"/,
+  "Account and settings remain accessible from the Profile header.");
+assert.doesNotMatch(profile, /<QuickLink title="Λογαριασμός"/,
+  "The duplicate Account tile must not return under Ο χώρος σου.");
+for (const title of ["Δραστηριότητα", "Ενδιαφέροντα", "Οδηγός"]) {
+  assert.ok(profile.includes(`<QuickLink title="${title}"`), title + " stays in Ο χώρος σου.");
+}
 assert.match(profile, /testID="profile-saved-link"/,
   "The Saved lessons destination stays discoverable from Profile.");
 assert.match(routes, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
