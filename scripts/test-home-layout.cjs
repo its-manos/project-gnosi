@@ -782,7 +782,10 @@ for (const component of ["MotionCardGlint", "MotionQuizGlyph", "MotionCtaArrow"]
 assert.match(homeMotionSource, /MotionCardGlint[\s\S]*pointerEvents="none"/,
   "card accents never intercept presses");
 const profileSource = fs.readFileSync(path.join(root, "src/screens/ProfileScreen.tsx"), "utf8");
-assert.match(profileSource, /testID="profile-saved-link"/, "saved lessons remain reachable from profile");
+assert.match(profileSource, /<QuickLink title="Αποθηκευμένα"/,
+  "saved lessons are visible as a full Profile shortcut");
+assert.match(profileSource, /title === "Αποθηκευμένα" \? "profile-saved-link"/,
+  "saved lessons tile keeps its stable test ID");
 const navigatorSource = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
 assert.match(navigatorSource, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
   "profile saved shortcut opens existing saved lessons route");
