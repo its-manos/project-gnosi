@@ -160,7 +160,7 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 14, heroScale) }, pressed && styles.pressed]}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 10, heroScale) }, pressed && styles.pressed]}
         onLayout={event => updateCardHeight("hero", event.nativeEvent.layout.height)}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
@@ -202,7 +202,7 @@ export default function HomeScreen({
 
       <MotionView entranceDelay={130} style={styles.actions}
         onLayout={event => updateCardHeight("quiz", event.nativeEvent.layout.height)}>
-        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : 10, quizScale) }, pressed && styles.pressed]}
+        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
@@ -225,7 +225,7 @@ export default function HomeScreen({
             <Text style={[styles.actionMeta, { fontSize: scaled(11, quizScale), lineHeight: scaled(15, quizScale) }]}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
           </View>
         </MotionPressable>
-        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : 10, quizScale) }, pressed && styles.pressed]}
+        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
           onPress={onOpenQuickQuiz}>
           <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quickQuizHalo]} />
