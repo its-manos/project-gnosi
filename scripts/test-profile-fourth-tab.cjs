@@ -34,7 +34,9 @@ assert.match(profile, /calculateDailyChallengeProgress\(dailyHistory\(daily\.doc
   "The streak must remain a daily-quiz streak, not an invented login streak.");
 assert.doesNotMatch(profile, /completedIds|completedLessons|totalLessonCount/,
   "Reading/learning completion belongs to Progress and Insights, not Profile.");
-for (const callback of ["onStats", "onAccount", "onInterests", "onGuide", "onSaved"]) {
+assert.match(profile, /onAction=\{onAccount\}/,
+  "The header Settings action is still wired to Account.");
+for (const callback of ["onStats", "onInterests", "onGuide", "onSaved"]) {
   assert.match(profile, new RegExp("onPress=\\{" + callback + "\\}"),
     "Existing Profile action must remain wired: " + callback);
 }
