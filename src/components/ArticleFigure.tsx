@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import type { InlineArticleImage } from "../data/articleMedia";
 import ResolvedCommonsImage from "./ResolvedCommonsImage";
-import { colors } from "../theme";
+import { reading } from "../theme";
 
 type Props = { figure: InlineArticleImage };
 
@@ -48,23 +48,23 @@ const styles = StyleSheet.create({
   imageFrame: {
     overflow: "hidden",
     borderRadius: 16,
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: reading.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: reading.border,
   },
   // Reserve the space before remote images load to avoid changing scroll positions.
   // Contain preserves the whole photo/diagram, even when its source is portrait.
   image: { width: "100%", aspectRatio: 4 / 3, minHeight: 210, maxHeight: 340 },
   caption: {
-    color: "#B2B6C9",
-    fontSize: 12,
-    lineHeight: 19,
+    color: reading.muted,
+    fontSize: 13,
+    lineHeight: 21,
     marginTop: 9,
   },
   credit: {
-    color: colors.accentLight,
-    fontSize: 10,
-    lineHeight: 16,
+    color: reading.accent,
+    fontSize: 12,
+    lineHeight: 18,
     marginTop: 5,
   },
 });
