@@ -115,6 +115,12 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  dimensions={height:830,width:390,fontScale:1};tree=draw();
  button(tree,'Συνέχεια →').props.onPress();await flush();tree=draw();
  assert.equal(phase,'choose','Interests precede the selected first-lesson category');
+ press(tree,'Προηγούμενο βήμα');await flush();tree=draw();
+ assert.equal(phase,'interests','Back from Category returns to Interests');
+ assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,3,
+   'Back navigation preserves the selected interest draft');
+ button(tree,'Συνέχεια →').props.onPress();await flush();tree=draw();
+ assert.equal(phase,'choose');
  assert.equal(savedInterests.topicIds.length,3);
  assert.equal(savedInterests.difficulty,initial.difficulty,'Keep existing difficulty');
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 4 από 4'));
@@ -173,6 +179,16 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(await guide.props.onSaveInterests(choices),true);
  assert.deepEqual([...navStore.getSnapshot().doc.preferences.value.topicIds].sort(),[...choices.topicIds].sort(),'Onboarding topics reach synced preferences before choosing a category');
  assert.equal(navStore.getSnapshot().doc.preferences.value.difficulty,choices.difficulty,'Onboarding preserves difficulty');
+ routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
+ assert.equal(guide.props.phase,'choose');
+ // Native back should follow the reversed stage order without dropping saved preferences.
+ const onBackFromCategory=latestNavEffect();
+ onBackFromCategory();
+ assert.equal(backHandler(),true);
+ await flush();
+ routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
+ assert.equal(guide.props.phase,'interests');
+ assert.equal(await guide.props.onSaveInterests(choices),true);
  routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
  assert.equal(guide.props.phase,'choose');
  assert.equal(await guide.props.onBeginLesson('science'),true);
