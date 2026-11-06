@@ -1,10 +1,15 @@
 /**
  * One visual identity per knowledge world, shared by Home and the Category header.
- * Lightweight bundled Style C artwork; card/route/progress behavior lives elsewhere.
+ * Bundled sculpted artwork; card, route, and progress behavior live elsewhere.
  */
 import {
-  CultureWorldIcon, DifficultHistoryWorldIcon, GeographyWorldIcon,
-  HistoryWorldIcon, NatureWorldIcon, ScienceWorldIcon, TechnologyWorldIcon,
+  CultureWorldIcon,
+  DifficultHistoryWorldIcon,
+  GeographyWorldIcon,
+  HistoryWorldIcon,
+  NatureWorldIcon,
+  ScienceWorldIcon,
+  TechnologyWorldIcon,
 } from "./CategoryArtworkIcons";
 
 export const categoryWorldIcons: Record<string, typeof HistoryWorldIcon> = {

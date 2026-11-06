@@ -1,7 +1,14 @@
 import { Image } from "expo-image";
 
 export type WorldIconProps = { size?: number; displayScale?: number };
-type IconId = "history" | "science" | "nature" | "culture" | "technology" | "geography" | "difficult-history";
+type IconId =
+  | "history"
+  | "science"
+  | "nature"
+  | "culture"
+  | "technology"
+  | "geography"
+  | "difficult-history";
 
 // Bundled artwork is deliberately static: Metro resolves every asset at build time,
 // so opening the Home or Category screen never requires a network request.
@@ -16,7 +23,10 @@ const artwork: Record<IconId, number> = {
 };
 
 function WorldArtwork({
-  icon, size = 32, displayScale = 1, testID,
+  icon,
+  size = 32,
+  displayScale = 1,
+  testID,
 }: WorldIconProps & { icon: IconId; testID: string }) {
   return (
     <Image
@@ -27,8 +37,11 @@ function WorldArtwork({
       accessible={false}
       pointerEvents="none"
       accessibilityIgnoresInvertColors
-      style={{ width: size, height: size,
-        transform: [{ scale: displayScale }] }}
+      style={{
+        width: size,
+        height: size,
+        transform: [{ scale: displayScale }],
+      }}
     />
   );
 }
