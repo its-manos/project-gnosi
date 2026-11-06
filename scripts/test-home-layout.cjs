@@ -771,6 +771,10 @@ const adventureProps = {
 };
 tree = adventure(adventureProps);
 assert.ok(nodes(tree).some(node => node.props?.testID === "subcategory-adventure-path"));
+const emptyAdventure = nodes(adventure({ ...adventureProps, lessons: [] }));
+assert.ok(emptyAdventure.some(node => node.props?.children === "Νέες αποστολές έρχονται"));
+assert.ok(!emptyAdventure.some(node => node.props?.testID === "adventure-continue" ||
+  node.props?.testID?.startsWith("adventure-node-")), "an empty path renders no destinations");
 assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("adventure-node-")).length, 30);
 assert.equal(nodes(tree).filter(node => node.props?.children?.startsWith?.("ΚΕΦΑΛΑΙΟ ")).length, 5);
 const categoryHeader = nodes(tree).find(node => node.props?.testID === "adventure-category-header");

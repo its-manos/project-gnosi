@@ -1,4 +1,4 @@
-/* Node-only regression checks for virtualized lesson lists; native views mocked. */
+/* Node-only regression checks for the virtualized saved-lesson list; native views mocked. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -29,7 +29,6 @@ const discovery = compile('src/utils/readingDiscovery.ts', { './lessonPath': pat
 const common = {
   '../utils/readingDiscovery': discovery,
   '../utils/lessonPath': pathRules,
-  '../utils/devLessonAccess': { devLessonsUnlocked: () => false },
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': native,
   '../components/AppHeader': { __esModule: true, default: 'AppHeader' },
@@ -37,7 +36,6 @@ const common = {
   '../components/ActionButton': { __esModule: true, default: 'ActionButton' },
   '../theme': { colors: {} },
 };
-const SubcategoryScreen = compile('src/screens/SubcategoryScreen.tsx', common).default;
 const SavedLessonsScreen = compile('src/screens/SavedLessonsScreen.tsx', common).default;
 const nodes = tree => tree && typeof tree === 'object'
   ? [tree, ...[tree.props?.children, tree.props?.ListHeaderComponent, tree.props?.ListEmptyComponent]
@@ -56,45 +54,27 @@ function list(tree, testID, length) {
 const ids = pathRules.lessonPaths['ancient-greece'];
 assert.ok(ids.length >= 20, 'use a genuine long editorial path');
 const catalogue = ids.map((id, index) => ({ id, title: `Lesson ${index + 1}`, categoryId: 'history', subcategoryId: 'ancient-greece' }));
-const category = { id: 'history', title: 'Ιστορία' };
-const subcategory = { id: 'ancient-greece', title: 'Αρχαία Ελλάδα', description: 'Ιστορική διαδρομή' };
 const opened = [], removed = [], backs = [];
 const base = { completedLessonIds: [ids[0]], inProgressLessonIds: [ids[3]], progressLoaded: true,
   onBack: () => backs.push('back'), onOpenLesson: id => opened.push(id) };
-const props = { ...base, category, subcategory, lessons: [...catalogue].reverse() };
-let tree = SubcategoryScreen(props);
-let flat = list(tree, 'subcategory-lessons-list', catalogue.length);
-assert.deepEqual(Array.from(flat.data, lesson => lesson.id), Array.from(ids), 'editorial path ordering is unchanged');
-assert.deepEqual(Array.from(flat.data, lesson => flat.keyExtractor(lesson)), Array.from(ids), 'stable lesson identity');
-assert.ok(nodes(tree).some(n => n.type === 'Text' && n.props.children === 'Αρχαία Ελλάδα'));
-let first = flat.renderItem({ item: flat.data[0], index: 0 });
-assert.equal(first.type, 'LessonCard');
-assert.equal(first.props.position, 1);
-assert.equal(first.props.lockedReason, undefined, 'first lesson remains available');
-first.props.onPress(); assert.deepEqual(opened, [ids[0]]);
-let second = flat.renderItem({ item: flat.data[1], index: 1 });
-assert.equal(second.props.lockedReason, undefined, 'completed predecessor unlocks the next');
-let fourth = flat.renderItem({ item: flat.data[3], index: 3 });
-assert.equal(fourth.props.lockedReason, undefined, 'existing unfinished lessons remain open');
-let fifth = flat.renderItem({ item: flat.data[4], index: 4 });
-assert.ok(fifth.props.lockedReason.includes('Lesson 4'));
-assert.equal(fifth.props.position, 5);
-let beforeHydration = SubcategoryScreen({ ...props, progressLoaded: false });
-assert.ok(list(beforeHydration, 'subcategory-lessons-list', catalogue.length)
-  .renderItem({ item: flat.data[0], index: 0 }).props.lockedReason.includes('Φόρτωση'));
-let empty = SubcategoryScreen({ ...props, subcategory: { id: 'future', title: 'Μελλοντική', description: '' } });
-list(empty, 'subcategory-lessons-list', 0);
-assert.ok(nodes(empty.props.ListEmptyComponent).some(n => n.type === 'Text' && n.props.children === 'Νέα μαθήματα έρχονται'));
-
-const saved = [catalogue[0], catalogue[4], catalogue[9]];
-const savedProps = { ...base, lessons: saved, catalogue, onRemoveSavedLesson: id => removed.push(id) };
-tree = SavedLessonsScreen(savedProps);
-flat = list(tree, 'saved-lessons-list', saved.length);
+const saved = [catalogue[0], catalogue[4], catalogue[3]];
+const savedProps = { ...base, lessons: saved, catalogue: [...catalogue].reverse(), onRemoveSavedLesson: id => removed.push(id) };
+const tree = SavedLessonsScreen(savedProps);
+const flat = list(tree, 'saved-lessons-list', saved.length);
 assert.deepEqual(Array.from(flat.data, lesson => flat.keyExtractor(lesson)), saved.map(lesson => lesson.id));
 const savedRow = flat.renderItem({ item: saved[1], index: 1 });
 const card = nodes(savedRow).find(n => n.type === 'LessonCard');
-assert.ok(card.props.lockedReason, 'saved bookmark does not bypass path locks');
-card.props.onPress(); assert.deepEqual(opened, [ids[0], ids[4]]);
+assert.match(card.props.lockedReason, /Lesson 4/, 'saved bookmarks retain editorial prerequisites');
+card.props.onPress(); assert.deepEqual(opened, [ids[4]]);
+const readingCard = index => nodes(flat.renderItem({ item: saved[index], index }))
+  .find(node => node.type === 'LessonCard');
+assert.equal(readingCard(0).props.readingState, 'completed');
+assert.equal(readingCard(2).props.readingState, 'in-progress');
+assert.equal(readingCard(2).props.lockedReason, undefined, 'unfinished lessons remain resumable');
+const loading = list(SavedLessonsScreen({ ...savedProps, progressLoaded: false }), 'saved-lessons-list', saved.length);
+const loadingCard = nodes(loading.renderItem({ item: saved[0], index: 0 })).find(node => node.type === 'LessonCard');
+assert.equal(loadingCard.props.lockedReason, 'Φόρτωση προόδου…');
+assert.equal(loadingCard.props.readingState, undefined);
 const remove = nodes(savedRow).find(n => n.type === 'Pressable');
 assert.ok(remove && nodes(remove).some(n => n.type === 'Text' && n.props.children === 'Αφαίρεση από αποθηκευμένα'));
 remove.props.onPress(); assert.deepEqual(removed, [ids[4]]);
@@ -105,4 +85,4 @@ list(emptySaved, 'saved-lessons-list', 0);
 const back = nodes(emptySaved.props.ListEmptyComponent).find(n => n.type === 'ActionButton');
 assert.equal(back.props.label, 'Επιστροφή στην αρχική'); back.props.onPress();
 assert.deepEqual(backs, ['back']);
-console.log('Virtualized lesson lists passed: bounded list rendering, stable keys/path order, progress locks, resumed access, saved removal, navigation, hydration and empty states. Native views mocked.');
+console.log('Saved lesson list passed: bounded rendering, stable keys, prerequisites, resumed access, saved removal, hydration, and empty-state navigation. Native views mocked.');
