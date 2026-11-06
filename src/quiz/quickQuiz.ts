@@ -56,10 +56,15 @@ function shuffleChoices(question: ChoiceQuestion, random: () => number): ChoiceQ
   return { ...question, content: { ...question.content, answers, correctIndex: answers.indexOf(correctAnswer) } };
 }
 
-export function startQuickQuiz(progress: QuickQuizProgress, random = Math.random): QuickQuizProgress {
+export function startQuickQuiz(
+  progress: QuickQuizProgress,
+  random = Math.random,
+  preferredTopicIds: readonly string[] = [],
+): QuickQuizProgress {
   if (progress.round && !progress.round.completed) return progress;
   const roundNumber = progress.roundsCompleted + 1;
   const missed = new Set(progress.missed);
+  const preferred = new Set(preferredTopicIds);
   const candidates = quickQuizQuestions.map(question => ({
     question, lastSeen: progress.seen[question.id] ?? 0, missed: missed.has(question.id), tie: random(),
   }));
@@ -85,8 +90,17 @@ export function startQuickQuiz(progress: QuickQuizProgress, random = Math.random
     if (recall && index === recallIndex) return recall.question;
     const eligible = candidates.filter(({ question }) =>
       question.difficulty === difficulty && !usedQuestions.has(question.id));
+    // Preserve at least three different subjects and the existing unseen/mistake
+    // priorities. After that, favor topics the player chose during onboarding.
+    const diversityFirst = preferred.size === 0 || usedCategories.size < 3;
+    const variety = (a: typeof candidates[number], b: typeof candidates[number]) =>
+      Number(usedCategories.has(a.question.categoryId)) - Number(usedCategories.has(b.question.categoryId));
+    const interest = (a: typeof candidates[number], b: typeof candidates[number]) =>
+      Number(!preferred.has(a.question.categoryId)) - Number(!preferred.has(b.question.categoryId));
     eligible.sort((a, b) => priority(a) - priority(b) ||
-      Number(usedCategories.has(a.question.categoryId)) - Number(usedCategories.has(b.question.categoryId)) ||
+      (diversityFirst ? variety(a, b) : 0) ||
+      interest(a, b) ||
+      (diversityFirst ? 0 : variety(a, b)) ||
       oldestFirst(a, b));
     const question = eligible[0].question;
     usedCategories.add(question.categoryId);
