@@ -1,35 +1,40 @@
-import UsageSharing from "../components/UsageSharing";
-import { useBetaAnalytics } from "../state/BetaAnalytics";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import ActionButton from "../components/ActionButton";
-import { DAILY_CHALLENGE_TOPICS, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
-import type { Lesson } from "../data/lessons";
-import type { WelcomeDestination } from "../utils/firstRun";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import type { Category } from "../data/lessons";
+import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
+import type { WelcomePhase } from "../utils/firstRun";
 import { colors } from "../theme";
+import ActionButton from "../components/ActionButton";
+import AtlasCard from "../components/AtlasCard";
+import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
+import UsageSharing from "../components/UsageSharing";
+import OnboardingDailyQuestion from "./OnboardingDailyQuestion";
 
 type Props = {
-  initialPreferences: DailyChallengePreferences;
+  phase: WelcomePhase;
   replay: boolean;
-  hasStartedChallenge: boolean;
-  lessonCandidates?: Lesson[];
-  onFinish: (preferences: DailyChallengePreferences, destination: WelcomeDestination, lessonId?: string) => Promise<boolean>;
+  categories: Category[];
+  selectedCategoryId: string | null;
+  preferences: DailyChallengePreferences;
+  preferencesLoaded: boolean;
+  onAdvance: (phase: WelcomePhase) => Promise<boolean>;
+  onBeginLesson: (categoryId: string) => Promise<boolean>;
   onSkip: (step?: number) => Promise<void>;
 };
 
-export default function WelcomeScreen({ initialPreferences, replay, hasStartedChallenge, onFinish, onSkip }: Props) {
-  const { analytics, enabled: usageEnabled } = useBetaAnalytics();
-  const [step, setStep] = useState(0);
-  const [topics, setTopics] = useState<string[]>(() => replay ? [...initialPreferences.topicIds] : []);
-  const [difficulty] = useState(initialPreferences.difficulty);
+export default function WelcomeScreen({
+  phase, replay, categories, selectedCategoryId, preferences, preferencesLoaded,
+  onAdvance, onBeginLesson, onSkip,
+}: Props) {
+  const [categoryId, setCategoryId] = useState(selectedCategoryId ?? "history");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
-  const locked = useRef(false), mounted = useRef(false);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  useEffect(() => {
-    if (usageEnabled) void analytics.track("onboarding_step_viewed", { screen: "welcome", onboarding_step: step + 1, replay });
-  }, [analytics, usageEnabled, step, replay]);
-
+  const locked = useRef(false);
+  const mounted = useRef(true);
+  const { height, fontScale } = useWindowDimensions();
+  const compact = height < 750 || fontScale > 1.25;
+  useEffect(() => () => { mounted.current = false; }, []);
 
   async function run(action: () => Promise<boolean | void>) {
     if (locked.current) return;
@@ -38,110 +43,138 @@ export default function WelcomeScreen({ initialPreferences, replay, hasStartedCh
     catch { if (mounted.current) setError(true); }
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   }
-  function advance(next: number) { if (!locked.current) { setStep(next); setError(false); } }
-  function finish() {
-    if (topics.length < 3 || topics.length > 5) return;
-    void run(() => onFinish({ topicIds: topics, difficulty }, "home"));
-  }
 
-  return <View style={styles.root} testID="welcome-flow">
+  const step = phase === "welcome" ? 1 : phase === "question" ? 2 : 3;
+  const selected = categories.find(category => category.id === categoryId);
+  return <View testID="welcome-flow" style={styles.root}>
+    <ProgressGradientBackground />
     <View style={styles.header}>
-      {step > 0 ? <Pressable style={styles.headerControl} disabled={busy} accessibilityRole="button" accessibilityLabel="Προηγούμενο βήμα" onPress={() => advance(step - 1)}><Text style={styles.link}>‹ Πίσω</Text></Pressable> : <Text style={styles.logo}>ΓΝΩΣΗ</Text>}
-      <Text style={styles.step} accessibilityLabel={`Βήμα ${step + 1} από 4`}>{step + 1} / 4</Text>
-      <Pressable style={styles.headerControl} disabled={busy} accessibilityRole="button" accessibilityLabel="Παράλειψη οδηγού" accessibilityState={{ disabled: busy }} onPress={() => void run(() => onSkip(step + 1))}><Text style={styles.link}>Παράλειψη</Text></Pressable>
+      <View style={styles.brand}><View style={styles.brandStar}><Text style={styles.brandGlyph}>✦</Text></View><Text style={styles.brandName}>ΓΝΩΣΗ</Text></View>
+      <Text accessibilityLabel={`Βήμα ${step} από 3`} style={styles.counter}>{step} / 3</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Παράλειψη οδηγού"
+        accessibilityState={{ disabled: busy }} disabled={busy} hitSlop={8}
+        onPress={() => void run(() => onSkip(step))} style={styles.skip}>
+        <Text style={styles.skipText}>Παράλειψη</Text>
+      </Pressable>
     </View>
-    <ScrollView key={step} style={styles.viewport} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {step === 0 ? <>
-        <View style={styles.heroMark} accessible={false}><Text style={styles.heroGlyph}>✦</Text></View>
-        <Text style={styles.eyebrow}>ΚΑΛΩΣ ΗΡΘΕΣ ΣΤΗ ΓΝΩΣΗ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Μια μικρή ανακάλυψη, κάθε μέρα.</Text>
-        <Text style={styles.body}>Για όσα πάντα αναρωτιόσουν και για όσα δεν είχες σκεφτεί να ρωτήσεις. Λίγη περιέργεια αρκεί για να ξεκινήσεις.</Text>
-        <Text style={styles.note}>Παίζεις χωρίς λογαριασμό. Αν θέλεις συγχρονισμό της προόδου σου, μπορείς να συνδεθείς αργότερα.</Text>
-        <UsageSharing />
-        <ActionButton label="Ας ξεκινήσουμε →" onPress={() => advance(1)} disabled={busy} />
-        <ActionButton label="Πήγαινε στην αρχική" onPress={() => void run(() => onSkip(step + 1))} secondary disabled={busy} />
-      </> : step === 1 ? <>
-        <Text style={styles.eyebrow}>ΒΡΕΣ ΤΟΝ ΡΥΘΜΟ ΣΟΥ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Δύο τρόποι να παίξεις.</Text>
-        <Text style={styles.body}>Μια γρήγορη πρόκληση ή μια διαδρομή με περισσότερες ανακαλύψεις; Μπορείς να απολαμβάνεις και τα δύο.</Text>
-        <View style={styles.modeCard} testID="welcome-daily-mode">
-          <View style={styles.modeHeading}><Text style={styles.modeGlyph} accessible={false}>⚡</Text><Text style={styles.modeTitle}>Καθημερινή πρόκληση</Text></View>
-          <Text style={styles.small}>7 κοινές ερωτήσεις κάθε μέρα, από διαφορετικά θέματα. Μετά από κάθε απάντηση, μια εξήγηση σε βοηθά να μάθεις κάτι νέο.</Text>
-          <Text style={styles.modeMeta}>Μια μικρή καθημερινή συνήθεια.</Text>
+    <View accessibilityLabel="Πρόοδος γνωριμίας" style={styles.track}>
+      {[1, 2, 3].map(number => <View key={number} style={[styles.segment, number <= step && styles.segmentActive]} />)}
+    </View>
+
+    {phase === "question" ? <OnboardingDailyQuestion
+      preferences={preferences} preferencesLoaded={preferencesLoaded}
+      onContinue={() => onAdvance("choose")} /> :
+    <ScrollView contentContainerStyle={[styles.content, compact && styles.contentCompact]}
+      showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      {phase === "welcome" ? <>
+        <View style={styles.hero} accessible={false}>
+          <View style={styles.heroRing} /><View style={styles.heroRingInner} />
+          <Text style={styles.heroSymbol}>✦</Text>
+          <View style={styles.heroSatellite} />
         </View>
-        <View style={styles.modeCard} testID="welcome-guided-mode">
-          <View style={styles.modeHeading}><Text style={styles.modeGlyph} accessible={false}>🧭</Text><Text style={styles.modeTitle}>Διαδρομές γνώσης</Text></View>
-          <Text style={styles.small}>Διάβασε ένα μάθημα και απάντησε στις ερωτήσεις του. Κάθε ολοκλήρωση ξεκλειδώνει το επόμενο μάθημα στην ίδια θεματική.</Text>
-          <Text style={styles.modeMeta}>Προχωράς με τον ρυθμό σου. Δεν χρειάζεται τέλειο σκορ.</Text>
-        </View>
-        <ActionButton label="Συνέχεια →" onPress={() => advance(2)} disabled={busy} />
-      </> : step === 2 ? <>
-        <Text style={styles.eyebrow}>Η ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ ΣΟΥ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Τι σου κινεί την περιέργεια;</Text>
-        <Text style={styles.body}>Διάλεξε 3 έως 5 θέματα για τις προτάσεις μαθημάτων μετά το quiz. Μπορείς να τα αλλάξεις όποτε θέλεις.</Text>
-        <Text style={styles.count} accessibilityLiveRegion="polite">{topics.length} / 5 επιλεγμένα · τουλάχιστον 3</Text>
-        <View style={styles.grid}>
-          {DAILY_CHALLENGE_TOPICS.map(topic => {
-            const selected = topics.includes(topic.id), disabled = busy || (!selected && topics.length >= 5);
-            return <Pressable key={topic.id} accessibilityRole="checkbox" accessibilityLabel={topic.title} accessibilityState={{ checked: selected, disabled }} disabled={disabled}
-              style={[styles.topic, selected && styles.selected, disabled && !selected && styles.disabled]} onPress={() => {
-                setTopics(current => current.includes(topic.id) ? current.filter(id => id !== topic.id) : current.length < 5 ? [...current, topic.id] : current); setError(false);
-              }}>
-              <View style={styles.topicHeader}><Text style={styles.emoji} accessible={false}>{topic.emoji}</Text><Text style={styles.check}>{selected ? "✓" : "+"}</Text></View>
-              <Text style={styles.topicTitle}>{topic.title}</Text>
+        <Text style={styles.eyebrow}>ΕΝΑΣ ΚΟΣΜΟΣ ΠΕΡΙΕΡΓΕΙΑΣ</Text>
+        <Text accessibilityRole="header" style={styles.title}>Κάθε μέρα, κάτι καινούργιο.</Text>
+        <Text style={styles.body}>Μικρές προκλήσεις, μεγάλες ιστορίες. Πρώτα μια ερώτηση· μετά η πρώτη σου διαδρομή γνώσης.</Text>
+        <AtlasCard style={styles.experience}>
+          <View style={styles.experienceRow}><Text style={styles.experienceIcon}>✧</Text><View style={styles.experienceCopy}>
+            <Text style={styles.experienceTitle}>01  Δοκίμασε τις γνώσεις σου</Text><Text style={styles.small}>Μια πραγματική ερώτηση από το ημερήσιο quiz.</Text></View></View>
+          <View style={styles.divider} />
+          <View style={styles.experienceRow}><Text style={styles.experienceIcon}>⌁</Text><View style={styles.experienceCopy}>
+            <Text style={styles.experienceTitle}>02  Ξεκίνα μια περιπέτεια</Text><Text style={styles.small}>Ένα σύντομο μάθημα με διαδραστικές στάσεις.</Text></View></View>
+        </AtlasCard>
+        <Text style={styles.support}>Χωρίς λογαριασμό. Η πρόοδός σου αποθηκεύεται στη συσκευή σου.</Text>
+        {!replay ? <UsageSharing /> : null}
+        <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκινάμε →"} disabled={busy}
+          onPress={() => void run(() => onAdvance("question"))} />
+      </> : <>
+        <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
+        <Text accessibilityRole="header" style={styles.title}>Τι σε κάνει να αναρωτιέσαι;</Text>
+        <Text style={styles.body}>Διάλεξε μια θεματική που θα ήθελες να εξερευνήσεις. Η επιλογή σου θα κρατηθεί για τις επόμενες διαδρομές.</Text>
+        <View style={styles.categoryGrid}>
+          {categories.map(category => {
+            const Icon = getCategoryWorldIcon(category.id);
+            const active = categoryId === category.id;
+            return <Pressable key={category.id} testID={`welcome-category-${category.id}`}
+              accessibilityRole="radio" accessibilityLabel={category.title}
+              accessibilityState={{ selected: active, disabled: busy }} disabled={busy}
+              onPress={() => setCategoryId(category.id)}
+              style={({ pressed }) => [styles.category, active && styles.categorySelected, pressed && styles.categoryPressed]}>
+              <View style={styles.iconArea}>{Icon ? <Icon size={38} /> : <Text style={styles.fallbackIcon}>{category.emoji}</Text>}</View>
+              <Text style={styles.categoryTitle} numberOfLines={2}>{category.title}</Text>
+              <Text style={[styles.selectionMark, active && styles.selectionMarkActive]}>{active ? "✓" : "·"}</Text>
             </Pressable>;
           })}
         </View>
-        <Text style={styles.note}>Η κοινή πρόκληση περιέχει εύκολες, μεσαίες και δύσκολες ερωτήσεις.</Text>
-        <ActionButton label="Συνέχεια →" disabled={busy || topics.length < 3 || topics.length > 5} onPress={() => advance(3)} />
-      </> : <>
-        <View style={styles.heroMark} accessible={false}><Text style={styles.heroGlyph}>✓</Text></View>
-        <Text style={styles.eyebrow}>ΟΛΑ ΕΤΟΙΜΑ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Καλή διασκέδαση!</Text>
-        <Text style={styles.body}>Διάλεξε μια διαδρομή, δοκίμασε όσα ξέρεις και ανακάλυψε κάτι καινούργιο. Ελπίζουμε να βρεις πολλά που θα σου μείνουν.</Text>
-        <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>Τα ενδιαφέροντά σου</Text>
-          <Text style={styles.small}>{DAILY_CHALLENGE_TOPICS.filter(topic => topics.includes(topic.id)).map(topic => topic.title).join(" · ")}</Text>
+        <View style={styles.lessonPreview}>
+          <Text style={styles.previewKicker}>Η ΠΡΩΤΗ ΔΙΑΔΡΟΜΗ · ΠΡΟΣ ΤΟ ΠΑΡΟΝ</Text>
+          <Text style={styles.previewTitle}>Αρχαία Ελλάδα</Text>
+          <Text style={styles.small}>Προς το παρόν, όλοι ξεκινούν με τη γνωριμία με την Αρχαία Ελλάδα, όποια θεματική κι αν διαλέξουν.</Text>
+          {selected ? <Text style={styles.selectedHint}>Η επιλογή σου: {selected.title}</Text> : null}
         </View>
-        {hasStartedChallenge ? <Text style={styles.note}>Η σημερινή πρόκληση διατηρείται. Οι επιλογές σου βοηθούν στις προτάσεις μαθημάτων.</Text> : null}
-        <ActionButton label={busy ? "Αποθήκευση…" : "Πάμε στη ΓΝΩΣΗ →"} disabled={busy || topics.length < 3 || topics.length > 5} onPress={finish} />
+        <ActionButton label={busy ? "Άνοιγμα…" : "Άνοιξε το πρώτο μάθημα →"}
+          disabled={busy} onPress={() => void run(() => onBeginLesson(categoryId))} />
       </>}
-      {error ? <Text style={styles.error} accessibilityLiveRegion="polite">Δεν ολοκληρώθηκε η αποθήκευση. Οι επιλογές σου παραμένουν εδώ. Δοκίμασε ξανά ή παράλειψε τον οδηγό.</Text> : null}
-    </ScrollView>
+      {error ? <Text style={styles.error} accessibilityLiveRegion="polite">Δεν αποθηκεύτηκε το βήμα. Δοκίμασε ξανά ή παράλειψε τον οδηγό.</Text> : null}
+    </ScrollView>}
   </View>;
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  header: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, paddingHorizontal: 20, paddingVertical: 6 },
-  headerControl: { minHeight: 44, justifyContent: "center", paddingVertical: 10, paddingHorizontal: 4 },
-  logo: { color: colors.accentLight, fontSize: 18, fontWeight: "900", letterSpacing: 2 },
-  link: { color: colors.accentLight, fontSize: 13, lineHeight: 21 },
-  step: { color: colors.textMuted, fontSize: 12, lineHeight: 20 },
-  viewport: { flex: 1 },
-  content: { width: "100%", maxWidth: 640, alignSelf: "center", paddingHorizontal: 22, paddingTop: 22, paddingBottom: 40 },
-  heroMark: { width: 72, height: 72, borderRadius: 23, backgroundColor: colors.accentSurface, justifyContent: "center", alignItems: "center", marginBottom: 26 },
-  heroGlyph: { color: colors.accentLight, fontSize: 38 },
-  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 18, fontWeight: "800", letterSpacing: 1, marginBottom: 10 },
-  title: { color: colors.text, fontSize: 30, lineHeight: 40, fontWeight: "700", marginBottom: 16 },
-  body: { color: colors.textBody, fontSize: 16, lineHeight: 26, marginBottom: 24 },
-  small: { color: colors.textBody, fontSize: 14, lineHeight: 23 },
-  note: { color: colors.textMuted, fontSize: 12, lineHeight: 20, marginTop: 12, marginBottom: 6 },
-  modeCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 18, gap: 12, marginBottom: 14 },
-  modeHeading: { flexDirection: "row", alignItems: "center", gap: 12 },
-  modeGlyph: { fontSize: 26 },
-  modeTitle: { color: colors.text, fontSize: 19, lineHeight: 27, fontWeight: "700", flex: 1 },
-  modeMeta: { color: colors.accentLight, fontSize: 12, lineHeight: 20 },
-  count: { color: colors.accentLight, fontSize: 13, lineHeight: 21, marginBottom: 14 },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  topic: { flexBasis: "47%", flexGrow: 1, minWidth: 125, padding: 16, borderWidth: 1, borderColor: colors.border, borderRadius: 16, backgroundColor: colors.surface, gap: 8 },
-  topicHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  emoji: { fontSize: 25 },
-  topicTitle: { color: colors.text, fontSize: 15, lineHeight: 23, fontWeight: "600" },
-  check: { color: colors.accentLight, fontSize: 19, fontWeight: "700" },
-  selected: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
-  disabled: { opacity: 0.45 },
-  summary: { padding: 18, gap: 10, backgroundColor: colors.surface, borderRadius: 16, marginBottom: 16 },
-  summaryTitle: { color: colors.textMuted, fontSize: 12, lineHeight: 20, fontWeight: "600" },
-  error: { color: colors.error, fontSize: 13, lineHeight: 22, marginTop: 18 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 20, paddingTop: 7, paddingBottom: 10, gap: 8 },
+  brand: { flexDirection: "row", alignItems: "center", gap: 9, flex: 1 },
+  brandStar: { width: 28, height: 28, alignItems: "center", justifyContent: "center",
+    borderRadius: 10, backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.borderStrong },
+  brandGlyph: { color: colors.accentLight, fontSize: 19 },
+  brandName: { color: colors.text, fontWeight: "900", fontSize: 15, letterSpacing: 2 },
+  counter: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
+  skip: { flex: 1, alignItems: "flex-end", justifyContent: "center", minHeight: 44 },
+  skipText: { color: colors.accentLight, fontSize: 12, fontWeight: "700" },
+  track: { flexDirection: "row", gap: 5, paddingHorizontal: 20, paddingBottom: 7 },
+  segment: { height: 3, flex: 1, backgroundColor: colors.border, borderRadius: 3 },
+  segmentActive: { backgroundColor: colors.accentLight },
+  content: { width: "100%", maxWidth: 640, flexGrow: 1, alignSelf: "center", paddingHorizontal: 20,
+    justifyContent: "center", paddingTop: 16, paddingBottom: 32 },
+  contentCompact: { justifyContent: "flex-start", paddingTop: 14 },
+  hero: { width: 110, height: 110, alignSelf: "center", alignItems: "center",
+    justifyContent: "center", marginVertical: 16 },
+  heroRing: { position: "absolute", width: 106, height: 106, borderWidth: 1,
+    borderColor: "#66608B", borderRadius: 53, transform: [{ rotate: "22deg" }] },
+  heroRingInner: { position: "absolute", width: 80, height: 80, borderWidth: 1,
+    borderColor: "#8D7EB0", borderRadius: 40 },
+  heroSymbol: { color: "#DCD0FF", fontSize: 57, fontWeight: "800" },
+  heroSatellite: { position: "absolute", width: 10, height: 10, borderRadius: 5,
+    right: 7, top: 15, backgroundColor: "#83D0C4" },
+  eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 17, fontWeight: "900",
+    letterSpacing: 1.2, textAlign: "center", marginBottom: 10 },
+  title: { color: colors.text, fontSize: 29, lineHeight: 37, fontWeight: "900",
+    textAlign: "center", marginBottom: 14 },
+  body: { color: colors.textBody, fontSize: 15, lineHeight: 24,
+    textAlign: "center", marginBottom: 22 },
+  experience: { padding: 18, gap: 13 },
+  experienceRow: { flexDirection: "row", alignItems: "center", gap: 13 },
+  experienceIcon: { width: 27, color: colors.accentLight, fontSize: 28, textAlign: "center" },
+  experienceCopy: { flex: 1, gap: 3 },
+  experienceTitle: { color: colors.text, fontSize: 14, fontWeight: "800", lineHeight: 21 },
+  small: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
+  divider: { height: 1, backgroundColor: "#45435F", marginLeft: 40 },
+  support: { color: colors.textMuted, textAlign: "center", fontSize: 12, lineHeight: 19, marginTop: 17 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 17 },
+  category: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 17, padding: 10, minWidth: 132, flexBasis: "46%", flexGrow: 1,
+    minHeight: 91, flexDirection: "row", alignItems: "center", gap: 8 },
+  categorySelected: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
+  categoryPressed: { opacity: .8 },
+  iconArea: { width: 40, alignItems: "center", justifyContent: "center" },
+  fallbackIcon: { fontSize: 24 },
+  categoryTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800", flex: 1 },
+  selectionMark: { color: colors.textMuted, fontSize: 16 },
+  selectionMarkActive: { color: colors.accentLight, fontSize: 17, fontWeight: "900" },
+  lessonPreview: { borderWidth: 1, borderColor: "#514C71", backgroundColor: "#20243B",
+    borderRadius: 18, padding: 16, gap: 7 },
+  previewKicker: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: .8 },
+  previewTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "900" },
+  selectedHint: { color: colors.accentLight, fontSize: 12, lineHeight: 19 },
+  error: { color: colors.error, fontSize: 12, lineHeight: 20, marginTop: 12 },
 });
