@@ -148,7 +148,7 @@ const home = compile("src/screens/HomeScreen.tsx", {
   "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
-    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
+    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View",
     MotionHeroAccent: "HeroAccent",
   },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
@@ -247,12 +247,14 @@ assert.equal(nodes(textById("home-primary-action")).filter(node => node.type ===
   "Continue has one border, with no duplicate animated rim");
 assert.equal(textById("home-primary-action").props.style({ pressed: false })[0].borderColor, "#595375",
   "Continue uses a single restrained border");
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
-  "completed daily quiz does not pulse");
+const filledSegments = () => nodes(tree).filter(node => node.props?.testID === "home-daily-segment-filled").length;
+const emptySegments = () => nodes(tree).filter(node => node.props?.testID === "home-daily-segment-empty").length;
+assert.equal(filledSegments(), 7, "completed daily quiz fills every segment");
+assert.equal(emptySegments(), 0);
 assert.equal(textById("home-daily-answered").props.children, "7/7",
   "completed daily quiz shows seven answered questions");
-assert.equal(textById("home-daily-answered").props.style.fontSize, 24,
-  "daily answer count stays prominent without expanding the card");
+assert.equal(textById("home-daily-answered").props.style.fontSize, 18,
+  "daily answer count leaves room for progress segments");
 assert.equal(textById("home-daily-quiz").props.accessibilityLabel.includes("7 από 7"), true);
 assert.equal(textById("home-daily-quiz").props.style({ pressed: false })[0].minHeight, 96,
   "daily card keeps its current compact footprint");
@@ -375,23 +377,21 @@ daily = { ready: true, doc: { days: { "2026-11-03": {
 } } } };
 tree = home(props);
 assert.equal(textById("home-daily-answered").props.children, "3/7");
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, true,
-  "unfinished daily quiz highlights");
+assert.equal(filledSegments(), 3, "one segment fills for each answer submitted today");
+assert.equal(emptySegments(), 4);
 assert.ok(nodes(tree).some(node => node.props?.children === "Συνέχισε σήμερα"));
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /3 από 7/);
 daily = { ready: true, doc: { days: { "2026-11-02": {
   record: { completed: true, answers: completeDailyAnswers },
 } } } };
 tree = home(props);
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, true,
-  "today can highlight even if yesterday was completed");
+assert.equal(filledSegments(), 0, "yesterday’s progress does not fill today’s segments");
 assert.equal(textById("home-daily-answered").props.children, "0/7",
   "yesterday's completed quiz does not count towards today's progress");
 assert.ok(nodes(tree).some(node => node.props?.children === "Ξεκίνα σήμερα"));
 daily = { ready: false, doc: { days: {} } };
 tree = home(props);
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
-  "loading state must not highlight");
+assert.equal(filledSegments(), 0, "loading state must not claim completed segments");
 assert.equal(textById("home-daily-answered").props.children, "—/7",
   "unknown loading progress must not appear as zero");
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /φόρτωση προόδου/);
@@ -551,22 +551,21 @@ assert.equal(homeSections.at(-1).props.testID, "home-exploration",
 
 assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 2,
+assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 1,
   "Continue is a flexible-height card");
 assert.equal(homeSections[2].props.style.flexGrow, 1,
   "daily quiz and review cards expand vertically");
-assert.equal(homeSections[3].props.style[0].flexGrow, 2,
+assert.equal(homeSections[3].props.style[0].flexGrow, 1,
   "knowledge worlds can expand to use spare height");
 const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap");
 assert.ok(flexibleWorldGrid, "knowledge-world cards stay in the existing grid");
-assert.equal(flexibleWorldGrid.props.style[0].flexGrow, 1);
-assert.equal(flexibleWorldGrid.props.style[0].alignContent, "stretch",
-  "both rows of world tiles share any extra height instead of leaving a void");
+assert.equal(flexibleWorldGrid.props.style[0].alignContent, "flex-start",
+  "category rows stay together when the viewport grows");
 assert.equal(flexibleWorldGrid.props.style[0].rowGap, 8,
   "world-row margins stay fixed");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "space-between",
-  "the Continue button can settle toward the bottom of its growing card");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "center",
+  "the lesson heading, title and action stay grouped as the card grows");
 
 assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measurements settle");
 assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
@@ -652,27 +651,15 @@ const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
   && node.props.style[1]?.width?.endsWith("%"));
 assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
 
-// The Daily Quiz highlight stays inside its original 16pt card,
-// preserves touch handling, respects reduced motion and does not repeat.
+// Shared Continue accent behavior.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
 const heroRimSource = homeMotionSource.slice(
   homeMotionSource.indexOf("export function MotionHeroAccent"),
-  homeMotionSource.indexOf("export function MotionQuizGlow"));
+  homeMotionSource.indexOf("const styles ="));
 assert.match(heroRimSource, /useReducedMotion/, "Continue accent respects reduced-motion settings");
 assert.match(heroRimSource, /pointerEvents="none"/, "Continue accent never takes taps");
 assert.doesNotMatch(heroRimSource, /withRepeat\(/,
   "Continue accent is a one-shot highlight rather than another ambient loop");
-const dailyHighlightSource = homeMotionSource.slice(homeMotionSource.indexOf("export function MotionQuizGlow"));
-assert.match(dailyHighlightSource, /\.\.\.StyleSheet\.absoluteFill/,
-  "highlight follows the card perimeter");
-assert.match(dailyHighlightSource, /borderRadius: 16/,
-  "highlight matches the quiz card radius");
-assert.match(dailyHighlightSource, /pointerEvents="none"/,
-  "highlight cannot intercept taps");
-assert.match(dailyHighlightSource, /if \(reduced \|\| !active\) return null/,
-  "completed quizzes and reduced motion suppress the pulse");
-assert.doesNotMatch(dailyHighlightSource, /withRepeat\(/,
-  "Daily Quiz highlight must not pulse indefinitely");
 
 // The compact bottom navigation preserves all four destinations.
 const bottomNav = compile("src/components/BottomNavigation.tsx", {

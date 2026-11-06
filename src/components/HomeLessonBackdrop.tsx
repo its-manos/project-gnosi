@@ -29,5 +29,5 @@ export default function HomeLessonBackdrop({ subcategoryId }: { subcategoryId?: 
 }
 
 const styles = StyleSheet.create({
-  landmark: { position: "absolute", right: 6, top: 2, width: 96, height: 96, opacity: 0.48 },
+  landmark: { position: "absolute", right: 8, top: 1, width: 74, height: 58, opacity: 0.46 },
 });

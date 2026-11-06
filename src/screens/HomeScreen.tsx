@@ -11,7 +11,7 @@ import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
-import { MotionCounter, MotionPressable, MotionQuizGlow, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import { MotionCounter, MotionPressable, MotionView, MotionXpCircle } from "../components/HomeMotion";
 import HomeAtlasBackground from "../components/HomeAtlasBackground";
 import HomeLessonBackdrop from "../components/HomeLessonBackdrop";
 import HomeStreakBadge from "../components/HomeStreakBadge";
@@ -83,6 +83,8 @@ export default function HomeScreen({
   // The daily quiz stores one answer per completed question, including wrong
   // answers and the current question before the Next button is pressed.
   const dailyAnsweredCount = todayRecord ? Object.keys(todayRecord.answers).length : 0;
+  const dailySegments = Array.from({ length: DAILY_CHALLENGE_SIZE }, (_, index) =>
+    daily.ready && index < dailyAnsweredCount);
   const dailyProgress = daily.ready
     ? String(dailyAnsweredCount) + "/" + String(DAILY_CHALLENGE_SIZE)
     : "—/" + String(DAILY_CHALLENGE_SIZE);
@@ -190,10 +192,14 @@ export default function HomeScreen({
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
             : "Καθημερινό quiz, φόρτωση προόδου"}
           onPress={onStartDailyChallenge}>
-          <MotionQuizGlow active={daily.ready && !todayCompleted} />
-          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.quizLip]} />
+          <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quizHalo]} />
           <View style={styles.quizTop}>
             <Text style={styles.actionIcon}>✦</Text>
+            <View style={styles.dailySegments} pointerEvents="none" accessible={false}>
+              {dailySegments.map((filled, index) => <View key={index}
+                testID={filled ? "home-daily-segment-filled" : "home-daily-segment-empty"}
+                style={[styles.dailySegment, filled && styles.dailySegmentFilled]} />)}
+            </View>
             <MotionCounter progressKey={today + "-" + dailyProgress} testID="home-daily-answered" style={styles.quizAnswered}
               accessible={false} numberOfLines={1} adjustsFontSizeToFit>{dailyProgress}</MotionCounter>
           </View>
@@ -203,8 +209,11 @@ export default function HomeScreen({
         <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
           onPress={onOpenQuickQuiz}>
-          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.quickQuizLip]} />
-          <Text style={[styles.actionIcon, styles.quickQuizIcon]}>ϟ</Text>
+          <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quickQuizHalo]} />
+          <View style={styles.quizTop}>
+            <Text style={[styles.actionIcon, styles.quickQuizIcon]}>ϟ</Text>
+            <Text accessible={false} style={styles.quickQuizCue}>{quickQuizInProgress ? "→" : "▸"}</Text>
+          </View>
           <Text style={styles.actionTitle}>Γρήγορο Κουίζ</Text>
           <Text style={styles.actionMeta}>{quickQuizInProgress ? "Συνέχισε τον γύρο" : "5 ερωτήσεις"}</Text>
         </MotionPressable>
@@ -243,9 +252,8 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Fill the available viewport by growing the cards and knowledge-world
-  // tiles, not the gaps between sections. Minimum card sizes remain intact;
-  // on genuinely small screens content can overflow and become scrollable.
+  // Share spare height across sections while keeping each section’s contents together.
+  // Small viewports can still scroll after the density fallback.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
     paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
   compactContent: { gap: 8, paddingBottom: 5 },
@@ -269,9 +277,9 @@ const styles = StyleSheet.create({
   levelCenter: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },
   levelCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
-  hero: { flexGrow: 2, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
-    overflow: "hidden", backgroundColor: "#1B2434", gap: 12, justifyContent: "space-between" },
-  heroIntro: { minHeight: 86, paddingRight: 96, gap: 6, justifyContent: "center" },
+  hero: { flexGrow: 1, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
+    overflow: "hidden", backgroundColor: "#1B2434", gap: 12, justifyContent: "center" },
+  heroIntro: { paddingRight: 76, gap: 3 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
   heroTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "700" },
@@ -286,27 +294,31 @@ const styles = StyleSheet.create({
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
   actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
-    padding: 12, justifyContent: "center", gap: 4 },
-  quizCard: { backgroundColor: "#252139", borderColor: "#564A6B" },
-  cardLip: { position: "absolute", top: 1, left: 16, right: 16, height: 1 },
-  quizLip: { backgroundColor: "#D8C5F2", opacity: 0.34 },
-  quickQuizLip: { backgroundColor: "#9CE4C5", opacity: 0.30 },
+    padding: 12, justifyContent: "center", gap: 4, overflow: "hidden" },
+  quizCard: { backgroundColor: "#201D30", borderColor: "#514463" },
+  actionHalo: { position: "absolute", width: 110, height: 110, borderRadius: 55, right: -36, top: -54 },
+  quizHalo: { backgroundColor: "rgba(177,165,255,0.10)" },
+  quickQuizHalo: { backgroundColor: "rgba(108,224,182,0.09)" },
+  dailySegments: { flex: 1, flexDirection: "row", gap: 2, marginHorizontal: 7, maxWidth: 58 },
+  dailySegment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: "#4A405D" },
+  dailySegmentFilled: { backgroundColor: colors.accentLight },
   quizTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  quizAnswered: { color: colors.accentLight, fontSize: 24, lineHeight: 27,
+  quizAnswered: { color: colors.accentLight, fontSize: 18, lineHeight: 26,
     fontWeight: "900", letterSpacing: -0.6, fontVariant: ["tabular-nums"] },
-  quickQuizCard: { backgroundColor: "#1D352F", borderColor: "#426B5E" },
+  quickQuizCard: { backgroundColor: "#192B2A", borderColor: "#395D54" },
   actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
+  quickQuizCue: { color: "#6CE0B6", fontSize: 19, lineHeight: 26, fontWeight: "700" },
   quickQuizIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  worlds: { gap: 9, flexGrow: 2 },
+  worlds: { gap: 9, flexGrow: 1, justifyContent: "center" },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
-    alignContent: "stretch", flexGrow: 1, columnGap: 8, rowGap: 8 },
+    alignContent: "flex-start", columnGap: 8, rowGap: 8 },
   category: { width: "22.7%", minHeight: 96, borderRadius: 14,
-    alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
+    alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
   categoryPlatform: { width: 62, height: 62, borderRadius: 31,
     backgroundColor: "rgba(177,165,255,0.07)", borderWidth: 1, borderColor: "rgba(177,165,255,0.13)",
     alignItems: "center", justifyContent: "center" },
