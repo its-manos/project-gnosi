@@ -11,7 +11,7 @@ import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
-import { MotionCounter, MotionPressable, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import { MotionCardGlint, MotionCounter, MotionCtaArrow, MotionPressable, MotionQuizGlyph, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
 import HomeAtlasBackground from "../components/HomeAtlasBackground";
 import HomeLessonBackdrop from "../components/HomeLessonBackdrop";
 import HomeStreakBadge from "../components/HomeStreakBadge";
@@ -34,6 +34,13 @@ type Props = {
   onOpenProfile?: () => void;
 };
 
+// Only grow interior content when a card really has extra room. Caps keep
+// long Greek titles and system font scaling readable on smaller screens.
+const cardScale = (height: number, baseline: number, max: number, range: number) =>
+  Math.min(max, 1 + Math.max(0, height - baseline) / range);
+
+const scaled = (value: number, scale: number) => Math.round(value * scale * 10) / 10;
+
 const shortLabels: Record<string, string> = {
   history: "Ιστορία",
   science: "Επιστήμη",
@@ -52,7 +59,7 @@ export default function HomeScreen({
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
-  const { height } = useWindowDimensions();
+  const { height, fontScale } = useWindowDimensions();
   // Development-only A/B switch for isolating Android native SVG paint from
   // its four twinkles + ambient glow. Release builds always use the full atlas.
   const atlasDebugMode = __DEV__ ? process.env.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE : undefined;
@@ -61,10 +68,20 @@ export default function HomeScreen({
   // by a few points after the lesson breadcrumb was added.
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+  const [cardHeights, setCardHeights] = useState({ hero: 0, quiz: 0 });
   const availableHeight = availableScreenHeight(viewportHeight, height);
   const density = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
+  // Measurements influence only interior decoration: never the viewport
+  // density, flex allocation, or scrolling contract. Ignore subpixel jitter.
+  const allowCardGrowth = !compact && (fontScale ?? 1) <= 1.1;
+  const heroScale = allowCardGrowth ? cardScale(cardHeights.hero, 225, 1.18, 400) : 1;
+  const quizScale = allowCardGrowth ? cardScale(cardHeights.quiz, 100, 1.2, 350) : 1;
+  const updateCardHeight = (card: "hero" | "quiz", next: number) => {
+    if (next <= 0) return;
+    setCardHeights(current => Math.abs(current[card] - next) < 3 ? current : { ...current, [card]: next });
+  };
   // Content measurements must never change density: startup hydration and old
   // layout callbacks can otherwise latch Home into a tighter mode until remount.
   // Long titles and accessibility text remain scrollable at every density.
@@ -143,67 +160,93 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 10, heroScale) }, pressed && styles.pressed]}
+        onLayout={event => updateCardHeight("hero", event.nativeEvent.layout.height)}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
             + (heroLocation ? ". " + heroLocation : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
-        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} />
-        <View style={styles.heroIntro}>
-          <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
-          {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}>
-            {heroLocation}</Text> : null}
-          {heroIsResume ? <Text style={styles.heroCount}>
-            {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
-          </Text> : null}
+        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} scale={heroScale} />
+        <MotionCardGlint tone="lesson" delayMs={0} />
+        <View style={[styles.heroCopy, compact && styles.compactHeroGroup, tight && styles.tightHeroGroup,
+          { gap: scaled(tight ? 4 : compact ? 8 : 12, heroScale) }]}>
+          <View style={[styles.heroIntro, { paddingRight: scaled(112, heroScale) }]}>
+            <Text style={[styles.eyebrow, { fontSize: scaled(11, heroScale), lineHeight: scaled(15, heroScale) }]}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
+            {heroLocation ? <Text testID="home-hero-location" style={[styles.heroLocation, { fontSize: scaled(12, heroScale), lineHeight: scaled(17, heroScale) }]}>
+              {heroLocation}</Text> : null}
+            {heroIsResume ? <Text style={[styles.heroCount, { fontSize: scaled(11, heroScale), lineHeight: scaled(16, heroScale) }]}>
+              {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
+            </Text> : null}
+          </View>
+          <Text style={[styles.heroTitle, tight && styles.tightHeroTitle,
+            { fontSize: scaled(tight ? 18 : 21, heroScale), lineHeight: scaled(tight ? 23 : 28, heroScale) }]}>
+            {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
+          </Text>
         </View>
-        <Text style={[styles.heroTitle, tight && styles.tightHeroTitle]}>
-          {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
-        </Text>
-        {heroIsResume && inProgressQuestionCount > 0 ?
-          <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]}>
-              <View pointerEvents="none" style={styles.trackSheen} />
-            </View></View>
-          : null}
-        <View style={styles.heroButton}>
-          <Text style={styles.heroButtonLabel}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
-          <Text style={styles.heroButtonLabel}>→</Text>
+        <View style={[styles.heroFooter, compact && styles.compactHeroGroup, tight && styles.tightHeroGroup,
+          { gap: scaled(tight ? 4 : compact ? 8 : 12, heroScale) }]}>
+          {heroIsResume && inProgressQuestionCount > 0 ?
+            <View style={[styles.track, { height: scaled(5, heroScale) }]}>
+              <View style={[styles.trackFill, { width: String(progress) + "%" }]}>
+                <View pointerEvents="none" style={styles.trackSheen} />
+              </View>
+            </View>
+            : null}
+          <View style={[styles.heroButton, { minHeight: scaled(44, heroScale) }]}>
+            <MotionShimmer />
+            <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
+            <MotionCtaArrow>
+              <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>→</Text>
+            </MotionCtaArrow>
+          </View>
         </View>
       </MotionPressable>
 
-      <MotionView entranceDelay={130} style={styles.actions}>
-        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
+      <MotionView entranceDelay={130} style={styles.actions}
+        onLayout={event => updateCardHeight("quiz", event.nativeEvent.layout.height)}>
+        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
             : "Καθημερινό quiz, φόρτωση προόδου"}
           onPress={onStartDailyChallenge}>
           <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quizHalo]} />
+          <MotionCardGlint tone="daily" delayMs={2300} />
           <View style={styles.quizTop}>
-            <Text style={styles.actionIcon}>✦</Text>
+            <MotionQuizGlyph delayMs={0}>
+              <Text style={[styles.actionIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>✦</Text>
+            </MotionQuizGlyph>
             <View style={styles.dailySegments} pointerEvents="none" accessible={false}>
               {dailySegments.map((filled, index) => <View key={index}
                 testID={filled ? "home-daily-segment-filled" : "home-daily-segment-empty"}
                 style={[styles.dailySegment, filled && styles.dailySegmentFilled]} />)}
             </View>
-            <MotionCounter progressKey={today + "-" + dailyProgress} testID="home-daily-answered" style={styles.quizAnswered}
+            <MotionCounter progressKey={today + "-" + dailyProgress} testID="home-daily-answered"
+              style={[styles.quizAnswered, { fontSize: scaled(18, quizScale), lineHeight: scaled(26, quizScale) }]}
               accessible={false} numberOfLines={1} adjustsFontSizeToFit>{dailyProgress}</MotionCounter>
           </View>
-          <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
-          <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
+          <View style={[styles.actionLabels, tight && styles.tightActionLabels]}>
+            <Text style={[styles.actionTitle, { fontSize: scaled(14, quizScale), lineHeight: scaled(19, quizScale) }]}>Καθημερινό Quiz</Text>
+            <Text style={[styles.actionMeta, { fontSize: scaled(11, quizScale), lineHeight: scaled(15, quizScale) }]}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
+          </View>
         </MotionPressable>
-        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
+        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
           onPress={onOpenQuickQuiz}>
           <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quickQuizHalo]} />
+          <MotionCardGlint tone="quick" delayMs={5700} />
           <View style={styles.quizTop}>
-            <Text style={[styles.actionIcon, styles.quickQuizIcon]}>ϟ</Text>
-            <Text accessible={false} style={styles.quickQuizCue}>{quickQuizInProgress ? "→" : "▸"}</Text>
+            <MotionQuizGlyph delayMs={2500}>
+              <Text style={[styles.actionIcon, styles.quickQuizIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>ϟ</Text>
+            </MotionQuizGlyph>
+            <Text accessible={false} style={[styles.quickQuizCue, { fontSize: scaled(19, quizScale), lineHeight: scaled(26, quizScale) }]}>{quickQuizInProgress ? "→" : "▸"}</Text>
           </View>
-          <Text style={styles.actionTitle}>Γρήγορο Κουίζ</Text>
-          <Text style={styles.actionMeta}>{quickQuizInProgress ? "Συνέχισε τον γύρο" : "5 ερωτήσεις"}</Text>
+          <View style={[styles.actionLabels, tight && styles.tightActionLabels]}>
+            <Text style={[styles.actionTitle, { fontSize: scaled(14, quizScale), lineHeight: scaled(19, quizScale) }]}>Γρήγορο Κουίζ</Text>
+            <Text style={[styles.actionMeta, { fontSize: scaled(11, quizScale), lineHeight: scaled(15, quizScale) }]}>{quickQuizInProgress ? "Συνέχισε τον γύρο" : "5 ερωτήσεις"}</Text>
+          </View>
         </MotionPressable>
       </MotionView>
 
@@ -241,15 +284,20 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Distribute spare height between the four sections. Category rows stay together.
-  // When content exceeds the viewport, the minimum gaps remain and scrolling takes over.
+  // Fill spare viewport height inside the three playable cards, not in gaps
+  // between sections. The worlds grid retains its natural height; real
+  // overflow remains scrollable on shorter screens and with large text.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
   // Compact screens save vertical room in spacing, not by shrinking artwork.
   compactContent: { gap: 8, paddingTop: 4, paddingBottom: 4 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
   compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
+  heroCopy: { gap: 10 },
+  heroFooter: { gap: 10 },
+  compactHeroGroup: { gap: 8 },
+  tightHeroGroup: { gap: 4 },
   tightHeroTitle: { fontSize: 18, lineHeight: 23 },
   compactActionCard: { minHeight: 90, padding: 10 },
   tightActionCard: { minHeight: 80, padding: 8, gap: 2 },
@@ -269,8 +317,9 @@ const styles = StyleSheet.create({
   levelCenter: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
   hero: { padding: 18, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
-    overflow: "hidden", backgroundColor: "#1B2434", gap: 10 },
-  heroIntro: { paddingRight: 76, gap: 3 },
+    overflow: "hidden", backgroundColor: "#1B2434", gap: 10,
+    flexGrow: 2, justifyContent: "center" },
+  heroIntro: { paddingRight: 112, gap: 3 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
   heroTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "700" },
@@ -283,9 +332,11 @@ const styles = StyleSheet.create({
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2, overflow: "hidden" },
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
-  actions: { flexDirection: "row", gap: 10 },
+  actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
-    padding: 12, justifyContent: "flex-start", gap: 4, overflow: "hidden" },
+    padding: 12, justifyContent: "center", gap: 4, overflow: "hidden" },
+  actionLabels: { gap: 4 },
+  tightActionLabels: { gap: 2 },
   quizCard: { backgroundColor: "#201D30", borderColor: "#514463" },
   actionHalo: { position: "absolute", width: 88, height: 88, borderRadius: 44, right: -37, top: -44 },
   quizHalo: { backgroundColor: "rgba(177,165,255,0.07)" },

@@ -34,7 +34,7 @@ const react = {
       const index = homeScrollHookIndex++;
       const value = homeScrollState[index] ?? initial;
       return [value, next => {
-        homeScrollState[index] = typeof next === "function" ? next(homeScrollState[index]) : next;
+        homeScrollState[index] = typeof next === "function" ? next(homeScrollState[index] ?? initial) : next;
       }];
     }
     return [showList, value => { showList = typeof value === "function" ? value(showList) : value; }];
@@ -138,6 +138,12 @@ for (const id of ["ancient-greece", "world-history", "mythology", "space", undef
   const artwork = nodes(decoration).find(node => node.props?.testID === "home-lesson-landmark");
   if (["ancient-greece", "world-history", "mythology"].includes(id)) {
     assert.equal(artwork.props.source, id, "landmark matches the selected destination");
+    assert.equal(artwork.props.style[0].width, 104, "the Continue landmark retains its base silhouette");
+    assert.equal(artwork.props.style[0].height, 84);
+    assert.equal(artwork.props.style[0].right, 12);
+    assert.equal(artwork.props.style[0].top, 12);
+    assert.equal(artwork.props.style[1].width, 104, "default icon scale stays 1");
+    assert.equal(artwork.props.style[1].height, 84);
     assert.ok(fs.existsSync(path.join(root, "assets/atlas-export-preview/island-icons/" + id + ".webp")));
   } else assert.equal(artwork, undefined, "unknown destinations never show an unrelated landmark");
 }
@@ -148,8 +154,9 @@ const home = compile("src/screens/HomeScreen.tsx", {
   "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
-    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View",
-    MotionHeroAccent: "HeroAccent",
+    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "Shimmer",
+    MotionHeroAccent: "HeroAccent", MotionCardGlint: "CardGlint",
+    MotionQuizGlyph: "QuizGlyph", MotionCtaArrow: "CtaArrow",
   },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
@@ -259,7 +266,7 @@ assert.equal(filledSegments(), 7, "completed daily quiz fills every segment");
 assert.equal(emptySegments(), 0);
 assert.equal(textById("home-daily-answered").props.children, "7/7",
   "completed daily quiz shows seven answered questions");
-assert.equal(textById("home-daily-answered").props.style.fontSize, 18,
+assert.equal(textById("home-daily-answered").props.style[1].fontSize, 18,
   "daily answer count leaves room for progress segments");
 assert.equal(textById("home-daily-quiz").props.accessibilityLabel.includes("7 από 7"), true);
 assert.equal(textById("home-daily-quiz").props.style({ pressed: false })[0].minHeight, 96,
@@ -553,8 +560,8 @@ const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.te
 let scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
   "dashboard content fills the usable viewport on taller screens");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
-  "spare height is shared between sections on every visit");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
+  "spare height belongs inside the playable cards rather than between sections");
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
@@ -564,10 +571,19 @@ assert.equal(homeSections.at(-1).props.testID, "home-exploration",
 
 assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, undefined,
-  "lesson card height follows its content");
-assert.equal(homeSections[2].props.style.flexGrow, undefined,
-  "quiz cards match one another without absorbing viewport height");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 2,
+  "the lesson card absorbs two shares of extra height");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "center",
+  "the lesson elements are centered vertically as a group");
+assert.equal(homeSections[2].props.style.flexGrow, 1,
+  "the two side-by-side quiz cards share the remaining extra height");
+for (const id of ["home-daily-quiz", "home-quick-quiz"]) {
+  const quiz = nodes(homeSections[2]).find(node => node.props?.testID === id);
+  assert.equal(quiz.props.style({ pressed: false })[0].justifyContent, "center",
+    "expanded quiz elements are centered vertically as a group");
+  assert.equal(quiz.props.style({ pressed: false })[0].flex, 1,
+    "both quizzes stretch to the same height");
+}
 assert.equal(homeSections[3].props.style[0].flexGrow, undefined,
   "knowledge worlds stay at their natural height");
 const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
@@ -622,9 +638,41 @@ scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[1], false,
   "available height growth restores spacious styling");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
-  "spacious mode distributes the four sections across the viewport");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
+  "spacious mode expands cards without introducing large vertical gaps");
 assert.equal(scroll.props.scrollEnabled, false);
+
+// Measure actual card dimensions: increasing height scales the card contents,
+// without affecting the knowledge-world grid or viewport density.
+const tallTree = renderMeasuredHome();
+const tallHero = nodes(tallTree).find(node => node.props?.testID === "home-primary-action");
+const tallQuizzes = nodes(tallTree).find(node =>
+  node.props?.entranceDelay === 130 && node.props?.style?.flexGrow === 1);
+tallHero.props.onLayout({ nativeEvent: { layout: { height: 315 } } });
+tallQuizzes.props.onLayout({ nativeEvent: { layout: { height: 165 } } });
+const grownTree = renderMeasuredHome();
+const grownHero = nodes(grownTree).find(node => node.props?.testID === "home-primary-action");
+const heroTitle = nodes(grownHero).find(node =>
+  node.props?.children === "Μάθημα 0");
+assert.ok(heroTitle.props.style[2].fontSize > 21,
+  "longer hero card grows its lesson title instead of adding blank interior space");
+const grownBackdrop = nodes(grownHero).find(node => node.type === "HomeLessonBackdrop");
+assert.ok(grownBackdrop.props.scale > 1,
+  "the lesson landmark grows with its card");
+const quizCount = nodes(grownTree).find(node => node.props?.testID === "home-daily-answered");
+assert.ok(quizCount.props.style[1].fontSize > 18,
+  "taller quiz cards grow their progress counter");
+const grownDaily = nodes(grownTree).find(node => node.props?.testID === "home-daily-quiz");
+assert.ok(nodes(grownDaily).some(node => node.props?.children === "Καθημερινό Quiz"
+  && node.props.style[1].fontSize > 14), "taller quiz cards grow their headings");
+// Compact mode must disable the measured growth even after a tall viewport.
+scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
+const resetTree = renderMeasuredHome();
+assert.equal(nodes(resetTree).find(node => node.props?.testID === "home-daily-answered")
+  .props.style[1].fontSize, 18);
+assert.equal(nodes(resetTree).find(node => node.type === "HomeLessonBackdrop").props.scale, 1);
+scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
+scroll = scrollNode();
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
 scroll.props.onContentSizeChange(360, 680);
@@ -685,13 +733,31 @@ for (const phoneWidth of [320, 360, 393]) {
   assert.ok(4 * available * cardPercent + 3 * 8 <= available,
     "four-column grid must fit at " + phoneWidth + "pt");
 }
-const primaryButton = nodes(tree).find(node => node.props?.style?.minHeight === 44
-  && node.props?.style?.backgroundColor === "#A89BFF");
-assert.ok(primaryButton, "primary CTA retains a 44-point tap area");
+const primaryButton = nodes(tree).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.minHeight === 44
+  && node.props.style[0]?.backgroundColor === "#A89BFF");
+assert.ok(primaryButton, "primary CTA retains its 44-point minimum tap area");
+assert.equal(primaryButton.props.style[1].minHeight, 44,
+  "compact card sizing does not reduce the primary CTA");
 const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
   && node.props.style[0]?.backgroundColor === "#B1A5FF"
   && node.props.style[1]?.width?.endsWith("%"));
 assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
+
+// Motion accents never change card hit targets or size.
+const primaryCard = nodes(tree).find(node => node.props?.testID === "home-primary-action");
+assert.equal(nodes(primaryCard).filter(node => node.type === "CardGlint").length, 1);
+const shimmer = nodes(primaryCard).find(node => node.type === "Shimmer");
+assert.ok(shimmer, "Continue button has a rare shimmer");
+assert.equal(nodes(primaryCard).filter(node => node.type === "CtaArrow").length, 1,
+  "Continue arrow has a gentle invitation motion");
+for (const id of ["home-daily-quiz", "home-quick-quiz"]) {
+  const card = nodes(tree).find(node => node.props?.testID === id);
+  assert.equal(nodes(card).filter(node => node.type === "CardGlint").length, 1,
+    "quiz card has one accent glint");
+  assert.equal(nodes(card).filter(node => node.type === "QuizGlyph").length, 1,
+    "quiz artwork has one idle lift");
+}
 
 // Shared Continue accent behavior.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
@@ -703,15 +769,41 @@ assert.match(heroRimSource, /pointerEvents="none"/, "Continue accent never takes
 assert.doesNotMatch(heroRimSource, /withRepeat\(/,
   "Continue accent is a one-shot highlight rather than another ambient loop");
 
-// The compact bottom navigation preserves all four destinations.
+// Every new card effect is opacity/translation only and respects accessibility
+// preferences; all decoration remains outside the accessibility/touch tree.
+for (const component of ["MotionCardGlint", "MotionQuizGlyph", "MotionCtaArrow"]) {
+  const start = homeMotionSource.indexOf("export function " + component);
+  assert.ok(start > 0, component + " exists");
+  const next = homeMotionSource.indexOf("\nexport function ", start + 1);
+  const body = homeMotionSource.slice(start, next > start ? next : undefined);
+  assert.match(body, /useReducedMotion/, component + " respects reduced motion");
+  assert.match(body, /cancelAnimation/, component + " cancels loops on exit");
+}
+assert.match(homeMotionSource, /MotionCardGlint[\s\S]*pointerEvents="none"/,
+  "card accents never intercept presses");
+const profileSource = fs.readFileSync(path.join(root, "src/screens/ProfileScreen.tsx"), "utf8");
+assert.match(profileSource, /<QuickLink title="Αποθηκευμένα"/,
+  "saved lessons are visible as a full Profile shortcut");
+assert.match(profileSource, /title === "Αποθηκευμένα" \? "profile-saved-link"/,
+  "saved lessons tile keeps its stable test ID");
+const navigatorSource = fs.readFileSync(path.join(root, "src/navigation/AppNavigator.tsx"), "utf8");
+assert.match(navigatorSource, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
+  "profile saved shortcut opens existing saved lessons route");
+assert.match(navigatorSource, /onBack=\{\(\) => navigateTo\("profile"\)\}/,
+  "saved lessons return to their profile origin");
+
+// The compact bottom navigation shows only three primary destinations.
 const bottomNav = compile("src/components/BottomNavigation.tsx", {
   "react-native-safe-area-context": { useSafeAreaInsets: () => ({ bottom: 34 }) },
 });
 const bottomTree = bottomNav({ currentScreen: "home", onNavigate: destination => actions.push("nav:" + destination) });
 const tabs = nodes(bottomTree).filter(node => node.props?.accessibilityRole === "tab");
-assert.equal(tabs.length, 4);
+assert.equal(tabs.length, 3);
+assert.ok(!nodes(bottomTree).some(node => node.props?.children === "Αποθηκευμένα"),
+  "saved lessons have no root tab");
 assert.equal(tabs[0].props.accessibilityState.selected, true);
 assert.equal(tabs[1].props.accessibilityState.selected, false);
+assert.equal(tabs[2].props.accessibilityLabel, "Το προφίλ μου");
 tabs[1].props.onPress();
 assert.equal(actions.at(-1), "nav:progress");
 assert.ok(nodes(bottomTree).some(node => Array.isArray(node.props?.style)

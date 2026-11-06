@@ -16,7 +16,7 @@ for (const [screen, destination] of Object.entries({
   account: "profile", profile: "progress", "player-stats": "profile",
   "knowledge-review": "home", "learning-insights": "progress",
   "weekly-review": "progress", lesson: "subcategory", results: "subcategory",
-  quiz: "lesson", subcategory: "category", category: "home", saved: "home",
+  quiz: "lesson", subcategory: "category", category: "home", saved: "profile",
 })) {
   assert.equal(backDestination(screen, origins), destination, screen);
 }

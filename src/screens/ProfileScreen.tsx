@@ -25,6 +25,7 @@ type Props = {
   onStats: () => void;
   onAccount: () => void;
   onInterests: () => void;
+  onSaved: () => void;
   onGuide: () => void;
 };
 
@@ -44,7 +45,7 @@ function StreakFlame() {
   </Svg>;
 }
 
-type QuickIconName = "activity" | "account" | "interests" | "guide";
+type QuickIconName = "activity" | "saved" | "interests" | "guide";
 
 function QuickIcon({ name }: { name: QuickIconName }) {
   const common = { stroke: "#B8A9F5", strokeWidth: 1.8, strokeLinecap: "round" as const,
@@ -53,9 +54,8 @@ function QuickIcon({ name }: { name: QuickIconName }) {
     {name === "activity" ? <>
       <Circle cx={12} cy={12} r={9} {...common} />
       <Path d="M12 6.5V12l4 2.5" {...common} />
-    </> : name === "account" ? <>
-      <Circle cx={12} cy={8} r={3.3} {...common} />
-      <Path d="M5 20v-1.5c0-3.3 2.7-5.2 7-5.2s7 1.9 7 5.2V20" {...common} />
+    </> : name === "saved" ? <>
+      <Path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" {...common} />
     </> : name === "interests" ? <>
       <Path d="M12 2.5 14.6 9.4 21.5 12l-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6L12 2.5Z" {...common} />
     </> : <>
@@ -69,11 +69,12 @@ function QuickLink({ title, icon, onPress }: {
   title: string; icon: QuickIconName; onPress: () => void;
 }) {
   return <NavigationTile title={title} icon={<QuickIcon name={icon} />}
-    testID={title === "Δραστηριότητα" ? "profile-activity-link" : undefined}
+    testID={title === "Δραστηριότητα" ? "profile-activity-link"
+      : title === "Αποθηκευμένα" ? "profile-saved-link" : undefined}
     onPress={onPress} />;
 }
 
-export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide }: Props) {
+export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide, onSaved }: Props) {
   const { email } = useLearningSession();
   const learning = useLearningDataSnapshot();
   const daily = useDailyDataSnapshot();
@@ -215,8 +216,8 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
         <View style={[styles.linksGrid, compact && styles.linksGridCompact]}>
           <QuickLink title="Δραστηριότητα"
             icon="activity" onPress={onStats} />
-          <QuickLink title="Λογαριασμός"
-            icon="account" onPress={onAccount} />
+          <QuickLink title="Αποθηκευμένα"
+            icon="saved" onPress={onSaved} />
           <QuickLink title="Ενδιαφέροντα"
             icon="interests" onPress={onInterests} />
           <QuickLink title="Οδηγός"

@@ -12,7 +12,8 @@ export function backDestination(screen: AppScreen, origins: BackOrigins): AppScr
   switch (screen) {
     case "account": return origins.account;
     case "profile": return origins.profile;
-    case "player-stats": return "profile";
+    case "player-stats":
+    case "saved": return "profile";
     case "knowledge-review": return origins.knowledge;
     case "learning-insights":
     case "weekly-review": return "progress";

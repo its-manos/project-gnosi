@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AppScreen } from "../hooks/useLearningApp";
 import { colors } from "../theme";
 
-type NavigationTarget = "home" | "progress" | "saved" | "profile";
+type NavigationTarget = "home" | "progress" | "profile";
 
 type Props = {
   currentScreen: AppScreen;
@@ -20,7 +20,6 @@ type Tab = {
 const tabs: Tab[] = [
   { key: "home", label: "Αρχική", accessibilityLabel: "Επιστροφή στην αρχική" },
   { key: "progress", label: "Πρόοδος", accessibilityLabel: "Πρόοδος μαθημάτων και καθημερινών quiz" },
-  { key: "saved", label: "Αποθηκευμένα", accessibilityLabel: "Αποθηκευμένα άρθρα" },
   { key: "profile", label: "Προφίλ", accessibilityLabel: "Το προφίλ μου" },
 ];
 
@@ -53,18 +52,15 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
     );
   }
 
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
+  // Exhaustive: only the three visible root tabs have icons.
+  return null;
 }
 
 function activeTabForScreen(screen: AppScreen): NavigationTarget | null {
   if (["home", "category", "subcategory", "lesson", "quiz", "results", "review"].includes(screen)) return "home";
   if (["progress", "learning-insights", "weekly-review", "knowledge-review"].includes(screen)) return "progress";
   if (["profile", "player-stats", "account"].includes(screen)) return "profile";
-  if (screen === "saved") return "saved";
+  if (screen === "saved") return "profile";
   return null;
 }
 
