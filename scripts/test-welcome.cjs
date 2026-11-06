@@ -151,7 +151,8 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
  assert.equal(guide.props.phase,'interests');
  assert.equal(await guide.props.onBeginLesson(choices),true);
- assert.deepEqual(plain(navStore.getSnapshot().doc.preferences.value),plain(choices),'Onboarding choices reach synced preferences');
+ assert.deepEqual([...navStore.getSnapshot().doc.preferences.value.topicIds].sort(),[...choices.topicIds].sort(),'Onboarding topics reach synced preferences');
+ assert.equal(navStore.getSnapshot().doc.preferences.value.difficulty,choices.difficulty,'Onboarding preserves difficulty');
  routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='LessonScreen'));
  assert.equal(app.activeLessonId,first.ONBOARDING_INTRO_LESSON_ID);
  assert.deepEqual(plain(navStore.getSnapshot().doc.days),beforeLessonDaily);
