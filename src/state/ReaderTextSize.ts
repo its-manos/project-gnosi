@@ -25,15 +25,18 @@ export class ReaderTextSizeStore {
   constructor(private storage: Storage) {}
 
   getSnapshot = () => this.size;
+  getReadySnapshot = () => this.loaded;
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => { this.listeners.delete(listener); };
   };
 
+  private emit() { for (const listener of this.listeners) listener(); }
+
   private update(next: number) {
     if (next === this.size) return;
     this.size = next;
-    for (const listener of this.listeners) listener();
+    this.emit();
   }
 
   load(): Promise<void> {
@@ -53,6 +56,9 @@ export class ReaderTextSizeStore {
         // or the latest user-selected value.
       } finally {
         this.loaded = true;
+        // Even when the stored size equals the default, the reader can now
+        // restore its scroll position against fully hydrated text metrics.
+        this.emit();
       }
     })().finally(() => { this.loading = null; });
     return this.loading;
