@@ -103,7 +103,7 @@ export default function WelcomeScreen({
       </> : phase === "choose" ? <>
         <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
         <Text accessibilityRole="header" style={styles.title}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
-        <Text style={styles.body}>Διάλεξε από πού θα ήθελες να ξεκινήσεις. Μπορείς να γνωρίσεις και τους άλλους κόσμους όποτε θέλεις.</Text>
+        <Text style={styles.body}>Διάλεξε τον κόσμο που σε ενδιαφέρει περισσότερο. Μπορείς να εξερευνήσεις και τους υπόλοιπους όποτε θέλεις.</Text>
         <View style={styles.categoryGrid}>
           {categories.map(category => {
             const Icon = getCategoryWorldIcon(category.id);
