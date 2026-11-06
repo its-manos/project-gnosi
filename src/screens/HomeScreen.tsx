@@ -241,13 +241,14 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Keep sections grouped; spare height stays below the dashboard on tall screens.
+  // Distribute spare height between the four sections. Category rows stay together.
+  // When content exceeds the viewport, the minimum gaps remain and scrolling takes over.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
   // Compact screens save vertical room in spacing, not by shrinking artwork.
   compactContent: { gap: 8, paddingTop: 4, paddingBottom: 4 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
-  // On tall screens share spare space between the three primary cards instead of gaps.\n  spaciousHero: { flexGrow: 1, justifyContent: "space-between" },\n  spaciousActions: { flexGrow: 0.35 },\n  compactHero: { padding: 14, gap: 8 },
+  compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
   tightHeroTitle: { fontSize: 18, lineHeight: 23 },
   compactActionCard: { minHeight: 90, padding: 10 },
