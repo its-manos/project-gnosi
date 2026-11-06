@@ -11,6 +11,27 @@ export function getSubcategoryPath(catalogue: readonly Lesson[], subcategoryId: 
     .sort((a, b) => rank(a.id) - rank(b.id) || a.id.localeCompare(b.id));
 }
 
+function getAccessAtIndex(
+  path: readonly Lesson[],
+  index: number,
+  completed: readonly string[],
+  inProgress: readonly string[],
+  unlockAll: boolean,
+) {
+  const lesson = path[index];
+  const prerequisite = index > 0 ? path[index - 1] : null;
+  // Keep existing completions and unfinished attempts accessible. Bookmarks are
+  // not progress. Unlocks derive from the same account-scoped backup.
+  const unlocked = Boolean(lesson && (
+    unlockAll ||
+    !prerequisite ||
+    completed.includes(prerequisite.id) ||
+    completed.includes(lesson.id) ||
+    inProgress.includes(lesson.id)
+  ));
+  return { unlocked, prerequisite, position: index + 1, total: path.length };
+}
+
 function getAccessInPath(
   lesson: Lesson,
   path: readonly Lesson[],
@@ -18,17 +39,17 @@ function getAccessInPath(
   inProgress: readonly string[],
 ) {
   const index = path.findIndex(item => item.id === lesson.id);
-  const prerequisite = index > 0 ? path[index - 1] : null;
-  // Keep existing completions and unfinished attempts accessible. Bookmarks are
-  // not progress. Unlocks derive from the same account-scoped backup.
-  const unlocked = index >= 0 && (
-    devLessonsUnlocked() ||
-    !prerequisite ||
-    completed.includes(prerequisite.id) ||
-    completed.includes(lesson.id) ||
-    inProgress.includes(lesson.id)
-  );
-  return { unlocked, prerequisite, position: index + 1, total: path.length };
+  return getAccessAtIndex(path, index, completed, inProgress, devLessonsUnlocked());
+}
+
+/** Resolve every checkpoint on a path that is already in editorial order. */
+export function getOrderedPathAccess(
+  path: readonly Lesson[],
+  completed: readonly string[],
+  inProgress: readonly string[],
+  unlockAll: boolean,
+) {
+  return path.map((_, index) => getAccessAtIndex(path, index, completed, inProgress, unlockAll));
 }
 
 export function getLessonAccess(lesson: Lesson, catalogue: readonly Lesson[], completed: readonly string[], inProgress: readonly string[] = []) {
