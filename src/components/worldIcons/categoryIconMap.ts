@@ -1,14 +1,19 @@
 /**
- * One visual identity per knowledge world, shared by Home and Category header.
- * Purely decorative 32pt icons; card/route/progress behavior lives elsewhere.
+ * One visual identity per knowledge world, shared by Home and the Category header.
+ * Bundled sculpted artwork; card, route, and progress behavior live elsewhere.
  */
-import HistoryWorldIcon from "./HistoryWorldIcon";
 import {
-  CultureWorldIcon, DifficultHistoryWorldIcon, GeographyWorldIcon,
-  NatureWorldIcon, ScienceWorldIcon, TechnologyWorldIcon,
-} from "./OtherWorldIcons";
+  CultureWorldIcon,
+  DifficultHistoryWorldIcon,
+  GeographyWorldIcon,
+  HistoryWorldIcon,
+  NatureWorldIcon,
+  ScienceWorldIcon,
+  TechnologyWorldIcon,
+  type WorldIconId,
+} from "./CategoryArtworkIcons";
 
-export const categoryWorldIcons: Record<string, typeof HistoryWorldIcon> = {
+export const categoryWorldIcons: Record<WorldIconId, typeof HistoryWorldIcon> = {
   history: HistoryWorldIcon,
   science: ScienceWorldIcon,
   nature: NatureWorldIcon,
@@ -19,5 +24,7 @@ export const categoryWorldIcons: Record<string, typeof HistoryWorldIcon> = {
 };
 
 export function getCategoryWorldIcon(categoryId: string) {
-  return categoryWorldIcons[categoryId];
+  return Object.prototype.hasOwnProperty.call(categoryWorldIcons, categoryId)
+    ? categoryWorldIcons[categoryId as WorldIconId]
+    : undefined;
 }
