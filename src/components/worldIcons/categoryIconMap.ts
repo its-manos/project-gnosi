@@ -1,12 +1,11 @@
 /**
- * One visual identity per knowledge world, shared by Home and Category header.
- * Purely decorative 32pt icons; card/route/progress behavior lives elsewhere.
+ * One visual identity per knowledge world, shared by Home and the Category header.
+ * Lightweight bundled Style C artwork; card/route/progress behavior lives elsewhere.
  */
-import HistoryWorldIcon from "./HistoryWorldIcon";
 import {
   CultureWorldIcon, DifficultHistoryWorldIcon, GeographyWorldIcon,
-  NatureWorldIcon, ScienceWorldIcon, TechnologyWorldIcon,
-} from "./OtherWorldIcons";
+  HistoryWorldIcon, NatureWorldIcon, ScienceWorldIcon, TechnologyWorldIcon,
+} from "./CategoryArtworkIcons";
 
 export const categoryWorldIcons: Record<string, typeof HistoryWorldIcon> = {
   history: HistoryWorldIcon,

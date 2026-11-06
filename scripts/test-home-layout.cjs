@@ -12,7 +12,7 @@ const root = path.join(__dirname, "..");
 const atlasTestEnv = {};
 const jsx = (type, props) => ({ type, props });
 const native = {
-  View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
+  View: "View", Text: "Text", Image: "Image", Pressable: "Pressable", ScrollView: "ScrollView",
   ActivityIndicator: "Spinner", useWindowDimensions: () => ({ width: 360, height: 740 }),
   Platform: { OS: "ios" },
   StyleSheet: { create: value => value },
@@ -110,11 +110,20 @@ const completeDailyAnswers = Object.fromEntries(Array.from({ length: 7 }, (_, i)
 let daily = { ready: true, doc: { days: { "2026-11-03": {
   record: { completed: true, started: true, currentIndex: 6, answers: completeDailyAnswers },
 } } } };
-const HistoryWorldIcon = compile("src/components/worldIcons/HistoryWorldIcon.tsx");
-const otherWorlds = compile("src/components/worldIcons/OtherWorldIcons.tsx", {}, true);
+const iconFiles = {
+  history: "gnosi_history.webp", science: "gnosi_science.webp",
+  nature: "gnosi_nature.webp", culture: "gnosi_arts.webp",
+  technology: "gnosi_technology.webp", geography: "gnosi_geography.webp",
+  "difficult-history": "gnosi_difficult_history.webp",
+};
+const imageImports = Object.fromEntries(Object.values(iconFiles).map(file => [
+  "../../../assets/category-world-icons/" + file, file,
+]));
+const artworkComponents = compile("src/components/worldIcons/CategoryArtworkIcons.tsx", {
+  ...imageImports,
+}, true);
 const categoryIconModule = compile("src/components/worldIcons/categoryIconMap.ts", {
-  "./HistoryWorldIcon": { __esModule: true, default: HistoryWorldIcon },
-  "./OtherWorldIcons": otherWorlds,
+  "./CategoryArtworkIcons": artworkComponents,
 }, true);
 const worldArtwork = categoryIconModule.categoryWorldIcons;
 assert.equal(Object.keys(worldArtwork).length, 7, "exactly seven shared world icons");
@@ -271,9 +280,8 @@ assert.equal(textById("home-daily-answered").props.style[1].fontSize, 18,
 assert.equal(textById("home-daily-quiz").props.accessibilityLabel.includes("7 από 7"), true);
 assert.equal(textById("home-daily-quiz").props.style({ pressed: false })[0].minHeight, 96,
   "daily card keeps its current compact footprint");
-// Every known world keeps its bespoke art and navigation, with a larger
-// illustration inside a lightweight circular platform.
-const HistoryCard = nodes(tree).find(node => node.props?.testID === "home-category-history");
+// Each category uses its own bundled square artwork. Keep navigation,
+// accessibility, responsive sizing and the unknown-category fallback intact.
 assert.equal(Object.keys(worldArtwork).length, 7);
 for (const category of categories) {
   const card = nodes(tree).find(node => node.props?.testID === "home-category-" + category.id);
@@ -281,83 +289,42 @@ for (const category of categories) {
   assert.match(card.props.accessibilityLabel, /Άνοιξε τη θεματική/);
   assert.equal(card.props.style({ pressed: false })[0].minHeight, 96);
   assert.ok(!nodes(card).some(node => node.props?.children === category.emoji),
-    "custom art replaces emoji for " + category.id);
-  const illustrationType = worldArtwork[category.id];
-  assert.equal(typeof illustrationType, "function", "component exists for " + category.id);
-  const illustrationNode = nodes(card).find(node => node.type === illustrationType);
-  assert.ok(illustrationNode, "card uses bespoke art for " + category.id);
+    "artwork replaces emoji for " + category.id);
+  const Illustration = worldArtwork[category.id];
+  assert.equal(typeof Illustration, "function");
+  const illustrationNode = nodes(card).find(node => node.type === Illustration);
+  assert.ok(illustrationNode, "category card displays its artwork for " + category.id);
   assert.equal(illustrationNode.props.size, 46);
   assert.equal(illustrationNode.props.displayScale, 1.18);
-  const illustration = illustrationType({ size: 32, displayScale: 1.18 });
-  assert.equal(illustration.type, "svg");
-  assert.equal(illustration.props.width, 32);
-  assert.equal(illustration.props.height, 32);
-  assert.equal(illustration.props.viewBox, "0 0 52 52");
-  assert.equal(illustration.props.accessible, false, "illustration is decorative");
-  assert.equal(illustration.props.pointerEvents, "none", "card owns touch");
-  assert.equal(illustration.props.style.transform[0].scale, 1.18);
-  assert.ok(nodes(illustration).filter(node => node.type === "path").length >= 5,
-    "custom engraving includes layered paths for " + category.id);
-  assert.ok(nodes(illustration).filter(node => node.type === "linearGradient").length >= 2,
-    "artwork includes shaded materials for " + category.id);
+
+  const wrapper = Illustration({ size: 32, displayScale: 1.18 });
+  assert.equal(wrapper.props.icon, category.id);
+  assert.ok(wrapper.props.testID);
+  // Render the inner, hook-free artwork component and inspect the actual
+  // native Image source rather than the obsolete SVG path geometry.
+  const art = wrapper.type(wrapper.props);
+  assert.equal(art.type, "Image");
+  assert.equal(art.props.source, iconFiles[category.id]);
+  assert.equal(art.props.accessible, false, "art is decorative");
+  assert.equal(art.props.pointerEvents, "none", "card owns taps");
+  assert.equal(art.props.style.width, 32);
+  assert.equal(art.props.style.height, 32);
+  assert.equal(art.props.style.transform[0].scale, 1.18);
+  const asset = iconFiles[category.id];
+  assert.ok(fs.existsSync(path.join(root, "assets/category-world-icons", asset)),
+    "bundled artwork exists: " + asset);
   card.props.onPress();
-  assert.equal(actions.at(-1), "category:" + category.id, "category navigation unchanged");
+  assert.equal(actions.at(-1), "category:" + category.id,
+    "category navigation unchanged");
 }
-// Icon-specific regressions: geometry, textures and motifs must remain distinct.
-// All seven still share the layout, navigation and accessibility tests above.
-const drawn = id => nodes(worldArtwork[id]({ size: 32, displayScale: 1.18 }));
-const gradientIds = id => drawn(id).filter(node => node.type === "linearGradient")
-  .map(node => node.props.id);
-const historyArt = drawn("history");
-assert.ok(gradientIds("history").includes("history-pyramid-sunlit"), "limestone gradient present");
-assert.ok(gradientIds("history").includes("history-pyramid-shaded"), "shadow gradient present");
-assert.ok(historyArt.some(node => node.type === "path" && node.props.fill === "url(#history-pyramid-sunlit)"
-  && node.props.d.includes("27 4.8")), "sunlit triangle reaches pyramid apex");
-assert.ok(historyArt.some(node => node.type === "path" && node.props.fill === "url(#history-pyramid-shaded)"
-  && node.props.d.includes("27 4.8")), "shaded triangle reaches pyramid apex");
-assert.ok(historyArt.filter(node => node.type === "circle").length >= 5, "mineral weathering remains");
-assert.ok(historyArt.filter(node => node.type === "path").length >= 18, "pyramid masonry is detailed");
-const mothArt = drawn("nature");
-assert.ok(mothArt.some(node => node.type === "g"
-  && node.props.transform === "translate(52 0) scale(-1 1)"),
-  "nature wings are geometrically mirrored around the body");
-assert.ok(gradientIds("nature").includes("nature-moth-forewing"));
-assert.ok(gradientIds("nature").includes("nature-moth-hindwing"));
-assert.ok(mothArt.filter(node => node.type === "ellipse").length >= 4,
-  "moth has paired, engraved eyespots");
-assert.ok(mothArt.filter(node => node.type === "path").length >= 16,
-  "moth has detailed naturalistic wing patterns");
-
-const painting = drawn("culture");
-assert.ok(gradientIds("culture").includes("culture-night-sky"),
-  "the Arts icon depicts an original night sky");
-assert.ok(gradientIds("culture").includes("culture-frame-gold"),
-  "the painting keeps a gilded perspective frame");
-assert.ok(painting.filter(node => node.type === "circle").length >= 4,
-  "moon and constellation stars are present");
-assert.ok(painting.filter(node => node.type === "path").length >= 12,
-  "painting has its own sky, seascape and wood bevel geometry");
-
-const archive = drawn("difficult-history");
-assert.ok(gradientIds("difficult-history").includes("difficult-history-folder"));
-assert.ok(gradientIds("difficult-history").includes("difficult-history-paper"));
-assert.ok(archive.some(node => node.type === "g"
-  && node.props.transform === "rotate(-11 31 34)"),
-  "classification stamp remains angled on archival folder");
-assert.ok(archive.some(node => node.type === "rect"
-  && node.props.stroke === "#A45E59"),
-  "classification stamp remains a muted oxide red");
-assert.ok(archive.filter(node => node.type === "path").length >= 11,
-  "document layers and folded folder remain dimensional");
-
-// These three landmarks are deliberately out of scope for the redesign.
-for (const [id, material] of [
-  ["science", "science-brass"], ["technology", "technology-chip"],
-  ["geography", "geography-sea"],
-]) {
-  assert.ok(gradientIds(id).includes(material), id + " retains its existing identity");
-}
-
+const artworkSource = fs.readFileSync(
+  path.join(root, "src/components/worldIcons/CategoryArtworkIcons.tsx"), "utf8");
+assert.match(artworkSource, /accessible=\{false\}/,
+  "decorative art must be hidden from accessibility");
+assert.match(artworkSource, /pointerEvents="none"/,
+  "only the category card owns touch events");
+assert.match(artworkSource, /resizeMode="cover"/,
+  "square art retains its aspect ratio");
 const futureCategory = { id: "future-world", title: "Νέος κόσμος", emoji: "🌟" };
 const futureTree = home({ ...props, categories: [...categories, futureCategory] });
 const futureCard = nodes(futureTree).find(node => node.props?.testID === "home-category-future-world");
