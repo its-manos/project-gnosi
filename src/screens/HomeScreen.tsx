@@ -153,27 +153,29 @@ export default function HomeScreen({
         <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} />
         <View style={[styles.heroCopy, compact && styles.compactHeroGroup, tight && styles.tightHeroGroup]}>
           <View style={styles.heroIntro}>
-          <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
-          {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}>
-            {heroLocation}</Text> : null}
-          {heroIsResume ? <Text style={styles.heroCount}>
-            {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
-          </Text> : null}
-        </View>
+            <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
+            {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}>
+              {heroLocation}</Text> : null}
+            {heroIsResume ? <Text style={styles.heroCount}>
+              {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
+            </Text> : null}
+          </View>
           <Text style={[styles.heroTitle, tight && styles.tightHeroTitle]}>
             {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
           </Text>
         </View>
         <View style={[styles.heroFooter, compact && styles.compactHeroGroup, tight && styles.tightHeroGroup]}>
-        {heroIsResume && inProgressQuestionCount > 0 ?
-          <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]}>
-              <View pointerEvents="none" style={styles.trackSheen} />
-            </View></View>
-          : null}
-        <View style={styles.heroButton}>
-          <Text style={styles.heroButtonLabel}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
-          <Text style={styles.heroButtonLabel}>→</Text>
-        </View>
+          {heroIsResume && inProgressQuestionCount > 0 ?
+            <View style={styles.track}>
+              <View style={[styles.trackFill, { width: String(progress) + "%" }]}>
+                <View pointerEvents="none" style={styles.trackSheen} />
+              </View>
+            </View>
+            : null}
+          <View style={styles.heroButton}>
+            <Text style={styles.heroButtonLabel}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
+            <Text style={styles.heroButtonLabel}>→</Text>
+          </View>
         </View>
       </MotionPressable>
 
