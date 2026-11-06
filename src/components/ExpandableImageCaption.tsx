@@ -19,7 +19,7 @@ export default function ExpandableImageCaption({ caption }: Props) {
         {caption}
       </Text>
       <View style={styles.measurer} pointerEvents="none" accessible={false}
-        importantForAccessibility="no-hide-descendants">
+        importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Text style={styles.caption} accessible={false} onTextLayout={event => {
           const next = event.nativeEvent.lines.length > 2;
           setOverflows(previous => previous === next ? previous : next);
