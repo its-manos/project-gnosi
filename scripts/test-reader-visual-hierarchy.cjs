@@ -52,11 +52,11 @@ assert.match(reader, /getParagraphText\(paragraph\)/);
 assert.match(reader, /<ArticleFigure /);
 assert.match(reader, /<ReaderSources lesson=\{lesson\} \/>/);
 // The question invitation must stay compact without shrinking its tap target.
-assert.match(reader, /checkpointButton: \\{ minHeight: 48, marginTop: 10, paddingVertical: 10 \\}/,
+assert.ok(reader.includes("checkpointButton: { minHeight: 48, marginTop: 10, paddingVertical: 10 }"),
   "Checkpoint CTA must remain at least 48pt tall.");
-assert.match(reader, /style=\\{styles.checkpointButton\\}/,
+assert.ok(reader.includes("style={styles.checkpointButton}"),
   "The compact override must only apply to the checkpoint button.");
-assert.match(reader, /checkpointHint: \\{ color: reading.muted, fontSize: 13, lineHeight: 20 \\}/,
+assert.ok(reader.includes("checkpointHint: { color: reading.muted, fontSize: 13, lineHeight: 20 }"),
   "Compact helper text must remain readable.");
 assert.match(figures, /fontSize: 13/, "Captions should remain comfortably legible.");
 assert.match(figures, /fontSize: 12/, "Attribution should not shrink to tiny text.");
