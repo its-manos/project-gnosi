@@ -27,6 +27,15 @@ const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).f
 const button=(t,label)=>{const n=nodes(t).find(n=>n.type==='Button'&&n.props.label===label);assert.ok(n,label);return n;};
 const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.accessibilityLabel===label);assert.ok(n,label);n.props.onPress();};
 (async()=>{
+ const guideStages=Array.from(first.WELCOME_GUIDE_STAGES);
+ assert.deepEqual(guideStages,['welcome','question','interests','choose']);
+ guideStages.forEach((stage,index)=>{
+  assert.equal(first.welcomeStepNumber(stage),index+1,'Progress follows the shared guide order');
+  assert.equal(first.previousWelcomePhase(stage),index>0?guideStages[index-1]:null,
+   'Back navigation follows the same stage order');
+ });
+ assert.equal(first.welcomeStepNumber('lesson'),4,'Lesson reader is after the four numbered steps');
+ assert.equal(first.previousWelcomePhase('lesson'),'choose','Lesson back returns to category selection');
  assert.equal(first.shouldShowWelcome(null,null,false,[]),true);
  assert.equal(first.shouldShowWelcome('question',null,true,[]),true,'Daily activity must not dismiss an unfinished onboarding');
  assert.equal(first.shouldShowWelcome('choose','signed-in',true,[]),true);
