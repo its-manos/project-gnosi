@@ -17,12 +17,14 @@ export const colors = {
   errorSurface: "#40232E",
 };
 
-// A quieter palette reserved for long-form reading.
+// Midnight Atlas reading palette. Body text stays on a solid, high-contrast
+// surface: decorative gradients belong to game screens, not long-form copy.
 export const reading = {
-  background: "#14181D",
-  text: "#DDD9D0",
-  heading: "#F1EBDD",
-  muted: "#B6B5B0",
-  surface: "#1C232A",
-  border: "#354049",
+  background: "#111827",
+  text: "#E3E5E8",
+  heading: "#F8F4EC",
+  muted: "#BAC5D5",
+  surface: "#1B2638",
+  border: "#37445B",
+  accent: "#C9BEFF",
 };
