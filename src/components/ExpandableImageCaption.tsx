@@ -18,17 +18,15 @@ export default function ExpandableImageCaption({ caption }: Props) {
       <Text selectable={expanded} style={styles.caption} numberOfLines={expanded ? undefined : 2}>
         {caption}
       </Text>
-      <Text
-        style={[styles.caption, styles.measurer]}
-        accessible={false}
-        importantForAccessibility="no-hide-descendants"
-        onTextLayout={event => {
+      <View style={styles.measurer} pointerEvents="none" accessible={false}
+        importantForAccessibility="no-hide-descendants">
+        <Text style={styles.caption} accessible={false} onTextLayout={event => {
           const next = event.nativeEvent.lines.length > 2;
           setOverflows(previous => previous === next ? previous : next);
-        }}
-      >
-        {caption}
-      </Text>
+        }}>
+          {caption}
+        </Text>
+      </View>
       {overflows ? (
         <Pressable
           style={styles.toggle}
