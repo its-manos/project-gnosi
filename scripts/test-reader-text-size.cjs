@@ -30,7 +30,7 @@ async function main() {
   assert.equal(store.getSnapshot(), 22);
   store.adjust(2); store.adjust(2); store.adjust(-2);
   assert.equal(store.getSnapshot(), 22, "Upper bound, lower bound and consecutive taps work");
-  await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(writes.at(-1)?.[1], "22", "Newest setting persists last");
   assert.equal(changes.join(","), "22,24,22", "Only meaningful changes notify subscribers");
   unsub();
@@ -61,7 +61,7 @@ async function main() {
   });
   await broken.load();
   broken.adjust(-2);
-  await Promise.resolve(); await Promise.resolve();
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(broken.getSnapshot(), 16, "Storage failure cannot break reading");
   console.log("Reader font preference passed: hydration, bounds, ordered writes, late reads and failures.");
 }
