@@ -153,6 +153,70 @@ export function MotionCounter({ progressKey, ...props }: TextProps & { progressK
   return <Animated.Text key={progressKey} {...props} entering={entering} />;
 }
 
+/** Small, staggered edge glints. Opacity only, no layout/SVG changes or touch interception. */
+export function MotionCardGlint({ tone, delayMs = 0 }: { tone: "lesson" | "daily" | "quick"; delayMs?: number }) {
+  const reduced = useReducedMotion();
+  const glow = useSharedValue(0.20);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
+  useEffect(() => {
+    cancelAnimation(glow);
+    if (reduced) {
+      glow.value = 0.20;
+      return;
+    }
+    glow.value = withDelay(delayMs + 900, withRepeat(withSequence(
+      withTiming(0.62, { duration: 950, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0.20, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+      withDelay(8500, withTiming(0.20, { duration: 1 })),
+    ), -1, false));
+    return () => cancelAnimation(glow);
+  }, [delayMs, reduced, glow]);
+  return <Animated.View testID={`home-${tone}-glint`} pointerEvents="none"
+    accessible={false} style={[styles.cardGlint, styles[`glint_${tone}`], animatedStyle]} />;
+}
+
+/** A tiny idle lift inside quiz cards, with no touch or Yoga movement. */
+export function MotionQuizGlyph({ children, delayMs = 0 }: PropsWithChildren<{ delayMs?: number }>) {
+  const reduced = useReducedMotion();
+  const y = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  useEffect(() => {
+    cancelAnimation(y);
+    if (reduced) {
+      y.value = 0;
+      return;
+    }
+    y.value = withDelay(delayMs + 1400, withRepeat(withSequence(
+      withTiming(-2, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0, { duration: 1350, easing: Easing.inOut(Easing.sin) }),
+      withDelay(7800, withTiming(0, { duration: 1 })),
+    ), -1, false));
+    return () => cancelAnimation(y);
+  }, [delayMs, reduced, y]);
+  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
+}
+
+/** Occasionally nudge the Continue arrow, not the tap target or label. */
+export function MotionCtaArrow({ children }: PropsWithChildren) {
+  const reduced = useReducedMotion();
+  const x = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
+  useEffect(() => {
+    cancelAnimation(x);
+    if (reduced) {
+      x.value = 0;
+      return;
+    }
+    x.value = withDelay(1800, withRepeat(withSequence(
+      withTiming(3, { duration: 300, easing: Easing.out(Easing.quad) }),
+      withTiming(0, { duration: 480, easing: Easing.inOut(Easing.quad) }),
+      withDelay(8700, withTiming(0, { duration: 1 })),
+    ), -1, false));
+    return () => cancelAnimation(x);
+  }, [reduced, x]);
+  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
+}
+
 /** Narrow highlight over the Continue CTA; runs rarely and never blocks touch. */
 export function MotionShimmer() {
   const reduced = useReducedMotion();
@@ -204,6 +268,11 @@ export function MotionHeroAccent() {
 
 const styles = StyleSheet.create({
   iconBox: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  cardGlint: { position: "absolute", top: -1, left: 18, width: 68, height: 2,
+    borderRadius: 2, backgroundColor: "#B1A5FF" },
+  glint_lesson: { width: 102, backgroundColor: "#C6BAFF" },
+  glint_daily: { backgroundColor: "#B1A5FF" },
+  glint_quick: { backgroundColor: "#7DDCB8" },
   shimmer: { position: "absolute", top: -8, bottom: -8, left: 0,
     width: 35, backgroundColor: "#FFFFFF", opacity: 0.12, transform: [{ skewX: "-16deg" }] },
   heroRim: { ...StyleSheet.absoluteFill, borderRadius: 18,
