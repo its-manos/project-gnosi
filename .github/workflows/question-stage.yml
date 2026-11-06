@@ -23,6 +23,10 @@ on:
       - "src/hooks/useWelcome.ts"
       - "src/utils/firstRun.ts"
       - "scripts/test-welcome.cjs"
+      - "src/quiz/quickQuiz.ts"
+      - "src/screens/QuickQuizScreen.tsx"
+      - "scripts/test-quick-quiz.cjs"
+      - "src/components/WelcomeStepIcons.tsx"
       - "src/components/DailyMissionMap.tsx"
       - "src/components/DailyJourneyTrack.tsx"
       - "src/hooks/useAdaptiveQuestionScroll.ts"
@@ -60,6 +64,7 @@ jobs:
       - run: node scripts/test-typed-lesson-integration.cjs
       - run: node scripts/test-daily-challenge.cjs
       - run: node scripts/test-welcome.cjs
+      - run: node scripts/test-quick-quiz.cjs
       - run: node scripts/test-profile-section-header.cjs
       - run: node scripts/test-daily-phase3-ui.cjs
       - run: node scripts/test-quiz-reveal.cjs
