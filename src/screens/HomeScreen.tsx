@@ -207,7 +207,7 @@ export default function HomeScreen({
         </MotionPressable>
       </MotionView>
 
-      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
+      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, compact && styles.compactWorlds, tight && styles.tightWorlds]}>
         <View style={styles.sectionRow}>
           <Text accessibilityRole="header" style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
           <View accessible={false} pointerEvents="none" style={styles.sectionRule} />
@@ -245,14 +245,17 @@ const styles = StyleSheet.create({
   // When content exceeds the viewport, the minimum gaps remain and scrolling takes over.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
     paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
-  compactContent: { gap: 10, paddingBottom: 6 },
+  // Compact screens save vertical room in spacing, not by shrinking artwork.
+  compactContent: { gap: 8, paddingTop: 4, paddingBottom: 4 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
   compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
   tightHeroTitle: { fontSize: 18, lineHeight: 23 },
   compactActionCard: { minHeight: 90, padding: 10 },
   tightActionCard: { minHeight: 80, padding: 8, gap: 2 },
-  compactCategory: { minHeight: 70 },
+  // A 62pt icon plus its label already exceeds minHeight: 70. Trim the
+  // surrounding padding/gap so both icon rows fit without losing artwork.
+  compactCategory: { minHeight: 70, paddingVertical: 4, gap: 4 },
   tightCategory: { minHeight: 67, paddingVertical: 4, gap: 2 },
   tightCategoryLabel: { fontSize: 10, lineHeight: 12 },
   tightWorlds: { gap: 4, paddingTop: 2 },
@@ -300,6 +303,7 @@ const styles = StyleSheet.create({
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
   worlds: { gap: 6, paddingTop: 6 },
+  compactWorlds: { gap: 5, paddingTop: 4 },
   sectionRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   sectionRule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(177,165,255,0.32)" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
