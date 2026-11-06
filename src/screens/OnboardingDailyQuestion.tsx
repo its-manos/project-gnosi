@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import QuizReveal from "../components/QuizReveal";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
@@ -74,7 +73,6 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
 
   const unavailable = !isLoading && (!questionsCompatible || startFailed);
   return <View testID="onboarding-daily-question" style={styles.root}>
-    <ProgressGradientBackground />
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.heading}>
         <Text style={styles.kicker}>Η ΠΡΩΤΗ ΣΟΥ ΔΟΚΙΜΑΣΙΑ  ·  01 / 07</Text>
@@ -110,7 +108,7 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: "transparent" },
   content: { flexGrow: 1, width: "100%", maxWidth: 640, alignSelf: "center",
     justifyContent: "center", paddingHorizontal: 18, paddingVertical: 18, paddingBottom: 36 },
   heading: { gap: 12, marginBottom: 22 },
