@@ -5,6 +5,7 @@ import ProgressGradientBackground from "../components/ProgressGradientBackground
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import QuizReveal from "../components/QuizReveal";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
+import { useLearningSession } from "../state/LearningSession";
 import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { dailyReportTarget } from "../utils/contentReports";
 import { colors } from "../theme";
@@ -22,15 +23,32 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
   const { record, todayKey, currentQuestion, selectedAnswer, isLoading,
     questionsCompatible, startChallenge, answerQuestion, nextQuestion } =
     useDailyChallenge(preferences, preferencesLoaded);
+  const { dailyStore } = useLearningSession();
   const attemptedDate = useRef<string | null>(null);
+  const startingRef = useRef(false);
+  const mountedRef = useRef(true);
   const locked = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [startFailed, setStartFailed] = useState(false);
+
+  useEffect(() => () => { mountedRef.current = false; }, []);
+  async function beginChallenge() {
+    if (startingRef.current) return;
+    startingRef.current = true;
+    setStarting(true); setStartFailed(false);
+    try {
+      await startChallenge();
+      if (mountedRef.current && !dailyStore.getSnapshot().doc.days[todayKey]?.record.started) setStartFailed(true);
+    } catch { if (mountedRef.current) setStartFailed(true); }
+    finally { startingRef.current = false; if (mountedRef.current) setStarting(false); }
+  }
 
   useEffect(() => {
     if (!isLoading && !record.started && attemptedDate.current !== todayKey) {
       attemptedDate.current = todayKey;
-      void startChallenge();
+      void beginChallenge();
     }
   }, [isLoading, record.started, todayKey, startChallenge]);
 
@@ -43,18 +61,18 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
     try {
       if (answeredFirst) {
         await nextQuestion();
-        // The first answer must be safely advanced before leaving its stage.
-        if (record.currentIndex === 0 && record.started && !record.completed) {
-          // nextQuestion writes to the store asynchronously; it resolves after
-          // local persistence. The next render will show question 2 in Daily.
-        }
+        // nextQuestion persists the advancement, so the normal Daily screen
+        // resumes at question 2 without asking for a second first answer.
+        const advanced = dailyStore.getSnapshot().doc.days[todayKey]?.record;
+        if (!advanced || (advanced.currentIndex === 0 && !advanced.completed)) throw Error("daily_not_advanced");
       }
+      if (record.started && !await dailyStore.flushLocal()) throw Error("daily_not_saved");
       if (!await onContinue()) setError(true);
     } catch { setError(true); }
     finally { locked.current = false; setBusy(false); }
   }
 
-  const unavailable = !isLoading && (!questionsCompatible || (!record.started && attemptedDate.current === todayKey));
+  const unavailable = !isLoading && (!questionsCompatible || startFailed);
   return <View testID="onboarding-daily-question" style={styles.root}>
     <ProgressGradientBackground />
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -76,11 +94,11 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
           compactAnswered reportTarget={dailyReportTarget(currentQuestion)}
           onConfirm={answerQuestion} />
       </QuizReveal> : <View style={styles.notice}>
-        {isLoading || (!record.started && !unavailable)
+        {isLoading || starting || (!record.started && !unavailable)
           ? <><ActivityIndicator color={colors.accentLight}/><Text style={styles.copy}>Ετοιμάζουμε την πρώτη ερώτηση…</Text></>
           : <><Text style={styles.noticeTitle}>Η πρόκληση δεν είναι διαθέσιμη.</Text>
             <Text style={styles.copy}>Δεν θα χάσεις την πρόοδό σου. Μπορείς να ξαναδοκιμάσεις ή να προχωρήσεις στο μάθημα.</Text>
-            <ActionButton secondary label="Δοκίμασε ξανά" onPress={() => { attemptedDate.current = todayKey; void startChallenge(); }} /></>}
+            <ActionButton secondary label="Δοκίμασε ξανά" onPress={() => { attemptedDate.current = todayKey; void beginChallenge(); }} /></>}
       </View>}
       {(alreadyPassed || answeredFirst || unavailable) ? <ActionButton
         label={busy ? "Αποθήκευση…" : unavailable ? "Συνέχεια χωρίς ερώτηση →" : "Πάμε στην πρώτη διαδρομή →"}
