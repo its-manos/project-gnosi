@@ -152,6 +152,12 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
     });
   }
 
+  useEffect(() => {
+    // A cached font preference may finish loading after the first layout.
+    // Retry restoration even when that preference leaves dimensions unchanged.
+    if (readingSizeReady) requestAnimationFrame(flushScroll);
+  }, [readingSizeReady]);
+
   return (
     <View style={styles.root} testID="article-reader">
       <View style={styles.chrome}>
