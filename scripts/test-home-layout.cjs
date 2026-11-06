@@ -138,6 +138,10 @@ for (const id of ["ancient-greece", "world-history", "mythology", "space", undef
   const artwork = nodes(decoration).find(node => node.props?.testID === "home-lesson-landmark");
   if (["ancient-greece", "world-history", "mythology"].includes(id)) {
     assert.equal(artwork.props.source, id, "landmark matches the selected destination");
+    assert.equal(artwork.props.style.width, 104, "the Continue landmark uses a larger silhouette");
+    assert.equal(artwork.props.style.height, 84);
+    assert.equal(artwork.props.style.right, 12);
+    assert.equal(artwork.props.style.top, 12);
     assert.ok(fs.existsSync(path.join(root, "assets/atlas-export-preview/island-icons/" + id + ".webp")));
   } else assert.equal(artwork, undefined, "unknown destinations never show an unrelated landmark");
 }
@@ -553,8 +557,8 @@ const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.te
 let scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
   "dashboard content fills the usable viewport on taller screens");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
-  "spare height is shared between sections on every visit");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
+  "spare height belongs inside the playable cards rather than between sections");
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
@@ -564,10 +568,19 @@ assert.equal(homeSections.at(-1).props.testID, "home-exploration",
 
 assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, undefined,
-  "lesson card height follows its content");
-assert.equal(homeSections[2].props.style.flexGrow, undefined,
-  "quiz cards match one another without absorbing viewport height");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 2,
+  "the lesson card absorbs two shares of extra height");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "space-between",
+  "lesson content occupies the top and bottom of the expanded card");
+assert.equal(homeSections[2].props.style.flexGrow, 1,
+  "the two side-by-side quiz cards share the remaining extra height");
+for (const id of ["home-daily-quiz", "home-quick-quiz"]) {
+  const quiz = nodes(homeSections[2]).find(node => node.props?.testID === id);
+  assert.equal(quiz.props.style({ pressed: false })[0].justifyContent, "space-between",
+    "each expanded quiz keeps its icon above its grouped labels");
+  assert.equal(quiz.props.style({ pressed: false })[0].flex, 1,
+    "both quizzes stretch to the same height");
+}
 assert.equal(homeSections[3].props.style[0].flexGrow, undefined,
   "knowledge worlds stay at their natural height");
 const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
@@ -622,8 +635,8 @@ scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[1], false,
   "available height growth restores spacious styling");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
-  "spacious mode distributes the four sections across the viewport");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
+  "spacious mode expands cards without introducing large vertical gaps");
 assert.equal(scroll.props.scrollEnabled, false);
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
