@@ -124,15 +124,31 @@ for (const [id, Component] of Object.entries(worldArtwork)) {
 }
 assert.equal(categoryIconModule.getCategoryWorldIcon("unknown"), undefined,
   "unknown worlds preserve their original fallback");
-// Compile the streak badge separately to assert its ring and inner caption.
+// Compile the streak badge separately to verify its daily-quiz semantics.
 const HomeStreakBadge = compile("src/components/HomeStreakBadge.tsx");
+const landmarkImports = Object.fromEntries(["ancient-greece", "world-history", "mythology"].map(id =>
+  ["../../assets/atlas-export-preview/island-icons/" + id + ".webp", id]));
+const backdrop = compile("src/components/HomeLessonBackdrop.tsx", {
+  "expo-image": { Image: "Image" }, ...landmarkImports,
+});
+for (const id of ["ancient-greece", "world-history", "mythology", "space", undefined]) {
+  const decoration = backdrop({ subcategoryId: id });
+  assert.equal(decoration.props.pointerEvents, "none");
+  assert.equal(decoration.props.importantForAccessibility, "no-hide-descendants");
+  const artwork = nodes(decoration).find(node => node.props?.testID === "home-lesson-landmark");
+  if (["ancient-greece", "world-history", "mythology"].includes(id)) {
+    assert.equal(artwork.props.source, id, "landmark matches the selected destination");
+    assert.ok(fs.existsSync(path.join(root, "assets/atlas-export-preview/island-icons/" + id + ".webp")));
+  } else assert.equal(artwork, undefined, "unknown destinations never show an unrelated landmark");
+}
 const home = compile("src/screens/HomeScreen.tsx", {
   "../components/worldIcons/categoryIconMap": categoryIconModule,
   "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
+  "../components/HomeLessonBackdrop": { __esModule: true, default: "HomeLessonBackdrop" },
   "../components/HomeStreakBadge": { __esModule: true, default: HomeStreakBadge },
   "../components/HomeMotion": {
     MotionView: "View", MotionPressable: "Pressable", MotionIcon: "View",
-    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View", MotionQuizGlow: "QuizGlow",
+    MotionCounter: "Text", MotionXpCircle: "circle", MotionShimmer: "View",
     MotionHeroAccent: "HeroAccent",
   },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
@@ -179,13 +195,13 @@ assert.equal(plainHomeTree.props.children[1].props.testID, "home-game-dashboard"
   "dashboard navigation and layout remain mounted in all modes");
 atlasTestEnv.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE = undefined;
 
-const oldHomeEntranceOrder = [
+const homeEntranceOrder = [
   [0, "topBar"], [60, "home-primary-action"], [130, "actions"],
-  [200, "home-exploration"], [250, "home-mini-games"],
+  [200, "home-exploration"],
 ];
 const entranceSource = fs.readFileSync(
   path.join(root, "src/screens/HomeScreen.tsx"), "utf8");
-for (const [delay, section] of oldHomeEntranceOrder) {
+for (const [delay, section] of homeEntranceOrder) {
   const expected = section === "topBar" ? `<MotionView entranceDelay={${delay}} style={styles.topBar}`
     : section === "home-primary-action" ? `<MotionPressable entranceDelay={${delay}} testID="home-primary-action"`
     : section === "actions" ? `<MotionView entranceDelay={${delay}} style={styles.actions}`
@@ -218,35 +234,46 @@ const textById = (id, t = tree) => nodes(t).find(node => node.props?.testID === 
 assert.equal(textById("home-hero-location").props.children, "Ιστορία · Αρχαία Ελλάδα",
   "continue card shows real category and subcategory titles");
 assert.match(textById("home-primary-action").props.accessibilityLabel, /Ιστορία · Αρχαία Ελλάδα/);
-assert.equal(nodes(textById("home-primary-action")).filter(node => node.type === "HeroAccent").length, 1,
-  "a single one-shot decorative rim lives within Continue");
-assert.equal(textById("home-primary-action").props.style({ pressed: false })[0].borderColor, "#5B5070",
-  "Continue uses a restrained brighter border without changing footprint");
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
-  "completed daily quiz does not pulse");
+assert.equal(nodes(textById("home-primary-action")).find(node => node.type === "HomeLessonBackdrop")
+  .props.subcategoryId, "ancient-greece", "hero decoration follows the actual lesson destination");
+const longLessonTitle = "Πελοποννησιακός Πόλεμος: φόβος, επιλογές και εξάντληση";
+const longTitleTree = home({ ...props, inProgressLesson: { ...lessons[0], title: longLessonTitle } });
+assert.equal(nodes(longTitleTree).find(node => node.props?.children === longLessonTitle)
+  .props.numberOfLines, undefined, "long lesson titles wrap instead of losing their ending");
+const nextLessonTree = home({ ...props, inProgressLesson: null, completedCount: 39 });
+assert.ok(!nodes(nextLessonTree).some(node => typeof node.props?.children === "string"
+  && node.props.children.includes("39 ολοκληρωμένα")), "unrelated completion totals are absent");
+assert.equal(nodes(textById("home-primary-action")).filter(node => node.type === "HeroAccent").length, 0,
+  "Continue has one border, with no duplicate animated rim");
+assert.equal(textById("home-primary-action").props.style({ pressed: false })[0].borderColor, "#595375",
+  "Continue uses a single restrained border");
+const filledSegments = () => nodes(tree).filter(node => node.props?.testID === "home-daily-segment-filled").length;
+const emptySegments = () => nodes(tree).filter(node => node.props?.testID === "home-daily-segment-empty").length;
+assert.equal(filledSegments(), 7, "completed daily quiz fills every segment");
+assert.equal(emptySegments(), 0);
 assert.equal(textById("home-daily-answered").props.children, "7/7",
   "completed daily quiz shows seven answered questions");
-assert.equal(textById("home-daily-answered").props.style.fontSize, 24,
-  "daily answer count stays prominent without expanding the card");
+assert.equal(textById("home-daily-answered").props.style.fontSize, 18,
+  "daily answer count leaves room for progress segments");
 assert.equal(textById("home-daily-quiz").props.accessibilityLabel.includes("7 από 7"), true);
 assert.equal(textById("home-daily-quiz").props.style({ pressed: false })[0].minHeight, 96,
   "daily card keeps its current compact footprint");
-// Every known world renders bespoke local art, with the same viewBox, display
-// scale and 32pt Yoga layout footprint. Each remains inside the original card.
+// Every known world keeps its bespoke art and navigation, with a larger
+// illustration inside a lightweight circular platform.
 const HistoryCard = nodes(tree).find(node => node.props?.testID === "home-category-history");
 assert.equal(Object.keys(worldArtwork).length, 7);
 for (const category of categories) {
   const card = nodes(tree).find(node => node.props?.testID === "home-category-" + category.id);
   assert.equal(card.props.accessibilityRole, "button");
   assert.match(card.props.accessibilityLabel, /Άνοιξε τη θεματική/);
-  assert.equal(card.props.style({ pressed: false })[0].minHeight, 78);
+  assert.equal(card.props.style({ pressed: false })[0].minHeight, 96);
   assert.ok(!nodes(card).some(node => node.props?.children === category.emoji),
     "custom art replaces emoji for " + category.id);
   const illustrationType = worldArtwork[category.id];
   assert.equal(typeof illustrationType, "function", "component exists for " + category.id);
   const illustrationNode = nodes(card).find(node => node.type === illustrationType);
   assert.ok(illustrationNode, "card uses bespoke art for " + category.id);
-  assert.equal(illustrationNode.props.size, 32);
+  assert.equal(illustrationNode.props.size, 46);
   assert.equal(illustrationNode.props.displayScale, 1.18);
   const illustration = illustrationType({ size: 32, displayScale: 1.18 });
   assert.equal(illustration.type, "svg");
@@ -326,30 +353,19 @@ assert.ok(nodes(futureCard).some(node => node.props?.children === "🌟"),
 futureCard.props.onPress();
 assert.equal(actions.at(-1), "category:future-world");
 const streakSlot = nodes(tree).find(node => node.type === HomeStreakBadge);
-assert.ok(streakSlot, "Home uses the same-size circular streak badge");
+assert.ok(streakSlot, "Home uses the compact daily streak badge");
 assert.equal(streakSlot.props.streak, 2,
-  "the new medallion receives the existing daily quiz streak, not a separate metric");
+  "the badge receives the existing daily quiz streak");
 const renderedStreak = HomeStreakBadge({ streak: streakSlot.props.streak });
 assert.match(renderedStreak.props.accessibilityLabel, /καθημερινού quiz/);
 assert.equal(renderedStreak.props.testID, "home-quiz-streak");
 assert.equal(nodes(renderedStreak).find(node => node.props?.testID === "home-streak-count").props.children, 2);
-assert.equal(renderedStreak.props.style.width, 50,
-  "streak circle matches the 50pt level badge");
-assert.equal(renderedStreak.props.style.backgroundColor, "#151928",
-  "streak circle uses the level badge surface");
-assert.equal(renderedStreak.props.style.borderWidth, undefined,
-  "streak badge has no duplicate native border outside its SVG ring");
-assert.equal(nodes(renderedStreak).filter(node => node.type === "circle").length, 2,
-  "streak badge has the same base and accent ring layers as the level badge");
-assert.ok(nodes(renderedStreak).filter(node => node.type === "circle")
-  .every(node => node.props.r === 21 && node.props.strokeWidth === 3.5),
-  "streak ring matches level ring dimensions");
-assert.ok(nodes(renderedStreak).some(node => node.props?.children === "ΣΕΡΙ"),
-  "streak caption is inside the medallion");
-assert.ok(!nodes(renderedStreak).some(node => node.props?.children === "σερί quiz"),
-  "no extra text appears beside the ring");
-assert.equal(nodes(renderedStreak).filter(node => node.type === "path").length, 0,
-  "flame artwork is removed");
+assert.equal(nodes(renderedStreak).filter(node => node.type === "circle").length, 0,
+  "a daily streak does not imply a percentage of completion");
+assert.equal(nodes(renderedStreak).filter(node => node.type === "path").length, 2,
+  "the compact streak has flame artwork");
+assert.ok(nodes(HomeStreakBadge({ streak: 1 })).some(node => node.props?.children === "ημέρα"));
+assert.ok(nodes(renderedStreak).some(node => node.props?.children === "ημέρες"));
 const loadingStreak = HomeStreakBadge({ streak: null });
 assert.match(loadingStreak.props.accessibilityLabel, /Φόρτωση/);
 assert.equal(nodes(loadingStreak).find(node => node.props?.testID === "home-streak-count").props.children, "—");
@@ -361,23 +377,21 @@ daily = { ready: true, doc: { days: { "2026-11-03": {
 } } } };
 tree = home(props);
 assert.equal(textById("home-daily-answered").props.children, "3/7");
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, true,
-  "unfinished daily quiz highlights");
+assert.equal(filledSegments(), 3, "one segment fills for each answer submitted today");
+assert.equal(emptySegments(), 4);
 assert.ok(nodes(tree).some(node => node.props?.children === "Συνέχισε σήμερα"));
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /3 από 7/);
 daily = { ready: true, doc: { days: { "2026-11-02": {
   record: { completed: true, answers: completeDailyAnswers },
 } } } };
 tree = home(props);
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, true,
-  "today can highlight even if yesterday was completed");
+assert.equal(filledSegments(), 0, "yesterday’s progress does not fill today’s segments");
 assert.equal(textById("home-daily-answered").props.children, "0/7",
   "yesterday's completed quiz does not count towards today's progress");
 assert.ok(nodes(tree).some(node => node.props?.children === "Ξεκίνα σήμερα"));
 daily = { ready: false, doc: { days: {} } };
 tree = home(props);
-assert.equal(nodes(tree).find(node => node.type === "QuizGlow").props.active, false,
-  "loading state must not highlight");
+assert.equal(filledSegments(), 0, "loading state must not claim completed segments");
 assert.equal(textById("home-daily-answered").props.children, "—/7",
   "unknown loading progress must not appear as zero");
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /φόρτωση προόδου/);
@@ -386,23 +400,10 @@ daily = { ready: true, doc: { days: { "2026-11-03": {
 } } } };
 tree = home(props);
 assert.equal(nodes(tree).filter(node => node.props?.accessibilityLabel?.includes("Αναζήτηση")).length, 0);
-// Future games are only discoverable previews. No unfinished game can be launched.
-const upcomingGames = nodes(tree).filter(node => node.props?.testID?.startsWith("home-mini-game-"));
-assert.equal(nodes(tree).filter(node => node.props?.testID === "home-mini-games").length, 1);
-assert.equal(upcomingGames.length, 2);
-assert.deepEqual(Array.from(upcomingGames, node => node.props.testID), [
-  "home-mini-game-sudoku", "home-mini-game-hangman",
-]);
-for (const game of upcomingGames) {
-  assert.equal(game.type, "View");
-  assert.equal(game.props.onPress, undefined, "future game cards must not navigate");
-  assert.equal(game.props.accessible, true);
-  assert.equal(game.props.accessibilityState.disabled, true);
-  assert.match(game.props.accessibilityLabel, /σύντομα διαθέσιμο/);
-  assert.equal(game.props.style[0].minHeight, 62);
-}
-assert.ok(nodes(tree).some(node => node.props?.children === "Μίνι παιχνίδια"));
-assert.equal(nodes(tree).filter(node => node.props?.children === "Σύντομα").length, 2);
+// Unavailable games no longer consume space or expose dead actions.
+assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("home-mini-game")).length, 0);
+assert.ok(!nodes(tree).some(node => node.props?.children === "Σύντομα"));
+assert.ok(!nodes(tree).some(node => node.props?.children === "7 κόσμοι"));
 
 // The Home chart now uses a cached WebP instead of a full-screen live SVG.
 // Verify immediate static artwork, viewport-driven ambient overlays and no
@@ -533,46 +534,38 @@ assert.match(homeMotionSourceCheck, /withTiming\(width \+ 42/,
   "the Continue shimmer's original animation has not been changed");
 
 // Responsive density follows the available Home height after safe areas and tabs.
-homeScrollState = [0, 0, 0];
+homeScrollState = [0, 0];
 const renderMeasuredHome = () => { homeScrollHookIndex = 0; return home(props); };
 const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-game-dashboard");
 let scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
   "dashboard content fills the usable viewport on taller screens");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "free viewport height grows dashboard cards instead of the margins");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
+  "spare height is shared between sections on every visit");
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
-assert.equal(homeSections.length, 5, "all five Home sections share the available height");
-assert.equal(homeSections.at(-1).props.testID, "home-mini-games",
-  "mini-games end the dashboard and anchor to the bottom when everything fits");
+assert.equal(homeSections.length, 4, "four actionable Home sections share the available height");
+assert.equal(homeSections.at(-1).props.testID, "home-exploration",
+  "knowledge worlds end the dashboard");
 
 assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 2,
-  "Continue is a flexible-height card");
-assert.equal(homeSections[2].props.style.flexGrow, 1,
-  "daily quiz and review cards expand vertically");
-assert.equal(homeSections[3].props.style[0].flexGrow, 2,
-  "knowledge worlds can expand to use spare height");
-assert.equal(homeSections[4].props.style[0].flexGrow, 1,
-  "mini-games expand without moving apart from the other sections");
+assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, undefined,
+  "lesson card height follows its content");
+assert.equal(homeSections[2].props.style.flexGrow, undefined,
+  "quiz cards match one another without absorbing viewport height");
+assert.equal(homeSections[3].props.style[0].flexGrow, undefined,
+  "knowledge worlds stay at their natural height");
 const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap");
 assert.ok(flexibleWorldGrid, "knowledge-world cards stay in the existing grid");
-assert.equal(flexibleWorldGrid.props.style[0].flexGrow, 1);
-assert.equal(flexibleWorldGrid.props.style[0].alignContent, "stretch",
-  "both rows of world tiles share any extra height instead of leaving a void");
+assert.equal(flexibleWorldGrid.props.style[0].alignContent, "flex-start",
+  "category rows sit directly below the heading");
+assert.equal(flexibleWorldGrid.props.style[0].flexGrow, undefined,
+  "the grid cannot stretch into unused viewport space");
 assert.equal(flexibleWorldGrid.props.style[0].rowGap, 8,
   "world-row margins stay fixed");
-const flexibleGamesRow = nodes(homeSections[4]).find(node =>
-  node.props?.style?.flexDirection === "row" && node.props?.style?.flexGrow === 1);
-assert.ok(flexibleGamesRow, "mini-game cards stretch to fill their section");
-assert.equal(flexibleGamesRow.props.style.gap, 10,
-  "mini-game card spacing remains constant");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "space-between",
-  "the Continue button can settle toward the bottom of its growing card");
 
 assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measurements settle");
 assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
@@ -580,26 +573,14 @@ assert.equal(scroll.props.alwaysBounceVertical, false);
 assert.equal(scroll.props.overScrollMode, "never", "disable Android overscroll glow");
 scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
 scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[1].gap, 8,
+assert.equal(scroll.props.contentContainerStyle[1].gap, 10,
   "shorter usable viewport activates compact layout even with a tall window");
 assert.equal(scroll.props.contentContainerStyle[2], false);
 scroll.props.onContentSizeChange(360, 711);
 scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
-  "measured overflow activates tight spacing without dropping sections");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "tight mode keeps the same fixed section spacing");
-const tightHero = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-primary-action");
-const tightQuiz = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-daily-quiz");
-const tightCategory = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
-const tightMiniGame = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-mini-game-sudoku");
-assert.equal(tightHero.props.style({ pressed: false })[2].padding, 10);
-assert.equal(tightQuiz.props.style({ pressed: false })[3].minHeight, 80);
-assert.equal(tightCategory.props.style({ pressed: false })[2].minHeight, 67);
-assert.equal(tightMiniGame.props.style[1].minHeight, 56);
-assert.equal(nodes(tightCategory).find(node => node.type === HistoryWorldIcon).props.size, 32);
-assert.ok(nodes(tightHero).some(node => node.props?.style?.minHeight === 44),
-  "primary CTA retains its 44pt tap target");
+assert.equal(scroll.props.contentContainerStyle[2], false,
+  "transient overflow cannot permanently tighten the layout");
+assert.equal(scroll.props.scrollEnabled, true, "overflow is scrollable at compact density");
 scroll.props.onContentSizeChange(360, 701);
 scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "fitted tight content cannot be scrolled");
@@ -607,8 +588,8 @@ scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[1], false,
   "available height growth restores spacious styling");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "spacious mode grows cards instead of spreading sections apart");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
+  "spacious mode distributes the four sections across the viewport");
 assert.equal(scroll.props.scrollEnabled, false);
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
@@ -620,7 +601,7 @@ scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "drag turns off when content fits again");
 
 // Preserve the one-point measurement tolerance and resize behavior.
-homeScrollState = [0, 0, 0];
+homeScrollState = [0, 0];
 scroll = scrollNode();
 scroll.props.onLayout({ nativeEvent: { layout: { height: 600 } } });
 scroll.props.onContentSizeChange(360, 596);
@@ -635,6 +616,24 @@ assert.equal(scroll.props.scrollEnabled, true);
 scroll.props.onLayout({ nativeEvent: { layout: { height: 660 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "recalculate overflow after viewport resize");
+// Cold startup can deliver content measured for an older viewport first.
+// Its settled layout must match a fresh visit with the same available height.
+homeScrollState = [0, 0];
+scroll = scrollNode();
+scroll.props.onContentSizeChange(360, 820);
+scroll = scrollNode();
+scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
+scroll = scrollNode();
+scroll.props.onContentSizeChange(360, 705);
+const coldLayout = scrollNode().props.contentContainerStyle;
+homeScrollState = [0, 0];
+scroll = scrollNode();
+scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
+scroll = scrollNode();
+scroll.props.onContentSizeChange(360, 705);
+assert.deepEqual(scrollNode().props.contentContainerStyle, coldLayout,
+  "cold startup and returning Home settle to the same layout");
+assert.equal(scrollNode().props.scrollEnabled, false);
 homeScrollState = null;
 assert.ok(nodes(tree).some(node => node.props?.children === "1 / 3 ερωτήσεις"),
   "resume card shows question progress beside its heading");
@@ -643,8 +642,8 @@ const centeredGrid = nodes(tree).find(node =>
   && node.props.style[0]?.justifyContent === "center");
 assert.ok(centeredGrid, "knowledge worlds are centered with equal grid gaps");
 assert.equal(centeredGrid.props.style[0].columnGap, 8);
-assert.equal(HistoryCard.props.style({ pressed: false })[0].minHeight, 78,
-  "History card dimensions remain unchanged on normal screens");
+assert.equal(HistoryCard.props.style({ pressed: false })[0].minHeight, 96,
+  "History destination has room for larger artwork");
 const firstWorld = nodes(tree).find(node => node.props?.testID === "home-category-history");
 const cardPercent = Number.parseFloat(firstWorld.props.style({ pressed: false })[0].width) / 100;
 for (const phoneWidth of [320, 360, 393]) {
@@ -660,27 +659,15 @@ const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
   && node.props.style[1]?.width?.endsWith("%"));
 assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
 
-// The Daily Quiz highlight stays inside its original 16pt card,
-// preserves touch handling, respects reduced motion and does not repeat.
+// Shared Continue accent behavior.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
 const heroRimSource = homeMotionSource.slice(
   homeMotionSource.indexOf("export function MotionHeroAccent"),
-  homeMotionSource.indexOf("export function MotionQuizGlow"));
+  homeMotionSource.indexOf("const styles ="));
 assert.match(heroRimSource, /useReducedMotion/, "Continue accent respects reduced-motion settings");
 assert.match(heroRimSource, /pointerEvents="none"/, "Continue accent never takes taps");
 assert.doesNotMatch(heroRimSource, /withRepeat\(/,
   "Continue accent is a one-shot highlight rather than another ambient loop");
-const dailyHighlightSource = homeMotionSource.slice(homeMotionSource.indexOf("export function MotionQuizGlow"));
-assert.match(dailyHighlightSource, /\.\.\.StyleSheet\.absoluteFill/,
-  "highlight follows the card perimeter");
-assert.match(dailyHighlightSource, /borderRadius: 16/,
-  "highlight matches the quiz card radius");
-assert.match(dailyHighlightSource, /pointerEvents="none"/,
-  "highlight cannot intercept taps");
-assert.match(dailyHighlightSource, /if \(reduced \|\| !active\) return null/,
-  "completed quizzes and reduced motion suppress the pulse");
-assert.doesNotMatch(dailyHighlightSource, /withRepeat\(/,
-  "Daily Quiz highlight must not pulse indefinitely");
 
 // The compact bottom navigation preserves all four destinations.
 const bottomNav = compile("src/components/BottomNavigation.tsx", {

@@ -202,38 +202,6 @@ export function MotionHeroAccent() {
   </Animated.View>;
 }
 
-/**
- * Highlight the actual quiz card perimeter, not an un-clipped bright oval
- * behind its counter. A single UI-thread pulse settles to a faint outline
- * while today's quiz is unfinished. No layout or hit area changes.
- */
-export function MotionQuizGlow({ active }: { active: boolean }) {
-  const reduced = useReducedMotion();
-  const glow = useSharedValue(0);
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: glow.value,
-  }));
-  useEffect(() => {
-    cancelAnimation(glow);
-    if (reduced || !active) {
-      glow.value = 0;
-      return;
-    }
-    glow.value = withDelay(650, withSequence(
-      withTiming(0.68, { duration: 450, easing: ease }),
-      withTiming(0.2, { duration: 700, easing: ease }),
-    ));
-    return () => cancelAnimation(glow);
-  }, [active, reduced, glow]);
-  if (reduced || !active) return null;
-  return <Animated.View
-    testID="home-daily-quiz-highlight"
-    pointerEvents="none"
-    accessible={false}
-    style={[styles.quizGlow, animatedStyle]}
-  />;
-}
-
 const styles = StyleSheet.create({
   iconBox: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
   shimmer: { position: "absolute", top: -8, bottom: -8, left: 0,
@@ -242,7 +210,4 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#CBBDEA" },
   heroRimTop: { position: "absolute", top: 0, left: 17, right: 17,
     height: 1, backgroundColor: "#F1E8FF", opacity: 0.44 },
-  // Overlay the 16pt-radius card's own boundary, never its content.
-  quizGlow: { ...StyleSheet.absoluteFill,
-    borderRadius: 16, borderWidth: 2, borderColor: "#C7B6FF" },
 });

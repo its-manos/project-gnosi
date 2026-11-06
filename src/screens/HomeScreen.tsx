@@ -11,8 +11,9 @@ import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
-import { MotionCounter, MotionHeroAccent, MotionIcon, MotionPressable, MotionQuizGlow, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import { MotionCounter, MotionPressable, MotionView, MotionXpCircle } from "../components/HomeMotion";
 import HomeAtlasBackground from "../components/HomeAtlasBackground";
+import HomeLessonBackdrop from "../components/HomeLessonBackdrop";
 import HomeStreakBadge from "../components/HomeStreakBadge";
 
 type Props = {
@@ -43,14 +44,8 @@ const shortLabels: Record<string, string> = {
   "difficult-history": "Δύσκολη ιστορία",
 };
 
-// Visual previews only. Game routes and persistence arrive in a later phase.
-const upcomingMiniGames = [
-  { id: "sudoku", title: "Sudoku", symbol: "▦" },
-  { id: "hangman", title: "Κρεμάλα", symbol: "Α _" },
-] as const;
-
 export default function HomeScreen({
-  categories, subcategories, featuredLesson, progressLoaded, completedCount,
+  categories, subcategories, featuredLesson, progressLoaded,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
   onOpenQuickQuiz, quickQuizInProgress, onOpenProfile,
@@ -66,16 +61,14 @@ export default function HomeScreen({
   // by a few points after the lesson breadcrumb was added.
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const [extraDensity, setExtraDensity] = useState(0);
   const availableHeight = availableScreenHeight(viewportHeight, height);
-  const baseDensity = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
-  const density = Math.max(baseDensity, extraDensity);
+  const density = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
-  // A genuine overflow first switches to a denser layout. Scrolling remains
-  // available only when the most compact layout cannot fit the content (e.g.
-  // accessibility text, small landscape viewports, unusually tall headings).
-  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1 && tight;
+  // Content measurements must never change density: startup hydration and old
+  // layout callbacks can otherwise latch Home into a tighter mode until remount.
+  // Long titles and accessibility text remain scrollable at every density.
+  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1;
   const today = useAthensDate();
   // This existing metric counts completed daily quizzes, not app logins.
   // A separate login streak requires account-scoped, synchronised visit records.
@@ -88,6 +81,8 @@ export default function HomeScreen({
   // The daily quiz stores one answer per completed question, including wrong
   // answers and the current question before the Next button is pressed.
   const dailyAnsweredCount = todayRecord ? Object.keys(todayRecord.answers).length : 0;
+  const dailySegments = Array.from({ length: DAILY_CHALLENGE_SIZE }, (_, index) =>
+    daily.ready && index < dailyAnsweredCount);
   const dailyProgress = daily.ready
     ? String(dailyAnsweredCount) + "/" + String(DAILY_CHALLENGE_SIZE)
     : "—/" + String(DAILY_CHALLENGE_SIZE);
@@ -121,19 +116,10 @@ export default function HomeScreen({
         const nextHeight = event.nativeEvent.layout.height;
         if (Math.abs(viewportHeight - nextHeight) >= 1) {
           setViewportHeight(nextHeight);
-          // Re-evaluate density after a resize, rotation or navigation change.
-          setExtraDensity(0);
-          if (contentHeight > nextHeight + 1) {
-            const nextBase = nextHeight < 610 ? 2 : nextHeight < 740 ? 1 : 0;
-            if (nextBase < 2) setExtraDensity(nextBase + 1);
-          }
         }
       }}
       onContentSizeChange={(_width, nextHeight) => {
         setContentHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
-        if (viewportHeight > 0 && nextHeight > viewportHeight + 1 && density < 2) {
-          setExtraDensity(density + 1);
-        }
       }}>
       <MotionView entranceDelay={0} style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
@@ -150,10 +136,10 @@ export default function HomeScreen({
                 rotation={-90} origin="25, 25" /> : null}
             </Svg>
             <View pointerEvents="none" style={styles.levelCenter}>
-              <Text style={styles.levelCaption}>ΕΠ.</Text>
               <Text testID="home-level" style={styles.levelNumber} numberOfLines={1}
                 adjustsFontSizeToFit>{profileReady ? profile.level : "—"}</Text>
             </View>
+            <Text style={styles.levelCaption}>Επίπεδο</Text>
           </MotionPressable> : null}
         </View>
       </MotionView>
@@ -165,28 +151,24 @@ export default function HomeScreen({
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
             + (heroLocation ? ". " + heroLocation : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
-        <MotionHeroAccent />
-        <View style={styles.heroTop}>
+        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} />
+        <View style={styles.heroIntro}>
           <Text style={styles.eyebrow}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
-          <Text style={styles.heroCount}>{heroIsResume
-            ? String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"
-            : completedCount + " ολοκληρωμένα"}</Text>
+          {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}>
+            {heroLocation}</Text> : null}
+          {heroIsResume ? <Text style={styles.heroCount}>
+            {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
+          </Text> : null}
         </View>
-        <Text style={[styles.heroTitle, tight && styles.tightHeroTitle]} numberOfLines={2}>
+        <Text style={[styles.heroTitle, tight && styles.tightHeroTitle]}>
           {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
         </Text>
-        {heroLocation ? <Text testID="home-hero-location" style={styles.heroLocation}
-          numberOfLines={1} ellipsizeMode="tail">{heroLocation}</Text>
-          : !heroIsResume ? <Text style={styles.heroDescription} numberOfLines={1}>
-            {hero ? "Ένα νέο μάθημα σε περιμένει" : "Επίλεξε μια θεματική για να ξεκινήσεις"}
-          </Text> : null}
         {heroIsResume && inProgressQuestionCount > 0 ?
           <View style={styles.track}><View style={[styles.trackFill, { width: String(progress) + "%" }]}>
               <View pointerEvents="none" style={styles.trackSheen} />
             </View></View>
           : null}
         <View style={styles.heroButton}>
-          <MotionShimmer />
           <Text style={styles.heroButtonLabel}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
           <Text style={styles.heroButtonLabel}>→</Text>
         </View>
@@ -199,10 +181,14 @@ export default function HomeScreen({
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
             : "Καθημερινό quiz, φόρτωση προόδου"}
           onPress={onStartDailyChallenge}>
-          <MotionQuizGlow active={daily.ready && !todayCompleted} />
-          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.quizLip]} />
+          <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quizHalo]} />
           <View style={styles.quizTop}>
             <Text style={styles.actionIcon}>✦</Text>
+            <View style={styles.dailySegments} pointerEvents="none" accessible={false}>
+              {dailySegments.map((filled, index) => <View key={index}
+                testID={filled ? "home-daily-segment-filled" : "home-daily-segment-empty"}
+                style={[styles.dailySegment, filled && styles.dailySegmentFilled]} />)}
+            </View>
             <MotionCounter progressKey={today + "-" + dailyProgress} testID="home-daily-answered" style={styles.quizAnswered}
               accessible={false} numberOfLines={1} adjustsFontSizeToFit>{dailyProgress}</MotionCounter>
           </View>
@@ -212,8 +198,11 @@ export default function HomeScreen({
         <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
           onPress={onOpenQuickQuiz}>
-          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.quickQuizLip]} />
-          <Text style={[styles.actionIcon, styles.quickQuizIcon]}>ϟ</Text>
+          <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quickQuizHalo]} />
+          <View style={styles.quizTop}>
+            <Text style={[styles.actionIcon, styles.quickQuizIcon]}>ϟ</Text>
+            <Text accessible={false} style={styles.quickQuizCue}>{quickQuizInProgress ? "→" : "▸"}</Text>
+          </View>
           <Text style={styles.actionTitle}>Γρήγορο Κουίζ</Text>
           <Text style={styles.actionMeta}>{quickQuizInProgress ? "Συνέχισε τον γύρο" : "5 ερωτήσεις"}</Text>
         </MotionPressable>
@@ -221,46 +210,28 @@ export default function HomeScreen({
 
       <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, tight && styles.tightWorlds]}>
         <View style={styles.sectionRow}>
-          <Text style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
-          <Text style={styles.worldCount}>{categories.length} κόσμοι</Text>
+          <Text accessibilityRole="header" style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
+          <View accessible={false} pointerEvents="none" style={styles.sectionRule} />
         </View>
         <View style={[styles.categoryGrid, tight && styles.tightCategoryGrid]}>
-          {categories.map((category, index) => {
+          {categories.map(category => {
             const WorldIllustration = getCategoryWorldIcon(category.id);
             return (
               <MotionPressable key={category.id} testID={"home-category-" + category.id}
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
                 onPress={() => onOpenCategory(category.id)}
                 style={({ pressed }) => [styles.category, compact && styles.compactCategory, tight && styles.tightCategory, pressed && styles.pressed]}>
-                {WorldIllustration
-                  ? <MotionIcon index={index}><WorldIllustration size={32} displayScale={1.18} /></MotionIcon>
-                  : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
+                <View style={[styles.categoryPlatform, tight && styles.tightCategoryPlatform]} accessible={false} pointerEvents="none">
+                  {WorldIllustration
+                    ? <WorldIllustration size={tight ? 38 : 46} displayScale={1.18} />
+                    : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
+                </View>
                 <Text style={[styles.categoryLabel, tight && styles.tightCategoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
                   {shortLabels[category.id] ?? category.title}
                 </Text>
               </MotionPressable>
             );
           })}
-        </View>
-      </MotionView>
-
-      <MotionView entranceDelay={250} testID="home-mini-games" style={[styles.miniGames, tight && styles.tightMiniGames]}>
-        <Text style={[styles.miniGamesHeading, tight && styles.tightMiniGamesHeading]}>Μίνι παιχνίδια</Text>
-        <View style={styles.miniGamesRow}>
-          {upcomingMiniGames.map(game =>
-            <View key={game.id} testID={"home-mini-game-" + game.id}
-              style={[styles.miniGameCard, tight && styles.tightMiniGameCard]}
-              accessible accessibilityLabel={game.title + ", σύντομα διαθέσιμο"}
-              accessibilityState={{ disabled: true }}>
-              <View style={[styles.miniGameIcon, tight && styles.tightMiniGameIcon]} accessible={false}>
-                <Text style={styles.miniGameSymbol}>{game.symbol}</Text>
-              </View>
-              <View style={styles.miniGameCopy}>
-                <Text style={styles.miniGameTitle} numberOfLines={1} adjustsFontSizeToFit>{game.title}</Text>
-                <Text style={styles.miniGameSoon}>Σύντομα</Text>
-              </View>
-            </View>
-          )}
         </View>
       </MotionView>
       </ScrollView>
@@ -271,14 +242,13 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Fill the available viewport by growing the cards and knowledge-world
-  // tiles, not the gaps between sections. Minimum card sizes remain intact;
-  // on genuinely small screens content can overflow and become scrollable.
+  // Distribute spare height between the four sections. Category rows stay together.
+  // When content exceeds the viewport, the minimum gaps remain and scrolling takes over.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
-  compactContent: { gap: 8, paddingBottom: 5 },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
+  compactContent: { gap: 10, paddingBottom: 6 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
-  compactHero: { padding: 12, gap: 5 },
+  compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
   tightHeroTitle: { fontSize: 18, lineHeight: 23 },
   compactActionCard: { minHeight: 90, padding: 10 },
@@ -286,30 +256,24 @@ const styles = StyleSheet.create({
   compactCategory: { minHeight: 70 },
   tightCategory: { minHeight: 67, paddingVertical: 4, gap: 2 },
   tightCategoryLabel: { fontSize: 10, lineHeight: 12 },
-  tightWorlds: { gap: 6 },
+  tightWorlds: { gap: 4, paddingTop: 2 },
   tightSectionTitle: { fontSize: 16, lineHeight: 20 },
   tightCategoryGrid: { rowGap: 6 },
-  tightMiniGames: { gap: 5 },
-  tightMiniGamesHeading: { fontSize: 14, lineHeight: 19 },
-  tightMiniGameCard: { minHeight: 56, paddingVertical: 6 },
-  tightMiniGameIcon: { width: 32, height: 32 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
-  logo: { color: colors.accentLight, fontSize: 21, lineHeight: 27, fontWeight: "900", letterSpacing: 2.4 },
+  logo: { color: colors.accentLight, fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 2.4 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
-  levelBadge: { width: 50, height: 50, alignItems: "center", justifyContent: "center",
-    borderRadius: 25, backgroundColor: colors.surface },
+  levelBadge: { height: 50, flexDirection: "row", alignItems: "center", gap: 5 },
   levelRing: { position: "absolute", top: 0, left: 0 },
-  levelCenter: { alignItems: "center", justifyContent: "center" },
-  levelCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 10, fontWeight: "900" },
+  levelCenter: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },
+  levelCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
-  hero: { flexGrow: 2, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#5B5070",
-    backgroundColor: "#1B2434", gap: 6, justifyContent: "space-between" },
-  heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  hero: { padding: 18, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
+    overflow: "hidden", backgroundColor: "#1B2434", gap: 10 },
+  heroIntro: { paddingRight: 76, gap: 3 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
-  heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1, textAlign: "right" },
-  heroTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "800" },
-  heroDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 16 },
-  heroLocation: { color: colors.accentLight, fontSize: 11, lineHeight: 15,
+  heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
+  heroTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "700" },
+  heroLocation: { color: "#D1C9EB", fontSize: 12, lineHeight: 17,
     fontWeight: "700" },
   track: { height: 5, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginTop: 2 },
   trackFill: { height: "100%", borderRadius: 4, backgroundColor: colors.accentLight },
@@ -318,45 +282,39 @@ const styles = StyleSheet.create({
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2, overflow: "hidden" },
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
-  actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
+  actions: { flexDirection: "row", gap: 10 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
-    padding: 12, justifyContent: "center", gap: 4 },
-  quizCard: { backgroundColor: "#252139", borderColor: "#564A6B" },
-  cardLip: { position: "absolute", top: 1, left: 16, right: 16, height: 1 },
-  quizLip: { backgroundColor: "#D8C5F2", opacity: 0.34 },
-  quickQuizLip: { backgroundColor: "#9CE4C5", opacity: 0.30 },
+    padding: 12, justifyContent: "flex-start", gap: 4, overflow: "hidden" },
+  quizCard: { backgroundColor: "#201D30", borderColor: "#514463" },
+  actionHalo: { position: "absolute", width: 88, height: 88, borderRadius: 44, right: -37, top: -44 },
+  quizHalo: { backgroundColor: "rgba(177,165,255,0.07)" },
+  quickQuizHalo: { backgroundColor: "rgba(108,224,182,0.06)" },
+  dailySegments: { flex: 1, flexDirection: "row", gap: 2, marginHorizontal: 7, maxWidth: 58 },
+  dailySegment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: "#4A405D" },
+  dailySegmentFilled: { backgroundColor: colors.accentLight },
   quizTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  quizAnswered: { color: colors.accentLight, fontSize: 24, lineHeight: 27,
+  quizAnswered: { color: colors.accentLight, fontSize: 18, lineHeight: 26,
     fontWeight: "900", letterSpacing: -0.6, fontVariant: ["tabular-nums"] },
-  quickQuizCard: { backgroundColor: "#1D352F", borderColor: "#426B5E" },
+  quickQuizCard: { backgroundColor: "#192B2A", borderColor: "#395D54" },
   actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
+  quickQuizCue: { color: "#6CE0B6", fontSize: 19, lineHeight: 26, fontWeight: "700" },
   quickQuizIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  worlds: { gap: 9, flexGrow: 2 },
-  sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  worlds: { gap: 6, paddingTop: 6 },
+  sectionRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  sectionRule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(177,165,255,0.32)" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
-  worldCount: { color: colors.textMuted, fontSize: 11 },
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
-    alignContent: "stretch", flexGrow: 1, columnGap: 8, rowGap: 8 },
-  category: { width: "22.7%", minHeight: 78, backgroundColor: "#182133",
-    borderColor: colors.border, borderTopColor: "#44475D", borderWidth: 1, borderRadius: 14,
-    alignItems: "center", justifyContent: "center", paddingHorizontal: 3, paddingVertical: 6, gap: 4 },
+    alignContent: "flex-start", columnGap: 8, rowGap: 8 },
+  category: { width: "22.7%", minHeight: 96, borderRadius: 14,
+    alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
+  categoryPlatform: { width: 62, height: 62, borderRadius: 31,
+    backgroundColor: "rgba(177,165,255,0.07)", borderWidth: 1, borderColor: "rgba(177,165,255,0.13)",
+    alignItems: "center", justifyContent: "center" },
+  tightCategoryPlatform: { width: 48, height: 48, borderRadius: 24 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
-  miniGames: { gap: 8, flexGrow: 1 },
-  miniGamesHeading: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: "800" },
-  miniGamesRow: { flexDirection: "row", gap: 10, flexGrow: 1 },
-  miniGameCard: { flex: 1, minHeight: 62, paddingHorizontal: 10, paddingVertical: 8,
-    flexDirection: "row", alignItems: "center", gap: 9, borderRadius: 14,
-    backgroundColor: colors.surface, borderColor: colors.border, borderTopColor: "#3B3C52",
-    borderWidth: 1 },
-  miniGameIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center",
-    justifyContent: "center", backgroundColor: colors.accentSurface },
-  miniGameSymbol: { color: colors.accentLight, fontSize: 18, lineHeight: 23, fontWeight: "800" },
-  miniGameCopy: { flex: 1, gap: 1 },
-  miniGameTitle: { color: colors.text, fontSize: 13, lineHeight: 18, fontWeight: "800" },
-  miniGameSoon: { color: colors.textMuted, fontSize: 10, lineHeight: 14 },
   pressed: { opacity: 0.76 },
 });
