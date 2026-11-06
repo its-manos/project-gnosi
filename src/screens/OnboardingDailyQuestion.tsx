@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import QuizReveal from "../components/QuizReveal";
+import { MotionView } from "../components/HomeMotion";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
 import { useLearningSession } from "../state/LearningSession";
 import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
@@ -81,11 +82,11 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
     <ScrollView contentContainerStyle={[styles.content, compact && styles.contentCompact,
       { paddingBottom: Math.max(onboardingLayout.minBottomPadding, insets.bottom + 18) }]}
       showsVerticalScrollIndicator={false}>
-      <View style={[styles.heading, compact && styles.headingCompact]}>
+      <MotionView entranceDelay={35} style={[styles.heading, compact && styles.headingCompact]}>
         <Text style={styles.kicker}>Η ΠΡΩΤΗ ΣΟΥ ΔΟΚΙΜΑΣΙΑ  ·  01 / 07</Text>
         <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Μια ερώτηση. Μια ανακάλυψη.</Text>
         <Text style={styles.copy}>Δοκίμασε την πρώτη ερώτηση της σημερινής πρόκλησης. Η απάντησή σου θα μείνει στο κανονικό quiz.</Text>
-      </View>
+      </MotionView>
       {alreadyPassed ? <QuizReveal><View style={styles.notice}>
         <Text style={styles.noticeTitle}>Η πρώτη στάση ολοκληρώθηκε ✦</Text>
         <Text style={styles.copy}>Η πρόοδός σου έχει αποθηκευτεί. Μπορείς να συνεχίσεις τις υπόλοιπες ερωτήσεις από την αρχική.</Text>
@@ -105,9 +106,11 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
             <Text style={styles.copy}>Η πρόοδός σου παραμένει ασφαλής. Μπορείς να ξαναδοκιμάσεις ή να συνεχίσεις στα ενδιαφέροντά σου.</Text>
             <ActionButton secondary label="Δοκίμασε ξανά" onPress={() => { attemptedDate.current = todayKey; void beginChallenge(); }} /></>}
       </View>}
-      {(alreadyPassed || answeredFirst || unavailable) ? <ActionButton
-        label={busy ? "Αποθήκευση…" : unavailable ? "Συνέχεια χωρίς ερώτηση →" : "Διάλεξε τα ενδιαφέροντά σου →"}
-        disabled={busy} onPress={() => void continueAfterQuestion()} /> : null}
+      {(alreadyPassed || answeredFirst || unavailable) ? <MotionView entranceDelay={60}>
+        <ActionButton
+          label={busy ? "Αποθήκευση…" : unavailable ? "Συνέχεια χωρίς ερώτηση →" : "Διάλεξε τα ενδιαφέροντά σου →"}
+          disabled={busy} onPress={() => void continueAfterQuestion()} />
+      </MotionView> : null}
       {answeredFirst ? <Text style={styles.tip}>Αυτή ήταν μόνο η πρώτη από 7 ερωτήσεις. Οι υπόλοιπες σε περιμένουν στην αρχική.</Text> : null}
       {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>Δεν ολοκληρώθηκε η μετάβαση. Δοκίμασε ξανά· η απάντησή σου διατηρείται.</Text> : null}
     </ScrollView>
