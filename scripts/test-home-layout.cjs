@@ -534,14 +534,14 @@ assert.match(homeMotionSourceCheck, /withTiming\(width \+ 42/,
   "the Continue shimmer's original animation has not been changed");
 
 // Responsive density follows the available Home height after safe areas and tabs.
-homeScrollState = [0, 0, 0];
+homeScrollState = [0, 0];
 const renderMeasuredHome = () => { homeScrollHookIndex = 0; return home(props); };
 const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-game-dashboard");
 let scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
   "dashboard content fills the usable viewport on taller screens");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "dashboard sections start below the header");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
+  "spare height is shared between sections on every visit");
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
@@ -578,19 +578,9 @@ assert.equal(scroll.props.contentContainerStyle[1].gap, 10,
 assert.equal(scroll.props.contentContainerStyle[2], false);
 scroll.props.onContentSizeChange(360, 711);
 scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
-  "measured overflow activates tight spacing without dropping sections");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "tight mode keeps the same fixed section spacing");
-const tightHero = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-primary-action");
-const tightQuiz = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-daily-quiz");
-const tightCategory = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
-assert.equal(tightHero.props.style({ pressed: false })[2].padding, 10);
-assert.equal(tightQuiz.props.style({ pressed: false })[3].minHeight, 80);
-assert.equal(tightCategory.props.style({ pressed: false })[2].minHeight, 67);
-assert.equal(nodes(tightCategory).find(node => node.type === HistoryWorldIcon).props.size, 38);
-assert.ok(nodes(tightHero).some(node => node.props?.style?.minHeight === 44),
-  "primary CTA retains its 44pt tap target");
+assert.equal(scroll.props.contentContainerStyle[2], false,
+  "transient overflow cannot permanently tighten the layout");
+assert.equal(scroll.props.scrollEnabled, true, "overflow is scrollable at compact density");
 scroll.props.onContentSizeChange(360, 701);
 scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "fitted tight content cannot be scrolled");
@@ -598,8 +588,8 @@ scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[1], false,
   "available height growth restores spacious styling");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "spacious mode grows cards instead of spreading sections apart");
+assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "space-between",
+  "spacious mode distributes the four sections across the viewport");
 assert.equal(scroll.props.scrollEnabled, false);
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
@@ -611,7 +601,7 @@ scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "drag turns off when content fits again");
 
 // Preserve the one-point measurement tolerance and resize behavior.
-homeScrollState = [0, 0, 0];
+homeScrollState = [0, 0];
 scroll = scrollNode();
 scroll.props.onLayout({ nativeEvent: { layout: { height: 600 } } });
 scroll.props.onContentSizeChange(360, 596);
@@ -626,6 +616,24 @@ assert.equal(scroll.props.scrollEnabled, true);
 scroll.props.onLayout({ nativeEvent: { layout: { height: 660 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "recalculate overflow after viewport resize");
+// Cold startup can deliver content measured for an older viewport first.
+// Its settled layout must match a fresh visit with the same available height.
+homeScrollState = [0, 0];
+scroll = scrollNode();
+scroll.props.onContentSizeChange(360, 820);
+scroll = scrollNode();
+scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
+scroll = scrollNode();
+scroll.props.onContentSizeChange(360, 705);
+const coldLayout = scrollNode().props.contentContainerStyle;
+homeScrollState = [0, 0];
+scroll = scrollNode();
+scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
+scroll = scrollNode();
+scroll.props.onContentSizeChange(360, 705);
+assert.deepEqual(scrollNode().props.contentContainerStyle, coldLayout,
+  "cold startup and returning Home settle to the same layout");
+assert.equal(scrollNode().props.scrollEnabled, false);
 homeScrollState = null;
 assert.ok(nodes(tree).some(node => node.props?.children === "1 / 3 ερωτήσεις"),
   "resume card shows question progress beside its heading");

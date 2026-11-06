@@ -61,16 +61,14 @@ export default function HomeScreen({
   // by a few points after the lesson breadcrumb was added.
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const [extraDensity, setExtraDensity] = useState(0);
   const availableHeight = availableScreenHeight(viewportHeight, height);
-  const baseDensity = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
-  const density = Math.max(baseDensity, extraDensity);
+  const density = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
-  // A genuine overflow first switches to a denser layout. Scrolling remains
-  // available only when the most compact layout cannot fit the content (e.g.
-  // accessibility text, small landscape viewports, unusually tall headings).
-  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1 && tight;
+  // Content measurements must never change density: startup hydration and old
+  // layout callbacks can otherwise latch Home into a tighter mode until remount.
+  // Long titles and accessibility text remain scrollable at every density.
+  const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1;
   const today = useAthensDate();
   // This existing metric counts completed daily quizzes, not app logins.
   // A separate login streak requires account-scoped, synchronised visit records.
@@ -118,19 +116,10 @@ export default function HomeScreen({
         const nextHeight = event.nativeEvent.layout.height;
         if (Math.abs(viewportHeight - nextHeight) >= 1) {
           setViewportHeight(nextHeight);
-          // Re-evaluate density after a resize, rotation or navigation change.
-          setExtraDensity(0);
-          if (contentHeight > nextHeight + 1) {
-            const nextBase = nextHeight < 610 ? 2 : nextHeight < 740 ? 1 : 0;
-            if (nextBase < 2) setExtraDensity(nextBase + 1);
-          }
         }
       }}
       onContentSizeChange={(_width, nextHeight) => {
         setContentHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
-        if (viewportHeight > 0 && nextHeight > viewportHeight + 1 && density < 2) {
-          setExtraDensity(density + 1);
-        }
       }}>
       <MotionView entranceDelay={0} style={styles.topBar}>
         <Text style={styles.logo}>ΓΝΩΣΗ</Text>
@@ -253,10 +242,10 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Keep every section at its natural height, including the two category rows.
-  // Small viewports can still scroll after the density fallback.
+  // Distribute spare height between the four sections. Category rows stay together.
+  // When content exceeds the viewport, the minimum gaps remain and scrolling takes over.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
   compactContent: { gap: 10, paddingBottom: 6 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
   compactHero: { padding: 14, gap: 8 },
