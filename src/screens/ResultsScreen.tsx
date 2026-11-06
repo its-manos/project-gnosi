@@ -65,7 +65,7 @@ export default function ResultsScreen({
   return <View style={styles.root} testID="lesson-results-screen">
     <ProgressGradientBackground />
     <View style={styles.chrome}>
-      <ProfileSectionHeader eyebrow="ΜΑΘΗΜΑ" title="Αποτελέσματα"
+      <ProfileSectionHeader title="Αποτελέσματα"
         actionLabel="Αρχική" actionAccessibilityLabel="Επιστροφή στην αρχική"
         onAction={onHome} style={styles.header} />
     </View>

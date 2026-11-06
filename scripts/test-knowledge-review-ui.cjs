@@ -47,7 +47,7 @@ const react={useEffect:()=>{},useRef:value=>({current:value}),useState:init=>{co
  link(tree,'Άλλη μικρή επανάληψη').props.onPress();tree=render();
  const practice=button(tree,'Θέλω λίγη εξάσκηση');
  if(practice)practice.props.onPress();else link(tree,'Ελεύθερη εξάσκηση').props.onPress();
- tree=render();assert.ok(nodes(tree).some(n=>n.type==='ProfileSectionHeader'&&n.props.eyebrow==='ΕΛΕΥΘΕΡΗ ΕΞΑΣΚΗΣΗ'));
+ tree=render();assert.ok(nodes(tree).some(n=>n.type==='ProfileSectionHeader'&&n.props.title==='Εξάσκηση'));
  const saved=store.getSnapshot().knowledgeSession,record=knowledgeById.get(saved.questionIds[0]);
  record.question.version='changed-for-test';tree=render();assert.ok(text(tree).includes('ενημερώθηκαν οι ερωτήσεις'));
  assert.equal(card(tree),undefined,'changed scored content is never silently regraded');record.question.version=saved.questionVersions[0];

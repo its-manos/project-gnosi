@@ -6,7 +6,7 @@ import { colors } from "../theme";
 type Variant = "shortcut" | "settings";
 type Props = {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   icon: ReactNode;
   onPress: () => void;
   variant?: Variant;
@@ -23,16 +23,16 @@ export default function NavigationTile({
   accessibilityLabel, iconBackground, entranceDelay, pressScale = 0.983,
 }: Props) {
   const settings = variant === "settings";
-  const label = accessibilityLabel ?? (settings ? title : title + ". " + subtitle);
+  const label = accessibilityLabel ?? (settings || !subtitle ? title : title + ". " + subtitle);
   const contents = <>
     <View accessible={false} style={[styles.icon, settings && styles.iconSettings,
       iconBackground ? { backgroundColor: iconBackground } : undefined]}>{icon}</View>
     <View style={[styles.copy, settings && styles.copySettings]}>
-      <Text style={[styles.title, settings && styles.titleSettings]}
-        numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings}>{title}</Text>
-      <Text style={[styles.subtitle, settings && styles.subtitleSettings]}
+      <Text style={[styles.title, settings && styles.titleSettings, !settings && !subtitle && styles.titleOnly]}
+        numberOfLines={!settings && subtitle ? 1 : undefined} adjustsFontSizeToFit={!settings && !!subtitle}>{title}</Text>
+      {subtitle ? <Text style={[styles.subtitle, settings && styles.subtitleSettings]}
         numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings}
-        minimumFontScale={0.82}>{subtitle}</Text>
+        minimumFontScale={0.82}>{subtitle}</Text> : null}
     </View>
     <Text accessible={false} style={[styles.arrow, settings && styles.arrowSettings]}>›</Text>
   </>;
@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   copy: { flex: 1, minWidth: 0, gap: 2 },
   copySettings: { gap: 5 },
   title: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800" },
+  titleOnly: { fontSize: 13, lineHeight: 18 },
   titleSettings: { fontSize: 15 },
   subtitle: { color: colors.textMuted, fontSize: 9, lineHeight: 14 },
   subtitleSettings: { fontSize: 12 },

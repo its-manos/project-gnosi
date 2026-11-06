@@ -46,16 +46,12 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
   return <View style={styles.card} testID="multiple-select-card">
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
-      <View style={styles.typeBadge}><Text style={styles.typeLabel}>☑  ΠΟΛΛΑΠΛΗ ΕΠΙΛΟΓΗ</Text></View>
+      <View style={styles.typeBadge}><Text style={styles.typeLabel}>☑  ΔΙΑΛΕΞΕ ΟΣΕΣ ΙΣΧΥΟΥΝ</Text></View>
       {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
-    <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
+    <Text accessibilityRole="header" style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
       {question.prompt}
     </Text>
-    {(!answered || !compactAnswered) ? <View style={styles.selectionBar}>
-      <Text style={styles.selectionText}>{answered ? "Η απάντησή σου" : "Οι επιλογές σου"}</Text>
-      <Text style={styles.selectionCount}>{selected.length} / {question.content.answers.length}</Text>
-    </View> : null}
     {(!answered || !compactAnswered) ? <View style={styles.answers}>
       {question.content.answers.map((label, index) => {
         const checked = selected.includes(index);
@@ -102,9 +98,6 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
 
 const styles = StyleSheet.create({
   ...questionCardStyles,
-  selectionBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 11 },
-  selectionText: { color: colors.textMuted, fontSize: 12, fontWeight: "700" },
-  selectionCount: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
   checkbox: { height: 25, width: 25, borderWidth: 2, borderColor: colors.textMuted, borderRadius: 7,
     alignItems: "center", justifyContent: "center", flexShrink: 0 },
   checkboxChecked: { borderColor: colors.accent, backgroundColor: colors.accentSurface },

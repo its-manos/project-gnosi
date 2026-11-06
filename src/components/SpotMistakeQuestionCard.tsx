@@ -82,7 +82,6 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
     <Text testID="spot-mistake-subject" accessibilityRole="header" style={[styles.question, questionSize]}>
       {question.prompt}{question.prompt.trim().endsWith(":") ? "" : ":"}
     </Text>
-    {!answered ? <Text style={styles.hint}>Ποια πρόταση είναι λανθασμένη;</Text> : null}
     {(!answered || !compactAnswered) ? <View style={styles.answers}>
       {question.content.options.map((option, index) => {
         const selected = selectedId === option.id;
@@ -98,7 +97,7 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
             style={({ pressed }) => [styles.answer, selected && !answered && styles.selected,
               isFalseStatement && styles.answerCorrect, wrongSelection && styles.answerWrong,
               pressed && !answered && !submitting && styles.pressed]}>
-            <View style={[styles.letterCircle, isFalseStatement && styles.circleCorrect,
+            <View style={[styles.letterBox, isFalseStatement && styles.circleCorrect,
               wrongSelection && styles.circleWrong]}>
               <Text style={styles.letter}>{String.fromCharCode(65 + index)}</Text>
             </View>
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
   ...questionCardStyles,
   eyebrow: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 1, marginBottom: 7 },
   highlight: { color: colors.accentLight, fontWeight: "800" },
-  letterCircle: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
+  letterBox: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.accentSurface,
     flexShrink: 0, justifyContent: "center", alignItems: "center" },
   circleCorrect: { backgroundColor: "#205143" },
   circleWrong: { backgroundColor: "#59323B" },

@@ -79,7 +79,7 @@ assert.equal(nodes(tree).find(n=>n.type==='ScrollView').props.scrollEnabled,fals
 // Athens rollover closes a previous day's answer review rather than presenting stale content.
 challenge={...challenge,record:load('src/utils/dailyChallenge.ts').emptyDailyChallengeRecord('2026-11-01'),resultDetails:undefined,correctCount:0};tree=render();
 const pageHeader=nodes(tree).find(n=>n.type==='ProfileSectionHeader');
-assert.equal(pageHeader.props.eyebrow,'ΚΑΘΗΜΕΡΙΝΗ ΠΡΟΚΛΗΣΗ');
+assert.equal(pageHeader.props.title,'Ημερήσιο quiz');
 assert.equal(pageHeader.props.title,'Ημερήσιο quiz');
 pageHeader.props.onAction();assert.equal(homes,1);
 const active={...shared.createSharedDailyRecord('2026-11-01'),answers:{}};const first=questions.find(q=>q.id===active.questionIds[0]);active.answers[0]=first.correctIndex;
@@ -133,7 +133,7 @@ assert.equal(nodes(tree).filter(n=>n.type==='SingleChoiceQuestionCard').length,0
   'preview does not display the saved live question');
 assert.equal(nodes(tree).filter(n=>n.type==='QuestionStageFooter').length,0,
   'preview cannot submit a live quiz answer');
-assert.equal(nodes(tree).find(n=>n.type==='ProfileSectionHeader').props.eyebrow,'ΠΡΟΕΠΙΣΚΟΠΗΣΗ · DEV');
+assert.equal(nodes(tree).find(n=>n.type==='ProfileSectionHeader').props.actionLabel,'‹ Εργαλεία');
 action(tree,'Συνέχισε την πρόκληση →').props.onPress();
 assert.equal(previewContinues,1,'preview CTA hands control to the real quiz');
 assert.equal(liveStarts,0,'preview CTA does not start or reset a daily attempt');

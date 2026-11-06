@@ -62,7 +62,6 @@ export default function AccountScreen({ onBack, backupControls, devControls, dev
     preferences={dailyIntroPreview.preferences} preferencesLoaded={dailyIntroPreview.preferencesLoaded} />;
   return <View style={styles.screen}><ProgressGradientBackground /><ScrollView ref={scrollRef} style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <ProfileSectionHeader
-      eyebrow={activeSection ? "ΟΙ ΡΥΘΜΙΣΕΙΣ ΣΟΥ" : "Ο ΧΩΡΟΣ ΣΟΥ"}
       title={sectionTitle}
       actionLabel={activeSection ? "‹ Ρυθμίσεις" : "‹ Προφίλ"}
       actionAccessibilityLabel={activeSection ? "Πίσω στις ρυθμίσεις" : "Πίσω στο προφίλ"}

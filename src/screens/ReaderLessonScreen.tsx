@@ -273,7 +273,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           testID="reader-question-screen">
           <ProgressGradientBackground />
           <View style={styles.quizHeader}>
-            <ProfileSectionHeader eyebrow="ΜΑΘΗΜΑ" title="Ερωτήσεις"
+            <ProfileSectionHeader title="Ερωτήσεις"
               actionLabel="‹ Έξοδος" actionAccessibilityLabel="Έξοδος από το μάθημα" onAction={onBack} />
             <QuestionStageProgress current={activeQuestionIndex + 1} total={questionCount} />
           </View>

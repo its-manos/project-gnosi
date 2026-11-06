@@ -75,8 +75,8 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
   const last = quiz?.currentIndex === (quiz?.questions.length ?? 0) - 1;
   return <View style={styles.screen} testID="knowledge-review-screen">
     <ProgressGradientBackground />
-    <ProfileSectionHeader eyebrow={active && practice ? "ΕΛΕΥΘΕΡΗ ΕΞΑΣΚΗΣΗ" : "ΑΝΑΚΛΗΣΗ ΓΝΩΣΕΩΝ"}
-      title={completed && !expired ? "Αποτελέσματα" : "Επανάληψη"}
+    <ProfileSectionHeader
+      title={completed && !expired ? "Αποτελέσματα" : active && practice ? "Εξάσκηση" : "Επανάληψη"}
       actionLabel="‹ Πίσω" actionAccessibilityLabel="Επιστροφή στην προηγούμενη οθόνη"
       onAction={onBack} style={styles.header} />
     <ScrollView ref={scroll} style={styles.viewport} contentContainerStyle={styles.content}

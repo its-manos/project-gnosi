@@ -39,6 +39,8 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
   const isCorrect = answered && evaluateAnswer(question, answer).correct;
   const sentenceSize = readingSize !== undefined && readingSize !== 18
     ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined;
+  const optionSize = readingSize !== undefined && readingSize !== 18
+    ? { fontSize: Math.max(14, readingSize - 1), lineHeight: Math.round(readingSize * 1.5) } : undefined;
   const before = question.content.before.trim();
   const after = question.content.after.trim();
   const punctuationOnly = /^[.,;:!?…·]+$/.test(after);
@@ -88,7 +90,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
           <View testID="fill-blank-slot" style={[styles.slot,
             answered && (isCorrect ? styles.slotCorrect : styles.slotWrong),
             !answered && pending !== null && styles.slotFilled]}>
-            <Text style={[styles.slotText, selectedOption && styles.slotTextFilled]}>
+            <Text style={[styles.slotText, selectedOption && styles.slotTextFilled, optionSize]}>
               {selectedOption ? selectedOption.text : "________"}
             </Text>
           </View>
@@ -112,7 +114,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
               <View style={[styles.optionNumber, selected && styles.numberSelected]}>
                 <Text style={styles.optionNumberText}>{String.fromCharCode(65 + index)}</Text>
               </View>
-              <Text style={styles.optionText}>{option.text}</Text>
+              <Text style={[styles.optionText, optionSize]}>{option.text}</Text>
               {selected ? <Text style={styles.optionMark}>✓</Text> : null}
             </Pressable>
           </AnswerMotion>;
@@ -137,12 +139,12 @@ const styles = StyleSheet.create({
   ...questionCardStyles,
   badge: questionCardStyles.typeBadge,
   badgeText: questionCardStyles.typeLabel,
-  passage: { backgroundColor: "#20263A", padding: 14, borderRadius: 15,
-    borderLeftWidth: 2, borderLeftColor: "#8276BB", marginBottom: 16 },
+  passage: { backgroundColor: "#20263A", padding: 10, borderRadius: 13,
+    borderLeftWidth: 2, borderLeftColor: "#8276BB", marginBottom: 8 },
   sentence: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 },
   passageText: { color: colors.text, fontSize: 18, lineHeight: 28, fontWeight: "700", flexShrink: 1 },
   slotTail: { flexDirection: "row", alignItems: "center", gap: 4, maxWidth: "100%" },
-  slot: { minHeight: 44, maxWidth: "100%", paddingHorizontal: 12, paddingVertical: 9,
+  slot: { minHeight: 36, flexShrink: 1, maxWidth: "100%", paddingHorizontal: 9, paddingVertical: 6,
     borderWidth: 1, borderColor: colors.accent, backgroundColor: "#353052",
     borderStyle: "dashed", borderRadius: 11, justifyContent: "center" },
   slotFilled: { borderStyle: "solid" },

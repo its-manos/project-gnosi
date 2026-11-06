@@ -65,10 +65,10 @@ function QuickIcon({ name }: { name: QuickIconName }) {
   </Svg>;
 }
 
-function QuickLink({ title, subtitle, icon, onPress }: {
-  title: string; subtitle: string; icon: QuickIconName; onPress: () => void;
+function QuickLink({ title, icon, onPress }: {
+  title: string; icon: QuickIconName; onPress: () => void;
 }) {
-  return <NavigationTile title={title} subtitle={subtitle} icon={<QuickIcon name={icon} />}
+  return <NavigationTile title={title} icon={<QuickIcon name={icon} />}
     testID={title === "Δραστηριότητα" ? "profile-activity-link" : undefined}
     onPress={onPress} />;
 }
@@ -116,7 +116,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
         setContentHeight(old => stableLayoutHeight(old, next));
       }}>
       <MotionView entranceDelay={0}>
-        <ProfileSectionHeader eyebrow="Η ΤΑΥΤΟΤΗΤΑ ΣΟΥ" title="Το προφίλ σου"
+        <ProfileSectionHeader title="Το προφίλ σου"
           actionLabel="Ρυθμίσεις ›" actionAccessibilityLabel="Λογαριασμός και ρυθμίσεις"
           onAction={onAccount} />
       </MotionView>
@@ -213,13 +213,13 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       <MotionView entranceDelay={205} style={styles.actions} testID="profile-links">
         <Text style={styles.sectionTitle}>Ο χώρος σου</Text>
         <View style={[styles.linksGrid, compact && styles.linksGridCompact]}>
-          <QuickLink title="Δραστηριότητα" subtitle="Στατιστικά & quiz"
+          <QuickLink title="Δραστηριότητα"
             icon="activity" onPress={onStats} />
-          <QuickLink title="Λογαριασμός" subtitle="Ασφάλεια & sync"
+          <QuickLink title="Λογαριασμός"
             icon="account" onPress={onAccount} />
-          <QuickLink title="Ενδιαφέροντα" subtitle="Οι επιλογές σου"
+          <QuickLink title="Ενδιαφέροντα"
             icon="interests" onPress={onInterests} />
-          <QuickLink title="Οδηγός" subtitle="Πώς λειτουργεί"
+          <QuickLink title="Οδηγός"
             icon="guide" onPress={onGuide} />
         </View>
       </MotionView>

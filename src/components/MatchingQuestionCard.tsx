@@ -19,7 +19,7 @@ type Props = {
   onActionChange?: (action: QuestionStageAction | null) => void;
 };
 
-/** Full-width two-stage pairing remains readable with long Greek labels. */
+/** Show one list at a time so long labels can use the full card width. */
 export default function MatchingQuestionCard({ question, questionNumber, answer, onSubmit, readingSize, onActionChange, compactAnswered = false }: Props) {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pending, setPending] = useState<Record<string, string>>({});
@@ -27,6 +27,9 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
   const answered = answer !== undefined;
   const assignments = answered ? answer : pending;
   const pairs = question.content.pairs;
+  const activePair = pairs.find(pair => pair.leftId === selectedLeft);
+  const choiceSize = readingSize !== undefined && readingSize !== 18
+    ? { fontSize: Math.max(14, readingSize - 1), lineHeight: Math.round(readingSize * 1.5) } : undefined;
   const rightOptions = [...pairs].reverse();
   const count = pairs.filter(pair => Object.prototype.hasOwnProperty.call(assignments, pair.leftId)).length;
   const ready = count === pairs.length;
@@ -64,67 +67,62 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⇄  ΑΝΤΙΣΤΟΙΧΙΣΗ</Text></View>
       {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
-    <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
+    <Text accessibilityRole="header" style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     {(!answered || !compactAnswered) ? <>
-    <Text style={styles.hint}>Πάτησε μια έννοια και έπειτα το ταίρι της.</Text>
-    <View style={styles.progressLine}>
-      <Text style={styles.progressLabel}>ΖΕΥΓΑΡΙΑ</Text>
-      <Text style={styles.progressCount}>{count} / {pairs.length}</Text>
-    </View>
-    <View style={styles.track}><View style={[styles.fill, { width: `${pairs.length ? count / pairs.length * 100 : 0}%` }]} /></View>
-    <View style={styles.stepTitle}>
-      <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>1</Text></View>
-      <Text style={styles.stepHeading}>Διάλεξε έννοια</Text>
-    </View>
-    <View style={styles.options}>
-      {pairs.map(pair => {
-        const active = selectedLeft === pair.leftId;
-        const rightId = assignments[pair.leftId];
-        const linked = rightId !== undefined;
-        return <AnswerMotion key={pair.leftId} active={!answered && (active || linked)}>
-          <Pressable testID={`matching-left-${pair.leftId}`}
-          accessibilityRole="button"
-          accessibilityLabel={`${pair.leftLabel}, ${linked ? "αντιστοιχισμένο με " + labelsByRight.get(rightId) : "χωρίς αντιστοίχιση"}`}
-          accessibilityState={{ selected: active, disabled: answered }} disabled={answered}
-          onPress={() => setSelectedLeft(pair.leftId)}
-          style={({ pressed }) => [styles.choice, active && styles.active, linked && !active && styles.linked,
-            pressed && !answered && styles.pressed]}>
-          <View style={[styles.number, active && styles.numberActive, linked && !active && styles.numberLinked]}>
-            <Text style={styles.numberText}>{positionFor(pair.leftId)}</Text>
-          </View>
-          <View style={styles.choiceContent}>
-            <Text style={styles.choiceText}>{pair.leftLabel}</Text>
-            {linked ? <Text style={styles.linkedLabel} numberOfLines={2}>↳ {labelsByRight.get(rightId)}</Text> : null}
-          </View>
-          <Text style={[styles.choiceStatus, active && styles.statusActive]}>{active ? "●" : linked ? "✓" : "＋"}</Text>
-        </Pressable>
-        </AnswerMotion>;
-      })}
-    </View>
-    <View style={styles.stepTitle}>
-      <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>2</Text></View>
-      <Text style={styles.stepHeading}>Βρες το ταίρι</Text>
-    </View>
-    <View style={styles.options}>
-      {rightOptions.map(pair => {
-        const linkedId = Object.keys(assignments).find(leftId => assignments[leftId] === pair.rightId);
-        const linked = linkedId !== undefined;
-        return <AnswerMotion key={pair.rightId} active={!answered && linked}>
-          <Pressable testID={`matching-right-${pair.rightId}`}
-          accessibilityRole="button"
-          accessibilityLabel={pair.rightLabel}
-          accessibilityState={{ selected: linked, disabled: answered || selectedLeft === null }}
-          disabled={answered || selectedLeft === null}
-          onPress={() => assign(pair.rightId)}
-          style={({ pressed }) => [styles.choice, linked && styles.linked,
-            selectedLeft !== null && !answered && styles.available, pressed && styles.pressed]}>
-          <Text style={styles.rightMarker}>{linked ? positionFor(linkedId) : "○"}</Text>
-          <Text style={styles.choiceTextRight}>{pair.rightLabel}</Text>
-          <Text style={styles.choiceStatus}>{linked ? "✓" : "↗"}</Text>
-        </Pressable>
-        </AnswerMotion>;
-      })}
-    </View>
+      <View style={styles.stepTitle}>
+        <Text style={styles.stepHeading}>{answered ? "Έννοιες" : activePair ? "Βρες το ταίρι" : "Διάλεξε έννοια"}</Text>
+        <Text style={styles.progressCount} accessibilityLabel={`${count} από ${pairs.length} ζευγάρια`}>{count} / {pairs.length}</Text>
+      </View>
+      {activePair && !answered ? <Pressable testID="matching-change-concept" accessibilityRole="button"
+        accessibilityLabel={`Άλλαξε έννοια. Επιλεγμένη έννοια: ${activePair.leftLabel}`}
+        onPress={() => setSelectedLeft(null)} style={({ pressed }) => [styles.activePair, pressed && styles.pressed]}>
+        <Text style={styles.changeGlyph} accessible={false}>‹</Text>
+        <Text style={[styles.choiceTextRight, choiceSize]}>{activePair.leftLabel}</Text>
+      </Pressable> : null}
+      {!activePair || answered ? <View style={styles.options}>
+        {pairs.map(pair => {
+          const rightId = assignments[pair.leftId];
+          const linked = rightId !== undefined;
+          return <AnswerMotion key={pair.leftId} active={!answered && linked}>
+            <Pressable testID={`matching-left-${pair.leftId}`}
+              accessibilityRole="button"
+              accessibilityLabel={`${pair.leftLabel}, ${linked ? "αντιστοιχισμένο με " + labelsByRight.get(rightId) : "χωρίς αντιστοίχιση"}`}
+              accessibilityState={{ disabled: answered }} disabled={answered}
+              onPress={() => setSelectedLeft(pair.leftId)}
+              style={({ pressed }) => [styles.choice, linked && styles.linked,
+                pressed && !answered && styles.pressed]}>
+              <View style={[styles.number, linked && styles.numberLinked]}>
+                <Text style={styles.numberText}>{positionFor(pair.leftId)}</Text>
+              </View>
+              <View style={styles.choiceContent}>
+                <Text style={[styles.choiceText, choiceSize]}>{pair.leftLabel}</Text>
+                {linked ? <Text style={styles.linkedLabel}>↳ {labelsByRight.get(rightId)}</Text> : null}
+              </View>
+              <Text style={styles.choiceStatus}>{linked ? "✓" : "＋"}</Text>
+            </Pressable>
+          </AnswerMotion>;
+        })}
+      </View> : null}
+      {activePair || answered ? <View style={styles.options}>
+        {rightOptions.map(pair => {
+          const linkedId = Object.keys(assignments).find(leftId => assignments[leftId] === pair.rightId);
+          const linked = linkedId !== undefined;
+          return <AnswerMotion key={pair.rightId} active={!answered && linked}>
+            <Pressable testID={`matching-right-${pair.rightId}`}
+              accessibilityRole="button"
+              accessibilityLabel={pair.rightLabel}
+              accessibilityState={{ selected: linked, disabled: answered || selectedLeft === null }}
+              disabled={answered || selectedLeft === null}
+              onPress={() => assign(pair.rightId)}
+              style={({ pressed }) => [styles.choice, linked && styles.linked,
+                pressed && styles.pressed]}>
+              <Text style={styles.rightMarker}>{linked ? positionFor(linkedId) : "○"}</Text>
+              <Text style={[styles.choiceTextRight, choiceSize]}>{pair.rightLabel}</Text>
+              <Text style={styles.choiceStatus}>{linked ? "✓" : "↗"}</Text>
+            </Pressable>
+          </AnswerMotion>;
+        })}
+      </View> : null}
     </> : null}
     {!answered && !onActionChange ? <>
       <Pressable testID="matching-confirm" accessibilityRole="button"
@@ -153,29 +151,19 @@ const styles = StyleSheet.create({
   typeLabel: questionCardStyles.typeLabel,
   counter: questionCardStyles.counter,
   question: questionCardStyles.question,
-  hint: questionCardStyles.hint,
-  progressLine: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  progressLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
   progressCount: { color: colors.accentLight, fontWeight: "900", fontSize: 12 },
-  track: { backgroundColor: colors.border, borderRadius: 5, height: 5, overflow: "hidden", marginBottom: 18 },
-  fill: { height: 5, backgroundColor: colors.accent, borderRadius: 5 },
-  stepTitle: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" },
-  stepBadge: { width: 24, height: 24, borderRadius: 8, backgroundColor: colors.accentSurface,
-    justifyContent: "center", alignItems: "center" },
-  stepBadgeText: { color: colors.accentLight, fontSize: 12, fontWeight: "900" },
+  stepTitle: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    gap: 8, marginBottom: 8, flexWrap: "wrap" },
   stepHeading: { color: colors.text, fontSize: 14, fontWeight: "800", flexShrink: 1 },
-  stepMeta: { color: colors.textMuted, fontSize: 9, fontWeight: "900", letterSpacing: 0.4, marginLeft: "auto" },
-  options: { gap: 9, marginBottom: 18 },
-  choice: { minHeight: 63, flexDirection: "row", alignItems: "center", gap: 11,
-    backgroundColor: colors.surfaceRaised, borderRadius: 13, borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: 12, paddingVertical: 12 },
-  available: { borderColor: colors.borderStrong },
-  active: { borderColor: colors.accent, backgroundColor: colors.accentSurface },
+  options: { ...questionCardStyles.answers, marginBottom: 6 },
+  choice: questionCardStyles.answer,
+  activePair: { ...questionCardStyles.answer, minHeight: 44, marginBottom: 8,
+    borderColor: colors.accent, backgroundColor: colors.accentSurface },
+  changeGlyph: { color: colors.accentLight, fontSize: 23, fontWeight: "800", width: 29, textAlign: "center" },
   linked: { borderColor: "#65648A", backgroundColor: "#24243A" },
   pressed: questionCardStyles.pressed,
   number: { width: 29, height: 29, alignItems: "center", justifyContent: "center",
     backgroundColor: colors.accentSurface, borderRadius: 9, flexShrink: 0 },
-  numberActive: { backgroundColor: "#504782" },
   numberLinked: { backgroundColor: "#25433D" },
   numberText: { color: colors.text, fontWeight: "900", fontSize: 13 },
   choiceContent: { flex: 1, minWidth: 0, gap: 4 },
@@ -184,7 +172,6 @@ const styles = StyleSheet.create({
   choiceTextRight: { flex: 1, minWidth: 0, color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: "600" },
   rightMarker: { color: colors.accentLight, fontSize: 16, fontWeight: "900", width: 29, textAlign: "center" },
   choiceStatus: { color: colors.textMuted, fontSize: 19, fontWeight: "900" },
-  statusActive: { color: colors.accentLight },
   footHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19 },
   confirm: questionCardStyles.confirm,
   disabled: questionCardStyles.confirmDisabled,

@@ -56,7 +56,7 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
   return <View testID="weekly-review-screen" style={styles.root}>
     <ProgressGradientBackground />
     <View style={styles.chrome}>
-      <ProfileSectionHeader eyebrow="Ο ΚΥΚΛΟΣ ΤΗΣ ΜΑΘΗΣΗΣ" title="Επανάληψη"
+      <ProfileSectionHeader title="Επανάληψη"
         actionLabel="Πρόοδος" actionAccessibilityLabel="Επιστροφή στην πρόοδο"
         onAction={onBack} style={styles.pageHeader} />
     </View>

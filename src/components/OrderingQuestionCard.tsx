@@ -27,6 +27,8 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
   const correct = answered && evaluateAnswer(question, answer).correct;
   const labels = new Map<string, string>(question.content.items.map(item => [item.id, item.label] as const));
   const correctOrder = question.content.correctOrder;
+  const labelSize = readingSize !== undefined && readingSize !== 18
+    ? { fontSize: Math.max(14, readingSize - 1), lineHeight: Math.round(readingSize * 1.5) } : undefined;
 
   function move(id: string, offset: number) {
     if (answered) return;
@@ -54,8 +56,8 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>↕  ΣΩΣΤΗ ΣΕΙΡΑ</Text></View>
       {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
-    <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
-    {!answered ? <Text style={styles.hint}>Χρησιμοποίησε τα βέλη για να αλλάξεις τη σειρά.</Text> : null}
+    <Text accessibilityRole="header" style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
+    {!answered ? <Text style={styles.hint}>Άλλαξε σειρά με τα βέλη.</Text> : null}
     {(!answered || !compactAnswered) ? <View style={styles.orderList}>
       {order.map((id, index) => {
         const atCorrectPlace = answered && id === correctOrder[index];
@@ -64,7 +66,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
           <View style={[styles.number, atCorrectPlace && styles.numberCorrect]}>
             <Text style={styles.numberText}>{String(index + 1).padStart(2, "0")}</Text>
           </View>
-          <Text style={styles.label}>{labels.get(id) ?? id}</Text>
+          <Text style={[styles.label, labelSize]}>{labels.get(id) ?? id}</Text>
           {!answered ? <View style={styles.controls}>
             <Pressable testID={`ordering-up-${id}`} accessibilityRole="button"
               accessibilityLabel={`Μετακίνησε το ${labels.get(id)} προς τα πάνω`}
@@ -109,19 +111,17 @@ const styles = StyleSheet.create({
   counter: questionCardStyles.counter,
   question: questionCardStyles.question,
   hint: questionCardStyles.hint,
-  orderList: { gap: 10 },
-  item: { minHeight: 69, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1,
-    backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderRadius: 14,
-    paddingHorizontal: 11, paddingVertical: 9 },
+  orderList: questionCardStyles.answers,
+  item: { ...questionCardStyles.answer, paddingVertical: 4 },
   itemCorrect: { borderColor: colors.success, backgroundColor: colors.successSurface },
   itemWrong: { borderColor: colors.error, backgroundColor: colors.errorSurface },
-  number: { width: 33, height: 36, borderRadius: 10, backgroundColor: colors.accentSurface, alignItems: "center",
+  number: { width: 27, height: 29, borderRadius: 10, backgroundColor: colors.accentSurface, alignItems: "center",
     justifyContent: "center", flexShrink: 0 },
   numberCorrect: { backgroundColor: "#205143" },
   numberText: { color: colors.accentLight, fontSize: 13, fontWeight: "900" },
   label: { flex: 1, minWidth: 0, color: colors.text, fontSize: 15, lineHeight: 22, fontWeight: "700" },
-  controls: { flexDirection: "row", gap: 5 },
-  control: { minWidth: 43, minHeight: 45, alignItems: "center", justifyContent: "center",
+  controls: { flexDirection: "row", gap: 3 },
+  control: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center",
     borderRadius: 10, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.accentSurface },
   disabled: { opacity: 0.3 },
   pressed: questionCardStyles.pressed,

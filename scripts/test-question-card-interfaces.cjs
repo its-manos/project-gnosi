@@ -93,10 +93,16 @@ const matching = {
 const m = mount('src/components/MatchingQuestionCard.tsx', matching);
 tree = m.render();
 assert.equal(id(tree, 'matching-confirm').props.disabled, true);
-assert.equal(id(tree, 'matching-right-x').props.disabled, true, 'select a left first');
+assert.equal(id(tree, 'matching-right-x'), undefined, 'show concepts first');
 id(tree, 'matching-left-a').props.onPress();
 tree = m.render();
 assert.equal(id(tree, 'matching-right-x').props.disabled, false);
+assert.equal(id(tree, 'matching-left-b'), undefined, 'the matching choices get the full card');
+id(tree, 'matching-change-concept').props.onPress();
+tree = m.render();
+assert.ok(id(tree, 'matching-left-b'), 'the learner can change concepts before pairing');
+id(tree, 'matching-left-a').props.onPress();
+tree = m.render();
 id(tree, 'matching-right-x').props.onPress();
 tree = m.render();
 assert.equal(id(tree, 'matching-confirm').props.disabled, true);
