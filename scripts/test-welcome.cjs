@@ -28,6 +28,9 @@ const button=(t,label)=>{const n=nodes(t).find(n=>n.type==='Button'&&n.props.lab
 const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.accessibilityLabel===label);assert.ok(n,label);n.props.onPress();};
 (async()=>{
  assert.equal(first.shouldShowWelcome(null,null,false,[]),true);
+ assert.equal(first.shouldShowWelcome('question',null,true,[]),true,'Daily activity must not dismiss an unfinished onboarding');
+ assert.equal(first.shouldShowWelcome('choose','signed-in',true,[]),true);
+ assert.equal(first.ONBOARDING_INTRO_LESSON_ID,'ancient-athens');
  for(const args of [['done',null,false,[]],[null,'A',false,[]],[null,null,true,[]],[null,null,false,['[]']]])assert.equal(first.shouldShowWelcome(...args),false);
  function welcomeHook(storage,user=null,activity=false){const h=reactHarness();const invoke=load('src/hooks/useWelcome.ts',{react:h.react,'@react-native-async-storage/async-storage':{__esModule:true,default:storage}}).useWelcome;return{render:()=>h.render(()=>invoke(user,activity)),mount:()=>h.mount()};}
  const d=disk(),hook=welcomeHook(d);hook.render();const cleanup=hook.mount();await flush();let state=hook.render();assert.equal(state.visible,true);assert.equal(await state.complete(),true);assert.equal(d.map.get(first.WELCOME_STORAGE_KEY),'done');state=hook.render();assert.equal(state.visible,false);state.open();state=hook.render();assert.equal(state.replay,true);await state.skip();cleanup();
@@ -53,33 +56,45 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  let touched=false;assert.equal(await first.finishWelcome({savePreferences:async()=>{touched=true;return true;}},choices,'home',()=>false,complete),false);assert.equal(touched,false);
  assert.equal(await first.finishWelcome({savePreferences:async()=>false},choices,'daily',()=>true,complete),false);
  const previousMarks=marked;assert.equal(await first.finishWelcome(homeStore,choices,'home',()=>true,async()=>false),false);assert.equal(marked,previousMarks);
- // Four-step screen flow: welcome -> both modes -> daily interests -> send-off.
- const ui=reactHarness();let finishCalls=[],skips=0,resolveFinish;
- let finishAction=async()=>true;
- const Screen=load('src/screens/WelcomeScreen.tsx',{react:ui.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../components/ActionButton':{__esModule:true,default:'Button'}}).default;
- const props={initialPreferences:initial,replay:false,hasStartedChallenge:false,onFinish:async(p,dest)=>{finishCalls.push([p,dest]);return finishAction();},onSkip:async()=>{skips++;}};
- const render=()=>ui.render(()=>Screen(props));let tree=render();const endUi=ui.mount();
- assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 1 από 4'));assert.ok(!nodes(tree).some(n=>n.type==='TextInput'));
- button(tree,'Ας ξεκινήσουμε →').props.onPress();tree=render();
- assert.ok(nodes(tree).some(n=>n.props?.testID==='welcome-daily-mode'));assert.ok(nodes(tree).some(n=>n.props?.testID==='welcome-guided-mode'));assert.ok(JSON.stringify(tree).includes('ξεκλειδώνει'));
- assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox').length,0,'explain both modes before asking interests');
- button(tree,'Συνέχεια →').props.onPress();tree=render();assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 3 από 4'));assert.equal(button(tree,'Συνέχεια →').props.disabled,true);
- for(const topic of topics.DAILY_CHALLENGE_TOPICS.slice(0,5)){press(tree,topic.title);tree=render();}
- assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,5);assert.ok(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&!n.props.accessibilityState.checked).every(n=>n.props.disabled));
- press(tree,topics.DAILY_CHALLENGE_TOPICS[0].title);tree=render();press(tree,topics.DAILY_CHALLENGE_TOPICS[1].title);tree=render();assert.equal(button(tree,'Συνέχεια →').props.disabled,false);
- press(tree,'Προηγούμενο βήμα');tree=render();button(tree,'Συνέχεια →').props.onPress();tree=render();assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,3,'Back preserves draft');
- button(tree,'Συνέχεια →').props.onPress();tree=render();assert.equal(finishCalls.length,0,'send-off must not save or start play automatically');assert.ok(JSON.stringify(tree).includes('Καλή διασκέδαση!'));assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 4 από 4'));assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='radio').length,0);
- finishAction=()=>new Promise(r=>{resolveFinish=r;});const startButton=button(tree,'Πάμε στη ΓΝΩΣΗ →');startButton.props.onPress();startButton.props.onPress();assert.equal(finishCalls.length,1);assert.equal(finishCalls[0][1],'home');assert.equal(finishCalls[0][0].difficulty,initial.difficulty,'existing difficulty is preserved');tree=render();assert.equal(nodes(tree).find(n=>n.props?.accessibilityLabel==='Παράλειψη οδηγού').props.disabled,true);
- resolveFinish(false);await flush();tree=render();assert.ok(JSON.stringify(tree).includes('Δεν ολοκληρώθηκε η αποθήκευση'));finishAction=async()=>true;button(tree,'Πάμε στη ΓΝΩΣΗ →').props.onPress();await flush();assert.equal(finishCalls.length,2);assert.equal(finishCalls.at(-1)[1],'home');assert.equal(skips,0);endUi();
- for(let target=0;target<4;target++){
-  const h=reactHarness();const Skip=load('src/screens/WelcomeScreen.tsx',{react:h.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../components/ActionButton':{__esModule:true,default:'Button'}}).default;
-  const p={...props,replay:true,initialPreferences:choices,hasStartedChallenge:true};const draw=()=>h.render(()=>Skip(p));let t=draw();const cleanup=h.mount();
-  if(target>0){button(t,'Ας ξεκινήσουμε →').props.onPress();t=draw();}if(target>1){button(t,'Συνέχεια →').props.onPress();t=draw();}if(target>2){button(t,'Συνέχεια →').props.onPress();t=draw();assert.ok(JSON.stringify(t).includes('Η σημερινή πρόκληση διατηρείται'));}
-  const before=finishCalls.length;press(t,'Παράλειψη οδηγού');await flush();assert.equal(finishCalls.length,before,'skip never saves a draft');cleanup();
- }
- assert.equal(skips,4);
- const replayUi=reactHarness();const Replay=load('src/screens/WelcomeScreen.tsx',{react:replayUi.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../components/ActionButton':{__esModule:true,default:'Button'}}).default;let replayPrefs;
- const replayProps={...props,replay:true,initialPreferences:choices,onFinish:async p=>{replayPrefs=p;return true;}};const drawReplay=()=>replayUi.render(()=>Replay(replayProps));tree=drawReplay();const endReplay=replayUi.mount();button(tree,'Ας ξεκινήσουμε →').props.onPress();tree=drawReplay();button(tree,'Συνέχεια →').props.onPress();tree=drawReplay();assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,3);button(tree,'Συνέχεια →').props.onPress();tree=drawReplay();button(tree,'Πάμε στη ΓΝΩΣΗ →').props.onPress();await flush();assert.deepEqual(plain(replayPrefs),choices);endReplay();
+ // Playable three-stage onboarding, with a real daily question stage.
+ const ui=reactHarness();let phase='welcome',category=null,skips=0;
+ const uiNative={...native,useWindowDimensions:()=>({height:830,fontScale:1})};
+ const Screen=load('src/screens/WelcomeScreen.tsx',{react:ui.react,'react/jsx-runtime':{jsx,jsxs:jsx},
+  'react-native':uiNative,'../components/ActionButton':{__esModule:true,default:'Button'},
+  '../components/AtlasCard':{__esModule:true,default:'AtlasCard'},
+  '../components/ProgressGradientBackground':{__esModule:true,default:'Background'},
+  '../components/worldIcons/categoryIconMap':{getCategoryWorldIcon:()=>null},
+  './OnboardingDailyQuestion':{__esModule:true,default:'OnboardingDailyQuestion'}}).default;
+ const props=()=>({phase,replay:false,categories:data.categories,selectedCategoryId:category,
+  preferences:initial,preferencesLoaded:true,onAdvance:async next=>{phase=next;return true;},
+  onBeginLesson:async selected=>{category=selected;phase='lesson';return true;},
+  onSkip:async()=>{skips++;}});
+ const draw=()=>ui.render(()=>Screen(props()));let tree=draw();const endUi=ui.mount();
+ assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 1 από 3'));
+ assert.ok(JSON.stringify(tree).includes('Μια πραγματική ερώτηση'));
+ button(tree,'Ξεκινάμε →').props.onPress();await flush();tree=draw();
+ assert.ok(nodes(tree).some(n=>n.type==='OnboardingDailyQuestion'),'Play the actual first daily question, not a static illustration');
+ assert.equal(nodes(tree).find(n=>n.type==='OnboardingDailyQuestion').props.preferences,initial);
+ await nodes(tree).find(n=>n.type==='OnboardingDailyQuestion').props.onContinue();tree=draw();
+ assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 3 από 3'));
+ assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='radio').length,data.categories.length);
+ press(tree,data.categories.find(c=>c.id==='science').title);tree=draw();
+ assert.ok(JSON.stringify(tree).includes('Αρχαία Ελλάδα'),'Temporary fixed lesson is explicit');
+ button(tree,'Άνοιξε το πρώτο μάθημα →').props.onPress();await flush();
+ assert.equal(category,'science','Keep chosen category while previewing Ancient Greece');
+ assert.equal(phase,'lesson');
+ press(tree,'Παράλειψη οδηγού');await flush();assert.equal(skips,1);endUi();
+ // Stored milestones resume even when activity has already been created.
+ const resumeDisk=disk(),resume=welcomeHook(resumeDisk);resume.render();const stopResume=resume.mount();await flush();
+ assert.equal(await resume.render().advance('question'),true);
+ assert.equal(resumeDisk.map.get(first.WELCOME_STORAGE_KEY),'question');
+ assert.equal(await resume.render().advance('choose'),true);
+ assert.equal(await resume.render().advance('lesson','science'),true);
+ assert.equal(resumeDisk.map.get(first.ONBOARDING_CATEGORY_KEY),'science');
+ stopResume();
+ const resumed=welcomeHook(resumeDisk,null,true);resumed.render();const stopResumed=resumed.mount();await flush();
+ assert.equal(resumed.render().phase,'lesson');assert.equal(resumed.render().categoryId,'science');
+ assert.equal(resumed.render().visible,true);stopResumed();
  // Existing preference drafts survive fresh props delivered by background sync.
  let prefSlots=[],prefCursor=0,prefEffects=[];
  const prefReact={useState:init=>{const i=prefCursor++;if(!(i in prefSlots))prefSlots[i]=init;return[prefSlots[i],v=>{prefSlots[i]=typeof v==='function'?v(prefSlots[i]):v;}];},useEffect:(fn,deps)=>{const i=prefCursor++;if(!prefSlots[i]||deps.some((d,j)=>d!==prefSlots[i][j])){prefSlots[i]=deps;prefEffects.push(fn);}}};
@@ -89,7 +104,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  tree=renderPrefs();nodes(tree).find(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).props.onPress();tree=renderPrefs();assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,4);
  prefProps={...prefProps,initialPreferences:choices};renderPrefs();tree=renderPrefs();assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,4,'Background sync cannot overwrite an unsaved preference draft.');
  // Real AppNavigator route boundary: welcome hides tabs; finishing opens daily directly.
- const nav=reactHarness();let visible=true;
+ const nav=reactHarness();let visible=true,welcomePhase="welcome";
  let latestNavEffect;
  nav.react.useEffect=fn=>{if(fn.toString().includes("hardwareBackPress"))latestNavEffect=fn;};
  const navStore=new DailyStore(null,disk());await navStore.start();
@@ -98,23 +113,43 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  const screens=['HomeScreen','QuickQuizScreen','CategoryScreen','SubcategoryScreen','LessonScreen','QuizScreen','ResultsScreen','ReviewMistakesScreen','WeeklyReviewScreen','KnowledgeReviewScreen','ProfileScreen','PlayerStatsScreen','AccountScreen','SavedLessonsScreen','SearchScreen','DailyChallengeScreen','DailyChallengePreferencesScreen','ProgressScreen','LearningInsightsScreen','WelcomeScreen'];
  const screenImports=Object.fromEntries(screens.map(name=>['../screens/'+name,{__esModule:true,default:name}]));
  const navigationAnalytics = load('src/navigation/useNavigationAnalytics.ts', { react: nav.react });
- const Navigator=load('src/navigation/AppNavigator.tsx',{...screenImports,'./useNavigationAnalytics':navigationAnalytics,react:nav.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useWelcome':{useWelcome:()=>({visible,loading:false,replay:false,isCurrent:()=>true,complete:async()=>{visible=false;return true;},skip:async()=>{visible=false;return true;},open:()=>{visible=true;}})},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[],isSavedLessonsLoaded:true})},'../hooks/useAthensDate':{useAthensDate:()=>today},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:initial,isLoading:false,savePreferences:p=>navStore.savePreferences(p)})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:navStore}),useDailySnapshot:()=>navStore.getSnapshot()},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'}}).default;
- let routed=nav.render(()=>Navigator());assert.ok(!nodes(routed).some(n=>n.type==='Tabs'));const welcome=nodes(routed).find(n=>n.type==='WelcomeScreen');await welcome.props.onFinish(choices,'daily');routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='DailyChallengeScreen'));assert.ok(!nodes(routed).some(n=>n.type==='Tabs'));assert.equal(navStore.getSnapshot().doc.days[today].record.started,true);
- // Dedicated account entry/return and Android Back share guarded navigation.
- nodes(routed).find(n=>n.type==='DailyChallengeScreen').props.onHome();routed=nav.render(()=>Navigator());
+ const Navigator=load('src/navigation/AppNavigator.tsx',{...screenImports,'./useNavigationAnalytics':navigationAnalytics,react:nav.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useWelcome':{useWelcome:()=>({visible,loading:false,replay:false,phase:welcomePhase,categoryId:null,isCurrent:()=>true,advance:async p=>{welcomePhase=p;return true;},complete:async()=>{visible=false;return true;},skip:async()=>{visible=false;return true;},open:()=>{visible=true;welcomePhase='welcome';}})},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[],isSavedLessonsLoaded:true})},'../hooks/useAthensDate':{useAthensDate:()=>today},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:initial,isLoading:false,savePreferences:p=>navStore.savePreferences(p)})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:navStore}),useDailySnapshot:()=>navStore.getSnapshot()},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'}}).default;
+ let routed=nav.render(()=>Navigator());assert.ok(!nodes(routed).some(n=>n.type==='Tabs'));
+ let guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
+ assert.equal(guide.props.phase,'welcome');
+ assert.equal(await guide.props.onAdvance('question'),true);
+ routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
+ assert.equal(guide.props.phase,'question');
+ assert.equal(await guide.props.onAdvance('choose'),true);
+ routed=nav.render(()=>Navigator());guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
+ const beforeLessonDaily=plain(navStore.getSnapshot().doc.days);
+ assert.equal(await guide.props.onBeginLesson('science'),true);
+ routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='LessonScreen'));
+ assert.equal(app.activeLessonId,first.ONBOARDING_INTRO_LESSON_ID);
+ assert.deepEqual(plain(navStore.getSnapshot().doc.days),beforeLessonDaily);
+ // Skipping the guide returns to Home without resetting the daily or reader.
+ await nodes(nav.render(()=>Navigator())).find(n=>n.type==='LessonScreen').props.onBack();
+ routed=nav.render(()=>Navigator());assert.equal(nodes(routed).find(n=>n.type==='WelcomeScreen').props.phase,'choose');
+ await nodes(routed).find(n=>n.type==='WelcomeScreen').props.onSkip(3);
+ routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='HomeScreen'));
  nodes(routed).find(n=>n.type==='HomeScreen').props.onOpenProfile();routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='ProfileScreen'));
  let unsubscribeBack=latestNavEffect();assert.equal(backHandler(),true);unsubscribeBack();routed=nav.render(()=>Navigator());assert.equal(app.screen,'home');
  nodes(routed).find(n=>n.type==='HomeScreen').props.onOpenQuickQuiz();routed=nav.render(()=>Navigator());
  assert.ok(nodes(routed).some(n=>n.type==='QuickQuizScreen'));assert.ok(!nodes(routed).some(n=>n.type==='Tabs'));
  unsubscribeBack=latestNavEffect();assert.equal(backHandler(),true);unsubscribeBack();routed=nav.render(()=>Navigator());assert.equal(app.screen,'home');
-
- nodes(routed).find(n=>n.type==='Tabs').props.onNavigate('progress');routed=nav.render(()=>Navigator());nodes(routed).find(n=>n.type==='ProgressScreen').props.onOpenProfile();routed=nav.render(()=>Navigator());unsubscribeBack=latestNavEffect();backHandler();unsubscribeBack();assert.equal(app.screen,'progress');
- app.screen='profile';routed=nav.render(()=>Navigator());nodes(routed).find(n=>n.type==='ProfileScreen').props.onAccount();routed=nav.render(()=>Navigator());assert.equal(app.screen,'account');unsubscribeBack=latestNavEffect();backHandler();unsubscribeBack();assert.equal(app.screen,'profile');routed=nav.render(()=>Navigator());nodes(routed).find(n=>n.type==='ProfileScreen').props.onStats();routed=nav.render(()=>Navigator());unsubscribeBack=latestNavEffect();backHandler();unsubscribeBack();assert.equal(app.screen,'profile');
- app.screen='lesson';app.lessonBackScreen='saved';routed=nav.render(()=>Navigator());unsubscribeBack=latestNavEffect();assert.equal(backHandler(),true);assert.equal(app.screen,'lesson','Back must not discard active reader immediately');assert.equal(leaveAlert[0],'Το μάθημα δεν έχει ολοκληρωθεί');leaveAlert[2].find(b=>b.style==='destructive').onPress();assert.equal(app.screen,'saved');unsubscribeBack();
- app.screen='home';nav.render(()=>Navigator());unsubscribeBack=latestNavEffect();assert.equal(backHandler(),false,'Android can exit normally from root');unsubscribeBack();
- visible=true;routed=nav.render(()=>Navigator());const firstLessonGuide=nodes(routed).find(n=>n.type==='WelcomeScreen');const beforeLessonDaily=plain(navStore.getSnapshot().doc.days);
- const lockedLesson=lessonPaths.getSubcategoryPath(data.lessons,'ancient-greece')[1];assert.equal(await firstLessonGuide.props.onFinish(choices,'lesson',lockedLesson.id),false,'onboarding cannot bypass lesson locks');assert.equal(visible,true);
- const lessonChoice=firstLessonGuide.props.lessonCandidates[0];assert.equal(await firstLessonGuide.props.onFinish(choices,'lesson',lessonChoice.id),true);routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='LessonScreen'));assert.equal(app.activeLessonId,lessonChoice.id);assert.deepEqual(plain(navStore.getSnapshot().doc.days),beforeLessonDaily,'starting a lesson preserves an existing daily challenge');
+ nodes(routed).find(n=>n.type==='Tabs').props.onNavigate('progress');routed=nav.render(()=>Navigator());
+ nodes(routed).find(n=>n.type==='ProgressScreen').props.onOpenProfile();routed=nav.render(()=>Navigator());
+ unsubscribeBack=latestNavEffect();backHandler();unsubscribeBack();assert.equal(app.screen,'progress');
+ app.screen='profile';routed=nav.render(()=>Navigator());nodes(routed).find(n=>n.type==='ProfileScreen').props.onAccount();
+ routed=nav.render(()=>Navigator());assert.equal(app.screen,'account');unsubscribeBack=latestNavEffect();backHandler();unsubscribeBack();assert.equal(app.screen,'profile');
+ routed=nav.render(()=>Navigator());nodes(routed).find(n=>n.type==='ProfileScreen').props.onStats();routed=nav.render(()=>Navigator());
+ unsubscribeBack=latestNavEffect();backHandler();unsubscribeBack();assert.equal(app.screen,'profile');
+ app.screen='lesson';app.lessonBackScreen='saved';routed=nav.render(()=>Navigator());
+ unsubscribeBack=latestNavEffect();assert.equal(backHandler(),true);assert.equal(app.screen,'lesson','Back keeps the protected reader open');
+ assert.equal(leaveAlert[0],'Το μάθημα δεν έχει ολοκληρωθεί');
+ leaveAlert[2].find(b=>b.style==='destructive').onPress();assert.equal(app.screen,'saved');unsubscribeBack();
+ app.screen='home';nav.render(()=>Navigator());unsubscribeBack=latestNavEffect();
+ assert.equal(backHandler(),false,'Android can exit normally from root');unsubscribeBack();
  // Returning from results continues the most recently worked-on lesson path.
  const [finishedLesson, nextLesson] = lessonPaths.getSubcategoryPath(data.lessons, 'ancient-greece');
  const other = data.lessons.find(lesson => lesson.subcategoryId !== finishedLesson.subcategoryId);
@@ -139,5 +174,5 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  app.inProgressLessonIds = [];
  assert.notEqual(home().featuredLesson.subcategoryId, finishedLesson.subcategoryId, 'A completed path falls back to discovery when nothing is in progress');
  store.stop();homeStore.stop();navStore.stop();
- console.log('Welcome checks passed: four-step order, both play modes before daily interests, 3–5 bounds, draft/back, final home destination, no automatic play, skip at every step, preserved difficulty/started quiz, duplicate taps, storage errors and navigation. Native views mocked.');
+ console.log('Welcome checks passed: resumable stages, Midnight Atlas choices, live daily question routing, Ancient Greece lesson, skip/back, daily state and navigation. Native views mocked.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
