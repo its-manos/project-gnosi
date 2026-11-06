@@ -8,6 +8,7 @@ import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import SourceLink from "../components/SourceLink";
 import type { useQuickQuiz } from "../hooks/useQuickQuiz";
 import { emitPlayFeedback } from "../play/events";
+import { requestPracticeCue } from "../play/soundStatus";
 import { calculateQuizResults, evaluateAnswer, questionToken } from "../quiz/engine";
 import { playQuickQuiz, QUICK_QUIZ_SIZE, quickQuizStreaks, startQuickQuiz } from "../quiz/quickQuiz";
 import type { ChoiceQuestion } from "../quiz/types";
@@ -70,7 +71,7 @@ export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], o
   const liveQuestionId = round && !round.completed && question && answer === undefined
     ? `${round.id}:${question.id}` : null;
   useEffect(() => {
-    if (liveQuestionId) emitPlayFeedback({ scope, kind: "question-open", id: `${liveQuestionId}:open` });
+    if (liveQuestionId) requestPracticeCue("question-open");
   }, [scope, liveQuestionId]);
 
   useEffect(() => {

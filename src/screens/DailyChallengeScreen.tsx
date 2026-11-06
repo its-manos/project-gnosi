@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ComponentRef } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
@@ -21,6 +21,7 @@ import { dailyResultAnalysis, recommendDailyLesson } from "../utils/dailyResults
 import { selectSharedDailyQuestions } from "../utils/sharedDailyChallenge";
 import { dailyXP } from "../utils/knowledgeScoring";
 import { useDailyChallenge } from "../hooks/useDailyChallenge";
+import { requestPracticeCue } from "../play/soundStatus";
 import { colors } from "../theme";
 
 type Props={onHome:()=>void;onOpenPreferences:()=>void;preferences:DailyChallengePreferences;preferencesLoaded:boolean;
@@ -66,6 +67,13 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
     [record.dateKey,record.started],
   );
   const activeQuiz=!previewIntro&&record.started&&!record.completed&&currentQuestion!==null&&questionsCompatible&&!isLoading;
+  // Sound on each newly visible unanswered question, including resuming after
+  // leaving the quiz. Intro, completed results and answered cards stay quiet.
+  const openingQuestionId=activeQuiz&&selectedAnswer===null&&currentQuestion
+    ? `${record.dateKey}:${record.currentIndex}:${currentQuestion.id}` : null;
+  useEffect(()=>{
+    if(openingQuestionId) requestPracticeCue("question-open");
+  },[openingQuestionId]);
   return <View style={styles.root}><ProgressGradientBackground />
     <View style={styles.pageChrome}>
       <ProfileSectionHeader

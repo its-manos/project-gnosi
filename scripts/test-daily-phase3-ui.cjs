@@ -3,7 +3,7 @@ const {questions}=load('src/data/questions.ts'),{lessons}=load('src/data/lessons
 const jsx=(type,props)=>({type,props}),nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
 const text=t=>typeof t==='string'||typeof t==='number'?String(t):Array.isArray(t)?t.map(text).join(''):t&&typeof t==='object'?text(t.props?.children):'';
 let slots=[],cursor=0,next=0,homes=0,opened=[];
-const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:initial=>{const i=cursor++;return slots[i]??={current:initial};},useMemo:factory=>factory()};
+const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:initial=>{const i=cursor++;return slots[i]??={current:initial};},useMemo:factory=>factory(),useEffect:()=>{}};
 const native={View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x},useWindowDimensions:()=>({width:390,height:844,fontScale:1})};
 const stubs=Object.fromEntries(['QuizReveal','KnowledgeProgress','DailyAnswerReview','DailyMistakeReview',
   'ActionButton','AnswerOption','ProfileSectionHeader','DailyMissionMap','DailyJourneyTrack','ReportContentButton',
