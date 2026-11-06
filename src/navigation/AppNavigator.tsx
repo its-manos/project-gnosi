@@ -354,7 +354,8 @@ export default function AppNavigator() {
 
     case "profile":
       screenContent = <ProfileScreen onBack={() => app.setScreen(profileOrigin)} onStats={() => app.setScreen("player-stats")}
-        onAccount={() => openAccount("profile")} onInterests={() => openDailyPreferences("profile")} onGuide={welcome.open} />;
+        onAccount={() => openAccount("profile")} onInterests={() => openDailyPreferences("profile")}
+        onSaved={() => app.setScreen("saved")} onGuide={welcome.open} />;
       break;
     case "player-stats":
       screenContent = <PlayerStatsScreen onBack={() => app.setScreen("profile")} />;
@@ -416,7 +417,7 @@ export default function AppNavigator() {
           inProgressLessonIds={app.inProgressLessonIds}
           progressLoaded={app.progressLoaded}
           lessons={savedLessons}
-          onBack={() => navigateTo("home")}
+          onBack={() => navigateTo("profile")}
           onOpenLesson={app.openLesson}
           onRemoveSavedLesson={bookmarks.toggleSavedLesson}
         />
