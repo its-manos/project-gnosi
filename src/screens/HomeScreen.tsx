@@ -143,7 +143,7 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, !compact && styles.spaciousHero, compact && styles.compactHero, tight && styles.tightHero, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
@@ -173,7 +173,7 @@ export default function HomeScreen({
         </View>
       </MotionPressable>
 
-      <MotionView entranceDelay={130} style={styles.actions}>
+      <MotionView entranceDelay={130} style={[styles.actions, !compact && styles.spaciousActions]}>
         <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
@@ -244,11 +244,11 @@ const styles = StyleSheet.create({
   // Distribute spare height between the four sections. Category rows stay together.
   // When content exceeds the viewport, the minimum gaps remain and scrolling takes over.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "space-between" },
+    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
   // Compact screens save vertical room in spacing, not by shrinking artwork.
   compactContent: { gap: 8, paddingTop: 4, paddingBottom: 4 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
-  compactHero: { padding: 14, gap: 8 },
+  // On tall screens share spare space between the three primary cards instead of gaps.\n  spaciousHero: { flexGrow: 1, justifyContent: "space-between" },\n  spaciousActions: { flexGrow: 0.35 },\n  compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
   tightHeroTitle: { fontSize: 18, lineHeight: 23 },
   compactActionCard: { minHeight: 90, padding: 10 },
