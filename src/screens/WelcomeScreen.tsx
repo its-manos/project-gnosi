@@ -135,8 +135,8 @@ export default function WelcomeScreen({
               accessibilityRole="radio" accessibilityLabel={category.title}
               accessibilityState={{ selected: active, disabled: busy }} disabled={busy}
               onPress={() => setCategoryId(category.id)}
-              style={({ pressed }) => [styles.category, compact && styles.categoryCompact, active && styles.categorySelected, pressed && styles.categoryPressed]}>
-              <View style={styles.iconArea}>{Icon ? <Icon size={38} /> : <Text style={styles.fallbackIcon}>{category.emoji}</Text>}</View>
+              style={({ pressed }) => [styles.category, compact && styles.categoryCompact, narrow && styles.optionNarrow, active && styles.categorySelected, pressed && styles.categoryPressed]}>
+              <View style={styles.iconArea}>{Icon ? <Icon size={narrow ? 32 : 38} /> : <Text style={styles.fallbackIcon}>{category.emoji}</Text>}</View>
               <Text style={styles.categoryTitle} numberOfLines={2}>{category.title}</Text>
               <View style={[styles.topicCheck, active && styles.topicCheckActive]}>
                 {active ? <Text style={styles.topicCheckText}>✓</Text> : null}
@@ -170,10 +170,10 @@ export default function WelcomeScreen({
               accessibilityRole="checkbox" accessibilityLabel={topic.title}
               accessibilityState={{ checked: active, disabled }}
               disabled={disabled} onPress={() => toggleTopic(topic.id)}
-              style={({ pressed }) => [styles.topic, compact && styles.topicCompact, active && styles.topicActive,
+              style={({ pressed }) => [styles.topic, compact && styles.topicCompact, narrow && styles.optionNarrow, active && styles.topicActive,
                 disabled && !active && styles.topicDisabled, pressed && styles.categoryPressed]}>
               <View style={styles.topicIcon} accessible={false}>
-                {Icon ? <Icon size={29} /> : <Text style={styles.topicEmoji}>{topic.emoji}</Text>}
+                {Icon ? <Icon size={narrow ? 26 : 29} /> : <Text style={styles.topicEmoji}>{topic.emoji}</Text>}
               </View>
               <Text style={styles.topicTitle} numberOfLines={2}>{topic.title}</Text>
               <View style={[styles.topicCheck, active && styles.topicCheckActive]}>
@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: 16, padding: 10, minWidth: 125, flexBasis: "46%", flexGrow: 1,
     minHeight: 80, flexDirection: "row", alignItems: "center", gap: 8 },
   categoryCompact: { minHeight: 72, paddingVertical: 7 },
+  optionNarrow: { paddingHorizontal: 7, gap: 6 },
   categorySelected: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
   categoryPressed: { opacity: .8 },
   iconArea: { width: 40, alignItems: "center", justifyContent: "center" },
