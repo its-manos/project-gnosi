@@ -11,7 +11,7 @@ import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import UsageSharing from "../components/UsageSharing";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import OnboardingDailyQuestion from "./OnboardingDailyQuestion";
-import { WelcomeLessonIcon, WelcomeQuizIcon } from "../components/WelcomeStepIcons";
+import { WelcomeAtlasIcon, WelcomeLessonIcon, WelcomeQuizIcon } from "../components/WelcomeStepIcons";
 
 type Props = {
   phase: WelcomePhase;
@@ -95,9 +95,7 @@ export default function WelcomeScreen({
       showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       {phase === "welcome" ? <>
         <View style={styles.hero} accessible={false}>
-          <View style={styles.heroRing} /><View style={styles.heroRingInner} />
-          <Text style={styles.heroSymbol}>✦</Text>
-          <View style={styles.heroSatellite} />
+          <WelcomeAtlasIcon size={108} />
         </View>
         <Text style={styles.eyebrow}>ΕΝΑΣ ΚΟΣΜΟΣ ΠΕΡΙΕΡΓΕΙΑΣ</Text>
         <Text accessibilityRole="header" style={styles.title}>Κάθε μέρα, κάτι καινούργιο.</Text>
@@ -205,15 +203,8 @@ const styles = StyleSheet.create({
   content: { width: "100%", maxWidth: 640, flexGrow: 1, alignSelf: "center", paddingHorizontal: 20,
     justifyContent: "center", paddingTop: 16, paddingBottom: 32 },
   contentCompact: { justifyContent: "flex-start", paddingTop: 14 },
-  hero: { width: 110, height: 110, alignSelf: "center", alignItems: "center",
-    justifyContent: "center", marginVertical: 16 },
-  heroRing: { position: "absolute", width: 106, height: 106, borderWidth: 1,
-    borderColor: "#66608B", borderRadius: 53, transform: [{ rotate: "22deg" }] },
-  heroRingInner: { position: "absolute", width: 80, height: 80, borderWidth: 1,
-    borderColor: "#8D7EB0", borderRadius: 40 },
-  heroSymbol: { color: "#DCD0FF", fontSize: 57, fontWeight: "800" },
-  heroSatellite: { position: "absolute", width: 10, height: 10, borderRadius: 5,
-    right: 7, top: 15, backgroundColor: "#83D0C4" },
+  hero: { width: 118, height: 118, alignSelf: "center", alignItems: "center",
+    justifyContent: "center", marginVertical: 12 },
   eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 17, fontWeight: "900",
     letterSpacing: 1.2, textAlign: "center", marginBottom: 10 },
   title: { color: colors.text, fontSize: 29, lineHeight: 37, fontWeight: "900",
