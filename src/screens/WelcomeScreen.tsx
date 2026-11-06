@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { Category } from "../data/lessons";
-import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
+import { DAILY_CHALLENGE_TOPICS, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import type { WelcomePhase } from "../utils/firstRun";
 import { colors } from "../theme";
 import ActionButton from "../components/ActionButton";
@@ -11,6 +11,7 @@ import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import UsageSharing from "../components/UsageSharing";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import OnboardingDailyQuestion from "./OnboardingDailyQuestion";
+import { WelcomeLessonIcon, WelcomeQuizIcon } from "../components/WelcomeStepIcons";
 
 type Props = {
   phase: WelcomePhase;
@@ -19,8 +20,8 @@ type Props = {
   selectedCategoryId: string | null;
   preferences: DailyChallengePreferences;
   preferencesLoaded: boolean;
-  onAdvance: (phase: WelcomePhase) => Promise<boolean>;
-  onBeginLesson: (categoryId: string) => Promise<boolean>;
+  onAdvance: (phase: WelcomePhase, categoryId?: string) => Promise<boolean>;
+  onBeginLesson: (preferences: DailyChallengePreferences) => Promise<boolean>;
   onSkip: (step?: number) => Promise<void>;
 };
 
@@ -29,6 +30,8 @@ export default function WelcomeScreen({
   onAdvance, onBeginLesson, onSkip,
 }: Props) {
   const [categoryId, setCategoryId] = useState<string | null>(selectedCategoryId);
+  const [topics, setTopics] = useState<string[]>(() =>
+    replay ? [...preferences.topicIds] : []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const locked = useRef(false);
@@ -46,7 +49,14 @@ export default function WelcomeScreen({
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   }
 
-  const step = phase === "welcome" ? 1 : phase === "question" ? 2 : 3;
+  const step = phase === "welcome" ? 1 : phase === "question" ? 2 : phase === "choose" ? 3 : 4;
+  function toggleTopic(id: string) {
+    if (busy) return;
+    setTopics(current => current.includes(id)
+      ? current.filter(value => value !== id)
+      : current.length < 5 ? [...current, id] : current);
+    setError(false);
+  }
   useEffect(() => {
     if (usageEnabled) void analytics.track("onboarding_step_viewed", { screen: "welcome", onboarding_step: step, replay });
   }, [analytics, usageEnabled, step, replay]);
@@ -55,7 +65,7 @@ export default function WelcomeScreen({
     <ProgressGradientBackground />
     <View style={styles.header}>
       <View style={styles.brand}><View style={styles.brandStar}><Text style={styles.brandGlyph}>✦</Text></View><Text style={styles.brandName}>ΓΝΩΣΗ</Text></View>
-      <Text accessibilityLabel={`Βήμα ${step} από 3`} style={styles.counter}>{step} / 3</Text>
+      <Text accessibilityLabel={`Βήμα ${step} από 4`} style={styles.counter}>{step} / 4</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="Παράλειψη οδηγού"
         accessibilityState={{ disabled: busy }} disabled={busy} hitSlop={8}
         onPress={() => void run(() => onSkip(step))} style={styles.skip}>
@@ -63,7 +73,7 @@ export default function WelcomeScreen({
       </Pressable>
     </View>
     <View accessibilityLabel="Πρόοδος γνωριμίας" style={styles.track}>
-      {[1, 2, 3].map(number => <View key={number} style={[styles.segment, number <= step && styles.segmentActive]} />)}
+      {[1, 2, 3, 4].map(number => <View key={number} style={[styles.segment, number <= step && styles.segmentActive]} />)}
     </View>
 
     {phase === "question" ? <OnboardingDailyQuestion
@@ -79,22 +89,21 @@ export default function WelcomeScreen({
         </View>
         <Text style={styles.eyebrow}>ΕΝΑΣ ΚΟΣΜΟΣ ΠΕΡΙΕΡΓΕΙΑΣ</Text>
         <Text accessibilityRole="header" style={styles.title}>Κάθε μέρα, κάτι καινούργιο.</Text>
-        <Text style={styles.body}>Μικρές προκλήσεις, μεγάλες ιστορίες. Πρώτα μια ερώτηση· μετά η πρώτη σου διαδρομή γνώσης.</Text>
         <AtlasCard style={styles.experience}>
-          <View style={styles.experienceRow}><Text style={styles.experienceIcon}>✧</Text><View style={styles.experienceCopy}>
-            <Text style={styles.experienceTitle}>01  Δοκίμασε τις γνώσεις σου</Text><Text style={styles.small}>Μια πραγματική ερώτηση από το ημερήσιο quiz.</Text></View></View>
+          <View style={styles.experienceRow}><View style={styles.experienceIcon} accessible={false}><WelcomeQuizIcon /></View><View style={styles.experienceCopy}>
+            <Text style={styles.experienceTitle}>01  Δοκίμασε τις γνώσεις σου</Text><Text style={styles.small}>Η πρώτη ερώτηση της σημερινής πρόκλησης.</Text></View></View>
           <View style={styles.divider} />
-          <View style={styles.experienceRow}><Text style={styles.experienceIcon}>⌁</Text><View style={styles.experienceCopy}>
-            <Text style={styles.experienceTitle}>02  Ξεκίνα μια περιπέτεια</Text><Text style={styles.small}>Ένα σύντομο μάθημα με διαδραστικές στάσεις.</Text></View></View>
+          <View style={styles.experienceRow}><View style={styles.experienceIcon} accessible={false}><WelcomeLessonIcon /></View><View style={styles.experienceCopy}>
+            <Text style={styles.experienceTitle}>02  Ξεκίνα μια περιπέτεια</Text><Text style={styles.small}>Ένα μάθημα γεμάτο ανακαλύψεις και ερωτήσεις.</Text></View></View>
         </AtlasCard>
         <Text style={styles.support}>Χωρίς λογαριασμό. Η πρόοδός σου αποθηκεύεται στη συσκευή σου.</Text>
         {!replay ? <UsageSharing /> : null}
         <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκινάμε →"} disabled={busy}
           onPress={() => void run(() => onAdvance("question"))} />
-      </> : <>
+      </> : phase === "choose" ? <>
         <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Τι σε κάνει να αναρωτιέσαι;</Text>
-        <Text style={styles.body}>Διάλεξε μια θεματική που θα ήθελες να εξερευνήσεις. Η επιλογή σου θα κρατηθεί για τις επόμενες διαδρομές.</Text>
+        <Text accessibilityRole="header" style={styles.title}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
+        <Text style={styles.body}>Διάλεξε από πού θα ήθελες να ξεκινήσεις. Μπορείς να γνωρίσεις και τους άλλους κόσμους όποτε θέλεις.</Text>
         <View style={styles.categoryGrid}>
           {categories.map(category => {
             const Icon = getCategoryWorldIcon(category.id);
@@ -111,13 +120,47 @@ export default function WelcomeScreen({
           })}
         </View>
         <View style={styles.lessonPreview}>
-          <Text style={styles.previewKicker}>Η ΠΡΩΤΗ ΔΙΑΔΡΟΜΗ · ΠΡΟΣ ΤΟ ΠΑΡΟΝ</Text>
+          <Text style={styles.previewKicker}>Η ΠΡΩΤΗ ΣΟΥ ΔΙΑΔΡΟΜΗ</Text>
           <Text style={styles.previewTitle}>Αρχαία Ελλάδα</Text>
-          <Text style={styles.small}>Προς το παρόν, όλοι ξεκινούν με τη γνωριμία με την Αρχαία Ελλάδα, όποια θεματική κι αν διαλέξουν.</Text>
-          {selected ? <Text style={styles.selectedHint}>Η επιλογή σου: {selected.title}</Text> : null}
+          <Text style={styles.small}>Για την πρώτη μας διαδρομή θα πάμε στην Αρχαία Ελλάδα. Προς το παρόν, αυτό είναι το εισαγωγικό μάθημα για όλους, όποιον κόσμο κι αν διαλέξεις.</Text>
+          {selected ? <Text style={styles.selectedHint}>Ο κόσμος που διάλεξες: {selected.title}</Text> : null}
         </View>
-        <ActionButton label={busy ? "Άνοιγμα…" : "Άνοιξε το πρώτο μάθημα →"}
-          disabled={busy || !categoryId} onPress={() => { if (categoryId) void run(() => onBeginLesson(categoryId)); }} />
+        <ActionButton label={busy ? "Συνέχεια…" : "Συνέχεια →"}
+          disabled={busy || !categoryId}
+          onPress={() => { if (categoryId) void run(() => onAdvance("interests", categoryId)); }} />
+      </> : <>
+        <Text style={styles.eyebrow}>Η ΓΝΩΣΗ ΣΤΑ ΜΕΤΡΑ ΣΟΥ</Text>
+        <Text accessibilityRole="header" style={styles.title}>Τι σου αρέσει να ανακαλύπτεις;</Text>
+        <Text style={styles.body}>Διάλεξε 3 έως 5 θέματα. Θα δίνουμε προτεραιότητα σε αυτά στο Γρήγορο Κουίζ, όπου υπάρχουν διαθέσιμες ερωτήσεις, και στις προτάσεις μαθημάτων.</Text>
+        <View style={styles.topicCount}>
+          <Text style={styles.topicCountText}>ΤΑ ΕΝΔΙΑΦΕΡΟΝΤΑ ΣΟΥ</Text>
+          <Text style={styles.topicCounter} accessibilityLiveRegion="polite">{topics.length} / 5 · τουλάχιστον 3</Text>
+        </View>
+        <View style={styles.topicGrid}>
+          {DAILY_CHALLENGE_TOPICS.map(topic => {
+            const active = topics.includes(topic.id);
+            const disabled = busy || (!active && topics.length >= 5);
+            const Icon = getCategoryWorldIcon(topic.id);
+            return <Pressable key={topic.id} testID={`welcome-interest-${topic.id}`}
+              accessibilityRole="checkbox" accessibilityLabel={topic.title}
+              accessibilityState={{ checked: active, disabled }}
+              disabled={disabled} onPress={() => toggleTopic(topic.id)}
+              style={({ pressed }) => [styles.topic, active && styles.topicActive,
+                disabled && !active && styles.topicDisabled, pressed && styles.categoryPressed]}>
+              <View style={styles.topicIcon} accessible={false}>
+                {Icon ? <Icon size={29} /> : <Text style={styles.topicEmoji}>{topic.emoji}</Text>}
+              </View>
+              <Text style={styles.topicTitle} numberOfLines={2}>{topic.title}</Text>
+              <View style={[styles.topicCheck, active && styles.topicCheckActive]}>
+                {active ? <Text style={styles.topicCheckText}>✓</Text> : null}
+              </View>
+            </Pressable>;
+          })}
+        </View>
+        <Text style={styles.interestsNote}>Η καθημερινή πρόκληση έχει τις ίδιες 7 ερωτήσεις για όλους. Μπορείς να αλλάξεις τα ενδιαφέροντά σου από το Προφίλ.</Text>
+        <ActionButton label={busy ? "Αποθήκευση…" : "Ξεκίνα το πρώτο μάθημα →"}
+          disabled={busy || !preferencesLoaded || topics.length < 3 || topics.length > 5}
+          onPress={() => void run(() => onBeginLesson({ topicIds: topics, difficulty: preferences.difficulty }))} />
       </>}
       {error ? <Text style={styles.error} accessibilityLiveRegion="polite">Δεν αποθηκεύτηκε το βήμα. Δοκίμασε ξανά ή παράλειψε τον οδηγό.</Text> : null}
     </ScrollView>}
@@ -159,11 +202,12 @@ const styles = StyleSheet.create({
     textAlign: "center", marginBottom: 22 },
   experience: { padding: 18, gap: 13 },
   experienceRow: { flexDirection: "row", alignItems: "center", gap: 13 },
-  experienceIcon: { width: 27, color: colors.accentLight, fontSize: 28, textAlign: "center" },
+  experienceIcon: { width: 51, height: 51, borderRadius: 15, borderWidth: 1,
+    borderColor: "#5A527B", backgroundColor: "#2D304C", justifyContent: "center", alignItems: "center" },
   experienceCopy: { flex: 1, gap: 3 },
   experienceTitle: { color: colors.text, fontSize: 14, fontWeight: "800", lineHeight: 21 },
   small: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
-  divider: { height: 1, backgroundColor: "#45435F", marginLeft: 40 },
+  divider: { height: 1, backgroundColor: "#45435F", marginLeft: 64 },
   support: { color: colors.textMuted, textAlign: "center", fontSize: 12, lineHeight: 19, marginTop: 17 },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 17 },
   category: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border,
@@ -181,5 +225,23 @@ const styles = StyleSheet.create({
   previewKicker: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: .8 },
   previewTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "900" },
   selectedHint: { color: colors.accentLight, fontSize: 12, lineHeight: 19 },
+  topicCount: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap",
+    alignItems: "center", gap: 6, marginBottom: 12 },
+  topicCountText: { color: colors.text, fontSize: 12, fontWeight: "900", letterSpacing: .5 },
+  topicCounter: { color: colors.accentLight, fontSize: 12, fontWeight: "800" },
+  topicGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
+  topic: { flexBasis: "46%", flexGrow: 1, minWidth: 128, minHeight: 79,
+    flexDirection: "row", alignItems: "center", padding: 10, gap: 8,
+    borderRadius: 15, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised },
+  topicActive: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
+  topicDisabled: { opacity: .42 },
+  topicIcon: { width: 31, height: 38, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  topicEmoji: { fontSize: 25 },
+  topicTitle: { color: colors.text, fontSize: 12, fontWeight: "800", lineHeight: 17, flex: 1 },
+  topicCheck: { width: 18, height: 18, borderRadius: 9, borderWidth: 1,
+    borderColor: "#77778C", justifyContent: "center", alignItems: "center", flexShrink: 0 },
+  topicCheckActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  topicCheckText: { color: colors.background, fontSize: 12, fontWeight: "900" },
+  interestsNote: { color: colors.textMuted, fontSize: 12, lineHeight: 19, marginTop: 14, marginBottom: 3 },
   error: { color: colors.error, fontSize: 12, lineHeight: 20, marginTop: 12 },
 });
