@@ -291,7 +291,10 @@ export default function AppNavigator() {
         typedCheckpointAnswers={app.typedCheckpointAnswers}
         onAnswerCheckpoint={app.answerCheckpoint}
         onFinishLesson={app.finishInlineLesson}
-        onBack={() => { void welcome.advance("choose"); }} />;
+        onBack={() => {
+          const previous = previousWelcomePhase(welcome.phase);
+          if (previous) void welcome.advance(previous);
+        }} />;
     } else {
       screenContent = <WelcomeScreen phase={welcome.phase} replay={welcome.replay}
         categories={categories} selectedCategoryId={welcome.categoryId}
