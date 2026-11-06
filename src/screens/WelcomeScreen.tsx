@@ -68,7 +68,15 @@ export default function WelcomeScreen({
   return <View testID="welcome-flow" style={styles.root}>
     <ProgressGradientBackground />
     <View style={styles.header}>
-      <View style={styles.brand}><View style={styles.brandStar}><Text style={styles.brandGlyph}>✦</Text></View><Text style={styles.brandName}>ΓΝΩΣΗ</Text></View>
+      {phase === "welcome"
+        ? <View style={styles.brand}><View style={styles.brandStar}><Text style={styles.brandGlyph}>✦</Text></View><Text style={styles.brandName}>ΓΝΩΣΗ</Text></View>
+        : <Pressable style={styles.back} disabled={busy} accessibilityRole="button"
+            accessibilityLabel="Προηγούμενο βήμα" accessibilityState={{ disabled: busy }}
+            onPress={() => void run(() => onAdvance(
+              phase === "question" ? "welcome" : phase === "choose" ? "question" : "choose",
+            ))}>
+            <Text style={styles.backText}>‹ Πίσω</Text>
+          </Pressable>}
       <Text accessibilityLabel={`Βήμα ${step} από 4`} style={styles.counter}>{step} / 4</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="Παράλειψη οδηγού"
         accessibilityState={{ disabled: busy }} disabled={busy} hitSlop={8}
@@ -182,6 +190,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingTop: 7, paddingBottom: 10, gap: 8 },
   brand: { flexDirection: "row", alignItems: "center", gap: 9, flex: 1 },
+  back: { minHeight: 44, flex: 1, justifyContent: "center" },
+  backText: { color: colors.accentLight, fontSize: 13, fontWeight: "800" },
   brandStar: { width: 28, height: 28, alignItems: "center", justifyContent: "center",
     borderRadius: 10, backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.borderStrong },
   brandGlyph: { color: colors.accentLight, fontSize: 19 },
