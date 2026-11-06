@@ -4,6 +4,7 @@ import type { AppScreen } from "../hooks/useLearningApp";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import type { AnalyticsScreen } from "../utils/betaAnalytics";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
+import { WELCOME_GUIDE_STAGES } from "../utils/firstRun";
 
 type NavigationAnalyticsState = {
   screen: AppScreen;
@@ -78,7 +79,7 @@ export function useNavigationAnalytics({
 
   return {
     trackWelcomeCompleted() {
-      void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: 4, replay: welcome.replay });
+      void analytics.track("onboarding_completed", { screen: "welcome", onboarding_step: WELCOME_GUIDE_STAGES.length, replay: welcome.replay });
     },
     trackWelcomeSkipped(step: number) {
       void analytics.track("onboarding_skipped", { screen: "welcome", onboarding_step: step, replay: welcome.replay });
