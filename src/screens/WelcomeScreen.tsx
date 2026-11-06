@@ -141,7 +141,7 @@ export default function WelcomeScreen({
               style={({ pressed }) => [styles.category, compact && styles.categoryCompact, narrow && styles.optionNarrow, active && styles.categorySelected, pressed && styles.categoryPressed]}>
               <View style={styles.iconArea}>{Icon ? <Icon size={narrow ? 32 : 38} /> : <Text style={styles.fallbackIcon}>{category.emoji}</Text>}</View>
               <Text style={styles.categoryTitle} numberOfLines={2}>{category.title}</Text>
-              <View style={[styles.topicCheck, active && styles.topicCheckActive]}>
+              <View style={[styles.topicCheck, narrow && styles.narrowCheck, active && styles.topicCheckActive]}>
                 {active ? <Text style={styles.topicCheckText}>✓</Text> : null}
               </View>
             </Pressable>;
@@ -179,7 +179,7 @@ export default function WelcomeScreen({
                 {Icon ? <Icon size={narrow ? 26 : 29} /> : <Text style={styles.topicEmoji}>{topic.emoji}</Text>}
               </View>
               <Text style={styles.topicTitle} numberOfLines={2}>{topic.title}</Text>
-              <View style={[styles.topicCheck, active && styles.topicCheckActive]}>
+              <View style={[styles.topicCheck, narrow && styles.narrowCheck, active && styles.topicCheckActive]}>
                 {active ? <Text style={styles.topicCheckText}>✓</Text> : null}
               </View>
             </Pressable>;
@@ -243,7 +243,11 @@ const styles = StyleSheet.create({
     borderRadius: 16, padding: 10, minWidth: 125, flexBasis: "46%", flexGrow: 1,
     minHeight: 80, flexDirection: "row", alignItems: "center", gap: 8 },
   categoryCompact: { minHeight: 72, paddingVertical: 7 },
-  optionNarrow: { paddingHorizontal: 7, gap: 6 },
+  // Narrow phones get a stacked icon/title card rather than truncating long
+  // Greek topic names beside an icon and a checkmark in one short row.
+  optionNarrow: { paddingHorizontal: 10, minHeight: 94, paddingVertical: 9,
+    flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", gap: 3 },
+  narrowCheck: { position: "absolute", right: 9, top: 9 },
   categorySelected: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
   categoryPressed: { opacity: .8 },
   iconArea: { width: 40, alignItems: "center", justifyContent: "center" },
