@@ -732,9 +732,12 @@ for (const phoneWidth of [320, 360, 393]) {
   assert.ok(4 * available * cardPercent + 3 * 8 <= available,
     "four-column grid must fit at " + phoneWidth + "pt");
 }
-const primaryButton = nodes(tree).find(node => node.props?.style?.minHeight === 44
-  && node.props?.style?.backgroundColor === "#A89BFF");
-assert.ok(primaryButton, "primary CTA retains a 44-point tap area");
+const primaryButton = nodes(tree).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.minHeight === 44
+  && node.props.style[0]?.backgroundColor === "#A89BFF");
+assert.ok(primaryButton, "primary CTA retains its 44-point minimum tap area");
+assert.equal(primaryButton.props.style[1].minHeight, 44,
+  "compact card sizing does not reduce the primary CTA");
 const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
   && node.props.style[0]?.backgroundColor === "#B1A5FF"
   && node.props.style[1]?.width?.endsWith("%"));
