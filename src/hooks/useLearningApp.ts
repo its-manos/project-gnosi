@@ -22,6 +22,7 @@ export type AppScreen =
   | "subcategory"
   | "lesson"
   | "quiz"
+  | "quick-quiz"
   | "results"
   | "review"
   | "weekly-review"

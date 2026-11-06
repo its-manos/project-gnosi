@@ -28,7 +28,8 @@ type Props = {
   onOpenCategory: (categoryId: string) => void;
   onOpenLesson: (lessonId: string) => void;
   onStartDailyChallenge: () => void;
-  onKnowledgeReview?: () => void;
+  onOpenQuickQuiz: () => void;
+  quickQuizInProgress?: boolean;
   onOpenProfile?: () => void;
 };
 
@@ -52,7 +53,7 @@ export default function HomeScreen({
   categories, subcategories, featuredLesson, progressLoaded, completedCount,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
-  onKnowledgeReview, onOpenProfile,
+  onOpenQuickQuiz, quickQuizInProgress, onOpenProfile,
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
@@ -208,13 +209,13 @@ export default function HomeScreen({
           <Text style={styles.actionTitle}>Καθημερινό Quiz</Text>
           <Text style={styles.actionMeta}>{todayCompleted ? "Ολοκληρώθηκε ✓" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
         </MotionPressable>
-        <MotionPressable testID="home-knowledge-review" style={({ pressed }) => [styles.actionCard, styles.reviewCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
-          accessibilityRole="button" accessibilityLabel="Επανάληψη γνώσεων"
-          onPress={onKnowledgeReview} disabled={!onKnowledgeReview}>
-          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.reviewLip]} />
-          <Text style={[styles.actionIcon, styles.reviewIcon]}>◎</Text>
-          <Text style={styles.actionTitle}>Επανάληψη</Text>
-          <Text style={styles.actionMeta}>Εξάσκησε τις γνώσεις σου</Text>
+        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, pressed && styles.pressed]}
+          accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
+          onPress={onOpenQuickQuiz}>
+          <View pointerEvents="none" accessible={false} style={[styles.cardLip, styles.quickQuizLip]} />
+          <Text style={[styles.actionIcon, styles.quickQuizIcon]}>ϟ</Text>
+          <Text style={styles.actionTitle}>Γρήγορο Κουίζ</Text>
+          <Text style={styles.actionMeta}>{quickQuizInProgress ? "Συνέχισε τον γύρο" : "5 ερωτήσεις"}</Text>
         </MotionPressable>
       </MotionView>
 
@@ -323,13 +324,13 @@ const styles = StyleSheet.create({
   quizCard: { backgroundColor: "#252139", borderColor: "#564A6B" },
   cardLip: { position: "absolute", top: 1, left: 16, right: 16, height: 1 },
   quizLip: { backgroundColor: "#D8C5F2", opacity: 0.34 },
-  reviewLip: { backgroundColor: "#9CE4C5", opacity: 0.30 },
+  quickQuizLip: { backgroundColor: "#9CE4C5", opacity: 0.30 },
   quizTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   quizAnswered: { color: colors.accentLight, fontSize: 24, lineHeight: 27,
     fontWeight: "900", letterSpacing: -0.6, fontVariant: ["tabular-nums"] },
-  reviewCard: { backgroundColor: "#1D352F", borderColor: "#426B5E" },
+  quickQuizCard: { backgroundColor: "#1D352F", borderColor: "#426B5E" },
   actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
-  reviewIcon: { color: "#6CE0B6" },
+  quickQuizIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
   worlds: { gap: 9, flexGrow: 2 },

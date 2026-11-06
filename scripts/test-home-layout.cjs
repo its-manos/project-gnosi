@@ -150,7 +150,7 @@ const props = {
   onOpenLesson: id => actions.push("lesson:" + id),
   onOpenCategory: id => actions.push("category:" + id),
   onStartDailyChallenge: () => actions.push("daily"),
-  onKnowledgeReview: () => actions.push("review"),
+  onOpenQuickQuiz: () => actions.push("quick-quiz"),
   onOpenProfile: () => actions.push("profile"),
 };
 let tree = home(props);
@@ -203,11 +203,11 @@ const press = (id, value = tree) => {
 };
 press("home-primary-action");
 press("home-daily-quiz");
-press("home-knowledge-review");
+press("home-quick-quiz");
 press("home-level-profile");
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-level-profile").props.style.borderWidth,
   undefined, "level badge has no duplicate native border outside its SVG ring");
-assert.deepEqual(actions, ["resume:0", "daily", "review", "profile"]);
+assert.deepEqual(actions, ["resume:0", "daily", "quick-quiz", "profile"]);
 const ring = nodes(tree).find(node => node.props?.testID === "home-xp-ring");
 assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(" ")[0]) - 2 * Math.PI * 21 * .25) < 0.01);
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props.children, 3);

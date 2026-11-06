@@ -26,6 +26,8 @@ import WelcomeScreen from "../screens/WelcomeScreen";
 import { useWelcome } from "../hooks/useWelcome";
 import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
 import { finishWelcome, type WelcomeDestination } from "../utils/firstRun";
+import QuickQuizScreen from "../screens/QuickQuizScreen";
+import { useQuickQuiz } from "../hooks/useQuickQuiz";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
 import SubcategoryScreen from "../screens/SubcategoryScreen";
@@ -56,6 +58,7 @@ export default function AppNavigator() {
   const dailyPreferences = useDailyChallengePreferences();
   const { dailyStore } = useLearningSession();
   const daily = useDailySnapshot();
+  const quickQuiz = useQuickQuiz(daily.userId);
   const hasActivity = app.completedLessonIds.length > 0 || app.inProgressLessonCount > 0 || bookmarks.savedLessonIds.length > 0 || daily.doc.preferences !== null || Object.keys(daily.doc.days).length > 0;
   const welcome = useWelcome(daily.userId, hasActivity);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
@@ -216,12 +219,13 @@ export default function AppNavigator() {
     return () => subscription.remove();
   }, []);
 
-  const analyticsScreen: AnalyticsScreen = welcome.visible ? "welcome"
-    : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" || app.screen === "learning-insights" ? "progress" : app.screen;
+  // The beta analytics endpoint only accepts its published screen names.
+  const analyticsScreen: AnalyticsScreen | null = welcome.visible ? "welcome"
+    : app.screen === "quick-quiz" ? null : isDailyPreferencesOpen ? "daily-preferences" : isDailyChallengeOpen ? "daily" : app.screen === "knowledge-review" ? "review" : app.screen === "profile" ? "account" : app.screen === "player-stats" || app.screen === "learning-insights" ? "progress" : app.screen;
   const answeredForAnalytics = Object.keys(app.checkpointAnswers).length;
   const analyticsLessonId = activeLesson?.id;
   useEffect(() => {
-    if (!welcome.loading && usageEnabled) void analytics.view(analyticsScreen);
+    if (!welcome.loading && usageEnabled && analyticsScreen) void analytics.view(analyticsScreen);
   }, [analytics, usageEnabled, welcome.loading, analyticsScreen]);
   useEffect(() => {
     if (!usageEnabled || welcome.loading) return;
@@ -277,7 +281,8 @@ export default function AppNavigator() {
     case "home":
       screenContent = (
         <HomeScreen
-          onKnowledgeReview={() => openKnowledgeReview("home")}
+          onOpenQuickQuiz={() => app.setScreen("quick-quiz")}
+          quickQuizInProgress={Boolean(quickQuiz.progress?.round && !quickQuiz.progress.round.completed)}
           onOpenProfile={() => openProfile("home")}
           categories={categories}
           subcategories={subcategories}
@@ -293,6 +298,10 @@ export default function AppNavigator() {
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
         />
       );
+      break;
+
+    case "quick-quiz":
+      screenContent = <QuickQuizScreen game={quickQuiz} scope={daily.userId ?? "guest"} onHome={() => app.setScreen("home")} />;
       break;
 
     case "profile":
@@ -478,7 +487,7 @@ export default function AppNavigator() {
         {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus quiet /> : null}
         {screenContent}
       </SafeAreaView>
-      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app.screen !== "quiz" ? <BottomNavigation
+      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app.screen !== "quiz" && app.screen !== "quick-quiz" ? <BottomNavigation
         currentScreen={isDailyChallengeOpen ? "home" : app.screen === "account" ? accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
