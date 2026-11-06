@@ -78,7 +78,6 @@ export default function WelcomeScreen({
   useEffect(() => {
     if (usageEnabled) void analytics.track("onboarding_step_viewed", { screen: "welcome", onboarding_step: step, replay });
   }, [analytics, usageEnabled, step, replay]);
-  const selected = categories.find(category => category.id === categoryId);
   return <View testID="welcome-flow" style={styles.root}>
     <ProgressGradientBackground />
     <View style={styles.header}>
@@ -140,7 +139,6 @@ export default function WelcomeScreen({
         <MotionView key="choose-heading" entranceDelay={25}>
           <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
           <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
-          <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε ποιον κόσμο θα ήθελες να εξερευνήσεις. Τους υπόλοιπους μπορείς να τους γνωρίσεις όποτε θέλεις.</Text>
         </MotionView>
         <View style={styles.categoryGrid}>
           {categories.map((category, index) => {
@@ -160,12 +158,6 @@ export default function WelcomeScreen({
             </MotionPressable>;
           })}
         </View>
-        <MotionView entranceDelay={190} style={styles.lessonPreview}>
-          <Text style={styles.previewKicker}>Η ΠΡΩΤΗ ΣΟΥ ΔΙΑΔΡΟΜΗ</Text>
-          <Text style={styles.previewTitle}>Αρχαία Ελλάδα</Text>
-          <Text style={styles.small}>Το πρώτο μάθημα μάς ταξιδεύει στην Αρχαία Ελλάδα, ανεξάρτητα από τον κόσμο που διάλεξες.</Text>
-          {selected ? <Text style={styles.selectedHint}>Ο κόσμος που διάλεξες: {selected.title}</Text> : null}
-        </MotionView>
         <MotionView entranceDelay={230}>
           <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκίνα το πρώτο μάθημα →"}
             disabled={busy || !categoryId}
@@ -257,7 +249,7 @@ const styles = StyleSheet.create({
   small: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
   divider: { height: 1, backgroundColor: "#45435F", marginLeft: 64 },
   support: { color: colors.textMuted, textAlign: "center", fontSize: 12, lineHeight: 19, marginTop: 14 },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginBottom: 14 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   category: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border,
     borderRadius: 16, padding: 10, minWidth: 125, flexBasis: "46%", flexGrow: 1,
     minHeight: 80, flexDirection: "row", alignItems: "center", gap: 8 },
@@ -271,11 +263,6 @@ const styles = StyleSheet.create({
   iconArea: { width: 40, alignItems: "center", justifyContent: "center" },
   fallbackIcon: { fontSize: 24 },
   categoryTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800", flex: 1 },
-  lessonPreview: { borderWidth: 1, borderColor: "#514C71", backgroundColor: "#20243B",
-    borderRadius: 16, padding: 13, gap: 5 },
-  previewKicker: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: .8 },
-  previewTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "900" },
-  selectedHint: { color: colors.accentLight, fontSize: 12, lineHeight: 19 },
   topicCount: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap",
     alignItems: "center", gap: 6, marginBottom: 12 },
   topicCountText: { color: colors.text, fontSize: 12, fontWeight: "900", letterSpacing: .5 },
