@@ -227,6 +227,12 @@ assert.deepEqual(actions, ["resume:0", "daily", "quick-quiz", "profile"]);
 const ring = nodes(tree).find(node => node.props?.testID === "home-xp-ring");
 assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(" ")[0]) - 2 * Math.PI * 21 * .25) < 0.01);
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props.children, 3);
+const levelBadge = nodes(tree).find(node => node.props?.testID === "home-level-profile");
+assert.equal(levelBadge.props.style.width, 50, "level ring retains a compact 50pt footprint");
+assert.ok(!nodes(levelBadge).some(node => node.props?.children === "Επίπεδο"),
+  "level caption is not displayed beside the ring");
+assert.match(levelBadge.props.accessibilityLabel, /Επίπεδο 3/,
+  "the level remains understandable to screen readers");
 assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("home-category-")).length, 7);
 press("home-category-history");
 assert.equal(actions.at(-1), "category:history");
@@ -364,8 +370,15 @@ assert.equal(nodes(renderedStreak).filter(node => node.type === "circle").length
   "a daily streak does not imply a percentage of completion");
 assert.equal(nodes(renderedStreak).filter(node => node.type === "path").length, 2,
   "the compact streak has flame artwork");
-assert.ok(nodes(HomeStreakBadge({ streak: 1 })).some(node => node.props?.children === "ημέρα"));
-assert.ok(nodes(renderedStreak).some(node => node.props?.children === "ημέρες"));
+assert.equal(renderedStreak.props.children[0].type, "svg",
+  "the flame appears first in the compact horizontal streak badge");
+assert.equal(renderedStreak.props.children[1].props.testID, "home-streak-count",
+  "the streak number is directly beside the flame");
+for (const streak of [1, 2, null]) {
+  const badge = HomeStreakBadge({ streak });
+  assert.equal(nodes(badge).filter(node => node.type === "Text").length, 1,
+    "the streak badge shows only the number, without a day caption");
+}
 const loadingStreak = HomeStreakBadge({ streak: null });
 assert.match(loadingStreak.props.accessibilityLabel, /Φόρτωση/);
 assert.equal(nodes(loadingStreak).find(node => node.props?.testID === "home-streak-count").props.children, "—");
