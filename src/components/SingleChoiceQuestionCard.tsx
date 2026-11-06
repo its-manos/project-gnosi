@@ -15,11 +15,12 @@ type Props = {
   answers: readonly string[];
   correctIndex: number;
   explanation: string;
-  questionNumber: number;
+  questionNumber?: number;
   /** Committed answer from lesson/daily/preview store; never a draft. */
   answer?: number;
   onConfirm: (index: number) => void | Promise<unknown>;
   readingSize?: number;
+  commitOnSelect?: boolean;
   onActionChange?: (action: QuestionStageAction | null) => void;
   badgeLabel?: string;
   showFeedback?: boolean;
@@ -39,7 +40,7 @@ type Props = {
 export default function SingleChoiceQuestionCard({
   id, question, answers, correctIndex, explanation, questionNumber, answer,
   onConfirm, readingSize, badgeLabel = "ΜΙΑ ΕΠΙΛΟΓΗ", showFeedback = true, compactAnswered = false,
-  combo = 0, reportTarget, feedbackExtra, onActionChange, testID = "choice-question-card", testPrefix = "single-choice",
+  combo = 0, reportTarget, feedbackExtra, commitOnSelect = false, onActionChange, testID = "choice-question-card", testPrefix = "single-choice",
 }: Props) {
   const [draft, setDraft] = useState<number | null>(null);
   const draftRef = useRef<number | null>(null);
@@ -61,11 +62,14 @@ export default function SingleChoiceQuestionCard({
 
   function choose(index: number) {
     if (answered || pendingSubmit.current) return;
+    if (commitOnSelect) {
+      submit(index);
+      return;
+    }
     draftRef.current = index;
     setDraft(index);
   }
-  function confirm() {
-    const index = draftRef.current;
+  function submit(index: number | null) {
     if (answered || pendingSubmit.current || index === null || index < 0 || index >= answers.length) return;
     pendingSubmit.current = true;
     setSubmitting(true);
@@ -82,19 +86,21 @@ export default function SingleChoiceQuestionCard({
     }
   }
 
+  function confirm() { submit(draftRef.current); }
+
   // In an immersive question stage the caller owns the footer location.
   // The card still owns its draft and confirmation guard.
   useEffect(() => {
-    if (!onActionChange) return;
+    if (!onActionChange || commitOnSelect) return;
     onActionChange(answered ? null : { label: "Επιβεβαίωση →", disabled: draft === null || submitting, onPress: confirm });
     return () => onActionChange(null);
-  }, [answered, draft, submitting, onActionChange]);
+  }, [answered, draft, submitting, onActionChange, commitOnSelect]);
 
   return <View style={styles.card} testID={testID}>
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>✦  {badgeLabel}</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <Text accessibilityRole="header" style={[styles.question, scaledQuestion]}>{question}</Text>
     {answered && compactAnswered ? null : <View style={styles.answers}>
@@ -127,7 +133,7 @@ export default function SingleChoiceQuestionCard({
         </AnswerMotion>;
       })}
     </View>}
-    {!answered && !onActionChange ? <Pressable
+    {!answered && !onActionChange && !commitOnSelect ? <Pressable
       testID={`${testPrefix}-confirm`}
       accessibilityRole="button"
       accessibilityState={{ disabled: draft === null || submitting }}
