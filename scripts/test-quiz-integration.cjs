@@ -15,7 +15,7 @@ function load(file,overrides={}) {
 const {LearningStore}=load('src/state/LearningStore.ts'),{lessons}=load('src/data/lessons.ts'),{getInlineQuestionCount}=load('src/utils/lessonProgress.ts');
 function harness(store) {
  let slots=[],cursor=0;
- const react={useRef:init=>{const i=cursor++;return slots[i]??={current:init};},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect(){}};
+ const react={useMemo:fn=>fn(),useRef:init=>{const i=cursor++;return slots[i]??={current:init};},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect(){}};
  const useApp=load('src/hooks/useLearningApp.ts',{react,'../state/LearningSession':{useLearningSession:()=>({store}),useLearningSnapshot:()=>store.getSnapshot()}}).useLearningApp;
  return()=>{cursor=0;return useApp();};
 }
@@ -34,7 +34,11 @@ const stores=[];
  await store.flushLocal();
  const reopened=new LearningStore(null,storage);stores.push(reopened);await reopened.start();const resume=harness(reopened);let resumed=resume();resumed.openLesson(lesson.id);resumed=resume();
  assert.equal(resumed.checkpointAnswers[0],wrong);assert.equal(resumed.score,0);
- for(let i=1;i<getInlineQuestionCount(lesson);i++){resumed.answerCheckpoint(i,lesson.questions[i].correctIndex,lesson.questions[i].correctIndex);resumed=resume();}
+ for(let i=1;i<getInlineQuestionCount(lesson);i++){
+  const {correctIndex,presentation}=lesson.questions[i];
+  const typedValue=presentation?.type==='multiple-select'?[...presentation.correctIndices]:undefined;
+  resumed.answerCheckpoint(i,correctIndex,correctIndex,typedValue);resumed=resume();
+ }
  resumed.finishInlineLesson();resumed.finishInlineLesson();await reopened.flushLocal();
  assert.equal(Object.keys(reopened.getSnapshot().activity).length,1,'completion button retry produces one persisted event');
  const event=Object.values(reopened.getSnapshot().activity)[0];assert.equal(event.correctCount,getInlineQuestionCount(lesson)-1);

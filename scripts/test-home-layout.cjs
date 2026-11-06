@@ -727,10 +727,13 @@ assert.equal(nodes(mapTree).filter(node => node.type === "g" && node.props?.onPr
 const adventureLessons = Array.from({ length: 30 }, (_v, index) => ({
   id: "anc-" + index, subcategoryId: "ancient-greece", title: "Ενότητα " + (index + 1),
 }));
-const access = (lesson, catalogue, completed, inProgress) => {
-  const index = catalogue.findIndex(item => item.id === lesson.id);
-  const prerequisite = index > 0 ? catalogue[index - 1] : null;
-  return { prerequisite, unlocked: !prerequisite || completed.includes(prerequisite.id) || completed.includes(lesson.id) || inProgress.includes(lesson.id) };
+const adventureAccess = compile("src/utils/lessonPath.ts", {
+  "../data/lessonPaths": compile("src/data/lessonPaths.ts", {}, true),
+  "./devLessonAccess": { devLessonsUnlocked: () => false },
+}, true);
+const adventurePathRules = {
+  getSubcategoryPath: catalogue => catalogue,
+  getOrderedPathAccess: adventureAccess.getOrderedPathAccess,
 };
 const continueModule = compile("src/components/AtlasContinueCard.tsx", {
   "./HomeMotion": { MotionPressable: "Pressable" },
@@ -738,7 +741,7 @@ const continueModule = compile("src/components/AtlasContinueCard.tsx", {
 const atlasContinueStub = { __esModule: true, default: "Pressable",
   atlasContinueStyles: continueModule.atlasContinueStyles };
 const adventureModule = compile("src/screens/SubcategoryScreen.tsx", {
-  "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
+  "../utils/lessonPath": adventurePathRules,
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
   "../components/AtlasContinueCard": atlasContinueStub,
@@ -1042,7 +1045,7 @@ const motionReact = {
 };
 const motionScreen = compile("src/screens/SubcategoryScreen.tsx", {
   react: motionReact,
-  "../utils/lessonPath": { getSubcategoryPath: catalogue => catalogue, getLessonAccess: access },
+  "../utils/lessonPath": adventurePathRules,
   "../utils/devLessonAccess": { devLessonsUnlocked: () => false },
   "../components/AdventureAtlasBackground": { __esModule: true, default: "AtlasBackground" },
   "../components/AtlasContinueCard": atlasContinueStub,

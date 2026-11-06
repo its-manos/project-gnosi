@@ -8,10 +8,10 @@ const storage=disk(),learning=new LearningStore('fresh-account',storage),daily=n
 let expanded=false,memoIndex=0,memos=[],latest,renderCount=0;
 const useKnowledgeProfile=load('src/hooks/useKnowledgeProfile.ts',{
  react:{useMemo:(calculate,deps)=>{const i=memoIndex++;if(!memos[i]||deps.some((v,j)=>v!==memos[i].deps[j]))memos[i]={deps,value:calculate()};return memos[i].value;}},
- '../state/LearningSession':{useLearningSnapshot:()=>learning.getSnapshot(),useDailySnapshot:()=>daily.getSnapshot()},
+ '../state/LearningSession':{useLearningDataSnapshot:()=>learning.getDataSnapshot(),useDailyDataSnapshot:()=>daily.getDataSnapshot()},
  './useAthensDate':{useAthensDate:()=> '2026-10-31'}
 }).useKnowledgeProfile;
-const Card=load('src/components/KnowledgeProgress.tsx',{ './ProgressBar':{__esModule:true,default:'ProgressBar'},
+const Card=load('src/components/KnowledgeProgress.tsx',{ './ProgressBar':{__esModule:true,default:'ProgressBar'},'./XpRules':{__esModule:true,default:'XpRules'},
  react:{useState:()=>[expanded,v=>{expanded=typeof v==='function'?v(expanded):v;}]},
  'react/jsx-runtime':{jsx,jsxs:jsx},
  'react-native':{Text:'Text',View:'View',Pressable:'Pressable',StyleSheet:{create:x=>x}},

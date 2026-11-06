@@ -1,5 +1,5 @@
 import type { Lesson } from "../data/lessons";
-import { getLessonAccess } from "./lessonPath";
+import { createLessonAccessLookup } from "./lessonPath";
 
 export type ReadingState = "unread" | "in-progress" | "completed";
 export type Recommendation = { lesson: Lesson; reason: "same-topic" | "same-category" | "explore" };
@@ -14,11 +14,12 @@ export function getReadingState(id: string, completed: readonly string[], inProg
 }
 
 function unreadPool(catalogue: readonly Lesson[], completed: readonly string[], inProgress: readonly string[]) {
+  const getAccess = createLessonAccessLookup(catalogue, completed, inProgress);
   const seen = new Set<string>();
   return catalogue.filter((lesson) => {
     if (seen.has(lesson.id)) return false;
     seen.add(lesson.id);
-    return getReadingState(lesson.id, completed, inProgress) === "unread" && getLessonAccess(lesson, catalogue, completed, inProgress).unlocked;
+    return getReadingState(lesson.id, completed, inProgress) === "unread" && getAccess(lesson).unlocked;
   }).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 

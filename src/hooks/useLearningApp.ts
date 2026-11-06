@@ -4,7 +4,7 @@ import { adaptLessonQuestion, adaptInteractiveLessonQuestion, projectInteractive
 import { advanceQuizSession, calculateQuizResults, createQuizSession, evaluateChoice, submitQuizAnswer } from "../quiz/engine";
 import { legacyAnswerSlots, restoreLegacySession } from "../quiz/compatibility";
 import type { QuizSession } from "../quiz/types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { lessons } from "../data/lessons";
 import type { LearningBackup } from "../utils/learningBackup";
 import { calculateScore } from "../utils/legacyLearning";
@@ -68,7 +68,22 @@ export function useLearningApp() {
   const lessonAttempts = snapshot.backup.attempts;
   const progressLoaded = snapshot.ready;
   const activeLesson = lessons.find(lesson => lesson.id === activeLessonId) ?? lessons[0];
-  const review = lessonReview(activeLesson, snapshot.activity);
+  const activeQuizQuestions = useMemo(
+    () => activeLesson.questions.map((_, index) => adaptLessonQuestion(activeLesson, index)),
+    [activeLesson],
+  );
+  const { combo, highestCombo } = useMemo(
+    () => quizRewardSummary(activeQuizQuestions, checkpointAnswers, "lesson"),
+    [activeQuizQuestions, checkpointAnswers],
+  );
+  const review = useMemo(
+    () => lessonReview(activeLesson, snapshot.activity),
+    [activeLesson, snapshot.activity],
+  );
+  const scores = useMemo(
+    () => lessonScores(activeLesson, snapshot.activity, snapshot.weeklyReviews),
+    [activeLesson, snapshot.activity, snapshot.weeklyReviews],
+  );
 
   function resetAttempt() {
     setCheckpointAnswers({});
@@ -173,7 +188,7 @@ export function useLearningApp() {
   function startQuiz() {
     newCompletionRun();
     setEarnedXP(0);
-    standaloneSession.current = createQuizSession(`quiz:${activeLessonId}:${completionRun.current}`, "lesson", activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)));
+    standaloneSession.current = createQuizSession(`quiz:${activeLessonId}:${completionRun.current}`, "lesson", activeQuizQuestions);
     setQuestionIndex(0);
     setSelectedAnswer(null);
     setCheckpointAnswers({});
@@ -189,11 +204,12 @@ export function useLearningApp() {
     if (!transition.changed) return;
     standaloneSession.current = transition.session;
     const ledger = store.getSnapshot().rewards;
-    const row = quizRewardSummary(activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)), legacyAnswerSlots(transition.session), "lesson", ledger).rows[questionIndex];
+    const answers = legacyAnswerSlots(transition.session);
+    const row = quizRewardSummary(activeQuizQuestions, answers, "lesson", ledger).rows[questionIndex];
     const answerXP = hasReward(ledger, `lesson:${activeLesson.id}`) ? 0 : (row?.baseXP ?? 0) + (row?.comboXP ?? 0);
     emitPlayFeedback({ scope: store.userId ?? "guest", id: `standalone:${session.id}:${question.id}`, kind: evaluateChoice(activeLesson.questions[questionIndex], answerIndex).correct ? "correct" : "incorrect", answerXP, pendingXP: answerXP > 0 });
     setSelectedAnswer(answerIndex);
-    setCheckpointAnswers(legacyAnswerSlots(transition.session));
+    setCheckpointAnswers(answers);
     setScore(calculateQuizResults(transition.session).correctCount);
   }
 
@@ -223,7 +239,7 @@ export function useLearningApp() {
     if (!lesson) return;
     const current = store.getSnapshot().backup;
     const previous = current.attempts[activeLessonId]?.checkpointAnswers ?? checkpointAnswers;
-    const normalized = lesson.questions.slice(0, getInlineQuestionCount(lesson)).map((_, i) => adaptLessonQuestion(lesson, i));
+    const normalized = activeQuizQuestions.slice(0, getInlineQuestionCount(lesson));
     const question = normalized[checkpointIndex];
     if (!question) return;
     const interactive = adaptInteractiveLessonQuestion(lesson, checkpointIndex);
@@ -329,20 +345,26 @@ export function useLearningApp() {
     await store.restoreProgress(backup);
   }
 
-  const latestAttemptEntry = Object.entries(lessonAttempts)
-    .filter(([lessonId, attempt]) =>
-      !completedLessonIds.includes(lessonId) || attempt.replayOfCompletedLesson
-    )
-    .sort(([, first], [, second]) => second.updatedAt - first.updatedAt)[0];
-
-  const inProgressLessonIds = Object.entries(lessonAttempts)
-    .filter(([id, attempt]) => !completedLessonIds.includes(id) || attempt.replayOfCompletedLesson)
-    .map(([id]) => id);
-
-  const inProgressLessonId = progressLoaded
-    ? latestAttemptEntry?.[0] ?? null
-    : null;
-  const inProgressCheckpointAnswers = latestAttemptEntry?.[1].checkpointAnswers ?? {};
+  const { inProgressLessonIds, latestAttemptId, inProgressAnsweredCount } = useMemo(() => {
+    const completed = new Set(completedLessonIds);
+    const inProgressLessonIds: string[] = [];
+    let latestAttemptId: string | null = null;
+    let latestAttempt: LearningBackup["attempts"][string] | undefined;
+    for (const [id, attempt] of Object.entries(lessonAttempts)) {
+      if (completed.has(id) && !attempt.replayOfCompletedLesson) continue;
+      inProgressLessonIds.push(id);
+      if (!latestAttempt || attempt.updatedAt > latestAttempt.updatedAt) {
+        latestAttemptId = id;
+        latestAttempt = attempt;
+      }
+    }
+    return {
+      inProgressLessonIds,
+      latestAttemptId,
+      inProgressAnsweredCount: latestAttempt ? Object.keys(latestAttempt.checkpointAnswers).length : 0,
+    };
+  }, [completedLessonIds, lessonAttempts]);
+  const inProgressLessonId = progressLoaded ? latestAttemptId : null;
 
   return {
     screen,
@@ -357,11 +379,11 @@ export function useLearningApp() {
     typedCheckpointAnswers: lessonAttempts[activeLessonId]?.typedCheckpointAnswers ?? {},
     score,
     earnedXP,
-    combo: quizRewardSummary(activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)), checkpointAnswers, "lesson").combo,
-    highestCombo: quizRewardSummary(activeLesson.questions.map((_, i) => adaptLessonQuestion(activeLesson, i)), checkpointAnswers, "lesson").highestCombo,
+    combo,
+    highestCombo,
     resultMode,
     review,
-    lessonScores: lessonScores(activeLesson, snapshot.activity, snapshot.weeklyReviews),
+    lessonScores: scores,
     reviewIndices,
     reviewIndex,
     reviewAnswer,
@@ -372,18 +394,17 @@ export function useLearningApp() {
     retryReviewQuestion,
     endMistakeReview,
     completedLessonIds,
+    completionEvents: snapshot.activity,
     lessonAttempts,
     mergeRestoredProgress,
     progressLoaded,
     inProgressLessonId,
     inProgressLessonIds,
-    inProgressAnsweredCount: Object.keys(inProgressCheckpointAnswers).length,
+    inProgressAnsweredCount,
     inProgressQuestionCount: inProgressLessonId
       ? countInlineQuestions(inProgressLessonId)
       : 0,
-    inProgressLessonCount: Object.entries(lessonAttempts).filter(([lessonId, attempt]) =>
-      !completedLessonIds.includes(lessonId) || attempt.replayOfCompletedLesson
-    ).length,
+    inProgressLessonCount: inProgressLessonIds.length,
     openCategory,
     openSubcategory,
     openLesson,

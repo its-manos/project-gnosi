@@ -10,7 +10,7 @@ import AdventureAtlasBackground from "../components/AdventureAtlasBackground";
 import { AdventureActiveHalo, AdventureContinueAccent, AdventureContinueArrow, AdventureProgressFill } from "../components/AdventureMotion";
 import { MotionCounter, MotionIcon, MotionPressable, MotionView } from "../components/HomeMotion";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
-import { getLessonAccess, getSubcategoryPath } from "../utils/lessonPath";
+import { getOrderedPathAccess, getSubcategoryPath } from "../utils/lessonPath";
 import { devLessonsUnlocked } from "../utils/devLessonAccess";
 
 type Props = {
@@ -107,13 +107,20 @@ export default function SubcategoryScreen({
   const completedIds = useMemo(() => new Set(completedLessonIds), [completedLessonIds]);
   const inProgressIds = useMemo(() => new Set(inProgressLessonIds), [inProgressLessonIds]);
   const completed = useMemo(() => path.reduce((count, lesson) => count + Number(completedIds.has(lesson.id)), 0), [path, completedIds]);
-  // Preserve the existing unlock policy while avoiding repeated linear ID lookups.
-  const nextLesson = path.find(lesson => !completedIds.has(lesson.id) &&
-    inProgressIds.has(lesson.id) &&
-    getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds).unlocked)
-    ?? path.find(lesson => !completedIds.has(lesson.id) &&
-      getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds).unlocked);
-  const nextIndex = nextLesson ? path.findIndex(lesson => lesson.id === nextLesson.id) : -1;
+  const isTesting = devLessonsUnlocked();
+  const accessByIndex = useMemo(
+    () => getOrderedPathAccess(path, completedLessonIds, inProgressLessonIds, isTesting),
+    [path, completedLessonIds, inProgressLessonIds, isTesting],
+  );
+  const nextIndex = useMemo(() => {
+    const available = (lesson: Lesson, index: number) =>
+      accessByIndex[index].unlocked && !completedIds.has(lesson.id);
+    const started = path.findIndex((lesson, index) =>
+      inProgressIds.has(lesson.id) && available(lesson, index),
+    );
+    return started >= 0 ? started : path.findIndex(available);
+  }, [path, accessByIndex, completedIds, inProgressIds]);
+  const nextLesson = path[nextIndex];
   const isAncientGreece = subcategory.id === "ancient-greece";
   const mapWidth = Math.max(1, Math.min(420, viewportWidth - 40));
   // Labels can extend slightly past the 148pt checkpoint touch target without
@@ -129,7 +136,6 @@ export default function SubcategoryScreen({
       completedIds.has(path[index].id),
   })), [points, path, completedIds, nextLesson?.id]);
   const progressPercent = path.length ? Math.round(completed / path.length * 100) : 0;
-  const isTesting = devLessonsUnlocked();
 
   useEffect(() => {
     let mounted = true;
@@ -287,7 +293,7 @@ export default function SubcategoryScreen({
 
           {path.map((lesson, index) => {
             const point = points[index];
-            const access = getLessonAccess(lesson, path, completedLessonIds, inProgressLessonIds);
+            const access = accessByIndex[index];
             const done = completedIds.has(lesson.id);
             const started = inProgressIds.has(lesson.id) && !done;
             const disabled = !progressLoaded || !access.unlocked;

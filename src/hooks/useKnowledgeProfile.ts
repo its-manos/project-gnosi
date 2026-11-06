@@ -1,4 +1,4 @@
-import { buildKnowledgeModel } from "../knowledge/model";
+import { countRecalledConcepts } from "../knowledge/model";
 import { mergeRewardLedgers } from "../gamification/rewards";
 import { useMemo } from "react";
 import { lessons } from "../data/lessons";
@@ -8,12 +8,19 @@ import { knowledgeProfile } from "../utils/knowledgeScoring";
 import { useAthensDate } from "./useAthensDate";
 
 export function useKnowledgeProfile() {
-  const learning = useLearningDataSnapshot(), daily = useDailyDataSnapshot(), today = useAthensDate();
-  const profile = useMemo(() => { const base = knowledgeProfile(lessons, learning.backup.completedIds,
-    learning.activity, learning.weeklyReviews, dailyHistory(daily.doc), today, mergeRewardLedgers(learning.rewards, daily.doc.rewards));
-    const recalled = buildKnowledgeModel({ ...learning.backup, activity: learning.activity, weeklyReviews: learning.weeklyReviews, knowledgeReviews: learning.knowledgeReviews }, daily.doc, today).recalled;
-    return { ...base, recalled, badges: base.badges.map(b => b.id === "recall" ? { ...b, current: recalled, unlocked: recalled >= b.target } : b) };
-  },
-  [learning.backup, learning.activity, learning.weeklyReviews, learning.rewards, learning.knowledgeReviews, daily.doc, today]);
-  return { profile, ready: learning.ready && daily.ready };
+  const { backup: { completedIds }, activity, weeklyReviews, rewards, knowledgeReviews, ready } = useLearningDataSnapshot();
+  const daily = useDailyDataSnapshot();
+  const today = useAthensDate();
+  const profile = useMemo(() => {
+    const base = knowledgeProfile(
+      lessons, completedIds, activity, weeklyReviews, dailyHistory(daily.doc), today,
+      mergeRewardLedgers(rewards, daily.doc.rewards),
+    );
+    const recalled = countRecalledConcepts({ completedIds, activity, weeklyReviews, knowledgeReviews }, daily.doc, today);
+    const badges = base.badges.map(badge =>
+      badge.id === "recall" ? { ...badge, current: recalled, unlocked: recalled >= badge.target } : badge,
+    );
+    return { ...base, recalled, badges };
+  }, [completedIds, activity, weeklyReviews, rewards, knowledgeReviews, daily.doc, today]);
+  return { profile, ready: ready && daily.ready };
 }
