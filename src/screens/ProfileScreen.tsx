@@ -73,7 +73,7 @@ function QuickLink({ title, icon, onPress }: {
     onPress={onPress} />;
 }
 
-export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide }: Props) {
+export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide, onSaved }: Props) {
   const { email } = useLearningSession();
   const learning = useLearningDataSnapshot();
   const daily = useDailyDataSnapshot();
@@ -211,7 +211,14 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       </MotionView>
 
       <MotionView entranceDelay={205} style={styles.actions} testID="profile-links">
-        <Text style={styles.sectionTitle}>Ο χώρος σου</Text>
+        <View style={styles.sectionHeadingRow}>
+          <Text style={styles.sectionTitle}>Ο χώρος σου</Text>
+          <Pressable testID="profile-saved-link" onPress={onSaved}
+            accessibilityRole="button" accessibilityLabel="Αποθηκευμένα μαθήματα"
+            style={styles.savedLink}>
+            <Text style={styles.savedLinkText}>Αποθηκευμένα ›</Text>
+          </Pressable>
+        </View>
         <View style={[styles.linksGrid, compact && styles.linksGridCompact]}>
           <QuickLink title="Δραστηριότητα"
             icon="activity" onPress={onStats} />
@@ -286,6 +293,9 @@ const styles = StyleSheet.create({
     textAlign: "center" },
   badgeProgress: { color: "#B9AAFF", fontSize: 10, fontWeight: "900", fontVariant: ["tabular-nums"] },
   actions: { gap: 8 },
+  sectionHeadingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  savedLink: { minHeight: 30, justifyContent: "center", paddingHorizontal: 6 },
+  savedLinkText: { color: colors.accentLight, fontSize: 11, fontWeight: "800" },
   linksGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   linksGridCompact: { gap: 6 },
 });
