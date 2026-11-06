@@ -11,7 +11,7 @@ import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { colors } from "../theme";
-import { MotionCounter, MotionPressable, MotionView, MotionXpCircle } from "../components/HomeMotion";
+import { MotionCardGlint, MotionCounter, MotionCtaArrow, MotionPressable, MotionQuizGlyph, MotionShimmer, MotionView, MotionXpCircle } from "../components/HomeMotion";
 import HomeAtlasBackground from "../components/HomeAtlasBackground";
 import HomeLessonBackdrop from "../components/HomeLessonBackdrop";
 import HomeStreakBadge from "../components/HomeStreakBadge";
@@ -169,6 +169,7 @@ export default function HomeScreen({
             + (heroLocation ? ". " + heroLocation : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
         <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} scale={heroScale} />
+        <MotionCardGlint tone="lesson" delayMs={0} />
         <View style={[styles.heroCopy, compact && styles.compactHeroGroup, tight && styles.tightHeroGroup,
           { gap: scaled(tight ? 4 : compact ? 8 : 12, heroScale) }]}>
           <View style={[styles.heroIntro, { paddingRight: scaled(112, heroScale) }]}>
@@ -194,8 +195,11 @@ export default function HomeScreen({
             </View>
             : null}
           <View style={[styles.heroButton, { minHeight: scaled(44, heroScale) }]}>
+            <MotionShimmer />
             <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
-            <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>→</Text>
+            <MotionCtaArrow>
+              <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>→</Text>
+            </MotionCtaArrow>
           </View>
         </View>
       </MotionPressable>
@@ -209,8 +213,11 @@ export default function HomeScreen({
             : "Καθημερινό quiz, φόρτωση προόδου"}
           onPress={onStartDailyChallenge}>
           <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quizHalo]} />
+          <MotionCardGlint tone="daily" delayMs={2300} />
           <View style={styles.quizTop}>
-            <Text style={[styles.actionIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>✦</Text>
+            <MotionQuizGlyph delayMs={0}>
+              <Text style={[styles.actionIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>✦</Text>
+            </MotionQuizGlyph>
             <View style={styles.dailySegments} pointerEvents="none" accessible={false}>
               {dailySegments.map((filled, index) => <View key={index}
                 testID={filled ? "home-daily-segment-filled" : "home-daily-segment-empty"}
@@ -229,8 +236,11 @@ export default function HomeScreen({
           accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
           onPress={onOpenQuickQuiz}>
           <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quickQuizHalo]} />
+          <MotionCardGlint tone="quick" delayMs={5700} />
           <View style={styles.quizTop}>
-            <Text style={[styles.actionIcon, styles.quickQuizIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>ϟ</Text>
+            <MotionQuizGlyph delayMs={2500}>
+              <Text style={[styles.actionIcon, styles.quickQuizIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>ϟ</Text>
+            </MotionQuizGlyph>
             <Text accessible={false} style={[styles.quickQuizCue, { fontSize: scaled(19, quizScale), lineHeight: scaled(26, quizScale) }]}>{quickQuizInProgress ? "→" : "▸"}</Text>
           </View>
           <View style={[styles.actionLabels, tight && styles.tightActionLabels]}>
