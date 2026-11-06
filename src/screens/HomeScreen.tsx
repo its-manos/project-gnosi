@@ -363,10 +363,11 @@ const styles = StyleSheet.create({
     alignContent: "flex-start", columnGap: 8, rowGap: 8 },
   category: { width: "22.7%", minHeight: 96, borderRadius: 14,
     alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
-  categoryPlatform: { width: 62, height: 62, borderRadius: 17,
-    backgroundColor: "rgba(177,165,255,0.07)", borderWidth: 1, borderColor: "rgba(177,165,255,0.18)",
+  // Transparent painted artwork floats over the Atlas, rather than sitting in
+  // a second framed icon card. The footprint and tap targets stay unchanged.
+  categoryPlatform: { width: 62, height: 62,
     alignItems: "center", justifyContent: "center" },
-  tightCategoryPlatform: { width: 48, height: 48, borderRadius: 14 },
+  tightCategoryPlatform: { width: 48, height: 48 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
   pressed: { opacity: 0.76 },

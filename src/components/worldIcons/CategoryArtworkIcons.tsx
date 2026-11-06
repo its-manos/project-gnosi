@@ -22,12 +22,12 @@ function WorldArtwork({
     <Image
       testID={testID}
       source={artwork[icon]}
-      contentFit="cover"
+      contentFit="contain"
       transition={0}
       accessible={false}
       pointerEvents="none"
       accessibilityIgnoresInvertColors
-      style={{ width: size, height: size, borderRadius: size * 0.23,
+      style={{ width: size, height: size,
         transform: [{ scale: displayScale }] }}
     />
   );

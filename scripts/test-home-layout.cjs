@@ -310,6 +310,8 @@ for (const category of categories) {
   assert.equal(art.props.pointerEvents, "none", "card owns taps");
   assert.equal(art.props.style.width, 32);
   assert.equal(art.props.style.height, 32);
+  assert.equal(art.props.contentFit, "contain", "transparent subject is not cropped");
+  assert.equal(art.props.style.borderRadius, undefined, "soft edges are not clipped");
   assert.equal(art.props.style.transform[0].scale, 1.18);
   const asset = iconFiles[category.id];
   assert.ok(fs.existsSync(path.join(root, "assets/category-world-icons", asset)),
@@ -324,7 +326,7 @@ assert.match(artworkSource, /accessible=\{false\}/,
   "decorative art must be hidden from accessibility");
 assert.match(artworkSource, /pointerEvents="none"/,
   "only the category card owns touch events");
-assert.match(artworkSource, /contentFit="cover"/,
+assert.match(artworkSource, /contentFit="contain"/,
   "square art retains its aspect ratio");
 const futureCategory = { id: "future-world", title: "Νέος κόσμος", emoji: "🌟" };
 const futureTree = home({ ...props, categories: [...categories, futureCategory] });
@@ -587,8 +589,12 @@ assert.equal(compactTile.props.style({ pressed: false })[1].paddingVertical, 4);
 assert.equal(compactTile.props.style({ pressed: false })[1].gap, 4);
 const originalPlatform = nodes(compactTile).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
-assert.ok(originalPlatform, "compact Home preserves the 62pt rounded category illustration");
+assert.ok(originalPlatform, "compact Home preserves the 62pt artwork footprint");
 assert.equal(originalPlatform.props.style[0].height, 62);
+assert.equal(originalPlatform.props.style[0].backgroundColor, undefined,
+  "Atlas shows through the transparent Home artwork");
+assert.equal(originalPlatform.props.style[0].borderWidth, undefined,
+  "no secondary frame competes with the painted icon");
 const savedCompactHeight =
   3 * (10 - 8) + (6 - 4) + (6 - 4) +
   2 * (2 * (6 - 4) + (7 - 4)) + (6 - 5) + (6 - 4);
