@@ -11,7 +11,7 @@ import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: MatchingQuestion;
-  questionNumber: number;
+  questionNumber?: number;
   answer?: Readonly<Record<string, string>>;
   onSubmit: (pairs: Record<string, string>) => void;
   readingSize?: number;
@@ -62,7 +62,7 @@ export default function MatchingQuestionCard({ question, questionNumber, answer,
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⇄  ΑΝΤΙΣΤΟΙΧΙΣΗ</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     {(!answered || !compactAnswered) ? <>

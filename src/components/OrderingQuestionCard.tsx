@@ -10,7 +10,7 @@ import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: OrderingQuestion;
-  questionNumber: number;
+  questionNumber?: number;
   answer?: readonly string[];
   onSubmit: (ids: string[]) => void;
   readingSize?: number;
@@ -52,7 +52,7 @@ export default function OrderingQuestionCard({ question, questionNumber, answer,
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>↕  ΣΩΣΤΗ ΣΕΙΡΑ</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>{question.prompt}</Text>
     {!answered ? <Text style={styles.hint}>Χρησιμοποίησε τα βέλη για να αλλάξεις τη σειρά.</Text> : null}

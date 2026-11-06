@@ -9,7 +9,7 @@ import OrderingQuestionCard from "./OrderingQuestionCard";
 
 type Props = {
   question: BuiltinQuizQuestion;
-  questionNumber: number;
+  questionNumber?: number;
   answer?: unknown;
   onSubmit: (answer: unknown) => void;
   readingSize?: number;

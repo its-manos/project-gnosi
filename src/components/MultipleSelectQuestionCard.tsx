@@ -11,7 +11,7 @@ import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: MultipleSelectQuestion;
-  questionNumber: number;
+  questionNumber?: number;
   /** Parent-owned submitted answer; draft selections never count as scored. */
   answer?: readonly number[];
   onSubmit: (selectedIndices: number[]) => void;
@@ -47,7 +47,7 @@ export default function MultipleSelectQuestionCard({ question, questionNumber, a
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>☑  ΠΟΛΛΑΠΛΗ ΕΠΙΛΟΓΗ</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <Text style={[styles.question, readingSize !== undefined && readingSize !== 18 ? { fontSize: readingSize, lineHeight: Math.round(readingSize * 1.5) } : undefined]}>
       {question.prompt}

@@ -11,7 +11,7 @@ import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: SpotMistakeQuestion;
-  questionNumber: number;
+  questionNumber?: number;
   /** Answer accepted by the parent, not the user's unconfirmed selection. */
   answer?: string;
   onSubmit: (optionId: string) => void;
@@ -77,7 +77,7 @@ export default function SpotMistakeQuestionCard({ question, questionNumber, answ
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.typeBadge}><Text style={styles.typeLabel}>⌕  ΒΡΕΣ ΤΟ ΛΑΘΟΣ</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <Text testID="spot-mistake-subject" accessibilityRole="header" style={[styles.question, questionSize]}>
       {question.prompt}{question.prompt.trim().endsWith(":") ? "" : ":"}

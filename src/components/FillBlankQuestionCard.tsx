@@ -11,7 +11,7 @@ import { questionCardStyles } from "./questionCardStyles";
 
 type Props = {
   question: FillBlankQuestion;
-  questionNumber: number;
+  questionNumber?: number;
   answer?: string;
   onSubmit: (optionId: string) => void;
   readingSize?: number;
@@ -77,7 +77,7 @@ export default function FillBlankQuestionCard({ question, questionNumber, answer
     <View pointerEvents="none" accessible={false} style={styles.rim} />
     <View style={styles.topLine}>
       <View style={styles.badge}><Text style={styles.badgeText}>✎  ΣΥΜΠΛΗΡΩΣΕ ΤΟ ΚΕΝΟ</Text></View>
-      <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text>
+      {questionNumber !== undefined ? <Text style={styles.counter}>{String(questionNumber).padStart(2, "0")}</Text> : null}
     </View>
     <View testID="fill-blank-sentence" style={styles.passage} accessible
       accessibilityRole="header"
