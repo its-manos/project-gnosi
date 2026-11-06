@@ -16,24 +16,41 @@ const common={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state
  nodes(tree).find(n=>n.type==='Button'&&n.props.label==='Ας ξεκινήσουμε →').props.onPress();h.render(()=>Welcome(props));assert.ok(events.some(e=>e[2]?.onboarding_step===2));
  const consent=harness();hook.enabled=false;const Usage=load('src/components/UsageSharing.tsx',{...common,react:consent.react}).default;tree=consent.render(()=>Usage());const toggle=nodes(tree).find(n=>n.type==='Switch');assert.equal(toggle.props.value,false);toggle.props.onValueChange(true);await Promise.resolve();assert.ok(events.some(e=>e[0]==='setEnabled'&&e[1]===true));
  // Exercise effects from the real navigator, not a reimplementation of routing.
+ let welcomeVisible=false;
  hook.enabled=true;events.length=0;const nav=harness(),data=load('src/data/lessons.ts');
- const lesson=data.lessons[0],app={screen:'home',activeCategoryId:lesson.categoryId,activeSubcategoryId:lesson.subcategoryId,activeLessonId:lesson.id,checkpointAnswers:{},completedLessonIds:[],inProgressLessonIds:[],inProgressLessonCount:0,lessonAttempts:{},progressLoaded:true,resultMode:'finished',setScreen:s=>{app.screen=s;}};
+ const lesson=data.lessons[0],app={screen:'home',activeCategoryId:lesson.categoryId,activeSubcategoryId:lesson.subcategoryId,activeLessonId:lesson.id,checkpointAnswers:{},completedLessonIds:[],completionEvents:{},inProgressLessonIds:[],inProgressLessonCount:0,lessonAttempts:{},progressLoaded:true,resultMode:'finished',setScreen:s=>{app.screen=s;}};
  const screens=['Home','Category','Subcategory','Lesson','Quiz','Results','ReviewMistakes','WeeklyReview','KnowledgeReview','Profile','PlayerStats','Account','SavedLessons','Search','DailyChallenge','DailyChallengePreferences','Progress','Welcome'];
- const imports={...common,react:nav.react,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useAthensDate':{useAthensDate:()=> '2026-10-31'},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[]})},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:prefs,savePreferences:async()=>true})},'../hooks/useWelcome':{useWelcome:()=>({visible:false,loading:false,replay:false})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:{}}),useDailySnapshot:()=>({doc:{days:{},preferences:null},userId:null})},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'},...Object.fromEntries(screens.map(n=>['../screens/'+n+'Screen',{__esModule:true,default:n}]))};
- const Navigator=load('src/navigation/AppNavigator.tsx',imports).default;
+ const imports={...common,react:nav.react,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useAthensDate':{useAthensDate:()=> '2026-10-31'},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[]})},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:prefs,savePreferences:async()=>true})},'../hooks/useWelcome':{useWelcome:()=>({visible:welcomeVisible,loading:false,replay:true,isCurrent:()=>true,complete:async()=>true,skip:async()=>true})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:{savePreferences:async()=>true}}),useDailySnapshot:()=>({doc:{days:{},preferences:null},userId:null})},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'},...Object.fromEntries([...screens,'QuickQuiz','LearningInsights'].map(n=>['../screens/'+n+'Screen',{__esModule:true,default:n}]))};
+ const navigationAnalytics = load('src/navigation/useNavigationAnalytics.ts', imports);
+ const Navigator=load('src/navigation/AppNavigator.tsx',{...imports,'./useNavigationAnalytics':navigationAnalytics}).default;
  const render=()=>nav.render(()=>Navigator());render();app.screen='lesson';render();app.checkpointAnswers={0:0};render();app.screen='results';render();
  assert.ok(events.some(e=>e[0]==='lesson'&&e[1]?.lesson_id===lesson.id));assert.ok(events.some(e=>e[0]==='progress'&&e[1]?.answered_count===1));assert.equal(events.filter(e=>e[0]==='completeLesson').length,1);
+ assert.equal(events.filter(e=>e[0]==='lesson'&&e[1]?.lesson_id===lesson.id).length,1,'Checkpoint updates do not reopen the lesson visit');
  events.length=0;app.resultMode='returning';app.activeLessonId=data.lessons[1].id;render();assert.ok(!events.some(e=>e[0]==='completeLesson'),'Saved results never count as new completions');
  app.screen='lesson';render();events.length=0;app.screen='home';render();assert.ok(events.some(e=>e[0]==='lesson'&&e[1]===null),'Confirmed navigation leaves the visit');
+ app.screen='quick-quiz';events.length=0;render();assert.ok(!events.some(e=>e[0]==='view'),'Quick Quiz has no published analytics screen');
  // Review routes retain their launcher origin and use the existing analytics enum.
- app.screen='home';tree=render();nodes(tree).find(n=>n.type==='Home').props.onKnowledgeReview();assert.equal(app.screen,'knowledge-review');tree=render();assert.ok(events.some(e=>e[0]==='view'&&e[1]==='review'));nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'home');
+ app.screen='home';tree=render();nodes(tree).find(n=>n.type==='Home').props.onStartDailyChallenge();tree=render();nodes(tree).find(n=>n.type==='DailyChallenge').props.onWeeklyReview();assert.equal(app.screen,'knowledge-review');tree=render();assert.ok(events.some(e=>e[0]==='view'&&e[1]==='review'));nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'home');
  app.screen='progress';tree=render();nodes(tree).find(n=>n.type==='Progress').props.onKnowledgeReview();tree=render();nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'progress');
  // Profile is reached from both launchers; nested details return to it.
- app.screen='home';tree=render();nodes(tree).find(n=>n.type==='Home').props.onOpenProfile();tree=render();assert.equal(app.screen,'profile');assert.ok(events.some(e=>e[0]==='view'&&e[1]==='account'));assert.equal(nodes(tree).find(n=>n.type==='Tabs').props.currentScreen,'home');
+ app.screen='home';tree=render();nodes(tree).find(n=>n.type==='Home').props.onOpenProfile();tree=render();assert.equal(app.screen,'profile');assert.ok(events.some(e=>e[0]==='view'&&e[1]==='account'));assert.equal(nodes(tree).find(n=>n.type==='Tabs').props.currentScreen,'profile');
  nodes(tree).find(n=>n.type==='Profile').props.onInterests();tree=render();nodes(tree).find(n=>n.type==='DailyChallengePreferences').props.onCancel();tree=render();assert.equal(app.screen,'profile');
  nodes(tree).find(n=>n.type==='Profile').props.onStats();tree=render();assert.equal(app.screen,'player-stats');nodes(tree).find(n=>n.type==='PlayerStats').props.onBack();tree=render();assert.equal(app.screen,'profile');
- nodes(tree).find(n=>n.type==='Profile').props.onAccount();tree=render();assert.equal(app.screen,'account');assert.equal(nodes(tree).find(n=>n.type==='Tabs').props.currentScreen,'home');nodes(tree).find(n=>n.type==='Account').props.onBack();tree=render();assert.equal(app.screen,'profile');nodes(tree).find(n=>n.type==='Profile').props.onBack();assert.equal(app.screen,'home');
- app.screen='progress';tree=render();nodes(tree).find(n=>n.type==='Progress').props.onViewChange('reading');tree=render();nodes(tree).find(n=>n.type==='Progress').props.onOpenProfile();tree=render();assert.equal(nodes(tree).find(n=>n.type==='Tabs').props.currentScreen,'progress');nodes(tree).find(n=>n.type==='Profile').props.onBack();tree=render();assert.equal(app.screen,'progress');assert.equal(nodes(tree).find(n=>n.type==='Progress').props.initialView,'reading');
+ nodes(tree).find(n=>n.type==='Profile').props.onAccount();tree=render();assert.equal(app.screen,'account');assert.equal(nodes(tree).find(n=>n.type==='Tabs').props.currentScreen,'profile');nodes(tree).find(n=>n.type==='Account').props.onBack();tree=render();assert.equal(app.screen,'profile');nodes(tree).find(n=>n.type==='Profile').props.onBack();assert.equal(app.screen,'home');
+ app.screen='progress';tree=render();nodes(tree).find(n=>n.type==='Progress').props.onOpenInsights('reading');tree=render();
+ const insights=nodes(tree).find(n=>n.type==='LearningInsights');assert.equal(insights.props.initialView,'reading');insights.props.onBack();
+ tree=render();nodes(tree).find(n=>n.type==='Progress').props.onOpenProfile();tree=render();assert.equal(app.screen,'profile');
+ nodes(tree).find(n=>n.type==='Profile').props.onBack();assert.equal(app.screen,'progress');
+ events.length=0;app.screen='learning-insights';render();
+ assert.deepEqual(events.filter(e=>e[0]==='view'),[['view','progress']]);
+ welcomeVisible=true;events.length=0;tree=render();
+ const welcome=nodes(tree).find(n=>n.type==='Welcome');
+ assert.ok(events.some(e=>e[0]==='view'&&e[1]==='welcome'));
+ await welcome.props.onFinish(prefs,'home');await welcome.props.onSkip(2);
+ assert.deepEqual(events.filter(e=>e[0]==='track'),[
+  ['track','onboarding_completed',{screen:'welcome',onboarding_step:4,replay:true}],
+  ['track','onboarding_skipped',{screen:'welcome',onboarding_step:2,replay:true}],
+ ]);
  // Provider uses actual AppState events and the existing RPC transport.
  const providerDisk=new Map(),sent=[];let onAppState,intervalTick,cleanupProvider;
  const core=load('src/utils/betaAnalytics.ts');
