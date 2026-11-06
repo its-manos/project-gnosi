@@ -586,9 +586,30 @@ assert.equal(scroll.props.alwaysBounceVertical, false);
 assert.equal(scroll.props.overScrollMode, "never", "disable Android overscroll glow");
 scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
 scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[1].gap, 10,
-  "shorter usable viewport activates compact layout even with a tall window");
+assert.equal(scroll.props.contentContainerStyle[1].gap, 8,
+  "shorter usable viewport uses compact gaps without hiding genuine overflow");
+assert.equal(scroll.props.contentContainerStyle[1].paddingTop, 4);
+assert.equal(scroll.props.contentContainerStyle[1].paddingBottom, 4);
 assert.equal(scroll.props.contentContainerStyle[2], false);
+// The larger illustrations and card silhouettes stay exactly the same.
+// Small inner spacings, not clipping/scroll disabling, recover the few points
+// consumed when the new two-row world atlas and lesson breadcrumb were added.
+const compactTree = renderMeasuredHome();
+const compactWorlds = nodes(compactTree).find(node => node.props?.testID === "home-exploration");
+assert.equal(compactWorlds.props.style[1].gap, 5);
+assert.equal(compactWorlds.props.style[1].paddingTop, 4);
+const compactTile = nodes(compactTree).find(node => node.props?.testID === "home-category-history");
+assert.equal(compactTile.props.style({ pressed: false })[1].paddingVertical, 4);
+assert.equal(compactTile.props.style({ pressed: false })[1].gap, 4);
+const originalPlatform = nodes(compactTile).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
+assert.ok(originalPlatform, "compact Home preserves the 62pt circular category illustration");
+assert.equal(originalPlatform.props.style[0].height, 62);
+const savedCompactHeight =
+  3 * (10 - 8) + (6 - 4) + (6 - 4) +
+  2 * (2 * (6 - 4) + (7 - 4)) + (6 - 5) + (6 - 4);
+assert.ok(savedCompactHeight >= 24,
+  "compact spacing reclaims a small vertical overflow without shrinking or clipping artwork");
 scroll.props.onContentSizeChange(360, 711);
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[2], false,
