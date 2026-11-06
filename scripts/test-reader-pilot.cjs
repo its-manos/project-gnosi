@@ -10,6 +10,7 @@ const jsx = (type, props) => ({ type, props });
 let states = [], refs = [], stateIndex = 0, refIndex = 0;
 const openingCues = [];
 const fontStore = { size: 18, subscribe: () => () => {}, getSnapshot: () => fontStore.size,
+  getReadySnapshot: () => true,
   adjust: delta => { fontStore.size = Math.max(16, Math.min(24, fontStore.size + delta)); } };
 const react = {
   useEffect: () => {},
@@ -57,6 +58,7 @@ function compile(file, imports = {}) {
   return mod.exports;
 }
 const progress = compile('src/utils/lessonProgress.ts');
+const readerScrollPosition = compile('src/utils/readerScrollPosition.ts', { './lessonProgress': progress });
 const addition = compile('src/data/additionalLessons.ts');
 const expansion = compile('src/data/catalogueExpansion.ts');
 const data = compile('src/data/lessons.ts', { './additionalLessons': addition, './greekWorldLessons': compile('src/data/greekWorldLessons.ts'), './greekEvidenceLessons': compile('src/data/greekEvidenceLessons.ts'), './greekChronologyLessons': compile('src/data/greekChronologyLessons.ts'), './greekGeographyLessons': compile('src/data/greekGeographyLessons.ts'), './aegeanBronzeAgeLessons': compile('src/data/aegeanBronzeAgeLessons.ts'), './minoanCreteLessons': compile('src/data/minoanCreteLessons.ts'), './mycenaeanPalacesLessons': compile('src/data/mycenaeanPalacesLessons.ts'), './palaceCollapseLessons': compile('src/data/palaceCollapseLessons.ts'), './geometricGreeceLessons': compile('src/data/geometricGreeceLessons.ts'), './riseOfPolisLessons': compile('src/data/riseOfPolisLessons.ts'), './greekSettlementsLessons': compile('src/data/greekSettlementsLessons.ts'), './spartaSocietyLessons': compile('src/data/spartaSocietyLessons.ts'), './athensLawCourtsLessons': compile('src/data/athensLawCourtsLessons.ts'), './greekWarHoplitesLessons': compile('src/data/greekWarHoplitesLessons.ts'), './greekSanctuariesGamesLessons': compile('src/data/greekSanctuariesGamesLessons.ts'), './persianWarsGreekWorldLessons': compile('src/data/persianWarsGreekWorldLessons.ts'), './athenianEmpireLessons': compile('src/data/athenianEmpireLessons.ts'), './peloponnesianWarLessons': compile('src/data/peloponnesianWarLessons.ts'), './greekCrisesFourthCenturyLessons': compile('src/data/greekCrisesFourthCenturyLessons.ts'), './macedonPhilipLessons': compile('src/data/macedonPhilipLessons.ts'), './alexanderConquestsLessons': compile('src/data/alexanderConquestsLessons.ts'), './greekStageTragedyLessons': compile('src/data/greekStageTragedyLessons.ts'), './greekPhilosophyInContextLessons': compile('src/data/greekPhilosophyInContextLessons.ts'), './greekScienceKnowledgeLessons': compile('src/data/greekScienceKnowledgeLessons.ts'), './greekImagesSculptureLessons': compile('src/data/greekImagesSculptureLessons.ts'), './hellenisticKingdomsCitiesLessons': compile('src/data/hellenisticKingdomsCitiesLessons.ts'), './catalogueExpansion': expansion, './architectureLessons': compile('src/data/architectureLessons.ts'), './astronomyLessons': compile('src/data/astronomyLessons.ts'), './worldHistoryLessons': compile('src/data/worldHistoryLessons.ts'), './geologyLessons': compile('src/data/geologyLessons.ts'), './perceptionLessons': compile('src/data/perceptionLessons.ts'), './perceptionAttentionLessons': compile('src/data/perceptionAttentionLessons.ts') });
@@ -68,7 +70,7 @@ const rewardRules = compile('src/gamification/rules.ts');
 const rewardLogic = compile('src/gamification/rewards.ts', { '../quiz/engine': rewardEngine, './rules': rewardRules });
 const rewardAdapters = compile('src/quiz/adapters.ts', { './engine': rewardEngine });
 const nextFigureWarmup = compile('src/utils/nextFigureWarmup.ts', { '../data/articleMedia': media, './lessonProgress': progress });
-const imports = { '../gamification/rules': rewardRules, '../utils/nextFigureWarmup': nextFigureWarmup, '../gamification/rewards': rewardLogic, '../quiz/adapters': rewardAdapters, ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
+const imports = { '../utils/readerScrollPosition': readerScrollPosition, '../gamification/rules': rewardRules, '../utils/nextFigureWarmup': nextFigureWarmup, '../gamification/rewards': rewardLogic, '../quiz/adapters': rewardAdapters, ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
 const QuestionStageProgress = compile('src/components/QuestionStageProgress.tsx', { '../theme': theme }).default;
 const Reader = compile('src/screens/ReaderLessonScreen.tsx', { ...imports,
   '../components/QuestionStageProgress': { __esModule: true, default: 'QuestionStageProgress' },
@@ -185,7 +187,9 @@ reset({0:0}); tree=render();
 nodes(tree).find(n=>n.type==='ScrollView').props.ref.current={scrollTo:args=>scrolls.push(args)};
 const resumeParagraph=byId(tree,'reader-paragraph-4'); lay(resumeParagraph,45);
 const resumeSection=nodes(tree).find(n=>n.props?.onLayout && nodes(n).includes(resumeParagraph) && n!==resumeParagraph && n.type==='View');
-lay(resumeSection,930); assert.equal(scrolls.at(-1).y,918); assert.equal(scrolls.at(-1).animated,false);
+lay(resumeSection,930); assert.equal(scrolls.at(-1).y,938,
+  'resume aligns the visible section marker, not the border above it');
+assert.equal(scrolls.at(-1).animated,false);
 const before=scrolls.length;
 props={...props,checkpointAnswers:{0:0,1:0}}; tree=render();
 nodes(tree).find(n=>n.type==='ScrollView').props.onContentSizeChange(); assert.equal(scrolls.length,before);
