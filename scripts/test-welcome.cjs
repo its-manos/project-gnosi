@@ -89,7 +89,13 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(phase,'interests');
  assert.ok(nodes(tree).some(n=>n.props?.accessibilityLabel==='Βήμα 4 από 4'));
  assert.equal(button(tree,'Ξεκίνα το πρώτο μάθημα →').props.disabled,true,'At least three interests are required');
- for(const topic of topics.DAILY_CHALLENGE_TOPICS.slice(0,5)){press(tree,topic.title);tree=draw();}
+ assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,1,
+   'Selected world is carried into the interests page');
+ for(const topic of topics.DAILY_CHALLENGE_TOPICS.slice(0,5)){
+  if(!nodes(tree).some(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityLabel===topic.title&&n.props.accessibilityState.checked)) {
+   press(tree,topic.title);tree=draw();
+  }
+ }
  assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,5);
  assert.ok(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&!n.props.accessibilityState.checked).every(n=>n.props.disabled));
  press(tree,topics.DAILY_CHALLENGE_TOPICS[0].title);tree=draw();
