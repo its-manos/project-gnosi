@@ -191,7 +191,8 @@ export default function AppNavigator() {
   hardwareBackRef.current = () => {
     if (welcome.loading) return false;
     if (welcome.visible) {
-      if (welcome.phase === "lesson") { void welcome.advance("choose"); return true; }
+      if (welcome.phase === "lesson") { void welcome.advance("interests"); return true; }
+      if (welcome.phase === "interests") { void welcome.advance("choose"); return true; }
       if (welcome.phase === "choose") { void welcome.advance("question"); return true; }
       if (welcome.phase === "question") { void welcome.advance("welcome"); return true; }
       return false;
@@ -249,13 +250,16 @@ export default function AppNavigator() {
     }).catch(() => { completingWelcome.current = false; });
   }, [welcome.visible, welcome.phase, app.screen, app.activeLessonId]);
 
-  async function advanceWelcome(phase: WelcomePhase) {
-    return welcome.advance(phase);
+  async function advanceWelcome(phase: WelcomePhase, categoryId?: string) {
+    return welcome.advance(phase, categoryId);
   }
-  async function beginWelcomeLesson(categoryId: string) {
+  async function beginWelcomeLesson(preferences: DailyChallengePreferences) {
     const lesson = lessons.find(l => l.id === ONBOARDING_INTRO_LESSON_ID);
     if (!lesson || !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return false;
-    if (!await welcome.advance("lesson", categoryId)) return false;
+    // Save interest choices in the existing synced Daily preferences store.
+    // A failed local write must not advance the onboarding marker.
+    if (!await dailyPreferences.savePreferences(preferences)) return false;
+    if (!await welcome.advance("lesson")) return false;
     app.openLesson(lesson.id);
     return true;
   }
@@ -285,7 +289,7 @@ export default function AppNavigator() {
         typedCheckpointAnswers={app.typedCheckpointAnswers}
         onAnswerCheckpoint={app.answerCheckpoint}
         onFinishLesson={app.finishInlineLesson}
-        onBack={() => { void welcome.advance("choose"); }} />;
+        onBack={() => { void welcome.advance("interests"); }} />;
     } else {
       screenContent = <WelcomeScreen phase={welcome.phase} replay={welcome.replay}
         categories={categories} selectedCategoryId={welcome.categoryId}
@@ -337,7 +341,9 @@ export default function AppNavigator() {
       break;
 
     case "quick-quiz":
-      screenContent = <QuickQuizScreen game={quickQuiz} scope={daily.userId ?? "guest"} onHome={() => app.setScreen("home")} />;
+      screenContent = <QuickQuizScreen game={quickQuiz} scope={daily.userId ?? "guest"}
+        preferredTopicIds={dailyPreferences.preferences.topicIds}
+        onHome={() => app.setScreen("home")} />;
       break;
 
     case "profile":
