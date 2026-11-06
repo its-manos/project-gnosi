@@ -1,7 +1,6 @@
 /** Completed daily-quiz streak; deliberately not a progress ring or login count. */
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "../theme";
 
 type Props = { streak: number | null };
 
@@ -14,17 +13,12 @@ export default function HomeStreakBadge({ streak }: Props) {
         fill="#E6B87B" />
       <Path d="M12 15c1 3 4 4 4 7a4 4 0 0 1-8 0c0-3 2-5 4-7Z" fill="#FFE6B8" />
     </Svg>
-    <View style={styles.copy}>
-      <Text testID="home-streak-count" style={styles.count} numberOfLines={1} adjustsFontSizeToFit>
-        {streak === null ? "—" : streak}
-      </Text>
-      <Text style={styles.caption}>{streak === 1 ? "ημέρα" : "ημέρες"}</Text>
-    </View>
+    <Text testID="home-streak-count" style={styles.count} numberOfLines={1} adjustsFontSizeToFit>
+      {streak === null ? "—" : streak}
+    </Text>
   </View>;
 }
 const styles = StyleSheet.create({
-  badge: { flexDirection: "row", alignItems: "center", gap: 6, maxWidth: 96, paddingHorizontal: 5 },
-  copy: { flexShrink: 1, alignItems: "center" },
-  count: { color: "#E6B87B", fontSize: 16, lineHeight: 20, fontWeight: "800", fontVariant: ["tabular-nums"] },
-  caption: { color: colors.textMuted, fontSize: 10, lineHeight: 13 },
+  badge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 3 },
+  count: { color: "#E6B87B", fontSize: 18, lineHeight: 24, fontWeight: "800", fontVariant: ["tabular-nums"] },
 });
