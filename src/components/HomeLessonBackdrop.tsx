@@ -9,7 +9,7 @@ const landmarks: Record<string, number> = {
   mythology: require("../../assets/atlas-export-preview/island-icons/mythology.webp"),
 };
 
-export default function HomeLessonBackdrop({ subcategoryId }: { subcategoryId?: string }) {
+export default function HomeLessonBackdrop({ subcategoryId, scale = 1 }: { subcategoryId?: string; scale?: number }) {
   const landmark = subcategoryId ? landmarks[subcategoryId] : undefined;
   return <View pointerEvents="none" accessible={false} accessibilityElementsHidden
     importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
@@ -24,7 +24,7 @@ export default function HomeLessonBackdrop({ subcategoryId }: { subcategoryId?: 
       <Rect width="100%" height="100%" fill="url(#home-lesson-surface)" />
     </Svg>
     {landmark ? <Image testID="home-lesson-landmark" source={landmark}
-      contentFit="contain" style={styles.landmark} accessible={false} /> : null}
+      contentFit="contain" style={[styles.landmark, { width: 104 * scale, height: 84 * scale }]} accessible={false} /> : null}
   </View>;
 }
 
