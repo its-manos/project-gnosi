@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Category } from "../data/lessons";
 import { DAILY_CHALLENGE_TOPICS, type DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import type { WelcomePhase } from "../utils/firstRun";
@@ -12,6 +13,7 @@ import UsageSharing from "../components/UsageSharing";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
 import OnboardingDailyQuestion from "./OnboardingDailyQuestion";
 import { WelcomeAtlasIcon, WelcomeLessonIcon, WelcomeQuizIcon } from "../components/WelcomeStepIcons";
+import { onboardingLayout } from "./onboardingLayout";
 
 type Props = {
   phase: WelcomePhase;
@@ -21,29 +23,36 @@ type Props = {
   preferences: DailyChallengePreferences;
   preferencesLoaded: boolean;
   onAdvance: (phase: WelcomePhase, categoryId?: string) => Promise<boolean>;
-  onBeginLesson: (preferences: DailyChallengePreferences) => Promise<boolean>;
+  onSaveInterests: (preferences: DailyChallengePreferences) => Promise<boolean>;
+  onBeginLesson: (categoryId: string) => Promise<boolean>;
   onSkip: (step?: number) => Promise<void>;
 };
 
 export default function WelcomeScreen({
   phase, replay, categories, selectedCategoryId, preferences, preferencesLoaded,
-  onAdvance, onBeginLesson, onSkip,
+  onAdvance, onSaveInterests, onBeginLesson, onSkip,
 }: Props) {
   const [categoryId, setCategoryId] = useState<string | null>(selectedCategoryId);
-  const [topics, setTopics] = useState<string[]>(() => {
-    if (replay) return [...preferences.topicIds];
-    const firstInterest = selectedCategoryId === "difficult-history" ? "history" : selectedCategoryId;
-    return firstInterest && DAILY_CHALLENGE_TOPICS.some(topic => topic.id === firstInterest)
-      ? [firstInterest] : [];
-  });
+  const [topics, setTopics] = useState<string[]>(() =>
+    replay || phase === "choose" ? [...preferences.topicIds] : []);
+  const interestsTouched = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const locked = useRef(false);
   const mounted = useRef(true);
-  const { height, fontScale } = useWindowDimensions();
+  const { height, width, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { analytics, enabled: usageEnabled } = useBetaAnalytics();
-  const compact = height < 750 || fontScale > 1.25;
+  const compact = height < 790 || fontScale > 1.15;
+  const narrow = width < 350 || fontScale > 1.3;
   useEffect(() => () => { mounted.current = false; }, []);
+  // Restore preferences when returning to Interests from a saved category
+  // stage, including after a process restart. Never overwrite a user edit.
+  useEffect(() => {
+    if (preferencesLoaded && (replay || phase === "choose") && !interestsTouched.current) {
+      setTopics([...preferences.topicIds]);
+    }
+  }, [preferencesLoaded, replay, phase, preferences.topicIds]);
 
   async function run(action: () => Promise<boolean | void>) {
     if (locked.current) return;
@@ -53,9 +62,10 @@ export default function WelcomeScreen({
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   }
 
-  const step = phase === "welcome" ? 1 : phase === "question" ? 2 : phase === "choose" ? 3 : 4;
+  const step = phase === "welcome" ? 1 : phase === "question" ? 2 : phase === "interests" ? 3 : 4;
   function toggleTopic(id: string) {
     if (busy) return;
+    interestsTouched.current = true;
     setTopics(current => current.includes(id)
       ? current.filter(value => value !== id)
       : current.length < 5 ? [...current, id] : current);
@@ -73,7 +83,7 @@ export default function WelcomeScreen({
         : <Pressable style={styles.back} disabled={busy} accessibilityRole="button"
             accessibilityLabel="Προηγούμενο βήμα" accessibilityState={{ disabled: busy }}
             onPress={() => void run(() => onAdvance(
-              phase === "question" ? "welcome" : phase === "choose" ? "question" : "choose",
+              phase === "question" ? "welcome" : phase === "interests" ? "question" : "interests",
             ))}>
             <Text style={styles.backText}>‹ Πίσω</Text>
           </Pressable>}
@@ -90,15 +100,18 @@ export default function WelcomeScreen({
 
     {phase === "question" ? <OnboardingDailyQuestion
       preferences={preferences} preferencesLoaded={preferencesLoaded}
-      onContinue={() => onAdvance("choose")} /> :
-    <ScrollView contentContainerStyle={[styles.content, compact && styles.contentCompact]}
+      onContinue={() => onAdvance("interests")} /> :
+    <ScrollView contentContainerStyle={[styles.content,
+      phase !== "welcome" && styles.selectionContent,
+      compact && styles.contentCompact,
+      { paddingBottom: Math.max(onboardingLayout.minBottomPadding, insets.bottom + 18) } ]}
       showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       {phase === "welcome" ? <>
-        <View style={styles.hero} accessible={false}>
+        <View style={[styles.hero, compact && styles.heroCompact]} accessible={false}>
           <WelcomeAtlasIcon size={108} />
         </View>
         <Text style={styles.eyebrow}>ΕΝΑΣ ΚΟΣΜΟΣ ΠΕΡΙΕΡΓΕΙΑΣ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Κάθε μέρα, κάτι καινούργιο.</Text>
+        <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Κάθε μέρα, κάτι καινούργιο.</Text>
         <AtlasCard style={styles.experience}>
           <View style={styles.experienceRow}><View style={styles.experienceIcon} accessible={false}><WelcomeQuizIcon /></View><View style={styles.experienceCopy}>
             <Text style={styles.experienceTitle}>01  Δοκίμασε τις γνώσεις σου</Text><Text style={styles.small}>Η πρώτη ερώτηση της σημερινής πρόκλησης.</Text></View></View>
@@ -112,8 +125,8 @@ export default function WelcomeScreen({
           onPress={() => void run(() => onAdvance("question"))} />
       </> : phase === "choose" ? <>
         <Text style={styles.eyebrow}>ΔΙΑΛΕΞΕ ΤΟΝ ΚΟΣΜΟ ΣΟΥ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
-        <Text style={styles.body}>Διάλεξε τον κόσμο που σε ενδιαφέρει περισσότερο. Μπορείς να εξερευνήσεις και τους υπόλοιπους όποτε θέλεις.</Text>
+        <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Ποιος κόσμος σε τραβάει περισσότερο;</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε ποιον κόσμο θα ήθελες να εξερευνήσεις. Τους υπόλοιπους μπορείς να τους γνωρίσεις όποτε θέλεις.</Text>
         <View style={styles.categoryGrid}>
           {categories.map(category => {
             const Icon = getCategoryWorldIcon(category.id);
@@ -122,32 +135,28 @@ export default function WelcomeScreen({
               accessibilityRole="radio" accessibilityLabel={category.title}
               accessibilityState={{ selected: active, disabled: busy }} disabled={busy}
               onPress={() => setCategoryId(category.id)}
-              style={({ pressed }) => [styles.category, active && styles.categorySelected, pressed && styles.categoryPressed]}>
+              style={({ pressed }) => [styles.category, compact && styles.categoryCompact, active && styles.categorySelected, pressed && styles.categoryPressed]}>
               <View style={styles.iconArea}>{Icon ? <Icon size={38} /> : <Text style={styles.fallbackIcon}>{category.emoji}</Text>}</View>
               <Text style={styles.categoryTitle} numberOfLines={2}>{category.title}</Text>
-              <Text style={[styles.selectionMark, active && styles.selectionMarkActive]}>{active ? "✓" : "·"}</Text>
+              <View style={[styles.topicCheck, active && styles.topicCheckActive]}>
+                {active ? <Text style={styles.topicCheckText}>✓</Text> : null}
+              </View>
             </Pressable>;
           })}
         </View>
         <View style={styles.lessonPreview}>
           <Text style={styles.previewKicker}>Η ΠΡΩΤΗ ΣΟΥ ΔΙΑΔΡΟΜΗ</Text>
           <Text style={styles.previewTitle}>Αρχαία Ελλάδα</Text>
-          <Text style={styles.small}>Για την πρώτη μας διαδρομή θα πάμε στην Αρχαία Ελλάδα. Προς το παρόν, αυτό είναι το εισαγωγικό μάθημα για όλους, όποιον κόσμο κι αν διαλέξεις.</Text>
+          <Text style={styles.small}>Το πρώτο μάθημα μάς ταξιδεύει στην Αρχαία Ελλάδα, ανεξάρτητα από τον κόσμο που διάλεξες.</Text>
           {selected ? <Text style={styles.selectedHint}>Ο κόσμος που διάλεξες: {selected.title}</Text> : null}
         </View>
-        <ActionButton label={busy ? "Συνέχεια…" : "Συνέχεια →"}
+        <ActionButton label={busy ? "Άνοιγμα…" : "Ξεκίνα το πρώτο μάθημα →"}
           disabled={busy || !categoryId}
-          onPress={() => {
-            if (!categoryId) return;
-            const firstInterest = categoryId === "difficult-history" ? "history" : categoryId;
-            setTopics(current => current.length || !DAILY_CHALLENGE_TOPICS.some(topic => topic.id === firstInterest)
-              ? current : [firstInterest]);
-            void run(() => onAdvance("interests", categoryId));
-          }} />
+          onPress={() => { if (categoryId) void run(() => onBeginLesson(categoryId)); }} />
       </> : <>
         <Text style={styles.eyebrow}>Η ΓΝΩΣΗ ΣΤΑ ΜΕΤΡΑ ΣΟΥ</Text>
-        <Text accessibilityRole="header" style={styles.title}>Τι σου αρέσει να ανακαλύπτεις;</Text>
-        <Text style={styles.body}>Διάλεξε 3 έως 5 θέματα. Θα δίνουμε προτεραιότητα σε αυτά στο Γρήγορο Κουίζ, όπου υπάρχουν διαθέσιμες ερωτήσεις, και στις προτάσεις μαθημάτων.</Text>
+        <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>Τι σου αρέσει να ανακαλύπτεις;</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>Διάλεξε 3–5 θέματα για να βλέπεις περισσότερες σχετικές ερωτήσεις στο Γρήγορο Κουίζ και προτάσεις μαθημάτων.</Text>
         <View style={styles.topicCount}>
           <Text style={styles.topicCountText}>ΤΑ ΕΝΔΙΑΦΕΡΟΝΤΑ ΣΟΥ</Text>
           <Text style={styles.topicCounter} accessibilityLiveRegion="polite">{topics.length} / 5 · τουλάχιστον 3</Text>
@@ -161,7 +170,7 @@ export default function WelcomeScreen({
               accessibilityRole="checkbox" accessibilityLabel={topic.title}
               accessibilityState={{ checked: active, disabled }}
               disabled={disabled} onPress={() => toggleTopic(topic.id)}
-              style={({ pressed }) => [styles.topic, active && styles.topicActive,
+              style={({ pressed }) => [styles.topic, compact && styles.topicCompact, active && styles.topicActive,
                 disabled && !active && styles.topicDisabled, pressed && styles.categoryPressed]}>
               <View style={styles.topicIcon} accessible={false}>
                 {Icon ? <Icon size={29} /> : <Text style={styles.topicEmoji}>{topic.emoji}</Text>}
@@ -174,9 +183,9 @@ export default function WelcomeScreen({
           })}
         </View>
         <Text style={styles.interestsNote}>Η καθημερινή πρόκληση έχει τις ίδιες 7 ερωτήσεις για όλους. Μπορείς να αλλάξεις τα ενδιαφέροντά σου από το Προφίλ.</Text>
-        <ActionButton label={busy ? "Αποθήκευση…" : "Ξεκίνα το πρώτο μάθημα →"}
+        <ActionButton label={busy ? "Αποθήκευση…" : "Συνέχεια →"}
           disabled={busy || !preferencesLoaded || topics.length < 3 || topics.length > 5}
-          onPress={() => void run(() => onBeginLesson({ topicIds: topics, difficulty: preferences.difficulty }))} />
+          onPress={() => void run(() => onSaveInterests({ topicIds: topics, difficulty: preferences.difficulty }))} />
       </>}
       {error ? <Text style={styles.error} accessibilityLiveRegion="polite">Δεν αποθηκεύτηκε το βήμα. Δοκίμασε ξανά ή παράλειψε τον οδηγό.</Text> : null}
     </ScrollView>}
@@ -200,18 +209,24 @@ const styles = StyleSheet.create({
   track: { flexDirection: "row", gap: 5, paddingHorizontal: 20, paddingBottom: 7 },
   segment: { height: 3, flex: 1, backgroundColor: colors.border, borderRadius: 3 },
   segmentActive: { backgroundColor: colors.accentLight },
-  content: { width: "100%", maxWidth: 640, flexGrow: 1, alignSelf: "center", paddingHorizontal: 20,
-    justifyContent: "center", paddingTop: 16, paddingBottom: 32 },
-  contentCompact: { justifyContent: "flex-start", paddingTop: 14 },
+  content: { width: "100%", maxWidth: onboardingLayout.maxWidth, flexGrow: 1,
+    alignSelf: "center", paddingHorizontal: onboardingLayout.horizontal,
+    justifyContent: "center", paddingTop: 18 },
+  selectionContent: { justifyContent: "flex-start", paddingTop: 18 },
+  contentCompact: { justifyContent: "flex-start", paddingTop: 12 },
+  heroCompact: { height: 108, marginVertical: 4 },
   hero: { width: 118, height: 118, alignSelf: "center", alignItems: "center",
     justifyContent: "center", marginVertical: 12 },
   eyebrow: { color: colors.accentLight, fontSize: 10, lineHeight: 17, fontWeight: "900",
     letterSpacing: 1.2, textAlign: "center", marginBottom: 10 },
-  title: { color: colors.text, fontSize: 29, lineHeight: 37, fontWeight: "900",
-    textAlign: "center", marginBottom: 14 },
-  body: { color: colors.textBody, fontSize: 15, lineHeight: 24,
-    textAlign: "center", marginBottom: 22 },
-  experience: { padding: 18, gap: 13 },
+  title: { color: colors.text, fontSize: onboardingLayout.titleSize,
+    lineHeight: onboardingLayout.titleLineHeight, fontWeight: "900",
+    textAlign: "center", marginBottom: 12 },
+  titleCompact: { fontSize: 25, lineHeight: 32, marginBottom: 9 },
+  body: { color: colors.textBody, fontSize: 14, lineHeight: 22,
+    textAlign: "center", marginBottom: 18 },
+  bodyCompact: { marginBottom: 12, lineHeight: 21 },
+  experience: { padding: 16, gap: 12 },
   experienceRow: { flexDirection: "row", alignItems: "center", gap: 13 },
   experienceIcon: { width: 51, height: 51, borderRadius: 15, borderWidth: 1,
     borderColor: "#5A527B", backgroundColor: "#2D304C", justifyContent: "center", alignItems: "center" },
@@ -219,31 +234,31 @@ const styles = StyleSheet.create({
   experienceTitle: { color: colors.text, fontSize: 14, fontWeight: "800", lineHeight: 21 },
   small: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
   divider: { height: 1, backgroundColor: "#45435F", marginLeft: 64 },
-  support: { color: colors.textMuted, textAlign: "center", fontSize: 12, lineHeight: 19, marginTop: 17 },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 17 },
+  support: { color: colors.textMuted, textAlign: "center", fontSize: 12, lineHeight: 19, marginTop: 14 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginBottom: 14 },
   category: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border,
-    borderRadius: 17, padding: 10, minWidth: 132, flexBasis: "46%", flexGrow: 1,
-    minHeight: 91, flexDirection: "row", alignItems: "center", gap: 8 },
+    borderRadius: 16, padding: 10, minWidth: 125, flexBasis: "46%", flexGrow: 1,
+    minHeight: 80, flexDirection: "row", alignItems: "center", gap: 8 },
+  categoryCompact: { minHeight: 72, paddingVertical: 7 },
   categorySelected: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
   categoryPressed: { opacity: .8 },
   iconArea: { width: 40, alignItems: "center", justifyContent: "center" },
   fallbackIcon: { fontSize: 24 },
   categoryTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: "800", flex: 1 },
-  selectionMark: { color: colors.textMuted, fontSize: 16 },
-  selectionMarkActive: { color: colors.accentLight, fontSize: 17, fontWeight: "900" },
   lessonPreview: { borderWidth: 1, borderColor: "#514C71", backgroundColor: "#20243B",
-    borderRadius: 18, padding: 16, gap: 7 },
+    borderRadius: 16, padding: 13, gap: 5 },
   previewKicker: { color: colors.accentLight, fontSize: 10, fontWeight: "900", letterSpacing: .8 },
-  previewTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "900" },
+  previewTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "900" },
   selectedHint: { color: colors.accentLight, fontSize: 12, lineHeight: 19 },
   topicCount: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap",
     alignItems: "center", gap: 6, marginBottom: 12 },
   topicCountText: { color: colors.text, fontSize: 12, fontWeight: "900", letterSpacing: .5 },
   topicCounter: { color: colors.accentLight, fontSize: 12, fontWeight: "800" },
   topicGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
-  topic: { flexBasis: "46%", flexGrow: 1, minWidth: 128, minHeight: 79,
+  topic: { flexBasis: "46%", flexGrow: 1, minWidth: 125, minHeight: 76,
     flexDirection: "row", alignItems: "center", padding: 10, gap: 8,
     borderRadius: 15, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised },
+  topicCompact: { minHeight: 70, paddingVertical: 7 },
   topicActive: { backgroundColor: colors.accentSurface, borderColor: colors.accentLight },
   topicDisabled: { opacity: .42 },
   topicIcon: { width: 31, height: 38, alignItems: "center", justifyContent: "center", flexShrink: 0 },
