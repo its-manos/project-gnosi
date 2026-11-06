@@ -31,7 +31,8 @@ import { inlineArticleMedia } from "../data/articleMedia";
 import { nextPendingFigureUrl } from "../utils/nextFigureWarmup";
 import { colors, reading } from "../theme";
 import { readerTextSize, READER_TEXT_SIZE_MIN, READER_TEXT_SIZE_MAX } from "../state/ReaderTextSize";
-import { getParagraphCount, getParagraphId, getParagraphText, getReadingQuestionPlacements, getReadingResumeParagraphNumber, getReadingVisibleParagraphLimit } from "../utils/lessonProgress";
+import { getParagraphCount, getParagraphId, getParagraphText, getReadingQuestionPlacements, getReadingVisibleParagraphLimit } from "../utils/lessonProgress";
+import { getReaderResumeAnchor, resolveReaderScrollY, READER_SECTION_TOP_PADDING, type ReaderScrollAnchor } from "../utils/readerScrollPosition";
 
 /** Shared article reader. Checkpoint placement, persistence and completion use the existing learning flow. */
 export default function ReaderLessonScreen({ category, subcategory, lesson, isSaved, bookmarksLoaded,
@@ -41,6 +42,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const quizViewport = useAdaptiveQuestionScroll();
   const lastSeenParagraph = useRef(0);
   const readingSize = useSyncExternalStore(readerTextSize.subscribe, readerTextSize.getSnapshot, readerTextSize.getSnapshot);
+  const readingSizeReady = useSyncExternalStore(readerTextSize.subscribe, readerTextSize.getReadySnapshot, readerTextSize.getReadySnapshot);
   const { width: windowWidth, fontScale } = useWindowDimensions();
   const compactWidth = windowWidth < 370;
   const compactHeadings = compactWidth && fontScale < 1.4;
@@ -54,9 +56,11 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const scrollRef = useRef<ScrollViewInstance>(null);
   const sectionPositions = useRef<Record<number, number>>({});
   const paragraphPositions = useRef<Record<number, { sectionIndex: number; y: number }>>({});
+  const checkpointPositions = useRef<Record<number, number>>({});
   const finishPosition = useRef<number | null>(null);
-  const pendingScroll = useRef<number | "finish" | null>(null);
+  const pendingScroll = useRef<ReaderScrollAnchor | null>(null);
   const restored = useRef(false);
+  const restoreQueued = useRef(false);
   const paragraphCount = getParagraphCount(lesson);
   const placements = getReadingQuestionPlacements(lesson);
   const firstPendingQuestionIndex = placements.findIndex(p => checkpointAnswers[p.questionIndex] === undefined);
@@ -78,7 +82,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   const visibleLimit = getReadingVisibleParagraphLimit(lesson, checkpointAnswers);
   const upcomingFigureUrl = nextPendingFigureUrl(lesson, visibleLimit);
   const complete = answeredCount === questionCount;
-  const resumeTarget = useRef(getReadingResumeParagraphNumber(lesson, checkpointAnswers));
+  const resumeTarget = useRef(getReaderResumeAnchor(lesson, checkpointAnswers));
   const sections = lesson.sections.map((section, index) => ({
     ...section,
     start: 1 + lesson.sections.slice(0, index).reduce((count, previous) => count + previous.paragraphs.length, 0),
@@ -108,36 +112,44 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
     setActiveQuestionIndex(null);
     setActiveBoundary(null);
     restored.current = true;
-    pendingScroll.current = boundary < paragraphCount ? boundary + 1 : "finish";
+    pendingScroll.current = boundary < paragraphCount
+      ? { kind: "paragraph", number: boundary + 1 } : { kind: "finish" };
     requestAnimationFrame(flushScroll);
   }
 
-  function paragraphY(number: number) {
-    const position = paragraphPositions.current[number];
-    if (!position) return undefined;
-    const sectionY = sectionPositions.current[position.sectionIndex];
-    if (sectionY === undefined) return undefined;
-    // Keep the heading visible when continuing into a new section. Parent and
-    // child layout events can arrive in either order.
-    return sections[position.sectionIndex].start === number ? sectionY : sectionY + position.y;
+  function scrollY(anchor: ReaderScrollAnchor) {
+    return resolveReaderScrollY(anchor, {
+      sectionStarts: sections.map(section => section.start),
+      sectionPositions: sectionPositions.current,
+      paragraphPositions: paragraphPositions.current,
+      checkpointPositions: checkpointPositions.current,
+      finishPosition: finishPosition.current,
+    });
   }
 
   function flushScroll() {
-    const target = pendingScroll.current;
-    if (target !== null) {
-      const y = target === "finish" ? finishPosition.current : paragraphY(target);
-      if (y !== undefined && y !== null) {
+    if (pendingScroll.current !== null) {
+      const y = scrollY(pendingScroll.current);
+      if (y !== undefined && scrollRef.current) {
         pendingScroll.current = null;
-        scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: motionAllowed(playPreferences.getSnapshot()) });
+        scrollRef.current.scrollTo({ y, animated: motionAllowed(playPreferences.getSnapshot()) });
       }
       return;
     }
-    if (restored.current || resumeTarget.current === null) return;
-    const resumeSection = sections.findIndex(s => resumeTarget.current !== null && s.start >= resumeTarget.current && s.start <= visibleLimit);
-    const y = resumeSection >= 0 ? sectionPositions.current[resumeSection] : paragraphY(resumeTarget.current);
-    if (y === undefined) return;
-    restored.current = true;
-    requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: false }));
+    if (restored.current || restoreQueued.current || !readingSizeReady || resumeTarget.current === null) return;
+
+    // OnLayout callbacks can arrive before the preceding paragraphs and
+    // captions have finished reflowing. Resolve the latest coordinates in
+    // the next frame, after font preferences have hydrated.
+    restoreQueued.current = true;
+    requestAnimationFrame(() => {
+      restoreQueued.current = false;
+      if (restored.current || resumeTarget.current === null || !scrollRef.current) return;
+      const y = scrollY(resumeTarget.current);
+      if (y === undefined) return;
+      restored.current = true;
+      scrollRef.current.scrollTo({ y, animated: false });
+    });
   }
 
   return (
@@ -194,6 +206,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
       <ScrollView ref={scrollRef} style={styles.viewport} contentContainerStyle={[styles.content, compactWidth && styles.contentCompact]}
         scrollEnabled={activeBoundary === null}
         showsVerticalScrollIndicator={false} onContentSizeChange={flushScroll} scrollEventThrottle={500}
+        onScrollBeginDrag={() => { restored.current = true; }}
         onScroll={event => {
           const bottom = event.nativeEvent.contentOffset.y + event.nativeEvent.layoutMeasurement.height;
           const seen = Object.entries(paragraphPositions.current).filter(([, pos]) => {
@@ -257,7 +270,10 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
                 {(inlineArticleMedia[lesson.id] ?? []).filter(f => f.afterParagraphId ? f.afterParagraphId === paragraphId : f.afterParagraphCount === number)
                   .map(figure => <ArticleFigure key={`${lesson.id}-${number}-${figure.url}`} figure={figure} />)}
                 {hasGate ? <View testID={`reader-checkpoint-${firstPending.questionIndex}`}
-                  style={styles.checkpoint}>
+                  style={styles.checkpoint} onLayout={event => {
+                    checkpointPositions.current[number] = event.nativeEvent.layout.y;
+                    flushScroll();
+                  }}>
                   <View style={styles.checkpointKicker}>
                     <View style={styles.checkpointDot} accessible={false} />
                     <Text style={styles.checkpointEyebrow}>ΣΤΑΣΗ ΓΝΩΣΗΣ</Text>
@@ -382,41 +398,41 @@ const styles = StyleSheet.create({
   track: { height: 4, borderRadius: 3, overflow: "hidden", backgroundColor: reading.border },
   fill: { height: 4, backgroundColor: reading.accent },
   viewport: { flex: 1 },
-  content: { paddingHorizontal: 24, paddingTop: 30, paddingBottom: 52,
+  content: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 46,
     width: "100%", maxWidth: 620, alignSelf: "center" },
   contentCompact: { paddingHorizontal: 18 },
-  articleLabel: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 13 },
+  articleLabel: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
   articleLabelDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
   eyebrow: { color: reading.accent, fontSize: 11, lineHeight: 19, letterSpacing: 0.45, flexShrink: 1 },
   title: { color: reading.heading, fontSize: 32, lineHeight: 41,
     fontWeight: "700", letterSpacing: -0.3, marginBottom: 12 },
   titleCompact: { fontSize: 29, lineHeight: 38 },
   metadata: { flexDirection: "row", flexWrap: "wrap", alignItems: "center",
-    justifyContent: "space-between", gap: 8, marginBottom: 16 },
-  titleRule: { width: 56, height: 2, borderRadius: 2, backgroundColor: reading.border, marginBottom: 25 },
+    justifyContent: "space-between", gap: 8, marginBottom: 12 },
+  titleRule: { width: 56, height: 2, borderRadius: 2, backgroundColor: reading.border, marginBottom: 22 },
   sourceControl: { minHeight: 44, justifyContent: "center", paddingHorizontal: 4 },
   link: { color: reading.accent, fontSize: 12, lineHeight: 20 },
   // Lead paragraph is visually distinct without sacrificing its type size.
   intro: { color: reading.heading, borderLeftWidth: 2, borderLeftColor: "#615B87",
-    paddingLeft: 17, marginBottom: 28 },
+    paddingLeft: 17, marginBottom: 24 },
   sources: { backgroundColor: reading.surface, borderRadius: 16, borderWidth: 1,
     borderColor: reading.border, padding: 16, marginBottom: 24, gap: 8 },
   cardTitle: { color: reading.heading, fontSize: 22, lineHeight: 31, fontWeight: "700" },
   note: { backgroundColor: reading.surface, borderLeftWidth: 3, borderLeftColor: reading.accent,
     borderRadius: 12, padding: 18, marginBottom: 24, gap: 8 },
   noteText: { color: reading.text },
-  coverBlock: { marginBottom: 28 },
+  coverBlock: { marginBottom: 22 },
   // Reserve cover space before remote images load and keep native image zoom.
   cover: { width: "100%", aspectRatio: 16 / 10, minHeight: 180, maxHeight: 330, borderRadius: 15 },
   creditControl: { minHeight: 44, justifyContent: "center", paddingVertical: 8 },
   readingHint: { color: reading.muted, fontSize: 14, lineHeight: 23, marginBottom: 20 },
-  section: { paddingTop: 24, borderTopWidth: 1, borderColor: reading.border, marginBottom: 22 },
-  sectionKicker: { flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 10 },
+  section: { paddingTop: READER_SECTION_TOP_PADDING, borderTopWidth: 1, borderColor: reading.border, marginBottom: 12 },
+  sectionKicker: { flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 8 },
   sectionPin: { width: 6, height: 6, borderRadius: 3, backgroundColor: reading.accent },
   sectionNumber: { color: reading.accent, fontSize: 10, lineHeight: 18, letterSpacing: 1 },
-  sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "700", marginBottom: 22 },
+  sectionTitle: { color: reading.heading, fontSize: 25, lineHeight: 34, fontWeight: "700", marginBottom: 18 },
   sectionTitleCompact: { fontSize: 23, lineHeight: 32 },
-  paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 24 },
+  paragraph: { color: reading.text, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", marginBottom: 22 },
   checkpoint: { marginBottom: 26, borderWidth: 1, borderLeftWidth: 3,
     borderColor: reading.border, borderLeftColor: reading.accent,
     backgroundColor: reading.surface, borderRadius: 16, padding: 14 },
