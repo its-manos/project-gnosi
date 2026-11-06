@@ -54,9 +54,9 @@ assert.deepEqual(resumed, legacyAnswered, "pre-shuffle rounds resume with their 
 assert.equal(quickQuizStreaks(resumed.round).current, 1);
 const recentlyDealt = [];
 const allDealt = new Set();
-let recalled = false;
 let firstMiss;
 for (let number = 1; number <= 15; number++) {
+  const seenBefore = progress.seen;
   progress = startQuickQuiz(progress, () => 0.5);
   const { id, questions } = progress.round;
   const ids = questions.map(question => question.id);
@@ -67,9 +67,9 @@ for (let number = 1; number <= 15; number++) {
   recentlyDealt.push(ids);
   if (recentlyDealt.length > 2) recentlyDealt.shift();
   for (const id of ids) allDealt.add(id);
-  if (number > 1 && ids.includes(firstMiss)) {
-    assert.ok(number >= 4);
-    recalled = true;
+  if (number === 4) {
+    assert.ok(ids.includes(firstMiss), "round four reserves a slot for the first miss even with unseen questions available");
+    assert.ok(ids.filter(id => id !== firstMiss).every(id => !seenBefore[id]), "the other four slots stay fresh");
   }
   assert.equal(startQuickQuiz(progress), progress, "opening an incomplete round resumes it");
   const firstToken = questionToken(progress.round);
@@ -97,10 +97,29 @@ for (let number = 1; number <= 15; number++) {
   assert.equal(progress.bestScore, number === 1 ? 4 : 5);
   assert.equal(progress.bestStreak, number === 1 ? 2 : 5);
   if (number === 1) assert.deepEqual(progress.missed, [firstMiss]);
-  if (recalled) assert.ok(!progress.missed.includes(firstMiss));
+  if (number >= 4) assert.ok(!progress.missed.includes(firstMiss), "a correct recall clears the miss");
   assert.deepEqual(restore(progress), progress);
 }
-assert.ok(recalled, "a miss returns after a gap and a correct recall clears it");
 assert.equal(allDealt.size, quickQuizQuestions.length);
+
+const easyMiss = quickQuizQuestions.find(question => question.difficulty === "easy").id;
+const hardMiss = quickQuizQuestions.find(question => question.difficulty === "hard").id;
+const multipleMisses = restore({
+  ...emptyQuickQuiz(), roundsCompleted: 4, seen: { [easyMiss]: 2, [hardMiss]: 1 }, missed: [easyMiss, hardMiss],
+});
+const recallRound = startQuickQuiz(multipleMisses, () => 0.5).round;
+assert.deepEqual(recallRound.questions.map(question => question.id).filter(id => multipleMisses.missed.includes(id)),
+  [hardMiss], "reserve one recall slot for the oldest eligible miss across difficulties");
+
+const allMissed = quickQuizQuestions.map(question => question.id);
+const saturated = restore({
+  ...emptyQuickQuiz(), roundsCompleted: 6, missed: allMissed,
+  seen: Object.fromEntries(allMissed.map((id, index) => [id, index % 6 + 1])),
+});
+const saturatedIds = startQuickQuiz(saturated, () => 0.5).round.questions.map(question => question.id);
+assert.equal(new Set(saturatedIds).size, 5,
+  "a bank of missed questions can still deal a full round");
+assert.ok(saturatedIds.every(id => saturated.seen[id] <= 4), "fallback still respects the two-round gap");
+
 assert.throws(() => readQuickQuiz(JSON.stringify({ version: 2, ...progress })), /invalid_quick_quiz_progress/);
 console.log("Quick Quiz selection, choice shuffling, resume, scoring, recall and duplicate guards passed.");

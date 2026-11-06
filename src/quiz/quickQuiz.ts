@@ -7,6 +7,7 @@ import type { ChoiceQuestion, QuestionToken, QuizSession } from "./types";
 
 export const QUICK_QUIZ_SIZE = 5;
 const difficulties = ["easy", "easy", "medium", "medium", "hard"] as const;
+const RECALL_GAP = 3;
 const bankById = new Map(quickQuizQuestions.map(question => [question.id, question]));
 
 export type QuickQuizProgress = {
@@ -58,25 +59,36 @@ function shuffleChoices(question: ChoiceQuestion, random: () => number): ChoiceQ
 export function startQuickQuiz(progress: QuickQuizProgress, random = Math.random): QuickQuizProgress {
   if (progress.round && !progress.round.completed) return progress;
   const roundNumber = progress.roundsCompleted + 1;
+  const missed = new Set(progress.missed);
+  const candidates = quickQuizQuestions.map(question => ({
+    question, lastSeen: progress.seen[question.id] ?? 0, missed: missed.has(question.id), tie: random(),
+  }));
+  const oldestFirst = (a: typeof candidates[number], b: typeof candidates[number]) =>
+    a.lastSeen - b.lastSeen || a.tie - b.tie;
+  // Reserve one slot across the whole round so easy questions cannot crowd out an older miss.
+  const recall = candidates.filter(candidate => candidate.missed && candidate.lastSeen > 0 &&
+    roundNumber - candidate.lastSeen >= RECALL_GAP).sort(oldestFirst)[0];
+  const recallIndex = recall ? difficulties.indexOf(recall.question.difficulty) : -1;
   const usedCategories = new Set<string>();
   const usedQuestions = new Set<string>();
-  let recalled = false;
-  const candidates = quickQuizQuestions.map(question => ({ question, tie: random() }));
-  const questions = difficulties.map(difficulty => {
+  if (recall) {
+    usedCategories.add(recall.question.categoryId);
+    usedQuestions.add(recall.question.id);
+  }
+  const priority = (candidate: typeof candidates[number]) => {
+    if (candidate.lastSeen === 0) return 0;
+    if (roundNumber - candidate.lastSeen < RECALL_GAP) return 3;
+    // Extra misses can fill a slot when its difficulty runs out of alternatives.
+    return candidate.missed ? 2 : 1;
+  };
+  const questions = difficulties.map((difficulty, index) => {
+    if (recall && index === recallIndex) return recall.question;
     const eligible = candidates.filter(({ question }) =>
       question.difficulty === difficulty && !usedQuestions.has(question.id));
-    const priority = (question: ChoiceQuestion) => {
-      const lastSeen = progress.seen[question.id];
-      if (lastSeen === undefined) return 0;
-      const age = roundNumber - lastSeen;
-      if (!recalled && age >= 3 && progress.missed.includes(question.id)) return 1;
-      return age >= 3 ? 2 : 3;
-    };
-    eligible.sort((a, b) => priority(a.question) - priority(b.question) ||
+    eligible.sort((a, b) => priority(a) - priority(b) ||
       Number(usedCategories.has(a.question.categoryId)) - Number(usedCategories.has(b.question.categoryId)) ||
-      (progress.seen[a.question.id] ?? 0) - (progress.seen[b.question.id] ?? 0) || a.tie - b.tie);
+      oldestFirst(a, b));
     const question = eligible[0].question;
-    recalled ||= priority(question) === 1;
     usedCategories.add(question.categoryId);
     usedQuestions.add(question.id);
     return question;
