@@ -44,6 +44,7 @@ assert.equal(measurement.props.accessible, false);
 const measureView = nodes(tree).find(node => node.type === "View" && node.props.importantForAccessibility === "no-hide-descendants");
 assert.ok(measureView);
 assert.equal(measureView.props.pointerEvents, "none", "Hidden measurements cannot intercept taps");
+assert.equal(measureView.props.accessibilityElementsHidden, true, "Hidden measurements must not be read twice on iOS");
 measurement.props.onTextLayout({ nativeEvent: { lines: [{}, {}] } });
 tree = render("Σύντομη περιγραφή της εικόνας.");
 assert.equal(getToggle(tree), undefined);
