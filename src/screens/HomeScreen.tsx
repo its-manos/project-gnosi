@@ -139,7 +139,6 @@ export default function HomeScreen({
               <Text testID="home-level" style={styles.levelNumber} numberOfLines={1}
                 adjustsFontSizeToFit>{profileReady ? profile.level : "—"}</Text>
             </View>
-            <Text style={styles.levelCaption}>Επίπεδο</Text>
           </MotionPressable> : null}
         </View>
       </MotionView>
@@ -262,10 +261,9 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
   logo: { color: colors.accentLight, fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 2.4 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
-  levelBadge: { height: 50, flexDirection: "row", alignItems: "center", gap: 5 },
+  levelBadge: { width: 50, height: 50 },
   levelRing: { position: "absolute", top: 0, left: 0 },
   levelCenter: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },
-  levelCaption: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: "700" },
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
   hero: { padding: 18, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
     overflow: "hidden", backgroundColor: "#1B2434", gap: 10 },
