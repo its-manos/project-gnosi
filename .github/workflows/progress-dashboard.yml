@@ -47,6 +47,7 @@ on:
       - "src/components/MetricCard.tsx"
       - "src/utils/categoryCompletion.ts"
       - "scripts/test-progress-layout.cjs"
+      - "scripts/test-learning-insights-details.cjs"
       - "scripts/test-progress-track.cjs"
       - "scripts/test-navigation-rules.cjs"
       - "scripts/test-profile-layout.cjs"
@@ -76,6 +77,7 @@ jobs:
       - run: npm run typecheck
       - run: node scripts/test-navigation-rules.cjs
       - run: node scripts/test-progress-layout.cjs
+      - run: node scripts/test-learning-insights-details.cjs
       - run: node scripts/test-lesson-results.cjs
       - run: node scripts/test-weekly-review.cjs
       - run: node scripts/test-progress-track.cjs
