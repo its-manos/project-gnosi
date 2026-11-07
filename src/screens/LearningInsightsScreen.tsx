@@ -29,9 +29,14 @@ export default function LearningInsightsScreen({
 }: Props) {
   const [view, setView] = useState<LearningInsightsView>(initialView);
   const [lessonsExpanded, setLessonsExpanded] = useState(false);
-  const { width, fontScale } = useWindowDimensions();
+  const [completedLimit, setCompletedLimit] = useState(12);
+  const { width, height, fontScale } = useWindowDimensions();
   const compact = width < 360 || fontScale >= 1.3;
-  const wide = width >= 600 && !compact;
+  const wide = width >= 600 && fontScale < 1.3;
+  // On short phones show one row initially; the rest stay one tap away.
+  // At large text sizes the grid becomes a single readable column.
+  const singleColumn = width < 325 || fontScale >= 1.3;
+  const subjectLimit = height < 740 || fontScale >= 1.3 ? 2 : 4;
   const { model, ready: knowledgeReady } = useMistakesModel();
 
   const readingTab = view === "reading";
@@ -78,7 +83,7 @@ export default function LearningInsightsScreen({
       </MotionView>
 
       <ScrollView key={view} style={styles.scroll} contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false} alwaysBounceVertical={false} bounces={false}>
         <MotionView entranceDelay={90} testID="insights-overview"
           style={[styles.overview, readingTab && styles.readingOverview]}>
           <View style={[styles.overviewAccent, readingTab && styles.readingAccentBar]}
@@ -120,7 +125,7 @@ export default function LearningInsightsScreen({
         {readingTab ? <View testID="learning-insights-reading" style={styles.details}>
           {lessonProgressLoaded ? (
             <MotionView entranceDelay={150}>
-              <CategoryProgress detail singleColumn={compact} threeColumn={wide} />
+              <CategoryProgress detail detailLimit={subjectLimit} singleColumn={singleColumn} threeColumn={wide} />
             </MotionView>
           ) : <Text style={styles.empty}>Φόρτωση μαθημάτων…</Text>}
           {lessonProgressLoaded && completedLessons.length > 0 ? <>
@@ -128,7 +133,10 @@ export default function LearningInsightsScreen({
               <Pressable testID="insights-completed-toggle"
                 style={({ pressed }) => [styles.disclosure, pressed && styles.disclosurePressed]}
                 accessibilityRole="button" accessibilityState={{ expanded: lessonsExpanded }}
-                onPress={() => setLessonsExpanded(previous => !previous)}>
+                onPress={() => {
+                  setLessonsExpanded(previous => !previous);
+                  setCompletedLimit(12);
+                }}>
                 <View style={styles.disclosureCopy}>
                   <Text style={styles.disclosureTitle}>Ολοκληρωμένα μαθήματα</Text>
                 </View>
@@ -138,8 +146,8 @@ export default function LearningInsightsScreen({
                 <Text style={styles.chevron}>{lessonsExpanded ? "⌃" : "⌄"}</Text>
               </Pressable>
             </MotionView>
-            {lessonsExpanded ? <View style={styles.lessons}>
-              {completedLessons.map(lesson => (
+            {lessonsExpanded ? <MotionView entranceDelay={0} style={styles.lessons}>
+              {completedLessons.slice(0, completedLimit).map(lesson => (
                 <Pressable key={lesson.id} style={({ pressed }) => [
                   styles.lesson, pressed && styles.lessonPressed,
                 ]} accessibilityRole="button" onPress={() => onOpenLesson(lesson.id)}>
@@ -148,13 +156,19 @@ export default function LearningInsightsScreen({
                   <Text style={styles.chevron}>›</Text>
                 </Pressable>
               ))}
-            </View> : null}
+              {completedLessons.length > completedLimit ? <Pressable testID="insights-completed-more"
+                accessibilityRole="button" style={({ pressed }) => [styles.moreLessons, pressed && styles.disclosurePressed]}
+                onPress={() => setCompletedLimit(value => value + 12)}>
+                <Text style={styles.moreLessonsText}>Περισσότερα μαθήματα ({completedLessons.length - completedLimit}) ↓</Text>
+              </Pressable> : null}
+            </MotionView> : null}
           </> : lessonProgressLoaded
             ? <Text style={styles.empty}>Τα ολοκληρωμένα μαθήματα θα εμφανιστούν εδώ.</Text>
             : null}
         </View> : <View testID="learning-insights-knowledge" style={styles.details}>
           <MotionView entranceDelay={150}>
-            <KnowledgeMastery onOpen={onKnowledgeReview} mapOnly detail singleColumn={compact} threeColumn={wide} />
+            <KnowledgeMastery onOpen={onKnowledgeReview} mapOnly detail subjectLimit={subjectLimit}
+              singleColumn={singleColumn} threeColumn={wide} />
           </MotionView>
         </View>}
       </ScrollView>
@@ -167,7 +181,7 @@ const styles = StyleSheet.create({
     flex: 1, minHeight: 0, width: "100%", maxWidth: 720,
     alignSelf: "center", overflow: "hidden", backgroundColor: "#0D1827",
   },
-  foreground: { flex: 1, minHeight: 0, paddingHorizontal: 18, paddingTop: 7 },
+  foreground: { flex: 1, minHeight: 0, paddingHorizontal: 16, paddingTop: 7 },
   header: { minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   back: { width: 82, minHeight: 44, justifyContent: "center", borderRadius: 12 },
   backPressed: { backgroundColor: "rgba(169, 155, 255, 0.10)" },
@@ -178,7 +192,7 @@ const styles = StyleSheet.create({
   headerSide: { width: 82 },
   tabs: {
     flexDirection: "row", padding: 4, gap: 4, borderRadius: 15,
-    backgroundColor: "#171B2C", borderWidth: 1, borderColor: "#34364D", marginTop: 10,
+    backgroundColor: "#171B2C", borderWidth: 1, borderColor: "#34364D", marginTop: 8,
   },
   tab: { flex: 1, minHeight: 44, justifyContent: "center", alignItems: "center", borderRadius: 11, paddingHorizontal: 6 },
   selected: { backgroundColor: "#322D4E" },
@@ -188,12 +202,12 @@ const styles = StyleSheet.create({
   selectedText: { color: "#C1B5FF", fontWeight: "900" },
   selectedReadingText: { color: "#9CD2D1" },
   scroll: { flex: 1, minHeight: 0 },
-  content: { paddingTop: 16, paddingBottom: 36, gap: 14 },
+  content: { paddingTop: 11, paddingBottom: 15, gap: 11 },
   // Matched dimensions in both tabs; only semantic values and color accents differ.
   overview: {
     backgroundColor: "#1B2035", borderWidth: 1, borderColor: "#51496D",
-    borderRadius: 20, paddingHorizontal: 16, paddingVertical: 14,
-    minHeight: 112, justifyContent: "center", overflow: "hidden",
+    borderRadius: 19, paddingHorizontal: 15, paddingVertical: 10,
+    minHeight: 100, justifyContent: "center", overflow: "hidden",
   },
   readingOverview: { backgroundColor: "#192A35", borderColor: "#385963" },
   overviewAccent: {
@@ -211,19 +225,19 @@ const styles = StyleSheet.create({
     fontWeight: "900", fontVariant: ["tabular-nums"] },
   overviewValueCompact: { fontSize: 30, lineHeight: 38 },
   overviewTotal: { color: colors.textMuted, fontSize: 17, lineHeight: 27, fontWeight: "700" },
-  ring: { width: 82, height: 82, justifyContent: "center", alignItems: "center" },
+  ring: { width: 74, height: 74, justifyContent: "center", alignItems: "center" },
   ringPercent: {
     position: "absolute", color: "#B8AAFF", fontSize: 18, lineHeight: 24,
     fontWeight: "900", fontVariant: ["tabular-nums"],
   },
-  details: { gap: 12 },
+  details: { gap: 10 },
   empty: {
     color: colors.textMuted, fontSize: 13, lineHeight: 21, paddingHorizontal: 6, paddingVertical: 9,
   },
   disclosure: {
-    minHeight: 64, flexDirection: "row", alignItems: "center", gap: 10,
+    minHeight: 52, flexDirection: "row", alignItems: "center", gap: 10,
     backgroundColor: "#18232F", borderWidth: 1, borderColor: "#38515B",
-    borderRadius: 17, paddingHorizontal: 14, paddingVertical: 9,
+    borderRadius: 15, paddingHorizontal: 13, paddingVertical: 7,
   },
   disclosurePressed: { backgroundColor: "#233947" },
   disclosureCopy: { flex: 1, minWidth: 0, gap: 3 },
@@ -250,4 +264,6 @@ const styles = StyleSheet.create({
   },
   lessonCheckText: { color: "#94D7BD", fontSize: 12, fontWeight: "800" },
   lessonText: { flex: 1, color: colors.textBody, fontSize: 13, lineHeight: 20 },
+  moreLessons: { minHeight: 46, justifyContent: "center", paddingHorizontal: 14 },
+  moreLessonsText: { color: "#9CD2D1", fontSize: 13, fontWeight: "800" },
 });
