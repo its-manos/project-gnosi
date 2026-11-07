@@ -71,7 +71,11 @@ export default function HomeScreen({
   const [contentHeight, setContentHeight] = useState(0);
   const [cardHeights, setCardHeights] = useState({ hero: 0, quiz: 0 });
   const availableHeight = availableScreenHeight(viewportHeight, height);
-  const density = availableHeight < 610 ? 2 : availableHeight < 740 ? 1 : 0;
+  // Hangman adds a fifth section. Reserve its 66pt card plus the largest
+  // section gap before allocating room to the original dashboard. Use only
+  // the viewport here: content measurements must not create a density loop.
+  const dashboardHeight = Math.max(0, availableHeight - 78);
+  const density = dashboardHeight < 610 ? 2 : dashboardHeight < 740 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
   // Measurements influence only interior decoration: never the viewport
@@ -300,7 +304,7 @@ const styles = StyleSheet.create({
   // overflow remains scrollable on shorter screens and with large text.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
     paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
-  // Compact screens save vertical room in spacing, not by shrinking artwork.
+  // Compact screens reduce spacing; tight screens also use smaller artwork.
   compactContent: { gap: 8, paddingTop: 4, paddingBottom: 4 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
   compactHero: { padding: 14, gap: 8 },

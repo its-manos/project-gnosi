@@ -620,7 +620,7 @@ assert.equal(scroll.props.scrollEnabled, true, "overflow is scrollable at compac
 scroll.props.onContentSizeChange(360, 701);
 scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "fitted tight content cannot be scrolled");
-scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
+scroll.props.onLayout({ nativeEvent: { layout: { height: 880 } } });
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[1], false,
   "available height growth restores spacious styling");
@@ -657,7 +657,7 @@ const resetTree = renderMeasuredHome();
 assert.equal(nodes(resetTree).find(node => node.props?.testID === "home-daily-answered")
   .props.style[1].fontSize, 18);
 assert.equal(nodes(resetTree).find(node => node.type === "HomeLessonBackdrop").props.scale, 1);
-scroll.props.onLayout({ nativeEvent: { layout: { height: 790 } } });
+scroll.props.onLayout({ nativeEvent: { layout: { height: 880 } } });
 scroll = scrollNode();
 // Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
@@ -667,6 +667,25 @@ assert.equal(scroll.props.scrollEnabled, true, "genuine overflow remains scrolla
 scroll.props.onContentSizeChange(360, 554);
 scroll = scrollNode();
 assert.equal(scroll.props.scrollEnabled, false, "drag turns off when content fits again");
+
+// Hangman must participate in the viewport budget. A phone with 650pt
+// available used to choose compact and overflow after adding the fifth card.
+scroll.props.onLayout({ nativeEvent: { layout: { height: 650 } } });
+scroll = scrollNode();
+assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
+  "reserve the Hangman card before selecting the tight phone layout");
+const phoneTree = renderMeasuredHome();
+const phoneWorld = nodes(phoneTree).find(node => node.props?.testID === "home-category-history");
+assert.equal(phoneWorld.props.style({ pressed: false })[2].minHeight, 67);
+const phoneArtwork = nodes(phoneWorld).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
+assert.equal(phoneArtwork.props.style[1].height, 48,
+  "tight phones reclaim height in both artwork rows");
+assert.equal(nodes(phoneTree).find(node => node.props?.children === "Μάθημα 0")
+  .props.style[2].fontSize, 18, "tight phones use the readable compact lesson title");
+assert.equal(nodes(phoneTree).filter(node => node.props?.testID === "home-hangman").length, 1);
+scroll.props.onContentSizeChange(360, 650);
+assert.equal(scrollNode().props.scrollEnabled, false);
 
 // Preserve the one-point measurement tolerance and resize behavior.
 homeScrollState = [0, 0];
