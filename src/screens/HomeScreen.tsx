@@ -71,11 +71,11 @@ export default function HomeScreen({
   const [contentHeight, setContentHeight] = useState(0);
   const [cardHeights, setCardHeights] = useState({ hero: 0, quiz: 0 });
   const availableHeight = availableScreenHeight(viewportHeight, height);
-  // Hangman adds a fifth section. Reserve its 66pt card plus the largest
-  // section gap before allocating room to the original dashboard. Use only
-  // the viewport here: content measurements must not create a density loop.
-  const dashboardHeight = Math.max(0, availableHeight - 78);
-  const density = dashboardHeight < 610 ? 2 : dashboardHeight < 740 ? 1 : 0;
+  // Reserve space for the Hangman card and Mini Games heading before sizing
+  // the other dashboard sections. Keep density based on the viewport only:
+  // content measurements must not create a density loop.
+  const dashboardHeight = Math.max(0, availableHeight - 102);
+  const density = dashboardHeight < 590 ? 2 : dashboardHeight < 720 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
   // Bound the normal portrait dashboard to the measured native viewport.
@@ -285,7 +285,12 @@ export default function HomeScreen({
           })}
         </View>
       </MotionView>
-      <MotionPressable entranceDelay={290} testID="home-hangman" style={[styles.hangmanCard, fitDashboard && styles.fittedHangman]}
+      <View testID="home-minigames-section" style={[styles.miniGames, compact && styles.compactMiniGames, tight && styles.tightMiniGames]}>
+        <View style={styles.sectionRow}>
+          <Text accessibilityRole="header" style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Μίνι παιχνίδια</Text>
+          <View accessible={false} pointerEvents="none" style={styles.sectionRule} />
+        </View>
+        <MotionPressable entranceDelay={290} testID="home-hangman" style={[styles.hangmanCard, fitDashboard && styles.fittedHangman]}
         onPress={onOpenHangman} accessibilityRole="button" accessibilityLabel="Παίξε Κρεμάλα">
         <MotionCardGlint tone="lesson" delayMs={4200} />
         <View accessible={false} style={styles.hangmanIcon}><Text style={styles.hangmanGlyph}>Α_Ω</Text></View>
@@ -294,7 +299,8 @@ export default function HomeScreen({
           <Text style={styles.hangmanMeta}>Μια λέξη, μια μικρή ανακάλυψη</Text>
         </View>
         <MotionCtaArrow><Text accessible={false} style={styles.hangmanArrow}>→</Text></MotionCtaArrow>
-      </MotionPressable>
+        </MotionPressable>
+      </View>
       </ScrollView>
     </View>
   );
@@ -391,6 +397,9 @@ const styles = StyleSheet.create({
   tightCategoryPlatform: { width: 40, height: 40 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
+  miniGames: { gap: 6 },
+  compactMiniGames: { gap: 4 },
+  tightMiniGames: { gap: 3 },
   hangmanCard: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 66,
     borderRadius: 16, borderWidth: 1, borderColor: "#6D5947", backgroundColor: "#292536",
     paddingHorizontal: 14, paddingVertical: 10, overflow: "hidden" },
