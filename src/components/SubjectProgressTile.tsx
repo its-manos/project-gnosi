@@ -67,7 +67,7 @@ export default function SubjectProgressTile({
       minimumFontScale={0.86}>{title}</Text>
     <View style={styles.foot}>
       <Text style={[styles.footLabel, reading && styles.readingFootLabel]}>
-        {reading ? "ΜΑΘΗΜΑΤΑ" : "ΚΑΤΑΚΤΗΣΗ"}
+        {reading ? "ΜΑΘΗΜΑΤΑ" : "ΔΙΟΡΘΩΜΕΝΑ"}
       </Text>
       <Text style={[styles.count, reading && styles.readingCount,
         complete && (reading ? styles.readingCountComplete : styles.knowledgeCountComplete)]}>
