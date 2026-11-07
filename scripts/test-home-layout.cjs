@@ -545,11 +545,24 @@ assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
-assert.equal(homeSections.length, 5, "five actionable Home sections share the available height");
-assert.equal(homeSections.at(-1).props.testID, "home-hangman",
-  "playable hangman ends the dashboard below the knowledge worlds");
+assert.equal(homeSections.length, 5, "five Home sections share the available height");
+const miniGamesSection = homeSections.at(-1);
+assert.equal(miniGamesSection.props.testID, "home-minigames-section",
+  "Mini Games ends the dashboard below the knowledge worlds");
 assert.equal(homeSections.at(-2).props.testID, "home-exploration");
-assert.equal(homeSections.at(-1).props.onPress, props.onOpenHangman);
+const miniGamesHeading = nodes(miniGamesSection).find(node => node.type === "Text"
+  && node.props?.children === "Μίνι παιχνίδια");
+assert.ok(miniGamesHeading, "Mini Games heading appears above Hangman");
+assert.equal(miniGamesHeading.props.accessibilityRole, "header");
+assert.equal(miniGamesHeading.props.style[0].fontWeight, "800",
+  "Mini Games shares the knowledge-world section typography");
+assert.equal(nodes(miniGamesSection).filter(node => node.props?.testID === "home-hangman").length, 1,
+  "Hangman remains the only playable mini game");
+assert.equal(nodes(miniGamesSection).find(node => node.props?.testID === "home-hangman").props.onPress,
+  props.onOpenHangman, "Hangman navigation remains intact");
+const miniGamesChildren = [miniGamesSection.props.children].flat(Infinity);
+assert.equal(miniGamesChildren[0].props.children[0].props.children, "Μίνι παιχνίδια",
+  "Mini Games heading precedes its playable card");
 
 assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
