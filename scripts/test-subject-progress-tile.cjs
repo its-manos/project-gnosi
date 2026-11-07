@@ -65,7 +65,7 @@ const knowledge = subject({ ...base, tone: "knowledge", completed: 3, total: 10,
   percent: 30, threeColumn: true, testID: "knowledge-subject-space" });
 assert.equal(knowledge.props.style[1].width, "31.7%");
 assert.equal(knowledge.props.style[4].backgroundColor, "#262840");
-assert.ok(text(knowledge).includes("ΚΑΤΑΚΤΗΣΗ"));
+assert.ok(text(knowledge).includes("ΔΙΟΡΘΩΜΕΝΑ"));
 assert.equal(nodes(knowledge).find(n => n.type === "ProgressBarFill").props.tone, "knowledge");
 assert.equal(nodes(knowledge).find(n => n.type === "ProgressTrack").props.tone, "knowledge");
 const knowledgeBadge = nodes(knowledge).find(n => n.type === "Text" && text(n) === "30%");
