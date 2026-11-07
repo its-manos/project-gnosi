@@ -225,7 +225,7 @@ const entranceSource = fs.readFileSync(
 for (const [delay, section] of homeEntranceOrder) {
   const expected = section === "topBar" ? `<MotionView entranceDelay={${delay}} style={styles.topBar}`
     : section === "home-primary-action" ? `<MotionPressable entranceDelay={${delay}} testID="home-primary-action"`
-    : section === "actions" ? `<MotionView entranceDelay={${delay}} style={styles.actions}`
+    : section === "actions" ? `<MotionView entranceDelay={${delay}} style={{ ...styles.actions,`
     : `<MotionView entranceDelay={${delay}} testID="${section}"`;
   assert.ok(entranceSource.includes(expected),
     `Home entrance order must preserve the established ${section} delay of ${delay} ms`);
