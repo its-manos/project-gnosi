@@ -647,10 +647,10 @@ assert.equal(scroll.props.scrollEnabled, false);
 // without affecting the knowledge-world grid or viewport density.
 const tallTree = renderMeasuredHome();
 const tallWorld = nodes(tallTree).find(node => node.props?.testID === "home-category-history");
-assert.equal(nodes(tallWorld).find(node => node.type === worldArtwork.history).props.size, 46,
-  "tall Home expands illustrations but caps them at 46pt");
+assert.equal(nodes(tallWorld).find(node => node.type === worldArtwork.history).props.size, 42,
+  "tall phones expand the illustrations up to the safe four-column width cap");
 assert.equal(nodes(tallWorld).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62).props.style[1].width, 55,
+  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62).props.style[1].width, 50,
   "tall artwork gets a proportional platform");
 homeWindowWidth = 320;
 const narrowWorld = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
