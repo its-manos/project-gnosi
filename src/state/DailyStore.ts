@@ -15,6 +15,7 @@ type Storage = { getItem: (key: string) => Promise<string | null>; setItem: (key
 export type DailySnapshot = { ready: boolean; doc: DailyDocument; status: SyncStatus; error: string; userId: string | null };
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 export class DailyStore {
+  onQuestionAnswer?: (question: import("../quiz/types").QuizQuestion, value: unknown) => void;
   readonly key: string;
   private doc = emptyDailyDocument();
   private dirty = false;
@@ -150,6 +151,11 @@ export class DailyStore {
     const rewards = record.completed ? awardQuiz(this.doc.rewards ?? {}, `day:${record.dateKey}`, record.questionIds.map(id => adaptDailyQuestion(questions.find(q => q.id === id)!)), record.answers, "daily") : this.doc.rewards;
     this.change({ ...this.doc, clock: stamp[0], rewards, days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history, ...(details ? {details} : {}) } } });
     if (this.active) {
+      for (const [slot, answer] of Object.entries(record.answers)) {
+        if (current?.record.answers[slot] !== undefined) continue;
+        const q = questions.find(q => q.id === record.questionIds[Number(slot)]);
+        if (q) this.onQuestionAnswer?.(adaptDailyQuestion(q), answer);
+      }
       const run = current?.run ?? stamp, base = `daily:${record.dateKey}:${run[0]}:${run[1]}`;
       if (record.completed) emitPlayFeedback({ id: `${base}:complete`, kind: "complete", scope: this.userId ?? "guest", xp: totalRewardXP(this.doc.rewards ?? {}) - beforeXP, label: "Η καθημερινή πρόκληση ολοκληρώθηκε" });
       else for (const [slot, answer] of Object.entries(record.answers)) {

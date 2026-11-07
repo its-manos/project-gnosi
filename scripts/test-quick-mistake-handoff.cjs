@@ -1,0 +1,33 @@
+const assert=require('node:assert/strict'),{load}=require('./helpers/load-typescript.cjs');
+const {LearningStore}=load('src/state/LearningStore.ts');
+const {playQuickQuiz,startQuickQuiz,emptyQuickQuiz}=load('src/quiz/quickQuiz.ts');
+const {questionToken}=load('src/quiz/engine.ts');
+const {mistakeKey,buildMistakeModel}=load('src/knowledge/mistakes.ts');
+const disk=new Map(),storage={getItem:async k=>disk.get(k)??null,setItem:async(k,v)=>{disk.set(k,v);}};
+let slots=[],cursor=0,effects=[];
+const react={useCallback:f=>f,useRef:v=>{const i=cursor++;return slots[i]??(slots[i]={current:v});},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useEffect:f=>effects.push(f)};
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+(async()=>{
+ const store=new LearningStore(null,storage);await store.start();
+ const hook=load('src/hooks/useQuickQuiz.ts',{react,'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'../state/LearningSession':{useLearningSession:()=>({store})}}).useQuickQuiz;
+ const render=()=>{cursor=0;effects=[];return hook(null);};
+ let game=render();const cleanup=effects[0]();await tick();game=render();
+ assert.ok(game.progress);
+ await game.update(current=>startQuickQuiz(current,()=>0.4));game=render();
+ let round=game.progress.round,q=round.questions[0],wrong=(q.content.correctIndex+1)%q.content.answers.length;
+ await game.update(current=>playQuickQuiz(current,round.id,questionToken(round),{type:'answer',value:wrong}));game=render();
+ assert.equal(buildMistakeModel(store.getSnapshot().mistakes).pending.length,1);
+ const saved=JSON.parse(disk.get('@gnosi/quick-quiz/v1/guest'));
+ assert.ok(saved.reviewAnswerTimes[q.id],'source timestamp persists before the shared handoff');
+ cleanup();
+ // Simulate losing the learning write after the Quick Quiz source write.
+ await store.resetGuestProgress();slots=[];game=render();const cleanup2=effects[0]();await tick();game=render();
+ assert.equal(buildMistakeModel(store.getSnapshot().mistakes).pending.length,1,'source restores the lost handoff on reload');
+ const canonical=load('src/knowledge/mistakes.ts').mistakeById.get(q.id).question;
+ store.recordQuestionAnswer(canonical,canonical.content.correctIndex);
+ const cleared=store.getSnapshot().mistakes[mistakeKey(canonical)].correctAt;
+ cleanup2();slots=[];game=render();const cleanup3=effects[0]();await tick();game=render();
+ assert.equal(store.getSnapshot().mistakes[mistakeKey(canonical)].correctAt,cleared);
+ assert.equal(buildMistakeModel(store.getSnapshot().mistakes).pending.length,0,'replaying an older source answer cannot reopen a correction');
+ cleanup3();store.stop();console.log('Quick Quiz mistake handoff passed: saved timestamps, normalized choices, crash recovery and idempotent replay after correction. Native hooks/storage mocked.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

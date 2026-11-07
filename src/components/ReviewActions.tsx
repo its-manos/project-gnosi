@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Lesson } from "../data/lessons";
-import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
+import { useMistakesModel } from "../hooks/useMistakesModel";
 import { useLearningSnapshot } from "../state/LearningSession";
 import ActionButton from "./ActionButton";
 import { ProgressActionHighlight } from "./ProgressMotion";
@@ -23,12 +23,11 @@ export default function ReviewActions({
   inProgressAnsweredCount = 0, inProgressQuestionCount = 0,
   inProgressLessonCount = 0, lessonProgressLoaded = false, onResumeLesson, dense = false,
 }: Props) {
-  const { model, today, ready } = useKnowledgeModel();
+  const { model, ready } = useMistakesModel();
   const learning = useLearningSnapshot();
-  const active = !!(learning.knowledgeSession
-    && !learning.knowledgeSession.completed
-    && learning.knowledgeSession.date === today);
-  const reviewDue = ready && (active || model.due.length > 0);
+  const active = !!(learning.mistakeSession
+    && !learning.mistakeSession.quiz.completed);
+  const reviewDue = ready && (active || model.pending.length > 0);
   const resumableLesson = lessonProgressLoaded && onResumeLesson ? inProgressLesson : null;
   // An ongoing/due review takes priority. Otherwise resume a lesson before
   // offering exploration. Every secondary action stays accessible.
@@ -37,7 +36,7 @@ export default function ReviewActions({
     ? resumableLesson?.title
     : !ready ? "Φόρτωση επανάληψης…"
     : active ? "Συνέχισε εκεί που έμεινες"
-    : model.due.length ? model.due.length + " ερωτήσεις σε περιμένουν"
+    : model.pending.length ? model.pending.length + " ερωτήσεις σε περιμένουν"
     : "Έτοιμος για μια νέα ανακάλυψη;";
   const primaryDetail = resumePrimary
     ? inProgressAnsweredCount + " / " + inProgressQuestionCount + " ερωτήσεις"
@@ -78,13 +77,7 @@ export default function ReviewActions({
           <Text style={styles.arrow}>›</Text>
         </Pressable>
       ) : null}
-      {ready && !reviewDue && model.practice.length > 0 ? (
-        <Pressable style={({ pressed }) => [styles.secondary, dense && styles.secondaryDense, pressed && styles.secondaryPressed]}
-          accessibilityRole="button" onPress={onReview}>
-          <Text style={styles.secondaryText}>Λίγη ελεύθερη εξάσκηση</Text>
-          <Text style={styles.arrow}>›</Text>
-        </Pressable>
-      ) : null}
+
     </View>
   );
 }

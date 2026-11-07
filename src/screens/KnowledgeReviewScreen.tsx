@@ -1,195 +1,93 @@
 import { useEffect, useRef, useState, type ComponentRef } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
 import AtlasCard from "../components/AtlasCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import QuestionStageFooter from "../components/QuestionStageFooter";
 import QuestionStageProgress from "../components/QuestionStageProgress";
+import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import QuizReveal from "../components/QuizReveal";
-import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import SourceLink from "../components/SourceLink";
 import SyncStatus from "../components/SyncStatus";
-import { lessons } from "../data/lessons";
-import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
-import { conceptById } from "../knowledge/concepts";
-import { MASTERY_LABELS } from "../knowledge/model";
-import { isCurrentKnowledgeSession, restoreKnowledgeQuiz } from "../knowledge/session";
+import { useMistakesModel } from "../hooks/useMistakesModel";
+import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
+import { asBuiltinQuestion, currentMistakeSession, mistakeKey } from "../knowledge/mistakes";
+import { requestPracticeCue } from "../play/soundStatus";
 import { calculateQuizResults, questionToken } from "../quiz/engine";
-import type { ChoiceQuestion, QuizSession } from "../quiz/types";
-import { useDailySnapshot, useLearningSession, useLearningSnapshot } from "../state/LearningSession";
+import { useLearningSession, useLearningSnapshot } from "../state/LearningSession";
 import { colors } from "../theme";
-import { getParagraphText } from "../utils/lessonProgress";
-import { shuffledIndices } from "../utils/weeklyReview";
 
 export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }) {
-  const { store } = useLearningSession(), learning = useLearningSnapshot(), daily = useDailySnapshot();
-  const { model, today, ready } = useKnowledgeModel();
+  const { store } = useLearningSession(), learning = useLearningSnapshot();
+  const { model } = useMistakesModel();
+  const saved = learning.mistakeSession, quiz = saved?.quiz;
+  const current = saved ? currentMistakeSession(saved) : true;
+  const q = quiz?.questions[quiz.currentIndex], answer = q && quiz?.answers[q.id];
+  const results = quiz?.completed ? calculateQuizResults(quiz) : null;
+  const active = current && q && quiz && !results;
+  const key = `${quiz?.id}:${q?.id}`;
+  const { action, onActionChange } = useQuestionStageAction(key);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
-  const [sectionFor, setSectionFor] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [showResultsDetail, setShowResultsDetail] = useState(false);
-  const saved = learning.knowledgeSession;
-  let restoredQuiz: QuizSession | null = null;
-  if (saved) {
-    try { restoredQuiz = restoreKnowledgeQuiz(saved); } catch { /* Keep incompatible attempts until explicitly closed. */ }
-  }
-  const quiz = restoredQuiz;
-  const expired = !!saved && (saved.date !== today || !quiz || !isCurrentKnowledgeSession(saved));
-  const q = quiz?.questions[quiz.currentIndex] as ChoiceQuestion | undefined;
-  const answer = q && quiz?.answers[q.id]?.value as number | undefined;
-  const item = q && model.items.find(i => i.question.id === q.id);
-  const concept = item?.conceptId ? conceptById.get(item.conceptId) : undefined;
-  const teachingLesson = concept ? lessons.find(l => l.id === concept.lessonIds[0]) : undefined;
-  const variantIndex = concept?.variants.findIndex(v => v.id === q?.id) ?? -1;
-  const section = concept && variantIndex >= 0 ? teachingLesson?.sections[concept.teachingSections[variantIndex]] : undefined;
-  const completed = quiz?.completed ? calculateQuizResults(quiz) : null;
-  const active = ready && !expired && saved && quiz && q && item && !completed;
-  const pageKey = `${saved?.id}:${quiz?.currentIndex}:${!!completed}:${answer !== undefined}:${expired}`;
-  useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [pageKey]);
-
-  function nextReview(row: NonNullable<typeof item>) {
-    if (row.state === "mastered") return "Η έννοια κατακτήθηκε.";
-    if (row.evidenceStatus === "needs-evidence") return "Χρειάζονται περισσότερες διαφορετικές δοκιμές.";
-    if (row.due) return `Επόμενη επανάληψη: ${row.due.split("-").reverse().join("/")}`;
-    return "Χρειάζονται νέες, διαφορετικές δοκιμές.";
-  }
-
-  function start(mode: "scheduled" | "practice") {
-    if (store.startKnowledgeReview(mode, daily.doc)) setMessage("");
-    else setMessage("Δεν υπάρχουν άλλες διαθέσιμες δοκιμές.");
-  }
-
-  function close() {
-    store.closeKnowledgeReview(saved?.id);
-    setShowResultsDetail(false);
-    setSectionFor(null);
-    setMessage("");
-  }
-
-  function staleAttempt() {
-    setMessage("Η προσπάθεια άλλαξε. Άνοιξε ξανά την επανάληψη.");
-  }
-
-  const order = saved && q ? shuffledIndices(q.content.answers.length, `${saved.id}:${q.id}`) : [];
-  const practice = saved?.mode === "practice";
-  const last = quiz?.currentIndex === (quiz?.questions.length ?? 0) - 1;
+  const [sources, setSources] = useState(false);
+  useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); setSources(false); }, [key, !!results]);
+  const opening = active && !answer ? key : null;
+  useEffect(() => { if (opening) requestPracticeCue("question-open"); }, [opening]);
+  const close = () => { store.closeMistakeReview(quiz?.id); setMessage(""); };
+  const start = () => { if (!store.startMistakeReview()) setMessage("Δεν υπάρχουν άλλα διαθέσιμα λάθη για επανάληψη."); };
+  const row = q && learning.mistakes[mistakeKey(q)];
+  const corrected = !!row?.wrong && row.correctAt > row.wrong.at;
   return <View style={styles.screen} testID="knowledge-review-screen">
     <ProgressGradientBackground />
-    <ProfileSectionHeader
-      title={completed && !expired ? "Αποτελέσματα" : active && practice ? "Εξάσκηση" : "Επανάληψη"}
-      actionLabel="‹ Πίσω" actionAccessibilityLabel="Επιστροφή στην προηγούμενη οθόνη"
-      onAction={onBack} style={styles.header} />
-    <ScrollView ref={scroll} style={styles.viewport} contentContainerStyle={styles.content}
-      bounces={false} keyboardShouldPersistTaps="handled">
+    <ProfileSectionHeader title={results ? "Αποτελέσματα" : "Επανάληψη λαθών"}
+      actionLabel="‹ Πίσω" actionAccessibilityLabel="Επιστροφή στην προηγούμενη οθόνη" onAction={onBack} style={styles.header} />
+    <ScrollView ref={scroll} style={styles.viewport} contentContainerStyle={styles.content}>
       <SyncStatus quiet />
-      {message ? <Text style={styles.error} accessibilityLiveRegion="polite">{message}</Text> : null}
-      {!ready ? <ActivityIndicator color={colors.accentLight} accessibilityLabel="Φόρτωση επανάληψης" />
-        : expired ? <AtlasCard style={styles.card}>
-          <Text style={styles.heading}>Η προσπάθεια ενημερώθηκε</Text>
-          <Text style={styles.body}>Άλλαξε η ημέρα ή ενημερώθηκαν οι ερωτήσεις. Οι απαντήσεις σου έχουν αποθηκευτεί.</Text>
-          <ActionButton label="Νέα επανάληψη" onPress={close} />
+      {message ? <Text accessibilityLiveRegion="polite" style={styles.body}>{message}</Text> : null}
+      {!current ? <AtlasCard style={styles.card}>
+        <Text style={styles.heading}>Οι ερωτήσεις ενημερώθηκαν</Text>
+        <Text style={styles.body}>Οι απαντήσεις σου διατηρήθηκαν. Ξεκίνα νέο γύρο με τις διαθέσιμες ερωτήσεις.</Text>
+        <ActionButton label="Νέος γύρος" onPress={close} />
+      </AtlasCard> : !quiz ? <AtlasCard style={styles.card}>
+        <Text style={styles.heading}>{model.pending.length ? `${model.pending.length} λάθη για επανάληψη` : "Δεν έχεις εκκρεμή λάθη"}</Text>
+        <Text style={styles.body}>Μία σωστή απάντηση αρκεί. Έως 5 ερωτήσεις ανά γύρο, χωρίς επανάληψη της ίδιας ερώτησης μέσα στον γύρο.</Text>
+        <Text style={styles.body}>+10 XP την ημέρα όταν ολοκληρώνεις γύρο και διορθώνεις τουλάχιστον ένα λάθος που δεν έχει δώσει ξανά αυτό το μπόνους.</Text>
+        {model.pending.length ? <ActionButton label="Ξεκίνα την επανάληψη →" onPress={start} /> : <Text style={styles.body}>Τα επόμενα λάθη από μαθήματα και κουίζ θα εμφανιστούν αυτόματα εδώ.</Text>}
+      </AtlasCard> : results ? <>
+        <AtlasCard style={styles.card} testID="knowledge-review-result">
+          <Text style={styles.heading}>{results.correctCount} / {results.total} σωστές</Text>
+          <Text style={styles.body}>{model.pending.length ? `${model.pending.length} λάθη απομένουν. Όσα έχασες μένουν για άλλον γύρο, όποτε θέλεις.` : "Διόρθωσες όλα τα διαθέσιμα λάθη σου."}</Text>
+          <Text style={styles.link}>+{saved!.earnedXP} XP</Text>
+          <Text style={styles.body}>Οι διορθώσεις έχουν ήδη αποθηκευτεί.</Text>
         </AtlasCard>
-        : !saved || !quiz ? <AtlasCard style={styles.card}>
-          <Text style={styles.heading}>{model.due.length ? `${model.due.length} ερωτήσεις σε περιμένουν` : "Είσαι εντάξει για σήμερα"}</Text>
-          {model.due.length > 0 ? <>
-            <Text style={styles.body}>Έως 5 ερωτήσεις ανά γύρο. Κέρδισε έως 10 XP την ημέρα με προγραμματισμένη επανάληψη.</Text>
-            <ActionButton label="Ξεκίνα την επανάληψη" onPress={() => start("scheduled")} />
-          </> : null}
-          {model.practice.length ? model.due.length ? <Pressable style={styles.linkButton} accessibilityRole="button" onPress={() => start("practice")}>
-            <Text style={styles.link}>Ελεύθερη εξάσκηση · χωρίς XP</Text>
-          </Pressable> : <>
-            <Text style={styles.body}>Η ελεύθερη εξάσκηση δεν δίνει XP ή πρόοδο κατάκτησης.</Text>
-            <ActionButton label="Θέλω λίγη εξάσκηση" onPress={() => start("practice")} />
-          </> : !model.due.length ? <Text style={styles.body}>Ολοκλήρωσε ένα μάθημα ή ένα καθημερινό κουίζ για την πρώτη σου επανάληψη.</Text> : null}
-        </AtlasCard>
-        : completed ? <>
-          <AtlasCard style={[styles.card, styles.scoreCard]} testID="knowledge-review-result">
-            <Text style={styles.label}>{completed.correctCount === completed.total ? "ΟΛΕΣ ΣΩΣΤΕΣ" : "ΣΩΣΤΕΣ ΑΠΑΝΤΗΣΕΙΣ"}</Text>
-            <Text style={styles.score} accessibilityLabel={`${completed.correctCount} από ${completed.total} σωστές`}>
-              {completed.correctCount}<Text style={styles.scoreTotal}> / {completed.total}</Text>
-            </Text>
-            <Text style={styles.link}>+{saved.earnedXP} XP</Text>
-          </AtlasCard>
-          <Pressable style={styles.linkButton} accessibilityRole="button" onPress={close}>
-            <Text style={styles.link}>Άλλη μικρή επανάληψη</Text>
-          </Pressable>
-          <Pressable style={styles.linkButton} accessibilityRole="button" accessibilityState={{ expanded: showResultsDetail }}
-            onPress={() => setShowResultsDetail(value => !value)}>
-            <Text style={styles.link}>{showResultsDetail ? "Απόκρυψη προόδου ↑" : "Πρόοδος εννοιών ↓"}</Text>
-          </Pressable>
-          {showResultsDetail ? saved.questionIds.map((id, i) => {
-            const row = model.items.find(k => k.question.id === id);
-            return row ? <AtlasCard key={id} style={styles.card}>
-              <Text style={styles.heading}>{row.topicTitle}</Text>
-              <Text style={styles.body}>{row.question.prompt}</Text>
-              <Text style={styles.body}>{MASTERY_LABELS[saved.beforeStates[i]]} → {MASTERY_LABELS[row.state]} · {row.successes}/3 διαφορετικές δοκιμές</Text>
-              <Text style={styles.body}>{nextReview(row)}</Text>
-            </AtlasCard> : null;
-          }) : null}
-        </>
-        : active ? <>
-          <QuestionStageProgress current={quiz.currentIndex + 1} total={quiz.questions.length} />
-          <QuizReveal key={`${saved.id}:${q.id}`}><SingleChoiceQuestionCard id={q.id} question={q.prompt}
-            answers={order.map(index => q.content.answers[index])} correctIndex={order.indexOf(q.content.correctIndex)}
-            explanation={q.explanation} badgeLabel={item.topicTitle}
-            answer={answer === undefined ? undefined : order.indexOf(answer)}
-            compactAnswered commitOnSelect
-            onConfirm={displayIndex => {
-              if (store.answerKnowledgeReview(saved.id, questionToken(quiz), order[displayIndex], daily.doc)) {
-                setMessage("");
-              } else {
-                staleAttempt();
-                throw new Error("knowledge_review_answer_not_saved");
-              }
-            }}
-            feedbackExtra={<>
-              {saved.qualifiedIndices.includes(quiz.currentIndex) ? <Text style={styles.body}>
-                {MASTERY_LABELS[item.state]} · {item.successes}/3 διαφορετικές δοκιμές
-              </Text> : null}
-              {(section || q.sources.length > 0) ? <>
-                <Pressable style={styles.linkButton} accessibilityRole="button" accessibilityState={{ expanded: sectionFor === q.id }}
-                  onPress={() => setSectionFor(value => value === q.id ? null : q.id)}>
-                  <Text style={styles.link}>{sectionFor === q.id ? "Λιγότερα ↑" : section ? "Σχετική ενότητα και πηγές ↓" : "Πηγές ↓"}</Text>
-                </Pressable>
-                {sectionFor === q.id ? <>
-                  {section ? <View style={styles.excerpt} testID="review-teaching-section">
-                    <Text style={styles.heading}>{section.title}</Text>
-                    {section.paragraphs.map((p, i) => <Text key={i} style={styles.body}>{getParagraphText(p)}</Text>)}
-                  </View> : null}
-                  {q.sources.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή τεκμηρίωσης" }} />)}
-                </> : null}
-              </> : null}
-            </>} /></QuizReveal>
+        {model.pending.length ? <ActionButton label="Άλλος ένας γύρος" onPress={() => { close(); start(); }} /> : null}
+      </> : active ? <>
+        <QuestionStageProgress current={quiz.currentIndex + 1} total={quiz.questions.length} />
+        <QuizReveal key={key}><QuizQuestionRenderer question={asBuiltinQuestion(q)} answer={answer?.value}
+          compactAnswered onActionChange={onActionChange} onSubmit={value => {
+            if (!store.answerMistakeReview(quiz.id, questionToken(quiz), value)) {
+              setMessage("Η προσπάθεια άλλαξε. Άνοιξε ξανά την επανάληψη.");
+              throw new Error("mistake_answer_not_saved");
+            }
+          }} /></QuizReveal>
+        {answer ? <Text style={styles.body} accessibilityLiveRegion="polite">{corrected ? "Διορθώθηκε ✓ Δεν χρειάζεται άλλη σωστή απάντηση." : "Μένει για έναν επόμενο γύρο, όποτε θελήσεις."}</Text> : null}
+        {answer && q.sources.length ? <>
+          <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded: sources }} onPress={() => setSources(v => !v)}><Text style={styles.link}>{sources ? "Κλείσιμο πηγών ↑" : "Πηγές ↓"}</Text></Pressable>
+          {sources ? q.sources.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή τεκμηρίωσης" }} />) : null}
         </> : null}
+      </> : null}
     </ScrollView>
-    {active && answer !== undefined ? <QuestionStageFooter action={{
-      label: last ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →", disabled: false,
-      onPress: () => {
-        if (store.advanceKnowledgeReview(saved.id, questionToken(quiz))) setMessage("");
-        else staleAttempt();
-      },
-    }} /> : ready && !expired && completed ? <QuestionStageFooter action={{
-      label: "Πίσω στην πρόοδο", disabled: false, onPress: onBack,
-    }} /> : null}
+    {active ? <QuestionStageFooter action={answer ? {
+      label: quiz.currentIndex === quiz.questions.length - 1 ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →", disabled: false,
+      onPress: () => { if (!store.advanceMistakeReview(quiz.id, questionToken(quiz))) setMessage("Η προσπάθεια άλλαξε. Άνοιξε ξανά την επανάληψη."); },
+    } : action} /> : results ? <QuestionStageFooter action={{ label: "Πίσω στην πρόοδο", disabled: false, onPress: onBack }} /> : null}
   </View>;
 }
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   header: { marginHorizontal: profileSectionLayout.horizontal, marginTop: profileSectionLayout.top },
-  viewport: { flex: 1 },
-  content: { width: "100%", maxWidth: 640, alignSelf: "center", gap: 10,
-    paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.below, paddingBottom: 12 },
-  card: { padding: 16, gap: 8 },
-  scoreCard: { alignItems: "center", paddingVertical: 22 },
-  score: { color: colors.text, fontSize: 48, fontWeight: "900" },
-  scoreTotal: { color: colors.accentLight, fontSize: 24 },
-  label: { color: colors.accentLight, fontSize: 11, fontWeight: "900", letterSpacing: 0.8 },
-  heading: { color: colors.text, fontSize: 18, fontWeight: "800" },
-  body: { color: colors.textBody, fontSize: 14, lineHeight: 22 },
-  error: { color: colors.error, fontWeight: "700" },
-  linkButton: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" },
-  link: { color: colors.accentLight, fontSize: 13, fontWeight: "800" },
-  excerpt: { gap: 8 },
+  viewport: { flex: 1 }, content: { width: "100%", maxWidth: 640, alignSelf: "center", gap: 12, paddingHorizontal: profileSectionLayout.horizontal, paddingVertical: 16 },
+  card: { padding: 18, gap: 12 }, heading: { color: colors.text, fontSize: 21, fontWeight: "800" },
+  body: { color: colors.textBody, fontSize: 14, lineHeight: 22 }, link: { color: colors.accentLight, fontSize: 14, fontWeight: "800" }, button: { minHeight: 44, justifyContent: "center" },
 });

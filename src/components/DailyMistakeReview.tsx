@@ -1,3 +1,5 @@
+import { useLearningSession } from "../state/LearningSession";
+import { adaptDailyQuestion } from "../quiz/adapters";
 import { useRef, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import type { GeneralKnowledgeQuestion } from "../data/questions";
@@ -13,8 +15,9 @@ type Props = {
   onAdvance: () => void;
 };
 
-/** Practice lives only in this component; it never writes daily results or history. */
+/** Review updates the shared mistake list while preserving daily results. */
 export default function DailyMistakeReview({ questions, onDone, onAdvance }: Props) {
+  const { store } = useLearningSession();
   const [{ index, answers }, setAttempt] = useState({
     index: 0,
     answers: {} as Record<string, number>,
@@ -64,7 +67,7 @@ export default function DailyMistakeReview({ questions, onDone, onAdvance }: Pro
   return (
     <View style={styles.container}>
       <Text style={styles.eyebrow}>ΕΠΑΝΑΛΗΨΗ ΛΑΘΩΝ · {index + 1} / {questions.length}</Text>
-      <Text style={styles.note}>Χωρίς πόντους · η εξάσκηση δεν αποθηκεύεται.</Text>
+      <Text style={styles.note}>Μία σωστή απάντηση αρκεί για να κλείσει το λάθος.</Text>
       <ProgressBar progress={((index + 1) / questions.length) * 100} />
       <SingleChoiceQuestionCard
         key={question.id}
@@ -79,6 +82,8 @@ export default function DailyMistakeReview({ questions, onDone, onAdvance }: Pro
         answer={selectedAnswer === null ? undefined : selectedAnswer}
         reportTarget={dailyReportTarget(question)}
         onConfirm={answerIndex => {
+          if (selectedAnswer !== null) return;
+          store.recordQuestionAnswer(adaptDailyQuestion(question), answerIndex);
           setAttempt(previous => {
             if (previous.index !== index || previous.answers[String(index)] !== undefined) return previous;
             return { ...previous, answers: { ...previous.answers, [String(index)]: answerIndex } };

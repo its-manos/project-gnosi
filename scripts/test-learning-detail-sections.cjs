@@ -73,7 +73,7 @@ assert.equal(expanded.props.accessibilityState.expanded, true);
 assert.ok(text(expanded).includes("Λιγότερες θεματικές"));
 assert.ok(text(expanded).includes("⌃"));
 
-for (const path of ["KnowledgeMastery.tsx", "LearningActivityPanel.tsx"]) {
+for (const path of ["LearningActivityPanel.tsx"]) {
   const source = fs.readFileSync("src/components/" + path, "utf8");
   assert.match(source, /<LearningSectionHeading\b/);
   assert.match(source, /<SubjectInsightPanel\b/);

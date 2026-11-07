@@ -1,3 +1,4 @@
+import { collectMistakeHistory } from "../knowledge/mistakeHistory";
 import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { ActivityIndicator, AppState, Pressable, StyleSheet, Text } from "react-native";
@@ -46,11 +47,16 @@ function ScopedLearning({ userId, email, children }: { userId: string | null; em
   // just because the readiness boundary re-rendered.
   const contextValue = useMemo(() => ({ store, dailyStore, email }), [store, dailyStore, email]);
   useEffect(() => {
+    dailyStore.onQuestionAnswer = (question, value) => { store.recordQuestionAnswer(question, value); };
     void store.start(); void dailyStore.start();
     const subscription = AppState.addEventListener("change", state => { if (state === "active") { void store.retry(); void dailyStore.retry(); } });
     const interval = setInterval(() => { if (AppState.currentState === "active") { void store.sync(); void dailyStore.sync(); } }, 30000);
-    return () => { subscription.remove(); clearInterval(interval); store.stop(); dailyStore.stop(); };
+    return () => { dailyStore.onQuestionAnswer = undefined; subscription.remove(); clearInterval(interval); store.stop(); dailyStore.stop(); };
   }, [store, dailyStore]);
+  useEffect(() => {
+    if (!snapshot.ready || !daily.ready) return;
+    store.importMistakes(collectMistakeHistory(snapshot.backup, snapshot.activity, snapshot.weeklyReviews, daily.doc, store.getSnapshot().mistakes));
+  }, [store, snapshot.ready, daily.ready, snapshot.backup, snapshot.activity, snapshot.weeklyReviews, daily.doc]);
   if (!snapshot.ready || !daily.ready) return <Loading error={!snapshot.ready ? snapshot.error : daily.error} retry={() => { void store.start(); void dailyStore.start(); }} />;
   return <Context.Provider value={contextValue}>{children}</Context.Provider>;
 }
