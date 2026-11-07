@@ -63,10 +63,10 @@ assert.ok(!text(tree).includes("Ερώτηση 0"), "history is collapsed on ent
 
 nodes(tree).find(n => n.type === "ActionButton").props.onPress();
 assert.equal(review, 1, "review navigation survives the redesign");
-node(tree, "knowledge-subject-subject-1").props.onPress();
+node(tree, "knowledge-subject-subject-4").props.onPress();
 tree = render();
 assert.ok(node(tree, "knowledge-selected-subject"), "subject detail opens only on demand");
-assert.equal(node(tree, "knowledge-selected-subject").props.current, 1);
+assert.equal(node(tree, "knowledge-selected-subject").props.current, 4);
 node(tree, "knowledge-all-subjects").props.onPress();
 tree = render();
 assert.equal(nodes(tree).filter(n => n.type === "SubjectProgressTile").length, 5);
