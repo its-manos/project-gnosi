@@ -11,9 +11,10 @@ const root = path.join(__dirname, "..");
 // headless renderer. This lets the contract exercise all three A/B modes.
 const atlasTestEnv = {};
 const jsx = (type, props) => ({ type, props });
+let homeWindowWidth = 360;
 const native = {
   View: "View", Text: "Text", Image: "Image", Pressable: "Pressable", ScrollView: "ScrollView",
-  ActivityIndicator: "Spinner", useWindowDimensions: () => ({ width: 360, height: 740 }),
+  ActivityIndicator: "Spinner", useWindowDimensions: () => ({ width: homeWindowWidth, height: 740 }),
   Platform: { OS: "ios" },
   StyleSheet: { create: value => value },
 };
@@ -296,7 +297,7 @@ for (const category of categories) {
   assert.equal(typeof Illustration, "function");
   const illustrationNode = nodes(card).find(node => node.type === Illustration);
   assert.ok(illustrationNode, "category card displays its artwork for " + category.id);
-  assert.equal(illustrationNode.props.size, 34, "short initial viewport uses tight artwork sizing");
+  assert.equal(illustrationNode.props.size, 28, "short initial viewport scales artwork down without changing tap targets");
   assert.equal(illustrationNode.props.displayScale, 1.18);
 
   const wrapper = Illustration({ size: 32, displayScale: 1.18 });
@@ -602,29 +603,30 @@ assert.equal(scroll.props.contentContainerStyle[1].gap, 8,
 assert.equal(scroll.props.contentContainerStyle[1].paddingTop, 4);
 assert.equal(scroll.props.contentContainerStyle[1].paddingBottom, 4);
 assert.equal(scroll.props.contentContainerStyle[2], false);
-// The larger illustrations and card silhouettes stay exactly the same.
-// Small inner spacings, not clipping/scroll disabling, recover the few points
-// consumed when the new two-row world atlas and lesson breadcrumb were added.
+// Small viewports reduce world-art scale and inner gaps rather than clipping
+// the scroll view, hiding categories, or shrinking the full-width tap targets.
 const compactTree = renderMeasuredHome();
 const compactWorlds = nodes(compactTree).find(node => node.props?.testID === "home-exploration");
 assert.equal(compactWorlds.props.style[1].gap, 5);
 assert.equal(compactWorlds.props.style[1].paddingTop, 4);
 const compactTile = nodes(compactTree).find(node => node.props?.testID === "home-category-history");
-assert.equal(compactTile.props.style({ pressed: false })[1].paddingVertical, 4);
-assert.equal(compactTile.props.style({ pressed: false })[1].gap, 4);
+assert.equal(compactTile.props.style({ pressed: false })[1].paddingVertical, 3);
+assert.equal(compactTile.props.style({ pressed: false })[1].gap, 3);
+const compactIllustration = nodes(compactTile).find(node => node.type === worldArtwork.history);
+assert.equal(compactIllustration.props.size, 34,
+  "world artwork scales to a 705pt native viewport");
 const originalPlatform = nodes(compactTile).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
-assert.ok(originalPlatform, "compact Home preserves the 62pt artwork footprint");
-assert.equal(originalPlatform.props.style[0].height, 62);
+assert.ok(originalPlatform, "world illustration retains its unframed platform");
+assert.equal(originalPlatform.props.style[1].width, 41,
+  "the art platform follows the measured illustration size");
+assert.equal(originalPlatform.props.style[1].height, 41);
 assert.equal(originalPlatform.props.style[0].backgroundColor, undefined,
   "Atlas shows through the transparent Home artwork");
 assert.equal(originalPlatform.props.style[0].borderWidth, undefined,
   "no secondary frame competes with the painted icon");
-const savedCompactHeight =
-  3 * (10 - 8) + (6 - 4) + (6 - 4) +
-  2 * (2 * (6 - 4) + (7 - 4)) + (6 - 5) + (6 - 4);
-assert.ok(savedCompactHeight >= 24,
-  "compact spacing reclaims a small vertical overflow without shrinking or clipping artwork");
+assert.equal(nodes(compactTree).find(node => node.type === worldArtwork.history).props.size, 34,
+  "smaller art uses the same original transparent image");
 scroll.props.onContentSizeChange(360, 711);
 scroll = scrollNode();
 assert.equal(scroll.props.contentContainerStyle[2], false,
@@ -644,6 +646,17 @@ assert.equal(scroll.props.scrollEnabled, false);
 // Measure actual card dimensions: increasing height scales the card contents,
 // without affecting the knowledge-world grid or viewport density.
 const tallTree = renderMeasuredHome();
+const tallWorld = nodes(tallTree).find(node => node.props?.testID === "home-category-history");
+assert.equal(nodes(tallWorld).find(node => node.type === worldArtwork.history).props.size, 46,
+  "tall Home expands illustrations but caps them at 46pt");
+assert.equal(nodes(tallWorld).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62).props.style[1].width, 55,
+  "tall artwork gets a proportional platform");
+homeWindowWidth = 320;
+const narrowWorld = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
+assert.equal(nodes(narrowWorld).find(node => node.type === worldArtwork.history).props.size, 37,
+  "320pt screen width caps artwork so all four columns stay clear");
+homeWindowWidth = 360;
 const tallHero = nodes(tallTree).find(node => node.props?.testID === "home-primary-action");
 const tallQuizzes = nodes(tallTree).find(node =>
   node.props?.entranceDelay === 130 && node.props?.style?.flexGrow === 1);
@@ -692,8 +705,13 @@ const phoneWorld = nodes(phoneTree).find(node => node.props?.testID === "home-ca
 assert.equal(phoneWorld.props.style({ pressed: false })[2].minHeight, 62);
 const phoneArtwork = nodes(phoneWorld).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
-assert.equal(phoneArtwork.props.style[1].height, 40,
+assert.equal(phoneArtwork.props.style[1].height, 36,
   "tight phones reclaim height in both artwork rows");
+assert.equal(nodes(phoneWorld).find(node => node.type === worldArtwork.history).props.size, 30);
+assert.equal(phoneWorld.props.style({ pressed: false })[2].paddingVertical, 2);
+assert.equal(nodes(phoneTree).find(node =>
+  Array.isArray(node.props?.style) && node.props.style[0]?.rowGap === 8).props.style[1].rowGap, 4,
+  "two rows of knowledge worlds have a tighter vertical gap on phones");
 assert.equal(nodes(phoneTree).find(node => node.props?.children === "Μάθημα 0")
   .props.style[2].fontSize, 18, "tight phones use the readable compact lesson title");
 assert.equal(nodes(phoneTree).filter(node => node.props?.testID === "home-hangman").length, 1);
