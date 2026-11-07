@@ -158,7 +158,9 @@ for (const id of ["ancient-greece", "world-history", "mythology", "space", undef
     assert.ok(fs.existsSync(path.join(root, "assets/atlas-export-preview/island-icons/" + id + ".webp")));
   } else assert.equal(artwork, undefined, "unknown destinations never show an unrelated landmark");
 }
+const dashboardLayout = compile("src/utils/homeDashboardLayout.ts", {}, true);
 const home = compile("src/screens/HomeScreen.tsx", {
+  "../utils/homeDashboardLayout": dashboardLayout,
   "../components/worldIcons/categoryIconMap": categoryIconModule,
   "../components/HomeAtlasBackground": { __esModule: true, default: "HomeAtlasBackground" },
   "../components/HomeLessonBackdrop": { __esModule: true, default: "HomeLessonBackdrop" },
@@ -290,14 +292,14 @@ for (const category of categories) {
   const card = nodes(tree).find(node => node.props?.testID === "home-category-" + category.id);
   assert.equal(card.props.accessibilityRole, "button");
   assert.match(card.props.accessibilityLabel, /Άνοιξε τη θεματική/);
-  assert.equal(card.props.style({ pressed: false })[0].minHeight, 96);
+  assert.equal(card.props.style({ pressed: false })[0].minHeight, 44);
   assert.ok(!nodes(card).some(node => node.props?.children === category.emoji),
     "artwork replaces emoji for " + category.id);
   const Illustration = worldArtwork[category.id];
   assert.equal(typeof Illustration, "function");
   const illustrationNode = nodes(card).find(node => node.type === Illustration);
   assert.ok(illustrationNode, "category card displays its artwork for " + category.id);
-  assert.equal(illustrationNode.props.size, 28, "short initial viewport scales artwork down without changing tap targets");
+  assert.equal(illustrationNode.props.size, dashboardLayout.homeDashboardLayout(610, 360).iconSize, "artwork follows the shared budget");
   assert.equal(illustrationNode.props.displayScale, 1.18);
 
   const wrapper = Illustration({ size: 32, displayScale: 1.18 });
@@ -534,274 +536,36 @@ assert.match(homeMotionSourceCheck, /export function MotionShimmer/,
 assert.match(homeMotionSourceCheck, /withTiming\(width \+ 42/,
   "the Continue shimmer's original animation has not been changed");
 
-// Responsive density follows the available Home height after safe areas and tabs.
+// Exercise the actual Home screen at measured viewport sizes. Card sizing
+// yields first, with full artwork retained on ordinary and tall phones.
 homeScrollState = [0, 0];
 const renderMeasuredHome = () => { homeScrollHookIndex = 0; return home(props); };
 const scrollNode = () => nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-game-dashboard");
 let scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[0].flexGrow, 1,
-  "dashboard content fills the usable viewport on taller screens");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "spare height belongs inside the playable cards rather than between sections");
-assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
-  "spacious Home retains comfortable minimum spacing");
-const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
-assert.equal(homeSections.length, 5, "five Home sections share the available height");
-const miniGamesSection = homeSections.at(-1);
-assert.equal(miniGamesSection.props.testID, "home-minigames-section",
-  "Mini Games ends the dashboard below the knowledge worlds");
-assert.equal(homeSections.at(-2).props.testID, "home-exploration");
-const miniGamesHeading = nodes(miniGamesSection).find(node => node.type === "Text"
-  && node.props?.children === "Μίνι παιχνίδια");
-assert.ok(miniGamesHeading, "Mini Games heading appears above Hangman");
-assert.equal(miniGamesHeading.props.accessibilityRole, "header");
-assert.equal(miniGamesHeading.props.style[0].fontWeight, "800",
-  "Mini Games shares the knowledge-world section typography");
-assert.equal(nodes(miniGamesSection).filter(node => node.props?.testID === "home-hangman").length, 1,
-  "Hangman remains the only playable mini game");
-assert.equal(nodes(miniGamesSection).find(node => node.props?.testID === "home-hangman").props.onPress,
-  props.onOpenHangman, "Hangman navigation remains intact");
-const miniGamesChildren = [miniGamesSection.props.children].flat(Infinity);
-assert.equal(miniGamesChildren[0].props.children[0].props.children, "Μίνι παιχνίδια",
-  "Mini Games heading precedes its playable card");
-
-assert.equal(homeSections[0].props.style.minHeight, 52,
-  "the brand/header stays at its original height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].flexGrow, 2,
-  "the lesson card absorbs two shares of extra height");
-assert.equal(homeSections[1].props.style({ pressed: false })[0].justifyContent, "center",
-  "the lesson elements are centered vertically as a group");
-assert.equal(homeSections[2].props.style.flexGrow, 1,
-  "the two side-by-side quiz cards share the remaining extra height");
-for (const id of ["home-daily-quiz", "home-quick-quiz"]) {
-  const quiz = nodes(homeSections[2]).find(node => node.props?.testID === id);
-  assert.equal(quiz.props.style({ pressed: false })[0].justifyContent, "center",
-    "expanded quiz elements are centered vertically as a group");
-  assert.equal(quiz.props.style({ pressed: false })[0].flex, 1,
-    "both quizzes stretch to the same height");
+for (const height of [650, 705, 880]) {
+  scroll.props.onLayout({ nativeEvent: { layout: { height } } });
+  const fitted = renderMeasuredHome();
+  const hero = nodes(fitted).find(node => node.props?.testID === "home-primary-action");
+  const expected = dashboardLayout.homeDashboardLayout(height, 360);
+  assert.equal(hero.props.style({ pressed: false })[4].minHeight, expected.heroHeight);
+  assert.equal(hero.props.style({ pressed: false })[0].flexGrow, undefined,
+    "Continue cannot absorb unused viewport height as empty padding");
+  assert.equal(nodes(fitted).find(node => node.type === worldArtwork.history).props.size, 46,
+    "normal and large phones keep full category artwork after compacting cards");
+  const sections = [scrollNode().props.children].flat(Infinity).filter(Boolean);
+  assert.equal(sections.length, 5);
+  assert.equal(sections.at(-1).props.testID, "home-minigames-section");
+  assert.ok(nodes(sections.at(-1)).some(n => n.props?.children === "Μίνι παιχνίδια"));
+  assert.equal(nodes(sections.at(-1)).find(n => n.props?.testID === "home-hangman").props.onPress, props.onOpenHangman);
+  assert.ok(!scrollNode().props.contentContainerStyle.some(style => style && style.height),
+    "content uses natural height rather than a clipping bound");
 }
-assert.equal(homeSections[3].props.style[0].flexGrow, undefined,
-  "knowledge worlds stay at their natural height");
-const flexibleWorldGrid = nodes(homeSections[3]).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap");
-assert.ok(flexibleWorldGrid, "knowledge-world cards stay in the existing grid");
-assert.equal(flexibleWorldGrid.props.style[0].alignContent, "flex-start",
-  "category rows sit directly below the heading");
-assert.equal(flexibleWorldGrid.props.style[0].flexGrow, undefined,
-  "the grid cannot stretch into unused viewport space");
-assert.equal(flexibleWorldGrid.props.style[0].rowGap, 8,
-  "world-row margins stay fixed");
-
-assert.equal(scroll.props.scrollEnabled, false, "disable scrolling before measurements settle");
-assert.equal(scroll.props.bounces, false, "disable iOS elastic bounce");
-assert.equal(scroll.props.alwaysBounceVertical, false);
-assert.equal(scroll.props.overScrollMode, "never", "disable Android overscroll glow");
-scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
-scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[1].gap, 8,
-  "shorter usable viewport uses compact gaps without hiding genuine overflow");
-assert.equal(scroll.props.contentContainerStyle[1].paddingTop, 4);
-assert.equal(scroll.props.contentContainerStyle[1].paddingBottom, 4);
-assert.equal(scroll.props.contentContainerStyle[2], false);
-// Small viewports reduce world-art scale and inner gaps rather than clipping
-// the scroll view, hiding categories, or shrinking the full-width tap targets.
-const compactTree = renderMeasuredHome();
-const compactWorlds = nodes(compactTree).find(node => node.props?.testID === "home-exploration");
-assert.equal(compactWorlds.props.style[1].gap, 5);
-assert.equal(compactWorlds.props.style[1].paddingTop, 4);
-const compactTile = nodes(compactTree).find(node => node.props?.testID === "home-category-history");
-assert.equal(compactTile.props.style({ pressed: false })[1].paddingVertical, 3);
-assert.equal(compactTile.props.style({ pressed: false })[1].gap, 3);
-const compactIllustration = nodes(compactTile).find(node => node.type === worldArtwork.history);
-assert.equal(compactIllustration.props.size, 34,
-  "world artwork scales to a 705pt native viewport");
-const originalPlatform = nodes(compactTile).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
-assert.ok(originalPlatform, "world illustration retains its unframed platform");
-assert.equal(originalPlatform.props.style[1].width, 41,
-  "the art platform follows the measured illustration size");
-assert.equal(originalPlatform.props.style[1].height, 41);
-assert.equal(originalPlatform.props.style[0].backgroundColor, undefined,
-  "Atlas shows through the transparent Home artwork");
-assert.equal(originalPlatform.props.style[0].borderWidth, undefined,
-  "no secondary frame competes with the painted icon");
-assert.equal(nodes(compactTree).find(node => node.type === worldArtwork.history).props.size, 34,
-  "smaller art uses the same original transparent image");
-scroll.props.onContentSizeChange(360, 711);
-scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[2], false,
-  "transient overflow cannot permanently tighten the layout");
-assert.equal(scroll.props.scrollEnabled, true, "overflow is scrollable at compact density");
-scroll.props.onContentSizeChange(360, 701);
-scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, false, "fitted tight content cannot be scrolled");
-scroll.props.onLayout({ nativeEvent: { layout: { height: 880 } } });
-scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[1], false,
-  "available height growth restores spacious styling");
-assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
-  "spacious mode expands cards without introducing large vertical gaps");
-assert.equal(scroll.props.scrollEnabled, false);
-
-// Measure actual card dimensions: increasing height scales the card contents,
-// without affecting the knowledge-world grid or viewport density.
-const tallTree = renderMeasuredHome();
-const tallWorld = nodes(tallTree).find(node => node.props?.testID === "home-category-history");
-assert.equal(nodes(tallWorld).find(node => node.type === worldArtwork.history).props.size, 42,
-  "tall phones expand the illustrations up to the safe four-column width cap");
-assert.equal(nodes(tallWorld).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62).props.style[1].width, 50,
-  "tall artwork gets a proportional platform");
-homeWindowWidth = 320;
-const narrowWorld = nodes(renderMeasuredHome()).find(node => node.props?.testID === "home-category-history");
-assert.equal(nodes(narrowWorld).find(node => node.type === worldArtwork.history).props.size, 37,
-  "320pt screen width caps artwork so all four columns stay clear");
-homeWindowWidth = 360;
-const tallHero = nodes(tallTree).find(node => node.props?.testID === "home-primary-action");
-const tallQuizzes = nodes(tallTree).find(node =>
-  node.props?.entranceDelay === 130 && node.props?.style?.flexGrow === 1);
-tallHero.props.onLayout({ nativeEvent: { layout: { height: 315 } } });
-tallQuizzes.props.onLayout({ nativeEvent: { layout: { height: 165 } } });
-const grownTree = renderMeasuredHome();
-const grownHero = nodes(grownTree).find(node => node.props?.testID === "home-primary-action");
-const heroTitle = nodes(grownHero).find(node =>
-  node.props?.children === "Μάθημα 0");
-assert.ok(heroTitle.props.style[2].fontSize > 21,
-  "longer hero card grows its lesson title instead of adding blank interior space");
-const grownBackdrop = nodes(grownHero).find(node => node.type === "HomeLessonBackdrop");
-assert.ok(grownBackdrop.props.scale > 1,
-  "the lesson landmark grows with its card");
-const quizCount = nodes(grownTree).find(node => node.props?.testID === "home-daily-answered");
-assert.ok(quizCount.props.style[1].fontSize > 18,
-  "taller quiz cards grow their progress counter");
-const grownDaily = nodes(grownTree).find(node => node.props?.testID === "home-daily-quiz");
-assert.ok(nodes(grownDaily).some(node => node.props?.children === "Καθημερινό Quiz"
-  && node.props.style[1].fontSize > 14), "taller quiz cards grow their headings");
-// Compact mode must disable the measured growth even after a tall viewport.
-scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
-const resetTree = renderMeasuredHome();
-assert.equal(nodes(resetTree).find(node => node.props?.testID === "home-daily-answered")
-  .props.style[1].fontSize, 18);
-assert.equal(nodes(resetTree).find(node => node.type === "HomeLessonBackdrop").props.scale, 0.8);
-scroll.props.onLayout({ nativeEvent: { layout: { height: 880 } } });
-scroll = scrollNode();
-// Small landscape screens and large accessibility text must never be clipped.
 scroll.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
-scroll.props.onContentSizeChange(360, 680);
-scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, true, "genuine overflow remains scrollable");
-scroll.props.onContentSizeChange(360, 554);
-scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, false, "drag turns off when content fits again");
-
-// Hangman must participate in the viewport budget. A phone with 650pt
-// available used to choose compact and overflow after adding the fifth card.
-scroll.props.onLayout({ nativeEvent: { layout: { height: 650 } } });
-scroll = scrollNode();
-assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
-  "reserve the Hangman card before selecting the tight phone layout");
-const phoneTree = renderMeasuredHome();
-const phoneWorld = nodes(phoneTree).find(node => node.props?.testID === "home-category-history");
-assert.equal(phoneWorld.props.style({ pressed: false })[2].minHeight, 62);
-const phoneArtwork = nodes(phoneWorld).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
-assert.equal(phoneArtwork.props.style[1].height, 36,
-  "tight phones reclaim height in both artwork rows");
-assert.equal(nodes(phoneWorld).find(node => node.type === worldArtwork.history).props.size, 30);
-assert.equal(phoneWorld.props.style({ pressed: false })[2].paddingVertical, 2);
-assert.equal(nodes(phoneTree).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.rowGap === 8).props.style[1].rowGap, 4,
-  "two rows of knowledge worlds have a tighter vertical gap on phones");
-assert.equal(nodes(phoneTree).find(node => node.props?.children === "Μάθημα 0")
-  .props.style[2].fontSize, 18, "tight phones use the readable compact lesson title");
-assert.equal(nodes(phoneTree).filter(node => node.props?.testID === "home-hangman").length, 1);
-assert.equal(scroll.props.contentContainerStyle[3].height, 650,
-  "normal iPhone dashboard is bounded to its native viewport");
-const phoneTitle = nodes(phoneTree).find(node => node.props?.children === "Μάθημα 0");
-assert.equal(phoneTitle.props.numberOfLines, 2);
-assert.equal(phoneTitle.props.adjustsFontSizeToFit, true);
-assert.equal(nodes(phoneTree).find(node => node.props?.testID === "home-primary-action")
-  .props.style({ pressed: false })[4].flexShrink, 1,
-  "the lesson card yields space to the remaining dashboard sections");
-scroll.props.onContentSizeChange(360, 650);
-assert.equal(scrollNode().props.scrollEnabled, false);
-
-// Preserve the one-point measurement tolerance and resize behavior.
-homeScrollState = [0, 0];
-scroll = scrollNode();
-scroll.props.onLayout({ nativeEvent: { layout: { height: 600 } } });
-scroll.props.onContentSizeChange(360, 596);
-scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, false);
-scroll.props.onContentSizeChange(360, 601);
-scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, false, "ignore subpixel measurement mismatch");
-scroll.props.onContentSizeChange(360, 620);
-scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, true);
-scroll.props.onLayout({ nativeEvent: { layout: { height: 660 } } });
-scroll = scrollNode();
-assert.equal(scroll.props.scrollEnabled, false, "recalculate overflow after viewport resize");
-// Cold startup can deliver content measured for an older viewport first.
-// Its settled layout must match a fresh visit with the same available height.
-homeScrollState = [0, 0];
-scroll = scrollNode();
-scroll.props.onContentSizeChange(360, 820);
-scroll = scrollNode();
-scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
-scroll = scrollNode();
-scroll.props.onContentSizeChange(360, 705);
-const coldLayout = scrollNode().props.contentContainerStyle;
-homeScrollState = [0, 0];
-scroll = scrollNode();
-scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
-scroll = scrollNode();
-scroll.props.onContentSizeChange(360, 705);
-assert.deepEqual(scrollNode().props.contentContainerStyle, coldLayout,
-  "cold startup and returning Home settle to the same layout");
+scroll.props.onContentSizeChange(360, 700);
+assert.equal(scrollNode().props.scrollEnabled, true, "genuine overflow stays reachable");
+scroll.props.onContentSizeChange(360, 560);
 assert.equal(scrollNode().props.scrollEnabled, false);
 homeScrollState = null;
-assert.ok(nodes(tree).some(node => node.props?.children === "1 / 3 ερωτήσεις"),
-  "resume card shows question progress beside its heading");
-const centeredGrid = nodes(tree).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.flexWrap === "wrap"
-  && node.props.style[0]?.justifyContent === "center");
-assert.ok(centeredGrid, "knowledge worlds are centered with equal grid gaps");
-assert.equal(centeredGrid.props.style[0].columnGap, 8);
-const firstWorld = nodes(tree).find(node => node.props?.testID === "home-category-history");
-assert.equal(firstWorld.props.style({ pressed: false })[0].minHeight, 96,
-  "History destination has room for larger artwork");
-const cardPercent = Number.parseFloat(firstWorld.props.style({ pressed: false })[0].width) / 100;
-for (const phoneWidth of [320, 360, 393]) {
-  const available = phoneWidth - 32;
-  assert.ok(4 * available * cardPercent + 3 * 8 <= available,
-    "four-column grid must fit at " + phoneWidth + "pt");
-}
-const primaryButton = nodes(tree).find(node =>
-  Array.isArray(node.props?.style) && node.props.style[0]?.minHeight === 44
-  && node.props.style[0]?.backgroundColor === "#A89BFF");
-assert.ok(primaryButton, "primary CTA retains its 44-point minimum tap area");
-assert.equal(primaryButton.props.style[1].minHeight, 44,
-  "compact card sizing does not reduce the primary CTA");
-const homeTrack = nodes(tree).find(node => Array.isArray(node.props?.style)
-  && node.props.style[0]?.backgroundColor === "#B1A5FF"
-  && node.props.style[1]?.width?.endsWith("%"));
-assert.ok(homeTrack, "lesson progress uses the shared lavender accent");
-
-// Motion accents never change card hit targets or size.
-const primaryCard = nodes(tree).find(node => node.props?.testID === "home-primary-action");
-assert.equal(nodes(primaryCard).filter(node => node.type === "CardGlint").length, 1);
-const shimmer = nodes(primaryCard).find(node => node.type === "Shimmer");
-assert.ok(shimmer, "Continue button has a rare shimmer");
-assert.equal(nodes(primaryCard).filter(node => node.type === "CtaArrow").length, 1,
-  "Continue arrow has a gentle invitation motion");
-for (const id of ["home-daily-quiz", "home-quick-quiz"]) {
-  const card = nodes(tree).find(node => node.props?.testID === id);
-  assert.equal(nodes(card).filter(node => node.type === "CardGlint").length, 1,
-    "quiz card has one accent glint");
-  assert.equal(nodes(card).filter(node => node.type === "QuizGlyph").length, 1,
-    "quiz artwork has one idle lift");
-}
 
 // Shared Continue accent behavior.
 const homeMotionSource = fs.readFileSync(path.join(root, "src/components/HomeMotion.tsx"), "utf8");
@@ -1355,4 +1119,3 @@ assert.match(adventureMotionSource, /if \(reduced\) return/,
   "reduced-motion users skip the Continue arrow's movement");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
-

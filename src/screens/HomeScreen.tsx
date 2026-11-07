@@ -1,3 +1,4 @@
+import { homeDashboardLayout } from "../utils/homeDashboardLayout";
 import { availableScreenHeight } from "../utils/screenLayout";
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
@@ -35,11 +36,6 @@ type Props = {
   onOpenProfile?: () => void;
 };
 
-// Only grow interior content when a card really has extra room. Caps keep
-// long Greek titles and system font scaling readable on smaller screens.
-const cardScale = (height: number, baseline: number, max: number, range: number) =>
-  Math.min(max, 1 + Math.max(0, height - baseline) / range);
-
 const scaled = (value: number, scale: number) => Math.round(value * scale * 10) / 10;
 
 const shortLabels: Record<string, string> = {
@@ -69,37 +65,16 @@ export default function HomeScreen({
   // by a few points after the lesson breadcrumb was added.
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const [cardHeights, setCardHeights] = useState({ hero: 0, quiz: 0 });
   const availableHeight = availableScreenHeight(viewportHeight, height);
-  // Reserve space for the Hangman card and Mini Games heading before sizing
-  // the other dashboard sections. Keep density based on the viewport only:
-  // content measurements must not create a density loop.
-  const dashboardHeight = Math.max(0, availableHeight - 102);
-  const density = dashboardHeight < 590 ? 2 : dashboardHeight < 720 ? 1 : 0;
-  const compact = density >= 1;
-  const tight = density >= 2;
-  // Shrink the world illustrations with the actual usable viewport, not just
-  // the device model. A width cap keeps four columns safe on narrow phones.
-  // Do not derive this from measured content height: that causes layout loops.
-  const worldIconSize = Math.max(28, Math.min(46,
-    Math.round(30 + (availableHeight - 650) * 0.07),
-    Math.floor((width - 32) * 0.13)));
-  const worldPlatformSize = Math.ceil(worldIconSize * 1.18);
-  // Bound the normal portrait dashboard to the measured native viewport.
-  // Accessibility sizes and very short windows retain natural scrolling.
-  const fitDashboard = availableHeight >= 620 && (fontScale ?? 1) <= 1.15;
-  // Measurements influence only interior decoration: never the viewport
-  // density, flex allocation, or scrolling contract. Ignore subpixel jitter.
-  const allowCardGrowth = !compact && (fontScale ?? 1) <= 1.1;
-  const heroScale = allowCardGrowth ? cardScale(cardHeights.hero, 225, 1.18, 400) : 1;
-  const quizScale = allowCardGrowth ? cardScale(cardHeights.quiz, 100, 1.2, 350) : 1;
-  const updateCardHeight = (card: "hero" | "quiz", next: number) => {
-    if (next <= 0) return;
-    setCardHeights(current => Math.abs(current[card] - next) < 3 ? current : { ...current, [card]: next });
-  };
-  // Content measurements must never change density: startup hydration and old
-  // layout callbacks can otherwise latch Home into a tighter mode until remount.
-  // Long titles and accessibility text remain scrollable at every density.
+  const layout = homeDashboardLayout(availableHeight, width, fontScale ?? 1);
+  const compact = layout.density >= 1;
+  const tight = layout.density >= 2;
+  const worldIconSize = layout.iconSize;
+  const worldPlatformSize = layout.platformSize;
+  const fitDashboard = availableHeight >= 620 && !layout.naturalText;
+  // Content no longer stretches the cards or changes their scale after layout.
+  const heroScale = 1;
+  const quizScale = 1;
   const canScroll = viewportHeight > 0 && contentHeight > viewportHeight + 1;
   const today = useAthensDate();
   // This existing metric counts completed daily quizzes, not app logins.
@@ -141,7 +116,7 @@ export default function HomeScreen({
       {atlasDebugMode === "off" ? null
         : <HomeAtlasBackground showAmbientMotion={atlasDebugMode !== "static"} />}
       <ScrollView testID="home-game-dashboard" style={styles.viewport}
-      contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent, fitDashboard && { height: availableHeight }]}
+      contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent]}
       scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false}
       overScrollMode="never" showsVerticalScrollIndicator={false}
       onLayout={event => {
@@ -175,8 +150,7 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 10, heroScale) }, fitDashboard && styles.fittedHero, pressed && styles.pressed]}
-        onLayout={event => updateCardHeight("hero", event.nativeEvent.layout.height)}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 10, heroScale) }, { minHeight: layout.heroHeight }, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
         accessibilityLabel={hero
@@ -220,8 +194,7 @@ export default function HomeScreen({
         </View>
       </MotionPressable>
 
-      <MotionView entranceDelay={130} style={styles.actions}
-        onLayout={event => updateCardHeight("quiz", event.nativeEvent.layout.height)}>
+      <MotionView entranceDelay={130} style={{ ...styles.actions, minHeight: layout.quizHeight }}>
         <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
@@ -266,25 +239,25 @@ export default function HomeScreen({
         </MotionPressable>
       </MotionView>
 
-      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds, compact && styles.compactWorlds, tight && styles.tightWorlds]}>
+      <MotionView entranceDelay={200} testID="home-exploration" style={[styles.worlds]}>
         <View style={styles.sectionRow}>
           <Text accessibilityRole="header" style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Κόσμοι γνώσης</Text>
           <View accessible={false} pointerEvents="none" style={styles.sectionRule} />
         </View>
-        <View style={[styles.categoryGrid, tight && styles.tightCategoryGrid]}>
+        <View style={[styles.categoryGrid]}>
           {categories.map(category => {
             const WorldIllustration = getCategoryWorldIcon(category.id);
             return (
               <MotionPressable key={category.id} testID={"home-category-" + category.id}
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
                 onPress={() => onOpenCategory(category.id)}
-                style={({ pressed }) => [styles.category, compact && styles.compactCategory, tight && styles.tightCategory, pressed && styles.pressed]}>
+                style={({ pressed }) => [styles.category, pressed && styles.pressed]}>
                 <View style={[styles.categoryPlatform, { width: worldPlatformSize, height: worldPlatformSize }]} accessible={false} pointerEvents="none">
                   {WorldIllustration
                     ? <WorldIllustration size={worldIconSize} displayScale={1.18} />
                     : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
                 </View>
-                <Text style={[styles.categoryLabel, tight && styles.tightCategoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
+                <Text style={[styles.categoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
                   {shortLabels[category.id] ?? category.title}
                 </Text>
               </MotionPressable>
@@ -316,15 +289,13 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
-  // Fill spare viewport height inside the three playable cards, not in gaps
-  // between sections. The worlds grid retains its natural height; real
-  // overflow remains scrollable on shorter screens and with large text.
+  // Cards keep bounded natural minimums; spare screen height is never
+  // converted into empty card padding. Real text overflow stays scrollable.
   content: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 16,
-    paddingTop: 6, paddingBottom: 8, gap: 12, flexGrow: 1, justifyContent: "flex-start" },
+    paddingTop: 4, paddingBottom: 4, gap: 8, flexGrow: 1, justifyContent: "flex-start" },
   // Compact screens reduce spacing; tight screens also use smaller artwork.
   compactContent: { gap: 8, paddingTop: 4, paddingBottom: 4 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
-  fittedHero: { flexBasis: 0, flexGrow: 100, flexShrink: 1, minHeight: 0 },
   fittedHangman: { minHeight: 54, paddingVertical: 6 },
   compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
@@ -337,12 +308,7 @@ const styles = StyleSheet.create({
   tightActionCard: { minHeight: 80, padding: 8, gap: 2 },
   // A 62pt icon plus its label already exceeds minHeight: 70. Trim the
   // surrounding padding/gap so both icon rows fit without losing artwork.
-  compactCategory: { minHeight: 70, paddingVertical: 3, gap: 3 },
-  tightCategory: { minHeight: 62, paddingVertical: 2, gap: 2 },
-  tightCategoryLabel: { fontSize: 10, lineHeight: 12 },
-  tightWorlds: { gap: 4, paddingTop: 2 },
   tightSectionTitle: { fontSize: 16, lineHeight: 20 },
-  tightCategoryGrid: { rowGap: 4 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
   logo: { color: colors.accentLight, fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 2.4 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -352,7 +318,7 @@ const styles = StyleSheet.create({
   levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
   hero: { padding: 18, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
     overflow: "hidden", backgroundColor: "#1B2434", gap: 10,
-    flexGrow: 2, justifyContent: "center" },
+    justifyContent: "center" },
   heroIntro: { paddingRight: 112, gap: 3 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
@@ -366,7 +332,7 @@ const styles = StyleSheet.create({
   heroButton: { flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 9, backgroundColor: colors.accent, borderRadius: 12, minHeight: 44, marginTop: 2, overflow: "hidden" },
   heroButtonLabel: { color: "#111421", fontSize: 14, fontWeight: "900" },
-  actions: { flexDirection: "row", gap: 10, flexGrow: 1 },
+  actions: { flexDirection: "row", gap: 10 },
   actionCard: { flex: 1, borderRadius: 16, borderWidth: 1, minHeight: 96,
     padding: 12, justifyContent: "center", gap: 4, overflow: "hidden" },
   actionLabels: { gap: 4 },
@@ -387,16 +353,15 @@ const styles = StyleSheet.create({
   quickQuizIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
-  worlds: { gap: 6, paddingTop: 6 },
-  compactWorlds: { gap: 5, paddingTop: 4 },
+  worlds: { gap: 4, paddingTop: 0 },
   sectionRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   sectionRule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(177,165,255,0.32)" },
   sectionTitle: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   // Four equal columns; the last three cards are centered, not stretched across the row.
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
-    alignContent: "flex-start", columnGap: 8, rowGap: 8 },
-  category: { width: "22.7%", minHeight: 96, borderRadius: 14,
-    alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
+    alignContent: "flex-start", columnGap: 8, rowGap: 4 },
+  category: { width: "22.7%", minHeight: 44, borderRadius: 14,
+    alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 3, gap: 3 },
   // Transparent artwork floats over the Atlas; only its frame scales with
   // the viewport, while the category's full-width tap target stays intact.
   categoryPlatform: { width: 62, height: 62,
@@ -417,4 +382,3 @@ const styles = StyleSheet.create({
   hangmanArrow: { color: "#E1BF88", fontSize: 23 },
   pressed: { opacity: 0.76 },
 });
-
