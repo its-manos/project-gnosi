@@ -1,15 +1,16 @@
+import { buildMistakeModel, mergeMistakes, currentMistakeSession, mistakeById, mistakeKey, recordMistakeAnswer, type Mistakes, type MistakeSession } from "../knowledge/mistakes";
 import { emitPlayFeedback, type FeedbackKind } from "../play/events";
 import { buildKnowledgeModel } from "../knowledge/model";
 import { mergeKnowledgeReviews, type KnowledgeReviews, type KnowledgeSession } from "../knowledge/records";
 import { isCurrentKnowledgeSession, restoreKnowledgeQuiz } from "../knowledge/session";
 import { legacyAnswerSlots } from "../quiz/compatibility";
-import type { QuestionToken } from "../quiz/types";
+import type { QuizQuestion, QuestionToken } from "../quiz/types";
 import type { DailyDocument } from "../utils/dailySyncDocument";
 import { awardQuiz, hasReward, mergeRewardLedgers, quizRewardSummary, totalRewardXP, type RewardLedger } from "../gamification/rewards";
 import { migrateLearningRewards } from "../gamification/migration";
 import { REWARD_RULES } from "../gamification/rules";
-import { adaptLessonQuestion } from "../quiz/adapters";
-import { advanceQuizSession, submitQuizAnswer, calculateChoiceResults, evaluateChoice } from "../quiz/engine";
+import { adaptLessonQuestion, adaptInteractiveLessonQuestion, restoreInteractiveLessonAnswer } from "../quiz/adapters";
+import { advanceQuizSession, submitQuizAnswer, calculateChoiceResults, evaluateChoice, createQuizSession, evaluateAnswer } from "../quiz/engine";
 import { lessons } from "../data/lessons";
 import { mergeCompletionEvents, parseCompletionEvents, quizFingerprint, lessonQuizMatches, type CompletionEvents } from "../utils/learningActivity";
 import { getInlineQuestionCount } from "../utils/lessonProgress";
@@ -21,7 +22,20 @@ import { emptySyncDocument, mergeSyncDocuments, parseSyncDocument, seedSyncBacku
 export type SyncTransport = { pull: () => Promise<{ doc: SyncDocument; revision: number } | null>; seed: () => Promise<LearningBackup | null>; push: (doc: SyncDocument, revision: number) => Promise<void> };
 type Storage = { getItem: (key: string) => Promise<string | null>; setItem: (key: string, value: string) => Promise<void> };
 export type SyncStatus = "loading" | "local" | "queued" | "syncing" | "saved" | "waiting" | "error" | "local-error";
-export type LearningSnapshot = { ready: boolean; knowledgeReviews: KnowledgeReviews; knowledgeSession: KnowledgeSession | null; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards: RewardLedger; status: SyncStatus; error: string; userId: string | null };
+export type LearningSnapshot = { ready: boolean; mistakes: Mistakes; mistakeSession: MistakeSession | null; knowledgeReviews: KnowledgeReviews; knowledgeSession: KnowledgeSession | null; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards: RewardLedger; status: SyncStatus; error: string; userId: string | null };
+const EMPTY_MISTAKES: Mistakes = {};
+const EMPTY_KNOWLEDGE_REVIEWS: KnowledgeReviews = {};
+const EMPTY_WEEKLY_REVIEWS: WeeklyAnswers = {};
+const EMPTY_REWARDS: RewardLedger = {};
+/** Preserve validated immutable sections when an edit only changes another section. */
+function retainSections(next: SyncDocument, input: SyncDocument, previous: SyncDocument): SyncDocument {
+  const retain = <K extends keyof SyncDocument>(key: K) => {
+    if (input[key] === previous[key]) next[key] = previous[key];
+  };
+  retain("progress"); retain("bookmarks"); retain("activity"); retain("weeklyReviews");
+  retain("knowledgeReviews"); retain("knowledgeSession"); retain("mistakes"); retain("mistakeSession");
+  return next;
+}
 const known = new Set(lessons.map(l => l.id));
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 export class LearningStore {
@@ -53,7 +67,7 @@ export class LearningStore {
     if (!this.backupCache || this.backupCache.progress !== progress || this.backupCache.bookmarks !== bookmarks) {
       this.backupCache = { progress, bookmarks, value: syncBackup(this.doc) };
     }
-    return { ready: this.ready, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: this.backupCache.value, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId };
+    return { ready: this.ready, mistakes: this.doc.mistakes ?? EMPTY_MISTAKES, mistakeSession: this.doc.mistakeSession?.value ?? null, knowledgeReviews: this.doc.knowledgeReviews ?? EMPTY_KNOWLEDGE_REVIEWS, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: this.backupCache.value, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, rewards: this.doc.rewards ?? EMPTY_REWARDS, status: this.status, error: this.error, userId: this.userId };
   }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
   // Data-only subscribers should not render on sync status/error transitions.
@@ -68,6 +82,8 @@ export class LearningStore {
       previous.activity === current.activity &&
       previous.weeklyReviews === current.weeklyReviews &&
       previous.rewards === current.rewards &&
+      previous.mistakes === current.mistakes &&
+      previous.mistakeSession === current.mistakeSession &&
       previous.knowledgeReviews === current.knowledgeReviews &&
       previous.knowledgeSession === current.knowledgeSession &&
       previous.userId === current.userId) return previous;
@@ -140,7 +156,7 @@ export class LearningStore {
   private change(doc: SyncDocument) {
     if (!this.ready) throw new Error("local_not_ready");
     if (doc.rewards !== undefined) doc = { ...doc, rewards: migrateLearningRewards(lessons, syncBackup(doc).completedIds, doc.activity, doc.weeklyReviews ?? {}, doc.rewards) };
-    this.doc = parseSyncDocument(doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
+    this.doc = retainSections(parseSyncDocument(doc), doc, this.doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
     this.emit(); void this.persist(); this.schedule();
   }
   private stamp(): [number, string] {
@@ -150,10 +166,10 @@ export class LearningStore {
   private feedback(kind: FeedbackKind, id: string, xp = 0, label?: string, answerXP?: number, pendingXP = false) {
     if (this.active) emitPlayFeedback({ kind, id, scope: this.userId ?? "guest", xp, label, answerXP, pendingXP });
   }
-  setProgress(id: string, value: ProgressValue) {
+  setProgress(id: string, value: ProgressValue, mistakes = this.doc.mistakes) {
     if (!known.has(id)) return;
     const stamp = this.stamp();
-    this.change({ ...this.doc, clock: stamp[0], progress: { ...this.doc.progress, [id]: { stamp, value } } });
+    this.change({ ...this.doc, clock: stamp[0], ...(mistakes ? { mistakes } : {}), progress: { ...this.doc.progress, [id]: { stamp, value } } });
   }
   setBookmark(id: string, value: boolean) {
     if (!known.has(id) || this.doc.bookmarks[id]?.value === value) return;
@@ -162,7 +178,15 @@ export class LearningStore {
   }
   answer(id: string, attempt: BackupAttempt) {
     const previous = this.doc.progress[id]?.value.attempt?.checkpointAnswers ?? {};
-    this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt });
+    let mistakes = this.doc.mistakes ?? {};
+    const lessonForMistakes = lessons.find(l => l.id === id);
+    if (lessonForMistakes) for (const [slot, value] of Object.entries(attempt.checkpointAnswers)) {
+      if (previous[Number(slot)] !== undefined) continue;
+      const index = Number(slot), question = adaptInteractiveLessonQuestion(lessonForMistakes, index) ?? adaptLessonQuestion(lessonForMistakes, index);
+      const typed = restoreInteractiveLessonAnswer(lessonForMistakes, index, value, attempt.typedCheckpointAnswers?.[index]);
+      if (typed !== undefined) mistakes = recordMistakeAnswer(mistakes, question, typed, attempt.updatedAt);
+    }
+    this.setProgress(id, { completed: this.doc.progress[id]?.value.completed ?? false, attempt }, mistakes);
     const lesson = lessons.find(l => l.id === id);
     if (!lesson) return;
     const ledger = this.doc.rewards ?? {};
@@ -220,9 +244,99 @@ export class LearningStore {
     if (row?.correct && !hasReward(rewards, recallKey)) rewards[recallKey] = row.baseXP + row.comboXP;
     const plan = weeklyPlan(this.doc.activity, weeklyReviews, getAthensDateKey());
     if (plan.length && plan.every(q => weeklyReviews[q.id]) && !hasReward(rewards, `review:${item.week}`)) rewards[`review:${item.week}`] = REWARD_RULES.review;
-    this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards });
+    const mistakes = this.projectLessonReview(item.lesson.id, item.questionIndex, answerIndex);
+    this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards, mistakes });
     const earned = totalRewardXP(this.doc.rewards ?? {}) - beforeXP;
     this.feedback(row?.correct ? "correct" : "incorrect", `weekly-answer:${id}`, earned, undefined, earned);
+    return true;
+  }
+  importMistakes(incoming: Mistakes) {
+    if (!this.ready || !this.active) return;
+    const mistakes = mergeMistakes(this.doc.mistakes, incoming);
+    if (same(mistakes, this.doc.mistakes ?? {})) return;
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], mistakes });
+  }
+  private projectLessonReview(lessonId: string, index: number, value: number): Mistakes {
+    const lesson = lessons.find(l => l.id === lessonId);
+    if (!lesson || !lesson.questions[index] || !evaluateChoice(lesson.questions[index], value).valid) return this.doc.mistakes ?? EMPTY_MISTAKES;
+    const q = adaptInteractiveLessonQuestion(lesson, index) ?? adaptLessonQuestion(lesson, index);
+    const previous = this.doc.mistakes?.[mistakeKey(q)];
+    const at = Math.max(Date.now(), (previous?.wrong?.at ?? 0) + 1, (previous?.correctAt ?? 0) + 1);
+    const correct = value === lesson.questions[index].correctIndex;
+    return mergeMistakes(this.doc.mistakes, { [mistakeKey(q)]: { questionId: q.id, version: q.version,
+      wrong: correct ? null : { at, value: q.type === "multiple-choice" ? value : null }, correctAt: correct ? at : 0 } });
+  }
+  recordLessonReview(lessonId: string, index: number, value: number) {
+    if (!this.ready || !this.active) return;
+    this.importMistakes(this.projectLessonReview(lessonId, index, value));
+  }
+  recordQuestionAnswer(question: QuizQuestion, value: unknown, at?: number): boolean {
+    if (!this.ready || !this.active) return false;
+    const canonical = mistakeById.get(question.id)?.question;
+    if (!canonical || canonical.version !== question.version) return false;
+    // Quick Quiz shuffles answer labels in the round snapshot. Store bank indices.
+    let normalized = value;
+    if (canonical.type === "multiple-choice" && question.type === "multiple-choice" && typeof value === "number") {
+      const displayed = question.content as { answers: string[] };
+      normalized = canonical.content.answers.indexOf(displayed.answers[value]);
+    }
+    if (!evaluateAnswer(canonical, normalized).valid) return false;
+    const previous = this.doc.mistakes?.[mistakeKey(canonical)];
+    const answeredAt = at ?? Math.max(Date.now(), (previous?.wrong?.at ?? 0) + 1, (previous?.correctAt ?? 0) + 1);
+    const mistakes = recordMistakeAnswer(this.doc.mistakes ?? {}, canonical, normalized, answeredAt);
+    if (same(mistakes, this.doc.mistakes ?? {})) return true;
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], mistakes });
+    return true;
+  }
+  startMistakeReview(): boolean {
+    if (!this.ready || !this.active) return false;
+    const current = this.doc.mistakeSession?.value;
+    if (current && !current.quiz.completed && currentMistakeSession(current)) return true;
+    const items = buildMistakeModel(this.doc.mistakes).pending.slice(0, 5);
+    if (!items.length) return false;
+    const stamp = this.stamp();
+    const quiz = createQuizSession(`mr1:${this.device}:${stamp[0]}`, "review", items.map(row => row.item!.question));
+    this.change({ ...this.doc, clock: stamp[0], mistakeSession: { stamp, value: { quiz, earnedXP: 0 } } });
+    return true;
+  }
+  closeMistakeReview(id?: string) {
+    if (!this.ready || !this.active || (id && this.doc.mistakeSession?.value?.quiz.id !== id)) return;
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], mistakeSession: { stamp, value: null } });
+  }
+  answerMistakeReview(id: string, token: QuestionToken, value: unknown): boolean {
+    const saved = this.doc.mistakeSession?.value;
+    if (!this.ready || !this.active || !saved || saved.quiz.id !== id || !currentMistakeSession(saved)) return false;
+    const result = submitQuizAnswer(saved.quiz, token, value);
+    if (!result.changed) return false;
+    const question = saved.quiz.questions[saved.quiz.currentIndex];
+    const previous = this.doc.mistakes?.[mistakeKey(question)];
+    const at = Math.max(Date.now(), (previous?.wrong?.at ?? 0) + 1, (previous?.correctAt ?? 0) + 1);
+    const mistakes = recordMistakeAnswer(this.doc.mistakes ?? {}, question, value, at);
+    const stamp = this.stamp();
+    this.change({ ...this.doc, clock: stamp[0], mistakes, mistakeSession: { stamp, value: { ...saved, quiz: result.session } } });
+    this.feedback(evaluateAnswer(question, value).correct ? "correct" : "incorrect", `mistake-answer:${id}:${question.id}`, 0, undefined, 0);
+    return true;
+  }
+  advanceMistakeReview(id: string, token: QuestionToken): boolean {
+    const saved = this.doc.mistakeSession?.value;
+    if (!this.ready || !this.active || !saved || saved.quiz.id !== id || !currentMistakeSession(saved)) return false;
+    const result = advanceQuizSession(saved.quiz, token);
+    if (!result.changed) return false;
+    const rewards = { ...this.doc.rewards };
+    let earnedXP = 0;
+    if (result.session.completed) {
+      const fresh = saved.quiz.questions.filter(q => {
+        const row = this.doc.mistakes?.[mistakeKey(q)];
+        return row?.wrong && row.correctAt > row.wrong.at && evaluateAnswer(q, saved.quiz.answers[q.id]?.value).correct && !hasReward(rewards, `seen:revision:${q.id}`);
+      });
+      const key = `review:${getAthensDateKey()}`;
+      if (fresh.length && !hasReward(rewards, key)) { earnedXP = 10; rewards[key] = 10; }
+      // Only consume eligibility when the bonus is paid. Unrewarded questions can qualify later.
+      if (earnedXP) for (const q of fresh) rewards[`seen:revision:${q.id}`] = 0;
+    }
+    const stamp = this.stamp();
+    this.change({ ...this.doc, clock: stamp[0], rewards, mistakeSession: { stamp, value: { quiz: result.session, earnedXP } } });
+    if (result.session.completed) this.feedback("complete", `mistake-complete:${id}`, earnedXP, "Η επανάληψη ολοκληρώθηκε");
     return true;
   }
   startKnowledgeReview(mode: "scheduled" | "practice", daily: DailyDocument): boolean {
@@ -231,7 +345,7 @@ export class LearningStore {
     if (current && !current.completed && current.date === date) {
       try { if (!isCurrentKnowledgeSession(current)) return false; restoreKnowledgeQuiz(current); return true; } catch { return false; }
     }
-    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, date);
+    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, knowledgeReviews: this.doc.knowledgeReviews }, daily, date);
     const items = (mode === "scheduled" ? model.due : model.practice).slice(0, 5);
     if (!items.length) return false;
     const stamp = this.stamp();
@@ -248,14 +362,14 @@ export class LearningStore {
     if (!this.ready || !this.active || !saved || saved.id !== id || !isCurrentKnowledgeSession(saved) || saved.date !== getAthensDateKey(new Date(now))) return false;
     let quiz; try { quiz = restoreKnowledgeQuiz(saved); } catch { return false; }
     const result = submitQuizAnswer(quiz, token, answerIndex); if (!result.changed) return false;
-    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date);
+    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date);
     const item = model.items.find(i => i.question.id === token.id)!;
     const firstToday = saved.mode === "scheduled" && item.isAssessment && item.novel && !item.reviewedToday && !this.doc.knowledgeReviews?.[token.id]?.[saved.date];
     const qualified = firstToday && item.due !== null && item.due <= saved.date;
     const knowledgeReviews = firstToday ? mergeKnowledgeReviews(this.doc.knowledgeReviews, { [token.id]: { [saved.date]: { version: token.version, answerIndex, at: now, mode: saved.mode } } }) : this.doc.knowledgeReviews;
     const value = { ...saved, answers: legacyAnswerSlots(result.session), qualifiedIndices: qualified ? [...saved.qualifiedIndices, saved.currentIndex] : saved.qualifiedIndices };
     const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], knowledgeReviews, knowledgeSession: { stamp, value } });
-    const after = firstToday ? buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date).items.find(i => i.question.id === token.id) : item;
+    const after = firstToday ? buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date).items.find(i => i.question.id === token.id) : item;
     const mastered = item.state !== "mastered" && after?.state === "mastered";
     const correct = evaluateChoice(quiz.questions[quiz.currentIndex].content as { answers: string[]; correctIndex: number }, answerIndex).correct;
     this.feedback(mastered ? "mastered" : correct ? "correct" : "incorrect", `knowledge-answer:${id}:${saved.currentIndex}`, 0, mastered ? item.topicTitle : undefined, 0);
@@ -283,7 +397,7 @@ export class LearningStore {
     await this.latestWrite;
   }
   async restoreBookmarks(ids: string[]) { for (const id of ids) this.setBookmark(id, true); await this.latestWrite; }
-  async importGuest(incoming: LearningBackup, events: CompletionEvents, reviews: WeeklyAnswers = {}, guestRewards: RewardLedger = {}, guestKnowledge: KnowledgeReviews = {}) {
+  async importGuest(incoming: LearningBackup, events: CompletionEvents, reviews: WeeklyAnswers = {}, guestRewards: RewardLedger = {}, guestKnowledge: KnowledgeReviews = {}, guestMistakes: Mistakes = {}) {
     const merged = mergeLearningBackups(this.snapshot.backup, incoming);
     const activity = mergeCompletionEvents(this.doc.activity, events);
     const stamp = this.stamp(), progress = { ...this.doc.progress }, bookmarks = { ...this.doc.bookmarks };
@@ -292,13 +406,13 @@ export class LearningStore {
       if (!same(progress[id]?.value, value)) progress[id] = { stamp, value };
     }
     for (const id of merged.savedIds) if (!bookmarks[id]?.value) bookmarks[id] = { stamp, value: true };
-    this.change({ ...this.doc, clock: stamp[0], knowledgeReviews: mergeKnowledgeReviews(this.doc.knowledgeReviews, guestKnowledge), progress, bookmarks, activity, rewards: mergeRewardLedgers(this.doc.rewards, guestRewards), weeklyReviews: mergeWeeklyAnswers(this.doc.weeklyReviews, reviews) });
+    this.change({ ...this.doc, clock: stamp[0], mistakes: mergeMistakes(this.doc.mistakes, guestMistakes), knowledgeReviews: mergeKnowledgeReviews(this.doc.knowledgeReviews, guestKnowledge), progress, bookmarks, activity, rewards: mergeRewardLedgers(this.doc.rewards, guestRewards), weeklyReviews: mergeWeeklyAnswers(this.doc.weeklyReviews, reviews) });
     await this.latestWrite;
   }
   async resetGuestProgress() {
     if (this.userId) throw new Error("guest_only_reset");
     const stamp = this.stamp();
-    this.change({ ...this.doc, clock: stamp[0], knowledgeReviews: {}, knowledgeSession: { stamp, value: null }, progress: {}, activity: {}, weeklyReviews: {}, rewards: {} }); await this.latestWrite;
+    this.change({ ...this.doc, clock: stamp[0], mistakes: {}, mistakeSession: { stamp, value: null }, knowledgeReviews: {}, knowledgeSession: { stamp, value: null }, progress: {}, activity: {}, weeklyReviews: {}, rewards: {} }); await this.latestWrite;
   }
   async flushLocal() { try { await this.latestWrite; return true; } catch { return false; } }
   async retry() {
@@ -321,7 +435,7 @@ export class LearningStore {
           // that request was pending, rather than the pre-request snapshot.
           combined = seed ? mergeSyncDocuments(this.doc, seedSyncBackup(seed)) : this.doc;
         }
-        this.doc = combined;
+        this.doc = same(this.doc, combined) ? this.doc : combined;
         this.dirty = !remote || !same(combined, remote.doc);
         // Persist pulled data and the outbox before writing to the network.
         await this.persist(); if (!current()) return;

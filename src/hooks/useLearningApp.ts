@@ -204,6 +204,7 @@ export function useLearningApp() {
     const transition = submitQuizAnswer(session, { id: question.id, version: question.version }, answerIndex);
     if (!transition.changed) return;
     standaloneSession.current = transition.session;
+    store.recordQuestionAnswer(question, answerIndex);
     const ledger = store.getSnapshot().rewards;
     const answers = legacyAnswerSlots(transition.session);
     const row = quizRewardSummary(activeQuizQuestions, answers, "lesson", ledger).rows[questionIndex];
@@ -312,6 +313,7 @@ export function useLearningApp() {
     const session = reviewSession.current;
     if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer !== null || !evaluateChoice(question, answer).valid) return;
     session.answer = answer;
+    store.recordLessonReview(activeLesson.id, reviewIndices[reviewIndex], answer);
     feedbackAttempt.current++;
     emitPlayFeedback({ scope: store.userId ?? "guest", id: `mistake:${activeLessonId}:${reviewIndex}:${completionRun.current}:${feedbackAttempt.current}`, kind: evaluateChoice(question, answer).correct ? "correct" : "incorrect", answerXP: 0 });
     setReviewAnswer(answer);

@@ -24,7 +24,7 @@ const native = {
   useWindowDimensions: () => ({ height: 810, width: windowWidth, fontScale }),
 };
 const { lessons, categories } = load("src/data/lessons.ts");
-const knowledge = { due: [], categories: [
+const knowledge = { revised:4,total:12,pending:[], due: [], categories: [
   { id: "history", mastered: 3, total: 8 },
   { id: "science", mastered: 1, total: 4 },
 ] };
@@ -40,7 +40,7 @@ const common = {
   "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle" },
   "../components/SyncStatus": { __esModule: true, default: "SyncStatus" },
   "../components/LearningActivityPanel": { CategoryProgress: "Categories" },
-  "../hooks/useKnowledgeModel": { useKnowledgeModel: () => ({ model: knowledge, ready: true }) },
+  "../hooks/useMistakesModel": { useMistakesModel: () => ({ model: knowledge, ready: true }) },
 };
 const Progress = load("src/screens/ProgressScreen.tsx", common).default;
 const Insights = load("src/screens/LearningInsightsScreen.tsx", common).default;
@@ -277,12 +277,13 @@ slots = []; cursor = 0;
 insightProps.initialView = "knowledge";
 tree = renderInsights();
 assert.equal(nodes(tree).find(n => n.type === "Mastery").props.detail, true);
-assert.ok(text(tree).includes("ΚΑΤΑΚΤΗΜΕΝΕΣ ΕΝΝΟΙΕΣ"));
+assert.ok(text(tree).includes("ΛΑΘΗ ΠΟΥ ΔΙΟΡΘΩΣΕΣ"));
 assert.ok(!nodes(tree).some(n => n.type === "Categories"));
 
 // A 0% mastery ring is a quiet empty track, not a bright arc-cap dot.
 // It still announces the true zero value to assistive technology.
 const existingCategories = knowledge.categories;
+knowledge.revised=0;knowledge.total=24;
 knowledge.categories = [{ id: "history", mastered: 0, total: 24, percent: 0 }];
 tree = renderInsights();
 assert.equal(node(tree, "insights-ring").props.accessibilityValue.now, 0);
@@ -298,7 +299,7 @@ assert.equal(nodes(tree).find(n => n.type === "Mastery").props.onOpen,
   insightProps.onKnowledgeReview,
   "the established KnowledgeMastery review route remains wired for the rest of the screen");
 knowledge.due = [];
-knowledge.categories = existingCategories;
+knowledge.categories = existingCategories;knowledge.revised=4;knowledge.total=12;
 
 // Responsive detail layout: three columns on wide screens and a single
 // readable column when large text is enabled.

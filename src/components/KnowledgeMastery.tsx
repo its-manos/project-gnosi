@@ -1,113 +1,50 @@
+import { asBuiltinQuestion, describeMistakeAnswer } from "../knowledge/mistakes";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
-import { useLearningSnapshot } from "../state/LearningSession";
-import { MASTERY_LABELS } from "../knowledge/model";
-import { categories as learningCategories } from "../data/lessons";
+import { useMistakesModel } from "../hooks/useMistakesModel";
 import ActionButton from "./ActionButton";
-import SubjectProgressTile from "./SubjectProgressTile";
-import { LearningSectionHeading, SubjectInsightPanel, SubjectShowAll } from "./LearningDetailSections";
 import { colors } from "../theme";
-
-export default function KnowledgeMastery({ onOpen, compact = false, mapOnly = false, preview = false, detail = false, singleColumn = false, threeColumn = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean }) {
-  const { model, ready, today } = useKnowledgeModel(), learning = useLearningSnapshot();
-  const [expanded, setExpanded] = useState(false);
-  const [allSubjects, setAllSubjects] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const [allDetailSubjects, setAllDetailSubjects] = useState(false);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const active = learning.knowledgeSession && !learning.knowledgeSession.completed && learning.knowledgeSession.date === today;
-  const previewCollapsed = preview && mapOnly && !allSubjects;
-  // Prioritize visible progress and keep catalogue order when categories tie.
-  // The default view stays short even for an account with no mastered concepts.
-  const rankedSubjects = detail
-    ? model.categories.map((category, index) => ({ category, index }))
-        .sort((a, b) => b.category.mastered - a.category.mastered
-          || b.category.percent - a.category.percent || a.index - b.index)
-        .map(item => item.category)
-    : [];
-  const focusedSubjects = allDetailSubjects ? rankedSubjects : rankedSubjects.slice(0, 4);
-  const selectedSubject = focusedSubjects.find(category => category.id === selectedSubjectId);
-  const remainingConcepts = selectedSubject
-    ? Math.max(0, selectedSubject.total - selectedSubject.mastered) : 0;
-  if (compact && (!ready || (!model.due.length && !active))) return null;
-  return <View style={[styles.card, preview && mapOnly && styles.previewCard, detail && styles.detailCard]} testID="knowledge-mastery">
-    {detail ? <LearningSectionHeading title="ΟΙ ΘΕΜΑΤΙΚΕΣ ΣΟΥ" tone="knowledge" />
-      : <Text style={styles.label}>Ο ΧΑΡΤΗΣ ΤΗΣ ΓΝΩΣΗΣ ΣΟΥ</Text>}
-    {mapOnly && !ready ? <Text style={styles.body}>Φόρτωση γνώσεων…</Text> : null}
-    {!mapOnly ? <>
-    <Text style={styles.heading}>{ready ? `${model.due.length} ερωτήσεις για επανάληψη` : "Φόρτωση γνώσεων…"}</Text>
-    <Text style={styles.body}>Μικρές επαναλήψεις, γνώση που μένει. Έως 5 ερωτήσεις κάθε φορά.</Text>
-    {ready ? <ActionButton label={active ? "Συνέχισε την επανάληψη" : model.due.length ? "Ώρα για επανάληψη" : "Επανάληψη και εξάσκηση"} onPress={onOpen} /> : null}
-    </> : null}
-    {!compact && ready ? <>
-      {!detail && (!mapOnly || showHelp) ? <><Text style={styles.body}>Νέο → Μαθαίνεται → Οικείο → Κατακτημένο. Η κατάκτηση χρειάζεται τρεις σωστές δοκιμές σε διαφορετικές περιπτώσεις και ημέρες. Η ίδια ερώτηση δεν μετρά ξανά. Μετά την κατάκτηση δεν χρειάζεται τακτική επανάληψη.</Text></> : null}
-      {detail ? (
-        <View style={[styles.detailGrid, singleColumn && styles.detailGridSingle]} testID="knowledge-tile-grid">
-          {focusedSubjects.map(category => {
-            const emoji = learningCategories.find(item => item.id === category.id)?.emoji ?? "✦";
-            const selected = selectedSubjectId === category.id;
-            return <SubjectProgressTile key={category.id}
-              tone="knowledge" title={category.title} emoji={emoji}
-              completed={category.mastered} total={category.total} percent={category.percent}
-              selected={selected} singleColumn={singleColumn} threeColumn={threeColumn}
-              testID={`knowledge-subject-${category.id}`}
-              onPress={() => setSelectedSubjectId(id => id === category.id ? null : category.id)}
-              accessibilityLabel={`${category.title}, ${category.mastered} από ${category.total} κατακτημένες έννοιες, πρόοδος επαναλήψεων ${category.percent}%`} />;
-          })}
-        </View>
-      ) : (
-        (mapOnly && !allSubjects ? model.categories.slice().sort((a, b) => b.percent - a.percent).slice(0, 3) : model.categories).map(category => <View key={category.id} style={[styles.row, previewCollapsed && styles.previewRow]}>
-        <Text style={[styles.title, previewCollapsed && styles.previewTitle]}>{category.title} · {category.total ? `${category.percent}%` : "Χωρίς δοκιμές ακόμη"}</Text>
-        <View style={[styles.track, previewCollapsed && styles.previewTrack]} accessible accessibilityRole="progressbar" accessibilityLabel={`Γνώσεις: ${category.title}`} accessibilityValue={{ min: 0, max: 100, now: category.percent }}><View style={[styles.fill, { width: `${category.percent}%` }]} /></View>
-        {!previewCollapsed ? <Text style={styles.body}>{category.mastered} / {category.total} έννοιες κατακτημένες</Text> : null}
-      </View>)
-      )}
-      {detail && selectedSubject ? <SubjectInsightPanel
-        testID="knowledge-selected-subject" tone="knowledge"
-        title={selectedSubject.title} current={selectedSubject.mastered} total={selectedSubject.total}
-        caption={selectedSubject.total === 0
-          ? "Δεν υπάρχουν ακόμη καταγεγραμμένες έννοιες εδώ."
-          : remainingConcepts === 0
-            ? "Όλες οι έννοιες αυτής της θεματικής κατακτημένες."
-            : selectedSubject.mastered === 0
-              ? "Επόμενος στόχος: η πρώτη κατακτημένη έννοια."
-              : `Απομένουν ${remainingConcepts} έννοιες για πλήρη κατάκτηση.`}
-        note={`Πρόοδος επαναλήψεων: ${selectedSubject.percent}%`} /> : null}
-      {detail && rankedSubjects.length > 4 ? (
-        <SubjectShowAll testID="knowledge-all-subjects" tone="knowledge"
-          expanded={allDetailSubjects} count={rankedSubjects.length}
-          onPress={() => setAllDetailSubjects(value => !value)} />
-      ) : null}
-      {mapOnly && !detail ? <Pressable style={styles.button} accessibilityRole="button" accessibilityState={{ expanded: allSubjects }} onPress={() => setAllSubjects(v => !v)}><Text style={styles.link}>{allSubjects ? (preview ? "Πίσω στη σύνοψη −" : "Λιγότερες θεματικές −") : (preview ? "Αναλυτική εικόνα +" : "Όλες οι θεματικές +")}</Text></Pressable> : null}
-      {!detail && !previewCollapsed && (!mapOnly || showHelp) ? <Text style={styles.body}>Οι μπάρες αφορούν τις έννοιες για τις οποίες υπάρχουν διαφορετικές δοκιμές, όχι ολόκληρο το γνωστικό πεδίο. Δεν μετρούν άρθρα που διάβασες. Χωρίς αρκετά στοιχεία, η ολοκλήρωση διατηρείται και η κατάκτηση περιμένει.</Text> : !previewCollapsed && !detail ? <Text style={styles.body}>Γνώση από επαναλήψεις, όχι ποσοστό άρθρων που διάβασες.</Text> : null}
-      {mapOnly && !previewCollapsed ? <Pressable style={[styles.button, detail && styles.detailDisclosure]} accessibilityRole="button" accessibilityState={{ expanded: showHelp }} onPress={() => setShowHelp(v => !v)}><Text style={styles.link}>{showHelp ? "Κλείσιμο επεξήγησης −" : "Πώς μετριέται η γνώση; +"}</Text></Pressable> : null}
-      {!previewCollapsed ? <Pressable style={[styles.button, detail && styles.detailDisclosure]} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => setExpanded(v => !v)}><Text style={styles.link}>{expanded ? "Κλείσιμο ενοτήτων −" : "Οι μαθησιακές ενότητές σου +"}</Text></Pressable> : null}
-      {detail && showHelp ? <Text style={styles.detailHelp}>Η κατάκτηση απαιτεί τρεις σωστές δοκιμές σε διαφορετικές περιπτώσεις και ημέρες. Το διάβασμα μετρά στην Ανάγνωση, όχι στις Γνώσεις.</Text> : null}
-      {expanded && !previewCollapsed ? model.topics.filter(t => t.state !== "new").map(topic => <View key={topic.id} style={styles.row}><Text style={styles.title}>{topic.title}</Text><Text style={styles.body}>{topic.status ?? MASTERY_LABELS[topic.state]}{topic.total ? ` · ${topic.mastered}/${topic.total} έννοιες` : ""}</Text></View>) : null}
-      {expanded && !previewCollapsed && !model.practice.length ? <Text style={styles.body}>Οι πρώτες ενότητες θα εμφανιστούν μόλις ολοκληρώσεις ένα μάθημα ή quiz.</Text> : null}
-    </> : null}
+export default function KnowledgeMastery({ onOpen, compact = false }: { onOpen: () => void; compact?: boolean; mapOnly?: boolean; preview?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean }) {
+  const { model, ready } = useMistakesModel();
+  const [show, setShow] = useState(false);
+  const [showRevised, setShowRevised] = useState(false);
+  const [limit, setLimit] = useState(20);
+  const listed = showRevised ? model.rows.filter(row => row.revised && row.available) : model.pending;
+  if (compact && !model.pending.length) return null;
+  return <View style={styles.card} testID="knowledge-mastery">
+    <Text style={styles.heading}>{ready ? `${model.pending.length} για επανάληψη` : "Φόρτωση…"}</Text>
+    <Text style={styles.body}>{model.total} συνολικά λάθη · {model.revised} διορθωμένα</Text>
+    <Text style={styles.body}>Κάθε ερώτηση μετρά μία φορά ανά έκδοση. Μία σωστή απάντηση αρκεί, σε επανάληψη ή σε οποιοδήποτε κουίζ. Αν την ξαναχάσεις, επιστρέφει εδώ.</Text>
+    {model.pending.length ? <ActionButton label="Επανάληψη λαθών →" onPress={onOpen} /> : <Text style={styles.body}>{model.total ? "Έχεις διορθώσει όλα τα διαθέσιμα λάθη σου." : "Τα λάθη από μαθήματα και κουίζ θα εμφανιστούν εδώ."}</Text>}
+    {model.unavailable ? <Text style={styles.body}>{model.unavailable} από παλιότερες εκδόσεις διατηρούνται στο ιστορικό και δεν μπαίνουν στην επανάληψη.</Text> : null}
+    {model.subjects.map(subject => <View key={subject.id} style={styles.subject}>
+      <Text style={styles.title}>{subject.emoji} {subject.title}</Text>
+      <Text style={styles.body}>{subject.revised} / {subject.total} διορθωμένα</Text>
+      <View style={styles.track} accessibilityRole="progressbar" accessibilityLabel={subject.title} accessibilityValue={{ min: 0, max: subject.total, now: subject.revised }}>
+        <View style={[styles.fill, { width: `${subject.revised / subject.total * 100}%` }]} />
+      </View>
+    </View>)}
+    {model.total ? <Pressable accessibilityRole="button" accessibilityState={{ expanded: show }} style={styles.button} onPress={() => setShow(v => !v)}>
+      <Text style={styles.link}>{show ? "Κλείσιμο λίστας ↑" : "Δες τα λάθη σου ↓"}</Text>
+    </Pressable> : null}
+    {show ? <View style={styles.filters}>
+      {([false, true] as const).map(revised => <Pressable key={String(revised)} style={styles.button} accessibilityRole="button" accessibilityState={{ selected: showRevised === revised }} onPress={() => { setShowRevised(revised); setLimit(20); }}>
+        <Text style={[styles.link, showRevised !== revised && styles.muted]}>{revised ? `Διορθωμένα (${model.revised})` : `Εκκρεμή (${model.pending.length})`}</Text>
+      </Pressable>)}
+    </View> : null}
+    {show ? listed.slice(0, limit).map(row => <View key={`${row.questionId}:${row.version}`} style={styles.subject}>
+      <Text style={styles.title}>{row.item!.question.prompt}</Text><Text style={styles.body}>{row.item!.title}</Text>
+      <Text style={styles.body}>Η επιλογή σου: {describeMistakeAnswer(asBuiltinQuestion(row.item!.question), row.wrong!.value)}</Text>
+    </View>) : null}
+    {show && listed.length > limit ? <Pressable style={styles.button} accessibilityRole="button" onPress={() => setLimit(n => n + 20)}><Text style={styles.link}>Περισσότερα ({listed.length - limit}) ↓</Text></Pressable> : null}
   </View>;
 }
 const styles = StyleSheet.create({
-  card: { padding: 20, gap: 14, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong },
-  previewCard: { padding: 14, gap: 8, borderRadius: 18 },
-  detailCard: { backgroundColor: "transparent", borderWidth: 0, padding: 0, gap: 11 },
-  detailGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 },
-  detailGridSingle: { flexDirection: "column" },
-  detailDisclosure: {
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#44435D",
-    marginTop: 3, paddingHorizontal: 2,
-  },
-  detailHelp: { color: colors.textBody, fontSize: 12, lineHeight: 19 },
-
-  previewRow: { gap: 5, paddingVertical: 2 },
-  previewTitle: { fontSize: 12, lineHeight: 18 },
-  previewTrack: { height: 6 },
-  label: { color: colors.accentLight, fontSize: 11, lineHeight: 18, fontWeight: "800" },
-  heading: { color: colors.text, fontSize: 22, lineHeight: 30, fontWeight: "800" },
-  title: { color: colors.text, fontSize: 14, lineHeight: 22, fontWeight: "700" },
-  body: { color: colors.textBody, fontSize: 13, lineHeight: 22 },
-  row: { gap: 6, paddingVertical: 6 }, track: { height: 8, borderRadius: 8, backgroundColor: colors.border, overflow: "hidden" }, fill: { height: "100%", backgroundColor: colors.accent },
-  button: { minHeight: 44, justifyContent: "center" }, link: { color: colors.accentLight, fontSize: 14, fontWeight: "700" },
+  filters: { flexDirection: "row", flexWrap: "wrap", gap: 14 }, muted: { color: colors.textMuted },
+  card: { gap: 14 }, heading: { color: colors.text, fontSize: 20, fontWeight: "800" },
+  title: { color: colors.text, fontSize: 14, fontWeight: "700", lineHeight: 22 },
+  body: { color: colors.textBody, fontSize: 13, lineHeight: 21 },
+  subject: { padding: 14, gap: 6, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  track: { height: 6, borderRadius: 6, backgroundColor: colors.border, overflow: "hidden" }, fill: { height: "100%", backgroundColor: colors.accent },
+  button: { minHeight: 44, justifyContent: "center" }, link: { color: colors.accentLight, fontSize: 14, fontWeight: "800" },
 });

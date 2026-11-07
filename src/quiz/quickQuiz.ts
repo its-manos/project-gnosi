@@ -12,6 +12,8 @@ const bankById = new Map(quickQuizQuestions.map(question => [question.id, questi
 
 export type QuickQuizProgress = {
   round: QuizSession | null;
+  /** Durable timestamps let the shared mistake store recover a saved answer after a crash. */
+  reviewAnswerTimes?: Record<string, number>;
   roundsCompleted: number;
   bestScore: number;
   bestStreak: number;
@@ -43,7 +45,9 @@ export function readQuickQuiz(bytes: string | null): QuickQuizProgress {
   const seen = Object.fromEntries(Object.entries(raw.seen).filter(([id, value]) =>
     bankById.has(id) && count(value, latest) && value > 0)) as Record<string, number>;
   const missed = [...new Set<string>(raw.missed.filter((id: string) => bankById.has(id)))];
-  return { round, roundsCompleted: raw.roundsCompleted, bestScore: raw.bestScore, bestStreak: raw.bestStreak, seen, missed };
+  const reviewAnswerTimes = raw.reviewAnswerTimes && typeof raw.reviewAnswerTimes === "object" && !Array.isArray(raw.reviewAnswerTimes)
+    ? Object.fromEntries(Object.entries(raw.reviewAnswerTimes).filter(([id, at]) => round?.answers[id] && count(at) && (at as number) > 0 && (at as number) <= 4102444800000)) as Record<string, number> : undefined;
+  return { ...(reviewAnswerTimes ? { reviewAnswerTimes } : {}), round, roundsCompleted: raw.roundsCompleted, bestScore: raw.bestScore, bestStreak: raw.bestStreak, seen, missed };
 }
 
 function shuffleChoices(question: ChoiceQuestion, random: () => number): ChoiceQuestion {

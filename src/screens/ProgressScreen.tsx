@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } fr
 import Svg, { Circle } from "react-native-svg";
 import { categories, type Lesson } from "../data/lessons";
 import type { LearningInsightsView } from "./LearningInsightsScreen";
-import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
+import { useMistakesModel } from "../hooks/useMistakesModel";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
 import { MotionView, MotionPressable, MotionXpCircle, MotionCounter } from "../components/HomeMotion";
 import { ProgressBarFill, ProgressRingGlow } from "../components/ProgressMotion";
@@ -37,7 +37,7 @@ export default function ProgressScreen({
 }: Props) {
   const { height: windowHeight, fontScale } = useWindowDimensions();
   const [viewportHeight, setViewportHeight] = useState(0);
-  const { model, ready: knowledgeReady } = useKnowledgeModel();
+  const { model, ready: knowledgeReady } = useMistakesModel();
 
   // Measure inside the app's safe area, ABOVE the bottom navigation.
   // Normal devices render a fixed page, not a tall, rubber-band ScrollView.
@@ -53,8 +53,8 @@ export default function ProgressScreen({
   const percent = totalLessonCount > 0
     ? Math.min(100, Math.round(completedCount / totalLessonCount * 100))
     : 0;
-  const mastered = model.categories.reduce((sum, item) => sum + item.mastered, 0);
-  const totalConcepts = model.categories.reduce((sum, item) => sum + item.total, 0);
+  const mastered = model.revised;
+  const totalConcepts = model.total;
   const masteryPercent = totalConcepts ? Math.round(mastered / totalConcepts * 100) : 0;
   const onViewportLayout = (event: { nativeEvent: { layout: { height: number } } }) => {
     const next = event.nativeEvent.layout.height;
@@ -154,7 +154,7 @@ export default function ProgressScreen({
               numberOfLines={1}>
               {knowledgeReady ? mastered + " / " + totalConcepts : "—"}
             </MotionCounter>
-            <Text style={styles.destinationCaption} numberOfLines={1}>έννοιες κατακτημένες</Text>
+            <Text style={styles.destinationCaption} numberOfLines={1}>λάθη που διόρθωσες</Text>
           </View>
           <View style={styles.destinationFoot}>
             <ProgressTrack variant="destination" accessible={false}>

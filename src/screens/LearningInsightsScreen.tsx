@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import type { Lesson } from "../data/lessons";
-import { useKnowledgeModel } from "../hooks/useKnowledgeModel";
+import { useMistakesModel } from "../hooks/useMistakesModel";
 import KnowledgeMastery from "../components/KnowledgeMastery";
 import { CategoryProgress } from "../components/LearningActivityPanel";
 import ProgressGradientBackground from "../components/ProgressGradientBackground";
@@ -32,11 +32,11 @@ export default function LearningInsightsScreen({
   const { width, fontScale } = useWindowDimensions();
   const compact = width < 360 || fontScale >= 1.3;
   const wide = width >= 600 && !compact;
-  const { model, ready: knowledgeReady } = useKnowledgeModel();
+  const { model, ready: knowledgeReady } = useMistakesModel();
 
   const readingTab = view === "reading";
-  const mastered = model.categories.reduce((sum, item) => sum + item.mastered, 0);
-  const totalConcepts = model.categories.reduce((sum, item) => sum + item.total, 0);
+  const mastered = model.revised;
+  const totalConcepts = model.total;
   const current = readingTab ? completedLessons.length : mastered;
   const total = readingTab ? totalLessonCount : totalConcepts;
   const ready = readingTab ? lessonProgressLoaded : knowledgeReady;
@@ -86,7 +86,7 @@ export default function LearningInsightsScreen({
           <View style={styles.overviewRow}>
             <View style={styles.overviewMain}>
               <Text style={[styles.overviewEyebrow, readingTab && styles.readingAccent]}>
-                {readingTab ? "ΜΑΘΗΜΑΤΑ" : "ΚΑΤΑΚΤΗΜΕΝΕΣ ΕΝΝΟΙΕΣ"}
+                {readingTab ? "ΜΑΘΗΜΑΤΑ" : "ΛΑΘΗ ΠΟΥ ΔΙΟΡΘΩΣΕΣ"}
               </Text>
               <View style={styles.overviewValues}>
                 <Text style={[styles.overviewValue, compact && styles.overviewValueCompact]}>
@@ -97,7 +97,7 @@ export default function LearningInsightsScreen({
             </View>
             <View testID="insights-ring" style={styles.ring}
               accessible accessibilityRole="progressbar"
-              accessibilityLabel={readingTab ? "Ολοκλήρωση μαθημάτων" : "Κατακτημένες έννοιες"}
+              accessibilityLabel={readingTab ? "Ολοκλήρωση μαθημάτων" : "Διορθωμένα λάθη"}
               accessibilityValue={ready ? { min: 0, max: 100, now: percent } : { text: "Φόρτωση" }}>
               <Svg width="100%" height="100%" viewBox="0 0 88 88" pointerEvents="none">
                 <Circle cx="44" cy="44" r="34" fill="none"

@@ -1,3 +1,5 @@
+import { mistakeById, mistakeKey } from "../knowledge/mistakes";
+import { useLearningSession } from "../state/LearningSession";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readQuickQuiz, type QuickQuizProgress } from "../quiz/quickQuiz";
@@ -7,6 +9,7 @@ import { readQuickQuiz, type QuickQuizProgress } from "../quiz/quickQuiz";
 const pendingWrites = new Map<string, Promise<void>>();
 
 export function useQuickQuiz(userId: string | null) {
+  const { store } = useLearningSession();
   const key = `@gnosi/quick-quiz/v1/${userId ? `account:${userId}` : "guest"}`;
   const [progress, setProgress] = useState<QuickQuizProgress | null>(null);
   const [error, setError] = useState<"load" | "save" | null>(null);
@@ -23,6 +26,22 @@ export function useQuickQuiz(userId: string | null) {
         await pendingWrites.get(key)?.catch(() => {});
         const next = readQuickQuiz(await AsyncStorage.getItem(key));
         if (!active) return;
+        // The per-round timestamp is a tiny durable handoff, not a second mistake history.
+        for (const id of next.missed) {
+          const q = mistakeById.get(id)?.question;
+          if (q && !store.getSnapshot().mistakes[mistakeKey(q)]) store.importMistakes({ [mistakeKey(q)]: {
+            questionId: q.id, version: q.version, wrong: { at: 946684800001, value: null }, correctAt: 0,
+          } });
+        }
+        if (next.round) for (const q of next.round.questions) {
+          const answer = next.round.answers[q.id], at = next.reviewAnswerTimes?.[q.id];
+          if (answer && (at || !store.getSnapshot().mistakes[mistakeKey(q)])) store.recordQuestionAnswer(q, answer.value, at ?? 946684800002);
+        }
+        // A correction in the unified review also clears Quick Quiz's recall hint.
+        next.missed = next.missed.filter(id => {
+          const q = mistakeById.get(id)?.question, row = q && store.getSnapshot().mistakes[mistakeKey(q)];
+          return !row?.wrong || row.correctAt <= row.wrong.at;
+        });
         latest.current = next;
         setProgress(next);
       } catch {
@@ -31,13 +50,29 @@ export function useQuickQuiz(userId: string | null) {
     }
     void load();
     return () => { active = false; mounted.current = false; };
-  }, [key, attempt]);
+  }, [key, attempt, store]);
 
   const update = useCallback(async (change: (current: QuickQuizProgress) => QuickQuizProgress) => {
     const current = latest.current;
     if (!current || pendingWrites.has(key)) return null;
-    const next = change(current);
-    if (next === current) return null;
+    // Reconcile before dealing the next round so corrected questions are not
+    // selected as outstanding misses by the round builder.
+    const outstanding = current.missed.filter(id => {
+      const q = mistakeById.get(id)?.question, row = q && store.getSnapshot().mistakes[mistakeKey(q)];
+      return !row?.wrong || row.correctAt <= row.wrong.at;
+    });
+    const source = outstanding.length === current.missed.length ? current : { ...current, missed: outstanding };
+    const changed = change(source);
+    if (changed === source) return null;
+    const reviewAnswerTimes = changed.round?.id === current.round?.id ? { ...current.reviewAnswerTimes } : {};
+    if (changed.round) for (const q of changed.round.questions) {
+      if (changed.round.answers[q.id] && (changed.round.id !== current.round?.id || !current.round.answers[q.id])) reviewAnswerTimes[q.id] = Date.now();
+    }
+    const missed = changed.missed.filter(id => {
+      const q = mistakeById.get(id)?.question, row = q && store.getSnapshot().mistakes[mistakeKey(q)];
+      return !row?.wrong || row.correctAt <= row.wrong.at;
+    });
+    const next = { ...changed, missed, reviewAnswerTimes };
     setError(null);
     setBusy(true);
     const write = AsyncStorage.setItem(key, JSON.stringify({ version: 1, ...next }));
@@ -45,6 +80,10 @@ export function useQuickQuiz(userId: string | null) {
     try {
       await write;
       if (!mounted.current) return null;
+      if (next.round) for (const q of next.round.questions) {
+        const answer = next.round.answers[q.id];
+        if (answer && (next.round.id !== current.round?.id || !current.round.answers[q.id])) store.recordQuestionAnswer(q, answer.value, reviewAnswerTimes[q.id]);
+      }
       latest.current = next;
       setProgress(next);
       return next;
@@ -55,7 +94,7 @@ export function useQuickQuiz(userId: string | null) {
       pendingWrites.delete(key);
       if (mounted.current) setBusy(false);
     }
-  }, [key]);
+  }, [key, store]);
 
   function retryLoad() {
     setError(null);

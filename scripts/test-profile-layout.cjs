@@ -182,133 +182,30 @@ assert.ok(text(tree).includes("ΑΚΡΙΒΕΙΑ QUIZ—"), "Fresh history should
 console.log("Profile/Statistics fourth-tab tests passed: player identity, XP, achievements, links, activity hierarchy, expandable quiz history and empty accuracy.");
 
 // One review action, optional practice/weekly links, and no stray numeric zero.
-let model={due:[],practice:[],categories:[],topics:[]},ready=true;
-const modelHook={'../hooks/useKnowledgeModel':{useKnowledgeModel:()=>({model,today:'2026-10-30',ready})}};
-learning={...learning,knowledgeSession:null};
+let model={pending:[],subjects:[],rows:[],total:0,revised:0,unavailable:0},ready=true;
+const modelHook={'../hooks/useMistakesModel':{useMistakesModel:()=>({model,today:'2026-10-30',ready})}};
+learning={...learning,mistakeSession:null};
 let pending=[];
 const Review=load('src/components/ReviewActions.tsx',{...common,...modelHook,'../utils/weeklyReview':{weeklyPlan:()=>pending},'./ActionButton':{__esModule:true,default:'Action'},'./ProgressMotion':{ProgressActionHighlight:'ActionHighlight'}}).default;
 const actions={onReview:()=>calls.push('review'),onExplore:()=>calls.push('explore')};
 tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,1);assert.ok(!text(tree).endsWith('0'));nodes(tree).find(n=>n.type==='Action').props.onPress();assert.equal(calls.at(-1),'explore');
-model={...model,due:[{}],practice:[{}]};tree=Review(actions);nodes(tree).find(n=>n.type==='Action').props.onPress();assert.equal(calls.at(-1),'review');
-learning={...learning,knowledgeSession:{completed:false,date:'2026-10-30'}};tree=Review(actions);assert.ok(text(tree).includes('Συνέχισε εκεί που έμεινες'));
-learning={...learning,knowledgeSession:null};model={...model,due:[]};pending=[{id:'miss'}];tree=Review(actions);assert.ok(text(tree).includes('ελεύθερη εξάσκηση'));assert.ok(!text(tree).includes('παλιά λάθη'),'legacy repeat prompts are retired');
+model={...model,pending:[{}]};tree=Review(actions);nodes(tree).find(n=>n.type==='Action').props.onPress();assert.equal(calls.at(-1),'review');
+learning={...learning,mistakeSession:{quiz:{completed:false}}};tree=Review(actions);assert.ok(text(tree).includes('Συνέχισε εκεί που έμεινες'));
+learning={...learning,mistakeSession:null};model={...model,pending:[]};pending=[{id:'miss'}];tree=Review(actions);assert.ok(text(tree).includes('Δεν έχεις εκκρεμείς επαναλήψεις')); assert.ok(!text(tree).includes('παλιά λάθη'),'legacy repeat prompts are retired');
 ready=false;tree=Review(actions);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0);ready=true;
-// The default learning map limits subjects without removing access to any subject or help.
-model={...model,categories:Array.from({length:8},(_,i)=>({id:String(i),title:'Θεματική '+i,percent:i,mastered:0,total:10}))};slots=[];cursor=0;
+// Mistake detail reports real correction counts and exposes saved wrong choices.
 const detailSections=load('src/components/LearningDetailSections.tsx', {...common});
 detailSectionComponents=Object.values(detailSections).filter(value=>typeof value==='function');
 subjectTileComponent=load('src/components/SubjectProgressTile.tsx',{
-  ...common,
-  './HomeMotion':{MotionPressable:'MotionPressable'},
-  './ProgressMotion':{ProgressBarFill:'ProgressBarFill'},
-  './ProgressTrack':{__esModule:true,default:'ProgressTrack'},
+ ...common,'./HomeMotion':{MotionPressable:'MotionPressable'},'./ProgressMotion':{ProgressBarFill:'ProgressBarFill'},'./ProgressTrack':{__esModule:true,default:'ProgressTrack'},
 }).default;
-const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,
-  './ActionButton':{__esModule:true,default:'Action'},
-  './HomeMotion':{MotionPressable:'MotionPressable'},
-  './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
-  './LearningDetailSections':detailSections,
-  './ProgressMotion':{ProgressBarFill:'ProgressBarFill'}}).default;
-const renderMap=()=>{cursor=0;return Map({onOpen(){},mapOnly:true});};tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);assert.equal(nodes(tree).filter(n=>n.type==='Action').length,0,'no duplicate review CTA');assert.ok(!text(tree).includes('τρεις σωστές'));
-nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).props.onPress();tree=renderMap();assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8);
-nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Πώς μετριέται')).props.onPress();tree=renderMap();assert.ok(text(tree).includes('τρεις σωστές'));
-console.log('Review/map disclosure passed: single next action, resume/due/practice/weekly/empty/loading states, three-subject preview, full expansion and optional explanation.');
-
+const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,'./ActionButton':{__esModule:true,default:'Action'}}).default;
 slots=[];cursor=0;
-const renderPreview=()=>{cursor=0;return Map({onOpen(){},mapOnly:true,preview:true});};
-tree=renderPreview();
-assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);
-assert.ok(!text(tree).includes("Πώς μετριέται"),"secondary disclosures stay out of the initial viewport");
-assert.ok(!text(tree).includes("έννοιες κατακτημένες"),"preview rows use one compact label");
-nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Αναλυτική εικόνα')).props.onPress();
-tree=renderPreview();
-assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,8,"all subject rows remain reachable");
-assert.ok(text(tree).includes("Πώς μετριέται"));
-nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes("Πίσω στη σύνοψη")).props.onPress();
-tree=renderPreview();
-assert.equal(nodes(tree).filter(n=>n.props.accessibilityRole==='progressbar').length,3);
-
-// Detail mode keeps all subjects visible as compact tiles without repeating
-// the explanatory essay; methodology stays one tap away.
-slots=[];cursor=0;
-const renderKnowledgeTiles=()=>{cursor=0;return Map({onOpen(){},mapOnly:true,detail:true});};
-tree=renderKnowledgeTiles();
-const tileGrid=nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid');
-assert.ok(tileGrid,'detail layout uses subject tiles');
-assert.equal(nodes(tileGrid).filter(n=>n.type==='MotionPressable').length,4,
-  'initial knowledge view has four tactile subject tiles');
-assert.ok(nodes(tileGrid).every(n=>n.type!=='MotionPressable'||n.props.accessibilityRole==='button'),
-  'each interactive tile has an accessible button role');
-const firstKnowledgeTile=nodes(tileGrid).find(n=>n.type==='MotionPressable');
-const firstKnowledgeId=firstKnowledgeTile.props.testID;
-// Knowledge tiles have an explicit icon medallion, readable mastery footer,
-// and a restrained 7pt track without fake 0% values on an untouched account.
-assert.ok(nodes(firstKnowledgeTile).some(n=>n.type==='Text'&&n.props.children==='ΚΑΤΑΚΤΗΣΗ'),
-  'each subject exposes a clear mastery progress caption');
-assert.ok(text(firstKnowledgeTile).includes('7%'),
-  'active subjects display their actual mastery percentage in the top badge');
-const firstTitle=nodes(firstKnowledgeTile).find(n=>n.type==='Text'
-  && typeof n.props.children==='string' && n.props.children.startsWith('Θεματική '));
-assert.ok(firstTitle?.props.adjustsFontSizeToFit&&firstTitle?.props.minimumFontScale<=0.9,
-  'long Greek subject labels adapt within a two-column tile');
-const subjectTileSource=require('node:fs').readFileSync('src/components/SubjectProgressTile.tsx','utf8');
-const progressTrackSource=require('node:fs').readFileSync('src/components/ProgressTrack.tsx','utf8');
-assert.match(subjectTileSource,/<ProgressTrack variant="subject" tone=\{tone\}/,
-  'both mastery and reading tiles share the track surface');
-assert.match(progressTrackSource,/subject: \{[\s\S]*?height: 7,/,
-  'mastery and reading bars retain their existing visible 7pt track');
-assert.match(subjectTileSource,/single: \{ width: "100%"/,
-  'small screens retain the accessible single-column fallback');
-assert.equal(firstKnowledgeTile.props.accessibilityState.selected,false);
-firstKnowledgeTile.props.onPress();tree=renderKnowledgeTiles();
-assert.equal(nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.accessibilityState.selected,true);
-assert.ok(text(nodes(tree).find(n=>n.props.testID==='knowledge-selected-subject')).includes('πρώτη κατακτημένη έννοια'),
-  'selected empty subject offers a truthful first milestone');
-nodes(tree).find(n=>n.props.testID===firstKnowledgeId).props.onPress();tree=renderKnowledgeTiles();
-assert.ok(!nodes(tree).some(n=>n.props.testID==='knowledge-selected-subject'),
-  'tapping a selected tile collapses its short insight');
-assert.ok(!text(tileGrid).includes('0%'), 'zero subjects do not repeat 0% labels');
-// The empty-account layout uses a quiet chevron instead of four redundant 0% badges.
-const rankedFixture=model.categories;
-model={...model,categories:rankedFixture.map(category=>({...category,percent:0}))};
-const zeroTiles=nodes(nodes(renderKnowledgeTiles()).find(n=>n.props.testID==='knowledge-tile-grid'))
-  .filter(n=>n.type==='MotionPressable');
-assert.equal(zeroTiles.length,4);
-assert.ok(zeroTiles.every(tile=>nodes(tile).some(n=>n.type==='Text'&&n.props.children==='›')));
-model={...model,categories:rankedFixture};
-const showAll=nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects');
-assert.ok(showAll,'all subjects remain reachable');
-assert.equal(showAll.props.accessibilityState.expanded,false);
-showAll.props.onPress();tree=renderKnowledgeTiles();
-assert.equal(nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects').props.accessibilityState.expanded,true);
-assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.type==='MotionPressable').length,8,
-  'expanded knowledge view renders all interactive subjects');
-nodes(tree).find(n=>n.props.testID==='knowledge-all-subjects').props.onPress();
-tree=renderKnowledgeTiles();
-assert.equal(nodes(nodes(tree).find(n=>n.props.testID==='knowledge-tile-grid')).filter(n=>n.type==='MotionPressable').length,4,
-  'knowledge view can collapse to its short overview');
-assert.ok(!text(tree).includes('Η κατάκτηση χρειάζεται'),
-  'long methodology is collapsed initially');
-assert.equal(nodes(tree).filter(n=>n.type==='Pressable'&&text(n).includes('Όλες οι θεματικές')).length,1,
-  'all subjects remain accessible through one compact disclosure');
-nodes(tree).find(n=>n.type==='Pressable'&&text(n).includes('Πώς μετριέται')).props.onPress();
-tree=renderKnowledgeTiles();
-assert.ok(text(tree).includes('τρεις σωστές δοκιμές'),
-  'methodology remains available on demand');
-
-// Real mastery data changes can distinguish progress from completion without
-// any new persisted achievement or fabricated reward.
-const originalCategories=model.categories;
-model={...model,categories:[{...model.categories[0],percent:100,mastered:10,total:10},...model.categories.slice(1)]};
-tree=renderKnowledgeTiles();
-const completedTile=nodes(tree).find(n=>n.props.testID==='knowledge-subject-0');
-assert.ok(text(completedTile).includes('✓'), 'fully mastered subject gains a restrained checkmark');
-assert.ok(nodes(completedTile).some(n=>n.type==='ProgressBarFill'&&n.props.percent===100),
-  'native fill reflects real review progress');
-completedTile.props.onPress();tree=renderKnowledgeTiles();
-assert.ok(text(nodes(tree).find(n=>n.props.testID==='knowledge-selected-subject')).includes('Όλες οι έννοιες'),
-  'completion insight describes actual mastered concepts');
-model={...model,categories:originalCategories};
+tree=Map({onOpen(){},detail:true});assert.ok(text(tree).includes('0 συνολικά λάθη'));
+assert.ok(!text(tree).includes('τρεις σωστές'));
+model={...model,pending:[],total:4,revised:4,subjects:[{id:'history',title:'Ιστορία',emoji:'',total:4,revised:4}]};
+cursor=0;tree=Map({onOpen(){},detail:true});assert.ok(text(tree).includes('4 / 4 διορθωμένα'));
+assert.ok(nodes(tree).some(n=>n.props.accessibilityRole==='progressbar'));
 
 // Reading tiles reuse the same native press feedback, but report actual
 // completed lessons rather than the knowledge success-stage percentage.
@@ -365,8 +262,8 @@ assert.equal(nodes(tree).filter(n=>n.type==='MotionPressable').length,7,
   'expanded reading detail preserves all seven category tiles');
 
 let resumed=[];
-model={...model,due:[],practice:[]};ready=true;
-learning={...learning,knowledgeSession:null};
+model={...model,pending:[]};ready=true;
+learning={...learning,mistakeSession:null};
 const withLesson={...actions,inProgressLesson:lessons[0],lessonProgressLoaded:true,
   inProgressAnsweredCount:2,inProgressQuestionCount:4,onResumeLesson:id=>resumed.push(id)};
 tree=Review(withLesson);
@@ -374,7 +271,7 @@ assert.equal(nodes(tree).filter(n=>n.type==='Action').length,1);
 assert.equal(nodes(tree).find(n=>n.type==='Action').props.label,'Συνέχισε το μάθημα');
 nodes(tree).find(n=>n.type==='Action').props.onPress();
 assert.equal(resumed.at(-1),lessons[0].id);
-model={...model,due:[{}]};
+model={...model,pending:[{}]};
 tree=Review(withLesson);
 assert.equal(nodes(tree).find(n=>n.type==='Action').props.label,'Ξεκίνα την επανάληψη');
 assert.ok(nodes(tree).some(n=>n.props.testID==='progress-resume'),"resume remains available as secondary action");

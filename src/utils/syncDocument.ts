@@ -1,3 +1,4 @@
+import { mergeMistakes, parseMistakes, parseMistakeSession, type Mistakes, type MistakeSession } from "../knowledge/mistakes";
 import { knowledgeSessionTie, mergeKnowledgeReviews, parseKnowledgeReviews, parseKnowledgeSession, type KnowledgeReviews, type KnowledgeSession } from "../knowledge/records";
 import { mergeRewardLedgers, parseRewardLedger, type RewardLedger } from "../gamification/rewards";
 import { migrateLearningRewards } from "../gamification/migration";
@@ -8,7 +9,7 @@ import { mergeWeeklyAnswers, parseWeeklyAnswers, type WeeklyAnswers } from "./we
 export type Stamp = [number, string];
 export type ProgressValue = { completed: boolean; attempt: BackupAttempt | null };
 type Register<T> = { stamp: Stamp; value: T };
-export type SyncDocument = { schemaVersion: 1; knowledgeReviews?: KnowledgeReviews; knowledgeSession?: Register<KnowledgeSession | null>; rewards?: RewardLedger; clock: number; progress: Record<string, Register<ProgressValue>>; bookmarks: Record<string, Register<boolean>>; activity: CompletionEvents; weeklyReviews?: WeeklyAnswers };
+export type SyncDocument = { schemaVersion: 1; mistakes?: Mistakes; mistakeSession?: Register<MistakeSession | null>; knowledgeReviews?: KnowledgeReviews; knowledgeSession?: Register<KnowledgeSession | null>; rewards?: RewardLedger; clock: number; progress: Record<string, Register<ProgressValue>>; bookmarks: Record<string, Register<boolean>>; activity: CompletionEvents; weeklyReviews?: WeeklyAnswers };
 const known = new Set(lessons.map(l => l.id));
 const record = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 export const emptySyncDocument = (): SyncDocument => ({ schemaVersion: 1, clock: 0, progress: {}, bookmarks: {}, activity: {} });
@@ -23,6 +24,8 @@ export function parseSyncDocument(raw: unknown): SyncDocument {
     if (!record(entry) || !Array.isArray(entry.stamp) || entry.stamp.length !== 2 || !Number.isSafeInteger(entry.stamp[0]) || entry.stamp[0] < 0 || entry.stamp[0] > result.clock || typeof entry.stamp[1] !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(entry.stamp[1])) throw new Error("invalid_sync");
     return { stamp: [entry.stamp[0], entry.stamp[1]], value: entry.value };
   };
+  if (raw.mistakes !== undefined) result.mistakes = parseMistakes(raw.mistakes);
+  if (raw.mistakeSession !== undefined) { const entry = stamp(raw.mistakeSession); result.mistakeSession = { stamp: entry.stamp, value: parseMistakeSession(entry.value) }; }
   if (raw.knowledgeReviews !== undefined) result.knowledgeReviews = parseKnowledgeReviews(raw.knowledgeReviews);
   if (raw.knowledgeSession !== undefined) { const entry = stamp(raw.knowledgeSession); result.knowledgeSession = { stamp: entry.stamp, value: parseKnowledgeSession(entry.value) }; }
   for (const [id, rawEntry] of Object.entries(raw.progress)) {
@@ -53,6 +56,10 @@ function winner<T>(a: Register<T> | undefined, b: Register<T>): Register<T> {
  * whole-attempt registers and permanent bookmark/attempt tombstones. */
 export function mergeSyncDocuments(a: SyncDocument, b: SyncDocument): SyncDocument {
   const merged: SyncDocument = { schemaVersion: 1, clock: Math.max(a.clock, b.clock), progress: { ...a.progress }, bookmarks: { ...a.bookmarks }, activity: mergeCompletionEvents(a.activity, b.activity), weeklyReviews: mergeWeeklyAnswers(a.weeklyReviews, b.weeklyReviews) };
+  if (a.mistakes !== undefined || b.mistakes !== undefined) merged.mistakes = mergeMistakes(a.mistakes, b.mistakes);
+  if (a.mistakeSession || b.mistakeSession) merged.mistakeSession = !a.mistakeSession ? b.mistakeSession : !b.mistakeSession ? a.mistakeSession :
+    compareStamps(a.mistakeSession.stamp, b.mistakeSession.stamp) > 0 ? a.mistakeSession : compareStamps(a.mistakeSession.stamp, b.mistakeSession.stamp) < 0 ? b.mistakeSession :
+    knowledgeSessionTie(a.mistakeSession.value) >= knowledgeSessionTie(b.mistakeSession.value) ? a.mistakeSession : b.mistakeSession;
   if (a.knowledgeReviews !== undefined || b.knowledgeReviews !== undefined) merged.knowledgeReviews = mergeKnowledgeReviews(a.knowledgeReviews, b.knowledgeReviews);
   if (a.knowledgeSession || b.knowledgeSession) merged.knowledgeSession = !a.knowledgeSession ? b.knowledgeSession : !b.knowledgeSession ? a.knowledgeSession :
     compareStamps(a.knowledgeSession.stamp, b.knowledgeSession.stamp) > 0 ? a.knowledgeSession : compareStamps(a.knowledgeSession.stamp, b.knowledgeSession.stamp) < 0 ? b.knowledgeSession :

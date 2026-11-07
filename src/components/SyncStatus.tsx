@@ -1,3 +1,4 @@
+import type { Mistakes } from "../knowledge/mistakes";
 import type { KnowledgeReviews } from "../knowledge/records";
 import type { RewardLedger } from "../gamification/rewards";
 import { useState } from "react";
@@ -18,7 +19,7 @@ export default function SyncStatus({ detailed = false, quiet = false }: { detail
   const daily = useDailySnapshot();
   const priority = ["local-error", "error", "waiting", "syncing", "queued", "loading", "saved", "local"];
   const combined = priority.indexOf(daily.status) < priority.indexOf(snapshot.status) ? daily : snapshot;
-  const [guest, setGuest] = useState<{ backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards?: RewardLedger; knowledgeReviews?: KnowledgeReviews } | null>(null);
+  const [guest, setGuest] = useState<{ backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards?: RewardLedger; knowledgeReviews?: KnowledgeReviews; mistakes?: Mistakes } | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const needsRetry = ["waiting", "error", "local-error"].includes(combined.status);
@@ -29,7 +30,7 @@ export default function SyncStatus({ detailed = false, quiet = false }: { detail
       const guestStore = getLearningStore(null); await guestStore.start();
       const state = guestStore.getSnapshot();
       if (!state.ready) throw new Error("local_guest");
-      setGuest({ backup: state.backup, activity: state.activity, weeklyReviews: state.weeklyReviews, rewards: state.rewards, knowledgeReviews: state.knowledgeReviews });
+      setGuest({ backup: state.backup, activity: state.activity, weeklyReviews: state.weeklyReviews, rewards: state.rewards, knowledgeReviews: state.knowledgeReviews, mistakes: state.mistakes });
     } catch { setMessage("Δεν φορτώθηκε η πρόοδος επισκέπτη. Δοκίμασε ξανά."); }
     finally { setBusy(false); }
   }
@@ -55,7 +56,7 @@ export default function SyncStatus({ detailed = false, quiet = false }: { detail
         <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" accessibilityState={{ disabled: busy }} onPress={() => {
           if (busy) return;
           setBusy(true);
-          void store.importGuest(guest.backup, guest.activity, guest.weeklyReviews, guest.rewards, guest.knowledgeReviews).then(() => { setGuest(null); setMessage("Η πρόοδος και η δραστηριότητα επισκέπτη προστέθηκαν. Οι αλλαγές θα συγχρονιστούν αυτόματα."); }).catch(() => setMessage("Η εισαγωγή δεν αποθηκεύτηκε πλήρως. Δοκίμασε ξανά.")).finally(() => setBusy(false));
+          void store.importGuest(guest.backup, guest.activity, guest.weeklyReviews, guest.rewards, guest.knowledgeReviews, guest.mistakes).then(() => { setGuest(null); setMessage("Η πρόοδος και η δραστηριότητα επισκέπτη προστέθηκαν. Οι αλλαγές θα συγχρονιστούν αυτόματα."); }).catch(() => setMessage("Η εισαγωγή δεν αποθηκεύτηκε πλήρως. Δοκίμασε ξανά.")).finally(() => setBusy(false));
         }}><Text style={styles.link}>Προσθήκη στον λογαριασμό</Text></Pressable>
         <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" onPress={() => setGuest(null)}><Text style={styles.link}>Ακύρωση εισαγωγής</Text></Pressable>
       </View> : <Pressable disabled={busy} style={styles.retry} accessibilityRole="button" onPress={() => void prepareImport()}><Text style={styles.link}>Προεπισκόπηση εισαγωγής προόδου επισκέπτη</Text></Pressable> : null}
