@@ -78,6 +78,9 @@ export default function HomeScreen({
   const density = dashboardHeight < 610 ? 2 : dashboardHeight < 740 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
+  // Bound the normal portrait dashboard to the measured native viewport.
+  // Accessibility sizes and very short windows retain natural scrolling.
+  const fitDashboard = availableHeight >= 620 && (fontScale ?? 1) <= 1.15;
   // Measurements influence only interior decoration: never the viewport
   // density, flex allocation, or scrolling contract. Ignore subpixel jitter.
   const allowCardGrowth = !compact && (fontScale ?? 1) <= 1.1;
@@ -131,7 +134,7 @@ export default function HomeScreen({
       {atlasDebugMode === "off" ? null
         : <HomeAtlasBackground showAmbientMotion={atlasDebugMode !== "static"} />}
       <ScrollView testID="home-game-dashboard" style={styles.viewport}
-      contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent]}
+      contentContainerStyle={[styles.content, compact && styles.compactContent, tight && styles.tightContent, fitDashboard && { height: availableHeight }]}
       scrollEnabled={canScroll} bounces={false} alwaysBounceVertical={false}
       overScrollMode="never" showsVerticalScrollIndicator={false}
       onLayout={event => {
@@ -165,7 +168,7 @@ export default function HomeScreen({
         </View>
       </MotionView>
 
-      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 10, heroScale) }, pressed && styles.pressed]}
+      <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 10, heroScale) }, fitDashboard && styles.fittedHero, pressed && styles.pressed]}
         onLayout={event => updateCardHeight("hero", event.nativeEvent.layout.height)}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
@@ -173,19 +176,20 @@ export default function HomeScreen({
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
             + (heroLocation ? ". " + heroLocation : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
-        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} scale={heroScale} />
+        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} scale={fitDashboard && compact ? 0.8 : heroScale} />
         <MotionCardGlint tone="lesson" delayMs={0} />
         <View style={[styles.heroCopy, compact && styles.compactHeroGroup, tight && styles.tightHeroGroup,
           { gap: scaled(tight ? 4 : compact ? 8 : 12, heroScale) }]}>
-          <View style={[styles.heroIntro, { paddingRight: scaled(112, heroScale) }]}>
+          <View style={[styles.heroIntro, { paddingRight: scaled(fitDashboard ? 88 : 112, heroScale) }]}>
             <Text style={[styles.eyebrow, { fontSize: scaled(11, heroScale), lineHeight: scaled(15, heroScale) }]}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
-            {heroLocation ? <Text testID="home-hero-location" style={[styles.heroLocation, { fontSize: scaled(12, heroScale), lineHeight: scaled(17, heroScale) }]}>
+            {heroLocation ? <Text testID="home-hero-location" numberOfLines={fitDashboard ? 1 : undefined} style={[styles.heroLocation, { fontSize: scaled(12, heroScale), lineHeight: scaled(17, heroScale) }]}>
               {heroLocation}</Text> : null}
-            {heroIsResume ? <Text style={[styles.heroCount, { fontSize: scaled(11, heroScale), lineHeight: scaled(16, heroScale) }]}>
+            {heroIsResume && !fitDashboard ? <Text style={[styles.heroCount, { fontSize: scaled(11, heroScale), lineHeight: scaled(16, heroScale) }]}>
               {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
             </Text> : null}
           </View>
-          <Text style={[styles.heroTitle, tight && styles.tightHeroTitle,
+          <Text numberOfLines={fitDashboard ? 2 : undefined} adjustsFontSizeToFit={fitDashboard} minimumFontScale={0.85}
+            style={[styles.heroTitle, tight && styles.tightHeroTitle,
             { fontSize: scaled(tight ? 18 : 21, heroScale), lineHeight: scaled(tight ? 23 : 28, heroScale) }]}>
             {hero?.title ?? "Ανακάλυψε έναν νέο κόσμο"}
           </Text>
@@ -270,7 +274,7 @@ export default function HomeScreen({
                 style={({ pressed }) => [styles.category, compact && styles.compactCategory, tight && styles.tightCategory, pressed && styles.pressed]}>
                 <View style={[styles.categoryPlatform, tight && styles.tightCategoryPlatform]} accessible={false} pointerEvents="none">
                   {WorldIllustration
-                    ? <WorldIllustration size={tight ? 38 : 46} displayScale={1.18} />
+                    ? <WorldIllustration size={tight ? 34 : 46} displayScale={1.18} />
                     : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
                 </View>
                 <Text style={[styles.categoryLabel, tight && styles.tightCategoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
@@ -281,7 +285,7 @@ export default function HomeScreen({
           })}
         </View>
       </MotionView>
-      <MotionPressable entranceDelay={290} testID="home-hangman" style={styles.hangmanCard}
+      <MotionPressable entranceDelay={290} testID="home-hangman" style={[styles.hangmanCard, fitDashboard && styles.fittedHangman]}
         onPress={onOpenHangman} accessibilityRole="button" accessibilityLabel="Παίξε Κρεμάλα">
         <MotionCardGlint tone="lesson" delayMs={4200} />
         <View accessible={false} style={styles.hangmanIcon}><Text style={styles.hangmanGlyph}>Α_Ω</Text></View>
@@ -307,6 +311,8 @@ const styles = StyleSheet.create({
   // Compact screens reduce spacing; tight screens also use smaller artwork.
   compactContent: { gap: 8, paddingTop: 4, paddingBottom: 4 },
   tightContent: { gap: 5, paddingTop: 4, paddingBottom: 2 },
+  fittedHero: { flexBasis: 0, flexGrow: 100, flexShrink: 1, minHeight: 0 },
+  fittedHangman: { minHeight: 54, paddingVertical: 6 },
   compactHero: { padding: 14, gap: 8 },
   tightHero: { padding: 10, gap: 4 },
   heroCopy: { gap: 10 },
@@ -319,7 +325,7 @@ const styles = StyleSheet.create({
   // A 62pt icon plus its label already exceeds minHeight: 70. Trim the
   // surrounding padding/gap so both icon rows fit without losing artwork.
   compactCategory: { minHeight: 70, paddingVertical: 4, gap: 4 },
-  tightCategory: { minHeight: 67, paddingVertical: 4, gap: 2 },
+  tightCategory: { minHeight: 62, paddingVertical: 4, gap: 2 },
   tightCategoryLabel: { fontSize: 10, lineHeight: 12 },
   tightWorlds: { gap: 4, paddingTop: 2 },
   tightSectionTitle: { fontSize: 16, lineHeight: 20 },
@@ -382,7 +388,7 @@ const styles = StyleSheet.create({
   // a second framed icon card. The footprint and tap targets stay unchanged.
   categoryPlatform: { width: 62, height: 62,
     alignItems: "center", justifyContent: "center" },
-  tightCategoryPlatform: { width: 48, height: 48 },
+  tightCategoryPlatform: { width: 40, height: 40 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
   hangmanCard: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 66,

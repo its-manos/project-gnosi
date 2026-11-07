@@ -296,7 +296,7 @@ for (const category of categories) {
   assert.equal(typeof Illustration, "function");
   const illustrationNode = nodes(card).find(node => node.type === Illustration);
   assert.ok(illustrationNode, "category card displays its artwork for " + category.id);
-  assert.equal(illustrationNode.props.size, 38, "short initial viewport uses tight artwork sizing");
+  assert.equal(illustrationNode.props.size, 34, "short initial viewport uses tight artwork sizing");
   assert.equal(illustrationNode.props.displayScale, 1.18);
 
   const wrapper = Illustration({ size: 32, displayScale: 1.18 });
@@ -656,7 +656,7 @@ scroll.props.onLayout({ nativeEvent: { layout: { height: 705 } } });
 const resetTree = renderMeasuredHome();
 assert.equal(nodes(resetTree).find(node => node.props?.testID === "home-daily-answered")
   .props.style[1].fontSize, 18);
-assert.equal(nodes(resetTree).find(node => node.type === "HomeLessonBackdrop").props.scale, 1);
+assert.equal(nodes(resetTree).find(node => node.type === "HomeLessonBackdrop").props.scale, 0.8);
 scroll.props.onLayout({ nativeEvent: { layout: { height: 880 } } });
 scroll = scrollNode();
 // Small landscape screens and large accessibility text must never be clipped.
@@ -676,14 +676,22 @@ assert.equal(scroll.props.contentContainerStyle[2].gap, 5,
   "reserve the Hangman card before selecting the tight phone layout");
 const phoneTree = renderMeasuredHome();
 const phoneWorld = nodes(phoneTree).find(node => node.props?.testID === "home-category-history");
-assert.equal(phoneWorld.props.style({ pressed: false })[2].minHeight, 67);
+assert.equal(phoneWorld.props.style({ pressed: false })[2].minHeight, 62);
 const phoneArtwork = nodes(phoneWorld).find(node =>
   Array.isArray(node.props?.style) && node.props.style[0]?.width === 62);
-assert.equal(phoneArtwork.props.style[1].height, 48,
+assert.equal(phoneArtwork.props.style[1].height, 40,
   "tight phones reclaim height in both artwork rows");
 assert.equal(nodes(phoneTree).find(node => node.props?.children === "Μάθημα 0")
   .props.style[2].fontSize, 18, "tight phones use the readable compact lesson title");
 assert.equal(nodes(phoneTree).filter(node => node.props?.testID === "home-hangman").length, 1);
+assert.equal(scroll.props.contentContainerStyle[3].height, 650,
+  "normal iPhone dashboard is bounded to its native viewport");
+const phoneTitle = nodes(phoneTree).find(node => node.props?.children === "Μάθημα 0");
+assert.equal(phoneTitle.props.numberOfLines, 2);
+assert.equal(phoneTitle.props.adjustsFontSizeToFit, true);
+assert.equal(nodes(phoneTree).find(node => node.props?.testID === "home-primary-action")
+  .props.style({ pressed: false })[4].flexShrink, 1,
+  "the lesson card yields space to the remaining dashboard sections");
 scroll.props.onContentSizeChange(360, 650);
 assert.equal(scrollNode().props.scrollEnabled, false);
 
