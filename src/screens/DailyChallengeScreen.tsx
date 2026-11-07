@@ -150,7 +150,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
           <Text style={styles.cardTitle}>{recommendation.title}</Text>
         </View>
         <View style={styles.recommendArrow}><Text style={styles.recommendArrowText}>›</Text></View>
-      </Pressable>:onWeeklyReview?<ActionButton label="Εβδομαδιαία επανάληψη →" onPress={onWeeklyReview} secondary style={styles.actionSecondary}/>:null}
+      </Pressable>:onWeeklyReview?<ActionButton label="Επανάληψη λαθών →" onPress={onWeeklyReview} secondary style={styles.actionSecondary}/>:null}
       <Text style={styles.tomorrow}>Νέο σετ αύριο · ώρα Ελλάδας</Text>
     </View></QuizReveal>
     :previewIntro||!record.started?<View testID="daily-intro" style={[styles.introContainer,denseIntro&&styles.introDense]}><QuizReveal>

@@ -20,6 +20,14 @@ on:
       - "src/state/LearningSession.tsx"
       - "src/state/LearningStore.ts"
       - "src/state/DailyStore.ts"
+      - "src/knowledge/**"
+      - "src/quiz/**"
+      - "src/hooks/useMistakesModel.ts"
+      - "src/hooks/useQuickQuiz.ts"
+      - "src/utils/syncDocument.ts"
+      - "supabase/migrations/**"
+      - "scripts/test-unified-mistakes*.cjs"
+      - "scripts/test-quick-mistake-handoff.cjs"
       - "src/hooks/useKnowledgeProfile.ts"
       - "src/screens/ProfileScreen.tsx"
       - "src/components/AtlasCard.tsx"
@@ -81,3 +89,7 @@ jobs:
       - run: node scripts/test-learning-activity.cjs
       - run: node scripts/test-category-completion.cjs
       - run: node scripts/test-knowledge-review-ui.cjs
+      - run: node scripts/test-unified-mistakes.cjs
+      - run: node scripts/test-unified-mistakes-sql.cjs
+      - run: node scripts/test-unified-mistakes-sync.cjs
+      - run: node scripts/test-quick-mistake-handoff.cjs

@@ -31,3 +31,9 @@ Apply `supabase/migrations/202611070014_unified_mistakes.sql` **before releasing
 The new `test-unified-mistakes.cjs`, `test-unified-mistakes-sql.cjs`, and updated `test-knowledge-review-ui.cjs` exercise one-answer correction, reopening, typed formats, shuffled choices, invalid/stale/duplicate submissions, early exits, resume, daily XP limits, old-client preservation, SQL/client merge parity, migration, account isolation and explicit guest import. UI tests mock native surfaces.
 
 Device acceptance: miss one lesson question, one Daily Quiz question and one Quick Quiz question; confirm the Γνώσεις count; inspect the saved selections; answer each correctly once; leave midway and restart; confirm corrections remain; finish an all-wrong batch and then a correct batch; verify audio, confirmation footers, long Greek text and large font settings on Android and iPhone.
+
+## Final audit
+
+The follow-up audit makes weekly answers, rewards and mistake facts share one local write. Unrelated edits retain validated mistake/reading section identities, and a no-data sync preserves data selectors. The mistake model uses the data-only subscription. Quick Quiz removes resolved recall hints before choosing its next round. Daily Quiz links use the unified review name.
+
+`test-unified-mistakes-sync.cjs` simulates two account-scoped devices through offline edits, sync convergence, correct-answer propagation, later reopening and the daily XP cap. It also checks stable data selectors and the single-write weekly path. The Progress dashboard workflow runs these store, PostgreSQL and handoff regressions on relevant pull requests. These checks do not substitute for a hosted Supabase/device verification.

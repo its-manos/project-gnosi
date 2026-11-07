@@ -55,8 +55,15 @@ export function useQuickQuiz(userId: string | null) {
   const update = useCallback(async (change: (current: QuickQuizProgress) => QuickQuizProgress) => {
     const current = latest.current;
     if (!current || pendingWrites.has(key)) return null;
-    const changed = change(current);
-    if (changed === current) return null;
+    // Reconcile before dealing the next round so corrected questions are not
+    // selected as outstanding misses by the round builder.
+    const outstanding = current.missed.filter(id => {
+      const q = mistakeById.get(id)?.question, row = q && store.getSnapshot().mistakes[mistakeKey(q)];
+      return !row?.wrong || row.correctAt <= row.wrong.at;
+    });
+    const source = outstanding.length === current.missed.length ? current : { ...current, missed: outstanding };
+    const changed = change(source);
+    if (changed === source) return null;
     const reviewAnswerTimes = changed.round?.id === current.round?.id ? { ...current.reviewAnswerTimes } : {};
     if (changed.round) for (const q of changed.round.questions) {
       if (changed.round.answers[q.id] && (changed.round.id !== current.round?.id || !current.round.answers[q.id])) reviewAnswerTimes[q.id] = Date.now();

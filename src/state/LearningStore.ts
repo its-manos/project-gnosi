@@ -24,6 +24,18 @@ type Storage = { getItem: (key: string) => Promise<string | null>; setItem: (key
 export type SyncStatus = "loading" | "local" | "queued" | "syncing" | "saved" | "waiting" | "error" | "local-error";
 export type LearningSnapshot = { ready: boolean; mistakes: Mistakes; mistakeSession: MistakeSession | null; knowledgeReviews: KnowledgeReviews; knowledgeSession: KnowledgeSession | null; backup: LearningBackup; activity: CompletionEvents; weeklyReviews: WeeklyAnswers; rewards: RewardLedger; status: SyncStatus; error: string; userId: string | null };
 const EMPTY_MISTAKES: Mistakes = {};
+const EMPTY_KNOWLEDGE_REVIEWS: KnowledgeReviews = {};
+const EMPTY_WEEKLY_REVIEWS: WeeklyAnswers = {};
+const EMPTY_REWARDS: RewardLedger = {};
+/** Preserve validated immutable sections when an edit only changes another section. */
+function retainSections(next: SyncDocument, input: SyncDocument, previous: SyncDocument): SyncDocument {
+  const retain = <K extends keyof SyncDocument>(key: K) => {
+    if (input[key] === previous[key]) next[key] = previous[key];
+  };
+  retain("progress"); retain("bookmarks"); retain("activity"); retain("weeklyReviews");
+  retain("knowledgeReviews"); retain("knowledgeSession"); retain("mistakes"); retain("mistakeSession");
+  return next;
+}
 const known = new Set(lessons.map(l => l.id));
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 export class LearningStore {
@@ -55,7 +67,7 @@ export class LearningStore {
     if (!this.backupCache || this.backupCache.progress !== progress || this.backupCache.bookmarks !== bookmarks) {
       this.backupCache = { progress, bookmarks, value: syncBackup(this.doc) };
     }
-    return { ready: this.ready, mistakes: this.doc.mistakes ?? EMPTY_MISTAKES, mistakeSession: this.doc.mistakeSession?.value ?? null, knowledgeReviews: this.doc.knowledgeReviews ?? {}, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: this.backupCache.value, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, rewards: this.doc.rewards ?? {}, status: this.status, error: this.error, userId: this.userId };
+    return { ready: this.ready, mistakes: this.doc.mistakes ?? EMPTY_MISTAKES, mistakeSession: this.doc.mistakeSession?.value ?? null, knowledgeReviews: this.doc.knowledgeReviews ?? EMPTY_KNOWLEDGE_REVIEWS, knowledgeSession: this.doc.knowledgeSession?.value ?? null, backup: this.backupCache.value, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, rewards: this.doc.rewards ?? EMPTY_REWARDS, status: this.status, error: this.error, userId: this.userId };
   }
   private emit() { this.snapshot = this.makeSnapshot(); for (const listener of this.listeners) listener(); }
   // Data-only subscribers should not render on sync status/error transitions.
@@ -144,7 +156,7 @@ export class LearningStore {
   private change(doc: SyncDocument) {
     if (!this.ready) throw new Error("local_not_ready");
     if (doc.rewards !== undefined) doc = { ...doc, rewards: migrateLearningRewards(lessons, syncBackup(doc).completedIds, doc.activity, doc.weeklyReviews ?? {}, doc.rewards) };
-    this.doc = parseSyncDocument(doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
+    this.doc = retainSections(parseSyncDocument(doc), doc, this.doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
     this.emit(); void this.persist(); this.schedule();
   }
   private stamp(): [number, string] {
@@ -232,8 +244,8 @@ export class LearningStore {
     if (row?.correct && !hasReward(rewards, recallKey)) rewards[recallKey] = row.baseXP + row.comboXP;
     const plan = weeklyPlan(this.doc.activity, weeklyReviews, getAthensDateKey());
     if (plan.length && plan.every(q => weeklyReviews[q.id]) && !hasReward(rewards, `review:${item.week}`)) rewards[`review:${item.week}`] = REWARD_RULES.review;
-    this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards });
-    this.recordLessonReview(item.lesson.id, item.questionIndex, answerIndex);
+    const mistakes = this.projectLessonReview(item.lesson.id, item.questionIndex, answerIndex);
+    this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards, mistakes });
     const earned = totalRewardXP(this.doc.rewards ?? {}) - beforeXP;
     this.feedback(row?.correct ? "correct" : "incorrect", `weekly-answer:${id}`, earned, undefined, earned);
     return true;
@@ -244,13 +256,19 @@ export class LearningStore {
     if (same(mistakes, this.doc.mistakes ?? {})) return;
     const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], mistakes });
   }
-  recordLessonReview(lessonId: string, index: number, value: number) {
+  private projectLessonReview(lessonId: string, index: number, value: number): Mistakes {
     const lesson = lessons.find(l => l.id === lessonId);
-    if (!this.ready || !this.active || !lesson || !evaluateChoice(lesson.questions[index], value).valid) return;
+    if (!lesson || !lesson.questions[index] || !evaluateChoice(lesson.questions[index], value).valid) return this.doc.mistakes ?? EMPTY_MISTAKES;
     const q = adaptInteractiveLessonQuestion(lesson, index) ?? adaptLessonQuestion(lesson, index);
-    const correct = value === lesson.questions[index].correctIndex, at = Date.now();
-    this.importMistakes({ [mistakeKey(q)]: { questionId: q.id, version: q.version,
+    const previous = this.doc.mistakes?.[mistakeKey(q)];
+    const at = Math.max(Date.now(), (previous?.wrong?.at ?? 0) + 1, (previous?.correctAt ?? 0) + 1);
+    const correct = value === lesson.questions[index].correctIndex;
+    return mergeMistakes(this.doc.mistakes, { [mistakeKey(q)]: { questionId: q.id, version: q.version,
       wrong: correct ? null : { at, value: q.type === "multiple-choice" ? value : null }, correctAt: correct ? at : 0 } });
+  }
+  recordLessonReview(lessonId: string, index: number, value: number) {
+    if (!this.ready || !this.active) return;
+    this.importMistakes(this.projectLessonReview(lessonId, index, value));
   }
   recordQuestionAnswer(question: QuizQuestion, value: unknown, at?: number): boolean {
     if (!this.ready || !this.active) return false;
@@ -327,7 +345,7 @@ export class LearningStore {
     if (current && !current.completed && current.date === date) {
       try { if (!isCurrentKnowledgeSession(current)) return false; restoreKnowledgeQuiz(current); return true; } catch { return false; }
     }
-    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, date);
+    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, knowledgeReviews: this.doc.knowledgeReviews }, daily, date);
     const items = (mode === "scheduled" ? model.due : model.practice).slice(0, 5);
     if (!items.length) return false;
     const stamp = this.stamp();
@@ -344,14 +362,14 @@ export class LearningStore {
     if (!this.ready || !this.active || !saved || saved.id !== id || !isCurrentKnowledgeSession(saved) || saved.date !== getAthensDateKey(new Date(now))) return false;
     let quiz; try { quiz = restoreKnowledgeQuiz(saved); } catch { return false; }
     const result = submitQuizAnswer(quiz, token, answerIndex); if (!result.changed) return false;
-    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date);
+    const model = buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date);
     const item = model.items.find(i => i.question.id === token.id)!;
     const firstToday = saved.mode === "scheduled" && item.isAssessment && item.novel && !item.reviewedToday && !this.doc.knowledgeReviews?.[token.id]?.[saved.date];
     const qualified = firstToday && item.due !== null && item.due <= saved.date;
     const knowledgeReviews = firstToday ? mergeKnowledgeReviews(this.doc.knowledgeReviews, { [token.id]: { [saved.date]: { version: token.version, answerIndex, at: now, mode: saved.mode } } }) : this.doc.knowledgeReviews;
     const value = { ...saved, answers: legacyAnswerSlots(result.session), qualifiedIndices: qualified ? [...saved.qualifiedIndices, saved.currentIndex] : saved.qualifiedIndices };
     const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], knowledgeReviews, knowledgeSession: { stamp, value } });
-    const after = firstToday ? buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? {}, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date).items.find(i => i.question.id === token.id) : item;
+    const after = firstToday ? buildKnowledgeModel({ ...this.snapshot.backup, activity: this.doc.activity, weeklyReviews: this.doc.weeklyReviews ?? EMPTY_WEEKLY_REVIEWS, knowledgeReviews: this.doc.knowledgeReviews }, daily, saved.date).items.find(i => i.question.id === token.id) : item;
     const mastered = item.state !== "mastered" && after?.state === "mastered";
     const correct = evaluateChoice(quiz.questions[quiz.currentIndex].content as { answers: string[]; correctIndex: number }, answerIndex).correct;
     this.feedback(mastered ? "mastered" : correct ? "correct" : "incorrect", `knowledge-answer:${id}:${saved.currentIndex}`, 0, mastered ? item.topicTitle : undefined, 0);
@@ -417,7 +435,7 @@ export class LearningStore {
           // that request was pending, rather than the pre-request snapshot.
           combined = seed ? mergeSyncDocuments(this.doc, seedSyncBackup(seed)) : this.doc;
         }
-        this.doc = combined;
+        this.doc = same(this.doc, combined) ? this.doc : combined;
         this.dirty = !remote || !same(combined, remote.doc);
         // Persist pulled data and the outbox before writing to the network.
         await this.persist(); if (!current()) return;
