@@ -306,6 +306,21 @@ assert.equal(nodes(tree).find(n => n.type === "Mastery").props.onOpen,
 knowledge.due = [];
 knowledge.categories = existingCategories;knowledge.revised=4;knowledge.total=12;
 
+// Long completion histories should not render every row on first expansion.
+slots = []; cursor = 0;
+insightProps.initialView = "reading";
+insightProps.completedLessons = lessons.slice(0, 25);
+insightProps.lessonProgressLoaded = true;
+tree = renderInsights();
+button(tree, "Ολοκληρωμένα μαθήματα").props.onPress();
+tree = renderInsights();
+assert.ok(node(tree, "insights-completed-more"), "completed history is paginated");
+assert.ok(!text(tree).includes(lessons[15].title), "only the first 12 completed lessons mount");
+node(tree, "insights-completed-more").props.onPress();
+tree = renderInsights();
+assert.ok(text(tree).includes(lessons[15].title), "the rest remain accessible");
+insightProps.completedLessons = lessons.slice(0, 7);
+
 // Responsive detail layout: three columns on wide screens and a single
 // readable column when large text is enabled.
 slots = []; cursor = 0; windowWidth = 690; fontScale = 1;
