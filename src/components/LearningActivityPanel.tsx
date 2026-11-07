@@ -121,7 +121,7 @@ export default function LearningActivityPanel({ todayKey, compact = false, dashb
   </View>;
 }
 
-export function CategoryProgress({ compact = false, detail = false, singleColumn = false, threeColumn = false }: { compact?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean } = {}) {
+export function CategoryProgress({ compact = false, detail = false, singleColumn = false, threeColumn = false, detailLimit = 4 }: { compact?: boolean; detail?: boolean; singleColumn?: boolean; threeColumn?: boolean; detailLimit?: number } = {}) {
   const snapshot = useLearningDataSnapshot();
   const [expanded, setExpanded] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -135,7 +135,7 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
     ? rows.slice().sort((a, b) => b.count - a.count
         || b.percent - a.percent || a.index - b.index)
     : rows;
-  const limit = detail ? 4 : 3;
+  const limit = detail ? detailLimit : 3;
   const visible = (compact || detail) && !expanded ? ranked.slice(0, limit) : ranked;
   const selectedCategory = detail ? visible.find(row => row.category.id === selectedCategoryId) : undefined;
 
