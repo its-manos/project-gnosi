@@ -199,13 +199,24 @@ detailSectionComponents=Object.values(detailSections).filter(value=>typeof value
 subjectTileComponent=load('src/components/SubjectProgressTile.tsx',{
  ...common,'./HomeMotion':{MotionPressable:'MotionPressable'},'./ProgressMotion':{ProgressBarFill:'ProgressBarFill'},'./ProgressTrack':{__esModule:true,default:'ProgressTrack'},
 }).default;
-const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,'./ActionButton':{__esModule:true,default:'Action'}}).default;
+const Map=load('src/components/KnowledgeMastery.tsx',{...common,...modelHook,'./ActionButton':{__esModule:true,default:'Action'},
+ './HomeMotion':{MotionView:'MotionView'},
+ './SubjectProgressTile':{__esModule:true,default:subjectTileComponent},
+ './LearningDetailSections':detailSections,
+ '../knowledge/mistakes':{asBuiltinQuestion:q=>q,describeMistakeAnswer:()=> 'λάθος επιλογή'},
+}).default;
 slots=[];cursor=0;
-tree=Map({onOpen(){},detail:true});assert.ok(text(tree).includes('0 συνολικά λάθη'));
+tree=Map({onOpen(){},detail:true});assert.ok(text(tree).includes('Τα λάθη από μαθήματα και κουίζ'));
+assert.ok(!nodes(tree).some(n=>n.props.testID==='knowledge-history-toggle'),
+  'new users do not get empty history controls');
 assert.ok(!text(tree).includes('τρεις σωστές'));
 model={...model,pending:[],total:4,revised:4,subjects:[{id:'history',title:'Ιστορία',emoji:'',total:4,revised:4}]};
-cursor=0;tree=Map({onOpen(){},detail:true});assert.ok(text(tree).includes('4 / 4 διορθωμένα'));
-assert.ok(nodes(tree).some(n=>n.props.accessibilityRole==='progressbar'));
+cursor=0;tree=Map({onOpen(){},detail:true});assert.ok(text(tree).includes('4 / 4'));
+const knowledgeTile=nodes(tree).find(n=>n.props.testID==='knowledge-subject-history');
+assert.ok(knowledgeTile && knowledgeTile.props.accessibilityRole==='button',
+  'mistakes-by-subject tiles are accessible disclosure controls');
+assert.ok(knowledgeTile.props.accessibilityLabel.includes('4 από 4 διορθωμένα λάθη'));
+assert.ok(nodes(knowledgeTile).some(n=>n.type==='ProgressBarFill' && n.props.percent===100));
 
 // Reading tiles reuse the same native press feedback, but report actual
 // completed lessons rather than the knowledge success-stage percentage.
