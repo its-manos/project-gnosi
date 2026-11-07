@@ -194,7 +194,7 @@ assert.ok(nodes(tree).some(n => n.type === "GradientBackground"),
   "learning details reuse the same static Midnight Atlas gradient");
 assert.ok(node(tree, "insights-overview"), "detail page leads with a compact mastery overview");
 const overviewShell = node(tree, "insights-overview").props.style[0];
-assert.equal(overviewShell.minHeight, 112, "both overview cards have matching compact height");
+assert.equal(overviewShell.minHeight, 100, "both overview cards have matching viewport-friendly height");
 assert.equal(overviewShell.justifyContent, "center", "both progress summaries stay vertically balanced");
 assert.equal(nodes(node(tree, "insights-overview")).filter(n => n.type === "Text").length, 4,
   "overview card has only its label, actual/total values and ring percent");
@@ -212,6 +212,8 @@ assert.equal(nodes(tree).find(n => n.type === "Mastery").props.detail, true,
   "dedicated knowledge page reveals all category rows without a secondary disclosure");
 assert.equal(nodes(tree).find(n => n.type === "Mastery").props.singleColumn, false,
   "normal-width phones use the two-column subject tile design");
+assert.equal(nodes(tree).find(n => n.type === "Mastery").props.subjectLimit, 4,
+  "normal-height phones start with two rows of subjects");
 assert.ok(!text(node(tree, "insights-overview")).includes("Η ανάγνωση είναι η αρχή."),
   "normal mastery state has no repetitive explanatory paragraph");
 assert.ok(!nodes(tree).some(n => n.type === "Categories"));
@@ -233,10 +235,13 @@ assert.equal(nodes(tree).find(n => n.type === "Categories").props.detail, true,
   "reading categories use the detail-specific card layout");
 assert.equal(nodes(tree).find(n => n.type === "Categories").props.singleColumn, false,
   "normal-width phones use matching teal tiles");
+assert.equal(nodes(tree).find(n => n.type === "Categories").props.detailLimit, 4);
+assert.equal(nodes(tree).find(n => n.type === "ScrollView").props.alwaysBounceVertical, false,
+  "non-overflowing detail pages must not bounce on iOS");
 const readingTileSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/LearningActivityPanel.tsx"), "utf8");
 assert.match(readingTileSource, /reading-all-subjects/);
-assert.match(readingTileSource, /detail \? 4 : 3/,
-  "reading details default to four focused subjects before expansion");
+assert.match(readingTileSource, /detail \? detailLimit : 3/,
+  "reading details accept a short-screen subject limit");
 assert.ok(!text(node(tree, "insights-overview")).includes("Κάθε ολοκληρωμένο"),
   "non-empty reading state remains visually driven");
 assert.ok(!nodes(tree).some(n => n.type === "Mastery"));
@@ -318,6 +323,8 @@ tree = renderInsights();
 assert.equal(nodes(tree).find(n => n.type === "Categories").props.singleColumn, true,
   "large accessibility fonts switch to single-column cards");
 assert.equal(nodes(tree).find(n => n.type === "Categories").props.threeColumn, false);
+assert.equal(nodes(tree).find(n => n.type === "Categories").props.detailLimit, 2,
+  "large text starts with one compact row and keeps all subjects available");
 fontScale = 1; windowWidth = 390;
 
 // The navigator and Android Back contract must recognize the new route.
