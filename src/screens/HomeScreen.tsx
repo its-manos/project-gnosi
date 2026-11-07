@@ -60,7 +60,7 @@ export default function HomeScreen({
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
-  const { height, fontScale } = useWindowDimensions();
+  const { width, height, fontScale } = useWindowDimensions();
   // Development-only A/B switch for isolating Android native SVG paint from
   // its four twinkles + ambient glow. Release builds always use the full atlas.
   const atlasDebugMode = __DEV__ ? process.env.EXPO_PUBLIC_GNOSI_HOME_ATLAS_MODE : undefined;
@@ -78,6 +78,13 @@ export default function HomeScreen({
   const density = dashboardHeight < 590 ? 2 : dashboardHeight < 720 ? 1 : 0;
   const compact = density >= 1;
   const tight = density >= 2;
+  // Shrink the world illustrations with the actual usable viewport, not just
+  // the device model. A width cap keeps four columns safe on narrow phones.
+  // Do not derive this from measured content height: that causes layout loops.
+  const worldIconSize = Math.max(28, Math.min(46,
+    Math.round(30 + (availableHeight - 650) * 0.07),
+    Math.floor((width - 32) * 0.13)));
+  const worldPlatformSize = Math.ceil(worldIconSize * 1.18);
   // Bound the normal portrait dashboard to the measured native viewport.
   // Accessibility sizes and very short windows retain natural scrolling.
   const fitDashboard = availableHeight >= 620 && (fontScale ?? 1) <= 1.15;
@@ -272,9 +279,9 @@ export default function HomeScreen({
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
                 onPress={() => onOpenCategory(category.id)}
                 style={({ pressed }) => [styles.category, compact && styles.compactCategory, tight && styles.tightCategory, pressed && styles.pressed]}>
-                <View style={[styles.categoryPlatform, tight && styles.tightCategoryPlatform]} accessible={false} pointerEvents="none">
+                <View style={[styles.categoryPlatform, { width: worldPlatformSize, height: worldPlatformSize }]} accessible={false} pointerEvents="none">
                   {WorldIllustration
-                    ? <WorldIllustration size={tight ? 34 : 46} displayScale={1.18} />
+                    ? <WorldIllustration size={worldIconSize} displayScale={1.18} />
                     : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
                 </View>
                 <Text style={[styles.categoryLabel, tight && styles.tightCategoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
@@ -330,12 +337,12 @@ const styles = StyleSheet.create({
   tightActionCard: { minHeight: 80, padding: 8, gap: 2 },
   // A 62pt icon plus its label already exceeds minHeight: 70. Trim the
   // surrounding padding/gap so both icon rows fit without losing artwork.
-  compactCategory: { minHeight: 70, paddingVertical: 4, gap: 4 },
-  tightCategory: { minHeight: 62, paddingVertical: 4, gap: 2 },
+  compactCategory: { minHeight: 70, paddingVertical: 3, gap: 3 },
+  tightCategory: { minHeight: 62, paddingVertical: 2, gap: 2 },
   tightCategoryLabel: { fontSize: 10, lineHeight: 12 },
   tightWorlds: { gap: 4, paddingTop: 2 },
   tightSectionTitle: { fontSize: 16, lineHeight: 20 },
-  tightCategoryGrid: { rowGap: 6 },
+  tightCategoryGrid: { rowGap: 4 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
   logo: { color: colors.accentLight, fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 2.4 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -390,11 +397,10 @@ const styles = StyleSheet.create({
     alignContent: "flex-start", columnGap: 8, rowGap: 8 },
   category: { width: "22.7%", minHeight: 96, borderRadius: 14,
     alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 6, gap: 7 },
-  // Transparent painted artwork floats over the Atlas, rather than sitting in
-  // a second framed icon card. The footprint and tap targets stay unchanged.
+  // Transparent artwork floats over the Atlas; only its frame scales with
+  // the viewport, while the category's full-width tap target stays intact.
   categoryPlatform: { width: 62, height: 62,
     alignItems: "center", justifyContent: "center" },
-  tightCategoryPlatform: { width: 40, height: 40 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
   miniGames: { gap: 6 },
