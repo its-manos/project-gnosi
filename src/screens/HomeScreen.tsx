@@ -30,6 +30,7 @@ type Props = {
   onOpenLesson: (lessonId: string) => void;
   onStartDailyChallenge: () => void;
   onOpenQuickQuiz: () => void;
+  onOpenHangman: () => void;
   quickQuizInProgress?: boolean;
   onOpenProfile?: () => void;
 };
@@ -55,7 +56,7 @@ export default function HomeScreen({
   categories, subcategories, featuredLesson, progressLoaded,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
-  onOpenQuickQuiz, quickQuizInProgress, onOpenProfile,
+  onOpenQuickQuiz, onOpenHangman, quickQuizInProgress, onOpenProfile,
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
@@ -276,6 +277,16 @@ export default function HomeScreen({
           })}
         </View>
       </MotionView>
+      <MotionPressable entranceDelay={290} testID="home-hangman" style={styles.hangmanCard}
+        onPress={onOpenHangman} accessibilityRole="button" accessibilityLabel="Παίξε Κρεμάλα">
+        <MotionCardGlint tone="lesson" delayMs={4200} />
+        <View accessible={false} style={styles.hangmanIcon}><Text style={styles.hangmanGlyph}>Α_Ω</Text></View>
+        <View style={styles.hangmanCopy}>
+          <Text style={styles.hangmanTitle}>Κρεμάλα</Text>
+          <Text style={styles.hangmanMeta}>Μια λέξη, μια μικρή ανακάλυψη</Text>
+        </View>
+        <MotionCtaArrow><Text accessible={false} style={styles.hangmanArrow}>→</Text></MotionCtaArrow>
+      </MotionPressable>
       </ScrollView>
     </View>
   );
@@ -370,5 +381,15 @@ const styles = StyleSheet.create({
   tightCategoryPlatform: { width: 48, height: 48 },
   categoryEmoji: { fontSize: 23, lineHeight: 29 },
   categoryLabel: { color: colors.textBody, fontSize: 11, lineHeight: 14, textAlign: "center", fontWeight: "700" },
+  hangmanCard: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 66,
+    borderRadius: 16, borderWidth: 1, borderColor: "#6D5947", backgroundColor: "#292536",
+    paddingHorizontal: 14, paddingVertical: 10, overflow: "hidden" },
+  hangmanIcon: { minWidth: 45, minHeight: 40, borderRadius: 11, backgroundColor: "#3A3041", alignItems: "center", justifyContent: "center" },
+  hangmanGlyph: { color: "#E1BF88", fontSize: 16, fontWeight: "800" },
+  hangmanCopy: { flex: 1, minWidth: 0, gap: 2 },
+  hangmanTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "800" },
+  hangmanMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
+  hangmanArrow: { color: "#E1BF88", fontSize: 23 },
   pressed: { opacity: 0.76 },
 });
+

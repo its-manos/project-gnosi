@@ -23,6 +23,7 @@ import WelcomeScreen from "../screens/WelcomeScreen";
 import { useWelcome } from "../hooks/useWelcome";
 import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
 import { ONBOARDING_INTRO_LESSON_ID, previousWelcomePhase, type WelcomePhase } from "../utils/firstRun";
+import HangmanScreen from "../screens/HangmanScreen";
 import QuickQuizScreen from "../screens/QuickQuizScreen";
 import { useQuickQuiz } from "../hooks/useQuickQuiz";
 import HomeScreen from "../screens/HomeScreen";
@@ -327,6 +328,7 @@ export default function AppNavigator() {
     case "home":
       screenContent = (
         <HomeScreen
+          onOpenHangman={() => app.setScreen("hangman")}
           onOpenQuickQuiz={() => app.setScreen("quick-quiz")}
           quickQuizInProgress={Boolean(quickQuiz.progress?.round && !quickQuiz.progress.round.completed)}
           onOpenProfile={() => openProfile("home")}
@@ -344,6 +346,10 @@ export default function AppNavigator() {
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
         />
       );
+      break;
+
+    case "hangman":
+      screenContent = <HangmanScreen key={daily.userId ?? "guest"} onHome={() => app.setScreen("home")} />;
       break;
 
     case "quick-quiz":
@@ -536,7 +542,7 @@ export default function AppNavigator() {
         {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus quiet /> : null}
         {screenContent}
       </SafeAreaView>
-      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app.screen !== "quiz" && app.screen !== "quick-quiz" ? <BottomNavigation
+      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app.screen !== "quiz" && app.screen !== "quick-quiz" && app.screen !== "hangman" ? <BottomNavigation
         currentScreen={isDailyChallengeOpen ? "home" : app.screen === "account" ? accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);
@@ -568,3 +574,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#0B0D15",
   },
 });
+

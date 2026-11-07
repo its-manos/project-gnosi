@@ -184,6 +184,7 @@ const props = {
   onOpenCategory: id => actions.push("category:" + id),
   onStartDailyChallenge: () => actions.push("daily"),
   onOpenQuickQuiz: () => actions.push("quick-quiz"),
+  onOpenHangman: () => actions.push("hangman"),
   onOpenProfile: () => actions.push("profile"),
 };
 let tree = home(props);
@@ -544,9 +545,11 @@ assert.equal(scroll.props.contentContainerStyle[0].justifyContent, "flex-start",
 assert.equal(scroll.props.contentContainerStyle[0].gap, 12,
   "spacious Home retains comfortable minimum spacing");
 const homeSections = [scroll.props.children].flat(Infinity).filter(Boolean);
-assert.equal(homeSections.length, 4, "four actionable Home sections share the available height");
-assert.equal(homeSections.at(-1).props.testID, "home-exploration",
-  "knowledge worlds end the dashboard");
+assert.equal(homeSections.length, 5, "five actionable Home sections share the available height");
+assert.equal(homeSections.at(-1).props.testID, "home-hangman",
+  "playable hangman ends the dashboard below the knowledge worlds");
+assert.equal(homeSections.at(-2).props.testID, "home-exploration");
+assert.equal(homeSections.at(-1).props.onPress, props.onOpenHangman);
 
 assert.equal(homeSections[0].props.style.minHeight, 52,
   "the brand/header stays at its original height");
@@ -1294,3 +1297,4 @@ assert.match(adventureMotionSource, /if \(reduced\) return/,
   "reduced-motion users skip the Continue arrow's movement");
 assert.match(adventureMotionSource, /withTiming\(target/, "progress bar animates to its value");
 console.log("Game Home + Adventure Path headless contracts passed. Native layout and touch QA still required.");
+

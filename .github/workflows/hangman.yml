@@ -1,0 +1,45 @@
+name: Hangman minigame checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/games/hangman/**"
+      - "src/screens/HangmanScreen.tsx"
+      - "src/components/Hangman*.tsx"
+      - "src/screens/HomeScreen.tsx"
+      - "src/navigation/**"
+      - "src/hooks/useLearningApp.ts"
+      - "scripts/test-hangman*.cjs"
+      - "scripts/test-home-layout.cjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/hangman.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hangman:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run validate:content
+      - run: npm run beta:check:config
+      - name: Run all Node regression scripts
+        shell: bash
+        run: |
+          failed=0
+          for test in scripts/test-*.cjs; do
+            node "$test" || failed=1
+          done
+          exit "$failed"
+      - run: git diff --check

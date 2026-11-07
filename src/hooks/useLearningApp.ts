@@ -23,6 +23,7 @@ export type AppScreen =
   | "lesson"
   | "quiz"
   | "quick-quiz"
+  | "hangman"
   | "results"
   | "review"
   | "weekly-review"
@@ -418,3 +419,4 @@ export function useLearningApp() {
     canResetLessonProgress: store.userId === null,
   };
 }
+

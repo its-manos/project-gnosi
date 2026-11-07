@@ -55,7 +55,8 @@
     "beta:update:ios": "npx eas-cli@latest update --channel beta --platform ios --environment preview",
     "images:commons:status": "node scripts/bundle-commons-images.cjs --dry-run",
     "images:commons:bundle": "node scripts/bundle-commons-images.cjs --apply",
-    "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify"
+    "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify",
+    "test:hangman": "node scripts/test-hangman.cjs && node scripts/test-hangman-ui.cjs"
   },
   "private": true
 }
