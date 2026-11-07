@@ -296,7 +296,7 @@ for (const category of categories) {
   assert.equal(typeof Illustration, "function");
   const illustrationNode = nodes(card).find(node => node.type === Illustration);
   assert.ok(illustrationNode, "category card displays its artwork for " + category.id);
-  assert.equal(illustrationNode.props.size, 46);
+  assert.equal(illustrationNode.props.size, 38, "short initial viewport uses tight artwork sizing");
   assert.equal(illustrationNode.props.displayScale, 1.18);
 
   const wrapper = Illustration({ size: 32, displayScale: 1.18 });
