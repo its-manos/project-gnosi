@@ -150,7 +150,7 @@ export function CategoryProgress({ compact = false, detail = false, singleColumn
           title={category.title} emoji={category.emoji}
           completed={count} total={total} percent={percent}
           selected={selectedCategoryId === category.id}
-          singleColumn={singleColumn} threeColumn={threeColumn}
+          singleColumn={singleColumn} threeColumn={threeColumn} dense={detail}
           testID={`reading-subject-${category.id}`}
           onPress={() => setSelectedCategoryId(value => value === category.id ? null : category.id)}
           accessibilityLabel={`${category.title}, ${count} από ${total} ολοκληρωμένα μαθήματα, ${percent}%`} />
