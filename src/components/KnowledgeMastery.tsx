@@ -16,6 +16,7 @@ type Props = {
   detail?: boolean;
   singleColumn?: boolean;
   threeColumn?: boolean;
+  subjectLimit?: number;
 };
 
 const VISIBLE_SUBJECTS = 4;
@@ -26,6 +27,7 @@ const HISTORY_PAGE = 12;
  */
 export default function KnowledgeMastery({
   onOpen, compact = false, detail = false, singleColumn = false, threeColumn = false,
+  subjectLimit = VISIBLE_SUBJECTS,
 }: Props) {
   const { model, ready } = useMistakesModel();
   const [allSubjects, setAllSubjects] = useState(false);
@@ -36,7 +38,7 @@ export default function KnowledgeMastery({
 
   const subjects = model.subjects.slice().sort((a, b) =>
     b.total - a.total || b.revised - a.revised);
-  const visible = detail && !allSubjects ? subjects.slice(0, VISIBLE_SUBJECTS) : subjects;
+  const visible = detail && !allSubjects ? subjects.slice(0, subjectLimit) : subjects;
   const selected = visible.find(subject => subject.id === selectedId);
   const listed = showRevised
     ? model.rows.filter(row => row.revised && row.available)
@@ -68,7 +70,7 @@ export default function KnowledgeMastery({
               ? "Τα λάθη σου εδώ περιμένουν την πρώτη επανάληψη."
               : "Απομένουν " + (selected.total - selected.revised) + " λάθη για διόρθωση."} />
       </MotionView> : null}
-      {detail && subjects.length > VISIBLE_SUBJECTS ? <SubjectShowAll
+      {detail && subjects.length > subjectLimit ? <SubjectShowAll
         testID="knowledge-all-subjects" tone="knowledge" expanded={allSubjects}
         count={subjects.length} onPress={() => {
           setAllSubjects(value => !value);
