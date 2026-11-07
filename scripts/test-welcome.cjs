@@ -187,7 +187,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  const navStore=new DailyStore(null,disk());await navStore.start();
  const app={checkpointAnswers:{},resultMode:'finished',screen:'home',activeCategoryId:data.categories[0].id,activeSubcategoryId:data.subcategories[0].id,activeLessonId:data.lessons[0].id,completedLessonIds:[],completionEvents:{},lessonAttempts:{},progressLoaded:true,inProgressLessonIds:[],inProgressLessonCount:0,setScreen:s=>{app.screen=s;}};
  app.openLesson=id=>{const l=data.lessons.find(x=>x.id===id);app.activeLessonId=id;app.activeCategoryId=l.categoryId;app.activeSubcategoryId=l.subcategoryId;app.screen='lesson';};
- const screens=['HomeScreen','QuickQuizScreen','CategoryScreen','SubcategoryScreen','LessonScreen','QuizScreen','ResultsScreen','ReviewMistakesScreen','WeeklyReviewScreen','KnowledgeReviewScreen','ProfileScreen','PlayerStatsScreen','AccountScreen','SavedLessonsScreen','SearchScreen','DailyChallengeScreen','DailyChallengePreferencesScreen','ProgressScreen','LearningInsightsScreen','WelcomeScreen'];
+ const screens=['HangmanScreen','HomeScreen','QuickQuizScreen','CategoryScreen','SubcategoryScreen','LessonScreen','QuizScreen','ResultsScreen','ReviewMistakesScreen','WeeklyReviewScreen','KnowledgeReviewScreen','ProfileScreen','PlayerStatsScreen','AccountScreen','SavedLessonsScreen','SearchScreen','DailyChallengeScreen','DailyChallengePreferencesScreen','ProgressScreen','LearningInsightsScreen','WelcomeScreen'];
  const screenImports=Object.fromEntries(screens.map(name=>['../screens/'+name,{__esModule:true,default:name}]));
  const navigationAnalytics = load('src/navigation/useNavigationAnalytics.ts', { react: nav.react });
  const Navigator=load('src/navigation/AppNavigator.tsx',{...screenImports,'./useNavigationAnalytics':navigationAnalytics,react:nav.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useWelcome':{useWelcome:()=>({visible,loading:false,replay:false,phase:welcomePhase,categoryId:null,isCurrent:()=>true,advance:async p=>{welcomePhase=p;return true;},complete:async()=>{visible=false;return true;},skip:async()=>{visible=false;return true;},open:()=>{visible=true;welcomePhase='welcome';}})},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[],isSavedLessonsLoaded:true})},'../hooks/useAthensDate':{useAthensDate:()=>today},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:initial,isLoading:false,savePreferences:p=>navStore.savePreferences(p)})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:navStore}),useDailySnapshot:()=>navStore.getSnapshot()},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'}}).default;
@@ -230,6 +230,14 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  nodes(routed).find(n=>n.type==='HomeScreen').props.onOpenQuickQuiz();routed=nav.render(()=>Navigator());
  assert.ok(nodes(routed).some(n=>n.type==='QuickQuizScreen'));assert.ok(!nodes(routed).some(n=>n.type==='Tabs'));
  unsubscribeBack=latestNavEffect();assert.equal(backHandler(),true);unsubscribeBack();routed=nav.render(()=>Navigator());assert.equal(app.screen,'home');
+ nodes(routed).find(n=>n.type==='HomeScreen').props.onOpenHangman();routed=nav.render(()=>Navigator());
+ assert.equal(app.screen,'hangman');
+ assert.ok(nodes(routed).some(n=>n.type==='HangmanScreen'));
+ assert.ok(!nodes(routed).some(n=>n.type==='Tabs'),'Hangman owns the full game viewport');
+ nodes(routed).find(n=>n.type==='HangmanScreen').props.onHome();routed=nav.render(()=>Navigator());
+ assert.equal(app.screen,'home');
+ nodes(routed).find(n=>n.type==='HomeScreen').props.onOpenHangman();routed=nav.render(()=>Navigator());
+ unsubscribeBack=latestNavEffect();assert.equal(backHandler(),true);unsubscribeBack();routed=nav.render(()=>Navigator());assert.equal(app.screen,'home');
  nodes(routed).find(n=>n.type==='Tabs').props.onNavigate('progress');routed=nav.render(()=>Navigator());
  nodes(routed).find(n=>n.type==='ProgressScreen').props.onOpenProfile();routed=nav.render(()=>Navigator());
  unsubscribeBack=latestNavEffect();backHandler();unsubscribeBack();assert.equal(app.screen,'progress');
@@ -269,3 +277,4 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  store.stop();homeStore.stop();navStore.stop();
  console.log('Welcome checks passed: four-stage flow, custom step icons, 3–5 persisted interests, real daily question and lesson routing, skip/back, resume and navigation. Native views mocked.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
