@@ -9,18 +9,34 @@ const events=[];const analytics=new Proxy({}, {get:(_,name)=>(...args)=>{events.
 const hook={analytics,enabled:true,ready:true,error:false};
 const common={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state/BetaAnalytics':{useBetaAnalytics:()=>hook},'../components/UsageSharing':{__esModule:true,default:'UsageSharing'},'../components/ActionButton':{__esModule:true,default:'Button'}};
 (async()=>{
- const h=harness();const Welcome=load('src/screens/WelcomeScreen.tsx',{...common,react:h.react}).default;
+ // Use the current parent-owned onboarding phase; child visuals stay mocked.
+ const h=harness();let phase='welcome';
  const prefs={topicIds:['science','nature','culture'],difficulty:'medium'};
- const props={initialPreferences:prefs,replay:false,hasStartedChallenge:false,onFinish:async()=>true,onSkip:async()=>{}};
- let tree=h.render(()=>Welcome(props));assert.ok(nodes(tree).some(n=>n.type==='UsageSharing'));assert.ok(events.some(e=>e[1]==='onboarding_step_viewed'&&e[2].onboarding_step===1&&e[2].replay===false));
- nodes(tree).find(n=>n.type==='Button'&&n.props.label==='Ας ξεκινήσουμε →').props.onPress();h.render(()=>Welcome(props));assert.ok(events.some(e=>e[2]?.onboarding_step===2));
+ const Welcome=load('src/screens/WelcomeScreen.tsx',{...common,react:h.react,
+  'react-native':{...native,useWindowDimensions:()=>({height:830,width:390,fontScale:1})},
+  'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:0})},
+  '../components/AtlasCard':{__esModule:true,default:'AtlasCard'},
+  '../components/HomeMotion':{MotionView:'View',MotionPressable:'Pressable',MotionCounter:'Text'},
+  '../components/ProgressGradientBackground':{__esModule:true,default:'Background'},
+  '../components/worldIcons/categoryIconMap':{getCategoryWorldIcon:()=>null},
+  './OnboardingDailyQuestion':{__esModule:true,default:'DailyQuestion'},
+  '../components/WelcomeStepIcons':{WelcomeAtlasIcon:'Icon',WelcomeLessonIcon:'Icon',WelcomeQuizIcon:'Icon'},
+ }).default;
+ const props={preferences:prefs,preferencesLoaded:true,categories:[],selectedCategoryId:null,replay:false,
+  onAdvance:async next=>{phase=next;return true;},onSkip:async()=>{}};
+ let tree=h.render(()=>Welcome({...props,phase}));
+ assert.ok(nodes(tree).some(n=>n.type==='UsageSharing'));
+ assert.ok(events.some(e=>e[1]==='onboarding_step_viewed'&&e[2].onboarding_step===1&&e[2].replay===false));
+ nodes(tree).find(n=>n.type==='Button'&&n.props.label==='Ξεκινάμε →').props.onPress();
+ await Promise.resolve();h.render(()=>Welcome({...props,phase}));
+ assert.ok(events.some(e=>e[2]?.onboarding_step===2));
  const consent=harness();hook.enabled=false;const Usage=load('src/components/UsageSharing.tsx',{...common,react:consent.react}).default;tree=consent.render(()=>Usage());const toggle=nodes(tree).find(n=>n.type==='Switch');assert.equal(toggle.props.value,false);toggle.props.onValueChange(true);await Promise.resolve();assert.ok(events.some(e=>e[0]==='setEnabled'&&e[1]===true));
  // Exercise effects from the real navigator, not a reimplementation of routing.
- let welcomeVisible=false;
+ let welcomeVisible=false,welcomePhase='welcome';
  hook.enabled=true;events.length=0;const nav=harness(),data=load('src/data/lessons.ts');
  const lesson=data.lessons[0],app={screen:'home',activeCategoryId:lesson.categoryId,activeSubcategoryId:lesson.subcategoryId,activeLessonId:lesson.id,checkpointAnswers:{},completedLessonIds:[],completionEvents:{},inProgressLessonIds:[],inProgressLessonCount:0,lessonAttempts:{},progressLoaded:true,resultMode:'finished',setScreen:s=>{app.screen=s;}};
- const screens=['Home','Category','Subcategory','Lesson','Quiz','Results','ReviewMistakes','WeeklyReview','KnowledgeReview','Profile','PlayerStats','Account','SavedLessons','Search','DailyChallenge','DailyChallengePreferences','Progress','Welcome'];
- const imports={...common,react:nav.react,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useAthensDate':{useAthensDate:()=> '2026-10-31'},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[]})},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:prefs,savePreferences:async()=>true})},'../hooks/useWelcome':{useWelcome:()=>({visible:welcomeVisible,loading:false,replay:true,isCurrent:()=>true,complete:async()=>true,skip:async()=>true})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:{savePreferences:async()=>true}}),useDailySnapshot:()=>({doc:{days:{},preferences:null},userId:null})},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'},...Object.fromEntries([...screens,'QuickQuiz','LearningInsights'].map(n=>['../screens/'+n+'Screen',{__esModule:true,default:n}]))};
+ const screens=['Hangman','Home','Category','Subcategory','Lesson','Quiz','Results','ReviewMistakes','WeeklyReview','KnowledgeReview','Profile','PlayerStats','Account','SavedLessons','Search','DailyChallenge','DailyChallengePreferences','Progress','Welcome'];
+ const imports={...common,react:nav.react,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useAthensDate':{useAthensDate:()=> '2026-10-31'},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[]})},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:prefs,savePreferences:async()=>true})},'../hooks/useWelcome':{useWelcome:()=>({visible:welcomeVisible,loading:false,replay:true,phase:welcomePhase,isCurrent:()=>true,complete:async()=>true,skip:async()=>true})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:{savePreferences:async()=>true}}),useDailySnapshot:()=>({doc:{days:{},preferences:null},userId:null})},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'},...Object.fromEntries([...screens,'QuickQuiz','LearningInsights'].map(n=>['../screens/'+n+'Screen',{__esModule:true,default:n}]))};
  const navigationAnalytics = load('src/navigation/useNavigationAnalytics.ts', imports);
  const Navigator=load('src/navigation/AppNavigator.tsx',{...imports,'./useNavigationAnalytics':navigationAnalytics}).default;
  const render=()=>nav.render(()=>Navigator());render();app.screen='lesson';render();app.checkpointAnswers={0:0};render();app.screen='results';render();
@@ -29,6 +45,9 @@ const common={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state
  events.length=0;app.resultMode='returning';app.activeLessonId=data.lessons[1].id;render();assert.ok(!events.some(e=>e[0]==='completeLesson'),'Saved results never count as new completions');
  app.screen='lesson';render();events.length=0;app.screen='home';render();assert.ok(events.some(e=>e[0]==='lesson'&&e[1]===null),'Confirmed navigation leaves the visit');
  app.screen='quick-quiz';events.length=0;render();assert.ok(!events.some(e=>e[0]==='view'),'Quick Quiz has no published analytics screen');
+ app.screen='hangman';events.length=0;tree=render();
+ assert.ok(nodes(tree).some(n=>n.type==='Hangman'));
+ assert.ok(!events.some(e=>e[0]==='view'),'Hangman does not send an unpublished screen name');
  // Review routes retain their launcher origin and use the existing analytics enum.
  app.screen='home';tree=render();nodes(tree).find(n=>n.type==='Home').props.onStartDailyChallenge();tree=render();nodes(tree).find(n=>n.type==='DailyChallenge').props.onWeeklyReview();assert.equal(app.screen,'knowledge-review');tree=render();assert.ok(events.some(e=>e[0]==='view'&&e[1]==='review'));nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'home');
  app.screen='progress';tree=render();nodes(tree).find(n=>n.type==='Progress').props.onKnowledgeReview();tree=render();nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'progress');
@@ -46,7 +65,10 @@ const common={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state
  welcomeVisible=true;events.length=0;tree=render();
  const welcome=nodes(tree).find(n=>n.type==='Welcome');
  assert.ok(events.some(e=>e[0]==='view'&&e[1]==='welcome'));
- await welcome.props.onFinish(prefs,'home');await welcome.props.onSkip(2);
+ // Completion is emitted when the real introductory lesson reaches results.
+ welcomePhase='lesson';app.activeLessonId='ancient-athens';app.screen='results';render();
+ await Promise.resolve();await Promise.resolve();
+ await welcome.props.onSkip(2);
  assert.deepEqual(events.filter(e=>e[0]==='track'),[
   ['track','onboarding_completed',{screen:'welcome',onboarding_step:4,replay:true}],
   ['track','onboarding_skipped',{screen:'welcome',onboarding_step:2,replay:true}],
@@ -66,3 +88,4 @@ const common={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state
  onAppState('active');await settle();assert.ok(sent.some(e=>e.event_name==='screen_viewed'));intervalTick();cleanupProvider();
  console.log('Analytics UI passed: welcome step events, sharing switch, real navigator lesson entry/checkpoints/completion/exit, saved-result exclusion. Native rendering mocked.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+

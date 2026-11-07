@@ -24,7 +24,7 @@ function analyticsScreenFor(
   dailyPreferencesOpen: boolean,
 ): AnalyticsScreen | null {
   if (welcomeVisible && (welcomePhase !== "lesson" || (screen !== "lesson" && screen !== "results"))) return "welcome";
-  if (screen === "quick-quiz") return null;
+  if (screen === "quick-quiz" || screen === "hangman") return null;
   if (dailyPreferencesOpen) return "daily-preferences";
   if (dailyChallengeOpen) return "daily";
 
@@ -86,3 +86,4 @@ export function useNavigationAnalytics({
     },
   };
 }
+
