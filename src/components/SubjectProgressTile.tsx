@@ -19,6 +19,8 @@ type Props = {
   accessibilityLabel: string;
   singleColumn?: boolean;
   threeColumn?: boolean;
+  /** Compact detail tiles keep the default two-column grid visible on phones. */
+  dense?: boolean;
 };
 
 /**
@@ -27,7 +29,7 @@ type Props = {
  */
 export default function SubjectProgressTile({
   title, emoji, completed, total, percent, tone, selected, onPress,
-  testID, accessibilityLabel, singleColumn = false, threeColumn = false,
+  testID, accessibilityLabel, singleColumn = false, threeColumn = false, dense = false,
 }: Props) {
   const reading = tone === "reading";
   const complete = total > 0 && completed === total;
@@ -38,7 +40,8 @@ export default function SubjectProgressTile({
       reading && styles.readingTile,
       progressing && (reading ? styles.readingProgressing : styles.knowledgeProgressing),
       complete && (reading ? styles.readingComplete : styles.knowledgeComplete),
-      selected && (reading ? styles.readingSelected : styles.knowledgeSelected)]}
+      selected && (reading ? styles.readingSelected : styles.knowledgeSelected),
+      dense && styles.dense]}
     accessibilityRole="button" accessibilityState={{ selected, expanded: selected }}
     accessibilityLabel={accessibilityLabel}
     accessibilityHint="Άνοιγμα σύντομης ανάλυσης της θεματικής">
@@ -85,6 +88,7 @@ const styles = StyleSheet.create({
     gap: 7, justifyContent: "space-between", overflow: "hidden",
   },
   wide: { width: "31.7%" },
+  dense: { minHeight: 116, paddingTop: 8, paddingBottom: 9, gap: 5 },
   single: { width: "100%", minHeight: 118 },
   knowledgeProgressing: { borderColor: "#625B91", backgroundColor: "#262840" },
   knowledgeComplete: { borderColor: "#8277AD", backgroundColor: "#2D2A44" },
