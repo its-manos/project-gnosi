@@ -190,7 +190,8 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  const screens=['HangmanScreen','HomeScreen','QuickQuizScreen','CategoryScreen','SubcategoryScreen','LessonScreen','QuizScreen','ResultsScreen','ReviewMistakesScreen','WeeklyReviewScreen','KnowledgeReviewScreen','ProfileScreen','PlayerStatsScreen','AccountScreen','SavedLessonsScreen','SearchScreen','DailyChallengeScreen','DailyChallengePreferencesScreen','ProgressScreen','LearningInsightsScreen','WelcomeScreen'];
  const screenImports=Object.fromEntries(screens.map(name=>['../screens/'+name,{__esModule:true,default:name}]));
  const navigationAnalytics = load('src/navigation/useNavigationAnalytics.ts', { react: nav.react });
- const Navigator=load('src/navigation/AppNavigator.tsx',{...screenImports,'../components/LessonIntroductionModal':{__esModule:true,default:'LessonIntroductionModal'},'./useNavigationAnalytics':navigationAnalytics,react:nav.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useWelcome':{useWelcome:()=>({visible,loading:false,replay:false,phase:welcomePhase,categoryId:null,isCurrent:()=>true,advance:async p=>{welcomePhase=p;return true;},complete:async()=>{visible=false;return true;},skip:async()=>{visible=false;return true;},open:()=>{visible=true;welcomePhase='welcome';}})},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[],isSavedLessonsLoaded:true})},'../hooks/useAthensDate':{useAthensDate:()=>today},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:initial,isLoading:false,savePreferences:p=>navStore.savePreferences(p)})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:navStore}),useDailySnapshot:()=>navStore.getSnapshot()},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'}}).default;
+ const navigationCues=[];
+ const Navigator=load('src/navigation/AppNavigator.tsx',{...screenImports,'../play/soundStatus':{requestPracticeCue:kind=>navigationCues.push(kind)},'../components/LessonIntroductionModal':{__esModule:true,default:'LessonIntroductionModal'},'./useNavigationAnalytics':navigationAnalytics,react:nav.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useWelcome':{useWelcome:()=>({visible,loading:false,replay:false,phase:welcomePhase,categoryId:null,isCurrent:()=>true,advance:async p=>{welcomePhase=p;return true;},complete:async()=>{visible=false;return true;},skip:async()=>{visible=false;return true;},open:()=>{visible=true;welcomePhase='welcome';}})},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[],isSavedLessonsLoaded:true})},'../hooks/useAthensDate':{useAthensDate:()=>today},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:initial,isLoading:false,savePreferences:p=>navStore.savePreferences(p)})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:navStore}),useDailySnapshot:()=>navStore.getSnapshot()},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'}}).default;
  let routed=nav.render(()=>Navigator());assert.ok(!nodes(routed).some(n=>n.type==='Tabs'));
  let guide=nodes(routed).find(n=>n.type==='WelcomeScreen');
  assert.equal(guide.props.phase,'welcome');
@@ -221,6 +222,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  let preview=nodes(routed).find(n=>n.type==='LessonIntroductionModal');
  assert.ok(preview,'Choosing onboarding lesson first opens the introduction');
  assert.equal(welcomePhase,'choose','Preview does not advance persisted onboarding');
+ assert.deepEqual(navigationCues,[],'Selecting a lesson does not play the reader cue');
  assert.ok(!nodes(routed).some(n=>n.type==='LessonScreen'),'Reader must not mount behind the preview');
  preview.props.onDismiss();
  routed=nav.render(()=>Navigator());
@@ -231,6 +233,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(await nodes(routed).find(n=>n.type==='LessonIntroductionModal').props.onStart(),true);
  routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='LessonScreen'));
  assert.equal(app.activeLessonId,first.ONBOARDING_INTRO_LESSON_ID);
+ assert.deepEqual(navigationCues,['lesson-open'],'confirmed onboarding plays one reader opening cue');
  assert.deepEqual(plain(navStore.getSnapshot().doc.days),beforeLessonDaily);
  // Skipping the guide returns to Home without resetting the daily or reader.
  await nodes(nav.render(()=>Navigator())).find(n=>n.type==='LessonScreen').props.onBack();

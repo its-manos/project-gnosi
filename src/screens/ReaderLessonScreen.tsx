@@ -1,3 +1,4 @@
+import LessonEntrance from "../components/LessonEntrance";
 import { motionAllowed, playPreferences } from "../play/preferences";
 import { quizRewardSummary } from "../gamification/rewards";
 import { adaptInteractiveLessonQuestion, adaptLessonQuestion, projectInteractiveLessonAnswer, restoreInteractiveLessonAnswer } from "../quiz/adapters";
@@ -159,7 +160,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
   }, [readingSizeReady]);
 
   return (
-    <View style={styles.root} testID="article-reader">
+    <LessonEntrance style={styles.root} testID="article-reader">
       <View style={styles.chrome}>
         <View style={styles.topbar}>
           <Pressable style={styles.control} onPress={onBack} accessibilityRole="button" accessibilityLabel="Επιστροφή στα άρθρα">
@@ -365,7 +366,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           } : stageAction.action} />
         </View>
       </Modal> : null}
-    </View>
+    </LessonEntrance>
   );
 }
 

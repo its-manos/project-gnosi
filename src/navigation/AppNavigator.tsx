@@ -1,3 +1,4 @@
+import { requestPracticeCue } from "../play/soundStatus";
 import LessonIntroductionModal from "../components/LessonIntroductionModal";
 import ProfileScreen from "../screens/ProfileScreen";
 import { backDestination, requiresLearningExitConfirmation } from "./navigationRules";
@@ -59,6 +60,7 @@ export default function AppNavigator() {
     setIsDailyChallengeOpen(false);
     if (lessonPreview.reread) app.restartLesson();
     else app.openLesson(lessonPreview.id);
+    requestPracticeCue("lesson-open");
     setLessonPreview(null);
     return true;
   }

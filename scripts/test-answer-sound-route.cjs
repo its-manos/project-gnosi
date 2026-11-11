@@ -12,7 +12,7 @@ const {FeedbackAudio}=load('src/play/audio.ts',{'react-native':{Platform:{OS:'an
  replace(asset){this.source=asset;this.isLoaded=true;listener?.({isLoaded:true,mute:this.muted});},
  play(){assert.equal(this.isLoaded,true,'rewind must restore a completed Android player before play');if(this.firstPlay){assert.equal(this.muted,true,'warm-up MUST be natively muted');assert.equal(this.volume,0);warmups.push(this.source);this.firstPlay=false;}else{assert.equal(this.muted,false,'real answer MUST be unmuted');assert.ok(this.volume>0);heard.push(this.source);}this.currentTime=.23;this.isLoaded=false;listener?.({didJustFinish:true,isLoaded:false,mute:this.muted});},
  pause(){},remove(){},async seekTo(){this.currentTime=0;this.isLoaded=true;listener?.({isLoaded:true,mute:this.muted});}};players.push(p);return p;
-}},...Object.fromEntries(['correct','incorrect','complete','mastered','level-up','question-open'].map(k=>['../../assets/sounds/'+k+'.wav',k]))});
+}},...Object.fromEntries(['correct','incorrect','complete','mastered','level-up','question-open','lesson-preview','lesson-open'].map(k=>['../../assets/sounds/'+k+'.wav',k]))});
 let slots=[],cursor=0,effects=[];
 const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:init=>{const i=cursor++;return slots[i]??={current:init};},useEffect:(fn,deps)=>{const i=cursor++;if(!slots[i]||deps.some((d,j)=>d!==slots[i].deps[j]))effects.push(()=>{slots[i]?.cleanup?.();slots[i]={deps,cleanup:fn()};});}};
 const native={View:'View',Text:'Text',StyleSheet:{create:x=>x},Animated:{Value:class{setValue(){} interpolate(){return 0;}}},AppState:{currentState:'active',addEventListener:()=>({remove(){}})},AccessibilityInfo:{isReduceMotionEnabled:async()=>false,addEventListener:()=>({remove(){}})}};
@@ -38,7 +38,14 @@ const native={View:'View',Text:'Text',StyleSheet:{create:x=>x},Animated:{Value:c
  const expected=[];while(!dailyStore.getSnapshot().doc.days[date].record.completed){const day=dailyStore.getSnapshot().doc.days[date],record=day.record,session=dailyRecordSession(record,questions),token=questionToken(session);
  if(record.answers[record.currentIndex]===undefined){const q=questions.find(q=>'daily:'+q.id===token.id),right=record.currentIndex%2===0;expected.push(right?'correct':'incorrect');dailyStore.commitRecord(updateDailyRecord(record,submitQuizAnswer(session,token,right?q.correctIndex:(q.correctIndex+1)%q.answers.length).session),day);await flush();render();}
  else{dailyStore.commitRecord(updateDailyRecord(record,advanceQuizSession(session,token).session),day);await flush();render();}}
- assert.deepEqual(heard.slice(n,n+7),expected,'every accepted daily answer reaches the real provider and audio service');assert.equal(players.length,6,'normal playback and preview share cached players');
+ assert.deepEqual(heard.slice(n,n+7),expected,'every accepted daily answer reaches the real provider and audio service');assert.equal(players.length,8,'normal playback and preview share cached players');
+ for(const kind of ['lesson-preview','lesson-open']) {
+  status.requestPracticeCue(kind);await flush();assert.equal(heard.at(-1),kind,'navigation whoosh reaches Android shared player');
+  status.requestPracticeCue(kind);await flush();assert.deepEqual(heard.slice(-2),[kind,kind],'reopened lessons replay the cue');
+ }
+ await prefs.playPreferences.set('sound',false);const beforeMute=heard.length;
+ status.requestPracticeCue('lesson-preview');status.requestPracticeCue('lesson-open');await flush();
+ assert.equal(heard.length,beforeMute,'navigation whooshes respect sound off');
  console.log('Answer sound route passed: ZERO playback during app startup; Android first requested sound warmed only after native mute status, then played audibly. Native playback mocked.');
  }finally{slots.forEach(s=>s?.cleanup?.());store.stop();dailyStore.stop();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

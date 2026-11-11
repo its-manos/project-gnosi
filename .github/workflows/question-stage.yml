@@ -25,6 +25,10 @@ on:
       - "src/utils/firstRun.ts"
       - "scripts/test-welcome.cjs"
       - "src/components/LessonIntroductionModal.tsx"
+      - "src/components/LessonEntrance.tsx"
+      - "src/play/**"
+      - "assets/sounds/lesson-*.wav"
+      - "scripts/test-lesson-entrance.cjs"
       - "scripts/test-lesson-introduction.cjs"
       - "src/quiz/quickQuiz.ts"
       - "src/screens/QuickQuizScreen.tsx"
@@ -69,6 +73,9 @@ jobs:
       - run: node scripts/test-daily-challenge.cjs
       - run: node scripts/test-welcome.cjs
       - run: node scripts/test-lesson-introduction.cjs
+      - run: node scripts/test-lesson-entrance.cjs
+      - run: node scripts/test-play-audio.cjs
+      - run: node scripts/test-answer-sound-route.cjs
       - run: node scripts/test-quick-quiz.cjs
       - run: node scripts/test-question-open-audio.cjs
       - run: node scripts/test-profile-section-header.cjs

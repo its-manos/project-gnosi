@@ -5,34 +5,37 @@ const vm = require('node:vm');
 const source = fs.readFileSync('src/components/LessonIntroductionModal.tsx', 'utf8');
 function harness(reduced = false, ok = true) {
   const slots = []; let cursor = 0, starts = 0, dismissals = 0;
-  const durations = [];
+  const durations = [], cues = [];
   const jsx = (type, props) => ({ type, props });
   const react = {
+    useEffect: () => {},
     useRef: initial => { const i = cursor++; return slots[i] ??= { current: initial }; },
     useState: initial => { const i = cursor++; if (!(i in slots)) slots[i] = initial; return [slots[i], v => { slots[i] = v; }]; },
   };
   const native = Object.fromEntries(['Modal', 'Pressable', 'ScrollView', 'Text', 'View'].map(x => [x, x]));
   Object.assign(native, {
-    StyleSheet: { create: x => x, absoluteFill: {} }, useWindowDimensions: () => ({ height: 400 }),
+    StyleSheet: { create: x => x, absoluteFill: {} }, useWindowDimensions: () => ({ height: 400, width: 350, fontScale: 1 }),
     Easing: { out: x => x, cubic: x => x },
-    Animated: { View: 'AnimatedView', Value: class { constructor(x) { this.value = x; } interpolate(x) { return x; } },
+    Animated: { View: 'AnimatedView', Value: class { constructor(x) { this.value = x; } interpolate(x) { return x; } stopAnimation() {} },
       timing: (value, options) => ({ start: done => { durations.push(options.duration); value.value = options.toValue; done?.({ finished: true }); } }) },
   });
   const m = { exports: {} };
   const imports = { react, 'react/jsx-runtime': { jsx, jsxs: jsx }, 'react-native': native,
-    'react-native-reanimated': { useReducedMotion: () => reduced }, 'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' } };
+    '../play/motion': { usePlayMotion: () => !reduced }, '../play/soundStatus': { requestPracticeCue: kind => cues.push(kind) }, './WelcomeStepIcons': { WelcomeLessonIcon: 'Icon' }, 'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' } };
   vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText,
     { exports: m.exports, module: m, require: id => { assert.ok(id in imports, id); return imports[id]; } });
   const render = () => { cursor = 0; return m.exports.default({ lesson: { title: 'Test lesson', intro: 'Full introduction', readingMinutes: 5 },
     actionLabel: 'Start', onDismiss: () => { dismissals++; }, onStart: async () => { starts++; return ok; } }); };
-  return { render, durations, counts: () => ({ starts, dismissals }) };
+  return { render, durations, cues, counts: () => ({ starts, dismissals }) };
 }
 const nodes = t => t && typeof t === 'object' ? [t, ...[t.props?.children].flat(Infinity).flatMap(nodes)] : [];
 const start = t => nodes(t).find(n => n.type === 'Pressable' && n.props.accessibilityState?.busy !== undefined);
 (async () => {
   for (const reduced of [false, true]) {
     const h = harness(reduced); let tree = h.render(); tree.props.onShow();
-    assert.equal(h.durations[0], reduced ? 0 : 260);
+    assert.equal(h.durations[0], reduced ? 0 : 320);
+    tree.props.onShow();assert.deepEqual(h.cues,['lesson-preview'],'duplicate native onShow does not replay the whoosh');
+    h.render();assert.deepEqual(h.cues,['lesson-preview'],'rerenders stay silent');
     assert.ok(nodes(tree).some(n => n.type === 'Text' && n.props.children === 'Full introduction'));
     assert.ok(nodes(tree).some(n => n.type === 'ScrollView'), 'Long introductions can scroll on small screens');
     start(tree).props.onPress(); start(tree).props.onPress(); tree.props.onRequestClose();

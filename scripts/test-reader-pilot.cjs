@@ -25,6 +25,7 @@ const react = {
 const native = { useWindowDimensions: () => ({ width: 390, height: 852, fontScale: 1 }), View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
 const analyticsScrollEvents = [];
 const common = {
+  "../components/LessonEntrance": { __esModule: true, default: "LessonEntrance" },
   '../play/preferences': { motionAllowed: () => true, playPreferences: { getSnapshot: () => ({}) } },
   '../play/soundStatus': { requestPracticeCue: kind => openingCues.push(kind) },
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
