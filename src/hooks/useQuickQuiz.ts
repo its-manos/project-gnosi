@@ -1,3 +1,4 @@
+import { totalRewardXP } from "../gamification/rewards";
 import { mistakeById, mistakeKey } from "../knowledge/mistakes";
 import { useLearningSession } from "../state/LearningSession";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -35,7 +36,7 @@ export function useQuickQuiz(userId: string | null) {
         }
         if (next.round) for (const q of next.round.questions) {
           const answer = next.round.answers[q.id], at = next.reviewAnswerTimes?.[q.id];
-          if (answer && (at || !store.getSnapshot().mistakes[mistakeKey(q)])) store.recordQuestionAnswer(q, answer.value, at ?? 946684800002);
+          if (answer && (at || !store.getSnapshot().mistakes[mistakeKey(q)])) store.recordQuestionAnswer(q, answer.value, at ?? 946684800002, at ? "quick" : "practice");
         }
         // A correction in the unified review also clears Quick Quiz's recall hint.
         next.missed = next.missed.filter(id => {
@@ -80,13 +81,14 @@ export function useQuickQuiz(userId: string | null) {
     try {
       await write;
       if (!mounted.current) return null;
+      const beforeXP = totalRewardXP(store.getSnapshot().rewards);
       if (next.round) for (const q of next.round.questions) {
         const answer = next.round.answers[q.id];
-        if (answer && (next.round.id !== current.round?.id || !current.round.answers[q.id])) store.recordQuestionAnswer(q, answer.value, reviewAnswerTimes[q.id]);
+        if (answer && (next.round.id !== current.round?.id || !current.round.answers[q.id])) store.recordQuestionAnswer(q, answer.value, reviewAnswerTimes[q.id], "quick");
       }
       latest.current = next;
       setProgress(next);
-      return next;
+      return { ...next, creditedXP: totalRewardXP(store.getSnapshot().rewards) - beforeXP };
     } catch {
       if (mounted.current) setError("save");
       throw new Error("quick_quiz_save_failed");

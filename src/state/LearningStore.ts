@@ -1,3 +1,6 @@
+import { hangmanStatus, GREEK_ALPHABET, type HangmanGame } from "../games/hangman/engine";
+import { hangmanWords } from "../games/hangman/words";
+import { quickQuizQuestions } from "../data/quickQuizQuestions";
 import { buildMistakeModel, mergeMistakes, currentMistakeSession, mistakeById, mistakeKey, recordMistakeAnswer, type Mistakes, type MistakeSession } from "../knowledge/mistakes";
 import { emitPlayFeedback, type FeedbackKind } from "../play/events";
 import { buildKnowledgeModel } from "../knowledge/model";
@@ -6,7 +9,7 @@ import { isCurrentKnowledgeSession, restoreKnowledgeQuiz } from "../knowledge/se
 import { legacyAnswerSlots } from "../quiz/compatibility";
 import type { QuizQuestion, QuestionToken } from "../quiz/types";
 import type { DailyDocument } from "../utils/dailySyncDocument";
-import { awardQuiz, hasReward, mergeRewardLedgers, quizRewardSummary, totalRewardXP, type RewardLedger } from "../gamification/rewards";
+import { awardGame, awardQuiz, hasReward, mergeRewardLedgers, quizRewardSummary, totalRewardXP, type RewardLedger } from "../gamification/rewards";
 import { migrateLearningRewards } from "../gamification/migration";
 import { REWARD_RULES } from "../gamification/rules";
 import { adaptLessonQuestion, adaptInteractiveLessonQuestion, restoreInteractiveLessonAnswer } from "../quiz/adapters";
@@ -270,7 +273,7 @@ export class LearningStore {
     if (!this.ready || !this.active) return;
     this.importMistakes(this.projectLessonReview(lessonId, index, value));
   }
-  recordQuestionAnswer(question: QuizQuestion, value: unknown, at?: number): boolean {
+  recordQuestionAnswer(question: QuizQuestion, value: unknown, at?: number, source: "practice" | "quick" = "practice"): boolean {
     if (!this.ready || !this.active) return false;
     const canonical = mistakeById.get(question.id)?.question;
     if (!canonical || canonical.version !== question.version) return false;
@@ -283,10 +286,27 @@ export class LearningStore {
     if (!evaluateAnswer(canonical, normalized).valid) return false;
     const previous = this.doc.mistakes?.[mistakeKey(canonical)];
     const answeredAt = at ?? Math.max(Date.now(), (previous?.wrong?.at ?? 0) + 1, (previous?.correctAt ?? 0) + 1);
+    if (source === "quick" && (!Number.isSafeInteger(answeredAt) || answeredAt <= 0 || answeredAt > Date.now() + 1000)) return false;
     const mistakes = recordMistakeAnswer(this.doc.mistakes ?? {}, canonical, normalized, answeredAt);
-    if (same(mistakes, this.doc.mistakes ?? {})) return true;
-    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], mistakes });
+    const ledger = this.doc.rewards ?? EMPTY_REWARDS;
+    const rewards = source === "quick" && quickQuizQuestions.some(q => q.id === canonical.id)
+      ? awardGame(ledger, "quick", getAthensDateKey(new Date(answeredAt)), canonical.id, evaluateAnswer(canonical, normalized).correct) : ledger;
+    if (rewards === ledger && same(mistakes, this.doc.mistakes ?? {})) return true;
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], mistakes, rewards });
     return true;
+  }
+  rewardHangman(game: HangmanGame): number {
+    if (!this.ready || !this.active) return 0;
+    const word = hangmanWords.find(word => word.id === game.word.id);
+    if (!word || new Set(game.guesses).size !== game.guesses.length ||
+      game.guesses.some(letter => letter.length !== 1 || !GREEK_ALPHABET.includes(letter)) ||
+      hangmanStatus({ ...game, word }) !== "won") return 0;
+    const ledger = this.doc.rewards ?? EMPTY_REWARDS;
+    const rewards = awardGame(ledger, "hangman", getAthensDateKey(), word.id, true);
+    if (rewards === ledger) return 0;
+    const earned = totalRewardXP(rewards) - totalRewardXP(ledger);
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], rewards });
+    return earned;
   }
   startMistakeReview(): boolean {
     if (!this.ready || !this.active) return false;

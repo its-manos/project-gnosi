@@ -1,4 +1,5 @@
 const assert=require('node:assert/strict'),{load}=require('./helpers/load-typescript.cjs');
+const { REWARD_RULES }=load('src/gamification/rules.ts');
 const {subscribePlayFeedback}=load('src/play/events.ts'),{LearningStore}=load('src/state/LearningStore.ts'),{DailyStore}=load('src/state/DailyStore.ts');
 const {lessons}=load('src/data/lessons.ts'),{questions}=load('src/data/questions.ts'),{getAthensDateKey}=load('src/utils/dailyChallenge.ts');
 const {createSharedDailyRecord}=load('src/utils/sharedDailyChallenge.ts'),{dailyRecordSession,updateDailyRecord}=load('src/quiz/compatibility.ts'),{questionToken,submitQuizAnswer,advanceQuizSession}=load('src/quiz/engine.ts');
@@ -16,7 +17,7 @@ const map=new Map(),storage={getItem:async k=>map.get(k)??null,setItem:async(k,v
   else {const t=advanceQuizSession(session,token);daily.commitRecord(updateDailyRecord(record,t.session),day);}
  }
  assert.equal(events.filter(e=>e.id.startsWith('daily:')&&e.kind==='correct').length,7);assert.equal(events.filter(e=>e.id.startsWith('daily:')&&e.kind==='complete').length,1);
- const dailyAnswers=events.filter(e=>e.id.startsWith('daily:')&&e.answerXP!==undefined);assert.equal(dailyAnswers.length,7);assert.ok(dailyAnswers.every(e=>e.answerXP>0&&e.pendingXP));const banked=daily.getSnapshot().doc.rewards[`day:${today}`];assert.equal(dailyAnswers.reduce((sum,e)=>sum+e.answerXP,0)+40,banked,'answer popups plus completion/perfect bonuses equal banked XP');
+ const dailyAnswers=events.filter(e=>e.id.startsWith('daily:')&&e.answerXP!==undefined);assert.equal(dailyAnswers.length,7);assert.ok(dailyAnswers.every(e=>e.answerXP>0&&e.pendingXP));const banked=daily.getSnapshot().doc.rewards[`day:${today}`];assert.equal(dailyAnswers.reduce((sum,e)=>sum+e.answerXP,0)+REWARD_RULES.daily+REWARD_RULES.perfectDaily,banked,'answer popups plus completion/perfect bonuses equal banked XP');
  const dailyCount=events.length;await daily.flushLocal();daily.stop();daily=new DailyStore('one',storage);await daily.start();assert.equal(events.length,dailyCount);
  // One fresh third transfer scenario emits mastery; the saved result never does.
  const c=masteryConcepts[0],l=lessons.find(l=>l.id===c.lessonIds[0]),doc=emptySyncDocument();doc.progress[l.id]={stamp:[0,'seed'],value:{completed:true,attempt:null}};

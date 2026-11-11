@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const ts = require("typescript");
 const root = path.join(__dirname, "..");
-const hooks = [], effects = [], cues = [], scrollCalls = [];
+const hooks = [], effects = [], cues = [], scrollCalls = [], rewardClaims = [];
 let hookIndex = 0, height = 900, reduced = false;
 const jsx = (type, props) => ({ type, props: props || {} });
 const react = {
@@ -47,12 +47,14 @@ const imports = {
   "react-native-svg": { __esModule: true, default: "svg", Circle: "circle", G: "g", Path: "path" },
   "react-native-safe-area-context": { useSafeAreaInsets: () => ({ bottom: 20 }) },
 };
-const componentStubs = ["ProfileSectionHeader", "ProgressGradientBackground", "AtlasContinueCard", "HangmanFigure", "HangmanFeedbackMotion"];
+const componentStubs = ["ProfileSectionHeader", "ProgressGradientBackground", "AtlasContinueCard", "HangmanFigure", "HangmanFeedbackMotion", "GameXpStatus"];
 for (const name of componentStubs) imports[`../components/${name}`] = { __esModule: true, default: name };
 imports["../components/ProfileSectionHeader"].profileSectionLayout = { horizontal: 18, top: 8, below: 13 };
 imports["../components/AtlasContinueCard"].atlasContinueStyles = { title: {} };
 imports["../components/HomeMotion"] = { MotionPressable: "Pressable", MotionView: "MotionView" };
 imports["../play/soundStatus"] = { requestPracticeCue: cue => cues.push(cue) };
+imports["../state/LearningSession"] = { useLearningSession: () => ({ store: { rewardHangman: game => { rewardClaims.push(game.word.id); return 10; } } }) };
+imports["../play/events"] = { emitPlayFeedback: event => cues.push(event.kind) };
 const cache = new Map();
 function load(file) {
   if (cache.has(file)) return cache.get(file).exports;
@@ -108,6 +110,8 @@ assert.ok(find("hangman-result"));
 assert.ok(!find("hangman-keyboard"));
 assert.ok(find("hangman-word").props.accessibilityLabel.endsWith([...word].join(", ")));
 assert.equal(cues.at(-1), "complete");
+assert.equal(rewardClaims.length, 1, "one accepted win commits exactly one reward");
+assert.equal(nodes(tree).find(n => n.type === "GameXpStatus").props.earnedXP, 10);
 const next = find("hangman-next");
 next.props.onPress(); next.props.onPress();
 assert.equal(hooks[0].round, 2, "double Next does not skip a word");
@@ -120,6 +124,7 @@ assert.equal(hooks[0].wins, 1);
 const newWord = engine.normalizeGreek(hooks[0].word.word);
 for (const l of [...engine.GREEK_ALPHABET].filter(l => !newWord.includes(l)).slice(0, 6)) { key(l).props.onPress(); render(); }
 assert.equal(engine.hangmanStatus(hooks[0]), "lost");
+assert.equal(rewardClaims.length, 1, "a lost round never requests a reward");
 assert.ok(find("hangman-result"));
 assert.ok(!find("hangman-keyboard"));
 assert.ok(find("hangman-status").props.children.includes(hooks[0].word.word));

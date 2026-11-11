@@ -1,0 +1,62 @@
+const assert = require('node:assert/strict');
+const { load } = require('./helpers/load-typescript.cjs');
+const { awardGame, gameRewardXP, totalRewardXP, mergeRewardLedgers, parseRewardLedger, quizRewardSummary } = load('src/gamification/rewards.ts');
+const { LearningStore } = load('src/state/LearningStore.ts');
+const { knowledgeProfile } = load('src/utils/knowledgeScoring.ts');
+const { getAthensDateKey } = load('src/utils/dailyChallenge.ts');
+const { quickQuizQuestions } = load('src/data/quickQuizQuestions.ts');
+const { hangmanWords } = load('src/games/hangman/words.ts');
+const { normalizeGreek } = load('src/games/hangman/engine.ts');
+const date = '2026-11-11', plain = value => JSON.parse(JSON.stringify(value));
+let ledger = awardGame({}, 'quick', date, 'quick:test', false);
+assert.equal(totalRewardXP(awardGame(ledger, 'quick', date, 'quick:test', true)), 0, 'same-day correction cannot farm XP');
+assert.equal(totalRewardXP(awardGame(ledger, 'quick', '2026-11-12', 'quick:test', true)), 2, 'a new Athens date restores eligibility');
+for (let i = 0; i < 15; i++) ledger = awardGame(ledger, 'quick', date, `quick:q${i}`, true);
+assert.equal(gameRewardXP(ledger, 'quick', date), 20);
+let a = {}, b = {};
+for (let i = 0; i < 3; i++) { a = awardGame(a, 'hangman', date, `a${i}`, true); b = awardGame(b, 'hangman', date, `b${i}`, true); }
+const merged = mergeRewardLedgers(a, b);
+assert.equal(totalRewardXP(merged), 30, 'disjoint offline receipts cannot exceed daily cap');
+assert.deepEqual(plain(merged), plain(mergeRewardLedgers(b, a)));
+assert.deepEqual(plain(mergeRewardLedgers(merged, a)), plain(merged));
+const duplicate = awardGame({}, 'hangman', date, 'a0', true);
+assert.equal(totalRewardXP(mergeRewardLedgers(duplicate, duplicate)), 10);
+assert.equal(totalRewardXP(mergeRewardLedgers(awardGame({}, 'hangman', date, 'a0', true), awardGame({}, 'hangman', date, 'b0', true))), 20, 'distinct concurrent wins are retained');
+assert.equal(totalRewardXP({ ...merged, 'lesson:old': 3030, 'day:2026-11-10': 220 }), 3280, 'historical totals survive unchanged');
+assert.equal(knowledgeProfile([], [], {}, {}, [], date, merged).gameXP, 30, 'profile breakdown uses the same capped projection');
+for (const bad of [{ 'game:hangman:2026-02-30:x': 10 }, { 'game:quick:2026-11-11:quick:x': 3 }, { 'game:hangman:2026-11-11:x': 11 }]) assert.throws(() => parseRewardLedger(bad));
+assert.throws(() => parseRewardLedger(duplicate, 'daily'));
+const qs = quickQuizQuestions.slice(0, 3).map(q => ({ ...q, difficulty: 'medium' }));
+assert.equal(quizRewardSummary(qs, Object.fromEntries(qs.map((q, i) => [i, q.content.correctIndex])), 'lesson', {}, true).totalXP, 111);
+assert.equal(getAthensDateKey(new Date('2026-11-11T21:59:59Z')), '2026-11-11');
+assert.equal(getAthensDateKey(new Date('2026-11-11T22:00:00Z')), '2026-11-12');
+const disk = new Map(), storage = { getItem: async key => disk.get(key) ?? null, setItem: async (key, value) => disk.set(key, value) };
+const stores = [];
+(async () => {
+  const store = new LearningStore(null, storage); stores.push(store); await store.start();
+  const win = word => ({ word, guesses: [...new Set(normalizeGreek(word.word))], remaining: [], round: 1, wins: 1 });
+  assert.equal(store.rewardHangman({ ...win(hangmanWords[0]), guesses: [] }), 0, 'unfinished words earn nothing');
+  assert.equal(store.rewardHangman(win(hangmanWords[0])), 10);
+  assert.equal(store.rewardHangman(win(hangmanWords[0])), 0, 'reopening and rapid duplicate claims earn nothing');
+  for (const word of hangmanWords.slice(1, 5)) store.rewardHangman(win(word));
+  assert.equal(totalRewardXP(store.getSnapshot().rewards), 30);
+  const q = quickQuizQuestions[0], at = Date.now();
+  store.recordQuestionAnswer(q, (q.content.correctIndex + 1) % 4, at, 'quick');
+  store.recordQuestionAnswer(q, q.content.correctIndex, at + 1, 'quick');
+  assert.equal(totalRewardXP(store.getSnapshot().rewards), 30, 'retry of wrong quick answer earns nothing');
+  for (const q of quickQuizQuestions.slice(1, 15)) {
+    // The UI shuffles choices. XP must use the same canonical normalization as mistakes.
+    const answers = [...q.content.answers].reverse();
+    store.recordQuestionAnswer({ ...q, content: { ...q.content, answers } }, answers.indexOf(q.content.answers[q.content.correctIndex]), at, 'quick');
+  }
+  assert.equal(totalRewardXP(store.getSnapshot().rewards), 50);
+  await store.flushLocal();
+  const reopened = new LearningStore(null, storage); stores.push(reopened); await reopened.start();
+  assert.equal(totalRewardXP(reopened.getSnapshot().rewards), 50);
+  const account = new LearningStore('account', storage); stores.push(account); await account.start();
+  assert.equal(totalRewardXP(account.getSnapshot().rewards), 0);
+  const guest = reopened.getSnapshot();
+  for (let i = 0; i < 2; i++) await account.importGuest(guest.backup, guest.activity, guest.weeklyReviews, guest.rewards);
+  assert.equal(totalRewardXP(account.getSnapshot().rewards), 50, 'repeated guest import preserves caps and deduplicates');
+  console.log('Game XP passed: daily caps, first attempts, midnight, offline union, distinct wins, shuffled choices, restart, account isolation and guest import.');
+})().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => stores.forEach(store => store.stop()));

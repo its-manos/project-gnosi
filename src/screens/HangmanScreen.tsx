@@ -1,3 +1,6 @@
+import { emitPlayFeedback } from "../play/events";
+import GameXpStatus from "../components/GameXpStatus";
+import { useLearningSession } from "../state/LearningSession";
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,9 +14,11 @@ import { GREEK_ALPHABET, MAX_MISTAKES, guessHangman, hangmanMistakes, hangmanSta
 import { requestPracticeCue } from "../play/soundStatus";
 import { colors } from "../theme";
 
-// Session-only casual play. No XP, lesson attempts, daily answers or streak writes.
+// Rounds remain casual; only distinct daily win receipts enter learning sync.
 export default function HangmanScreen({ onHome }: { onHome: () => void }) {
+  const { store } = useLearningSession();
   const [game, setGame] = useState(startHangman);
+  const [earnedXP, setEarnedXP] = useState(0);
   // The synchronous ref serializes rapid taps before React commits a render.
   const liveGame = useRef(game);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -35,12 +40,18 @@ export default function HangmanScreen({ onHome }: { onHome: () => void }) {
     const next = guessHangman(previous, game.round, letter);
     if (next === previous) return;
     liveGame.current = next;
+    if (hangmanStatus(next) === "won") {
+      const xp = store.rewardHangman(next);
+      setEarnedXP(xp);
+      emitPlayFeedback({ id: `hangman:${next.word.id}:${next.round}:${Date.now()}`, kind: "complete", scope: store.userId ?? "guest", xp });
+    } else {
+      requestPracticeCue(normalizeGreek(next.word.word).includes(letter) ? "correct" : "incorrect");
+    }
     setGame(next);
-    requestPracticeCue(hangmanStatus(next) === "won" ? "complete"
-      : normalizeGreek(next.word.word).includes(letter) ? "correct" : "incorrect");
   }
   function nextWord() {
     const next = nextHangman(liveGame.current, game.round);
+    if (next !== liveGame.current) setEarnedXP(0);
     liveGame.current = next;
     setGame(next);
   }
@@ -83,6 +94,7 @@ export default function HangmanScreen({ onHome }: { onHome: () => void }) {
         </Text>
       </MotionView>
       {finished ? <MotionView entranceDelay={40} testID="hangman-result" style={styles.result}>
+        <GameXpStatus game="hangman" earnedXP={earnedXP} />
         <Text style={styles.eyebrow}>ΜΙΑ ΜΙΚΡΗ ΓΝΩΣΗ</Text>
         <Text style={styles.fact}>{game.word.fact}</Text>
         <AtlasContinueCard testID="hangman-next" onPress={nextWord} accessibilityRole="button"

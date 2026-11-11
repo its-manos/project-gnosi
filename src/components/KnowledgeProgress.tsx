@@ -33,7 +33,7 @@ export default function KnowledgeProgress({ compact = false }: { compact?: boole
           <Text style={styles.link}>{expanded ? "Λιγότερα −" : "Πώς κερδίζω XP; +"}</Text>
         </Pressable>
         {expanded ? <XpRules learningXP={p.learningXP} challengeXP={p.challengeXP}
-          recallXP={p.recallXP} explorationXP={p.explorationXP} /> : null}
+          recallXP={p.recallXP} explorationXP={p.explorationXP} gameXP={p.gameXP} /> : null}
       </> : null}
     </> : null}
   </View>;

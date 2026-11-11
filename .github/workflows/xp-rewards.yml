@@ -1,0 +1,44 @@
+name: XP rewards
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/gamification/**"
+      - "src/state/LearningStore.ts"
+      - "src/state/DailyStore.ts"
+      - "src/hooks/useQuickQuiz.ts"
+      - "src/screens/HangmanScreen.tsx"
+      - "src/screens/QuickQuizScreen.tsx"
+      - "src/components/GameXpStatus.tsx"
+      - "src/components/XpRules.tsx"
+      - "src/utils/knowledgeScoring.ts"
+      - "src/utils/*SyncDocument.ts"
+      - "src/utils/syncDocument.ts"
+      - "supabase/migrations/**"
+      - "scripts/test-game-xp.cjs"
+      - "scripts/test-xp-*.cjs"
+      - "scripts/test-quick-mistake-handoff.cjs"
+      - "scripts/test-play-feedback-integration.cjs"
+      - ".github/workflows/xp-rewards.yml"
+  workflow_dispatch:
+
+jobs:
+  rewards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: node scripts/test-xp-rewards.cjs
+      - run: node scripts/test-xp-rewards-sql.cjs
+      - run: node scripts/test-xp-ui.cjs
+      - run: node scripts/test-game-xp.cjs
+      - run: node scripts/test-quick-mistake-handoff.cjs
+      - run: node scripts/test-play-feedback-integration.cjs
+      - run: npm run test:hangman

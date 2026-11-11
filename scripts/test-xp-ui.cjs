@@ -15,7 +15,7 @@ assert.equal(ruleProps.challengeXP,220);
 const XpRules=load('src/components/XpRules.tsx',common).default;
 const rules=text(XpRules(ruleProps));
 assert.ok(rules.includes('Καθημερινό quiz: 220 XP'));
-assert.ok(rules.includes('30 XP'));
+assert.ok(rules.includes('60 XP'));
 assert.ok(rules.includes('10 / 15 / 20 XP'));
 assert.ok(rules.includes('Τα κερδισμένα XP διατηρούνται'));
 console.log('XP UI passed: Greek level title, permanent total, and shared reward rules. Native views mocked.');
