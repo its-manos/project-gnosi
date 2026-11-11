@@ -34,11 +34,18 @@ for (const kind of ['lesson-preview', 'lesson-open', 'world-open', 'island-open'
   const bytes = fs.readFileSync(`assets/sounds/${kind}.wav`);
   assert.equal(bytes.toString('ascii', 0, 4), 'RIFF');assert.equal(bytes.toString('ascii', 8, 12), 'WAVE');
   assert.equal(bytes.readUInt16LE(22),1);assert.equal(bytes.readUInt16LE(34),16);
-  const samples = bytes.readUInt32LE(40)/2, duration = samples/bytes.readUInt32LE(24);
+  const rate = bytes.readUInt32LE(24);
+  // Android-safe files include trailing silence. Keep the short audible-cue
+  // budget independent of the container duration checked by test-sound-palette.
+  let lastAudibleFrame = -1;
+  for (let offset = 44; offset < bytes.length; offset += 2) {
+    if (bytes.readInt16LE(offset) !== 0) lastAudibleFrame = (offset - 44) / 2;
+  }
+  const duration = (lastAudibleFrame + 1) / rate;
   const navigation = kind === 'world-open' || kind === 'island-open';
   assert.ok(duration >= (navigation ? .06 : .12) && duration <= (navigation ? .1 : .25), 'Navigation stays shorter than lesson cues');
   let peak=0, energy=0; for(let i=44;i<bytes.length;i+=2){const sample=bytes.readInt16LE(i);peak=Math.max(peak,Math.abs(sample));energy+=sample*sample;}
-  assert.ok(peak<32767*.35&&energy>0,'Original sweep has no clipping or loud transients');
+  assert.ok(peak<32767*.35&&energy>0,'Original tonal cue has no clipping or loud transients');
   assert.equal(bytes.readInt16LE(44),0);assert.equal(bytes.readInt16LE(bytes.length-2),0,'Fade endpoints avoid clicks');
 }
-console.log('Lesson entrance passed: native one-shot reveal, motion settings, hydration, cleanup and short non-clipping whoosh assets. Native views mocked.');
+console.log('Lesson entrance passed: native one-shot reveal, motion settings, hydration, cleanup and short non-clipping tonal cues with silent padding. Native views mocked.');

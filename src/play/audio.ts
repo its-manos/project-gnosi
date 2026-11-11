@@ -18,9 +18,8 @@ const volumes: Record<FeedbackKind, number> = {
   "world-open": .22, "island-open": .24, "lesson-preview": .36, "lesson-open": .36,
   "question-open": .32, correct: .46, incorrect: .44, complete: .52, mastered: .54, "level-up": .58,
 };
-const cueVolume = (kind: FeedbackKind) => volumes[kind];
-/** One foreground cue at a time. Native status, rather than a 250 ms seek,
- * controls readiness. Packaged resources load directly on Android and iOS. */
+/** One foreground cue at a time, with guarded readiness and replay.
+ * Bundled WAVs include trailing silence for Android first-play reliability. */
 export class FeedbackAudio {
   private players = new Map<FeedbackKind, AudioPlayer>();
   private subscriptions: { remove: () => void }[] = [];
@@ -53,7 +52,7 @@ export class FeedbackAudio {
       for (const kind of Object.keys(sources) as FeedbackKind[]) {
         // Loading a packaged source prepares it without playing a silent copy.
         const player = createAudioPlayer(sources[kind], { downloadFirst: false, keepAudioSessionActive: false });
-        player.volume = cueVolume(kind);
+        player.volume = volumes[kind];
         player.loop = false;
         this.players.set(kind, player);
         if (player.isLoaded) this.preparedKinds.add(kind);
