@@ -42,4 +42,11 @@ assert.match(daily, /openingQuestionId\) requestPracticeCue\("question-open"\)/,
 assert.match(daily, /\},\[openingQuestionId\]\);/,
   "Daily Quiz plays once per newly visible question, not on ordinary rerenders");
 
+const onboarding = read("src/screens/OnboardingDailyQuestion.tsx");
+assert.match(onboarding, /record\.currentIndex === 0 && selectedAnswer === null && currentQuestion/,
+  "Onboarding opens only the real first unanswered daily question");
+assert.match(onboarding, /if \(opening\) requestPracticeCue\("question-open"\)/);
+const weekly = read("src/screens/WeeklyReviewScreen.tsx");
+assert.match(weekly, /snapshot\.ready && !expired && item && !answer/);
+assert.match(weekly, /if \(opening\) requestPracticeCue\("question-open"\)/);
 console.log("Question entrance audio passed: repeated visits, live-question guards, no XP or replay gate interference.");

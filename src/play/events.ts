@@ -1,4 +1,4 @@
-export type FeedbackKind = "correct" | "incorrect" | "complete" | "mastered" | "level-up" | "question-open";
+export type FeedbackKind = "correct" | "incorrect" | "complete" | "mastered" | "level-up" | "question-open" | "lesson-preview" | "lesson-open" | "world-open" | "island-open";
 export type FeedbackEvent = { id: string; scope: string; kind: FeedbackKind; xp?: number; answerXP?: number; pendingXP?: boolean; label?: string; level?: number };
 const listeners = new Set<(event: FeedbackEvent) => void>();
 /** Only accepted local actions publish here. Hydration, imports and sync never do.
@@ -9,7 +9,7 @@ export function emitPlayFeedback(event: FeedbackEvent) {
 export function subscribePlayFeedback(listener: (event: FeedbackEvent) => void) {
   listeners.add(listener); return () => { listeners.delete(listener); };
 }
-const priorities: Record<FeedbackKind, number> = { correct: 1, incorrect: 1, complete: 2, mastered: 3, "level-up": 4, "question-open": 0 };
+export const feedbackPriority: Record<FeedbackKind, number> = { correct: 1, incorrect: 1, complete: 2, mastered: 3, "level-up": 4, "question-open": 0, "lesson-preview": 0, "lesson-open": 0, "world-open": 0, "island-open": 0 };
 export class FeedbackGate {
   private seen = new Set<string>();
   private last: { kind: FeedbackKind; at: number } | null = null;
@@ -17,7 +17,7 @@ export class FeedbackGate {
     if (event.scope !== scope || !foreground || this.seen.has(event.id)) return false;
     this.seen.add(event.id);
     if (this.seen.size > 256) this.seen.delete(this.seen.values().next().value!);
-    if (event.answerXP === undefined && this.last && now - this.last.at < 900 && priorities[this.last.kind] > priorities[event.kind]) return false;
+    if (event.answerXP === undefined && this.last && now - this.last.at < 900 && feedbackPriority[this.last.kind] > feedbackPriority[event.kind]) return false;
     this.last = { kind: event.kind, at: now }; return true;
   }
   reset() { this.last = null; }

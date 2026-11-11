@@ -1,3 +1,6 @@
+import ScreenEntrance from "../components/ScreenEntrance";
+import { requestPracticeCue } from "../play/soundStatus";
+import LessonIntroductionModal from "../components/LessonIntroductionModal";
 import ProfileScreen from "../screens/ProfileScreen";
 import { backDestination, requiresLearningExitConfirmation } from "./navigationRules";
 import PlayerStatsScreen from "../screens/PlayerStatsScreen";
@@ -42,8 +45,58 @@ import SyncStatus from "../components/SyncStatus";
 import ProgressScreen from "../screens/ProgressScreen";
 import LearningInsightsScreen, { type LearningInsightsView } from "../screens/LearningInsightsScreen";
 
+type LessonPreview = { id: string; welcomeCategoryId?: string; reread?: boolean };
+
 export default function AppNavigator() {
   const app = useLearningApp();
+  const [browseEntrance, setBrowseEntrance] = useState<"category" | "subcategory" | null>(null);
+  const browseTapOrigin = useRef<AppScreen | null>(null);
+  function openWorld(categoryId: string) {
+    if (app.screen !== "home" || browseTapOrigin.current === app.screen ||
+      !categories.some(category => category.id === categoryId)) return;
+    browseTapOrigin.current = app.screen;
+    setBrowseEntrance("category");
+    app.openCategory(categoryId);
+    requestPracticeCue("world-open");
+  }
+  function openIsland(subcategoryId: string, categoryId: string) {
+    if (app.screen !== "category" || browseTapOrigin.current === app.screen ||
+      categoryId !== app.activeCategoryId ||
+      !subcategories.some(region => region.id === subcategoryId && region.categoryId === categoryId)) return;
+    browseTapOrigin.current = app.screen;
+    setBrowseEntrance("subcategory");
+    app.openSubcategory(subcategoryId, categoryId);
+    requestPracticeCue("island-open");
+  }
+  const [lessonPreview, setLessonPreview] = useState<LessonPreview | null>(null);
+  const previewRequested = useRef(false);
+  function presentLessonPreview(selection: LessonPreview) {
+    // Guard before React rerenders, including two taps in the same frame.
+    if (previewRequested.current) return;
+    previewRequested.current = true;
+    setLessonPreview(selection);
+    // A navigation cue belongs to the accepted tap. Native Modal.onShow can
+    // arrive late or be omitted; it is only responsible for the visual reveal.
+    requestPracticeCue("lesson-preview");
+  }
+  function dismissLessonPreview() {
+    previewRequested.current = false;
+    setLessonPreview(null);
+  }
+  function previewLesson(id: string) {
+    const lesson = lessons.find(item => item.id === id);
+    if (!lesson) return;
+    // Selection must not start a session or change the reader's saved position.
+    if (app.progressLoaded && !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return;
+    presentLessonPreview({ id });
+  }
+  const preview = lessonPreview ? lessons.find(item => item.id === lessonPreview.id) : undefined;
+  function previewActionLabel() {
+    if (lessonPreview?.reread) return "Διάβασε ξανά";
+    if (preview && app.lessonAttempts[preview.id]) return "Συνέχεια μαθήματος";
+    if (preview && app.completedLessonIds.includes(preview.id)) return "Προβολή αποτελεσμάτων";
+    return "Ξεκίνα το μάθημα";
+  }
   const [allLessonsUnlockedForTesting, setAllLessonsUnlockedForTesting] = useState(() => devLessonsUnlocked());
   function toggleAllLessonsForTesting() {
     if (!__DEV__) return;
@@ -59,6 +112,16 @@ export default function AppNavigator() {
   const hasActivity = app.completedLessonIds.length > 0 || app.inProgressLessonCount > 0 || bookmarks.savedLessonIds.length > 0 || daily.doc.preferences !== null || Object.keys(daily.doc.days).length > 0;
   const welcome = useWelcome(daily.userId, hasActivity);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
+  async function startPreviewLesson() {
+    if (!lessonPreview || !app.progressLoaded) return false;
+    if (lessonPreview.welcomeCategoryId && !await welcome.advance("lesson", lessonPreview.welcomeCategoryId)) return false;
+    setIsDailyChallengeOpen(false);
+    if (lessonPreview.reread) app.restartLesson();
+    else app.openLesson(lessonPreview.id);
+    requestPracticeCue("lesson-open");
+    dismissLessonPreview();
+    return true;
+  }
   const [isDevQuizPreviewOpen, setIsDevQuizPreviewOpen] = useState(false);
   const [isDevDailyIntroPreviewOpen, setIsDevDailyIntroPreviewOpen] = useState(false);
   const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
@@ -152,6 +215,8 @@ export default function AppNavigator() {
 
   const navigateTo = (destination: AppScreen) => {
     if (destination === currentScreen) return;
+    browseTapOrigin.current = null;
+    setBrowseEntrance(null);
 
     // Returning from the legacy standalone quiz to its article is an internal
     // step; keep the current attempt instead of warning or resetting it.
@@ -262,8 +327,7 @@ export default function AppNavigator() {
     const lesson = lessons.find(l => l.id === ONBOARDING_INTRO_LESSON_ID);
     if (!lesson || !categories.some(category => category.id === categoryId) ||
       !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return false;
-    if (!await welcome.advance("lesson", categoryId)) return false;
-    app.openLesson(lesson.id);
+    presentLessonPreview({ id: lesson.id, welcomeCategoryId: categoryId });
     return true;
   }
   async function skipWelcome(step = 1) {
@@ -316,7 +380,7 @@ export default function AppNavigator() {
     screenContent = (
       <DailyChallengeScreen
         completedLessonIds={app.completedLessonIds} inProgressLessonIds={app.inProgressLessonIds}
-        onOpenLesson={id => { setIsDailyChallengeOpen(false); app.openLesson(id); }}
+        onOpenLesson={previewLesson}
         onWeeklyReview={() => { setIsDailyChallengeOpen(false); openKnowledgeReview("home"); }}
         onHome={() => setIsDailyChallengeOpen(false)}
         onOpenPreferences={() => openDailyPreferences("daily")}
@@ -340,9 +404,9 @@ export default function AppNavigator() {
           inProgressLesson={!homePathLesson || homePathLesson.id === inProgressLesson?.id ? inProgressLesson : null}
           inProgressAnsweredCount={app.inProgressAnsweredCount}
           inProgressQuestionCount={app.inProgressQuestionCount}
-          onResumeLesson={app.openLesson}
-          onOpenCategory={app.openCategory}
-          onOpenLesson={app.openLesson}
+          onResumeLesson={previewLesson}
+          onOpenCategory={openWorld}
+          onOpenLesson={previewLesson}
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
         />
       );
@@ -396,7 +460,7 @@ export default function AppNavigator() {
           inProgressLessonCount={app.inProgressLessonCount}
           totalLessonCount={lessons.length}
           lessonProgressLoaded={app.progressLoaded}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
         />
       );
       break;
@@ -410,7 +474,7 @@ export default function AppNavigator() {
           completedLessons={completedLessons}
           totalLessonCount={lessons.length}
           lessonProgressLoaded={app.progressLoaded}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
         />
       );
       break;
@@ -424,7 +488,7 @@ export default function AppNavigator() {
           progressLoaded={app.progressLoaded}
           lessons={savedLessons}
           onBack={() => navigateTo("profile")}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
           onRemoveSavedLesson={bookmarks.toggleSavedLesson}
         />
       );
@@ -432,31 +496,37 @@ export default function AppNavigator() {
 
     case "category":
       screenContent = (
-        <CategoryScreen
-          category={activeCategory}
-          subcategories={categorySubcategories}
-          lessons={lessons}
-          completedLessonIds={app.completedLessonIds}
-          inProgressLessonIds={app.inProgressLessonIds}
-          progressLoaded={app.progressLoaded}
-          onBack={() => navigateTo("home")}
-          onOpenSubcategory={app.openSubcategory}
-        />
+        <ScreenEntrance key={"category:" + activeCategory.id} testID="category-forward-entry"
+          style={styles.browseViewport} animateOnMount={browseEntrance === "category"} duration={240} rise={6}>
+          <CategoryScreen
+            category={activeCategory}
+            subcategories={categorySubcategories}
+            lessons={lessons}
+            completedLessonIds={app.completedLessonIds}
+            inProgressLessonIds={app.inProgressLessonIds}
+            progressLoaded={app.progressLoaded}
+            onBack={() => navigateTo("home")}
+            onOpenSubcategory={openIsland}
+          />
+        </ScreenEntrance>
       );
       break;
 
     case "subcategory":
       screenContent = (
-        <SubcategoryScreen
-          completedLessonIds={app.completedLessonIds}
-          inProgressLessonIds={app.inProgressLessonIds}
-          progressLoaded={app.progressLoaded}
-          category={activeCategory}
-          subcategory={activeSubcategory}
-          lessons={subcategoryLessons}
-          onBack={() => navigateTo("category")}
-          onOpenLesson={app.openLesson}
-        />
+        <ScreenEntrance key={"subcategory:" + activeSubcategory.id} testID="subcategory-forward-entry"
+          style={styles.browseViewport} animateOnMount={browseEntrance === "subcategory"} duration={240} rise={6}>
+          <SubcategoryScreen
+            completedLessonIds={app.completedLessonIds}
+            inProgressLessonIds={app.inProgressLessonIds}
+            progressLoaded={app.progressLoaded}
+            category={activeCategory}
+            subcategory={activeSubcategory}
+            lessons={subcategoryLessons}
+            onBack={() => navigateTo("category")}
+            onOpenLesson={previewLesson}
+          />
+        </ScreenEntrance>
       );
       break;
 
@@ -520,10 +590,10 @@ export default function AppNavigator() {
           practiceComplete={app.practiceComplete}
           onReviewMistakes={app.startMistakeReview}
           onHome={() => navigateTo("home")}
-          onReadAgain={app.restartLesson}
+          onReadAgain={() => presentLessonPreview({ id: activeLesson.id, reread: true })}
           nextLesson={nextLesson}
           pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: completedSubcategoryCount }}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
           onBrowse={() => navigateTo("category")}
         />
       );
@@ -535,6 +605,10 @@ export default function AppNavigator() {
 
   return (
     <View style={styles.container}>
+      {preview ? <LessonIntroductionModal key={preview.id} lesson={preview}
+        subcategoryTitle={subcategories.find(item => item.id === preview.subcategoryId)?.title}
+        actionLabel={previewActionLabel()}
+        onDismiss={dismissLessonPreview} onStart={startPreviewLesson} /> : null}
       <SafeAreaView
         style={styles.screenViewport}
         edges={["top", "left", "right"]}
@@ -564,6 +638,7 @@ export default function AppNavigator() {
 const styles = StyleSheet.create({
   welcomeLoading: { flex: 1, backgroundColor: "#0B0D15", alignItems: "center", justifyContent: "center", gap: 14 },
   welcomeLoadingText: { color: "#ABB0C1", fontSize: 14 },
+  browseViewport: { flex: 1, minHeight: 0 },
   container: {
     flex: 1,
     backgroundColor: "#0B0D15",

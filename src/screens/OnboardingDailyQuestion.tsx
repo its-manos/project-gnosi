@@ -1,3 +1,4 @@
+import { requestPracticeCue } from "../play/soundStatus";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -59,6 +60,9 @@ export default function OnboardingDailyQuestion({ preferences, preferencesLoaded
 
   const alreadyPassed = record.completed || (record.started && record.currentIndex > 0);
   const answeredFirst = record.started && record.currentIndex === 0 && selectedAnswer !== null;
+  const opening = !isLoading && questionsCompatible && record.started && !record.completed &&
+    record.currentIndex === 0 && selectedAnswer === null && currentQuestion ? `${record.dateKey}:${currentQuestion.id}` : null;
+  useEffect(() => { if (opening) requestPracticeCue("question-open"); }, [opening]);
 
   async function continueAfterQuestion() {
     if (locked.current) return;

@@ -8,7 +8,7 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const source = name => fs.readFileSync(path.join(root, name), "utf8");
 const paletteSource = source("src/theme.ts");
-const reader = source("src/screens/ReaderLessonScreen.tsx");
+const reader = source("src/screens/ReaderLessonScreen.tsx") + "\n" + source("src/screens/readerLessonStyles.ts");
 const figures = source("src/components/ArticleFigure.tsx");
 const captions = source("src/components/ExpandableImageCaption.tsx");
 const fontStore = source("src/state/ReaderTextSize.ts");

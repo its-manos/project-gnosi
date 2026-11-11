@@ -48,10 +48,9 @@ daily quiz.
 
 ## Audio
 
-- `assets/sounds/question-open.wav`: 0.46 s, 22,050 Hz, mono, signed
-  PCM 16-bit; a shortened, softly faded derivative of the already bundled
-  `assets/sounds/mastered.wav`. It uses the **same existing sound source**,
-  not a new provider or unverified external download.
+- `assets/sounds/question-open.wav`: 0.13 s, 22,050 Hz, mono, signed
+  PCM 16-bit; an original warm pluck from the shared D-major feedback palette.
+  Reproduce it with `node scripts/generate-learning-feedback.cjs`.
 - Playback is requested through `requestPracticeCue("question-open")`
   and the existing `FeedbackAudio` player. It is non-scoring and does not
   create an XP event, toast, persistence write or synchronization event.
@@ -59,8 +58,8 @@ daily quiz.
   Android muted first-play warm-up and playback cancellation remain shared
   with the existing sound effects. The new cue plays only when a question is
   opened, not during app startup, hydration, or restoring answers.
-- The original `mastered.wav` creator/license metadata should be retained
-  with the existing audio library when such provenance is documented.
+- See `docs/sound-feedback.md` for the current cue matrix, priority policy
+  and device test checklist.
 
 ## Verification
 

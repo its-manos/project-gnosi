@@ -14,6 +14,7 @@ const fontStore = { size: 18, subscribe: () => () => {}, getSnapshot: () => font
   adjust: delta => { fontStore.size = Math.max(16, Math.min(24, fontStore.size + delta)); } };
 const react = {
   useEffect: () => {},
+  useMemo: fn => fn(),
   useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot(),
   useState: initial => {
     const i = stateIndex++;
@@ -25,6 +26,7 @@ const react = {
 const native = { useWindowDimensions: () => ({ width: 390, height: 852, fontScale: 1 }), View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
 const analyticsScrollEvents = [];
 const common = {
+  "../components/ScreenEntrance": { __esModule: true, default: "ScreenEntrance" },
   '../play/preferences': { motionAllowed: () => true, playPreferences: { getSnapshot: () => ({}) } },
   '../play/soundStatus': { requestPracticeCue: kind => openingCues.push(kind) },
   '../play/motion': { AnswerMotion: 'AnswerMotion' },
@@ -72,7 +74,9 @@ const rewardAdapters = compile('src/quiz/adapters.ts', { './engine': rewardEngin
 const nextFigureWarmup = compile('src/utils/nextFigureWarmup.ts', { '../data/articleMedia': media, './lessonProgress': progress });
 const imports = { '../utils/readerScrollPosition': readerScrollPosition, '../gamification/rules': rewardRules, '../utils/nextFigureWarmup': nextFigureWarmup, '../gamification/rewards': rewardLogic, '../quiz/adapters': rewardAdapters, ...stubs, '../data/articleMedia': media, '../theme': theme, '../utils/lessonProgress': progress, '../utils/contentReports': { lessonReportTarget: (lesson, questionIndex = null) => ({ itemId: lesson.id, questionIndex }) } };
 const QuestionStageProgress = compile('src/components/QuestionStageProgress.tsx', { '../theme': theme }).default;
+const readerStyles = compile('src/screens/readerLessonStyles.ts', { '../theme': theme, '../utils/readerScrollPosition': readerScrollPosition });
 const Reader = compile('src/screens/ReaderLessonScreen.tsx', { ...imports,
+  './readerLessonStyles': readerStyles,
   '../components/QuestionStageProgress': { __esModule: true, default: 'QuestionStageProgress' },
 }).default;
 const Entry = compile('src/screens/LessonScreen.tsx', { ...imports, './ReaderLessonScreen': { __esModule: true, default: Reader } }).default;
