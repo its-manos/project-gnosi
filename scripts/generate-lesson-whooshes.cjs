@@ -1,59 +1,14 @@
-/* Original, deterministic filtered-noise UI sweeps; no third-party samples.
- * Run from the repo root. All cues are short mono 22.05 kHz PCM. */
-const fs = require('node:fs');
-const path = require('node:path');
-function puff(t, start, end) {
-  return t <= start || t >= end ? 0 : Math.sin(Math.PI * (t - start) / (end - start)) ** 1.6;
-}
-function whoosh(seconds, seed, opening) {
-  const rate = 22050, count = Math.round(seconds * rate), samples = [];
-  let noiseState = seed, low = 0, smooth = 0;
-  for (let i = 0; i < count; i++) {
-    noiseState = (Math.imul(noiseState, 1664525) + 1013904223) >>> 0;
-    const noise = noiseState / 2147483648 - 1, t = i / (count - 1);
-    // Preview: one bright, light upward swish.
-    // Lesson: two warm paper strokes with a short gap, like turning a page.
-    // Separate rhythm AND frequency range keep the actions audibly distinct.
-    const cutoff = opening ? 1050 - 180 * t : 2000 + 1200 * t;
-    const envelope = opening ? 0.65 * puff(t, 0, 0.34) + puff(t, 0.43, 1) : puff(t, 0, 1);
-    const texture = opening ? 0.88 + 0.12 * Math.cos(10 * Math.PI * t) : 1;
-    low += (1 - Math.exp(-2 * Math.PI * (opening ? 180 : 900) / rate)) * (noise - low);
-    smooth += (1 - Math.exp(-2 * Math.PI * cutoff / rate)) * (noise - low - smooth);
-    samples.push(smooth * envelope * texture);
-  }
-  return encodeWave(samples, rate);
-}
-function encodeWave(samples, rate, amplitude = 0.30) {
-  const count = samples.length;
-  const peak = Math.max(...samples.map(Math.abs));
-  const bytes = Buffer.alloc(44 + count * 2);
-  bytes.write('RIFF'); bytes.writeUInt32LE(bytes.length - 8, 4); bytes.write('WAVEfmt ', 8);
-  bytes.writeUInt32LE(16, 16); bytes.writeUInt16LE(1, 20); bytes.writeUInt16LE(1, 22);
-  bytes.writeUInt32LE(rate, 24); bytes.writeUInt32LE(rate * 2, 28);
-  bytes.writeUInt16LE(2, 32); bytes.writeUInt16LE(16, 34); bytes.write('data', 36); bytes.writeUInt32LE(count * 2, 40);
-  samples.forEach((value, i) => bytes.writeInt16LE(Math.round(value / peak * amplitude * 32767), 44 + i * 2));
-  return bytes;
-}
-for (const [name, seconds, seed, opening] of [['lesson-preview', 0.13, 1907, false], ['lesson-open', 0.24, 5201, true]]) {
-  fs.writeFileSync(path.join(__dirname, '../assets/sounds', name + '.wav'), whoosh(seconds, seed, opening));
-}
-
-// Rounded navigation ticks share a timbre; a small pitch step marks depth.
-// The airy layer is deliberately quieter than the warm, damped fundamental.
-function navigationTick(seconds, frequency, seed) {
-  const rate = 22050, count = Math.round(seconds * rate), samples = [];
-  let noiseState = seed, air = 0;
-  for (let i = 0; i < count; i++) {
-    const t = i / (count - 1), time = i / rate;
-    noiseState = (Math.imul(noiseState, 1664525) + 1013904223) >>> 0;
-    const noise = noiseState / 2147483648 - 1;
-    air += 0.3 * (noise - air);
-    const tone = Math.sin(2 * Math.PI * frequency * time) + 0.16 * Math.sin(4 * Math.PI * frequency * time);
-    const envelope = Math.sin(Math.PI * t) ** 0.8 * Math.exp(-4 * t);
-    samples.push((tone + 0.18 * air) * envelope);
-  }
-  return encodeWave(samples, rate, 0.22);
-}
-for (const [name, seconds, frequency, seed] of [['world-open', 0.075, 620, 1301], ['island-open', 0.085, 740, 1709]]) {
-  fs.writeFileSync(path.join(__dirname, '../assets/sounds', name + '.wav'), navigationTick(seconds, frequency, seed));
+/* Historical entry point: now generates warm tonal transitions, not noise
+ * whooshes. Shares the same synthesis and notes as learning feedback. */
+const fs = require('node:fs'), path = require('node:path');
+const { render, D, F, LOW_A } = require('./helpers/synthesize-feedback.cjs');
+const cues = [
+  // Preview rises lightly; entering a lesson has a lower, slower resolution.
+  ['lesson-preview', .15, [[0,D,.12],[.035,F,.115,.7]], .26],
+  ['lesson-open', .24, [[0,LOW_A,.18],[.09,D,.15,.85]], .28],
+  ['world-open', .075, [[0,D,.075]], .22],
+  ['island-open', .085, [[0,F,.085]], .22],
+];
+for (const [name, seconds, notes, amplitude] of cues) {
+  fs.writeFileSync(path.join(__dirname, '../assets/sounds', name + '.wav'), render(seconds, notes, amplitude));
 }

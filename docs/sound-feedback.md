@@ -7,10 +7,10 @@ Gnosi uses quiet browsing, silent reading, clear answer feedback and brief miles
 | Action | Cue | Where it applies |
 | --- | --- | --- |
 | Select a world / island | Related 75 / 85 ms rounded ticks | Accepted forward browsing taps only |
-| Select a lesson / confirm opening | 130 ms bright swish / 240 ms two-stroke page turn | Home, paths, saved lessons, results, onboarding |
+| Select a lesson / confirm opening | 150 ms light D/F-sharp transition / 240 ms lower A/D transition | Home, paths, saved lessons, results, onboarding |
 | Reveal an unanswered question | 130 ms soft F-sharp pluck | Reader checkpoints, Daily Quiz, onboarding, Quick Quiz, mistake review, weekly review, legacy quiz/review, Hangman round opening |
 | Confirm a correct answer | 240 ms rising D/A plucks | Shared confirmed-answer pipeline; accepted Hangman letters |
-| Confirm an incorrect answer | 180 ms neutral lower pluck | Same flows; no harsh buzzer or extra penalty sound |
+| Confirm an incorrect answer | 230 ms descending F-sharp/D plucks | Same flows; no harsh buzzer or extra penalty sound |
 | Finish a lesson, quiz or review / win a word | 560 ms D/F-sharp/A resolution | Accepted completion actions only; Hangman replaces the final letter cue with completion |
 | Master an item | 430 ms A/high-D variant | Existing mastery event |
 | Level up | 740 ms D/F-sharp/A/high-D resolution | Existing earned-XP level crossing |
@@ -20,7 +20,7 @@ Hangman treats a submitted letter as an answer; repeated/disabled letters do not
 
 ## Playback policy
 
-- `FeedbackAudio` is the only native effects player. All modes use the same named assets and volume hierarchy. Learning plucks are original deterministic syntheses from `scripts/generate-learning-feedback.cjs`; navigation assets come from `scripts/generate-lesson-whooshes.cjs`. No external samples are used.
+- `FeedbackAudio` is the only native effects player. All modes use the same named assets and volume hierarchy. Learning plucks are original deterministic syntheses from `scripts/generate-learning-feedback.cjs`; navigation assets come from `scripts/generate-lesson-whooshes.cjs` (a historical filename; these are now tonal cues). Both generators use `scripts/helpers/synthesize-feedback.cjs` to keep the timbre and notes consistent. No external samples are used. Incorrect-answer output is checked against correct-answer RMS after the player volumes are applied, so it cannot silently become much quieter.
 - `playsInSilentMode: false` respects iOS silent mode and Android silent/vibrate mode in the installed Expo SDK. `interruptionMode: "mixWithOthers"` avoids pausing or ducking other apps' music. Playback stays foreground-only, with no microphone use or lock-screen session.
 - The existing device-local sound preference controls every cue, including the settings preview. A sound toggle does not affect motion or learning data. Settings explain that system silence still takes precedence.
 - `SoundFeedbackQueue` selects the strongest cue emitted during one microtask: level-up > mastery > completion > answer > opening/navigation. It never queues a backlog of old sounds. Lower-priority transitions do not truncate a brief celebration; a new confirmed answer still gets feedback.

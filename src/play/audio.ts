@@ -16,8 +16,8 @@ const sources = {
 };
 // One loudness hierarchy for every learning mode; browsing remains quiet.
 const volumes: Record<FeedbackKind, number> = {
-  "world-open": .22, "island-open": .24, "lesson-preview": .42, "lesson-open": .36,
-  "question-open": .32, correct: .46, incorrect: .32, complete: .52, mastered: .54, "level-up": .58,
+  "world-open": .22, "island-open": .24, "lesson-preview": .36, "lesson-open": .36,
+  "question-open": .32, correct: .46, incorrect: .44, complete: .52, mastered: .54, "level-up": .58,
 };
 const cueVolume = (kind: FeedbackKind) => volumes[kind];
 /** One foreground cue at a time. Native status, rather than a 250 ms seek,

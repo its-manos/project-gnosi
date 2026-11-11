@@ -9,7 +9,7 @@ const tick = () => Promise.resolve();
   await tick();assert.deepEqual(heard,['level-up'],'One action plays its strongest cue');
   now+=50;queue.enqueue('world-open');queue.enqueue('complete');await tick();
   assert.deepEqual(heard,['level-up'],'A transition does not truncate a celebration');
-  queue.enqueue('incorrect');await tick();assert.equal(heard.at(-1),'incorrect','A newly confirmed answer still receives feedback');
+  queue.enqueue('incorrect');queue.enqueue('question-open');await tick();assert.equal(heard.at(-1),'incorrect','A newly confirmed answer still receives feedback');
   now+=500;queue.enqueue('question-open');await tick();assert.equal(heard.at(-1),'question-open');
   queue.enqueue('correct');queue.clear();await tick();assert.equal(heard.at(-1),'question-open','Mute/background/dispose cancel queued audio');
   queue.enqueue('complete');queue.clear();queue.enqueue('lesson-preview');await tick();

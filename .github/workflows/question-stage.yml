@@ -34,6 +34,8 @@ on:
       - "scripts/test-lesson-entrance.cjs"
       - "scripts/test-sound-feedback-queue.cjs"
       - "scripts/generate-learning-feedback.cjs"
+      - "scripts/helpers/synthesize-feedback.cjs"
+      - "scripts/test-sound-palette.cjs"
       - "assets/sounds/*.wav"
       - "scripts/test-lesson-introduction.cjs"
       - "src/quiz/quickQuiz.ts"
@@ -83,6 +85,7 @@ jobs:
       - run: node scripts/test-play-audio.cjs
       - run: node scripts/test-answer-sound-route.cjs
       - run: node scripts/test-sound-feedback-queue.cjs
+      - run: node scripts/test-sound-palette.cjs
       - run: node scripts/test-play-feedback.cjs
       - run: node scripts/test-play-feedback-ui.cjs
       - run: node scripts/test-weekly-review.cjs
