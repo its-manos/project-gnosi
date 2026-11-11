@@ -10,7 +10,8 @@ export default function PlayFeedbackSettings() {
   const sound = useSyncExternalStore(subscribeSoundStatus, getSoundStatus, getSoundStatus);
   return <View style={styles.card} testID="play-feedback-settings">
     <Text style={styles.title}>Ήχος και κίνηση</Text>
-    <View style={styles.row}><View style={styles.copy}><Text style={styles.label}>Ήχοι παιχνιδιού</Text><Text style={styles.body}>Σύντομα ηχητικά σήματα στις απαντήσεις και τις ολοκληρώσεις.</Text></View><Switch accessibilityLabel="Ήχοι παιχνιδιού" value={p.sound} disabled={!p.ready} onValueChange={value => { void playPreferences.set("sound", value); }} trackColor={{ true: colors.accent }} /></View>
+    <View style={styles.row}><View style={styles.copy}><Text style={styles.label}>Ήχοι εφαρμογής</Text><Text style={styles.body}>Διακριτικά σήματα στην εξερεύνηση, στις ερωτήσεις και στην πρόοδό σου.</Text></View><Switch accessibilityLabel="Ήχοι εφαρμογής" value={p.sound} disabled={!p.ready} onValueChange={value => { void playPreferences.set("sound", value); }} trackColor={{ true: colors.accent }} /></View>
+    <Text style={styles.body}>Οι ήχοι σέβονται την αθόρυβη λειτουργία και δεν διακόπτουν τη μουσική σου.</Text>
     <ActionButton secondary label="Δοκιμή ήχου" disabled={!p.ready || !p.sound} onPress={requestSoundPreview} />
     <Text style={styles.body} accessibilityLiveRegion="polite">{p.sound ? sound.message : "Ενεργοποίησε τους ήχους για να κάνεις δοκιμή."}</Text>
     <View style={styles.row}><View style={styles.copy}><Text style={styles.label}>Κινούμενα εφέ</Text><Text style={styles.body}>{p.reducedMotion ? "Η μειωμένη κίνηση της συσκευής έχει προτεραιότητα." : "Ήπιες κινήσεις και εορτασμοί προόδου."}</Text></View><Switch accessibilityLabel="Κινούμενα εφέ" value={p.animations} disabled={!p.ready} onValueChange={value => { void playPreferences.set("animations", value); }} trackColor={{ true: colors.accent }} /></View>

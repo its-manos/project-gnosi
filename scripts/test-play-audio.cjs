@@ -7,7 +7,7 @@ function fixture({fail=false,loaded=true}={}){
  return{audio:new FeedbackAudio(),players,modes,options,resolve:()=>{const resolve=pending.shift();assert.ok(resolve);resolve();}};
 }
 (async()=>{
- let f=fixture();await f.audio.start();assert.equal(f.players.length,10);assert.equal(f.modes[0].playsInSilentMode,true,'Android silent/vibrate ringer mode must not suppress game media');assert.equal(f.modes[0].interruptionMode,'mixWithOthers');assert.equal(f.modes[0].shouldPlayInBackground,false);assert.equal(f.modes[0].allowsRecording,false);assert.equal(f.modes[0].shouldRouteThroughEarpiece,false);assert.ok(f.options.every(o=>o.downloadFirst===false));
+ let f=fixture();await f.audio.start();assert.equal(f.players.length,10);assert.equal(f.modes[0].playsInSilentMode,false,'Optional effects must respect device silent/vibrate mode');assert.equal(f.modes[0].interruptionMode,'mixWithOthers');assert.equal(f.modes[0].shouldPlayInBackground,false);assert.equal(f.modes[0].allowsRecording,false);assert.equal(f.modes[0].shouldRouteThroughEarpiece,false);assert.ok(f.options.every(o=>o.downloadFirst===false));
  let enabled=true;f.audio.play('correct',()=>enabled);await flush();f.resolve();await flush();assert.equal(f.players[0].played,1);assert.ok(f.players.every(p=>p.loop===false&&p.volume<=.65));
  f.audio.play('correct',()=>enabled);await flush();f.audio.play('complete',()=>enabled);await flush();f.resolve();await flush();assert.equal(f.players[0].played,1,'new sound cancels an older pending seek');f.resolve();await flush();assert.equal(f.players[2].played,1);
  f.players[0].currentTime=.1;f.audio.play('correct',()=>enabled);await flush();enabled=false;f.resolve();await flush();assert.equal(f.players[0].played,1,'mute checked again after asynchronous seek');

@@ -1,3 +1,4 @@
+import { requestPracticeCue } from "../play/soundStatus";
 import { emitPlayFeedback } from "../play/events";
 import { hasReward, quizRewardSummary } from "../gamification/rewards";
 import { adaptLessonQuestion, adaptInteractiveLessonQuestion, projectInteractiveLessonAnswer } from "../quiz/adapters";
@@ -195,6 +196,7 @@ export function useLearningApp() {
     setCheckpointAnswers({});
     setScore(0);
     setScreen("quiz");
+    requestPracticeCue("question-open");
   }
 
   function chooseAnswer(answerIndex: number, _correctIndex: number) {
@@ -227,6 +229,7 @@ export function useLearningApp() {
     } else {
       setQuestionIndex(transition.session.currentIndex);
       setSelectedAnswer(null);
+      requestPracticeCue("question-open");
     }
   }
 
@@ -307,6 +310,7 @@ export function useLearningApp() {
     setReviewAnswer(null);
     setPracticeComplete(false);
     setScreen("review");
+    requestPracticeCue("question-open");
   }
   function answerReview(answer: number) {
     const question = activeLesson.questions[reviewIndices[reviewIndex]];
@@ -326,12 +330,14 @@ export function useLearningApp() {
     session.answer = null;
     setReviewIndex(session.index);
     setReviewAnswer(null);
+    requestPracticeCue(session.index === reviewIndices.length ? "complete" : "question-open");
   }
   function retryReviewQuestion() {
     const session = reviewSession.current, question = activeLesson.questions[reviewIndices[reviewIndex]];
     if (!question || session.lessonId !== activeLessonId || session.index !== reviewIndex || session.answer === null || evaluateChoice(question, session.answer).correct) return;
     session.answer = null;
     setReviewAnswer(null);
+    requestPracticeCue("question-open");
   }
   function endMistakeReview() {
     setPracticeComplete(reviewIndices.length > 0 && reviewIndex === reviewIndices.length);

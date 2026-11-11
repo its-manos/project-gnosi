@@ -39,6 +39,9 @@ const native={View:'View',Text:'Text',StyleSheet:{create:x=>x},Animated:{Value:c
  if(record.answers[record.currentIndex]===undefined){const q=questions.find(q=>'daily:'+q.id===token.id),right=record.currentIndex%2===0;expected.push(right?'correct':'incorrect');dailyStore.commitRecord(updateDailyRecord(record,submitQuizAnswer(session,token,right?q.correctIndex:(q.correctIndex+1)%q.answers.length).session),day);await flush();render();}
  else{dailyStore.commitRecord(updateDailyRecord(record,advanceQuizSession(session,token).session),day);await flush();render();}}
  assert.deepEqual(heard.slice(n,n+7),expected,'every accepted daily answer reaches the real provider and audio service');assert.equal(players.length,10,'normal playback and preview share cached players');
+ assert.equal(heard.at(-1),'complete');
+ status.requestPracticeCue('world-open');await flush();assert.equal(heard.at(-1),'complete','An immediate transition does not truncate completion');
+ await new Promise(resolve=>setTimeout(resolve,610));
  for(const kind of ['lesson-preview','lesson-open','world-open','island-open']) {
   status.requestPracticeCue(kind);await flush();assert.equal(heard.at(-1),kind,'navigation whoosh reaches Android shared player');
   status.requestPracticeCue(kind);await flush();assert.deepEqual(heard.slice(-2),[kind,kind],'reopened lessons replay the cue');

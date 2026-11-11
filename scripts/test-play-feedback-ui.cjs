@@ -13,24 +13,24 @@ const flush=async()=>{for(let i=0;i<15;i++)await Promise.resolve();};
  const store={userId:'one',getSnapshot:()=>({rewards:{'lesson:test':210}})},dailyStore={getSnapshot:()=>({doc:{rewards:{}}})};
  const storage={getItem:async()=>null,setItem:async()=>{}};
  const Provider=load('src/play/PlayFeedback.tsx',{react:h.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:20})},'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'../state/LearningSession':{useLearningSession:()=>({store,dailyStore})},'./events':events,'./preferences':prefs,'./motion':{usePlayMotion:()=>false},'./audio':{FeedbackAudio:Audio},'./soundStatus':status}).default;
- const render=()=>h.render(()=>Provider({children:'app'}));let tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'mount/hydration is silent');
- const e={scope:'one',id:'finish:1',kind:'complete',xp:60,label:'Μάθημα ολοκληρώθηκε'};events.emitPlayFeedback(e);tree=render();assert.ok(text(tree).includes('Επίπεδο 2'));assert.ok(!text(tree).includes('+60 XP'),'completion total stays in results');assert.equal(sounds.at(-1),'level-up');assert.equal(started,0,'disabled motion keeps static feedback');
+ const render=()=>h.render(()=>Provider({children:'app'}));let tree=render();await flush();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'mount/hydration is silent');
+ const e={scope:'one',id:'finish:1',kind:'complete',xp:60,label:'Μάθημα ολοκληρώθηκε'};events.emitPlayFeedback(e);tree=render();await flush();assert.ok(text(tree).includes('Επίπεδο 2'));assert.ok(!text(tree).includes('+60 XP'),'completion total stays in results');assert.equal(sounds.at(-1),'level-up');assert.equal(started,0,'disabled motion keeps static feedback');
  const count=sounds.length;events.emitPlayFeedback(e);events.emitPlayFeedback({...e,id:'foreign',scope:'other'});assert.equal(sounds.length,count);
- deviceReduced(true);assert.equal(prefs.playPreferences.getSnapshot().reducedMotion,true);appState('background');tree=render();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'));events.emitPlayFeedback({...e,id:'background'});assert.equal(sounds.length,count);appState('active');
- await prefs.playPreferences.set('sound',false);assert.ok(stops>0);events.emitPlayFeedback({...e,id:'muted',xp:0,kind:'correct',answerXP:17,pendingXP:true});tree=render();assert.equal(sounds.length,count);assert.ok(text(tree).includes('+17 XP'),'muted audio does not hide answer XP');assert.ok(text(tree).includes('Πιστώνονται στην ολοκλήρωση'));events.emitPlayFeedback({...e,id:'wrong',xp:0,kind:'incorrect',answerXP:0});tree=render();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP answers dismiss an earlier earned-XP popup');appState('background');appState('active');events.emitPlayFeedback({...e,id:'ordinary-complete',xp:0});tree=render();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'no ordinary completion popup');
+ deviceReduced(true);assert.equal(prefs.playPreferences.getSnapshot().reducedMotion,true);appState('background');tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'));events.emitPlayFeedback({...e,id:'background'});assert.equal(sounds.length,count);appState('active');
+ await prefs.playPreferences.set('sound',false);assert.ok(stops>0);events.emitPlayFeedback({...e,id:'muted',xp:0,kind:'correct',answerXP:17,pendingXP:true});tree=render();await flush();assert.equal(sounds.length,count);assert.ok(text(tree).includes('+17 XP'),'muted audio does not hide answer XP');assert.ok(text(tree).includes('Πιστώνονται στην ολοκλήρωση'));events.emitPlayFeedback({...e,id:'wrong',xp:0,kind:'incorrect',answerXP:0});tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP answers dismiss an earlier earned-XP popup');appState('background');appState('active');events.emitPlayFeedback({...e,id:'ordinary-complete',xp:0});tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'no ordinary completion popup');
 // A replay can be correct but earns no additional XP: keep audio feedback,
 // without a +0 XP popup. Zero-XP mastery notifications follow the same rule.
 await prefs.playPreferences.set('sound',true);
 const beforeReplaySound=sounds.length;
 events.emitPlayFeedback({...e,id:'replay-correct',xp:0,kind:'correct',answerXP:0,pendingXP:false});
-tree=render();assert.equal(sounds.length,beforeReplaySound+1,'replay answer sound still plays');
+tree=render();await flush();assert.equal(sounds.length,beforeReplaySound+1,'replay answer sound still plays');
 assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'replay +0 XP popup hidden');
 events.emitPlayFeedback({...e,id:'mastery-no-xp',xp:0,kind:'mastered'});
-tree=render();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP mastery popup hidden');
+tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP mastery popup hidden');
 events.emitPlayFeedback({...e,id:'mastery-with-xp',xp:10,kind:'mastered'});
-tree=render();assert.ok(nodes(tree).some(n=>n.props.testID==='play-celebration'),'positive XP mastery remains visible');
+tree=render();await flush();assert.ok(nodes(tree).some(n=>n.props.testID==='play-celebration'),'positive XP mastery remains visible');
 events.emitPlayFeedback({...e,id:'replay-after-mastery',xp:0,kind:'correct',answerXP:0});
-tree=render();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP after a milestone closes the popup');
+tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP after a milestone closes the popup');
 await prefs.playPreferences.set('sound',false);
 assert.equal(prefs.playPreferences.getSnapshot().sound,false,'restore muted preference after replay audio check');
 

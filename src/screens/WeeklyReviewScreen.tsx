@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { requestPracticeCue } from "../play/soundStatus";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLearningSession, useLearningSnapshot } from "../state/LearningSession";
 import { useAthensDate } from "../hooks/useAthensDate";
@@ -46,6 +47,15 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
     snapshot.weeklyReviews[q.id]?.answerIndex !== q.lesson.questions[q.questionIndex].correctIndex) : [];
   const weekLabel = initial.week.split("-").reverse().join("/");
   const reward = snapshot.rewards?.["review:" + initial.week] ?? 0;
+  const opening = snapshot.ready && !expired && item && !answer ? item.id : null;
+  useEffect(() => { if (opening) requestPracticeCue("question-open"); }, [opening]);
+  const continuedId = useRef<string | null>(null);
+  function continueReview() {
+    if (expired || !snapshot.ready || !feedbackId || continuedId.current === feedbackId) return;
+    continuedId.current = feedbackId;
+    setFeedbackId(null);
+    if (items.every(q => store.getSnapshot().weeklyReviews[q.id])) requestPracticeCue("complete");
+  }
 
   function choose(answerIndex: number) {
     if (!item || expired || !snapshot.ready) return;
@@ -183,7 +193,7 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
           </Text> : null}
           <Text style={styles.body}>{question.explanation}</Text>
           <ActionButton label={done === items.length ? "Δες το αποτέλεσμα" : "Συνέχεια"}
-            onPress={() => setFeedbackId(null)} style={styles.flatAction} />
+            onPress={continueReview} style={styles.flatAction} />
         </View> : null}
       </> : null}
     </ScrollView>

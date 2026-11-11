@@ -68,16 +68,17 @@ function disk(payload=doc(),userId=null){const map=new Map([['@gnosi/sync-device
  // Render the real weekly screen: persisted answers, original shuffled indices, feedback and summary.
  now=Date.parse('2026-10-30T10:00:00Z');
  const uiStore=new LearningStore(null,disk());stores.push(uiStore);await uiStore.start();
- let slots=[],cursor=0;
- const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
+ let slots=[],cursor=0,effects=[],screenCues=[];
+ const react={useRef:init=>{const i=cursor++;return slots[i]??={current:init};},useEffect:(fn,deps)=>{const i=cursor++;if(!slots[i]||deps.some((d,j)=>d!==slots[i][j])){slots[i]=deps;effects.push(fn);}},useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];}};
  const jsx=(type,props)=>({type,props});
  const stubs=Object.fromEntries(['ActionButton','SingleChoiceQuestionCard','AppHeader','SyncStatus','AtlasCard','ProfileSectionHeader','ProgressGradientBackground'].map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]));
- const Screen=load('src/screens/WeeklyReviewScreen.tsx',{...stubs,react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{ScrollView:'ScrollView',View:'View',Text:'Text',Pressable:'Pressable',ActivityIndicator:'ActivityIndicator',StyleSheet:{create:x=>x}},'../hooks/useAthensDate':{useAthensDate:()=>load('src/utils/dailyChallenge.ts').getAthensDateKey()},'../state/LearningSession':{useLearningSession:()=>({store:uiStore}),useLearningSnapshot:()=>uiStore.getSnapshot()}}).default;
+ const Screen=load('src/screens/WeeklyReviewScreen.tsx',{...stubs,'../play/soundStatus':{requestPracticeCue:kind=>screenCues.push(kind)},react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{ScrollView:'ScrollView',View:'View',Text:'Text',Pressable:'Pressable',ActivityIndicator:'ActivityIndicator',StyleSheet:{create:x=>x}},'../hooks/useAthensDate':{useAthensDate:()=>load('src/utils/dailyChallenge.ts').getAthensDateKey()},'../state/LearningSession':{useLearningSession:()=>({store:uiStore}),useLearningSnapshot:()=>uiStore.getSnapshot()}}).default;
  const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
  const named=(tree,id)=>nodes(tree).find(n=>n.props?.testID===id);
- const render=()=>{cursor=0;return Screen({onBack(){}});};
+ const render=()=>{cursor=0;const tree=Screen({onBack(){}});const pending=effects;effects=[];pending.forEach(fn=>fn());return tree;};
  let tree=render();let choice=nodes(tree).find(n=>n.type==='SingleChoiceQuestionCard');
  assert.ok(choice,'weekly review renders the shared confirmable card');
+ assert.deepEqual(screenCues,['question-open']);render();assert.equal(screenCues.length,1,'Weekly question rerenders stay quiet');
  assert.ok(named(tree,'weekly-review-journey'),'weekly journey is visible during the session');
  assert.ok(nodes(tree).some(n=>n.type==='ProfileSectionHeader'),'shared fixed header is used');
  assert.equal(choice.props.answers.length,4);
@@ -101,6 +102,7 @@ function disk(payload=doc(),userId=null){const map=new Map([['@gnosi/sync-device
  assert.ok(!nodes(tree).some(n=>n.props?.label==='Δοκίμασε ξανά'),'weekly score cannot be retried');
  nodes(tree).find(n=>n.props?.label==='Δες το αποτέλεσμα').props.onPress();tree=render();assert.equal(nodes(tree).filter(n=>n.type==='SingleChoiceQuestionCard').length,0);assert.ok(nodes(tree).some(n=>n.props?.label==='Πίσω στην πρόοδο'));
  assert.ok(named(tree,'weekly-review-result'),'completed review has a dedicated score card');
+ assert.deepEqual(screenCues,['question-open','question-open','complete'],'Weekly opening/advance/completion share the learning palette');
  assert.ok(!named(tree,'weekly-review-corrections'),'missed answers start collapsed');
  const correctionsToggle=named(tree,'weekly-review-corrections-toggle');
  assert.ok(correctionsToggle && correctionsToggle.props.accessibilityState.expanded===false,'review has an accessible disclosure');

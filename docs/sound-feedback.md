@@ -1,0 +1,44 @@
+# Gnosi sound feedback
+
+Gnosi uses quiet browsing, silent reading, clear answer feedback and brief milestones. Audio is cosmetic: scoring, XP, saved progress and sync must work identically with sound disabled.
+
+## Shared cue matrix
+
+| Action | Cue | Where it applies |
+| --- | --- | --- |
+| Select a world / island | Related 75 / 85 ms rounded ticks | Accepted forward browsing taps only |
+| Select a lesson / confirm opening | 130 ms bright swish / 240 ms two-stroke page turn | Home, paths, saved lessons, results, onboarding |
+| Reveal an unanswered question | 130 ms soft F-sharp pluck | Reader checkpoints, Daily Quiz, onboarding, Quick Quiz, mistake review, weekly review, legacy quiz/review, Hangman round opening |
+| Confirm a correct answer | 240 ms rising D/A plucks | Shared confirmed-answer pipeline; accepted Hangman letters |
+| Confirm an incorrect answer | 180 ms neutral lower pluck | Same flows; no harsh buzzer or extra penalty sound |
+| Finish a lesson, quiz or review / win a word | 560 ms D/F-sharp/A resolution | Accepted completion actions only; Hangman replaces the final letter cue with completion |
+| Master an item | 430 ms A/high-D variant | Existing mastery event |
+| Level up | 740 ms D/F-sharp/A/high-D resolution | Existing earned-XP level crossing |
+| Read, scroll, select an unconfirmed quiz choice, change tabs, go back, hydrate or open saved results | Silent | Visual feedback stays available |
+
+Hangman treats a submitted letter as an answer; repeated/disabled letters do not make a sound. Losing uses the ordinary incorrect cue, not a separate failure fanfare. No background music, startup jingle, per-XP tick or sound on automatic map positioning is introduced.
+
+## Playback policy
+
+- `FeedbackAudio` is the only native effects player. All modes use the same named assets and volume hierarchy. Learning plucks are original deterministic syntheses from `scripts/generate-learning-feedback.cjs`; navigation assets come from `scripts/generate-lesson-whooshes.cjs`. No external samples are used.
+- `playsInSilentMode: false` respects iOS silent mode and Android silent/vibrate mode in the installed Expo SDK. `interruptionMode: "mixWithOthers"` avoids pausing or ducking other apps' music. Playback stays foreground-only, with no microphone use or lock-screen session.
+- The existing device-local sound preference controls every cue, including the settings preview. A sound toggle does not affect motion or learning data. Settings explain that system silence still takes precedence.
+- `SoundFeedbackQueue` selects the strongest cue emitted during one microtask: level-up > mastery > completion > answer > opening/navigation. It never queues a backlog of old sounds. Lower-priority transitions do not truncate a brief celebration; a new confirmed answer still gets feedback.
+- Reward event deduplication and toast delivery remain separate. Sound priority does not remove XP popups or writes. Muting, backgrounding, account-boundary cleanup and sound-preview actions clear queued effects. Preferences loading retains only a recent highest-priority cue.
+- Cached-player rewind and Android's native-muted first-play warm-up are retained. Initialization does not call `play()` or make startup sounds.
+
+API references: [Expo SDK 58 Audio](https://docs.expo.dev/versions/v58.0.0/sdk/audio/) and [Apple playing audio guidance](https://developer.apple.com/design/human-interface-guidelines/playing-audio).
+
+## Verification
+
+Node tests cover configuration, mute/background/unmount cancellation, one strongest cue per action, native replay readiness, feedback semantics, finite/non-clipping PCM and weekly question/completion triggers. Native playback is mocked; these checks do not prove hardware behavior.
+
+On Android and iPhone:
+
+1. With sound enabled, test the browse-to-lesson path, a lesson checkpoint, Daily Quiz, Quick Quiz and Hangman. Include correct, incorrect and completed states.
+2. Test onboarding's first question and weekly/mistake review. Reopening an unanswered question should play once; expanding sources, changing font size or restoring completed results should stay quiet.
+3. Trigger a level-up at completion. Hear the level-up cue without a cascade of answer/completion sounds. Confirm that the visual XP/result feedback remains correct.
+4. Turn off the app's sound toggle. Repeat actions and the settings sound preview; all remain quiet. Toggle motion independently.
+5. Turn the app's sound on but use iPhone silent mode, or Android silent/vibrate mode. Effects remain quiet. Return to normal mode and verify the next action plays normally.
+6. Play music in another app, then browse, answer and complete a quiz in Gnosi. Music should continue at its existing volume.
+7. Background the app during playback and while opening a question. No stale cue should resume later. Test the first cold opening as well as repeated playback.

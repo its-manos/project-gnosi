@@ -14,7 +14,12 @@ const sources = {
   "world-open": require("../../assets/sounds/world-open.wav"),
   "island-open": require("../../assets/sounds/island-open.wav"),
 };
-const cueVolume = (kind: FeedbackKind) => kind === "world-open" ? .22 : kind === "island-open" ? .24 : kind === "lesson-preview" ? .42 : kind === "lesson-open" ? .36 : kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
+// One loudness hierarchy for every learning mode; browsing remains quiet.
+const volumes: Record<FeedbackKind, number> = {
+  "world-open": .22, "island-open": .24, "lesson-preview": .42, "lesson-open": .36,
+  "question-open": .32, correct: .46, incorrect: .32, complete: .52, mastered: .54, "level-up": .58,
+};
+const cueVolume = (kind: FeedbackKind) => volumes[kind];
 /** One foreground cue at a time. Native status, rather than a 250 ms seek,
  * controls readiness. Packaged resources load directly on Android and iOS. */
 export class FeedbackAudio {
@@ -46,7 +51,7 @@ export class FeedbackAudio {
   private async initialize() {
     reportSoundStatus("loading", "Φόρτωση ήχων…");
     try {
-      await setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "mixWithOthers", shouldPlayInBackground: false, shouldRouteThroughEarpiece: false, allowsRecording: false, allowsBackgroundRecording: false });
+      await setAudioModeAsync({ playsInSilentMode: false, interruptionMode: "mixWithOthers", shouldPlayInBackground: false, shouldRouteThroughEarpiece: false, allowsRecording: false, allowsBackgroundRecording: false });
       if (!this.alive) return;
       for (const kind of Object.keys(sources) as FeedbackKind[]) {
         const android = Platform.OS === "android";
@@ -73,7 +78,7 @@ export class FeedbackAudio {
             this.primedKinds.add(kind);
           }
           // No automatic calls to play(): opening the app must be quiet.
-          if (!this.priming.has(kind) && status.playing) reportSoundStatus("playing", "Αναπαραγωγή · έλεγξε την ένταση πολυμέσων και τη σύνδεση Bluetooth.");
+          if (!this.priming.has(kind) && status.playing) reportSoundStatus("playing", "Αναπαραγωγή · έλεγξε την αθόρυβη λειτουργία, την ένταση πολυμέσων και το Bluetooth.");
           else if (this.audioReady() && !this.pending && !this.failedKinds.size && getSoundStatus().phase !== "playing") reportSoundStatus("ready", "Ήχοι έτοιμοι · ένταση από τα πολυμέσα της συσκευής.");
           this.pending?.();
         }));

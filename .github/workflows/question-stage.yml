@@ -32,6 +32,9 @@ on:
       - "assets/sounds/world-open.wav"
       - "assets/sounds/island-open.wav"
       - "scripts/test-lesson-entrance.cjs"
+      - "scripts/test-sound-feedback-queue.cjs"
+      - "scripts/generate-learning-feedback.cjs"
+      - "assets/sounds/*.wav"
       - "scripts/test-lesson-introduction.cjs"
       - "src/quiz/quickQuiz.ts"
       - "src/screens/QuickQuizScreen.tsx"
@@ -79,6 +82,10 @@ jobs:
       - run: node scripts/test-lesson-entrance.cjs
       - run: node scripts/test-play-audio.cjs
       - run: node scripts/test-answer-sound-route.cjs
+      - run: node scripts/test-sound-feedback-queue.cjs
+      - run: node scripts/test-play-feedback.cjs
+      - run: node scripts/test-play-feedback-ui.cjs
+      - run: node scripts/test-weekly-review.cjs
       - run: node scripts/test-quick-quiz.cjs
       - run: node scripts/test-question-open-audio.cjs
       - run: node scripts/test-profile-section-header.cjs
