@@ -27,10 +27,15 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
     // Accepted answers can arrive before the device's saved sound setting loads.
     // Keep one short-lived cue instead of silently losing the first answer.
     let pendingPreferenceCue: { kind: FeedbackEvent["kind"]; at: number } | null = null;
+    const allowed = () => { const p = playPreferences.getSnapshot(); return alive && foreground.current && p.ready && p.sound; };
     const sounds = new SoundFeedbackQueue(kind => audio.play(kind, allowed));
     const rememberCue = (kind: FeedbackEvent["kind"]) => {
       if (!pendingPreferenceCue || Date.now() - pendingPreferenceCue.at >= 2500 ||
           feedbackPriority[kind] >= feedbackPriority[pendingPreferenceCue.kind]) pendingPreferenceCue = { kind, at: Date.now() };
+    };
+    const requestCue = (kind: FeedbackEvent["kind"]) => {
+      if (!playPreferences.getSnapshot().ready) rememberCue(kind);
+      else if (allowed()) sounds.enqueue(kind);
     };
     void playPreferences.load(AsyncStorage); void audio.start();
     const reduced = AccessibilityInfo.addEventListener("reduceMotionChanged", value => { motionChanged = true; playPreferences.setMotion(value); });
@@ -39,7 +44,6 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
       foreground.current = value === "active";
       if (!foreground.current) { pendingPreferenceCue = null; sounds.clear(); audio.stop(); gate.reset(); setToast(null); }
     });
-    const allowed = () => { const p = playPreferences.getSnapshot(); return alive && foreground.current && p.ready && p.sound; };
     const unsubscribePrefs = playPreferences.subscribe(() => {
       const p = playPreferences.getSnapshot();
       if (!p.ready) return;
@@ -53,16 +57,14 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
     const unsubscribePractice = subscribePracticeCue(kind => {
       // Match rewarded answers: a first tap during preference hydration must
       // not silently lose its cue, and disabled sound must remain silent.
-      if (!playPreferences.getSnapshot().ready) rememberCue(kind);
-      else if (allowed()) sounds.enqueue(kind);
+      requestCue(kind);
     });
     const unsubscribe = subscribePlayFeedback(incoming => {
       const total = totalRewardXP(mergeRewardLedgers(store.getSnapshot().rewards, dailyStore.getSnapshot().doc.rewards));
       const level = levelProgress(total).level;
       const event: FeedbackEvent = (incoming.xp ?? 0) > 0 && level > levelProgress(Math.max(0, total - incoming.xp!)).level ? { ...incoming, kind: "level-up", level } : incoming;
       if (!alive || !gate.accept(event, store.userId ?? "guest", foreground.current, Date.now())) return;
-      if (!playPreferences.getSnapshot().ready) rememberCue(event.kind);
-      else if (allowed()) sounds.enqueue(event.kind);
+      requestCue(event.kind);
       // Show reward popups only when XP was actually earned (or is pending).
       // A zero-XP answer/replay still plays its sound, but must also dismiss any
       // previous toast so an old +XP popup is not mistaken for the new answer.

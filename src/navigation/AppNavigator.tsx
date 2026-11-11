@@ -90,17 +90,13 @@ export default function AppNavigator() {
     if (app.progressLoaded && !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return;
     presentLessonPreview({ id });
   }
-  async function startPreviewLesson() {
-    if (!lessonPreview || !app.progressLoaded) return false;
-    if (lessonPreview.welcomeCategoryId && !await welcome.advance("lesson", lessonPreview.welcomeCategoryId)) return false;
-    setIsDailyChallengeOpen(false);
-    if (lessonPreview.reread) app.restartLesson();
-    else app.openLesson(lessonPreview.id);
-    requestPracticeCue("lesson-open");
-    dismissLessonPreview();
-    return true;
+  const preview = lessonPreview ? lessons.find(item => item.id === lessonPreview.id) : undefined;
+  function previewActionLabel() {
+    if (lessonPreview?.reread) return "Διάβασε ξανά";
+    if (preview && app.lessonAttempts[preview.id]) return "Συνέχεια μαθήματος";
+    if (preview && app.completedLessonIds.includes(preview.id)) return "Προβολή αποτελεσμάτων";
+    return "Ξεκίνα το μάθημα";
   }
-  const preview = lessons.find(item => item.id === lessonPreview?.id);
   const [allLessonsUnlockedForTesting, setAllLessonsUnlockedForTesting] = useState(() => devLessonsUnlocked());
   function toggleAllLessonsForTesting() {
     if (!__DEV__) return;
@@ -116,6 +112,16 @@ export default function AppNavigator() {
   const hasActivity = app.completedLessonIds.length > 0 || app.inProgressLessonCount > 0 || bookmarks.savedLessonIds.length > 0 || daily.doc.preferences !== null || Object.keys(daily.doc.days).length > 0;
   const welcome = useWelcome(daily.userId, hasActivity);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
+  async function startPreviewLesson() {
+    if (!lessonPreview || !app.progressLoaded) return false;
+    if (lessonPreview.welcomeCategoryId && !await welcome.advance("lesson", lessonPreview.welcomeCategoryId)) return false;
+    setIsDailyChallengeOpen(false);
+    if (lessonPreview.reread) app.restartLesson();
+    else app.openLesson(lessonPreview.id);
+    requestPracticeCue("lesson-open");
+    dismissLessonPreview();
+    return true;
+  }
   const [isDevQuizPreviewOpen, setIsDevQuizPreviewOpen] = useState(false);
   const [isDevDailyIntroPreviewOpen, setIsDevDailyIntroPreviewOpen] = useState(false);
   const [isDailyPreferencesOpen, setIsDailyPreferencesOpen] = useState(false);
@@ -601,7 +607,7 @@ export default function AppNavigator() {
     <View style={styles.container}>
       {preview ? <LessonIntroductionModal key={preview.id} lesson={preview}
         subcategoryTitle={subcategories.find(item => item.id === preview.subcategoryId)?.title}
-        actionLabel={lessonPreview?.reread ? "Διάβασε ξανά" : app.lessonAttempts[preview.id] ? "Συνέχεια μαθήματος" : app.completedLessonIds.includes(preview.id) ? "Προβολή αποτελεσμάτων" : "Ξεκίνα το μάθημα"}
+        actionLabel={previewActionLabel()}
         onDismiss={dismissLessonPreview} onStart={startPreviewLesson} /> : null}
       <SafeAreaView
         style={styles.screenViewport}

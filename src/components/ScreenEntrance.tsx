@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, type StyleProp, type ViewStyle } from "react-native";
 import { usePlayMotion } from "../play/motion";
 
@@ -10,7 +10,7 @@ export default function ScreenEntrance({ children, style, testID = "lesson-entra
 }) {
   const motion = usePlayMotion();
   const enabled = motion && animateOnMount;
-  const progress = useRef(new Animated.Value(enabled ? 0 : 1)).current;
+  const [progress] = useState(() => new Animated.Value(enabled ? 0 : 1));
   const entered = useRef(false);
   useEffect(() => {
     if (!enabled) { progress.stopAnimation(); progress.setValue(1); entered.current = true; return; }

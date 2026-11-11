@@ -4,6 +4,7 @@ const { load } = require('./helpers/load-typescript.cjs');
 function harness(initial) {
   let enabled = initial, slots = [], cursor = 0, effects = [], animations = [];
   const react = {
+    useState: initial => { const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return [slots[i],value=>{slots[i]=value;}]; },
     useRef: init => { const i = cursor++; return slots[i] ??= { current: init }; },
     useEffect: (fn, deps) => { const i = cursor++; if (!slots[i] || deps.some((d, j) => d !== slots[i].deps[j])) {
       const previous = slots[i]; slots[i] = { deps }; effects.push(() => { previous?.cleanup?.(); slots[i].cleanup = fn(); });
