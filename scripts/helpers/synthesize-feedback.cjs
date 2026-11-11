@@ -1,7 +1,11 @@
 /* Shared original warm-pluck synthesis for all Gnosi sound assets. */
 const RATE = 22050;
 const D = 587.33, F = 739.99, A = 880, HIGH_D = 1174.66, LOW_A = 440;
-function render(seconds, notes, amplitude) {
+// Android Media3 can discard a very short clip fully buffered while paused
+// before its first play (expo/expo#52724, fixed upstream by #52732). Keep
+// the audible waveform intact and append PCM silence; never delay its onset.
+const MIN_FILE_SECONDS = 1.1;
+function render(seconds, notes, amplitude, minimumSeconds = MIN_FILE_SECONDS) {
   const count = Math.round(seconds * RATE), samples = [];
   for (let i = 0; i < count; i++) {
     const t = i / RATE;
@@ -18,10 +22,11 @@ function render(seconds, notes, amplitude) {
   }
   const peak = Math.max(...samples.map(Math.abs));
   if (!Number.isFinite(peak) || peak <= 0) throw Error("invalid_sound_samples");
-  const out = Buffer.alloc(44 + count * 2);
+  const fileFrames = Math.max(count, Math.ceil(minimumSeconds * RATE));
+  const out = Buffer.alloc(44 + fileFrames * 2);
   out.write('RIFF');out.writeUInt32LE(out.length-8,4);out.write('WAVEfmt ',8);out.writeUInt32LE(16,16);
   out.writeUInt16LE(1,20);out.writeUInt16LE(1,22);out.writeUInt32LE(RATE,24);out.writeUInt32LE(RATE*2,28);
-  out.writeUInt16LE(2,32);out.writeUInt16LE(16,34);out.write('data',36);out.writeUInt32LE(count*2,40);
+  out.writeUInt16LE(2,32);out.writeUInt16LE(16,34);out.write('data',36);out.writeUInt32LE(fileFrames*2,40);
   samples.forEach((v,i)=>out.writeInt16LE(Math.round(v/peak*amplitude*32767),44+i*2));
   return out;
 }

@@ -29,6 +29,14 @@ Hangman treats a submitted letter as an answer; repeated/disabled letters do not
 
 API references: [Expo SDK 58 Audio](https://docs.expo.dev/versions/v58.0.0/sdk/audio/) and [Apple playing audio guidance](https://developer.apple.com/design/human-interface-guidelines/playing-audio).
 
+## Android first-play failure
+
+The installed `expo-audio` 58.0.11 uses Media3 1.9.1 and lacks Expo's `AudioRenderersFactory` fix. Expo issue [#52724](https://github.com/expo/expo/issues/52724) reproduces our exact SDK/package versions: a short clip entirely buffered while paused can have its AudioTrack stopped before first playback. Status can report successful playback and `didJustFinish` even though no sound was emitted. Later replays work. Expo merged the native fix in [#52732](https://github.com/expo/expo/pull/52732); the inspected published 58.0.12 package also lacks that fix, so simply upgrading to that patch does not resolve this.
+
+All ten original PCM WAVs now have a 1.1-second container, with digital silence appended **after** the existing audible waveform. Audible timing and volume do not change; there is no leading silence or JS warm-up/retry. The shared generator preserves the original fade and normalization before padding. This is an asset workaround based on the [padding report in #42814](https://github.com/expo/expo/issues/42814), rather than proof of every device's buffer behavior. Priorities and cancellation still follow the short audible cue, not the padded duration. It adds roughly 350 KiB across the bundled files. No native dependency/configuration changes are required.
+
+Mock tests cannot detect this silent AudioTrack failure: they verify commands, not speaker output. PCM tests now enforce container duration, valid WAV sizes, silence-only tails and unchanged synthesized audible samples. On Android, force-stop/relaunch, wait at least 3 seconds, and play **each different cue once**, then repeat after a 2-minute idle and background/foreground. Verify that a new cue can interrupt a previous silent tail immediately, and check iPhone behavior too.
+
 ## Verification
 
 Node tests cover configuration, mute/background/unmount cancellation, one strongest cue per action, native replay readiness, feedback semantics, finite/non-clipping PCM and weekly question/completion triggers. Native playback is mocked; these checks do not prove hardware behavior.
