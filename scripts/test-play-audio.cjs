@@ -32,7 +32,7 @@ function fixture({fail=false,loaded=true}={}){
   f=fixture(); await f.audio.start();
   assert.equal(f.players[index].played,0,'whooshes never autoplay at startup');
   f.players[index].currentTime=0;f.audio.play(kind,()=>true);await flush();
-  assert.equal(f.players[index].played,1);assert.ok(f.players[index].volume<=.38);
+  assert.equal(f.players[index].played,1);assert.ok(f.players[index].volume<=.42);
   f.audio.play(kind,()=>false);await flush();assert.equal(f.players[index].played,1);
   f.audio.dispose();
  }

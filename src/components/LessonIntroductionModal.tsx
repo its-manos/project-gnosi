@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { usePlayMotion } from "../play/motion";
-import { requestPracticeCue } from "../play/soundStatus";
 import { WelcomeLessonIcon } from "./WelcomeStepIcons";
 import type { Lesson } from "../data/lessons";
 
@@ -28,7 +27,6 @@ export default function LessonIntroductionModal({ lesson, subcategoryTitle, acti
   function show() {
     if (shown.current) return;
     shown.current = true;
-    requestPracticeCue("lesson-preview");
     animate(1);
   }
   function animate(toValue: number, done?: () => void) {

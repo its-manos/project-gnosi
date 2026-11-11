@@ -12,7 +12,7 @@ const sources = {
   "lesson-preview": require("../../assets/sounds/lesson-preview.wav"),
   "lesson-open": require("../../assets/sounds/lesson-open.wav"),
 };
-const cueVolume = (kind: FeedbackKind) => kind === "lesson-preview" ? .32 : kind === "lesson-open" ? .38 : kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
+const cueVolume = (kind: FeedbackKind) => kind === "lesson-preview" ? .42 : kind === "lesson-open" ? .36 : kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
 /** One foreground cue at a time. Native status, rather than a 250 ms seek,
  * controls readiness. Packaged resources load directly on Android and iOS. */
 export class FeedbackAudio {

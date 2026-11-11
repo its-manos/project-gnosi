@@ -44,15 +44,31 @@ import SyncStatus from "../components/SyncStatus";
 import ProgressScreen from "../screens/ProgressScreen";
 import LearningInsightsScreen, { type LearningInsightsView } from "../screens/LearningInsightsScreen";
 
+type LessonPreview = { id: string; welcomeCategoryId?: string; reread?: boolean };
+
 export default function AppNavigator() {
   const app = useLearningApp();
-  const [lessonPreview, setLessonPreview] = useState<{ id: string; welcomeCategoryId?: string; reread?: boolean } | null>(null);
+  const [lessonPreview, setLessonPreview] = useState<LessonPreview | null>(null);
+  const previewRequested = useRef(false);
+  function presentLessonPreview(selection: LessonPreview) {
+    // Guard before React rerenders, including two taps in the same frame.
+    if (previewRequested.current) return;
+    previewRequested.current = true;
+    setLessonPreview(selection);
+    // A navigation cue belongs to the accepted tap. Native Modal.onShow can
+    // arrive late or be omitted; it is only responsible for the visual reveal.
+    requestPracticeCue("lesson-preview");
+  }
+  function dismissLessonPreview() {
+    previewRequested.current = false;
+    setLessonPreview(null);
+  }
   function previewLesson(id: string) {
     const lesson = lessons.find(item => item.id === id);
     if (!lesson) return;
     // Selection must not start a session or change the reader's saved position.
     if (app.progressLoaded && !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return;
-    setLessonPreview({ id });
+    presentLessonPreview({ id });
   }
   async function startPreviewLesson() {
     if (!lessonPreview || !app.progressLoaded) return false;
@@ -61,7 +77,7 @@ export default function AppNavigator() {
     if (lessonPreview.reread) app.restartLesson();
     else app.openLesson(lessonPreview.id);
     requestPracticeCue("lesson-open");
-    setLessonPreview(null);
+    dismissLessonPreview();
     return true;
   }
   const preview = lessons.find(item => item.id === lessonPreview?.id);
@@ -283,7 +299,7 @@ export default function AppNavigator() {
     const lesson = lessons.find(l => l.id === ONBOARDING_INTRO_LESSON_ID);
     if (!lesson || !categories.some(category => category.id === categoryId) ||
       !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return false;
-    setLessonPreview({ id: lesson.id, welcomeCategoryId: categoryId });
+    presentLessonPreview({ id: lesson.id, welcomeCategoryId: categoryId });
     return true;
   }
   async function skipWelcome(step = 1) {
@@ -540,7 +556,7 @@ export default function AppNavigator() {
           practiceComplete={app.practiceComplete}
           onReviewMistakes={app.startMistakeReview}
           onHome={() => navigateTo("home")}
-          onReadAgain={() => setLessonPreview({ id: activeLesson.id, reread: true })}
+          onReadAgain={() => presentLessonPreview({ id: activeLesson.id, reread: true })}
           nextLesson={nextLesson}
           pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: completedSubcategoryCount }}
           onOpenLesson={previewLesson}
@@ -558,7 +574,7 @@ export default function AppNavigator() {
       {preview ? <LessonIntroductionModal key={preview.id} lesson={preview}
         subcategoryTitle={subcategories.find(item => item.id === preview.subcategoryId)?.title}
         actionLabel={lessonPreview?.reread ? "Διάβασε ξανά" : app.lessonAttempts[preview.id] ? "Συνέχεια μαθήματος" : app.completedLessonIds.includes(preview.id) ? "Προβολή αποτελεσμάτων" : "Ξεκίνα το μάθημα"}
-        onDismiss={() => setLessonPreview(null)} onStart={startPreviewLesson} /> : null}
+        onDismiss={dismissLessonPreview} onStart={startPreviewLesson} /> : null}
       <SafeAreaView
         style={styles.screenViewport}
         edges={["top", "left", "right"]}

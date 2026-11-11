@@ -34,8 +34,8 @@ const start = t => nodes(t).find(n => n.type === 'Pressable' && n.props.accessib
   for (const reduced of [false, true]) {
     const h = harness(reduced); let tree = h.render(); tree.props.onShow();
     assert.equal(h.durations[0], reduced ? 0 : 320);
-    tree.props.onShow();assert.deepEqual(h.cues,['lesson-preview'],'duplicate native onShow does not replay the whoosh');
-    h.render();assert.deepEqual(h.cues,['lesson-preview'],'rerenders stay silent');
+    tree.props.onShow();assert.deepEqual(h.cues,[],'native onShow never schedules audio');
+    h.render();assert.deepEqual(h.cues,[],'rerenders stay silent');
     assert.ok(nodes(tree).some(n => n.type === 'Text' && n.props.children === 'Full introduction'));
     assert.ok(nodes(tree).some(n => n.type === 'ScrollView'), 'Long introductions can scroll on small screens');
     start(tree).props.onPress(); start(tree).props.onPress(); tree.props.onRequestClose();

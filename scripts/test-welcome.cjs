@@ -222,7 +222,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  let preview=nodes(routed).find(n=>n.type==='LessonIntroductionModal');
  assert.ok(preview,'Choosing onboarding lesson first opens the introduction');
  assert.equal(welcomePhase,'choose','Preview does not advance persisted onboarding');
- assert.deepEqual(navigationCues,[],'Selecting a lesson does not play the reader cue');
+ assert.deepEqual(navigationCues,['lesson-preview'],'Preview sound is requested before native Modal.onShow');
  assert.ok(!nodes(routed).some(n=>n.type==='LessonScreen'),'Reader must not mount behind the preview');
  preview.props.onDismiss();
  routed=nav.render(()=>Navigator());
@@ -233,7 +233,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  assert.equal(await nodes(routed).find(n=>n.type==='LessonIntroductionModal').props.onStart(),true);
  routed=nav.render(()=>Navigator());assert.ok(nodes(routed).some(n=>n.type==='LessonScreen'));
  assert.equal(app.activeLessonId,first.ONBOARDING_INTRO_LESSON_ID);
- assert.deepEqual(navigationCues,['lesson-open'],'confirmed onboarding plays one reader opening cue');
+ assert.deepEqual(navigationCues,['lesson-preview','lesson-preview','lesson-open'],'cancel/reopen gives one preview cue per visit and confirmation gives one reader cue');
  assert.deepEqual(plain(navStore.getSnapshot().doc.days),beforeLessonDaily);
  // Skipping the guide returns to Home without resetting the daily or reader.
  await nodes(nav.render(()=>Navigator())).find(n=>n.type==='LessonScreen').props.onBack();
@@ -293,11 +293,15 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  app.screen='home';app.completedLessonIds=[];app.inProgressLessonIds=[];app.lessonAttempts={};
  const entry=lessonPaths.getSubcategoryPath(data.lessons,'ancient-greece')[0];
  let homeTree=nav.render(()=>Navigator());
+ const cueCount=navigationCues.length;
  nodes(homeTree).find(n=>n.type==='HomeScreen').props.onOpenLesson(entry.id);
+ nodes(homeTree).find(n=>n.type==='HomeScreen').props.onOpenLesson(entry.id);
+ assert.deepEqual(navigationCues.slice(cueCount),['lesson-preview'],'two taps before render schedule only one preview sound without any onShow callback');
  routed=nav.render(()=>Navigator());preview=nodes(routed).find(n=>n.type==='LessonIntroductionModal');
  assert.equal(preview.props.lesson.id,entry.id);assert.equal(app.screen,'home');
  assert.equal(preview.props.actionLabel,'Ξεκίνα το μάθημα');
- preview.props.onDismiss();assert.equal(app.screen,'home');assert.deepEqual(app.lessonAttempts,{});
+ const beforeDismiss=navigationCues.length;preview.props.onDismiss();assert.equal(app.screen,'home');assert.deepEqual(app.lessonAttempts,{});
+ assert.equal(navigationCues.length,beforeDismiss,'Dismissing does not play a reader cue');
  app.lessonAttempts={[entry.id]:{checkpointAnswers:{0:1},score:1,updatedAt:123}};app.inProgressLessonIds=[entry.id];
  homeTree=nav.render(()=>Navigator());nodes(homeTree).find(n=>n.type==='HomeScreen').props.onResumeLesson(entry.id);
  routed=nav.render(()=>Navigator());preview=nodes(routed).find(n=>n.type==='LessonIntroductionModal');
