@@ -239,7 +239,6 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
           <ReaderSources lesson={lesson} />
         </View> : null}
         {lesson.contentNote ? <View style={styles.note}><Text style={styles.cardTitle}>Πριν διαβάσεις</Text><Text style={[styles.noteText, textStyle]}>{lesson.contentNote}</Text></View> : null}
-        <Text style={[styles.intro, textStyle]}>{lesson.intro}</Text>
         <View style={styles.coverBlock}>
           {lesson.coverKind !== "editorial" ? <ZoomableLessonImage image={{ uri: lesson.imageUrl, caption: lesson.imageCaption, credit: lesson.imageCredit, creditUrl: lesson.imageCreditUrl }}>
             <LessonCover lesson={lesson} style={styles.cover} />
@@ -418,9 +417,6 @@ const styles = StyleSheet.create({
   titleRule: { width: 56, height: 2, borderRadius: 2, backgroundColor: reading.border, marginBottom: 22 },
   sourceControl: { minHeight: 44, justifyContent: "center", paddingHorizontal: 4 },
   link: { color: reading.accent, fontSize: 12, lineHeight: 20 },
-  // Lead paragraph is visually distinct without sacrificing its type size.
-  intro: { color: reading.heading, borderLeftWidth: 2, borderLeftColor: "#615B87",
-    paddingLeft: 17, marginBottom: 24 },
   sources: { backgroundColor: reading.surface, borderRadius: 16, borderWidth: 1,
     borderColor: reading.border, padding: 16, marginBottom: 24, gap: 8 },
   cardTitle: { color: reading.heading, fontSize: 22, lineHeight: 31, fontWeight: "700" },

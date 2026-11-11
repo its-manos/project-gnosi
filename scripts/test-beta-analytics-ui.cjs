@@ -7,7 +7,7 @@ const jsx=(type,props)=>({type,props}),native={View:'View',Text:'Text',Pressable
 const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
 const events=[];const analytics=new Proxy({}, {get:(_,name)=>(...args)=>{events.push([name,...args]);return Promise.resolve();}});
 const hook={analytics,enabled:true,ready:true,error:false};
-const common={'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state/BetaAnalytics':{useBetaAnalytics:()=>hook},'../components/UsageSharing':{__esModule:true,default:'UsageSharing'},'../components/ActionButton':{__esModule:true,default:'Button'}};
+const common={'../components/LessonIntroductionModal':{__esModule:true,default:'LessonIntroductionModal'},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'../state/BetaAnalytics':{useBetaAnalytics:()=>hook},'../components/UsageSharing':{__esModule:true,default:'UsageSharing'},'../components/ActionButton':{__esModule:true,default:'Button'}};
 (async()=>{
  // Use the current parent-owned onboarding phase; child visuals stay mocked.
  const h=harness();let phase='welcome';

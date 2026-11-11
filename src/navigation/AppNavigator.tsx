@@ -1,3 +1,4 @@
+import LessonIntroductionModal from "../components/LessonIntroductionModal";
 import ProfileScreen from "../screens/ProfileScreen";
 import { backDestination, requiresLearningExitConfirmation } from "./navigationRules";
 import PlayerStatsScreen from "../screens/PlayerStatsScreen";
@@ -44,6 +45,24 @@ import LearningInsightsScreen, { type LearningInsightsView } from "../screens/Le
 
 export default function AppNavigator() {
   const app = useLearningApp();
+  const [lessonPreview, setLessonPreview] = useState<{ id: string; welcomeCategoryId?: string; reread?: boolean } | null>(null);
+  function previewLesson(id: string) {
+    const lesson = lessons.find(item => item.id === id);
+    if (!lesson) return;
+    // Selection must not start a session or change the reader's saved position.
+    if (app.progressLoaded && !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return;
+    setLessonPreview({ id });
+  }
+  async function startPreviewLesson() {
+    if (!lessonPreview || !app.progressLoaded) return false;
+    if (lessonPreview.welcomeCategoryId && !await welcome.advance("lesson", lessonPreview.welcomeCategoryId)) return false;
+    setIsDailyChallengeOpen(false);
+    if (lessonPreview.reread) app.restartLesson();
+    else app.openLesson(lessonPreview.id);
+    setLessonPreview(null);
+    return true;
+  }
+  const preview = lessons.find(item => item.id === lessonPreview?.id);
   const [allLessonsUnlockedForTesting, setAllLessonsUnlockedForTesting] = useState(() => devLessonsUnlocked());
   function toggleAllLessonsForTesting() {
     if (!__DEV__) return;
@@ -262,8 +281,7 @@ export default function AppNavigator() {
     const lesson = lessons.find(l => l.id === ONBOARDING_INTRO_LESSON_ID);
     if (!lesson || !categories.some(category => category.id === categoryId) ||
       !getLessonAccess(lesson, lessons, app.completedLessonIds, app.inProgressLessonIds).unlocked) return false;
-    if (!await welcome.advance("lesson", categoryId)) return false;
-    app.openLesson(lesson.id);
+    setLessonPreview({ id: lesson.id, welcomeCategoryId: categoryId });
     return true;
   }
   async function skipWelcome(step = 1) {
@@ -316,7 +334,7 @@ export default function AppNavigator() {
     screenContent = (
       <DailyChallengeScreen
         completedLessonIds={app.completedLessonIds} inProgressLessonIds={app.inProgressLessonIds}
-        onOpenLesson={id => { setIsDailyChallengeOpen(false); app.openLesson(id); }}
+        onOpenLesson={previewLesson}
         onWeeklyReview={() => { setIsDailyChallengeOpen(false); openKnowledgeReview("home"); }}
         onHome={() => setIsDailyChallengeOpen(false)}
         onOpenPreferences={() => openDailyPreferences("daily")}
@@ -340,9 +358,9 @@ export default function AppNavigator() {
           inProgressLesson={!homePathLesson || homePathLesson.id === inProgressLesson?.id ? inProgressLesson : null}
           inProgressAnsweredCount={app.inProgressAnsweredCount}
           inProgressQuestionCount={app.inProgressQuestionCount}
-          onResumeLesson={app.openLesson}
+          onResumeLesson={previewLesson}
           onOpenCategory={app.openCategory}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
         />
       );
@@ -396,7 +414,7 @@ export default function AppNavigator() {
           inProgressLessonCount={app.inProgressLessonCount}
           totalLessonCount={lessons.length}
           lessonProgressLoaded={app.progressLoaded}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
         />
       );
       break;
@@ -410,7 +428,7 @@ export default function AppNavigator() {
           completedLessons={completedLessons}
           totalLessonCount={lessons.length}
           lessonProgressLoaded={app.progressLoaded}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
         />
       );
       break;
@@ -424,7 +442,7 @@ export default function AppNavigator() {
           progressLoaded={app.progressLoaded}
           lessons={savedLessons}
           onBack={() => navigateTo("profile")}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
           onRemoveSavedLesson={bookmarks.toggleSavedLesson}
         />
       );
@@ -455,7 +473,7 @@ export default function AppNavigator() {
           subcategory={activeSubcategory}
           lessons={subcategoryLessons}
           onBack={() => navigateTo("category")}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
         />
       );
       break;
@@ -520,10 +538,10 @@ export default function AppNavigator() {
           practiceComplete={app.practiceComplete}
           onReviewMistakes={app.startMistakeReview}
           onHome={() => navigateTo("home")}
-          onReadAgain={app.restartLesson}
+          onReadAgain={() => setLessonPreview({ id: activeLesson.id, reread: true })}
           nextLesson={nextLesson}
           pathProgress={{ title: activeSubcategory.title, total: subcategoryLessons.length, completed: completedSubcategoryCount }}
-          onOpenLesson={app.openLesson}
+          onOpenLesson={previewLesson}
           onBrowse={() => navigateTo("category")}
         />
       );
@@ -535,6 +553,10 @@ export default function AppNavigator() {
 
   return (
     <View style={styles.container}>
+      {preview ? <LessonIntroductionModal key={preview.id} lesson={preview}
+        subcategoryTitle={subcategories.find(item => item.id === preview.subcategoryId)?.title}
+        actionLabel={lessonPreview?.reread ? "Διάβασε ξανά" : app.lessonAttempts[preview.id] ? "Συνέχεια μαθήματος" : app.completedLessonIds.includes(preview.id) ? "Προβολή αποτελεσμάτων" : "Ξεκίνα το μάθημα"}
+        onDismiss={() => setLessonPreview(null)} onStart={startPreviewLesson} /> : null}
       <SafeAreaView
         style={styles.screenViewport}
         edges={["top", "left", "right"]}
