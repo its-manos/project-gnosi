@@ -30,7 +30,7 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
     const allowed = () => { const p = playPreferences.getSnapshot(); return alive && foreground.current && p.ready && p.sound; };
     const sounds = new SoundFeedbackQueue(kind => audio.play(kind, allowed));
     const rememberCue = (kind: FeedbackEvent["kind"]) => {
-      if (!pendingPreferenceCue || Date.now() - pendingPreferenceCue.at >= 2500 ||
+      if (!pendingPreferenceCue || Date.now() - pendingPreferenceCue.at >= 500 ||
           feedbackPriority[kind] >= feedbackPriority[pendingPreferenceCue.kind]) pendingPreferenceCue = { kind, at: Date.now() };
     };
     const requestCue = (kind: FeedbackEvent["kind"]) => {
@@ -51,7 +51,7 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
       const pending = pendingPreferenceCue;
       pendingPreferenceCue = null;
       // Don't let an old cue play after leaving the app or navigating away.
-      if (pending && alive && foreground.current && Date.now() - pending.at < 2500) sounds.enqueue(pending.kind);
+      if (pending && alive && foreground.current && Date.now() - pending.at < 500) sounds.enqueue(pending.kind);
     });
     const unsubscribePreview = subscribeSoundPreview(() => { if (allowed()) { sounds.clear(); audio.preview(allowed); } });
     const unsubscribePractice = subscribePracticeCue(kind => {

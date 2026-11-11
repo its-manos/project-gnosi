@@ -25,7 +25,7 @@ Hangman treats a submitted letter as an answer; repeated/disabled letters do not
 - The existing device-local sound preference controls every cue, including the settings preview. A sound toggle does not affect motion or learning data. Settings explain that system silence still takes precedence.
 - `SoundFeedbackQueue` selects the strongest cue emitted during one microtask: level-up > mastery > completion > answer > opening/navigation. It never queues a backlog of old sounds. Lower-priority transitions do not truncate a brief celebration; a new confirmed answer still gets feedback.
 - Reward event deduplication and toast delivery remain separate. Sound priority does not remove XP popups or writes. Muting, backgrounding, account-boundary cleanup and sound-preview actions clear queued effects. Preferences loading retains only a recent highest-priority cue.
-- Cached-player rewind and Android's native-muted first-play warm-up are retained. Initialization does not call `play()` or make startup sounds.
+- Bundled sources prepare at initialization without `play()` or a silent first-play cycle. Playback commands track the active player rather than relying on delayed native `playing` status. Pausing before every rewind clears Android's retained play intent at `STATE_ENDED`; overlapping replays share an in-flight seek and only the latest request may play. Audio and preference-hydration requests expire after 500 ms, including when the JS thread delays timeout delivery.
 
 API references: [Expo SDK 58 Audio](https://docs.expo.dev/versions/v58.0.0/sdk/audio/) and [Apple playing audio guidance](https://developer.apple.com/design/human-interface-guidelines/playing-audio).
 
@@ -42,3 +42,5 @@ On Android and iPhone:
 5. Turn the app's sound on but use iPhone silent mode, or Android silent/vibrate mode. Effects remain quiet. Return to normal mode and verify the next action plays normally.
 6. Play music in another app, then browse, answer and complete a quiz in Gnosi. Music should continue at its existing volume.
 7. Background the app during playback and while opening a question. No stale cue should resume later. Test the first cold opening as well as repeated playback.
+
+Android regression checks: cold first cue has one native play call, repeated ended cues cannot auto-resume during seek, stop pauses even before native playing status arrives, overlapping same-player seeks cannot rewind a newer sound, and expired requests stay silent. On hardware, repeat correct/incorrect answers and rapid preview open/close/reopen, including after backgrounding. Confirm the first cue remains audible without warm-up.
