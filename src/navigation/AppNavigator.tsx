@@ -1,3 +1,4 @@
+import ScreenEntrance from "../components/ScreenEntrance";
 import { requestPracticeCue } from "../play/soundStatus";
 import LessonIntroductionModal from "../components/LessonIntroductionModal";
 import ProfileScreen from "../screens/ProfileScreen";
@@ -48,6 +49,25 @@ type LessonPreview = { id: string; welcomeCategoryId?: string; reread?: boolean 
 
 export default function AppNavigator() {
   const app = useLearningApp();
+  const [browseEntrance, setBrowseEntrance] = useState<"category" | "subcategory" | null>(null);
+  const browseTapOrigin = useRef<AppScreen | null>(null);
+  function openWorld(categoryId: string) {
+    if (app.screen !== "home" || browseTapOrigin.current === app.screen ||
+      !categories.some(category => category.id === categoryId)) return;
+    browseTapOrigin.current = app.screen;
+    setBrowseEntrance("category");
+    app.openCategory(categoryId);
+    requestPracticeCue("world-open");
+  }
+  function openIsland(subcategoryId: string, categoryId: string) {
+    if (app.screen !== "category" || browseTapOrigin.current === app.screen ||
+      categoryId !== app.activeCategoryId ||
+      !subcategories.some(region => region.id === subcategoryId && region.categoryId === categoryId)) return;
+    browseTapOrigin.current = app.screen;
+    setBrowseEntrance("subcategory");
+    app.openSubcategory(subcategoryId, categoryId);
+    requestPracticeCue("island-open");
+  }
   const [lessonPreview, setLessonPreview] = useState<LessonPreview | null>(null);
   const previewRequested = useRef(false);
   function presentLessonPreview(selection: LessonPreview) {
@@ -189,6 +209,8 @@ export default function AppNavigator() {
 
   const navigateTo = (destination: AppScreen) => {
     if (destination === currentScreen) return;
+    browseTapOrigin.current = null;
+    setBrowseEntrance(null);
 
     // Returning from the legacy standalone quiz to its article is an internal
     // step; keep the current attempt instead of warning or resetting it.
@@ -377,7 +399,7 @@ export default function AppNavigator() {
           inProgressAnsweredCount={app.inProgressAnsweredCount}
           inProgressQuestionCount={app.inProgressQuestionCount}
           onResumeLesson={previewLesson}
-          onOpenCategory={app.openCategory}
+          onOpenCategory={openWorld}
           onOpenLesson={previewLesson}
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
         />
@@ -468,31 +490,37 @@ export default function AppNavigator() {
 
     case "category":
       screenContent = (
-        <CategoryScreen
-          category={activeCategory}
-          subcategories={categorySubcategories}
-          lessons={lessons}
-          completedLessonIds={app.completedLessonIds}
-          inProgressLessonIds={app.inProgressLessonIds}
-          progressLoaded={app.progressLoaded}
-          onBack={() => navigateTo("home")}
-          onOpenSubcategory={app.openSubcategory}
-        />
+        <ScreenEntrance key={"category:" + activeCategory.id} testID="category-forward-entry"
+          style={styles.browseViewport} animateOnMount={browseEntrance === "category"} duration={240} rise={6}>
+          <CategoryScreen
+            category={activeCategory}
+            subcategories={categorySubcategories}
+            lessons={lessons}
+            completedLessonIds={app.completedLessonIds}
+            inProgressLessonIds={app.inProgressLessonIds}
+            progressLoaded={app.progressLoaded}
+            onBack={() => navigateTo("home")}
+            onOpenSubcategory={openIsland}
+          />
+        </ScreenEntrance>
       );
       break;
 
     case "subcategory":
       screenContent = (
-        <SubcategoryScreen
-          completedLessonIds={app.completedLessonIds}
-          inProgressLessonIds={app.inProgressLessonIds}
-          progressLoaded={app.progressLoaded}
-          category={activeCategory}
-          subcategory={activeSubcategory}
-          lessons={subcategoryLessons}
-          onBack={() => navigateTo("category")}
-          onOpenLesson={previewLesson}
-        />
+        <ScreenEntrance key={"subcategory:" + activeSubcategory.id} testID="subcategory-forward-entry"
+          style={styles.browseViewport} animateOnMount={browseEntrance === "subcategory"} duration={240} rise={6}>
+          <SubcategoryScreen
+            completedLessonIds={app.completedLessonIds}
+            inProgressLessonIds={app.inProgressLessonIds}
+            progressLoaded={app.progressLoaded}
+            category={activeCategory}
+            subcategory={activeSubcategory}
+            lessons={subcategoryLessons}
+            onBack={() => navigateTo("category")}
+            onOpenLesson={previewLesson}
+          />
+        </ScreenEntrance>
       );
       break;
 
@@ -604,6 +632,7 @@ export default function AppNavigator() {
 const styles = StyleSheet.create({
   welcomeLoading: { flex: 1, backgroundColor: "#0B0D15", alignItems: "center", justifyContent: "center", gap: 14 },
   welcomeLoadingText: { color: "#ABB0C1", fontSize: 14 },
+  browseViewport: { flex: 1, minHeight: 0 },
   container: {
     flex: 1,
     backgroundColor: "#0B0D15",

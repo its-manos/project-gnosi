@@ -11,8 +11,10 @@ const sources = {
   "question-open": require("../../assets/sounds/question-open.wav"),
   "lesson-preview": require("../../assets/sounds/lesson-preview.wav"),
   "lesson-open": require("../../assets/sounds/lesson-open.wav"),
+  "world-open": require("../../assets/sounds/world-open.wav"),
+  "island-open": require("../../assets/sounds/island-open.wav"),
 };
-const cueVolume = (kind: FeedbackKind) => kind === "lesson-preview" ? .42 : kind === "lesson-open" ? .36 : kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
+const cueVolume = (kind: FeedbackKind) => kind === "world-open" ? .22 : kind === "island-open" ? .24 : kind === "lesson-preview" ? .42 : kind === "lesson-open" ? .36 : kind === "incorrect" ? .45 : kind === "question-open" ? .50 : .65;
 /** One foreground cue at a time. Native status, rather than a 250 ms seek,
  * controls readiness. Packaged resources load directly on Android and iOS. */
 export class FeedbackAudio {

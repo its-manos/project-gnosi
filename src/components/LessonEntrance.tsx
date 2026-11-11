@@ -1,21 +1,2 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { Animated, Easing, type StyleProp, type ViewStyle } from "react-native";
-import { usePlayMotion } from "../play/motion";
-
-/** One native fade/lift per reader mount. Transforms preserve resume geometry.
- * Hydrating preferences or returning from a question never replays the reveal. */
-export default function LessonEntrance({ children, style, testID = "lesson-entrance" }: { children: ReactNode; style?: StyleProp<ViewStyle>; testID?: string }) {
-  const enabled = usePlayMotion();
-  const progress = useRef(new Animated.Value(enabled ? 0 : 1)).current;
-  const entered = useRef(false);
-  useEffect(() => {
-    if (!enabled) { progress.stopAnimation(); progress.setValue(1); entered.current = true; return; }
-    if (entered.current) return;
-    entered.current = true;
-    const animation = Animated.timing(progress, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true, isInteraction: false });
-    animation.start();
-    return () => { animation.stop(); progress.setValue(1); };
-  }, [enabled, progress]);
-  return <Animated.View testID={testID} style={[style, { opacity: progress,
-    transform: [{ translateY: enabled ? progress.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) : 0 }] }]}>{children}</Animated.View>;
-}
+// Keep the reader entry point stable while browsing shares its native reveal.
+export { default } from "./ScreenEntrance";
