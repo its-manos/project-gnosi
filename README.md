@@ -130,6 +130,8 @@ Follow [Curriculum](docs/CONTENT-CURRICULUM-v1.md), [Guided-content standard](do
 
 ## Images and licensing
 
+Player characters and category icons follow Gnosi’s [faceted visual identity](docs/visual-identity.md), with shared colours, silhouettes and compact transparent WebP assets.
+
 Gnosi currently uses a **hybrid** approach. Existing local JPEG/PNG assets are packaged through Metro's static **require()** mapping; other Wikimedia Commons cover and inline figures remain remote. **ResilientImage** checks the bundled mapping first and handles remote loading/fallbacks. For unbundled Commons **Special:FilePath** images on Android, **ResolvedCommonsImage** resolves a direct Wikimedia thumbnail using the Commons API, then renders it through **expo-image** with memory/disk caching. Other image paths may use React Native's image loader. Image frames reserve space and figures retain captions and credit/source links.
 
 An offline device can show bundled images, **not** necessarily remote ones. Remote availability and licences must be checked independently; an automated structural test is not a copyright or native-HTTP audit. See [Commons 403 / Android delivery notes](docs/COMMONS-IMAGE-DELIVERY-403.md), [Supplementary images](docs/supplementary-lesson-images.md) and **assets/lesson-images/** attribution manifests.

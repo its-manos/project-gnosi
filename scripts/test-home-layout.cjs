@@ -120,7 +120,7 @@ const iconFiles = {
   "difficult-history": "gnosi_difficult_history.webp",
 };
 const imageImports = Object.fromEntries(Object.values(iconFiles).map(file => [
-  "../../../assets/category-world-icons/" + file, file,
+  "../../../assets/category-world-icons/faceted/" + file, file,
 ]));
 const artworkComponents = compile("src/components/worldIcons/CategoryArtworkIcons.tsx", {
   "expo-image": { Image: "Image" },
@@ -341,7 +341,7 @@ for (const category of categories) {
   assert.equal(art.props.style.borderRadius, undefined, "soft edges are not clipped");
   assert.equal(art.props.style.transform[0].scale, 1.18);
   const asset = iconFiles[category.id];
-  const assetPath = path.join(root, "assets/category-world-icons", asset);
+  const assetPath = path.join(root, "assets/category-world-icons/faceted", asset);
   assert.ok(fs.existsSync(assetPath), "bundled artwork exists: " + asset);
   // Each low-distraction illustration must retain a real alpha channel.
   // The WebP extended header flags alpha at bit 4 and encodes a 192px canvas.

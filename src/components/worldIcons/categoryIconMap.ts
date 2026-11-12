@@ -1,6 +1,6 @@
 /**
  * One visual identity per knowledge world, shared by Home and the Category header.
- * Bundled sculpted artwork; card, route, and progress behavior live elsewhere.
+ * Bundled faceted artwork; card, route, and progress behavior live elsewhere.
  */
 import {
   CultureWorldIcon,

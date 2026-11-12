@@ -9,6 +9,10 @@
 - Questions and historical compatibility live in **src/quiz/**, XP in **src/gamification/** and knowledge reviews in **src/knowledge/**. Do not bypass the shared scoring/session model.
 - The image pipeline is hybrid: **src/data/bundledLessonImages.ts** maps local Metro assets; **ResilientImage** and **ResolvedCommonsImage** handle remote loading and Android Wikimedia compatibility. Preserve attribution manifests.
 
+## Visual identity
+
+Use the approved faceted illustration language in **docs/visual-identity.md** for new UI artwork. Player characters and category objects share crisp silhouettes, restrained angular shading and the Midnight Atlas palette. Reuse **categoryIconMap** for category illustrations and bundle compact transparent WebP assets through the existing image renderer.
+
 ## Expo / native work
 
 Expo SDKs change often. Before touching Expo, React Native or EAS APIs, check **package.json** and the versioned [Expo SDK 58 documentation](https://docs.expo.dev/versions/v58.0.0/). Expo's documentation index is [llms.txt](https://docs.expo.dev/llms.txt).
