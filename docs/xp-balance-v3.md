@@ -86,8 +86,13 @@ Positive completion XP now shows in the same popup as answer rewards, whether or
 not it crosses a level threshold. Sound priority may coalesce cues but cannot
 suppress an earned reward. Navigation and zero-XP completion events leave the
 current reward visible; a zero-XP answer still dismisses an older answer popup.
-The card uses the Midnight Atlas surface, violet border and gold reward accent.
-It remains visible longer, supports reduced motion and never intercepts touches.
+The popup is a small, transparent gold XP burst, with no background or border.
+Each event gets a stable, varied position above the bottom controls, with a gentle
+upward drift, a slight sideways movement and a soft fade. Ordinary rewards show
+only XP; milestone titles and pending-credit explanations stay available where
+needed. Reduced motion uses a fixed central position with no movement. The full
+reward description remains available to screen readers, and the burst never
+intercepts touches.
 
 Lesson questions live in a native Modal above the main app window. A modal host
 now presents the same transient popup there through React context; the root host

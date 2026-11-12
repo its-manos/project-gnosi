@@ -18,6 +18,7 @@ import { subscribePracticeCue, subscribeSoundPreview } from "./soundStatus";
 export default function PlayFeedback({ children }: { children: ReactNode }) {
   const { store, dailyStore } = useLearningSession();
   const [toast, setToast] = useState<FeedbackEvent | null>(null), [reveal] = useState(() => new Animated.Value(1));
+  const [drift] = useState(() => new Animated.Value(0));
   const [modalHosts, setModalHosts] = useState(0);
   const registerModal = useRef(() => {
     setModalHosts(count => count + 1);
@@ -80,16 +81,20 @@ export default function PlayFeedback({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!toast) return;
     reveal.setValue(motion ? 0 : 1);
-    const hold = toast.kind === "level-up" || toast.kind === "mastered" ? 2200 : toast.answerXP !== undefined ? 1400 : 1800;
-    const animation = motion ? Animated.sequence([
+    drift.setValue(0);
+    const hold = toast.kind === "level-up" || toast.kind === "mastered" ? 1800 : toast.answerXP !== undefined ? 1000 : 1300;
+    const animation = motion ? Animated.parallel([
+      Animated.timing(drift, { toValue: 1, duration: hold + 400, useNativeDriver: true, isInteraction: false }),
+      Animated.sequence([
       Animated.timing(reveal, { toValue: 1, duration: 180, useNativeDriver: true, isInteraction: false }),
       Animated.timing(reveal, { toValue: 1, duration: 0, delay: hold, useNativeDriver: true, isInteraction: false }), Animated.timing(reveal, { toValue: 0, duration: 220, useNativeDriver: true, isInteraction: false }),
+      ]),
     ]) : undefined;
     animation?.start();
     const id = toast.id, timer = setTimeout(() => setToast(current => current?.id === id ? null : current), hold + 500);
     return () => { clearTimeout(timer); animation?.stop(); reveal.setValue(1); };
-  }, [toast, motion, reveal]);
-  const presentation = { event: toast, reveal, motion };
+  }, [toast, motion, reveal, drift]);
+  const presentation = { event: toast, reveal, drift, motion };
   return <RewardToastContext.Provider value={{ ...presentation, registerModal }}>
     <View style={styles.root}>{children}{modalHosts === 0 ? renderRewardToast(presentation, insets.bottom) : null}</View>
   </RewardToastContext.Provider>;

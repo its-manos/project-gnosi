@@ -5,7 +5,7 @@ import { playerTitle } from "../gamification/rules";
 import { colors } from "../theme";
 import type { FeedbackEvent } from "./events";
 
-type Presentation = { event: FeedbackEvent | null; reveal: Animated.Value; motion: boolean };
+type Presentation = { event: FeedbackEvent | null; reveal: Animated.Value; drift: Animated.Value; motion: boolean };
 type Overlay = Presentation & { registerModal: () => () => void };
 export const RewardToastContext = createContext<Overlay | null>(null);
 
@@ -18,8 +18,20 @@ export function RewardToastHost() {
   return overlay ? renderRewardToast(overlay, insets.bottom) : null;
 }
 
+// Stable per event: remounting inside a native modal never moves the same reward.
+const positions = [
+  { alignItems: "flex-start", lift: 16 }, { alignItems: "center", lift: 64 },
+  { alignItems: "flex-end", lift: 32 }, { alignItems: "flex-start", lift: 88 },
+  { alignItems: "flex-end", lift: 104 }, { alignItems: "center", lift: 0 },
+] as const;
+export function rewardToastPosition(id: string, motion: boolean) {
+  let hash = 2166136261;
+  for (let i = 0; i < id.length; i++) hash = Math.imul(hash ^ id.charCodeAt(i), 16777619) >>> 0;
+  return motion ? positions[hash % positions.length] : { alignItems: "center" as const, lift: 24 };
+}
+
 /** Shared presentation for the root host and the active lesson-question Modal. */
-export function renderRewardToast({ event, reveal, motion }: Presentation, bottomInset: number) {
+export function renderRewardToast({ event, reveal, drift, motion }: Presentation, bottomInset: number) {
   if (!event) return null;
   const xp = event.answerXP ?? event.xp ?? 0;
   const heading = event.kind === "level-up" ? `Επίπεδο ${event.level} · ${playerTitle(event.level!)}`
@@ -28,41 +40,40 @@ export function renderRewardToast({ event, reveal, motion }: Presentation, botto
     : event.kind === "correct" ? "Σωστή απάντηση!" : "Κέρδισες XP!";
   const detail = event.pendingXP ? "Πιστώνονται στην ολοκλήρωση" : event.label;
   const description = `${heading}. +${xp} XP${detail ? `. ${detail}` : ""}`;
+  const milestone = event.kind === "level-up" || event.kind === "mastered";
+  const position = rewardToastPosition(event.id, motion);
   return <Animated.View pointerEvents="none" testID="play-celebration" accessible
     accessibilityLiveRegion="polite" accessibilityLabel={description}
-    style={[styles.overlay, { bottom: Math.max(bottomInset, 8) + 76, opacity: reveal,
-      transform: motion ? [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] : [] }]}>
-    <View style={[styles.card, event.kind === "level-up" && styles.levelCard]}>
-      <View style={styles.medallion} accessible={false}>
-        <Text style={styles.symbol}>{event.kind === "level-up" ? "↑" : "✦"}</Text>
-      </View>
-      <View style={styles.copy}>
-        <Text style={styles.eyebrow}>{event.pendingXP ? "XP ΜΑΘΗΣΗΣ" : "XP ΚΕΡΔΙΣΜΕΝΑ"}</Text>
-        <Text style={styles.heading}>{heading}</Text>
-        {detail ? <Text style={styles.detail} numberOfLines={2}>{detail}</Text> : null}
-      </View>
+    style={[styles.overlay, { alignItems: position.alignItems,
+      bottom: Math.max(bottomInset, 8) + 112 + position.lift, opacity: reveal,
+      transform: motion ? [
+        { translateY: drift.interpolate({ inputRange: [0, 1], outputRange: [8, -28] }) },
+        { translateX: drift.interpolate({ inputRange: [0, 1], outputRange: [0, position.alignItems === "flex-end" ? -10 : 10] }) },
+        { scale: reveal.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
+      ] : [] }]}>
+    <View style={styles.burst}>
+      {milestone ? <Text style={styles.heading}>{heading}</Text> : null}
       <View style={styles.reward}>
+        <Text style={styles.sparkle} accessible={false}>✦</Text>
         <Text style={styles.amount}>+{xp}<Text style={styles.unit}> XP</Text></Text>
+        {motion ? <Text style={styles.smallSparkle} accessible={false}>✧</Text> : null}
       </View>
+      {event.pendingXP ? <Text style={styles.detail}>Πιστώνονται στην ολοκλήρωση</Text> : null}
     </View>
   </Animated.View>;
 }
 
 const styles = StyleSheet.create({
-  overlay: { position: "absolute", left: 16, right: 16, alignItems: "center", zIndex: 40, elevation: 12 },
-  card: { width: "100%", maxWidth: 460, flexDirection: "row", alignItems: "center", gap: 11,
-    backgroundColor: "#1B2034", borderWidth: 1, borderColor: "#6A618C", borderLeftWidth: 3,
-    borderLeftColor: "#D5B785", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 13,
-    shadowColor: "#000000", shadowOpacity: 0.24, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } },
-  levelCard: { borderColor: "#A08A65" },
-  medallion: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: "#796B85",
-    backgroundColor: "#302B4A", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  symbol: { color: "#D5B785", fontSize: 20, lineHeight: 25, fontWeight: "700" },
-  copy: { flex: 1, minWidth: 0, gap: 3 },
-  eyebrow: { color: "#D5B785", fontSize: 9, lineHeight: 13, fontWeight: "800", letterSpacing: 0.8 },
-  heading: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: "800" },
-  detail: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
-  reward: { alignItems: "center", flexShrink: 0, gap: 1 },
-  amount: { color: "#E6CEA2", fontSize: 23, lineHeight: 29, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  unit: { color: colors.accentLight, fontSize: 10, lineHeight: 14, fontWeight: "800", letterSpacing: 1 },
+  overlay: { position: "absolute", left: 24, right: 24, zIndex: 40, elevation: 12 },
+  burst: { maxWidth: 240, alignItems: "center", gap: 2 },
+  heading: { color: colors.accentLight, fontSize: 12, lineHeight: 18, fontWeight: "800", textAlign: "center",
+    textShadowColor: "#0B0D15", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
+  reward: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  amount: { color: "#E6CEA2", fontSize: 25, lineHeight: 33, fontWeight: "900", fontVariant: ["tabular-nums"],
+    textShadowColor: "#0B0D15", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 5 },
+  unit: { color: colors.accentLight, fontSize: 13, fontWeight: "800" },
+  sparkle: { color: "#D5B785", fontSize: 12, lineHeight: 18 },
+  smallSparkle: { color: colors.accentLight, fontSize: 9, lineHeight: 14, alignSelf: "flex-start", marginTop: 2 },
+  detail: { color: colors.textMuted, fontSize: 10, lineHeight: 15, textAlign: "center",
+    textShadowColor: "#0B0D15", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
 });

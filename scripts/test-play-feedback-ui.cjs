@@ -5,15 +5,20 @@ function harness(){let slots=[],i=0,queued=[];return{react:{useState:init=>{cons
 class Value{constructor(n){this.n=n;}setValue(n){this.n=n;}interpolate(config){return{value:this,config};}}
 const flush=async()=>{for(let i=0;i<15;i++)await Promise.resolve();};
 (async()=>{
- let started=0,stopped=0,deviceReduced,appState;
+ let started=0,stopped=0,deviceReduced,appState,motionEnabled=false;
  const animation=()=>({start(){started++;},stop(){stopped++;}});
- const native={Text:'Text',View:'View',Switch:'Switch',StyleSheet:{create:x=>x},Animated:{Value,View:'AnimatedView',timing:animation,sequence:animation,delay:animation},AppState:{currentState:'active',addEventListener:(_e,fn)=>{appState=fn;return{remove(){}};}},AccessibilityInfo:{addEventListener:(_e,fn)=>{deviceReduced=fn;return{remove(){}};},isReduceMotionEnabled:async()=>false}};
+ const native={Text:'Text',View:'View',Switch:'Switch',StyleSheet:{create:x=>x},Animated:{Value,View:'AnimatedView',timing:animation,sequence:animation,parallel:animation,delay:animation},AppState:{currentState:'active',addEventListener:(_e,fn)=>{appState=fn;return{remove(){}};}},AccessibilityInfo:{addEventListener:(_e,fn)=>{deviceReduced=fn;return{remove(){}};},isReduceMotionEnabled:async()=>false}};
  const events=load('src/play/events.ts'),prefs=load('src/play/preferences.ts'),status=load('src/play/soundStatus.ts'),h=harness();let sounds=[],stops=0,disposed=0;
  class Audio{async start(){}play(kind,allowed){if(allowed())sounds.push(kind);}preview(allowed){this.play('correct',allowed);}stop(){stops++;}dispose(){disposed++;}}
  const store={userId:'one',getSnapshot:()=>({rewards:{'lesson:test':210}})},dailyStore={getSnapshot:()=>({doc:{rewards:{}}})};
  const storage={getItem:async()=>null,setItem:async()=>{}};
  const rewardToast=load('src/play/RewardToast.tsx',{react:{...h.react,createContext:value=>({Provider:'RewardToastProvider',value}),useContext:context=>context.value},'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:20})}});
- const Provider=load('src/play/PlayFeedback.tsx',{react:h.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:20})},'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'../state/LearningSession':{useLearningSession:()=>({store,dailyStore})},'./RewardToast':rewardToast,'./events':events,'./preferences':prefs,'./motion':{usePlayMotion:()=>false},'./audio':{FeedbackAudio:Audio},'./soundStatus':status}).default;
+ const positions=Array.from({length:30},(_,i)=>rewardToast.rewardToastPosition(`answer:${i}`,true));
+ assert.equal(new Set(positions.map(p=>p.alignItems)).size,3,'varied positions use left, center and right lanes');
+ assert.ok(positions.every(p=>p.lift>=0&&p.lift<=104),'positions stay in a bounded band above controls');
+ assert.equal(rewardToast.rewardToastPosition('same-reward',true),rewardToast.rewardToastPosition('same-reward',true),'modal handoff preserves the position');
+ assert.equal(rewardToast.rewardToastPosition('reduced',false).alignItems,'center','reduced motion uses a predictable position');
+ const Provider=load('src/play/PlayFeedback.tsx',{react:h.react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:20})},'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'../state/LearningSession':{useLearningSession:()=>({store,dailyStore})},'./RewardToast':rewardToast,'./events':events,'./preferences':prefs,'./motion':{usePlayMotion:()=>motionEnabled},'./audio':{FeedbackAudio:Audio},'./soundStatus':status}).default;
  const render=()=>{const tree=h.render(()=>Provider({children:'app'}));rewardToast.RewardToastContext.value=tree.props.value;return tree;};let tree=render();await flush();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'mount/hydration is silent');
  const e={scope:'one',id:'finish:1',kind:'complete',xp:60,label:'Μάθημα ολοκληρώθηκε'};events.emitPlayFeedback(e);tree=render();await flush();assert.ok(text(tree).includes('Επίπεδο 2'));assert.ok(text(tree).includes('+60 XP'),'banked completion XP is visible, including level-ups');assert.equal(sounds.at(-1),'level-up');assert.equal(started,0,'disabled motion keeps static feedback');
  // The modal host reuses the active toast and animation, and never re-emits audio.
@@ -26,7 +31,7 @@ const flush=async()=>{for(let i=0;i<15;i++)await Promise.resolve();};
  assert.equal(sounds.length,beforeModal,'mounting another host never replays a sound');
  modal.cleanup();tree=render();assert.ok(text(tree).includes('+60 XP'),'root host resumes when modal closes');
  events.emitPlayFeedback({...e,id:'ordinary-earned',xp:5});tree=render();await flush();
- assert.ok(text(tree).includes('Ολοκληρώθηκε!')&&text(tree).includes('+5 XP'),'ordinary completion after a level-up cannot be suppressed');
+ assert.ok(text(tree).includes('+5 XP'),'ordinary completion after a level-up cannot be suppressed');
  const realNow=Date.now;Date.now=()=>realNow()+1000;
  events.emitPlayFeedback({...e,id:'navigate',kind:'lesson-open',xp:0});tree=render();
  Date.now=realNow;
@@ -34,7 +39,16 @@ const flush=async()=>{for(let i=0;i<15;i++)await Promise.resolve();};
  events.emitPlayFeedback({...e,id:'round-complete',xp:0});tree=render();
  assert.ok(text(tree).includes('+5 XP'),'zero-XP completion does not erase the prior reward');
  events.emitPlayFeedback({...e,id:'review-bonus',kind:'incorrect',xp:0,answerXP:5});tree=render();await flush();
- assert.ok(text(tree).includes('Κέρδισες XP!')&&!text(tree).includes('Σωστή απάντηση!'),'review completion bonus never labels a wrong answer correct');
+ assert.ok(nodes(tree).find(n=>n.props.testID==='play-celebration').props.accessibilityLabel.includes('Κέρδισες XP!')&&!text(tree).includes('Σωστή απάντηση!'),'review completion bonus never labels a wrong answer correct');
+ motionEnabled=true;tree=render();
+ const floating=nodes(tree).find(n=>n.props.testID==='play-celebration');
+ assert.equal(floating.props.style[1].transform.length,3,'enabled motion combines float, drift and a subtle scale');
+ for(const n of nodes(floating))for(const style of [n.props.style].flat(Infinity))if(style&&typeof style==='object'){
+   assert.equal(style.backgroundColor,undefined,'floating XP has no background');
+   assert.equal(style.borderWidth,undefined,'floating XP has no border');
+ }
+ motionEnabled=false;tree=render();
+ assert.equal(nodes(tree).find(n=>n.props.testID==='play-celebration').props.style[1].transform.length,0,'reduced motion has no transforms');
  const count=sounds.length;events.emitPlayFeedback(e);events.emitPlayFeedback({...e,id:'foreign',scope:'other'});assert.equal(sounds.length,count);
  deviceReduced(true);assert.equal(prefs.playPreferences.getSnapshot().reducedMotion,true);appState('background');tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'));events.emitPlayFeedback({...e,id:'background'});assert.equal(sounds.length,count);appState('active');
  await prefs.playPreferences.set('sound',false);assert.ok(stops>0);events.emitPlayFeedback({...e,id:'muted',xp:0,kind:'correct',answerXP:17,pendingXP:true});tree=render();await flush();assert.equal(sounds.length,count);assert.ok(text(tree).includes('+17 XP'),'muted audio does not hide answer XP');assert.ok(text(tree).includes('Πιστώνονται στην ολοκλήρωση'));events.emitPlayFeedback({...e,id:'wrong',xp:0,kind:'incorrect',answerXP:0});tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'zero XP answers dismiss an earlier earned-XP popup');appState('background');appState('active');events.emitPlayFeedback({...e,id:'ordinary-complete',xp:0});tree=render();await flush();assert.ok(!nodes(tree).some(n=>n.props.testID==='play-celebration'),'no ordinary completion popup');
