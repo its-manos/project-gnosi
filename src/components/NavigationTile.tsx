@@ -30,7 +30,8 @@ export default function NavigationTile({
       iconBackground ? { backgroundColor: iconBackground } : undefined]}>{icon}</View>
     <View style={[styles.copy, settings && styles.copySettings]}>
       <Text style={[styles.title, settings && styles.titleSettings, titleOnly && styles.titleOnly]}
-        numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings} minimumFontScale={titleOnly ? 0.8 : undefined}>{title}</Text>
+        numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings}
+        minimumFontScale={titleOnly ? 0.8 : undefined}>{title}</Text>
       {subtitle ? <Text style={[styles.subtitle, settings && styles.subtitleSettings]}
         numberOfLines={settings ? undefined : 1} adjustsFontSizeToFit={!settings}
         minimumFontScale={0.82}>{subtitle}</Text> : null}
@@ -50,7 +51,7 @@ export default function NavigationTile({
 const styles = StyleSheet.create({
   base: { flexDirection: "row", alignItems: "center", borderWidth: 1,
     borderColor: "#38435C", backgroundColor: "#1A2538" },
-  shortcut: { width: "48.5%", flexGrow: 1, minHeight: 58, paddingHorizontal: 8,
+  shortcut: { width: "48.5%", minWidth: 144, flexGrow: 1, minHeight: 58, paddingHorizontal: 8,
     gap: 7, borderRadius: 15 },
   shortcutTitleOnly: { paddingHorizontal: 7, gap: 5 },
   settings: { minHeight: 75, padding: 12, marginBottom: 9, borderRadius: 17 },

@@ -24,6 +24,8 @@ assert.equal(shortcut.props.accessibilityRole, "button");
 assert.equal(shortcut.props.testID, "profile-activity-link");
 assert.equal(shortcut.props.accessibilityLabel, "Δραστηριότητα. Στατιστικά & quiz");
 assert.equal(shortcut.props.style({ pressed: false })[1].minHeight, 58);
+assert.equal(shortcut.props.style({ pressed: false })[1].minWidth, 144,
+  "Shortcut tiles wrap to one column before Greek labels become unreadably narrow");
 assert.equal(shortcut.props.style({ pressed: false })[1].borderRadius, 15);
 assert.equal(shortcut.props.style({ pressed: true })[2].backgroundColor, "#2D304A");
 shortcut.props.onPress();
