@@ -1,74 +1,54 @@
-# Player characters and trophies
+# Player identity and trophies
 
-Profile now pairs the live XP class with an original geometric character portrait. Tap the portrait to choose between two unlabeled appearances of the current class. Class level requirements remain 1, 2, 5, 10, 15. Titles and XP thresholds are unchanged. The character follows the current class automatically; the device saves an account-scoped appearance preference without a new account schema.
+Home and Profile share the character for the live player class and the same saved appearance preference. Home places the portrait inside its existing 50-point XP ring with a compact level badge. Profile shows the larger portrait, level/total XP, one XP progress bar and the next-class hint. The streak row and XP-help control are removed. Existing shortcuts, loading states and the accessibility scrolling fallback remain.
 
-The trophy preview contains the closest unfinished goal and the highest earned tier from up to three families. The trophy collection opens in a dismissible native modal with all 24 milestones. The collection is mounted only while open. Existing Profile links, loading states, and the accessibility scrolling fallback remain. Progress keeps its current learning/revision layout.
+## Classes and appearance
 
-| Family | Targets | Source |
+| Class | First level | Character motif |
 | --- | --- | --- |
-| Lessons | 1, 5, 15, 30, 60 | Existing unique completed lessons |
-| Worlds | 1, 3, 5 | Existing completed lesson category IDs |
+| Αρχάριος | 1 | Novice traveller with a closed book |
+| Μαθητευόμενος | 2 | Apprentice with an open book |
+| Εξερευνητής | 5 | Explorer with a compass |
+| Ερευνητής | 10 | Researcher with glasses and a celestial instrument |
+| Σοφός | 15 | Elderly wizard with a book and lavender orb |
+
+Tapping the Profile portrait opens two appearances of the current class. Only their portraits and selection indicators are displayed; neutral accessibility labels distinguish “Εμφάνιση 1” and “Εμφάνιση 2”. The selected appearance follows level/class changes automatically. No earlier/later class portraits mount in the picker.
+
+`PlayerAvatarStore` persists the internal `male`/`female` asset variant through AsyncStorage, scoped separately to each account and the guest profile. This is a device preference, not cloud-synced account data. Reads are deduplicated, controls wait for hydration, overlapping writes are blocked, and failed saves retain the previous choice with retry feedback. Scoped stores survive screen remounts and pending writes. A loading portrait keeps its reserved frame empty instead of flashing another appearance.
+
+## Trophy collection
+
+The preview shows the closest unfinished goal and the highest earned tier from up to three families. The full collection contains 24 milestones and mounts only when opened. Roman numerals sit beside trophy titles; full requirements remain accessible in the collection. Cards use the established navy surfaces, borders and spacing, with the shared `TrophyIcon` and `ProgressTrack` components.
+
+| Family | Targets | Saved evidence |
+| --- | --- | --- |
+| Lessons | 1, 5, 15, 30, 60 | Unique completed lessons |
+| Worlds | 1, 3, 5 | Categories containing completed lessons |
 | Daily Quiz | 1, 7, 30, 100 | Unique completed daily history dates |
-| Quiz streak | 3, 7, 14, 30 | Historical longest streak, not current streak |
-| Review | 1, 10, 25, 50 | Permanent review completion receipts on different dates |
-| Hangman | 1, 10, 25, 50 | Positive Hangman reward receipts, up to three per day |
+| Quiz streak | 3, 7, 14, 30 | Historical longest streak |
+| Review | 1, 10, 25, 50 | Permanent review receipts on distinct dates |
+| Hangman | 1, 10, 25, 50 | Positive reward receipts, up to three per day |
 
-Revision milestones deliberately count completed review days. The mistake model retains latest wrong/correct facts, not a permanent lifetime correction total. Hangman stops issuing reward receipts after the XP cap; extra wins cannot be reconstructed and are not presented as lifetime wins. Future-dated daily and receipt entries are excluded. No new XP rewards, cloud writes, migrations, or dependencies are added. The legacy four-badge projection remains intact for existing consumers.
+Review milestones count credited review days: the mistake model does not retain a permanent lifetime correction total. Hangman wins after the XP cap are not recorded as reward receipts and cannot be reconstructed. Future-dated daily and receipt entries are excluded. The legacy four-badge projection remains available to existing consumers. XP rules, backend documents and Progress behaviour are unchanged.
 
-## Artwork and packaging
+## Unlock celebrations
 
-Original character artwork was generated with the built-in image generator, with flat geometric personality-test character illustrations as a stylistic reference. No existing character was copied. Runtime assets are `assets/player-characters/{novice,apprentice,explorer,researcher,sage}.webp`.
+Accepted local lesson completions, rewarded Hangman wins, completed Daily Quizzes and credited reviews compare before/after metrics using the same projection as Profile. Only crossed thresholds emit events. Hydration, imports and remote sync never emit them; persisted progress prevents replay after restart without another cloud field or progress write.
 
-Shared prompt: one waist-up three-quarter portrait; centered, entire head and props visible; friendly adult proportions; large angular color planes; midnight navy, muted teal, lavender and antique brass; warm skin; true transparency; no text, frame, scenery or tiny details; readable at 64 pixels. Character specifications:
+A silent top banner groups milestones earned by one action and dismisses after 2.8 seconds. It uses shared trophy glyphs/ranks, respects the app's animation preference and system reduced motion, filters account scope, deduplicates notices and clears on backgrounding. The overlay does not intercept touches or change dashboard height. Existing XP feedback and sounds remain separate.
 
-- Novice: short tousled dark hair, teal tunic, satchel, closed book.
-- Apprentice: auburn bob, lavender tunic, open book.
-- Explorer: dark curly hair, teal cloak, brass compass.
-- Researcher: silver round glasses, dark hair in a bun, indigo coat, brass celestial instrument.
-- Sage: elderly wizard, white beard, bent purple hat, midnight robe, lavender orb.
+## Artwork and delivery
 
-Exports trim transparent margins, fit to 240px within a 256px transparent canvas, and encode WebP at quality 85 with alpha quality 100. All five files together are 72,922 bytes (about 71.2 KiB). The existing expo-image renderer uses local Metro sources, memory caching and no transition. No network requests or full-resolution artwork are used at runtime. Runtime portraits were visually inspected together at 92px on the Profile background color.
+The ten transparent 256px portraits in `assets/player-characters/` total 145,918 bytes (142.5 KiB); every file is below 25 KB. They use local Metro sources, memory caching and no transition through the existing expo-image renderer. Portraits fit a 240px subject within a 256px canvas, encoded as WebP at quality 85 and alpha quality 100.
 
-## Validation and device review
+Original artwork was created with the built-in image generator. The shared character prompt specifies a friendly adult waist-up three-quarter portrait, large angular colour planes, midnight navy/teal/lavender/antique brass, warm skin and true transparency; no text, frame, scenery or tiny details. Companion variants preserve each class's pose, clothes, props, framing and palette while changing face/hair. For the elderly woman wizard, the beard is removed while retaining the hat, robe, book and orb. These are original characters, not copies of personality-test characters.
 
-Typecheck, content validation and beta configuration checks pass. Content validation retains 13 existing supplementary-image warnings. Expo Doctor passes 19/20 checks, reporting existing patch-version mismatches for expo, expo-asset, expo-audio, expo-status-bar and expo-updates; release-sensitive dependencies were not changed.
+The seven category illustrations follow the same [faceted visual identity](visual-identity.md). Their 192px WebP set totals 83,152 bytes (81.2 KiB). Previous artwork remains in the repository, while current Metro bundles reference the new set.
 
-All 157 regression scripts pass across the suite run and focused reruns after updating the affected Profile contracts. Focused tests cover class boundaries/title consistency, milestone thresholds, future dates, reward receipts, historical streaks, hydration/account switching, collection discovery, lazy mounting and native modal dismissal. Existing profile tests were updated for the collection and compact summary strip.
+## Verification
 
-Physical Android/iOS visual checks remain required: Profile on small and large screens, large text scrolling, transparent portraits, class gallery lock labels, trophy progress and collection scrolling, Android Back, XP help, and existing shortcuts. Native view mocks do not validate device layout or image decoding.
+Validation covers class boundaries, asset mappings/dimensions/transparency, appearance restoration and account isolation, failed/overlapping saves, local lesson/Daily Quiz/Hangman milestones, quiet restart/import, duplicate suppression, grouped notices, automatic dismissal, backgrounding and reduced motion. Home checks preserve the existing avatar footprint and verify live appearance/level updates.
 
-## Profile layout polish after iPhone review
+Typecheck, content validation, beta configuration and Android/iOS Metro exports pass. Content validation has 13 existing supplementary-image warnings. Expo Doctor reports existing patch mismatches; release dependencies are unchanged. Automated native-view mocks do not prove physical screen layout or image decoding.
 
-The player character is now 88–100 points wide instead of 76. Level and total XP share a line; a single XP bar replaces the duplicate ring/bar pair, freeing horizontal room for the character and identity. Earned trophy previews use compact medallions and short names; full titles, requirements and tier counts stay in the collection. The next goal uses a concise unit and separate progress count, and opens the collection when tapped. Singular quiz streak text is corrected. Existing 44-point actions, accessible trophy labels and large-text scrolling remain. Typecheck and affected Profile, collection, trophy-model and shared-navigation tests pass; updated native screen fit requires device review.
-
-## Male/female character choice
-
-Each class has both male and female artwork. Original assets remain referenced; five complementary variants use sibling WebP filenames. The portrait opens exactly two current-class choices, replacing the earlier/later class gallery. The selected appearance applies automatically at each level threshold. No other class images mount in the picker.
-
-`PlayerAvatarStore` stores `male` or `female` using AsyncStorage under an account-specific or guest-specific key. This is a device preference, not cloud-synced profile data; the default is male. Profile subscribes only to its current preference store. Reads are deduplicated, controls wait for hydration, concurrent writes are blocked, and a save failure preserves the previous selection with retry feedback. Account remounts reuse the scoped store so pending writes cannot leak across accounts or be overwritten by a stale read.
-
-The new images were generated with the built-in image generator, using each original class portrait as the edit reference. Prompt: preserve faceted polygon style, waist-up framing, pose, clothing, props, palette and scale; change the face and hair to the complementary male/female variant; for the elderly woman wizard remove the beard and retain the hat, robe, book and orb; retain true transparency, with no frame, scenery or text. Export settings match the original 256px WebP portraits.
-
-Validation includes preference restoration, account/guest isolation, storage failure handling, write ordering, exactly two current-class choices, successful-save dismissal, retry after failed saves, and disabled controls while saving. Device review should verify switching appearances, restarting, and level-up rendering on both iOS and Android.
-
-All ten final 256px transparent WebP portraits total 145,918 bytes (142.5 KiB); every file is below 25 KB. All five male/female pairs were inspected together at 100px on the Profile background. Asset tests verify every class-to-variant mapping, dimensions, transparency and the total size budget. Typecheck, beta configuration, and affected Profile/collection/trophy tests pass.
-
-## Compact Profile and consistent trophy styling
-
-Removed the Profile streak row and XP-help button/panel, including their unused state, daily subscription and streak computation. The next-class hint now sits inside the player card. The shared XP-rules component remains available to its other consumers.
-
-Trophy Roman numerals appear inline with titles in both the preview and collection. Preview tiles no longer use a separate rank row. Trophy cards match navigation shortcuts with the same navy surface, border and 15-point corner radius; medals use the theme accent surface and the next-goal bar reuses `ProgressTrack`. Gaps follow an 8-point section/tile rhythm and 16-point collection grouping. Existing accessibility labels still announce complete trophy requirements.
-
-Appearance options now show only their portraits and selected/choose indicators. Neutral screen-reader labels identify them as “Εμφάνιση 1” and “Εμφάνιση 2”; no gender labels are displayed. Preference compatibility and artwork mapping remain unchanged. Typecheck and affected Profile, collection and shared-navigation checks pass. Native screen fit and spacing still require device review.
-
-## Home identity and trophy celebrations
-
-Home now reuses the selected class portrait inside the existing 50-point XP ring. The portrait is clipped to the inner circle, with a compact level badge. Appearance hydration keeps the frame empty until ready rather than flashing another appearance. Home and Profile subscribe to the same account-scoped preference store, so appearance changes update without a relaunch. Class artwork remains derived from live level; no duplicate avatar files or class state are stored. The dashboard footprint and existing navigation action are unchanged.
-
-Accepted local lesson completions, rewarded Hangman wins, completed Daily Quizzes and credited review days compare their before/after trophy metrics. Only crossed thresholds emit trophy events. The Profile uses the same metric projection. Hydration, imports and remote sync never emit these events. Existing persisted progress therefore prevents replay after restart; duplicate local actions cannot cross the threshold again. No notification-seen cloud field or extra progress write is needed.
-
-A silent, nonblocking top banner groups milestones earned by the same action, uses the shared trophy glyph and Roman numeral definitions, and dismisses after 2.8 seconds. It respects the existing animation preference and system reduced-motion setting. Backgrounding clears queued notices; account scopes and a session dedupe guard prevent unrelated/repeated notices. Ordinary XP feedback and sounds remain separate. The banner is outside the dashboard layout and does not change screen height.
-
-Validation: the 159-script regression run passed; the newly added celebration tests and focused reruns also pass. Typecheck, content validation, beta configuration and Android/iOS Metro exports pass. Content validation retains its 13 existing supplementary-image warnings. Exports package all ten character assets. Headless checks cover Home appearance updates, unchanged 50-point footprint, level/class transitions, quiet hydration/import/restart, real lesson/Daily Quiz/Hangman threshold events, duplicate suppression, backgrounding, grouped unlocks and static reduced-motion presentation. No Android/iOS emulator or connected-device tooling is available in this workspace, so physical layout/touch checks remain outstanding.
-
-On-device review: change appearance in Profile and return Home; confirm the portrait and XP ring remain clear and the dashboard fits. Check Profile and the picker on a small Android screen and with large text. Earn a new trophy through a normal activity and verify one brief banner, then reopen the completed activity/restart to confirm it does not replay. With reduced motion enabled, the banner should stay still. Verify the selected appearance remains after a level/class change.
+On-device review covers Home/Profile fit, small Android screens and large text, portrait clarity, appearance persistence after restart/class changes, collection scrolling/Android Back, and a single brief celebration for a new milestone. The user has reviewed and accepted the visual direction; this workspace has no emulator or connected-device tooling.

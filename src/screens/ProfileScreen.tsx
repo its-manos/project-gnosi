@@ -27,7 +27,6 @@ type Props = {
   onGuide: () => void;
 };
 
-
 type QuickIconName = "activity" | "saved" | "interests" | "guide";
 
 function QuickIcon({ name }: { name: QuickIconName }) {
