@@ -1,3 +1,4 @@
+import TrophyCelebrations from "./src/play/TrophyCelebrations";
 import PlayFeedback from "./src/play/PlayFeedback";
 import { BetaAnalyticsProvider } from "./src/state/BetaAnalytics";
 import { useSupabaseLifecycle } from "./src/hooks/useSupabaseLifecycle";
@@ -14,7 +15,7 @@ export default function App() {
     <SafeAreaProvider>
       <View style={styles.root}>
         <StatusBar barStyle="light-content" />
-        <BetaAnalyticsProvider><LearningSession><PlayFeedback><AppNavigator /></PlayFeedback></LearningSession></BetaAnalyticsProvider>
+        <BetaAnalyticsProvider><LearningSession><PlayFeedback><TrophyCelebrations><AppNavigator /></TrophyCelebrations></PlayFeedback></LearningSession></BetaAnalyticsProvider>
       </View>
     </SafeAreaProvider>
   );

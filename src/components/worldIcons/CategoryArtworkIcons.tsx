@@ -10,16 +10,17 @@ export type WorldIconId =
   | "geography"
   | "difficult-history";
 
+// Faceted artwork shares the player-character identity.
 // Bundled artwork is deliberately static: Metro resolves every asset at build time,
 // so opening the Home or Category screen never requires a network request.
 const artwork: Record<WorldIconId, number> = {
-  history: require("../../../assets/category-world-icons/gnosi_history.webp"),
-  science: require("../../../assets/category-world-icons/gnosi_science.webp"),
-  nature: require("../../../assets/category-world-icons/gnosi_nature.webp"),
-  culture: require("../../../assets/category-world-icons/gnosi_arts.webp"),
-  technology: require("../../../assets/category-world-icons/gnosi_technology.webp"),
-  geography: require("../../../assets/category-world-icons/gnosi_geography.webp"),
-  "difficult-history": require("../../../assets/category-world-icons/gnosi_difficult_history.webp"),
+  history: require("../../../assets/category-world-icons/faceted/gnosi_history.webp"),
+  science: require("../../../assets/category-world-icons/faceted/gnosi_science.webp"),
+  nature: require("../../../assets/category-world-icons/faceted/gnosi_nature.webp"),
+  culture: require("../../../assets/category-world-icons/faceted/gnosi_arts.webp"),
+  technology: require("../../../assets/category-world-icons/faceted/gnosi_technology.webp"),
+  geography: require("../../../assets/category-world-icons/faceted/gnosi_geography.webp"),
+  "difficult-history": require("../../../assets/category-world-icons/faceted/gnosi_difficult_history.webp"),
 };
 
 function WorldArtwork({
@@ -34,6 +35,7 @@ function WorldArtwork({
       source={artwork[icon]}
       contentFit="contain"
       transition={0}
+      cachePolicy="memory"
       accessible={false}
       pointerEvents="none"
       accessibilityIgnoresInvertColors

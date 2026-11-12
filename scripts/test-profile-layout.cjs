@@ -50,6 +50,7 @@ let history = [
 let daily = { ready: true, doc: {} };
 const player = {
   level: 2, earned: 120, required: 200, totalXP: 320,
+  trophies: [],
   badges: [
     { id: "first", title: "Πρώτη γνώση", unlocked: true, current: 1, target: 1 },
     { id: "curious", title: "Περιέργεια", unlocked: false, current: 1, target: 3 },
@@ -67,6 +68,7 @@ const common = {
     useDailyDataSnapshot: () => daily,
     useLearningSession: () => ({ email: learning.userId ? "player@example.test" : null }),
   },
+  "../hooks/usePlayerAvatar": { usePlayerAvatar: () => ({ variant: "female", ready: true, saving: false, error: null, choose: async () => true }) },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => ({ profile: player, ready: true }) },
   "../gamification/rules": { playerTitle: level => "Παίκτης " + level },
   "../utils/dailyChallenge": { getAthensDateKey: () => "2026-10-30" },
@@ -77,6 +79,7 @@ const common = {
   "../components/AppBackground": { __esModule: true, default: "AppBackground" },
   "../components/AtlasCard": { __esModule: true, default: "MotionView" },
   "../components/NavigationTile": { __esModule: true, default: "NavigationTile" },
+  "../components/PlayerCollection": { __esModule: true, default: "PlayerCollection" },
   "../components/MetricCard": { __esModule: true, default: "MetricCard" },
   "../components/ProgressTrack": { __esModule: true, default: "ProgressTrack" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
@@ -95,13 +98,17 @@ const renderProfile = () => { cursor = 0; return Profile(profileProps); };
 let tree = renderProfile();
 assert.ok(text(tree).includes("επισκέπτης"), "Guest identity remains visible");
 assert.ok(nodes(tree).some(n => n.props?.testID === "profile-identity"));
+const avatarPicker = nodes(tree).find(n => n.type === "PlayerCollection" && n.props?.mode === "character");
+assert.equal(avatarPicker.props.variant, "female", "Profile uses the saved appearance");
+assert.equal(avatarPicker.props.level, player.level, "Picker follows the current class level");
 const profileHeader = nodes(tree).find(n => n.type === "SectionHeader");
 assert.equal(profileHeader?.props.title, "Το προφίλ σου");
 assert.equal(profileHeader.props.onAction, profileProps.onAccount);
 profileHeader.props.onAction();
 assert.equal(calls.at(-1), "account", "The header Settings button still opens Account");
-assert.ok(nodes(tree).some(n => n.props?.testID === "profile-achievements"));
-assert.ok(nodes(tree).some(n => n.type === "MotionXpCircle"), "Level retains its progress ring");
+assert.ok(nodes(tree).some(n => n.type === "PlayerCollection" && n.props?.mode !== "character"));
+assert.equal(nodes(tree).filter(n => n.props?.accessibilityRole === "progressbar").length, 1, "Profile should show one XP progress indicator");
+assert.ok(!nodes(tree).some(n => n.type === "MotionXpCircle"), "Do not repeat XP progress in a second ring");
 const pressProfile = label => {
   const item = nodes(tree).find(n => typeof n.type === "function" && n.type.name === "QuickLink" && n.props?.title === label);
   assert.ok(item, "Profile shortcut should exist: " + label);
@@ -121,11 +128,8 @@ assert.deepEqual(calls, ["account", "stats", "saved", "interests", "guide"]);
 const savedShortcut = shortcuts.find(n => n.props.title === "Αποθηκευμένα");
 assert.equal(savedShortcut.type(savedShortcut.props).props.testID, "profile-saved-link",
   "Saved lessons uses the same accessible shortcut component as the other tiles");
-const xpHelp = nodes(tree).find(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;");
-assert.ok(xpHelp && !xpHelp.props.accessibilityState.expanded);
-xpHelp.props.onPress();
-tree = renderProfile();
-assert.ok(nodes(tree).some(n => n.type === "XpRules"), "Shared XP rules remain available");
+assert.ok(!nodes(tree).some(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;"), "XP help is removed from Profile");
+assert.ok(!text(tree).includes("σερί"), "Profile no longer repeats the streak");
 learning = { ...learning, userId: "user" };
 tree = renderProfile();
 assert.ok(text(tree).includes("player@example.test"), "Account identity updates");

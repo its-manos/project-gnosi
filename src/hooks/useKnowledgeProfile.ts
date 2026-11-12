@@ -1,3 +1,5 @@
+import { playerTrophies } from "../gamification/trophies";
+import { learningTrophyMetrics, dailyTrophyMetrics } from "../gamification/trophyProgress";
 import { countRecalledConcepts } from "../knowledge/model";
 import { mergeRewardLedgers } from "../gamification/rewards";
 import { useMemo } from "react";
@@ -20,7 +22,11 @@ export function useKnowledgeProfile() {
     const badges = base.badges.map(badge =>
       badge.id === "recall" ? { ...badge, current: recalled, unlocked: recalled >= badge.target } : badge,
     );
-    return { ...base, recalled, badges };
+    const trophies = playerTrophies({
+      ...learningTrophyMetrics(lessons, completedIds, activity, rewards, today),
+      ...dailyTrophyMetrics(dailyHistory(daily.doc), today),
+    });
+    return { ...base, recalled, badges, trophies };
   }, [completedIds, activity, weeklyReviews, rewards, knowledgeReviews, daily.doc, today]);
   return { profile, ready: ready && daily.ready };
 }

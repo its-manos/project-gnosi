@@ -29,9 +29,9 @@ assert.match(routes, /navigateTo\(destination\)/,
 
 assert.match(profile, /useKnowledgeProfile\(/,
   "Use the existing account-scoped XP/achievement model.");
-assert.match(profile, /profile\.badges\.map\(/);
-assert.match(profile, /calculateDailyChallengeProgress\(dailyHistory\(daily\.doc\), today\)/,
-  "The streak must remain a daily-quiz streak, not an invented login streak.");
+assert.match(profile, /<PlayerCollection trophies=\{profile.trophies\}/);
+assert.doesNotMatch(profile, /quizStats|StreakFlame/,
+  "Profile no longer repeats the quiz streak row.");
 assert.doesNotMatch(profile, /completedIds|completedLessons|totalLessonCount/,
   "Reading/learning completion belongs to Progress and Insights, not Profile.");
 assert.match(profile, /onAction=\{onAccount\}/,
@@ -56,9 +56,8 @@ assert.match(routes, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
 assert.match(profile, /scrollEnabled=\{canScroll\}/,
   "Default Profile layout should fit the viewport with a scroll fallback.");
 assert.match(profile, /AppBackground/);
-assert.ok(profile.includes('accessibilityState={{ expanded: xpExpanded, disabled: !profileReady }}'),
-  "The existing XP explanation should remain accessible.");
-assert.ok(profile.includes('<XpRules learningXP={profile.learningXP}'));
+assert.doesNotMatch(profile, /XpRules|xpExpanded|Πώς κερδίζω XP/,
+  "Profile no longer includes the XP-help control.");
 assert.ok(read("src/components/KnowledgeProgress.tsx").includes('<XpRules learningXP={p.learningXP}'),
   "Keep XP rules in one shared component.");
 const activity = read("src/screens/PlayerStatsScreen.tsx");

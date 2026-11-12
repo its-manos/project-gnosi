@@ -1,3 +1,5 @@
+import { learningTrophyMetrics } from "../gamification/trophyProgress";
+import { announceTrophyCrossings } from "../play/trophyEvents";
 import { hangmanStatus, GREEK_ALPHABET, type HangmanGame } from "../games/hangman/engine";
 import { hangmanWords } from "../games/hangman/words";
 import { quickQuizQuestions } from "../data/quickQuizQuestions";
@@ -156,11 +158,14 @@ export class LearningStore {
     if (this.timer) clearTimeout(this.timer);
     if (this.active && this.userId) this.timer = setTimeout(() => { this.timer = null; void this.sync(); }, 1000);
   }
-  private change(doc: SyncDocument) {
+  private change(doc: SyncDocument, localTrophies = false) {
     if (!this.ready) throw new Error("local_not_ready");
+    const today = localTrophies && this.active ? getAthensDateKey() : "";
+    const before = today ? learningTrophyMetrics(lessons, this.getSnapshot().backup.completedIds, this.doc.activity, this.doc.rewards, today) : null;
     if (doc.rewards !== undefined) doc = { ...doc, rewards: migrateLearningRewards(lessons, syncBackup(doc).completedIds, doc.activity, doc.weeklyReviews ?? {}, doc.rewards) };
     this.doc = retainSections(parseSyncDocument(doc), doc, this.doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
     this.emit(); void this.persist(); this.schedule();
+    if (before) announceTrophyCrossings(this.userId ?? "guest", before, learningTrophyMetrics(lessons, this.getSnapshot().backup.completedIds, this.doc.activity, this.doc.rewards, today));
   }
   private stamp(): [number, string] {
     if (!Number.isSafeInteger(this.doc.clock + 1)) throw new Error("invalid_sync");
@@ -222,7 +227,7 @@ export class LearningStore {
     const rewards = { ...awardQuiz(this.doc.rewards ?? {}, `lesson:${id}`, lesson.questions.slice(0, questionCount).map((_, i) => adaptLessonQuestion(lesson, i)), run.answers, "lesson") };
     if (!hasReward(rewards, `category:${lesson.categoryId}`)) rewards[`category:${lesson.categoryId}`] = REWARD_RULES.category;
     // Reward, event and completion share one write and one sync revision.
-    this.change({ ...this.doc, clock: stamp[0], rewards, activity, progress: { ...this.doc.progress, [id]: { stamp, value: { completed: true, attempt: null } } } });
+    this.change({ ...this.doc, clock: stamp[0], rewards, activity, progress: { ...this.doc.progress, [id]: { stamp, value: { completed: true, attempt: null } } } }, true);
     const earned = totalRewardXP(this.doc.rewards ?? {}) - before;
     this.feedback("complete", `lesson-complete:${eventId}`, earned, lesson.title);
     return earned;
@@ -248,7 +253,7 @@ export class LearningStore {
     const plan = weeklyPlan(this.doc.activity, weeklyReviews, getAthensDateKey());
     if (plan.length && plan.every(q => weeklyReviews[q.id]) && !hasReward(rewards, `review:${item.week}`)) rewards[`review:${item.week}`] = REWARD_RULES.review;
     const mistakes = this.projectLessonReview(item.lesson.id, item.questionIndex, answerIndex);
-    this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards, mistakes });
+    this.change({ ...this.doc, clock: stamp[0], weeklyReviews, rewards, mistakes }, true);
     const earned = totalRewardXP(this.doc.rewards ?? {}) - beforeXP;
     this.feedback(row?.correct ? "correct" : "incorrect", `weekly-answer:${id}`, earned, undefined, earned);
     return true;
@@ -305,7 +310,7 @@ export class LearningStore {
     const rewards = awardGame(ledger, "hangman", getAthensDateKey(), word.id, true);
     if (rewards === ledger) return 0;
     const earned = totalRewardXP(rewards) - totalRewardXP(ledger);
-    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], rewards });
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], rewards }, true);
     return earned;
   }
   startMistakeReview(): boolean {
@@ -355,7 +360,7 @@ export class LearningStore {
       if (earnedXP) for (const q of fresh) rewards[`seen:revision:${q.id}`] = 0;
     }
     const stamp = this.stamp();
-    this.change({ ...this.doc, clock: stamp[0], rewards, mistakeSession: { stamp, value: { quiz: result.session, earnedXP } } });
+    this.change({ ...this.doc, clock: stamp[0], rewards, mistakeSession: { stamp, value: { quiz: result.session, earnedXP } } }, result.session.completed);
     if (result.session.completed) this.feedback("complete", `mistake-complete:${id}`, earnedXP, "Η επανάληψη ολοκληρώθηκε");
     return true;
   }
@@ -404,7 +409,7 @@ export class LearningStore {
     const earnedXP = result.session.completed && saved.mode === "scheduled" && saved.qualifiedIndices.length > 0 ? Math.max(0, REWARD_RULES.review - (rewards[key] ?? 0)) : 0;
     if (earnedXP) rewards[key] = REWARD_RULES.review;
     const value = { ...saved, currentIndex: result.session.currentIndex, completed: result.session.completed, earnedXP };
-    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], rewards, knowledgeSession: { stamp, value } });
+    const stamp = this.stamp(); this.change({ ...this.doc, clock: stamp[0], rewards, knowledgeSession: { stamp, value } }, result.session.completed);
     if (result.session.completed) this.feedback("complete", `knowledge-complete:${id}`, earnedXP, saved.mode === "practice" ? "Η εξάσκηση ολοκληρώθηκε" : "Η δοκιμή κατανόησης ολοκληρώθηκε");
     return true;
   }

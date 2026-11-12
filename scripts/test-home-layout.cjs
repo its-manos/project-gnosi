@@ -12,6 +12,8 @@ const root = path.join(__dirname, "..");
 const atlasTestEnv = {};
 const jsx = (type, props) => ({ type, props });
 let homeWindowWidth = 360;
+let avatarVariant = "female";
+let avatarReady = true;
 const native = {
   View: "View", Text: "Text", Image: "Image", Pressable: "Pressable", ScrollView: "ScrollView",
   ActivityIndicator: "Spinner", useWindowDimensions: () => ({ width: homeWindowWidth, height: 740 }),
@@ -118,7 +120,7 @@ const iconFiles = {
   "difficult-history": "gnosi_difficult_history.webp",
 };
 const imageImports = Object.fromEntries(Object.values(iconFiles).map(file => [
-  "../../../assets/category-world-icons/" + file, file,
+  "../../../assets/category-world-icons/faceted/" + file, file,
 ]));
 const artworkComponents = compile("src/components/worldIcons/CategoryArtworkIcons.tsx", {
   "expo-image": { Image: "Image" },
@@ -172,9 +174,11 @@ const home = compile("src/screens/HomeScreen.tsx", {
     MotionQuizGlyph: "QuizGlyph", MotionCtaArrow: "CtaArrow",
   },
   "../data/questions": { DAILY_CHALLENGE_SIZE: 7 },
+  "../hooks/usePlayerAvatar": { usePlayerAvatar: () => ({ ready: avatarReady, variant: avatarVariant }) },
+  "../components/PlayerCharacter": { __esModule: true, default: "PlayerCharacter" },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => profile },
   "../hooks/useAthensDate": { useAthensDate: () => "2026-11-03" },
-  "../state/LearningSession": { useDailySnapshot: () => daily },
+  "../state/LearningSession": { useDailySnapshot: () => daily, useLearningSession: () => ({ store: { userId: null } }) },
   "../utils/dailySyncDocument": { dailyHistory: () => ["today", "yesterday"] },
   "../utils/progressStats": { calculateDailyChallengeProgress: () => ({ currentStreak: 2 }) },
 });
@@ -249,6 +253,25 @@ const ring = nodes(tree).find(node => node.props?.testID === "home-xp-ring");
 assert.ok(Math.abs(Number(ring.props.strokeDasharray.split(" ")[0]) - 2 * Math.PI * 21 * .25) < 0.01);
 assert.equal(nodes(tree).find(node => node.props?.testID === "home-level").props.children, 3);
 const levelBadge = nodes(tree).find(node => node.props?.testID === "home-level-profile");
+const portrait = () => nodes(tree).find(node => node.type === "PlayerCharacter");
+assert.equal(portrait().props.variant, "female");
+assert.equal(portrait().props.level, 3);
+assert.equal(portrait().props.size, 38, "Avatar stays within the existing ring");
+avatarVariant = "male";
+tree = home(props);
+assert.equal(portrait().props.variant, "male", "Home reflects an appearance change without relaunch");
+const previousLevel = profile.profile.level;
+profile.profile.level = 5;
+tree = home(props);
+assert.equal(portrait().props.level, 5, "The same appearance follows a new class level");
+assert.equal(portrait().props.variant, "male");
+profile.profile.level = previousLevel;
+avatarReady = false;
+tree = home(props);
+assert.equal(portrait(), undefined, "Do not flash the wrong avatar before preference hydration");
+avatarReady = true;
+tree = home(props);
+
 assert.equal(levelBadge.props.style.width, 50, "level ring retains a compact 50pt footprint");
 assert.ok(!nodes(levelBadge).some(node => node.props?.children === "Επίπεδο"),
   "level caption is not displayed beside the ring");
@@ -318,7 +341,7 @@ for (const category of categories) {
   assert.equal(art.props.style.borderRadius, undefined, "soft edges are not clipped");
   assert.equal(art.props.style.transform[0].scale, 1.18);
   const asset = iconFiles[category.id];
-  const assetPath = path.join(root, "assets/category-world-icons", asset);
+  const assetPath = path.join(root, "assets/category-world-icons/faceted", asset);
   assert.ok(fs.existsSync(assetPath), "bundled artwork exists: " + asset);
   // Each low-distraction illustration must retain a real alpha channel.
   // The WebP extended header flags alpha at bit 4 and encodes a 192px canvas.

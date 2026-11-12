@@ -1,3 +1,5 @@
+import { dailyTrophyMetrics } from "../gamification/trophyProgress";
+import { announceTrophyCrossings } from "../play/trophyEvents";
 import { emitPlayFeedback } from "../play/events";
 import { createDailyResultDetails } from "../utils/dailyResults";
 import { awardQuiz, hasReward, quizRewardSummary, totalRewardXP } from "../gamification/rewards";
@@ -123,11 +125,14 @@ export class DailyStore {
     if (this.timer) clearTimeout(this.timer);
     if (this.active && this.userId) this.timer = setTimeout(() => { this.timer = null; void this.sync(); }, 1000);
   }
-  private change(doc: DailyDocument) {
+  private change(doc: DailyDocument, localTrophies = false) {
     if (!this.ready) throw new Error("local_not_ready");
+    const today = localTrophies && this.active ? getAthensDateKey() : "";
+    const before = today ? dailyTrophyMetrics(dailyHistory(this.doc), today) : null;
     if (doc.rewards !== undefined) doc = { ...doc, rewards: migrateDailyRewards(dailyHistory(doc), doc.rewards) };
     this.doc = parseDailyDocument(doc); this.dirty = Boolean(this.userId); this.status = this.userId ? "queued" : "local"; this.error = "";
     this.emit(); void this.persist(); this.schedule();
+    if (before) announceTrophyCrossings(this.userId ?? "guest", before, dailyTrophyMetrics(dailyHistory(this.doc), today));
   }
   private stamp(): [number, string] {
     if (!Number.isSafeInteger(this.doc.clock + 1)) throw new Error("invalid_daily");
@@ -149,7 +154,7 @@ export class DailyStore {
     const history = record.completed ? createCompletedHistoryEntry(record) : null;
     if (record.completed && !history) throw new Error("invalid_daily");
     const rewards = record.completed ? awardQuiz(this.doc.rewards ?? {}, `day:${record.dateKey}`, record.questionIds.map(id => adaptDailyQuestion(questions.find(q => q.id === id)!)), record.answers, "daily") : this.doc.rewards;
-    this.change({ ...this.doc, clock: stamp[0], rewards, days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history, ...(details ? {details} : {}) } } });
+    this.change({ ...this.doc, clock: stamp[0], rewards, days: { ...this.doc.days, [record.dateKey]: { run: current?.run ?? stamp, edit: stamp, record, history, ...(details ? {details} : {}) } } }, record.completed);
     if (this.active) {
       for (const [slot, answer] of Object.entries(record.answers)) {
         if (current?.record.answers[slot] !== undefined) continue;

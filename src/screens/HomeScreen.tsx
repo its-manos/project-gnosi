@@ -1,3 +1,5 @@
+import PlayerCharacter from "../components/PlayerCharacter";
+import { usePlayerAvatar } from "../hooks/usePlayerAvatar";
 import { homeDashboardLayout } from "../utils/homeDashboardLayout";
 import { availableScreenHeight } from "../utils/screenLayout";
 import { useMemo, useState } from "react";
@@ -7,7 +9,7 @@ import type { Category, Lesson, Subcategory } from "../data/lessons";
 import { DAILY_CHALLENGE_SIZE } from "../data/questions";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
 import { useAthensDate } from "../hooks/useAthensDate";
-import { useDailySnapshot } from "../state/LearningSession";
+import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
 import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
@@ -56,6 +58,8 @@ export default function HomeScreen({
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
+  const { store } = useLearningSession();
+  const avatar = usePlayerAvatar(store.userId);
   const { width, height, fontScale } = useWindowDimensions();
   // Development-only A/B switch for isolating Android native SVG paint from
   // its four twinkles + ambient glow. Release builds always use the full atlas.
@@ -143,6 +147,9 @@ export default function HomeScreen({
                 rotation={-90} origin="25, 25" /> : null}
             </Svg>
             <View pointerEvents="none" style={styles.levelCenter}>
+              <View style={styles.portraitFrame}>{profileReady && avatar.ready ? <PlayerCharacter level={profile.level} variant={avatar.variant} size={38} /> : null}</View>
+            </View>
+            <View pointerEvents="none" style={styles.levelPill}>
               <Text testID="home-level" style={styles.levelNumber} numberOfLines={1}
                 adjustsFontSizeToFit>{profileReady ? profile.level : "—"}</Text>
             </View>
@@ -315,7 +322,9 @@ const styles = StyleSheet.create({
   levelBadge: { width: 50, height: 50 },
   levelRing: { position: "absolute", top: 0, left: 0 },
   levelCenter: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },
-  levelNumber: { color: colors.accentLight, fontSize: 18, lineHeight: 21, fontWeight: "900" },
+  portraitFrame: { width: 38, height: 38, borderRadius: 19, overflow: "hidden" },
+  levelPill: { position: "absolute", right: -2, bottom: -2, minWidth: 18, height: 18, paddingHorizontal: 3, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: colors.accentSurface, borderWidth: 1, borderColor: colors.accentLight },
+  levelNumber: { color: colors.text, fontSize: 10, lineHeight: 13, fontWeight: "900" },
   hero: { padding: 18, borderRadius: 20, borderWidth: 1, borderColor: "#595375",
     overflow: "hidden", backgroundColor: "#1B2434", gap: 10,
     justifyContent: "center" },
