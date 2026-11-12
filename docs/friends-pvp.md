@@ -1,6 +1,11 @@
 # Private quiz games with friends
 
 From Home → **Μίνι παιχνίδια → Με φίλους**, sign in and choose a display name.
+The name is saved once per account on this device. Returning players see their
+saved identity with an **Αλλαγή** action; edits require an explicit save and can
+be cancelled. Failed reads/writes show a retry message without replacing the
+last saved name. Resuming an older room also remembers its existing player name.
+
 Create a room, share its six-character code, and have friends join from their own
 signed-in accounts. The host chooses a category, 5 or 10 questions (thematic games
 have 5), and 15 or 30 seconds per question. Two to four players must all be ready.
@@ -11,6 +16,25 @@ Answers, explanations and updated scores appear after everyone answers or time
 expires. After seven seconds, the next question starts automatically when a client
 refreshes the room. Final standings support shared places on ties and a host-led
 rematch. These private points do not award learning XP or change saved progress.
+
+## Multiplayer presentation and sound
+
+The mode reuses the Midnight Atlas backdrop, bundled faceted characters/category
+artwork, Atlas action cards and reduced-motion-aware screen entrances. Create/join
+tabs keep setup short, the lobby has four seat cards, and rounds show a compact
+score strip, countdown, clear answer states and a low-time warning. Results
+highlight shared winners and the player's score/place. Each new question resets
+the scroll position so an explanation cannot leave the next prompt offscreen.
+
+Question-open, correct/incorrect reveal and match-complete cues use the existing
+practice sound pipeline, including its mute/background preferences. Correctness
+is sounded only after the server reveals it. A phase tracker suppresses duplicate
+poll sounds, restored results, stale snapshots and background/reconnect replays.
+These sounds never award XP or write learning progress.
+
+Name preferences use AsyncStorage under `@gnosi/pvp-name/v1/account:<user-id>`;
+they are device preferences, not cloud profile fields. No new dependency, database
+migration or native sound module is needed for this polish.
 
 ## Backend rollout
 

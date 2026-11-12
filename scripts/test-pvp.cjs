@@ -106,8 +106,29 @@ function hooks() {
   rpcReply = { data: snapshot, error: null };
   assert.equal((await transport.getPvpRoom('room')).id, 'room');
 
+  const feedbackHarness = hooks(), heard = [], feedbackListeners = new Set();
+  const { usePvpFeedback } = compile('src/hooks/usePvpFeedback.ts', {
+    react: feedbackHarness.react,
+    'react-native': { AppState: { currentState: 'active', addEventListener: (_event, listener) => { feedbackListeners.add(listener); return { remove: () => feedbackListeners.delete(listener) }; } } },
+    '../play/pvpFeedback': load('src/play/pvpFeedback.ts'), '../play/soundStatus': { requestPracticeCue: cue => heard.push(cue) },
+  });
+  let audibleRoom = { ...snapshot, status: 'lobby' }, visible = false;
+  const feedback = () => feedbackHarness.render(() => usePvpFeedback(audibleRoom, 'user', visible, true));
+  feedback(); audibleRoom = { ...audibleRoom, status: 'question' }; feedback(); visible = true; feedback();
+  assert.deepEqual(heard, ['question-open']);
+  audibleRoom = { ...audibleRoom, status: 'reveal', question: { correctIndex: 1 }, players: [{ id: 'user', answered: true, answer: 1 }] }; visible = false; feedback(); feedback();
+  assert.deepEqual(heard, ['question-open', 'correct']);
+  for (const listener of feedbackListeners) listener('background');
+  for (const listener of feedbackListeners) listener('active');
+  feedback(); audibleRoom = { ...audibleRoom, status: 'finished' }; feedback();
+  assert.deepEqual(heard, ['question-open', 'correct'], 'returning to a cached snapshot must not replay a result/completion sound');
+  feedbackHarness.unmount(); assert.equal(feedbackListeners.size, 0);
+
   // Exercise the actual native screen's interactions with a stubbed transport.
   const ui = hooks(), sent = [];
+  let savedName = '';
+  const identity = () => ({ name: savedName, ready: true, saving: false, error: null,
+    choose: async value => { savedName = value.trim(); return true; }, retry() {} });
   let state = { room: null, busy: false, loading: false, available: true, error: null, offset: 0, lastSynced: Date.now(),
     join: (...args) => sent.push(args), create: (...args) => sent.push(args), refresh() {}, ready() {}, start() {}, answer() {}, rematch() {}, dismiss() {} };
   const jsx = (type, props, key) => ({ type, props, key });
@@ -118,6 +139,10 @@ function hooks() {
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ bottom: 0 }) },
     '../components/AppBackground': { default: 'Background' }, '../components/ProfileSectionHeader': { default: 'Header' },
     '../components/SourceLink': { default: 'Source' }, '../hooks/usePvp': { usePvp: () => state },
+    '../components/AtlasContinueCard': { __esModule: true, default: 'Pressable' }, '../components/ScreenEntrance': { __esModule: true, default: 'Entrance' },
+    '../components/PvpArtwork': { PvpBadge: 'Badge', PvpHero: 'Hero', PvpWorld: 'World' },
+    '../hooks/usePvpIdentity': { usePvpIdentity: identity }, '../hooks/usePvpFeedback': { usePvpFeedback() {} },
+    '../state/PvpIdentity': load('src/state/PvpIdentity.ts'),
     '../quiz/pvp': model, '../theme': { colors: {} },
   }, { setInterval: () => 1, clearInterval() {} }).default;
   const draw = userId => ui.render(() => Screen({ userId, onHome() {}, onAccount() {} }));
@@ -131,6 +156,12 @@ function hooks() {
   let root = draw(null); assert.match(text(root), /Συνδέσου/);
   root = draw('user');
   nodes(root).find(node => node.props.testID === 'pvp-name').props.onChangeText('Μάνος');
+  root = draw('user');
+  await nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Αποθήκευση ονόματος').props.onPress(); await flush();
+  root = draw('user');
+  assert.ok(!nodes(root).some(node => node.props.testID === 'pvp-name'), 'saved identity replaces the entry form');
+  nodes(root).find(node => node.props.accessibilityRole === 'tab' && text(node) === 'Έχω κωδικό').props.onPress();
+  root = draw('user');
   nodes(root).find(node => node.props.testID === 'pvp-code').props.onChangeText('ab12cd');
   root = draw('user');
   nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Συμμετοχή').props.onPress();
