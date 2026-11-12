@@ -79,3 +79,20 @@ On Android and iPhone:
 6. Import guest progress twice and sync two devices after different offline wins;
    verify all clients agree on capped totals. Check the Profile games subtotal.
 7. Cross a level threshold in either game and verify the existing level-up cue.
+
+## Reward popup
+
+Positive completion XP now shows in the same popup as answer rewards, whether or
+not it crosses a level threshold. Sound priority may coalesce cues but cannot
+suppress an earned reward. Navigation and zero-XP completion events leave the
+current reward visible; a zero-XP answer still dismisses an older answer popup.
+The card uses the Midnight Atlas surface, violet border and gold reward accent.
+It remains visible longer, supports reduced motion and never intercepts touches.
+
+Lesson questions live in a native Modal above the main app window. A modal host
+now presents the same transient popup there through React context; the root host
+yields while that host is mounted. This does not resubscribe to scoring events,
+reissue XP or replay sounds. Closing the modal restores the root host for any
+remaining display time. Device QA should check both legacy and typed lesson
+questions, returning to the reader while a popup is visible, game completion,
+muted audio, reduced motion and large text.

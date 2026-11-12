@@ -1,3 +1,4 @@
+import { RewardToastHost } from "../play/RewardToast";
 import ScreenEntrance from "../components/ScreenEntrance";
 import { readerLessonStyles as styles } from "./readerLessonStyles";
 import { motionAllowed, playPreferences } from "../play/preferences";
@@ -369,6 +370,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
               ? "Επόμενη ερώτηση →" : "Συνέχεια ανάγνωσης →",
             disabled: false, onPress: advanceQuestion,
           } : stageAction.action} />
+          <RewardToastHost />
         </View>
       </Modal> : null}
     </ScreenEntrance>

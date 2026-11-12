@@ -17,7 +17,7 @@ const native={View:'View',Text:'Text',StyleSheet:{create:x=>x},Animated:{Value:c
 (async()=>{
  let resolvePreferences;const preferencesReady=new Promise(resolve=>{resolvePreferences=resolve;});
  const map=new Map(),storage={getItem:async k=>{if(k===prefs.PLAY_PREFERENCES_KEY)await preferencesReady;return map.get(k)??null;},setItem:async(k,v)=>map.set(k,v)},store=new LearningStore(null,storage),dailyStore=new DailyStore(null,storage);await store.start();await dailyStore.start();
- const Provider=load('src/play/PlayFeedback.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:0})},'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'../state/LearningSession':{useLearningSession:()=>({store,dailyStore})},'./audio':{FeedbackAudio},'./events':events,'./preferences':prefs,'./soundStatus':status,'./motion':{usePlayMotion:()=>false}}).default;
+ const Provider=load('src/play/PlayFeedback.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:0})},'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'../state/LearningSession':{useLearningSession:()=>({store,dailyStore})},'./RewardToast':{RewardToastContext:{Provider:'RewardToastProvider'},renderRewardToast:()=>null},'./audio':{FeedbackAudio},'./events':events,'./preferences':prefs,'./soundStatus':status,'./motion':{usePlayMotion:()=>false}}).default;
  const render=()=>{cursor=0;Provider({children:null});const pending=effects;effects=[];pending.forEach(fn=>fn());};
  try{
  render();await flush();assert.deepEqual(heard,[],'hydration stays quiet');
