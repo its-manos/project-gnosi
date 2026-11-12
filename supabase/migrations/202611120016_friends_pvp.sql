@@ -25,6 +25,8 @@ create table if not exists public.pvp_rooms (
   created_at timestamptz not null default clock_timestamp(),
   expires_at timestamptz not null default clock_timestamp() + interval '2 hours'
 );
+create index if not exists pvp_rooms_creator_idx on public.pvp_rooms(creator_id,created_at desc);
+create index if not exists pvp_rooms_host_idx on public.pvp_rooms(host_id);
 create table if not exists public.pvp_players (
   room_id uuid not null references public.pvp_rooms(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -35,7 +37,7 @@ create table if not exists public.pvp_players (
   left_at timestamptz,
   primary key (room_id,user_id)
 );
-create index if not exists pvp_players_user_idx on public.pvp_players(user_id) where left_at is null;
+create index if not exists pvp_players_user_idx on public.pvp_players(user_id,room_id);
 create table if not exists public.pvp_answers (
   room_id uuid not null references public.pvp_rooms(id) on delete cascade,
   match_id uuid not null,
@@ -45,6 +47,7 @@ create table if not exists public.pvp_answers (
   correct boolean not null,
   primary key (room_id,match_id,question_index,user_id)
 );
+create index if not exists pvp_answers_user_idx on public.pvp_answers(user_id);
 create table if not exists public.pvp_join_limits (
   user_id uuid primary key references auth.users(id) on delete cascade,
   window_start timestamptz not null,

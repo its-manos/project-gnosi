@@ -34,9 +34,44 @@ required. The existing public Supabase configuration and account session are use
 Guests get a sign-in prompt; an unconfigured client keeps all solo modes available.
 Missing backend functions produce a friendly unavailable/retry message.
 
-The implementation and tests do **not** establish that these migrations have been
-applied to the live service, or that an installed beta has received this client.
-Apply and test the backend before distributing the corresponding app update.
+### Verified deployment — 13 November 2026
+
+Both migrations are installed in `project-gnosi` (`qrbwrtzmhyuogtvxivhs`). The
+hosted migration service recorded these versions; they map to the tracked source
+files above and do not need to be applied again to this project:
+
+| Tracked source | Hosted version | Hosted name |
+| --- | --- | --- |
+| `202611120016_friends_pvp.sql` | `20261112231544` | `friends_pvp` |
+| `202611120017_friends_pvp_bank.sql` | `20261112231559` | `friends_pvp_bank` |
+
+The existing application schema was present with no recorded migration history
+before this rollout. Baseline that history before adopting a CLI-driven workflow;
+do not blindly replay the older application migrations against this database.
+
+Live verification confirmed 30 questions, RLS on all five PvP tables, no raw table
+grants to `anon`/`authenticated`, nine intended authenticated RPCs, and no anonymous
+PvP RPC grants. An authenticated-role database smoke test used two existing account
+identities to check create/join, readiness, countdown, five shared rounds, hidden
+solutions, first-answer-only scoring, final standings, rematch, stale-match
+rejection and host transfer. Its transaction rolled back all game data; zero test
+rooms, answers or throttle rows remained. No accounts were created or changed.
+
+Requests to the actual REST endpoints using the public publishable key confirmed
+that anonymous access to `pvp_resume_room` and `pvp_questions` is rejected with
+`401 / 42501`. This checks API/schema visibility and anonymous denial; it does not
+replace a signed-in mobile end-to-end test.
+
+Security and performance advisors were reviewed. The
+[authenticated definer-function notices](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)
+describe the nine intentional, identity-checked RPC entry points. The
+[RLS-without-policy notices](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
+describe deliberately inaccessible tables: callers use RPCs rather than direct
+table policies. Internal helpers remain revoked. New foreign keys have supporting
+indexes; their initial unused-index notices are expected before gameplay traffic.
+
+The backend is ready. Distribution of this client to an installed beta and the
+Android/iOS device acceptance checks below remain pending.
 
 ## Protocol and lifecycle
 
