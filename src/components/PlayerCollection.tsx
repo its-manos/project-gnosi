@@ -1,34 +1,19 @@
 import type { AvatarVariant } from "../state/PlayerAvatar";
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
-import { nextTrophy, type Trophy, type TrophyFamily } from '../gamification/trophies';
+import TrophyIcon from './TrophyIcon';
+import { TROPHY_RANKS, nextTrophy, type Trophy, type TrophyFamily } from '../gamification/trophies';
 import PlayerCharacter from './PlayerCharacter';
 import ProgressTrack from './ProgressTrack';
 import { colors } from '../theme';
 
-const glyphs: Record<TrophyFamily, string> = {
-  lessons: 'M5 5h6l1 2 1-2h6v15h-6l-1 1-1-1H5V5Zm7 2v14',
-  worlds: 'm12 3 8 9-8 9-8-9 8-9Zm0 5-4 8 8-4-4-4Z',
-  daily: 'M5 6h14v15H5V6Zm3-3v6m8-6v6M5 11h14m-10 5 2 2 4-4',
-  streak: 'M13 3c1 6-6 7-6 12a5 5 0 0 0 10 0c0-3-2-5-2-5s0 4-3 4c-2-3 2-6 1-11Z',
-  revision: 'M5 10a7 7 0 1 1 0 5M5 4v6h6m-2 4 2 2 4-4',
-  hangman: 'M4 19V5h12v3M2 20h9m5-5v5m-3-2 3-3 3 3',
-};
-function TrophyIcon({ trophy }: { trophy: Trophy }) {
-  const tone = trophy.unlocked ? [colors.accentLight, '#C8B7EC', '#DCC08B', '#EAD8AB', '#F3E4C1'][trophy.tier - 1] : '#737C91';
-  return <Svg width={34} height={34} viewBox="0 0 24 24" fill="none" accessible={false}>
-    <Path d={glyphs[trophy.family]} stroke={tone} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-    {trophy.family === 'hangman' ? <Circle cx={16} cy={11} r={3} stroke={tone} strokeWidth={1.5} /> : null}
-  </Svg>;
-}
 const shortTitles: Record<TrophyFamily, string> = { lessons: 'Ανακαλύψεις', worlds: 'Ορίζοντες', daily: 'Daily Quiz', streak: 'Συνέπεια', revision: 'Επανάληψη', hangman: 'Κρεμάλα' };
 const units: Record<TrophyFamily, string> = { lessons: 'μαθήματα', worlds: 'κόσμοι', daily: 'Daily Quiz', streak: 'ημέρες σερί', revision: 'ημέρες επανάληψης', hangman: 'νίκες με XP' };
 function TrophyTile({ trophy, preview = false }: { trophy: Trophy; preview?: boolean }) {
   return <View style={[styles.tile, preview && styles.previewTile, !trophy.unlocked && styles.locked]} accessible
     accessibilityLabel={`${trophy.title}, βαθμίδα ${trophy.tier}. ${trophy.description}: ${Math.min(trophy.current, trophy.target)} από ${trophy.target}. ${trophy.unlocked ? 'Κερδήθηκε' : 'Κλειδωμένο'}`}>
     <View style={preview && styles.medallion}><TrophyIcon trophy={trophy} /></View>
-    <Text style={styles.tileTitle}>{preview ? shortTitles[trophy.family] : trophy.title}<Text style={styles.tier}> {["I", "II", "III", "IV", "V"][trophy.tier - 1]}</Text></Text>
+    <Text style={styles.tileTitle}>{preview ? shortTitles[trophy.family] : trophy.title}<Text style={styles.tier}> {TROPHY_RANKS[trophy.tier - 1]}</Text></Text>
     {!preview ? <Text style={styles.muted}>{trophy.unlocked ? `✓ ${trophy.target}` : `${Math.min(trophy.current, trophy.target)}/${trophy.target}`}</Text> : null}
   </View>;
 }

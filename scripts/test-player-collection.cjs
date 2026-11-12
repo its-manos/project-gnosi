@@ -8,6 +8,7 @@ const { default: Collection } = load('src/components/PlayerCollection.tsx', {
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': { Modal: 'Modal', Pressable: 'Button', ScrollView: 'Scroll', Text: 'Text', View: 'View', StyleSheet: { create: x => x } },
   'react-native-svg': { __esModule: true, default: 'Svg', Circle: 'Circle', Path: 'Path' },
+  './TrophyIcon': { __esModule: true, default: 'TrophyIcon' },
   './ProgressTrack': { __esModule: true, default: 'ProgressTrack' },
   './PlayerCharacter': { __esModule: true, default: 'Character' },
 });

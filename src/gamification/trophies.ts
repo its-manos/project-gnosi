@@ -1,3 +1,4 @@
+export const TROPHY_RANKS = ['I', 'II', 'III', 'IV', 'V'] as const;
 export type TrophyFamily = 'lessons' | 'worlds' | 'daily' | 'streak' | 'revision' | 'hangman';
 export type Trophy = { id: string; family: TrophyFamily; title: string; description: string; current: number; target: number; tier: number; unlocked: boolean };
 export type TrophyMetrics = Record<TrophyFamily, number>;
