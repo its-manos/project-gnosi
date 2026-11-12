@@ -23,16 +23,20 @@ assert.equal(shortcut.type, "Pressable", "Profile shortcut stays a lightweight n
 assert.equal(shortcut.props.accessibilityRole, "button");
 assert.equal(shortcut.props.testID, "profile-activity-link");
 assert.equal(shortcut.props.accessibilityLabel, "Δραστηριότητα. Στατιστικά & quiz");
-assert.equal(shortcut.props.style({ pressed: false })[1].minHeight, 58);
+assert.equal(shortcut.props.style({ pressed: false })[1].minHeight, 62);
 assert.equal(shortcut.props.style({ pressed: false })[1].minWidth, 144,
   "Shortcut tiles wrap to one column before Greek labels become unreadably narrow");
-assert.equal(shortcut.props.style({ pressed: false })[1].borderRadius, 15);
+assert.equal(shortcut.props.style({ pressed: false })[1].borderRadius, 16);
 assert.equal(shortcut.props.style({ pressed: true })[2].backgroundColor, "#2D304A");
+assert.equal(shortcut.props.style({ pressed: true })[2].borderColor, "#6B6397");
 shortcut.props.onPress();
 assert.deepEqual(callbacks, ["activity"]);
 const shortcutTitle = nodes(shortcut).find(n => n.type === "Text" && n.props?.children === "Δραστηριότητα");
 assert.equal(shortcutTitle.props.numberOfLines, 1);
 assert.equal(shortcutTitle.props.adjustsFontSizeToFit, true);
+const shortcutIconShell = nodes(shortcut).find(n => n.type === "View");
+assert.equal(shortcutIconShell.props.style[1].width, 34,
+  "Profile shortcuts use a compact framed icon instead of a loose glyph");
 
 const titleOnly = NavigationTile({
   title: "Ενδιαφέροντα", icon: jsx("SparkleIcon", {}), onPress: () => {},

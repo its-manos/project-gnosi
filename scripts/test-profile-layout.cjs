@@ -126,8 +126,13 @@ assert.ok(!shortcuts.some(n => n.props.title === "Λογαριασμός"),
 for (const label of ["Δραστηριότητα", "Αποθηκευμένα", "Ενδιαφέροντα", "Οδηγός"]) pressProfile(label);
 assert.deepEqual(calls, ["account", "stats", "saved", "interests", "guide"]);
 const savedShortcut = shortcuts.find(n => n.props.title === "Αποθηκευμένα");
-assert.equal(savedShortcut.type(savedShortcut.props).props.testID, "profile-saved-link",
+const renderedSavedShortcut = savedShortcut.type(savedShortcut.props);
+assert.equal(renderedSavedShortcut.props.testID, "profile-saved-link",
   "Saved lessons uses the same accessible shortcut component as the other tiles");
+assert.equal(renderedSavedShortcut.props.iconBackground, "#91B7FF1A",
+  "Profile destinations keep their distinct Midnight Atlas accent treatment");
+assert.ok(nodes(tree).some(n => n.type === "Text" && n.props?.accessibilityRole === "header"
+  && n.props?.children === "Ο χώρος σου"), "The shortcut group has an accessible visual heading");
 assert.ok(!nodes(tree).some(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;"), "XP help is removed from Profile");
 assert.ok(!text(tree).includes("σερί"), "Profile no longer repeats the streak");
 learning = { ...learning, userId: "user" };

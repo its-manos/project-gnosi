@@ -29,10 +29,17 @@ type Props = {
 
 type QuickIconName = "activity" | "saved" | "interests" | "guide";
 
-function QuickIcon({ name }: { name: QuickIconName }) {
-  const common = { stroke: "#B8A9F5", strokeWidth: 1.8, strokeLinecap: "round" as const,
+const quickLinkAccents: Record<QuickIconName, string> = {
+  activity: "#B7A5FF",
+  saved: "#91B7FF",
+  interests: "#82C4C7",
+  guide: "#D9B77D",
+};
+
+function QuickIcon({ name, color }: { name: QuickIconName; color: string }) {
+  const common = { stroke: color, strokeWidth: 1.8, strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const, fill: "none" };
-  return <Svg width={23} height={23} viewBox="0 0 24 24" fill="none" accessible={false}>
+  return <Svg width={21} height={21} viewBox="0 0 24 24" fill="none" accessible={false}>
     {name === "activity" ? <>
       <Circle cx={12} cy={12} r={9} {...common} />
       <Path d="M12 6.5V12l4 2.5" {...common} />
@@ -50,7 +57,9 @@ function QuickIcon({ name }: { name: QuickIconName }) {
 function QuickLink({ title, icon, onPress }: {
   title: string; icon: QuickIconName; onPress: () => void;
 }) {
-  return <NavigationTile title={title} icon={<QuickIcon name={icon} />}
+  const accent = quickLinkAccents[icon];
+  return <NavigationTile title={title} icon={<QuickIcon name={icon} color={accent} />}
+    iconBackground={accent + "1A"}
     testID={title === "Δραστηριότητα" ? "profile-activity-link"
       : title === "Αποθηκευμένα" ? "profile-saved-link" : undefined}
     onPress={onPress} />;
@@ -127,7 +136,10 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       </MotionView>
 
       <MotionView entranceDelay={205} style={styles.actions} testID="profile-links">
-        <Text style={styles.sectionTitle}>Ο χώρος σου</Text>
+        <View style={styles.sectionHeading}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>Ο χώρος σου</Text>
+          <View accessible={false} style={styles.sectionRule} />
+        </View>
         <View style={[styles.linksGrid, compact && styles.linksGridCompact]}>
           <QuickLink title="Δραστηριότητα"
             icon="activity" onPress={onStats} />
@@ -164,8 +176,10 @@ const styles = StyleSheet.create({
   xpTrack: { height: 6, borderRadius: 6, backgroundColor: "#3D3D5C", overflow: "hidden" },
   xpFill: { height: "100%", borderRadius: 6, backgroundColor: "#B1A5FF" },
   classHint: { color: colors.textMuted, fontSize: 10, lineHeight: 17, marginTop: 4 },
-  sectionTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "900" },
-  actions: { gap: 8 },
+  sectionHeading: { minHeight: 24, flexDirection: "row", alignItems: "center", gap: 11 },
+  sectionTitle: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: "900" },
+  sectionRule: { flex: 1, height: 1, backgroundColor: "#38435C" },
+  actions: { gap: 10 },
   linksGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   linksGridCompact: { gap: 6 },
 });

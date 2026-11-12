@@ -26,7 +26,7 @@ export default function NavigationTile({
   const titleOnly = !settings && !subtitle;
   const label = accessibilityLabel ?? (settings || !subtitle ? title : title + ". " + subtitle);
   const contents = <>
-    <View accessible={false} style={[styles.icon, settings && styles.iconSettings,
+    <View accessible={false} style={[styles.icon, settings ? styles.iconSettings : styles.iconShortcut,
       iconBackground ? { backgroundColor: iconBackground } : undefined]}>{icon}</View>
     <View style={[styles.copy, settings && styles.copySettings]}>
       <Text style={[styles.title, settings && styles.titleSettings, titleOnly && styles.titleOnly]}
@@ -51,12 +51,14 @@ export default function NavigationTile({
 const styles = StyleSheet.create({
   base: { flexDirection: "row", alignItems: "center", borderWidth: 1,
     borderColor: "#38435C", backgroundColor: "#1A2538" },
-  shortcut: { width: "48.5%", minWidth: 144, flexGrow: 1, minHeight: 58, paddingHorizontal: 8,
-    gap: 7, borderRadius: 15 },
-  shortcutTitleOnly: { paddingHorizontal: 7, gap: 5 },
+  shortcut: { width: "48.5%", minWidth: 144, flexGrow: 1, minHeight: 62, paddingHorizontal: 10,
+    gap: 8, borderRadius: 16, borderColor: "#414C66", backgroundColor: "#1B273B" },
+  shortcutTitleOnly: { paddingHorizontal: 9, gap: 7 },
   settings: { minHeight: 75, padding: 12, marginBottom: 9, borderRadius: 17 },
-  pressed: { backgroundColor: "#2D304A" },
-  icon: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
+  pressed: { backgroundColor: "#2D304A", borderColor: "#6B6397" },
+  icon: { alignItems: "center", justifyContent: "center" },
+  iconShortcut: { width: 34, height: 34, borderRadius: 11, borderWidth: 1,
+    borderColor: "#494966", backgroundColor: "#272C42" },
   iconSettings: { width: 44, height: 44, borderRadius: 14, marginRight: 13 },
   copy: { flex: 1, minWidth: 0, gap: 2 },
   copySettings: { gap: 5 },
@@ -65,7 +67,7 @@ const styles = StyleSheet.create({
   titleSettings: { fontSize: 15 },
   subtitle: { color: colors.textMuted, fontSize: 9, lineHeight: 14 },
   subtitleSettings: { fontSize: 12 },
-  arrow: { color: "#ACA0E7", fontSize: 19 },
+  arrow: { color: "#B8ACEC", fontSize: 19 },
   arrowCompact: { fontSize: 16 },
   arrowSettings: { color: colors.accentLight, fontSize: 26 },
 });
