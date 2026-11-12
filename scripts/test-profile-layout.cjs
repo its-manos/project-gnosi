@@ -103,7 +103,8 @@ assert.equal(profileHeader.props.onAction, profileProps.onAccount);
 profileHeader.props.onAction();
 assert.equal(calls.at(-1), "account", "The header Settings button still opens Account");
 assert.ok(nodes(tree).some(n => n.type === "PlayerCollection" && n.props?.mode !== "classes"));
-assert.ok(nodes(tree).some(n => n.type === "MotionXpCircle"), "Level retains its progress ring");
+assert.equal(nodes(tree).filter(n => n.props?.accessibilityRole === "progressbar").length, 1, "Profile should show one XP progress indicator");
+assert.ok(!nodes(tree).some(n => n.type === "MotionXpCircle"), "Do not repeat XP progress in a second ring");
 const pressProfile = label => {
   const item = nodes(tree).find(n => typeof n.type === "function" && n.type.name === "QuickLink" && n.props?.title === label);
   assert.ok(item, "Profile shortcut should exist: " + label);

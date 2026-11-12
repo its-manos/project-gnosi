@@ -36,3 +36,7 @@ Typecheck, content validation and beta configuration checks pass. Content valida
 All 157 regression scripts pass across the suite run and focused reruns after updating the affected Profile contracts. Focused tests cover class boundaries/title consistency, milestone thresholds, future dates, reward receipts, historical streaks, hydration/account switching, collection discovery, lazy mounting and native modal dismissal. Existing profile tests were updated for the collection and compact summary strip.
 
 Physical Android/iOS visual checks remain required: Profile on small and large screens, large text scrolling, transparent portraits, class gallery lock labels, trophy progress and collection scrolling, Android Back, XP help, and existing shortcuts. Native view mocks do not validate device layout or image decoding.
+
+## Profile layout polish after iPhone review
+
+The player character is now 88–100 points wide instead of 76. Level and total XP share a line; a single XP bar replaces the duplicate ring/bar pair, freeing horizontal room for the character and identity. Earned trophy previews use compact medallions and short names; full titles, requirements and tier counts stay in the collection. The next goal uses a concise unit and separate progress count, and opens the collection when tapped. Singular quiz streak text is corrected. Existing 44-point actions, accessible trophy labels and large-text scrolling remain. Typecheck and affected Profile, collection, trophy-model and shared-navigation tests pass; updated native screen fit requires device review.

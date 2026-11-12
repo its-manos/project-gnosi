@@ -20,16 +20,18 @@ function TrophyIcon({ trophy }: { trophy: Trophy }) {
     {trophy.family === 'hangman' ? <Circle cx={16} cy={11} r={3} stroke={tone} strokeWidth={1.5} /> : null}
   </Svg>;
 }
-function TrophyTile({ trophy }: { trophy: Trophy }) {
-  return <View style={[styles.tile, !trophy.unlocked && styles.locked]} accessible
+const shortTitles: Record<TrophyFamily, string> = { lessons: 'Ανακαλύψεις', worlds: 'Ορίζοντες', daily: 'Daily Quiz', streak: 'Συνέπεια', revision: 'Επανάληψη', hangman: 'Κρεμάλα' };
+const units: Record<TrophyFamily, string> = { lessons: 'μαθήματα', worlds: 'κόσμοι', daily: 'Daily Quiz', streak: 'ημέρες σερί', revision: 'ημέρες επανάληψης', hangman: 'νίκες με XP' };
+function TrophyTile({ trophy, preview = false }: { trophy: Trophy; preview?: boolean }) {
+  return <View style={[styles.tile, preview && styles.previewTile, !trophy.unlocked && styles.locked]} accessible
     accessibilityLabel={`${trophy.title}, βαθμίδα ${trophy.tier}. ${trophy.description}: ${Math.min(trophy.current, trophy.target)} από ${trophy.target}. ${trophy.unlocked ? 'Κερδήθηκε' : 'Κλειδωμένο'}`}>
-    <TrophyIcon trophy={trophy} />
-    <Text style={styles.tileTitle}>{trophy.title}</Text>
-    <Text style={styles.muted}>Βαθμίδα {trophy.tier} · {trophy.unlocked ? `✓ ${trophy.target}` : `${Math.min(trophy.current, trophy.target)}/${trophy.target}`}</Text>
+    <View style={preview && styles.medallion}><TrophyIcon trophy={trophy} /></View>
+    <Text style={styles.tileTitle}>{preview ? shortTitles[trophy.family] : trophy.title}</Text>
+    <Text style={styles.muted}>{preview ? ["I", "II", "III", "IV", "V"][trophy.tier - 1] : `Βαθμίδα ${trophy.tier} · ${trophy.unlocked ? `✓ ${trophy.target}` : `${Math.min(trophy.current, trophy.target)}/${trophy.target}`}`}</Text>
   </View>;
 }
-export default function PlayerCollection({ trophies, ready, level, mode = 'trophies' }: {
-  trophies: readonly Trophy[]; ready: boolean; level: number; mode?: 'trophies' | 'classes';
+export default function PlayerCollection({ trophies, ready, level, mode = 'trophies', dense = false }: {
+  trophies: readonly Trophy[]; ready: boolean; level: number; mode?: 'trophies' | 'classes'; dense?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const earned = trophies.filter(t => t.unlocked);
@@ -41,7 +43,7 @@ export default function PlayerCollection({ trophies, ready, level, mode = 'troph
     {mode === 'classes' ? <Pressable onPress={() => setOpen(true)} disabled={!ready}
       accessibilityRole="button" accessibilityLabel="Δες τις κλάσεις παίκτη"
       style={styles.characterButton}>
-      <PlayerCharacter level={ready ? level : 1} size={76} />
+      <PlayerCharacter level={ready ? level : 1} size={dense ? 88 : 100} />
       <Text style={styles.muted}>Κλάσεις ›</Text>
     </Pressable> : <View testID="profile-achievements" style={styles.section}>
       <View style={styles.heading}>
@@ -52,16 +54,18 @@ export default function PlayerCollection({ trophies, ready, level, mode = 'troph
         </Pressable>
       </View>
       {!ready ? <Text style={styles.muted}>Φόρτωση διακρίσεων…</Text> : <>
-        {next ? <View style={styles.next}>
+        {next ? <Pressable style={styles.next} onPress={() => setOpen(true)} accessibilityRole="button"
+          accessibilityLabel={`${next.title}. ${next.description}: ${next.current} από ${next.target}. Άνοιγμα συλλογής.`}>
           <TrophyIcon trophy={next} />
           <View style={styles.nextCopy}>
             <Text style={styles.eyebrow}>ΕΠΟΜΕΝΟΣ ΣΤΟΧΟΣ</Text>
-            <Text style={styles.title}>{next.title}</Text>
-            <Text style={styles.muted}>{next.description} · {next.current}/{next.target}</Text>
+            <View style={styles.heading}><Text style={[styles.title, styles.goalTitle]}>{next.title}</Text>
+              <Text style={styles.goalCount}>{next.current}/{next.target}</Text></View>
+            <Text style={styles.muted}>{units[next.family]}</Text>
             <View style={styles.track}><View style={[styles.fill, { width: `${Math.min(100, next.current / next.target * 100)}%` }]} /></View>
           </View>
-        </View> : <Text style={styles.muted}>Κέρδισες όλες τις διακρίσεις!</Text>}
-        {showcase.length ? <View style={styles.row}>{showcase.map(t => <TrophyTile key={t.id} trophy={t} />)}</View>
+        </Pressable> : <Text style={styles.muted}>Κέρδισες όλες τις διακρίσεις!</Text>}
+        {showcase.length ? <View style={styles.row}>{showcase.map(t => <TrophyTile key={t.id} trophy={t} preview />)}</View>
           : <Text style={styles.muted}>Η συλλογή σου ξεκινά με την πρώτη ανακάλυψη.</Text>}
       </>}
     </View>}
@@ -105,6 +109,10 @@ const styles = StyleSheet.create({
   eyebrow: { color: '#AFA4DC', fontSize: 9, fontWeight: '800', letterSpacing: 0.6 },
   link: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 },
   linkText: { color: '#C7BAF5', fontSize: 11, fontWeight: '800' },
+  goalTitle: { flex: 1, minWidth: 0, fontSize: 13 },
+  goalCount: { color: '#C7BAF5', fontSize: 12, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  previewTile: { paddingVertical: 6, gap: 2, backgroundColor: 'transparent' },
+  medallion: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#263044', alignItems: 'center', justifyContent: 'center' },
   next: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 12, borderRadius: 16, backgroundColor: '#202A3C' },
   nextCopy: { flex: 1, minWidth: 0, gap: 3 }, track: { height: 4, backgroundColor: '#3C4055', borderRadius: 4, overflow: 'hidden', marginTop: 4 },
   fill: { height: '100%', backgroundColor: '#B5A4EE' }, row: { flexDirection: 'row', gap: 7 },

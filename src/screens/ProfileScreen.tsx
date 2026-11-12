@@ -10,7 +10,7 @@ import { getAthensDateKey } from "../utils/dailyChallenge";
 import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { playerTitle } from "../gamification/rules";
-import { MotionView, MotionXpCircle } from "../components/HomeMotion";
+import { MotionView } from "../components/HomeMotion";
 import AppBackground from "../components/AppBackground";
 import AtlasCard from "../components/AtlasCard";
 import NavigationTile from "../components/NavigationTile";
@@ -30,7 +30,6 @@ type Props = {
   onGuide: () => void;
 };
 
-const XP_RING_LENGTH = 2 * Math.PI * 38;
 
 function StreakFlame() {
   return <Svg width={17} height={19} viewBox="0 0 24 24" fill="none" accessible={false}>
@@ -121,17 +120,15 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       <AtlasCard entranceDelay={65} style={[styles.hero, dense && styles.heroDense]}
         testID="profile-identity">
         <View pointerEvents="none" style={styles.heroAccent} />
-        <PlayerCollection mode="classes" trophies={profile.trophies} ready={profileReady} level={profile.level} />
+        <PlayerCollection mode="classes" trophies={profile.trophies} ready={profileReady} level={profile.level} dense={dense} />
         <View style={styles.heroCopy}>
           <Text style={styles.playerTitle} testID="player-title" numberOfLines={1}
             adjustsFontSizeToFit>{profileReady ? playerTitle(profile.level) : "Ο παίκτης"}</Text>
+          <Text style={styles.levelLabel}>{profileReady ? `Επίπεδο ${profile.level} · ${profile.totalXP.toLocaleString("el-GR")} XP` : "—"}</Text>
           <Text style={styles.identity} numberOfLines={1}>{identity}</Text>
-          <Text style={styles.xpTotal}>{profileReady
-            ? profile.totalXP.toLocaleString("el-GR") + " XP συνολικά"
-            : "Φόρτωση XP…"}</Text>
           <View style={styles.xpCaptionRow}>
-            <Text style={styles.xpCaption}>Προς επίπεδο {profileReady ? profile.level + 1 : "—"}</Text>
-            <Text style={styles.xpCaption}>{profileReady ? profile.earned + " / " + profile.required + " XP" : "—"}</Text>
+            <Text style={styles.xpCaption}>{profileReady ? `${profile.earned} / ${profile.required} XP` : "—"}</Text>
+            <Text style={styles.xpCaption}>→ {profileReady ? profile.level + 1 : "—"}</Text>
           </View>
           <View style={styles.xpTrack} accessible accessibilityRole="progressbar"
             accessibilityLabel="Πρόοδος στο επόμενο επίπεδο"
@@ -148,21 +145,6 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
             <Text style={styles.xpHelpText}>{xpExpanded ? "Λιγότερα −" : "Πώς κερδίζω XP; +"}</Text>
           </Pressable>
         </View>
-        <View style={[styles.levelRing, dense && styles.levelRingDense]} accessible
-          accessibilityLabel={profileReady ? "Επίπεδο " + profile.level : "Φόρτωση επιπέδου"}>
-          <Svg viewBox="0 0 96 96" width="100%" height="100%" pointerEvents="none">
-            <Circle cx={48} cy={48} r={38} stroke="#3D405A" strokeWidth={6} fill="none" />
-            {profileReady && progress > 0 ? <MotionXpCircle
-              cx={48} cy={48} r={38} fill="none" stroke={colors.accentLight}
-              strokeWidth={6} strokeLinecap="round"
-              transform="rotate(-90 48 48)" circumference={XP_RING_LENGTH}
-              progress={progress} strokeDasharray={`${XP_RING_LENGTH * progress} ${XP_RING_LENGTH}`} /> : null}
-          </Svg>
-          <View pointerEvents="none" style={styles.levelCenter}>
-            <Text style={styles.levelCaption}>ΕΠ.</Text>
-            <Text style={styles.levelValue}>{profileReady ? profile.level : "—"}</Text>
-          </View>
-        </View>
       </AtlasCard>
       {xpExpanded ? <View style={styles.xpPanel} testID="profile-xp-rules">
         <XpRules learningXP={profile.learningXP} challengeXP={profile.challengeXP}
@@ -171,14 +153,14 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
 
       <MotionView entranceDelay={115} style={styles.summaryStrip} testID="profile-summary">
         <View style={styles.metricLabelRow}><StreakFlame /><Text style={styles.summaryText}>
-          {daily.ready ? quizStats.currentStreak : "—"} ημέρες σερί
+          {daily.ready ? `${quizStats.currentStreak} ${quizStats.currentStreak === 1 ? "ημέρα" : "ημέρες"} σερί` : "—"}
         </Text></View>
         <Text style={styles.summaryText}>{profileReady ? nextClass
           ? `Νέα κλάση στο επίπεδο ${nextClass.level}` : "Τελική κλάση · Σοφός" : "—"}</Text>
       </MotionView>
 
       <MotionView entranceDelay={160}>
-        <PlayerCollection trophies={profile.trophies} ready={profileReady} level={profile.level} />
+        <PlayerCollection trophies={profile.trophies} ready={profileReady} level={profile.level} dense={dense} />
       </MotionView>
 
       <MotionView entranceDelay={205} style={styles.actions} testID="profile-links">
@@ -205,28 +187,23 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 14, gap: profileSectionLayout.below },
   contentDense: { paddingBottom: 9, gap: 9 },
   contentVeryDense: { gap: 6 },
-  hero: { minHeight: 154, flexDirection: "row", alignItems: "center", gap: 10,
+  hero: { minHeight: 158, flexDirection: "row", alignItems: "center", gap: 10,
     paddingHorizontal: 12, paddingVertical: 15 },
-  heroDense: { minHeight: 124, paddingVertical: 10, gap: 9 },
+  heroDense: { minHeight: 144, paddingVertical: 10, gap: 9 },
   heroAccent: { position: "absolute", left: 22, top: -1, width: 88, height: 3,
     backgroundColor: "#B2A3FF", borderRadius: 3 },
-  heroCopy: { flex: 1, minWidth: 0, gap: 5 },
+  heroCopy: { flex: 1, minWidth: 0, gap: 3 },
   playerTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "900" },
+  levelLabel: { color: "#D4C8FF", fontSize: 12, lineHeight: 17, fontWeight: "800" },
   identity: { color: "#C6C6D8", fontSize: 11, lineHeight: 17 },
-  xpTotal: { color: "#D4C8FF", fontSize: 12, lineHeight: 18, fontWeight: "800" },
   xpCaptionRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 5 },
   xpCaption: { color: "#C8BDFF", fontSize: 10, lineHeight: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },
   xpTrack: { height: 6, borderRadius: 6, backgroundColor: "#3D3D5C", overflow: "hidden" },
   xpFill: { height: "100%", borderRadius: 6, backgroundColor: "#B1A5FF" },
-  xpHelp: { alignSelf: "flex-start", minHeight: 24, justifyContent: "center" },
+  xpHelp: { alignSelf: "flex-start", minHeight: 44, justifyContent: "center" },
   xpHelpText: { color: "#C6B9FF", fontSize: 10, lineHeight: 16, fontWeight: "800" },
   xpPanel: { padding: 15, borderRadius: 17, borderColor: "#45415F", borderWidth: 1,
     backgroundColor: "#1B2234" },
-  levelRing: { width: 88, height: 88, alignItems: "center", justifyContent: "center" },
-  levelRingDense: { width: 68, height: 68 },
-  levelCenter: { position: "absolute", alignItems: "center" },
-  levelCaption: { color: "#AAA4D2", fontSize: 9, fontWeight: "900" },
-  levelValue: { color: colors.text, fontSize: 24, lineHeight: 28, fontWeight: "900", fontVariant: ["tabular-nums"] },
   summaryStrip: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 6 },
   summaryText: { color: colors.textMuted, fontSize: 10, lineHeight: 17 },
   metricLabelRow: { flexDirection: "row", alignItems: "center", gap: 5 },
