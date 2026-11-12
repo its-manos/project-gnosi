@@ -26,6 +26,7 @@ const react = {
 const native = { useWindowDimensions: () => ({ width: 390, height: 852, fontScale: 1 }), View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', Modal: 'Modal', Platform: { OS: 'android' }, Linking: { openURL: async () => {} }, StyleSheet: { create: s => s } };
 const analyticsScrollEvents = [];
 const common = {
+  '../play/RewardToast': { RewardToastHost: 'RewardToastHost' },
   "../components/ScreenEntrance": { __esModule: true, default: "ScreenEntrance" },
   '../play/preferences': { motionAllowed: () => true, playPreferences: { getSnapshot: () => ({}) } },
   '../play/soundStatus': { requestPracticeCue: kind => openingCues.push(kind) },
@@ -103,6 +104,7 @@ function openGate(t) {
   const modalTree = render();
   assert.ok(byId(modalTree,'reader-question-screen'), 'question screen opens');
   assert.equal(nodes(modalTree).find(n => n.type === 'Modal').props.presentationStyle,'fullScreen');
+  assert.ok(nodes(nodes(modalTree).find(n => n.type === 'Modal')).some(n => n.type === 'RewardToastHost'), 'XP host lives inside the native question modal');
   assert.equal(nodes(modalTree).find(n => n.type === 'ScrollView').props.scrollEnabled,false,
     'article scrolling stays disabled while answering');
   return modalTree;

@@ -205,8 +205,8 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         feedbackExtra={selectedAnswer !== null ? <>
           {rewardSummary?.rows[record.currentIndex]?.eligible === false ?
             <Text style={styles.note}>Η απάντηση έχει ήδη ανταμειφθεί.</Text> : null}
-          {rewardSummary?.combo && rewardSummary.combo > 1 ?
-            <Text style={styles.combo}>+{rewardSummary.rows[record.currentIndex]?.comboXP ?? 0} XP μπόνους</Text> : null}
+          {(rewardSummary?.rows[record.currentIndex]?.comboXP ?? 0) > 0 ?
+            <Text style={styles.combo}>+{rewardSummary?.rows[record.currentIndex]?.comboXP ?? 0} XP μπόνους</Text> : null}
           <Pressable onPress={() => void openSource(currentQuestion.sourceUrl)}
             accessibilityRole="link" style={styles.sourceLink}>
             <Text style={styles.sourceLinkText}>Πηγή: {currentQuestion.sourceTitle} ↗</Text>

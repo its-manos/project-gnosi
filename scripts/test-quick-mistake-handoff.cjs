@@ -33,5 +33,14 @@ const tick=()=>new Promise(resolve=>setImmediate(resolve));
  cleanup2();slots=[];game=render();const cleanup3=effects[0]();await tick();game=render();
  assert.equal(store.getSnapshot().mistakes[mistakeKey(canonical)].correctAt,cleared);
  assert.equal(buildMistakeModel(store.getSnapshot().mistakes).pending.length,0,'replaying an older source answer cannot reopen a correction');
- cleanup3();store.stop();console.log('Quick Quiz mistake handoff passed: saved timestamps, normalized choices, crash recovery and idempotent replay after correction. Native hooks/storage mocked.');
+ // Credit a new correct answer, then replay the durable handoff after a remount.
+ await game.update(current=>playQuickQuiz(current,current.round.id,questionToken(current.round),{type:'advance'}));game=render();
+ const next=game.progress.round,nextQ=next.questions[next.currentIndex];
+ const credited=await game.update(current=>playQuickQuiz(current,next.id,questionToken(next),{type:'answer',value:nextQ.content.correctIndex}));
+ assert.equal(credited.creditedXP,2);
+ const {totalRewardXP}=load('src/gamification/rewards.ts');
+ assert.equal(totalRewardXP(store.getSnapshot().rewards),2);
+ cleanup3();slots=[];game=render();const cleanup4=effects[0]();await tick();game=render();
+ assert.equal(totalRewardXP(store.getSnapshot().rewards),2,'reloading a credited source does not pay twice');
+ cleanup4();store.stop();console.log('Quick Quiz mistake handoff passed: saved timestamps, normalized choices, crash recovery and idempotent replay after correction. Native hooks/storage mocked.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

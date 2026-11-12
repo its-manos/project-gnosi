@@ -17,7 +17,8 @@ export class FeedbackGate {
     if (event.scope !== scope || !foreground || this.seen.has(event.id)) return false;
     this.seen.add(event.id);
     if (this.seen.size > 256) this.seen.delete(this.seen.values().next().value!);
-    if (event.answerXP === undefined && this.last && now - this.last.at < 900 && feedbackPriority[this.last.kind] > feedbackPriority[event.kind]) return false;
+    const reward = (event.answerXP ?? event.xp ?? 0) > 0;
+    if (!reward && event.answerXP === undefined && this.last && now - this.last.at < 900 && feedbackPriority[this.last.kind] > feedbackPriority[event.kind]) return false;
     this.last = { kind: event.kind, at: now }; return true;
   }
   reset() { this.last = null; }

@@ -57,6 +57,6 @@ export function knowledgeProfile(catalogue: readonly Lesson[], completedIds: rea
     { id: "explorer", title: "Εξερευνητής", current: explored.size, target: Math.min(3, new Set(catalogue.map(l => l.categoryId)).size) || 3 },
     { id: "recall", title: "Το θυμήθηκα!", current: recalled.size, target: 1 },
   ].map(badge => ({ ...badge, unlocked: badge.current >= badge.target }));
-  return { totalXP, learningXP: rewards === undefined ? learningXP : sum("lesson:"), challengeXP: rewards === undefined ? challengeXP : sum("day:"), recallXP: rewards === undefined ? recallXP : sum("recall:") + sum("review:"), explorationXP: rewards === undefined ? explorationXP : sum("category:"), completed: completed.size,
+  return { totalXP, learningXP: rewards === undefined ? learningXP : sum("lesson:"), challengeXP: rewards === undefined ? challengeXP : sum("day:"), recallXP: rewards === undefined ? recallXP : sum("recall:") + sum("review:"), explorationXP: rewards === undefined ? explorationXP : sum("category:"), gameXP: rewards === undefined ? 0 : totalRewardXP(Object.fromEntries(Object.entries(rewards).filter(([id]) => id.startsWith("game:")))), completed: completed.size,
     explored: explored.size, recalled: recalled.size, badges, ...levelProgress(totalXP) };
 }

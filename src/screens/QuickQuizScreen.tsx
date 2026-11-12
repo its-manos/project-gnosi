@@ -1,3 +1,4 @@
+import GameXpStatus from "../components/GameXpStatus";
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -92,7 +93,7 @@ export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], o
     if (!saved) throw new Error("quick_quiz_answer_not_saved");
     emitPlayFeedback({
       scope, id: `${round.id}:${question.id}:answer`,
-      kind: evaluateAnswer(question, value).correct ? "correct" : "incorrect", answerXP: 0,
+      kind: evaluateAnswer(question, value).correct ? "correct" : "incorrect", answerXP: saved.creditedXP, xp: saved.creditedXP,
     });
   }
 
@@ -151,6 +152,7 @@ export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], o
             })}
           </View>
           <Text style={styles.body}>Καλύτερο σερί γύρου · {streaks?.best}</Text>
+          <GameXpStatus game="quick" />
         </View>
         <NextButton label="Νέος γύρος" onPress={newRound} disabled={busy} />
         {results.incorrectQuestionIds.length ? <Pressable accessibilityRole="button" style={styles.review}

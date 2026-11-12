@@ -173,7 +173,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       </AtlasCard>
       {xpExpanded ? <View style={styles.xpPanel} testID="profile-xp-rules">
         <XpRules learningXP={profile.learningXP} challengeXP={profile.challengeXP}
-          recallXP={profile.recallXP} explorationXP={profile.explorationXP} />
+          recallXP={profile.recallXP} explorationXP={profile.explorationXP} gameXP={profile.gameXP} />
       </View> : null}
 
       <MotionView entranceDelay={115} style={styles.metrics} testID="profile-summary">
