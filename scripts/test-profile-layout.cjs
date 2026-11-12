@@ -50,6 +50,7 @@ let history = [
 let daily = { ready: true, doc: {} };
 const player = {
   level: 2, earned: 120, required: 200, totalXP: 320,
+  trophies: [],
   badges: [
     { id: "first", title: "Πρώτη γνώση", unlocked: true, current: 1, target: 1 },
     { id: "curious", title: "Περιέργεια", unlocked: false, current: 1, target: 3 },
@@ -77,6 +78,7 @@ const common = {
   "../components/AppBackground": { __esModule: true, default: "AppBackground" },
   "../components/AtlasCard": { __esModule: true, default: "MotionView" },
   "../components/NavigationTile": { __esModule: true, default: "NavigationTile" },
+  "../components/PlayerCollection": { __esModule: true, default: "PlayerCollection" },
   "../components/MetricCard": { __esModule: true, default: "MetricCard" },
   "../components/ProgressTrack": { __esModule: true, default: "ProgressTrack" },
   "../components/XpRules": { __esModule: true, default: "XpRules" },
@@ -100,7 +102,7 @@ assert.equal(profileHeader?.props.title, "Το προφίλ σου");
 assert.equal(profileHeader.props.onAction, profileProps.onAccount);
 profileHeader.props.onAction();
 assert.equal(calls.at(-1), "account", "The header Settings button still opens Account");
-assert.ok(nodes(tree).some(n => n.props?.testID === "profile-achievements"));
+assert.ok(nodes(tree).some(n => n.type === "PlayerCollection" && n.props?.mode !== "classes"));
 assert.ok(nodes(tree).some(n => n.type === "MotionXpCircle"), "Level retains its progress ring");
 const pressProfile = label => {
   const item = nodes(tree).find(n => typeof n.type === "function" && n.type.name === "QuickLink" && n.props?.title === label);

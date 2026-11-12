@@ -29,7 +29,7 @@ assert.match(routes, /navigateTo\(destination\)/,
 
 assert.match(profile, /useKnowledgeProfile\(/,
   "Use the existing account-scoped XP/achievement model.");
-assert.match(profile, /profile\.badges\.map\(/);
+assert.match(profile, /<PlayerCollection trophies=\{profile.trophies\}/);
 assert.match(profile, /calculateDailyChallengeProgress\(dailyHistory\(daily\.doc\), today\)/,
   "The streak must remain a daily-quiz streak, not an invented login streak.");
 assert.doesNotMatch(profile, /completedIds|completedLessons|totalLessonCount/,

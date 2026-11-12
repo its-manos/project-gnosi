@@ -1,3 +1,5 @@
+import { PLAYER_CLASSES } from "../gamification/trophies";
+import PlayerCollection from "../components/PlayerCollection";
 import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
@@ -12,7 +14,6 @@ import { MotionView, MotionXpCircle } from "../components/HomeMotion";
 import AppBackground from "../components/AppBackground";
 import AtlasCard from "../components/AtlasCard";
 import NavigationTile from "../components/NavigationTile";
-import MetricCard from "../components/MetricCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import SyncStatus from "../components/SyncStatus";
 import XpRules from "../components/XpRules";
@@ -30,12 +31,6 @@ type Props = {
 };
 
 const XP_RING_LENGTH = 2 * Math.PI * 38;
-const badgeGlyphs: Record<string, string> = {
-  first: "✦",
-  curious: "◇",
-  explorer: "✧",
-  recall: "◈",
-};
 
 function StreakFlame() {
   return <Svg width={17} height={19} viewBox="0 0 24 24" fill="none" accessible={false}>
@@ -100,7 +95,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
     (viewportHeight > 0 && contentHeight > viewportHeight + 1);
   const progress = profileReady
     ? Math.max(0, Math.min(1, profile.earned / Math.max(1, profile.required))) : 0;
-  const earnedBadgeCount = profileReady ? profile.badges.filter(b => b.unlocked).length : null;
+  const nextClass = PLAYER_CLASSES.find(item => item.level > profile.level);
   const identity = learning.userId ? email ?? "Συνδεδεμένος παίκτης" : "Παίζεις ως επισκέπτης";
 
   return <View style={styles.screen} testID="profile-screen"
@@ -126,9 +121,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       <AtlasCard entranceDelay={65} style={[styles.hero, dense && styles.heroDense]}
         testID="profile-identity">
         <View pointerEvents="none" style={styles.heroAccent} />
-        <View style={[styles.avatar, dense && styles.avatarDense]} accessible={false}>
-          <Text style={styles.avatarGlyph}>✦</Text>
-        </View>
+        <PlayerCollection mode="classes" trophies={profile.trophies} ready={profileReady} level={profile.level} />
         <View style={styles.heroCopy}>
           <Text style={styles.playerTitle} testID="player-title" numberOfLines={1}
             adjustsFontSizeToFit>{profileReady ? playerTitle(profile.level) : "Ο παίκτης"}</Text>
@@ -176,39 +169,16 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
           recallXP={profile.recallXP} explorationXP={profile.explorationXP} gameXP={profile.gameXP} />
       </View> : null}
 
-      <MotionView entranceDelay={115} style={styles.metrics} testID="profile-summary">
-        <MetricCard variant="profile" style={dense && styles.metricDense}>
-          <View style={styles.metricLabelRow}><StreakFlame /><Text style={styles.metricEyebrow}>ΣΕΡΙ QUIZ</Text></View>
-          <Text style={styles.metricValue}>{daily.ready ? quizStats.currentStreak : "—"}
-            <Text style={styles.metricUnit}> ημέρες</Text>
-          </Text>
-        </MetricCard>
-        <MetricCard variant="profile" style={[styles.badgeMetric, dense && styles.metricDense]}>
-          <Text style={[styles.metricEyebrow, styles.gold]}>✦  ΔΙΑΚΡΙΣΕΙΣ</Text>
-          <Text style={styles.metricValue}>{earnedBadgeCount ?? "—"}
-            <Text style={styles.metricUnit}> / {profile.badges.length}</Text>
-          </Text>
-        </MetricCard>
+      <MotionView entranceDelay={115} style={styles.summaryStrip} testID="profile-summary">
+        <View style={styles.metricLabelRow}><StreakFlame /><Text style={styles.summaryText}>
+          {daily.ready ? quizStats.currentStreak : "—"} ημέρες σερί
+        </Text></View>
+        <Text style={styles.summaryText}>{profileReady ? nextClass
+          ? `Νέα κλάση στο επίπεδο ${nextClass.level}` : "Τελική κλάση · Σοφός" : "—"}</Text>
       </MotionView>
 
-      <MotionView entranceDelay={160} style={styles.achievements} testID="profile-achievements">
-        <View style={styles.sectionHeading}>
-          <Text style={styles.sectionTitle}>Οι διακρίσεις σου</Text>
-          <Text style={styles.sectionHint}>Κερδίζονται με τη μάθηση</Text>
-        </View>
-        <View style={styles.badgeRow}>
-          {profile.badges.map(badge => <View key={badge.id}
-            style={[styles.badge, dense && styles.badgeDense,
-              !badge.unlocked && styles.badgeLocked]}>
-            <Text style={[styles.badgeSymbol, !badge.unlocked && styles.badgeSymbolLocked]}
-              accessible={false}>{badgeGlyphs[badge.id] ?? "✦"}</Text>
-            <Text style={styles.badgeName} numberOfLines={2} adjustsFontSizeToFit
-              minimumFontScale={0.75}>{badge.title}</Text>
-            <Text style={styles.badgeProgress}>{profileReady
-              ? badge.unlocked ? "✓" : Math.min(badge.current, badge.target) + "/" + badge.target
-              : "—"}</Text>
-          </View>)}
-        </View>
+      <MotionView entranceDelay={160}>
+        <PlayerCollection trophies={profile.trophies} ready={profileReady} level={profile.level} />
       </MotionView>
 
       <MotionView entranceDelay={205} style={styles.actions} testID="profile-links">
@@ -240,10 +210,6 @@ const styles = StyleSheet.create({
   heroDense: { minHeight: 124, paddingVertical: 10, gap: 9 },
   heroAccent: { position: "absolute", left: 22, top: -1, width: 88, height: 3,
     backgroundColor: "#B2A3FF", borderRadius: 3 },
-  avatar: { width: 46, height: 46, borderRadius: 15, borderColor: "#62598A", borderWidth: 1,
-    backgroundColor: "#373455", alignItems: "center", justifyContent: "center" },
-  avatarDense: { width: 42, height: 42, borderRadius: 14 },
-  avatarGlyph: { color: "#D4C9FF", fontSize: 26 },
   heroCopy: { flex: 1, minWidth: 0, gap: 5 },
   playerTitle: { color: colors.text, fontSize: 19, lineHeight: 25, fontWeight: "900" },
   identity: { color: "#C6C6D8", fontSize: 11, lineHeight: 17 },
@@ -261,31 +227,10 @@ const styles = StyleSheet.create({
   levelCenter: { position: "absolute", alignItems: "center" },
   levelCaption: { color: "#AAA4D2", fontSize: 9, fontWeight: "900" },
   levelValue: { color: colors.text, fontSize: 24, lineHeight: 28, fontWeight: "900", fontVariant: ["tabular-nums"] },
-  metrics: { flexDirection: "row", gap: 9 },
-  metricDense: { minHeight: 70, paddingVertical: 8 },
-  badgeMetric: { backgroundColor: "#25263B", borderColor: "#53475E" },
-  metricLabelRow: { flexDirection: "row", alignItems: "center", gap: 7 },
-  metricEyebrow: { color: "#9DC7D0", fontSize: 10, lineHeight: 16,
-    fontWeight: "900", letterSpacing: 0.5 },
-  gold: { color: "#DBC495" },
-  metricValue: { color: colors.text, fontSize: 28, lineHeight: 34, fontWeight: "900",
-    fontVariant: ["tabular-nums"] },
-  metricUnit: { color: colors.textMuted, fontSize: 11, fontWeight: "700" },
-  achievements: { gap: 8 },
-  sectionHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  summaryStrip: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 6 },
+  summaryText: { color: colors.textMuted, fontSize: 10, lineHeight: 17 },
+  metricLabelRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   sectionTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "900" },
-  sectionHint: { color: colors.textMuted, fontSize: 10, lineHeight: 15, flexShrink: 1 },
-  badgeRow: { flexDirection: "row", gap: 7 },
-  badge: { flex: 1, minWidth: 0, minHeight: 96, paddingHorizontal: 3, paddingVertical: 7,
-    alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 14,
-    backgroundColor: "#272B43", borderWidth: 1, borderColor: "#595176" },
-  badgeDense: { minHeight: 80, paddingVertical: 4 },
-  badgeLocked: { backgroundColor: "#1C2535", borderColor: "#384052" },
-  badgeSymbol: { color: "#CFC1FF", fontSize: 23, lineHeight: 28 },
-  badgeSymbolLocked: { color: "#757C97" },
-  badgeName: { color: colors.textBody, fontSize: 9.5, lineHeight: 13, fontWeight: "700",
-    textAlign: "center" },
-  badgeProgress: { color: "#B9AAFF", fontSize: 10, fontWeight: "900", fontVariant: ["tabular-nums"] },
   actions: { gap: 8 },
   linksGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   linksGridCompact: { gap: 6 },
