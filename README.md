@@ -13,6 +13,7 @@
 - Weekly second-chance review, knowledge review, mastery tracking, XP, combos, levels and statistics.
 - Onboarding, saved lessons, content-error reporting and accessibility-oriented loading/feedback states.
 - Guest play with device-local persistence; optional email/password account, explicit guest-progress import and account-scoped Supabase synchronization.
+- Private quiz rooms for 2–4 signed-in friends: room-code invitations, readiness, shared timed rounds, server-scored standings, reconnect and rematches. Requires the [friends PvP migrations and device acceptance checks](docs/friends-pvp.md).
 
 **Not implemented:** a public, server-authoritative competitive leaderboard. Public-store distribution and external-device acceptance are separate release activities. The native app is the supported target; the presence of a web script does not constitute a tested web deployment.
 

@@ -24,6 +24,7 @@ export type AppScreen =
   | "lesson"
   | "quiz"
   | "quick-quiz"
+  | "pvp"
   | "hangman"
   | "results"
   | "review"
