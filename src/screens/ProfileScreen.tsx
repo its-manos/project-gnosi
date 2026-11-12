@@ -1,3 +1,4 @@
+import { usePlayerAvatar } from "../hooks/usePlayerAvatar";
 import { PLAYER_CLASSES } from "../gamification/trophies";
 import PlayerCollection from "../components/PlayerCollection";
 import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout";
@@ -72,6 +73,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
   const { email } = useLearningSession();
   const learning = useLearningDataSnapshot();
   const daily = useDailyDataSnapshot();
+  const avatar = usePlayerAvatar(learning.userId);
   // useKnowledgeProfile already subscribes to the Athens day boundary.
   // Avoid another AppState listener and minute interval on this screen.
   const today = getAthensDateKey();
@@ -120,7 +122,8 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       <AtlasCard entranceDelay={65} style={[styles.hero, dense && styles.heroDense]}
         testID="profile-identity">
         <View pointerEvents="none" style={styles.heroAccent} />
-        <PlayerCollection mode="classes" trophies={profile.trophies} ready={profileReady} level={profile.level} dense={dense} />
+        <PlayerCollection mode="character" trophies={profile.trophies} ready={profileReady && avatar.ready} level={profile.level} dense={dense}
+          variant={avatar.variant} onChooseVariant={avatar.choose} saving={avatar.saving} error={avatar.error} />
         <View style={styles.heroCopy}>
           <Text style={styles.playerTitle} testID="player-title" numberOfLines={1}
             adjustsFontSizeToFit>{profileReady ? playerTitle(profile.level) : "Ο παίκτης"}</Text>

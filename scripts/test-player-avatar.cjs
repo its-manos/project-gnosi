@@ -1,0 +1,40 @@
+const assert = require('node:assert/strict');
+const { load } = require('./helpers/load-typescript.cjs');
+const values = new Map();
+const storage = { getItem: async key => values.get(key) ?? null, setItem: async (key, value) => { values.set(key, value); } };
+const { PlayerAvatarStore, getPlayerAvatarStore } = load('src/state/PlayerAvatar.ts', {
+  '@react-native-async-storage/async-storage': { __esModule: true, default: storage },
+});
+(async () => {
+  const guest = getPlayerAvatarStore(null);
+  const account = getPlayerAvatarStore('a');
+  assert.equal(guest.getSnapshot().ready, false);
+  await guest.load();
+  assert.equal(guest.getSnapshot().variant, 'male');
+  assert.equal(await guest.choose('female'), true);
+  assert.equal(guest.getSnapshot().variant, 'female');
+  const restored = new PlayerAvatarStore(storage, '@gnosi/player-avatar/v1/guest');
+  await restored.load();
+  assert.equal(restored.getSnapshot().variant, 'female', 'Preference survives remount/restart');
+  await account.load();
+  assert.equal(account.getSnapshot().variant, 'male', 'Guest selection stays separate from account');
+  assert.equal(getPlayerAvatarStore(null), guest, 'Remount reuses in-flight account state');
+  let finish;
+  const delayed = new PlayerAvatarStore({ getItem: async () => 'female', setItem: () => new Promise(resolve => { finish = resolve; }) }, 'delayed');
+  await delayed.load();
+  const save = delayed.choose('male');
+  await Promise.resolve();
+  assert.equal(delayed.getSnapshot().saving, true);
+  assert.equal(await delayed.choose('female'), false, 'Cannot overlap writes');
+  finish();
+  assert.equal(await save, true);
+  assert.equal(delayed.getSnapshot().variant, 'male');
+  const broken = new PlayerAvatarStore({ getItem: async () => { throw Error(); }, setItem: async () => { throw Error(); } }, 'broken');
+  await broken.load();
+  assert.equal(broken.getSnapshot().ready, true, 'Storage failure cannot block Profile');
+  assert.equal(await broken.choose('female'), false);
+  assert.equal(broken.getSnapshot().variant, 'male');
+  assert.ok(broken.getSnapshot().error, 'Failed save exposes retry feedback');
+  assert.equal(await guest.choose('invalid'), false);
+  console.log('Avatar preference persistence, account isolation, write ordering and failure handling passed');
+})().catch(error => { console.error(error); process.exitCode = 1; });

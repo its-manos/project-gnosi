@@ -1,8 +1,8 @@
 # Player characters and trophies
 
-Profile now pairs the live XP class with an original geometric character portrait. Tap the portrait to see all five classes and their level requirements (1, 2, 5, 10, 15). Titles and XP thresholds are unchanged. The character follows the current class automatically; this version does not add an avatar preference or new account schema.
+Profile now pairs the live XP class with an original geometric character portrait. Tap the portrait to choose the male or female appearance of the current class. Class level requirements remain 1, 2, 5, 10, 15. Titles and XP thresholds are unchanged. The character follows the current class automatically; the device saves an account-scoped appearance preference without a new account schema.
 
-The trophy preview contains the closest unfinished goal and the highest earned tier from up to three families. The collection opens in a dismissible native modal with all 24 milestones. The collection is mounted only while open. Existing Profile links, the XP explanation, loading states, and the accessibility scrolling fallback remain. Progress keeps its current learning/revision layout.
+The trophy preview contains the closest unfinished goal and the highest earned tier from up to three families. The trophy collection opens in a dismissible native modal with all 24 milestones. The collection is mounted only while open. Existing Profile links, the XP explanation, loading states, and the accessibility scrolling fallback remain. Progress keeps its current learning/revision layout.
 
 | Family | Targets | Source |
 | --- | --- | --- |
@@ -40,3 +40,15 @@ Physical Android/iOS visual checks remain required: Profile on small and large s
 ## Profile layout polish after iPhone review
 
 The player character is now 88–100 points wide instead of 76. Level and total XP share a line; a single XP bar replaces the duplicate ring/bar pair, freeing horizontal room for the character and identity. Earned trophy previews use compact medallions and short names; full titles, requirements and tier counts stay in the collection. The next goal uses a concise unit and separate progress count, and opens the collection when tapped. Singular quiz streak text is corrected. Existing 44-point actions, accessible trophy labels and large-text scrolling remain. Typecheck and affected Profile, collection, trophy-model and shared-navigation tests pass; updated native screen fit requires device review.
+
+## Male/female character choice
+
+Each class has both male and female artwork. Original assets remain referenced; five complementary variants use sibling WebP filenames. The portrait opens exactly two current-class choices, replacing the earlier/later class gallery. The selected appearance applies automatically at each level threshold. No other class images mount in the picker.
+
+`PlayerAvatarStore` stores `male` or `female` using AsyncStorage under an account-specific or guest-specific key. This is a device preference, not cloud-synced profile data; the default is male. Profile subscribes only to its current preference store. Reads are deduplicated, controls wait for hydration, concurrent writes are blocked, and a save failure preserves the previous selection with retry feedback. Account remounts reuse the scoped store so pending writes cannot leak across accounts or be overwritten by a stale read.
+
+The new images were generated with the built-in image generator, using each original class portrait as the edit reference. Prompt: preserve faceted polygon style, waist-up framing, pose, clothing, props, palette and scale; change the face and hair to the complementary male/female variant; for the elderly woman wizard remove the beard and retain the hat, robe, book and orb; retain true transparency, with no frame, scenery or text. Export settings match the original 256px WebP portraits.
+
+Validation includes preference restoration, account/guest isolation, storage failure handling, write ordering, exactly two current-class choices, successful-save dismissal, retry after failed saves, and disabled controls while saving. Device review should verify switching appearances, restarting, and level-up rendering on both iOS and Android.
+
+All ten final 256px transparent WebP portraits total 145,918 bytes (142.5 KiB); every file is below 25 KB. All five male/female pairs were inspected together at 100px on the Profile background. Asset tests verify every class-to-variant mapping, dimensions, transparency and the total size budget. Typecheck, beta configuration, and affected Profile/collection/trophy tests pass.

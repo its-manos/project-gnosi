@@ -68,6 +68,7 @@ const common = {
     useDailyDataSnapshot: () => daily,
     useLearningSession: () => ({ email: learning.userId ? "player@example.test" : null }),
   },
+  "../hooks/usePlayerAvatar": { usePlayerAvatar: () => ({ variant: "female", ready: true, saving: false, error: null, choose: async () => true }) },
   "../hooks/useKnowledgeProfile": { useKnowledgeProfile: () => ({ profile: player, ready: true }) },
   "../gamification/rules": { playerTitle: level => "Παίκτης " + level },
   "../utils/dailyChallenge": { getAthensDateKey: () => "2026-10-30" },
@@ -97,12 +98,15 @@ const renderProfile = () => { cursor = 0; return Profile(profileProps); };
 let tree = renderProfile();
 assert.ok(text(tree).includes("επισκέπτης"), "Guest identity remains visible");
 assert.ok(nodes(tree).some(n => n.props?.testID === "profile-identity"));
+const avatarPicker = nodes(tree).find(n => n.type === "PlayerCollection" && n.props?.mode === "character");
+assert.equal(avatarPicker.props.variant, "female", "Profile uses the saved appearance");
+assert.equal(avatarPicker.props.level, player.level, "Picker follows the current class level");
 const profileHeader = nodes(tree).find(n => n.type === "SectionHeader");
 assert.equal(profileHeader?.props.title, "Το προφίλ σου");
 assert.equal(profileHeader.props.onAction, profileProps.onAccount);
 profileHeader.props.onAction();
 assert.equal(calls.at(-1), "account", "The header Settings button still opens Account");
-assert.ok(nodes(tree).some(n => n.type === "PlayerCollection" && n.props?.mode !== "classes"));
+assert.ok(nodes(tree).some(n => n.type === "PlayerCollection" && n.props?.mode !== "character"));
 assert.equal(nodes(tree).filter(n => n.props?.accessibilityRole === "progressbar").length, 1, "Profile should show one XP progress indicator");
 assert.ok(!nodes(tree).some(n => n.type === "MotionXpCircle"), "Do not repeat XP progress in a second ring");
 const pressProfile = label => {

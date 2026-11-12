@@ -1,7 +1,8 @@
+import type { AvatarVariant } from "../state/PlayerAvatar";
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { PLAYER_CLASSES, nextTrophy, playerClass, type Trophy, type TrophyFamily } from '../gamification/trophies';
+import { nextTrophy, type Trophy, type TrophyFamily } from '../gamification/trophies';
 import PlayerCharacter from './PlayerCharacter';
 import { colors } from '../theme';
 
@@ -30,21 +31,23 @@ function TrophyTile({ trophy, preview = false }: { trophy: Trophy; preview?: boo
     <Text style={styles.muted}>{preview ? ["I", "II", "III", "IV", "V"][trophy.tier - 1] : `Βαθμίδα ${trophy.tier} · ${trophy.unlocked ? `✓ ${trophy.target}` : `${Math.min(trophy.current, trophy.target)}/${trophy.target}`}`}</Text>
   </View>;
 }
-export default function PlayerCollection({ trophies, ready, level, mode = 'trophies', dense = false }: {
-  trophies: readonly Trophy[]; ready: boolean; level: number; mode?: 'trophies' | 'classes'; dense?: boolean;
+export default function PlayerCollection({ trophies, ready, level, mode = 'trophies', dense = false, variant = 'male', onChooseVariant, saving = false, error }: {
+  trophies: readonly Trophy[]; ready: boolean; level: number; mode?: 'trophies' | 'character'; dense?: boolean;
+  variant?: AvatarVariant; onChooseVariant?: (value: AvatarVariant) => Promise<boolean>; saving?: boolean; error?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const earned = trophies.filter(t => t.unlocked);
   const next = nextTrophy(trophies);
   // One highest earned tier per family; later tiers remain discoverable in collection.
   const showcase = [...new Map(earned.map(t => [t.family, t])).values()].slice(-3);
-  const currentClass = playerClass(level);
   return <>
-    {mode === 'classes' ? <Pressable onPress={() => setOpen(true)} disabled={!ready}
-      accessibilityRole="button" accessibilityLabel="Δες τις κλάσεις παίκτη"
+    {mode === 'character' ? <Pressable onPress={() => setOpen(true)} disabled={!ready}
+      accessibilityRole="button" accessibilityLabel="Επίλεξε εμφάνιση χαρακτήρα"
       style={styles.characterButton}>
-      <PlayerCharacter level={ready ? level : 1} size={dense ? 88 : 100} />
-      <Text style={styles.muted}>Κλάσεις ›</Text>
+      <View style={{ width: dense ? 88 : 100, height: dense ? 88 : 100 }}>
+        {ready ? <PlayerCharacter level={level} size={dense ? 88 : 100} variant={variant} /> : null}
+      </View>
+      <Text style={styles.muted}>Αλλαγή ›</Text>
     </Pressable> : <View testID="profile-achievements" style={styles.section}>
       <View style={styles.heading}>
         <Text style={styles.title}>Οι διακρίσεις σου</Text>
@@ -73,19 +76,28 @@ export default function PlayerCollection({ trophies, ready, level, mode = 'troph
       <View style={styles.scrim}>
         <View style={styles.panel} accessibilityViewIsModal>
           <View style={styles.heading}>
-            <Text style={styles.title}>{mode === 'classes' ? 'Οι κλάσεις σου' : 'Οι διακρίσεις σου'}</Text>
+            <Text style={styles.title}>{mode === 'character' ? 'Ο χαρακτήρας σου' : 'Οι διακρίσεις σου'}</Text>
             <Pressable onPress={() => setOpen(false)} accessibilityRole="button" accessibilityLabel="Κλείσιμο συλλογής" style={styles.link}>
               <Text style={styles.linkText}>Κλείσιμο ✕</Text>
             </Pressable>
           </View>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.collection}>
-            {mode === 'classes' ? PLAYER_CLASSES.map(item => <View key={item.id} style={[styles.classRow, level < item.level && styles.locked]}>
-              <PlayerCharacter level={item.level} size={92} />
-              <View style={styles.nextCopy}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.muted}>Επίπεδο {item.level}{item.id === currentClass.id ? ' · Η κλάση σου' : level >= item.level ? ' · Ξεκλειδώθηκε' : ' · Κλειδωμένο'}</Text>
+            {mode === 'character' ? <>
+              <Text style={styles.muted}>Διάλεξε εμφάνιση για την κλάση σου. Η επιλογή σου παραμένει καθώς ανεβαίνεις επίπεδα.</Text>
+              <View style={styles.choices}>
+                {(['male', 'female'] as const).map(value => <Pressable key={value}
+                  accessibilityRole="radio" accessibilityLabel={value === 'male' ? 'Άνδρας' : 'Γυναίκα'}
+                  accessibilityState={{ checked: variant === value, disabled: saving }} disabled={saving}
+                  onPress={async () => { if (await onChooseVariant?.(value)) setOpen(false); }}
+                  style={[styles.choice, variant === value && styles.choiceSelected]}>
+                  <PlayerCharacter level={level} size={104} variant={value} />
+                  <Text style={styles.title}>{value === 'male' ? 'Άνδρας' : 'Γυναίκα'}</Text>
+                  <Text style={styles.linkText}>{variant === value ? 'Επιλεγμένο ✓' : 'Επιλογή'}</Text>
+                </Pressable>)}
               </View>
-            </View>) : <>
+              {saving ? <Text style={styles.muted}>Αποθήκευση…</Text> : null}
+              {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
+            </> : <>
               <Text style={styles.muted}>Κάθε βαθμίδα είναι μία ξεχωριστή διάκριση. Οι κερδισμένες διακρίσεις παραμένουν στη συλλογή σου.</Text>
               {(['lessons', 'worlds', 'daily', 'streak', 'revision', 'hangman'] as const).map(family => {
                 const items = trophies.filter(t => t.family === family);
@@ -122,5 +134,8 @@ const styles = StyleSheet.create({
   scrim: { flex: 1, backgroundColor: '#070E1AE8', justifyContent: 'center', alignItems: 'center', padding: 20 },
   panel: { width: '100%', maxWidth: 600, maxHeight: '88%', backgroundColor: '#152133', padding: 16, borderRadius: 22, gap: 10 },
   collection: { gap: 18, paddingBottom: 12 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  classRow: { flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: '#202A3C', padding: 8, borderRadius: 16 },
+  choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  choice: { flex: 1, minWidth: 112, alignItems: 'center', gap: 8, paddingVertical: 14, borderRadius: 16, borderWidth: 1, borderColor: '#3C4055', backgroundColor: '#202A3C' },
+  choiceSelected: { borderColor: '#B5A4EE', backgroundColor: '#2B304A' },
+  error: { color: '#F0B8B8', fontSize: 12, lineHeight: 18 },
 });
