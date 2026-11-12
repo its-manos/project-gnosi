@@ -128,11 +128,8 @@ assert.deepEqual(calls, ["account", "stats", "saved", "interests", "guide"]);
 const savedShortcut = shortcuts.find(n => n.props.title === "Αποθηκευμένα");
 assert.equal(savedShortcut.type(savedShortcut.props).props.testID, "profile-saved-link",
   "Saved lessons uses the same accessible shortcut component as the other tiles");
-const xpHelp = nodes(tree).find(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;");
-assert.ok(xpHelp && !xpHelp.props.accessibilityState.expanded);
-xpHelp.props.onPress();
-tree = renderProfile();
-assert.ok(nodes(tree).some(n => n.type === "XpRules"), "Shared XP rules remain available");
+assert.ok(!nodes(tree).some(n => n.props?.accessibilityLabel === "Πώς κερδίζω XP;"), "XP help is removed from Profile");
+assert.ok(!text(tree).includes("σερί"), "Profile no longer repeats the streak");
 learning = { ...learning, userId: "user" };
 tree = renderProfile();
 assert.ok(text(tree).includes("player@example.test"), "Account identity updates");

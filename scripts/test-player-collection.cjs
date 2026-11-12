@@ -8,6 +8,7 @@ const { default: Collection } = load('src/components/PlayerCollection.tsx', {
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': { Modal: 'Modal', Pressable: 'Button', ScrollView: 'Scroll', Text: 'Text', View: 'View', StyleSheet: { create: x => x } },
   'react-native-svg': { __esModule: true, default: 'Svg', Circle: 'Circle', Path: 'Path' },
+  './ProgressTrack': { __esModule: true, default: 'ProgressTrack' },
   './PlayerCharacter': { __esModule: true, default: 'Character' },
 });
 const nodes = tree => !tree || typeof tree !== 'object' ? [] : [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)];
@@ -38,7 +39,7 @@ assert.equal(chosen, 'male');
 assert.equal(open, false, 'Successful choice closes the picker');
 open = true;
 tree = Collection({ ...props, mode: 'character', onChooseVariant: async () => false });
-await nodes(tree).find(n => n.props?.accessibilityLabel === 'Άνδρας').props.onPress();
+await nodes(tree).find(n => n.props?.accessibilityLabel === 'Εμφάνιση 1').props.onPress();
 assert.equal(open, true, 'Failed save leaves the picker available for retry');
 tree = Collection({ ...props, mode: 'character', saving: true });
 assert.ok(nodes(tree).filter(n => n.props?.accessibilityRole === 'radio').every(n => n.props.disabled));

@@ -2,14 +2,11 @@ import { usePlayerAvatar } from "../hooks/usePlayerAvatar";
 import { PLAYER_CLASSES } from "../gamification/trophies";
 import PlayerCollection from "../components/PlayerCollection";
 import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout";
-import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useState } from "react";
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import { useLearningSession, useDailyDataSnapshot, useLearningDataSnapshot } from "../state/LearningSession";
+import { useLearningSession, useLearningDataSnapshot } from "../state/LearningSession";
 import { useKnowledgeProfile } from "../hooks/useKnowledgeProfile";
-import { getAthensDateKey } from "../utils/dailyChallenge";
-import { dailyHistory } from "../utils/dailySyncDocument";
-import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { playerTitle } from "../gamification/rules";
 import { MotionView } from "../components/HomeMotion";
 import AppBackground from "../components/AppBackground";
@@ -17,7 +14,6 @@ import AtlasCard from "../components/AtlasCard";
 import NavigationTile from "../components/NavigationTile";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import SyncStatus from "../components/SyncStatus";
-import XpRules from "../components/XpRules";
 import { colors } from "../theme";
 
 type Props = {
@@ -31,14 +27,6 @@ type Props = {
   onGuide: () => void;
 };
 
-
-function StreakFlame() {
-  return <Svg width={17} height={19} viewBox="0 0 24 24" fill="none" accessible={false}>
-    <Path d="M12.5 2.5c.6 3.6-1.4 5.4-3.2 7.4-.4-1.6-.4-2.9-.1-4.2C5.4 8.9 4.5 12 5 15c.6 4.2 3.4 6.5 7 6.5s6.6-2.7 7-6.6c.3-3.2-1.3-6.1-4.2-8.8.2 2.5-.4 3.9-1.3 5.1-.2-3.2-.4-5.6-1-8.7Z"
-      stroke="#A9A4FF" strokeWidth={1.6} strokeLinejoin="round" fill="#7068BA" />
-    <Path d="M12 13.1c.4 1.7-2.1 3-2.1 4.6a2.1 2.1 0 0 0 4.2 0c0-1.3-.6-2.5-2.1-4.6Z" fill="#D4CAFF" />
-  </Svg>;
-}
 
 type QuickIconName = "activity" | "saved" | "interests" | "guide";
 
@@ -72,20 +60,11 @@ function QuickLink({ title, icon, onPress }: {
 export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide, onSaved }: Props) {
   const { email } = useLearningSession();
   const learning = useLearningDataSnapshot();
-  const daily = useDailyDataSnapshot();
   const avatar = usePlayerAvatar(learning.userId);
-  // useKnowledgeProfile already subscribes to the Athens day boundary.
-  // Avoid another AppState listener and minute interval on this screen.
-  const today = getAthensDateKey();
   const { profile, ready: profileReady } = useKnowledgeProfile();
-  const quizStats = useMemo(
-    () => calculateDailyChallengeProgress(dailyHistory(daily.doc), today),
-    [daily.doc, today],
-  );
   const { height: windowHeight, width, fontScale } = useWindowDimensions();
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const [xpExpanded, setXpExpanded] = useState(false);
   const availableHeight = availableScreenHeight(viewportHeight, windowHeight);
   const dense = availableHeight < 700;
   const veryDense = availableHeight < 585;
@@ -140,28 +119,10 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
               : { text: "Φόρτωση" }}>
             <View style={[styles.xpFill, { width: (progress * 100) + "%" }]} />
           </View>
-          <Pressable onPress={() => setXpExpanded(value => !value)}
-            disabled={!profileReady} accessibilityRole="button"
-            accessibilityLabel="Πώς κερδίζω XP;"
-            accessibilityState={{ expanded: xpExpanded, disabled: !profileReady }}
-            style={styles.xpHelp}>
-            <Text style={styles.xpHelpText}>{xpExpanded ? "Λιγότερα −" : "Πώς κερδίζω XP; +"}</Text>
-          </Pressable>
+          <Text style={styles.classHint}>{profileReady ? nextClass
+            ? `Νέα κλάση στο επίπεδο ${nextClass.level}` : "Τελική κλάση · Σοφός" : "—"}</Text>
         </View>
       </AtlasCard>
-      {xpExpanded ? <View style={styles.xpPanel} testID="profile-xp-rules">
-        <XpRules learningXP={profile.learningXP} challengeXP={profile.challengeXP}
-          recallXP={profile.recallXP} explorationXP={profile.explorationXP} gameXP={profile.gameXP} />
-      </View> : null}
-
-      <MotionView entranceDelay={115} style={styles.summaryStrip} testID="profile-summary">
-        <View style={styles.metricLabelRow}><StreakFlame /><Text style={styles.summaryText}>
-          {daily.ready ? `${quizStats.currentStreak} ${quizStats.currentStreak === 1 ? "ημέρα" : "ημέρες"} σερί` : "—"}
-        </Text></View>
-        <Text style={styles.summaryText}>{profileReady ? nextClass
-          ? `Νέα κλάση στο επίπεδο ${nextClass.level}` : "Τελική κλάση · Σοφός" : "—"}</Text>
-      </MotionView>
-
       <MotionView entranceDelay={160}>
         <PlayerCollection trophies={profile.trophies} ready={profileReady} level={profile.level} dense={dense} />
       </MotionView>
@@ -190,9 +151,9 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.top, paddingBottom: 14, gap: profileSectionLayout.below },
   contentDense: { paddingBottom: 9, gap: 9 },
   contentVeryDense: { gap: 6 },
-  hero: { minHeight: 158, flexDirection: "row", alignItems: "center", gap: 10,
+  hero: { minHeight: 144, flexDirection: "row", alignItems: "center", gap: 10,
     paddingHorizontal: 12, paddingVertical: 15 },
-  heroDense: { minHeight: 144, paddingVertical: 10, gap: 9 },
+  heroDense: { minHeight: 128, paddingVertical: 10, gap: 9 },
   heroAccent: { position: "absolute", left: 22, top: -1, width: 88, height: 3,
     backgroundColor: "#B2A3FF", borderRadius: 3 },
   heroCopy: { flex: 1, minWidth: 0, gap: 3 },
@@ -203,13 +164,7 @@ const styles = StyleSheet.create({
   xpCaption: { color: "#C8BDFF", fontSize: 10, lineHeight: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },
   xpTrack: { height: 6, borderRadius: 6, backgroundColor: "#3D3D5C", overflow: "hidden" },
   xpFill: { height: "100%", borderRadius: 6, backgroundColor: "#B1A5FF" },
-  xpHelp: { alignSelf: "flex-start", minHeight: 44, justifyContent: "center" },
-  xpHelpText: { color: "#C6B9FF", fontSize: 10, lineHeight: 16, fontWeight: "800" },
-  xpPanel: { padding: 15, borderRadius: 17, borderColor: "#45415F", borderWidth: 1,
-    backgroundColor: "#1B2234" },
-  summaryStrip: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 6 },
-  summaryText: { color: colors.textMuted, fontSize: 10, lineHeight: 17 },
-  metricLabelRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  classHint: { color: colors.textMuted, fontSize: 10, lineHeight: 17, marginTop: 4 },
   sectionTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: "900" },
   actions: { gap: 8 },
   linksGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

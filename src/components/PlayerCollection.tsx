@@ -4,6 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import Svg, { Path, Circle } from 'react-native-svg';
 import { nextTrophy, type Trophy, type TrophyFamily } from '../gamification/trophies';
 import PlayerCharacter from './PlayerCharacter';
+import ProgressTrack from './ProgressTrack';
 import { colors } from '../theme';
 
 const glyphs: Record<TrophyFamily, string> = {
@@ -15,7 +16,7 @@ const glyphs: Record<TrophyFamily, string> = {
   hangman: 'M4 19V5h12v3M2 20h9m5-5v5m-3-2 3-3 3 3',
 };
 function TrophyIcon({ trophy }: { trophy: Trophy }) {
-  const tone = trophy.unlocked ? ['#9CC9CB', '#B6ABF5', '#DCC08B', '#EAD8AB', '#F3E4C1'][trophy.tier - 1] : '#737C91';
+  const tone = trophy.unlocked ? [colors.accentLight, '#C8B7EC', '#DCC08B', '#EAD8AB', '#F3E4C1'][trophy.tier - 1] : '#737C91';
   return <Svg width={34} height={34} viewBox="0 0 24 24" fill="none" accessible={false}>
     <Path d={glyphs[trophy.family]} stroke={tone} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
     {trophy.family === 'hangman' ? <Circle cx={16} cy={11} r={3} stroke={tone} strokeWidth={1.5} /> : null}
@@ -27,8 +28,8 @@ function TrophyTile({ trophy, preview = false }: { trophy: Trophy; preview?: boo
   return <View style={[styles.tile, preview && styles.previewTile, !trophy.unlocked && styles.locked]} accessible
     accessibilityLabel={`${trophy.title}, βαθμίδα ${trophy.tier}. ${trophy.description}: ${Math.min(trophy.current, trophy.target)} από ${trophy.target}. ${trophy.unlocked ? 'Κερδήθηκε' : 'Κλειδωμένο'}`}>
     <View style={preview && styles.medallion}><TrophyIcon trophy={trophy} /></View>
-    <Text style={styles.tileTitle}>{preview ? shortTitles[trophy.family] : trophy.title}</Text>
-    <Text style={styles.muted}>{preview ? ["I", "II", "III", "IV", "V"][trophy.tier - 1] : `Βαθμίδα ${trophy.tier} · ${trophy.unlocked ? `✓ ${trophy.target}` : `${Math.min(trophy.current, trophy.target)}/${trophy.target}`}`}</Text>
+    <Text style={styles.tileTitle}>{preview ? shortTitles[trophy.family] : trophy.title}<Text style={styles.tier}> {["I", "II", "III", "IV", "V"][trophy.tier - 1]}</Text></Text>
+    {!preview ? <Text style={styles.muted}>{trophy.unlocked ? `✓ ${trophy.target}` : `${Math.min(trophy.current, trophy.target)}/${trophy.target}`}</Text> : null}
   </View>;
 }
 export default function PlayerCollection({ trophies, ready, level, mode = 'trophies', dense = false, variant = 'male', onChooseVariant, saving = false, error }: {
@@ -65,7 +66,7 @@ export default function PlayerCollection({ trophies, ready, level, mode = 'troph
             <View style={styles.heading}><Text style={[styles.title, styles.goalTitle]}>{next.title}</Text>
               <Text style={styles.goalCount}>{next.current}/{next.target}</Text></View>
             <Text style={styles.muted}>{units[next.family]}</Text>
-            <View style={styles.track}><View style={[styles.fill, { width: `${Math.min(100, next.current / next.target * 100)}%` }]} /></View>
+            <ProgressTrack variant="destination" style={styles.goalTrack}><View style={[styles.fill, { width: `${Math.min(100, next.current / next.target * 100)}%` }]} /></ProgressTrack>
           </View>
         </Pressable> : <Text style={styles.muted}>Κέρδισες όλες τις διακρίσεις!</Text>}
         {showcase.length ? <View style={styles.row}>{showcase.map(t => <TrophyTile key={t.id} trophy={t} preview />)}</View>
@@ -86,12 +87,11 @@ export default function PlayerCollection({ trophies, ready, level, mode = 'troph
               <Text style={styles.muted}>Διάλεξε εμφάνιση για την κλάση σου. Η επιλογή σου παραμένει καθώς ανεβαίνεις επίπεδα.</Text>
               <View style={styles.choices}>
                 {(['male', 'female'] as const).map(value => <Pressable key={value}
-                  accessibilityRole="radio" accessibilityLabel={value === 'male' ? 'Άνδρας' : 'Γυναίκα'}
+                  accessibilityRole="radio" accessibilityLabel={value === 'male' ? 'Εμφάνιση 1' : 'Εμφάνιση 2'}
                   accessibilityState={{ checked: variant === value, disabled: saving }} disabled={saving}
                   onPress={async () => { if (await onChooseVariant?.(value)) setOpen(false); }}
                   style={[styles.choice, variant === value && styles.choiceSelected]}>
                   <PlayerCharacter level={level} size={104} variant={value} />
-                  <Text style={styles.title}>{value === 'male' ? 'Άνδρας' : 'Γυναίκα'}</Text>
                   <Text style={styles.linkText}>{variant === value ? 'Επιλεγμένο ✓' : 'Επιλογή'}</Text>
                 </Pressable>)}
               </View>
@@ -123,17 +123,18 @@ const styles = StyleSheet.create({
   linkText: { color: '#C7BAF5', fontSize: 11, fontWeight: '800' },
   goalTitle: { flex: 1, minWidth: 0, fontSize: 13 },
   goalCount: { color: '#C7BAF5', fontSize: 12, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  previewTile: { paddingVertical: 6, gap: 2, backgroundColor: 'transparent' },
-  medallion: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#263044', alignItems: 'center', justifyContent: 'center' },
-  next: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 12, borderRadius: 16, backgroundColor: '#202A3C' },
-  nextCopy: { flex: 1, minWidth: 0, gap: 3 }, track: { height: 4, backgroundColor: '#3C4055', borderRadius: 4, overflow: 'hidden', marginTop: 4 },
-  fill: { height: '100%', backgroundColor: '#B5A4EE' }, row: { flexDirection: 'row', gap: 7 },
-  tile: { flexGrow: 1, flexBasis: '28%', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, borderRadius: 14, backgroundColor: '#263044' },
+  previewTile: { paddingVertical: 8, gap: 4 },
+  medallion: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accentSurface, alignItems: 'center', justifyContent: 'center' },
+  next: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 12, borderRadius: 15, borderWidth: 1, borderColor: '#38435C', backgroundColor: '#1A2538' },
+  nextCopy: { flex: 1, minWidth: 0, gap: 4 }, goalTrack: { marginTop: 4 },
+  fill: { height: '100%', backgroundColor: colors.accentLight }, row: { flexDirection: 'row', gap: 8 },
+  tile: { flexGrow: 1, flexBasis: '28%', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, borderRadius: 15, backgroundColor: '#1A2538', borderWidth: 1, borderColor: '#38435C' },
+  tier: { color: colors.accentLight, fontSize: 10, fontWeight: '800' },
   tileTitle: { color: colors.text, fontSize: 10, lineHeight: 14, textAlign: 'center', fontWeight: '700' },
   locked: { opacity: 0.62 }, characterButton: { alignItems: 'center', justifyContent: 'center', minWidth: 76 },
   scrim: { flex: 1, backgroundColor: '#070E1AE8', justifyContent: 'center', alignItems: 'center', padding: 20 },
   panel: { width: '100%', maxWidth: 600, maxHeight: '88%', backgroundColor: '#152133', padding: 16, borderRadius: 22, gap: 10 },
-  collection: { gap: 18, paddingBottom: 12 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  collection: { gap: 16, paddingBottom: 12 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   choice: { flex: 1, minWidth: 112, alignItems: 'center', gap: 8, paddingVertical: 14, borderRadius: 16, borderWidth: 1, borderColor: '#3C4055', backgroundColor: '#202A3C' },
   choiceSelected: { borderColor: '#B5A4EE', backgroundColor: '#2B304A' },

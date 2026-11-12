@@ -1,8 +1,8 @@
 # Player characters and trophies
 
-Profile now pairs the live XP class with an original geometric character portrait. Tap the portrait to choose the male or female appearance of the current class. Class level requirements remain 1, 2, 5, 10, 15. Titles and XP thresholds are unchanged. The character follows the current class automatically; the device saves an account-scoped appearance preference without a new account schema.
+Profile now pairs the live XP class with an original geometric character portrait. Tap the portrait to choose between two unlabeled appearances of the current class. Class level requirements remain 1, 2, 5, 10, 15. Titles and XP thresholds are unchanged. The character follows the current class automatically; the device saves an account-scoped appearance preference without a new account schema.
 
-The trophy preview contains the closest unfinished goal and the highest earned tier from up to three families. The trophy collection opens in a dismissible native modal with all 24 milestones. The collection is mounted only while open. Existing Profile links, the XP explanation, loading states, and the accessibility scrolling fallback remain. Progress keeps its current learning/revision layout.
+The trophy preview contains the closest unfinished goal and the highest earned tier from up to three families. The trophy collection opens in a dismissible native modal with all 24 milestones. The collection is mounted only while open. Existing Profile links, loading states, and the accessibility scrolling fallback remain. Progress keeps its current learning/revision layout.
 
 | Family | Targets | Source |
 | --- | --- | --- |
@@ -52,3 +52,11 @@ The new images were generated with the built-in image generator, using each orig
 Validation includes preference restoration, account/guest isolation, storage failure handling, write ordering, exactly two current-class choices, successful-save dismissal, retry after failed saves, and disabled controls while saving. Device review should verify switching appearances, restarting, and level-up rendering on both iOS and Android.
 
 All ten final 256px transparent WebP portraits total 145,918 bytes (142.5 KiB); every file is below 25 KB. All five male/female pairs were inspected together at 100px on the Profile background. Asset tests verify every class-to-variant mapping, dimensions, transparency and the total size budget. Typecheck, beta configuration, and affected Profile/collection/trophy tests pass.
+
+## Compact Profile and consistent trophy styling
+
+Removed the Profile streak row and XP-help button/panel, including their unused state, daily subscription and streak computation. The next-class hint now sits inside the player card. The shared XP-rules component remains available to its other consumers.
+
+Trophy Roman numerals appear inline with titles in both the preview and collection. Preview tiles no longer use a separate rank row. Trophy cards match navigation shortcuts with the same navy surface, border and 15-point corner radius; medals use the theme accent surface and the next-goal bar reuses `ProgressTrack`. Gaps follow an 8-point section/tile rhythm and 16-point collection grouping. Existing accessibility labels still announce complete trophy requirements.
+
+Appearance options now show only their portraits and selected/choose indicators. Neutral screen-reader labels identify them as “Εμφάνιση 1” and “Εμφάνιση 2”; no gender labels are displayed. Preference compatibility and artwork mapping remain unchanged. Typecheck and affected Profile, collection and shared-navigation checks pass. Native screen fit and spacing still require device review.
