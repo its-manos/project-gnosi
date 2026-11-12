@@ -24,7 +24,8 @@ export function renderRewardToast({ event, reveal, motion }: Presentation, botto
   const xp = event.answerXP ?? event.xp ?? 0;
   const heading = event.kind === "level-up" ? `Επίπεδο ${event.level} · ${playerTitle(event.level!)}`
     : event.kind === "mastered" ? "Νέα έννοια κατακτημένη!"
-    : event.kind === "complete" ? "Ολοκληρώθηκε!" : "Σωστή απάντηση!";
+    : event.kind === "complete" ? "Ολοκληρώθηκε!"
+    : event.kind === "correct" ? "Σωστή απάντηση!" : "Κέρδισες XP!";
   const detail = event.pendingXP ? "Πιστώνονται στην ολοκλήρωση" : event.label;
   const description = `${heading}. +${xp} XP${detail ? `. ${detail}` : ""}`;
   return <Animated.View pointerEvents="none" testID="play-celebration" accessible
