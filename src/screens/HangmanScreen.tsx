@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ComponentRef } from "react";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import HangmanFigure from "../components/HangmanFigure";
 import HangmanFeedbackMotion from "../components/HangmanFeedbackMotion";
@@ -59,7 +59,7 @@ export default function HangmanScreen({ onHome }: { onHome: () => void }) {
   const spokenWord = [...word].map(letter => game.guesses.includes(letter) || finished ? letter : "κενό").join(", ");
   const lastGuess = game.guesses.at(-1);
   return <View testID="hangman-screen" style={styles.screen}>
-    <ProgressGradientBackground />
+    <AppBackground />
     <ProfileSectionHeader title="Κρεμάλα" actionLabel="‹ Αρχική"
       actionAccessibilityLabel="Επιστροφή στην αρχική" onAction={onHome} style={styles.header} />
     <ScrollView ref={scroll} testID="hangman-scroll" showsVerticalScrollIndicator={false}

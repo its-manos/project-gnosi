@@ -47,7 +47,7 @@ const imports = {
   "react-native-svg": { __esModule: true, default: "svg", Circle: "circle", G: "g", Path: "path" },
   "react-native-safe-area-context": { useSafeAreaInsets: () => ({ bottom: 20 }) },
 };
-const componentStubs = ["ProfileSectionHeader", "ProgressGradientBackground", "AtlasContinueCard", "HangmanFigure", "HangmanFeedbackMotion", "GameXpStatus"];
+const componentStubs = ["ProfileSectionHeader", "AppBackground", "AtlasContinueCard", "HangmanFigure", "HangmanFeedbackMotion", "GameXpStatus"];
 for (const name of componentStubs) imports[`../components/${name}`] = { __esModule: true, default: name };
 imports["../components/ProfileSectionHeader"].profileSectionLayout = { horizontal: 18, top: 8, below: 13 };
 imports["../components/AtlasContinueCard"].atlasContinueStyles = { title: {} };

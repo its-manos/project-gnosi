@@ -10,7 +10,7 @@ const react={useEffect:()=>{},useRef:value=>({current:value}),useState:init=>{co
  const store=new LearningStore(null,{getItem:async()=>null,setItem:async()=>{}});await store.start();
  const hook={'../hooks/useMistakesModel':{useMistakesModel:()=>({model:buildMistakeModel(store.getSnapshot().mistakes),ready:true})}};
  const session={'../state/LearningSession':{useLearningSession:()=>({store}),useLearningSnapshot:store.getSnapshot}};
- const components=Object.fromEntries(['ActionButton','AtlasCard','ProfileSectionHeader','ProgressGradientBackground','QuestionStageFooter','QuestionStageProgress','QuizReveal','QuizQuestionRenderer','SyncStatus','SourceLink'].map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]));
+ const components=Object.fromEntries(['ActionButton','AtlasCard','ProfileSectionHeader','AppBackground','QuestionStageFooter','QuestionStageProgress','QuizReveal','QuizQuestionRenderer','SyncStatus','SourceLink'].map(n=>['../components/'+n,{__esModule:true,default:n,profileSectionLayout:{horizontal:18,top:8,below:13}}]));
  const Screen=load('src/screens/KnowledgeReviewScreen.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,...session,...components,...hook,
   '../hooks/useQuestionStageAction':{useQuestionStageAction:()=>({action:null,onActionChange:()=>{}})},'../play/soundStatus':{requestPracticeCue:()=>{}}}).default;
  const render=()=>{cursor=0;return Screen({onBack:()=>backs++});};

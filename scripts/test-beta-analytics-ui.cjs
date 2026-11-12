@@ -17,7 +17,7 @@ const common={'../components/ScreenEntrance':{__esModule:true,default:'ScreenEnt
   'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:0})},
   '../components/AtlasCard':{__esModule:true,default:'AtlasCard'},
   '../components/HomeMotion':{MotionView:'View',MotionPressable:'Pressable',MotionCounter:'Text'},
-  '../components/ProgressGradientBackground':{__esModule:true,default:'Background'},
+  '../components/AppBackground':{__esModule:true,default:'Background'},
   '../components/worldIcons/categoryIconMap':{getCategoryWorldIcon:()=>null},
   './OnboardingDailyQuestion':{__esModule:true,default:'DailyQuestion'},
   '../components/WelcomeStepIcons':{WelcomeAtlasIcon:'Icon',WelcomeLessonIcon:'Icon',WelcomeQuizIcon:'Icon'},

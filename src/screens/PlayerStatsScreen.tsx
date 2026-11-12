@@ -7,7 +7,7 @@ import { getAthensDateKey } from "../utils/dailyChallenge";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import LearningActivityPanel from "../components/LearningActivityPanel";
 import MetricCard from "../components/MetricCard";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import ProgressTrack from "../components/ProgressTrack";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import { MotionPressable, MotionView } from "../components/HomeMotion";
@@ -59,7 +59,7 @@ export default function PlayerStatsScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <View style={styles.screen} testID="player-stats-screen" onLayout={event => { const next = event.nativeEvent.layout.height; if (next > 0) setViewportHeight(previous => stableLayoutHeight(previous, next)); }}>
-      <ProgressGradientBackground />
+      <AppBackground />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
         bounces={false} overScrollMode="never" scrollEnabled={allowScroll}
         onContentSizeChange={(_, next) => setContentHeight(previous => stableLayoutHeight(previous, next))}

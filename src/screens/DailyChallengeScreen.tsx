@@ -9,7 +9,7 @@ import DailyJourneyTrack from "../components/DailyJourneyTrack";
 import DailyMistakeReview from "../components/DailyMistakeReview";
 import DailyAnswerReview from "../components/DailyAnswerReview";
 import QuizReveal from "../components/QuizReveal";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
 import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
 import QuestionStageFooter from "../components/QuestionStageFooter";
@@ -74,7 +74,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
   useEffect(()=>{
     if(openingQuestionId) requestPracticeCue("question-open");
   },[openingQuestionId]);
-  return <View style={styles.root}><ProgressGradientBackground />
+  return <View style={styles.root}><AppBackground />
     <View style={styles.pageChrome}>
       <ProfileSectionHeader
         title={previewIntro?"Ημερήσιο quiz":reviewing?"Ανασκόπηση":record.completed?"Αποτέλεσμα":"Ημερήσιο quiz"}

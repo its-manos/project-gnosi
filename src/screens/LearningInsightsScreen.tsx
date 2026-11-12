@@ -5,7 +5,7 @@ import type { Lesson } from "../data/lessons";
 import { useMistakesModel } from "../hooks/useMistakesModel";
 import KnowledgeMastery from "../components/KnowledgeMastery";
 import { CategoryProgress } from "../components/LearningActivityPanel";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import { MotionView, MotionXpCircle } from "../components/HomeMotion";
 import { colors } from "../theme";
 
@@ -43,7 +43,7 @@ export default function LearningInsightsScreen({
   const percent = total > 0 ? Math.max(0, Math.min(100, Math.round(current / total * 100))) : 0;
 
   return <View style={styles.screen} testID="learning-insights-screen">
-    <ProgressGradientBackground />
+    <AppBackground />
     <View style={styles.foreground}>
       <MotionView entranceDelay={0} style={styles.header}>
         <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Πίσω στην πρόοδο"

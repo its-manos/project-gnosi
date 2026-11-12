@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
 import AppHeader from "../components/AppHeader";
 import ProgressBar from "../components/ProgressBar";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import QuizReveal from "../components/QuizReveal";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
@@ -64,7 +64,7 @@ export default function QuizTypesPreviewScreen({ onBack }: Props) {
   if (showArticlePilot) return <DevTypedLessonPilotScreen onBack={() => setShowArticlePilot(false)} />;
 
   return <View style={styles.root} testID="quiz-types-preview">
-    <ProgressGradientBackground />
+    <AppBackground />
     <View style={styles.chrome}>
       <AppHeader onBack={onBack} backLabel="ΕΡΓΑΛΕΙΑ" style={styles.appHeader} />
     </View>

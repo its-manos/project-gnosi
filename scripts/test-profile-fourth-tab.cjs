@@ -55,7 +55,7 @@ assert.match(routes, /onSaved=\{\(\) => app\.setScreen\("saved"\)\}/,
   "Saved lessons shortcut must navigate to the existing route.");
 assert.match(profile, /scrollEnabled=\{canScroll\}/,
   "Default Profile layout should fit the viewport with a scroll fallback.");
-assert.match(profile, /ProgressGradientBackground/);
+assert.match(profile, /AppBackground/);
 assert.ok(profile.includes('accessibilityState={{ expanded: xpExpanded, disabled: !profileReady }}'),
   "The existing XP explanation should remain accessible.");
 assert.ok(profile.includes('<XpRules learningXP={profile.learningXP}'));

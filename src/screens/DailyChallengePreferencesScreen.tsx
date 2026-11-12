@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import ActionButton from "../components/ActionButton";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import AtlasCard from "../components/AtlasCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import { MotionView, MotionPressable } from "../components/HomeMotion";
@@ -70,7 +70,7 @@ export default function DailyChallengePreferencesScreen({
   }
 
   return (
-    <View style={styles.screen}><ProgressGradientBackground /><ScrollView style={styles.scroll} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, nextHeight) => setContentHeight(Math.round(nextHeight))} scrollEnabled={needsScroll || veryCompact || fontScale > 1.2 || isLoading || saveError} contentContainerStyle={[styles.content, compact && styles.contentCompact]} showsVerticalScrollIndicator={false}>
+    <View style={styles.screen}><AppBackground /><ScrollView style={styles.scroll} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, nextHeight) => setContentHeight(Math.round(nextHeight))} scrollEnabled={needsScroll || veryCompact || fontScale > 1.2 || isLoading || saveError} contentContainerStyle={[styles.content, compact && styles.contentCompact]} showsVerticalScrollIndicator={false}>
       <ProfileSectionHeader title="Ενδιαφέροντα"
         actionLabel="‹ Προφίλ" actionAccessibilityLabel="Πίσω στο προφίλ"
         onAction={onCancel} style={styles.headerSpacing} />

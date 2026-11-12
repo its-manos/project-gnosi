@@ -70,8 +70,8 @@ assert.ok(figures.includes("<ExpandableImageCaption caption={figure.caption}"),
 assert.match(figures, /fontSize: 12/, "Attribution should not shrink to tiny text.");
 
 const readingViewport = reader.split("<NextImageWarmup")[0];
-assert.doesNotMatch(readingViewport, /<ProgressGradientBackground/,
+assert.doesNotMatch(readingViewport, /<AppBackground/,
   "Decorative gradients must stay on question screens, never beneath article text.");
-assert.match(reader, /<ProgressGradientBackground \/>/,
+assert.match(reader, /<AppBackground \/>/,
   "Full-screen questions keep their established Midnight Atlas background.");
 console.log("Reader legibility and presentation guardrails passed.");

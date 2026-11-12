@@ -4,7 +4,7 @@ import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import SourceLink from "../components/SourceLink";
 import type { useQuickQuiz } from "../hooks/useQuickQuiz";
@@ -113,7 +113,7 @@ export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], o
   const showResults = progress && round?.completed && results && entered.current &&
     (openingResult.current !== round.id || error === "save");
   return <View testID="quick-quiz-screen" style={styles.screen}>
-    <ProgressGradientBackground />
+    <AppBackground />
     <ProfileSectionHeader title={review ? "Τα λάθη σου" : "Γρήγορο Κουίζ"}
       actionLabel={review ? "‹ Αποτελέσματα" : "‹ Αρχική"}
       actionAccessibilityLabel={review ? "Επιστροφή στα αποτελέσματα" : "Επιστροφή στην αρχική"}

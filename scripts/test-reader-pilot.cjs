@@ -43,7 +43,7 @@ const common = {
   '../hooks/useQuestionStageAction': { useQuestionStageAction: () => ({
     action: null, onActionChange: () => {},
   }) },
-  '../components/ProgressGradientBackground': { __esModule: true, default: 'ProgressGradientBackground' },
+  '../components/AppBackground': { __esModule: true, default: 'AppBackground' },
   '../state/ReaderTextSize': { readerTextSize: fontStore, READER_TEXT_SIZE_MIN: 16, READER_TEXT_SIZE_MAX: 24 },
   '../hooks/useAdaptiveQuestionScroll': { useAdaptiveQuestionScroll: () => ({
     scrollEnabled: false, onLayout: () => {}, onContentSizeChange: () => {},

@@ -9,7 +9,7 @@ import { dailyHistory } from "../utils/dailySyncDocument";
 import { calculateDailyChallengeProgress } from "../utils/progressStats";
 import { playerTitle } from "../gamification/rules";
 import { MotionView, MotionXpCircle } from "../components/HomeMotion";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import AtlasCard from "../components/AtlasCard";
 import NavigationTile from "../components/NavigationTile";
 import MetricCard from "../components/MetricCard";
@@ -108,7 +108,7 @@ export default function ProfileScreen({ onStats, onAccount, onInterests, onGuide
       const next = event.nativeEvent.layout.height;
       if (next > 0) setViewportHeight(old => stableLayoutHeight(old, next));
     }}>
-    <ProgressGradientBackground />
+    <AppBackground />
     <ScrollView style={styles.viewport} bounces={false} overScrollMode="never"
       showsVerticalScrollIndicator={false} scrollEnabled={canScroll}
       contentContainerStyle={[styles.content, dense && styles.contentDense,

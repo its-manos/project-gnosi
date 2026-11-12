@@ -3,7 +3,7 @@ import type { Lesson } from "../data/lessons";
 import { MotionView } from "../components/HomeMotion";
 import { ProgressBarFill } from "../components/ProgressMotion";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import ProgressTrack from "../components/ProgressTrack";
 import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
 import { playerTitle } from "../gamification/rules";
@@ -63,7 +63,7 @@ export default function ResultsScreen({
   const nextTitle = nextLesson?.title ?? (pathComplete ? "Διάλεξε νέα θεματική" : "Εξερεύνησε τους κόσμους");
 
   return <View style={styles.root} testID="lesson-results-screen">
-    <ProgressGradientBackground />
+    <AppBackground />
     <View style={styles.chrome}>
       <ProfileSectionHeader title="Αποτελέσματα"
         actionLabel="Αρχική" actionAccessibilityLabel="Επιστροφή στην αρχική"

@@ -33,7 +33,7 @@ const common = {
   "../utils/screenLayout": { availableScreenHeight: (viewport, window) => viewport > 0 ? viewport : Math.max(0, window - 130), stableLayoutHeight: (old, next) => next > 0 && Math.abs(old - next) >= 1 ? next : old }, "react-native": native,
   "../components/KnowledgeMastery": { __esModule: true, default: "Mastery" },
   "../components/ReviewActions": { __esModule: true, default: "ReviewActions" },
-  "../components/ProgressGradientBackground": { __esModule: true, default: "GradientBackground" },
+  "../components/AppBackground": { __esModule: true, default: "AppBackground" },
   "../components/HomeMotion": { MotionView: "MotionView", MotionPressable: "MotionPressable", MotionXpCircle: "MotionXpCircle", MotionCounter: "MotionCounter" },
   "../components/ProgressMotion": { ProgressBarFill: "ProgressBarFill", ProgressRingGlow: "ProgressRingGlow" },
   "../components/ProgressTrack": { __esModule: true, default: "ProgressTrack" },
@@ -65,7 +65,7 @@ let tree = render();
 assert.equal(tree.type, "View", "Progress is a fixed View, not a scroll container");
 assert.ok(node(tree, "progress-fixed-dashboard"));
 assert.ok(node(tree, "progress-shell"));
-assert.ok(nodes(tree).some(n => n.type === "GradientBackground"), "static gradient replaces the illustrated atlas");
+assert.ok(nodes(tree).some(n => n.type === "AppBackground"), "shared atlas backdrop is mounted behind the dashboard");
 assert.ok(!nodes(tree).some(n => n.type === "AtlasBackground"), "no map SVG background remains");
 assert.ok(!nodes(tree).some(n => n.type === "ScrollView"));
 assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "Circle"), "overview retains the ring track");
@@ -114,9 +114,9 @@ assert.equal(node(tree, "progress-summary").type, "MotionView", "summary gets a 
 const progressMotionSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ProgressMotion.tsx"), "utf8");
 assert.match(progressMotionSource, /useReducedMotion\(/, "indicator animations respect reduced-motion");
 assert.doesNotMatch(progressMotionSource, /withRepeat\(/, "no continuous progress animation");
-const backgroundSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ProgressGradientBackground.tsx"), "utf8");
-assert.ok(!backgroundSource.includes("HomeAtlasBackground"), "gradient has no atlas dependency");
-assert.ok(!backgroundSource.includes("withRepeat"), "gradient stays static");
+const backgroundSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/AppBackground.tsx"), "utf8");
+assert.match(backgroundSource, /<HomeAtlasBackground showAmbientMotion=\{false\} \/>/, "shared backdrop reuses Home artwork without ambient loops");
+assert.ok(!backgroundSource.includes("withRepeat"), "shared backdrop stays static");
 
 const reviewSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ReviewActions.tsx"), "utf8");
 const buttonSource = fs.readFileSync(require("node:path").join(__dirname, "../src/components/ActionButton.tsx"), "utf8");
@@ -190,8 +190,8 @@ const renderInsights = () => { cursor = 0; return Insights(insightProps); };
 tree = renderInsights();
 assert.equal(tree.type, "View", "the detail page owns its own scrollable content");
 assert.ok(node(tree, "learning-insights-screen"));
-assert.ok(nodes(tree).some(n => n.type === "GradientBackground"),
-  "learning details reuse the same static Midnight Atlas gradient");
+assert.ok(nodes(tree).some(n => n.type === "AppBackground"),
+  "learning details reuse the same static Midnight Atlas artwork");
 assert.ok(node(tree, "insights-overview"), "detail page leads with a compact mastery overview");
 const overviewShell = node(tree, "insights-overview").props.style[0];
 assert.equal(overviewShell.minHeight, 112, "both overview cards have matching compact height");

@@ -7,7 +7,7 @@ const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeo
 const native={View:'View',Text:'Text',ScrollView:'ScrollView',Pressable:'Pressable',ActivityIndicator:'Spinner',Linking:{openURL:async()=>{}},StyleSheet:{create:x=>x},useWindowDimensions:()=>({width:390,height:844,fontScale:1})};
 const stubs=Object.fromEntries(['QuizReveal','KnowledgeProgress','DailyAnswerReview','DailyMistakeReview',
   'ActionButton','AnswerOption','ProfileSectionHeader','DailyMissionMap','DailyJourneyTrack','ReportContentButton',
-  'SingleChoiceQuestionCard','ProgressGradientBackground','QuestionStageFooter']
+  'SingleChoiceQuestionCard','AppBackground','QuestionStageFooter']
   .map(n=>['../components/'+n,{__esModule:true,default:n}]));
 const record={...shared.createSharedDailyRecord('2026-10-31'),currentIndex:6,completed:true};
 record.answers=Object.fromEntries(record.questionIds.map((id,i)=>{const q=questions.find(q=>q.id===id);return[i,[2,4].includes(i)?(q.correctIndex+1)%4:q.correctIndex];}));

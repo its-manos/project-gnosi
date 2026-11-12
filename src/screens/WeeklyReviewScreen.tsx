@@ -8,7 +8,7 @@ import { mondayOf } from "../utils/learningActivity";
 import ActionButton from "../components/ActionButton";
 import AtlasCard from "../components/AtlasCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import SyncStatus from "../components/SyncStatus";
 import { lessonReportTarget } from "../utils/contentReports";
@@ -64,7 +64,7 @@ export default function WeeklyReviewScreen({ onBack }: { onBack: () => void }) {
   }
 
   return <View testID="weekly-review-screen" style={styles.root}>
-    <ProgressGradientBackground />
+    <AppBackground />
     <View style={styles.chrome}>
       <ProfileSectionHeader title="Επανάληψη"
         actionLabel="Πρόοδος" actionAccessibilityLabel="Επιστροφή στην πρόοδο"
