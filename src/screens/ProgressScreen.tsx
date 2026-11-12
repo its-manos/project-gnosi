@@ -1,7 +1,7 @@
 import { availableScreenHeight, stableLayoutHeight } from "../utils/screenLayout";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Svg, { Circle } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
 import { categories, type Lesson } from "../data/lessons";
 import type { LearningInsightsView } from "./LearningInsightsScreen";
 import { useMistakesModel } from "../hooks/useMistakesModel";
@@ -29,6 +29,14 @@ type Props = {
 };
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 31;
+
+function OpenArrow({ color, size = 15 }: { color: string; size?: number }) {
+  return <Svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+    accessible={false} pointerEvents="none">
+    <Path d="M5 11 11 5M6.25 5H11v4.75" stroke={color} strokeWidth={1.6}
+      strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>;
+}
 
 export default function ProgressScreen({
   onOpenInsights, onKnowledgeReview, onOpenProfile, onHome,
@@ -74,7 +82,8 @@ export default function ProgressScreen({
       </View>
       <Pressable style={({ pressed }) => [styles.profile, pressed && styles.profilePressed]} accessibilityRole="button"
         accessibilityLabel="Το προφίλ μου" onPress={onOpenProfile}>
-        <Text style={styles.link}>Προφίλ ↗</Text>
+        <Text style={styles.link}>Προφίλ</Text>
+        <OpenArrow color={colors.accentLight} size={14} />
       </Pressable>
     </MotionView>
 
@@ -146,7 +155,7 @@ export default function ProgressScreen({
           <View pointerEvents="none" style={[styles.destinationAccent, styles.knowledgeAccent]} />
           <View style={styles.destinationHeader}>
             <Text style={styles.destinationTitle}>✦  Γνώσεις</Text>
-            <Text style={styles.chevron}>↗</Text>
+            <OpenArrow color={colors.accentLight} />
           </View>
           <View style={styles.destinationCenter}>
             <MotionCounter progressKey={`mastery-${knowledgeReady ? mastered + "-" + totalConcepts : "loading"}`}
@@ -171,7 +180,7 @@ export default function ProgressScreen({
           <View pointerEvents="none" style={[styles.destinationAccent, styles.readingAccent]} />
           <View style={styles.destinationHeader}>
             <Text style={styles.destinationTitle}>◇  Ανάγνωση</Text>
-            <Text style={[styles.chevron, styles.readingChevron]}>↗</Text>
+            <OpenArrow color="#8CC9CA" />
           </View>
           <View style={styles.destinationCenter}>
             <MotionCounter progressKey={`reading-${lessonProgressLoaded ? completedCount : "loading"}`}
@@ -230,7 +239,8 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 23, lineHeight: 29, fontWeight: "900" },
   titleDense: { fontSize: 21, lineHeight: 27 },
   profile: {
-    minHeight: 44, justifyContent: "center", paddingHorizontal: 12,
+    minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 6, paddingHorizontal: 12,
     backgroundColor: "#1B2032", borderWidth: 1, borderColor: colors.border,
     borderRadius: 13,
   },
@@ -278,8 +288,6 @@ const styles = StyleSheet.create({
   destinationVeryDense: { height: 142, paddingVertical: 8 },
   destinationHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 3 },
   destinationTitle: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: "900" },
-  chevron: { color: colors.accentLight, fontSize: 18, lineHeight: 22 },
-  readingChevron: { color: "#8CC9CA" },
   destinationCenter: { gap: 3 },
   destinationNumber: { color: colors.accentLight, fontSize: 25, lineHeight: 31, fontWeight: "900", fontVariant: ["tabular-nums"] },
   destinationNumberDense: { fontSize: 21, lineHeight: 27 },

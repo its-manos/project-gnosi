@@ -26,7 +26,8 @@ const tabs: Tab[] = [
 function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
   if (name === "home") {
     return (
-      <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Svg width={21} height={21} viewBox="0 0 24 24" fill="none"
+        accessible={false} pointerEvents="none">
         <Path d="M3 10.5 12 3l9 7.5" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
         <Path d="M5.5 9.5V21h13V9.5M9.5 21v-7h5v7" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
@@ -35,7 +36,8 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
 
   if (name === "progress") {
     return (
-      <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Svg width={21} height={21} viewBox="0 0 24 24" fill="none"
+        accessible={false} pointerEvents="none">
         <Circle cx={12} cy={12} r={8.5} stroke={color} strokeWidth={1.8} />
         <Path d="M12 7v5l3.5 2" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
@@ -44,7 +46,8 @@ function TabIcon({ name, color }: { name: NavigationTarget; color: string }) {
 
   if (name === "profile") {
     return (
-      <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Svg width={21} height={21} viewBox="0 0 24 24" fill="none"
+        accessible={false} pointerEvents="none">
         <Circle cx={12} cy={8} r={3.5} stroke={color} strokeWidth={1.8} />
         <Path d="M5 20v-1.4c0-3.1 2.8-5.1 7-5.1s7 2 7 5.1V20" stroke={color}
           strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
@@ -77,9 +80,9 @@ export default function BottomNavigation({ currentScreen, onNavigate }: Props) {
         return (
           <Pressable
             key={tab.key}
+            testID={"bottom-tab-" + tab.key}
             style={({ pressed }) => [
               styles.tab,
-              selected && styles.tabSelected,
               pressed && styles.tabPressed,
             ]}
             onPress={() => onNavigate(tab.key)}
@@ -87,7 +90,12 @@ export default function BottomNavigation({ currentScreen, onNavigate }: Props) {
             accessibilityLabel={tab.accessibilityLabel}
             accessibilityState={{ selected }}
           >
-            <TabIcon name={tab.key} color={iconColor} />
+            {selected ? <View testID={"bottom-tab-indicator-" + tab.key}
+              pointerEvents="none" accessible={false} style={styles.activeIndicator} /> : null}
+            <View pointerEvents="none" accessible={false}
+              style={[styles.iconFrame, selected && styles.iconFrameSelected]}>
+              <TabIcon name={tab.key} color={iconColor} />
+            </View>
             <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78}
               style={[styles.label, selected && styles.labelSelected]}>
               {tab.label}
@@ -106,25 +114,33 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     minHeight: 60,
     paddingHorizontal: 8,
-    paddingTop: 6,
-    backgroundColor: "#0E111C",
+    paddingTop: 5,
+    backgroundColor: "#0D121E",
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: "#30364A",
   },
   tab: {
     flex: 1,
     minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,
+    gap: 1,
     borderRadius: 12,
     paddingHorizontal: 2,
   },
-  tabSelected: {
-    backgroundColor: "rgba(168, 155, 255, 0.16)",
-  },
   tabPressed: {
     opacity: 0.72,
+  },
+  activeIndicator: {
+    position: "absolute", top: -5, width: 30, height: 2,
+    borderRadius: 2, backgroundColor: colors.accentLight,
+  },
+  iconFrame: {
+    width: 34, height: 25, borderRadius: 10,
+    alignItems: "center", justifyContent: "center",
+  },
+  iconFrameSelected: {
+    backgroundColor: "rgba(168, 155, 255, 0.14)",
   },
   label: {
     color: colors.textMuted,

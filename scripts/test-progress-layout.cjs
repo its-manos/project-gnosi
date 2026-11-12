@@ -37,7 +37,7 @@ const common = {
   "../components/HomeMotion": { MotionView: "MotionView", MotionPressable: "MotionPressable", MotionXpCircle: "MotionXpCircle", MotionCounter: "MotionCounter" },
   "../components/ProgressMotion": { ProgressBarFill: "ProgressBarFill", ProgressRingGlow: "ProgressRingGlow" },
   "../components/ProgressTrack": { __esModule: true, default: "ProgressTrack" },
-  "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle" },
+  "react-native-svg": { __esModule: true, default: "Svg", Circle: "Circle", Path: "Path" },
   "../components/SyncStatus": { __esModule: true, default: "SyncStatus" },
   "../components/LearningActivityPanel": { CategoryProgress: "Categories" },
   "../hooks/useMistakesModel": { useMistakesModel: () => ({ model: knowledge, ready: true }) },
@@ -71,6 +71,11 @@ assert.ok(!nodes(tree).some(n => n.type === "ScrollView"));
 assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "Circle"), "overview retains the ring track");
 assert.ok(nodes(node(tree, "progress-summary")).some(n => n.type === "MotionXpCircle"),
   "the completed arc animates as the percentage changes");
+assert.equal(nodes(tree).filter(n => typeof n.type === "function" && n.type.name === "OpenArrow").length, 3,
+  "Profile and detail links use reliable vector arrows instead of font glyphs");
+assert.doesNotMatch(fs.readFileSync(require("node:path").join(__dirname,
+  "../src/screens/ProgressScreen.tsx"), "utf8"), /↗/,
+  "Progress navigation must not regress to a missing diagonal-arrow glyph");
 const glow = nodes(node(tree, "progress-summary")).find(n => n.type === "ProgressRingGlow");
 assert.ok(glow, "completion ring gets a separate, soft interior halo");
 assert.equal(glow.props.ready, true);

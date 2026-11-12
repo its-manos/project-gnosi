@@ -635,6 +635,11 @@ assert.ok(!nodes(bottomTree).some(node => node.props?.children === "Αποθηκ
 assert.equal(tabs[0].props.accessibilityState.selected, true);
 assert.equal(tabs[1].props.accessibilityState.selected, false);
 assert.equal(tabs[2].props.accessibilityLabel, "Το προφίλ μου");
+assert.equal(tabs[0].props.testID, "bottom-tab-home");
+assert.ok(nodes(tabs[0]).some(node => node.props?.testID === "bottom-tab-indicator-home"),
+  "the selected destination has a compact top indicator");
+assert.ok(!nodes(tabs[1]).some(node => node.props?.testID?.startsWith("bottom-tab-indicator-")),
+  "inactive destinations do not compete with the active indicator");
 tabs[1].props.onPress();
 assert.equal(actions.at(-1), "nav:progress");
 assert.ok(nodes(bottomTree).some(node => Array.isArray(node.props?.style)
