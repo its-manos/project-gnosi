@@ -31,9 +31,12 @@ const common = {
   '../utils/lessonPath': pathRules,
   'react/jsx-runtime': { jsx, jsxs: jsx },
   'react-native': native,
-  '../components/AppHeader': { __esModule: true, default: 'AppHeader' },
+  '../components/AppBackground': { __esModule: true, default: 'AppBackground' },
+  '../components/ProfileSectionHeader': { __esModule: true, default: 'ProfileSectionHeader',
+    profileSectionLayout: { horizontal: 18, top: 8, below: 13 } },
   '../components/LessonCard': { __esModule: true, default: 'LessonCard' },
   '../components/ActionButton': { __esModule: true, default: 'ActionButton' },
+  'react-native-svg': { __esModule: true, default: 'Svg', Path: 'Path' },
   '../theme': { colors: {} },
 };
 const SavedLessonsScreen = compile('src/screens/SavedLessonsScreen.tsx', common).default;
@@ -41,15 +44,16 @@ const nodes = tree => tree && typeof tree === 'object'
   ? [tree, ...[tree.props?.children, tree.props?.ListHeaderComponent, tree.props?.ListEmptyComponent]
     .flat(Infinity).flatMap(nodes)] : [];
 function list(tree, testID, length) {
-  assert.equal(tree.type, 'FlatList', testID + ' must virtualize the primary vertical scroll');
-  assert.equal(tree.props.testID, testID);
-  assert.equal(tree.props.data.length, length);
-  assert.ok(tree.props.initialNumToRender > 0 && tree.props.initialNumToRender < 10);
-  assert.ok(tree.props.windowSize > 0 && tree.props.windowSize < 10);
-  assert.ok(tree.props.maxToRenderPerBatch > 0 && tree.props.maxToRenderPerBatch < 10);
-  assert.equal(nodes(tree).filter(node => node.type === 'LessonCard').length, 0,
+  const flatList = nodes(tree).find(node => node.type === 'FlatList');
+  assert.ok(flatList, testID + ' must virtualize the primary vertical scroll');
+  assert.equal(flatList.props.testID, testID);
+  assert.equal(flatList.props.data.length, length);
+  assert.ok(flatList.props.initialNumToRender > 0 && flatList.props.initialNumToRender < 10);
+  assert.ok(flatList.props.windowSize > 0 && flatList.props.windowSize < 10);
+  assert.ok(flatList.props.maxToRenderPerBatch > 0 && flatList.props.maxToRenderPerBatch < 10);
+  assert.equal(nodes(flatList).filter(node => node.type === 'LessonCard').length, 0,
     'only FlatList may mount image cards');
-  return tree.props;
+  return flatList.props;
 }
 const ids = pathRules.lessonPaths['ancient-greece'];
 assert.ok(ids.length >= 20, 'use a genuine long editorial path');
@@ -60,7 +64,13 @@ const base = { completedLessonIds: [ids[0]], inProgressLessonIds: [ids[3]], prog
 const saved = [catalogue[0], catalogue[4], catalogue[3]];
 const savedProps = { ...base, lessons: saved, catalogue: [...catalogue].reverse(), onRemoveSavedLesson: id => removed.push(id) };
 const tree = SavedLessonsScreen(savedProps);
+assert.equal(tree.props.testID, 'saved-lessons-screen');
+assert.ok(nodes(tree).some(node => node.type === 'AppBackground'));
 const flat = list(tree, 'saved-lessons-list', saved.length);
+const header = nodes(flat.ListHeaderComponent).find(node => node.type === 'ProfileSectionHeader');
+assert.equal(header.props.title, 'Αποθηκευμένα');
+assert.equal(header.props.actionLabel, '‹ Προφίλ');
+header.props.onAction(); assert.deepEqual(backs, ['back']);
 assert.deepEqual(Array.from(flat.data, lesson => flat.keyExtractor(lesson)), saved.map(lesson => lesson.id));
 const savedRow = flat.renderItem({ item: saved[1], index: 1 });
 const card = nodes(savedRow).find(n => n.type === 'LessonCard');
@@ -76,13 +86,14 @@ const loadingCard = nodes(loading.renderItem({ item: saved[0], index: 0 })).find
 assert.equal(loadingCard.props.lockedReason, 'Φόρτωση προόδου…');
 assert.equal(loadingCard.props.readingState, undefined);
 const remove = nodes(savedRow).find(n => n.type === 'Pressable');
-assert.ok(remove && nodes(remove).some(n => n.type === 'Text' && n.props.children === 'Αφαίρεση από αποθηκευμένα'));
+assert.ok(remove && nodes(remove).some(n => n.type === 'Text' && n.props.children === 'Αφαίρεση'));
+assert.match(remove.props.accessibilityLabel, /Lesson 5/);
 remove.props.onPress(); assert.deepEqual(removed, [ids[4]]);
 const afterRemove = SavedLessonsScreen({ ...savedProps, lessons: saved.filter(lesson => lesson.id !== ids[4]) });
 list(afterRemove, 'saved-lessons-list', 2);
 const emptySaved = SavedLessonsScreen({ ...savedProps, lessons: [] });
-list(emptySaved, 'saved-lessons-list', 0);
-const back = nodes(emptySaved.props.ListEmptyComponent).find(n => n.type === 'ActionButton');
-assert.equal(back.props.label, 'Επιστροφή στην αρχική'); back.props.onPress();
-assert.deepEqual(backs, ['back']);
+const empty = list(emptySaved, 'saved-lessons-list', 0);
+const back = nodes(empty.ListEmptyComponent).find(n => n.type === 'ActionButton');
+assert.equal(back.props.label, 'Επιστροφή στο προφίλ'); back.props.onPress();
+assert.deepEqual(backs, ['back', 'back']);
 console.log('Saved lesson list passed: bounded rendering, stable keys, prerequisites, resumed access, saved removal, hydration, and empty-state navigation. Native views mocked.');

@@ -20,6 +20,7 @@ const componentStubs=['KnowledgeProgress','ActionButton','AppHeader','LessonResu
 let profileReady=true;
 let profile={level:5,earned:240,required:500,remaining:260,totalXP:1140};
 const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,
+ 'react-native-svg':{__esModule:true,default:'Svg',Path:'Path'},
  '../hooks/useKnowledgeProfile':{useKnowledgeProfile:()=>({profile,ready:profileReady})},
  '../components/HomeMotion':{MotionView:'MotionView'},
  '../components/AtlasContinueCard':{__esModule:true,default:'AtlasContinueCard',atlasContinueStyles:{body:{},copy:{},eyebrow:{},title:{},action:{}}},
