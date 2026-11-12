@@ -76,7 +76,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
   '../components/ActionButton':{__esModule:true,default:'Button'},
   '../components/AtlasCard':{__esModule:true,default:'AtlasCard'},
   '../components/HomeMotion':{MotionView:'View',MotionPressable:'Pressable',MotionCounter:'Text'},
-  '../components/ProgressGradientBackground':{__esModule:true,default:'Background'},
+  '../components/AppBackground':{__esModule:true,default:'Background'},
   '../components/worldIcons/categoryIconMap':{getCategoryWorldIcon:()=>null},
   '../components/WelcomeStepIcons':{WelcomeAtlasIcon:'AtlasIcon',WelcomeQuizIcon:'QuizIcon',WelcomeLessonIcon:'LessonIcon'},
   './OnboardingDailyQuestion':{__esModule:true,default:'OnboardingDailyQuestion'}}).default;
@@ -175,7 +175,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  // Existing preference drafts survive fresh props delivered by background sync.
  let prefSlots=[],prefCursor=0,prefEffects=[];
  const prefReact={useState:init=>{const i=prefCursor++;if(!(i in prefSlots))prefSlots[i]=init;return[prefSlots[i],v=>{prefSlots[i]=typeof v==='function'?v(prefSlots[i]):v;}];},useEffect:(fn,deps)=>{const i=prefCursor++;if(!prefSlots[i]||deps.some((d,j)=>d!==prefSlots[i][j])){prefSlots[i]=deps;prefEffects.push(fn);}}};
- const PrefScreen=load('src/screens/DailyChallengePreferencesScreen.tsx',{react:prefReact,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{...native,useWindowDimensions:()=>({height:800,fontScale:1})},'../components/ActionButton':{__esModule:true,default:'Button'},'../components/ProgressGradientBackground':{__esModule:true,default:'Background'},'../components/AtlasCard':{__esModule:true,default:'Card'},'../components/ProfileSectionHeader':{__esModule:true,default:'Header',profileSectionLayout:{}},'../components/HomeMotion':{MotionView:'View',MotionPressable:'Pressable'}}).default;
+ const PrefScreen=load('src/screens/DailyChallengePreferencesScreen.tsx',{react:prefReact,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{...native,useWindowDimensions:()=>({height:800,fontScale:1})},'../components/ActionButton':{__esModule:true,default:'Button'},'../components/AppBackground':{__esModule:true,default:'Background'},'../components/AtlasCard':{__esModule:true,default:'Card'},'../components/ProfileSectionHeader':{__esModule:true,default:'Header',profileSectionLayout:{}},'../components/HomeMotion':{MotionView:'View',MotionPressable:'Pressable'}}).default;
  let prefProps={initialPreferences:initial,isLoading:false,onSave:async()=>true,onCancel:()=>{}};
  const renderPrefs=()=>{prefCursor=0;const t=PrefScreen(prefProps);const pending=prefEffects;prefEffects=[];for(const fn of pending)fn();return t;};
  tree=renderPrefs();nodes(tree).find(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).props.onPress();tree=renderPrefs();assert.equal(nodes(tree).filter(n=>n.props?.accessibilityRole==='checkbox'&&n.props.accessibilityState.checked).length,4);

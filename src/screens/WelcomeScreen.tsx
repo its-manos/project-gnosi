@@ -7,7 +7,7 @@ import { WELCOME_GUIDE_STAGES, previousWelcomePhase, welcomeStepNumber, type Wel
 import { colors } from "../theme";
 import ActionButton from "../components/ActionButton";
 import AtlasCard from "../components/AtlasCard";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import { getCategoryWorldIcon } from "../components/worldIcons/categoryIconMap";
 import UsageSharing from "../components/UsageSharing";
 import { useBetaAnalytics } from "../state/BetaAnalytics";
@@ -79,7 +79,7 @@ export default function WelcomeScreen({
     if (usageEnabled) void analytics.track("onboarding_step_viewed", { screen: "welcome", onboarding_step: step, replay });
   }, [analytics, usageEnabled, step, replay]);
   return <View testID="welcome-flow" style={styles.root}>
-    <ProgressGradientBackground />
+    <AppBackground />
     <View style={styles.header}>
       {phase === "welcome"
         ? <View style={styles.brand}><View style={styles.brandStar}><Text style={styles.brandGlyph}>✦</Text></View><Text style={styles.brandName}>ΓΝΩΣΗ</Text></View>

@@ -7,7 +7,7 @@ import type { DailyChallengePreferences } from "../data/dailyChallengeTopics";
 import { ScrollView, StyleSheet, View, type ScrollViewInstance } from "react-native";
 import { useRef, useState } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import NavigationTile from "../components/NavigationTile";
 import AccountPanel from "../components/AccountPanel";
@@ -60,7 +60,7 @@ export default function AccountScreen({ onBack, backupControls, devControls, dev
     onHome={dailyIntroPreview.onClose} onPreviewContinue={dailyIntroPreview.onContinue}
     onOpenPreferences={dailyIntroPreview.onOpenPreferences}
     preferences={dailyIntroPreview.preferences} preferencesLoaded={dailyIntroPreview.preferencesLoaded} />;
-  return <View style={styles.screen}><ProgressGradientBackground /><ScrollView ref={scrollRef} style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
+  return <View style={styles.screen}><AppBackground /><ScrollView ref={scrollRef} style={styles.scroll} scrollEnabled={activeSection !== null || (viewportHeight > 0 && contentHeight > viewportHeight + 1)} onLayout={event => setViewportHeight(Math.round(event.nativeEvent.layout.height))} onContentSizeChange={(_width, height) => setContentHeight(Math.round(height))} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.content, activeSection === null && styles.overviewContent]}>
     <ProfileSectionHeader
       title={sectionTitle}
       actionLabel={activeSection ? "‹ Ρυθμίσεις" : "‹ Προφίλ"}

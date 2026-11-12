@@ -5,7 +5,7 @@ import Svg, { Circle } from "react-native-svg";
 import { categories, type Lesson } from "../data/lessons";
 import type { LearningInsightsView } from "./LearningInsightsScreen";
 import { useMistakesModel } from "../hooks/useMistakesModel";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import { MotionView, MotionPressable, MotionXpCircle, MotionCounter } from "../components/HomeMotion";
 import { ProgressBarFill, ProgressRingGlow } from "../components/ProgressMotion";
 import ProgressTrack from "../components/ProgressTrack";
@@ -194,7 +194,7 @@ export default function ProgressScreen({
 
   return (
     <View testID="progress-shell" onLayout={onViewportLayout} style={styles.screen}>
-      <ProgressGradientBackground />
+      <AppBackground />
       {accessibleScroll ? (
         <ScrollView testID="progress-accessibility-scroll"
           style={styles.scroll} contentContainerStyle={[...contentStyle, styles.scrollContent]}

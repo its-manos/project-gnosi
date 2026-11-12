@@ -19,7 +19,7 @@ import ExpandableImageCaption from "../components/ExpandableImageCaption";
 import InlineQuestionCard from "../components/InlineQuestionCard";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
 import QuizReveal from "../components/QuizReveal";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
 import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
 import ProfileSectionHeader from "../components/ProfileSectionHeader";
@@ -317,7 +317,7 @@ export default function ReaderLessonScreen({ category, subcategory, lesson, isSa
         statusBarTranslucent navigationBarTranslucent onRequestClose={onBack}>
         <View style={[styles.quizScreen, { paddingTop: safeArea.top, paddingLeft: safeArea.left, paddingRight: safeArea.right }]}
           testID="reader-question-screen">
-          <ProgressGradientBackground />
+          <AppBackground />
           <View style={styles.quizHeader}>
             <ProfileSectionHeader title="Ερωτήσεις"
               actionLabel="‹ Έξοδος" actionAccessibilityLabel="Έξοδος από το μάθημα" onAction={onBack} />

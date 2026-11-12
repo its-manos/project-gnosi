@@ -54,7 +54,7 @@ function harness(store){
 
  // The real screens expose separate actions and branch correctly on feedback.
  const jsx=(type,props)=>({type,props});
- const components=['ProgressGradientBackground','ProgressTrack','ReportContentButton','ActionButton','AppHeader','AnswerOption'];
+ const components=['AppBackground','ProgressTrack','ReportContentButton','ActionButton','AppHeader','AnswerOption'];
  const natives={
   'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},
   'react-native':{Pressable:'Pressable',ScrollView:'ScrollView',View:'View',Text:'Text',

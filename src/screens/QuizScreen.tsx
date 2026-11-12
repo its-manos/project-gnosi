@@ -1,5 +1,5 @@
 import QuizReveal from "../components/QuizReveal";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import QuestionStageFooter from "../components/QuestionStageFooter";
 import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -31,7 +31,7 @@ export default function QuizScreen({ combo = 0, lesson, questionIndex, selectedA
 
   return (
     <View style={styles.root}>
-      <ProgressGradientBackground />
+      <AppBackground />
       <View style={styles.chrome}>
         <AppHeader onBack={onBack} backLabel="ΑΡΘΡΟ" style={styles.fixedHeader} />
       </View>

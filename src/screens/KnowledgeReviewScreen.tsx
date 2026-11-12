@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ActionButton from "../components/ActionButton";
 import AtlasCard from "../components/AtlasCard";
 import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
-import ProgressGradientBackground from "../components/ProgressGradientBackground";
+import AppBackground from "../components/AppBackground";
 import QuestionStageFooter from "../components/QuestionStageFooter";
 import QuestionStageProgress from "../components/QuestionStageProgress";
 import QuizQuestionRenderer from "../components/QuizQuestionRenderer";
@@ -39,7 +39,7 @@ export default function KnowledgeReviewScreen({ onBack }: { onBack: () => void }
   const row = q && learning.mistakes[mistakeKey(q)];
   const corrected = !!row?.wrong && row.correctAt > row.wrong.at;
   return <View style={styles.screen} testID="knowledge-review-screen">
-    <ProgressGradientBackground />
+    <AppBackground />
     <ProfileSectionHeader title={results ? "Αποτελέσματα" : "Επανάληψη λαθών"}
       actionLabel="‹ Πίσω" actionAccessibilityLabel="Επιστροφή στην προηγούμενη οθόνη" onAction={onBack} style={styles.header} />
     <ScrollView ref={scroll} style={styles.viewport} contentContainerStyle={styles.content}>

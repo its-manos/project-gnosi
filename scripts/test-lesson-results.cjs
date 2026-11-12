@@ -16,7 +16,7 @@ const native=Object.fromEntries(['View','Text','Pressable','ScrollView','FlatLis
 native.StyleSheet={create:x=>x};native.Keyboard={dismiss(){}};
 native.useWindowDimensions=()=>dimensions;
 const componentStubs=['KnowledgeProgress','ActionButton','AppHeader','LessonResultChart','ReportContentButton','LessonCard','LessonCover',
- 'AtlasCard','ProfileSectionHeader','ProgressGradientBackground','ProgressTrack'];
+ 'AtlasCard','ProfileSectionHeader','AppBackground','ProgressTrack'];
 let profileReady=true;
 let profile={level:5,earned:240,required:500,remaining:260,totalXP:1140};
 const stubs={react,'react/jsx-runtime':{jsx,jsxs:jsx,Fragment:'Fragment'},'react-native':native,
@@ -45,7 +45,7 @@ const props={lesson,score:4,earnedXP:102,highestCombo:4,nextLesson:next,
  review:{status:'perfect',indices:[],result:{questionCount:4,correctCount:4}}};
 let tree=render(props);
 assert.ok(named(tree,'lesson-results-screen'));
-assert.ok(nodes(tree).some(n=>n.type==='ProgressGradientBackground'),'Midnight Atlas background');
+assert.ok(nodes(tree).some(n=>n.type==='AppBackground'),'Midnight Atlas background');
 assert.ok(!nodes(tree).some(n=>n.type==='KnowledgeProgress'),'no old XP panel');
 assert.ok(!nodes(tree).some(n=>n.type==='LessonResultChart'),'no heavy score ring');
 const header=nodes(tree).find(n=>n.type==='ProfileSectionHeader');
