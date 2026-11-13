@@ -25,5 +25,8 @@ export const startPvpRoom = (roomId: string, matchId: string) => call("pvp_start
 export const answerPvpRoom = (room: PvpRoom, value: number) => call("pvp_answer", {
   p_room: room.id, p_match: room.matchId, p_index: room.index, p_answer: value,
 });
+export const selectPvpRoom = (room: PvpRoom, value: number) => call("pvp_select_answer", {
+  p_room: room.id, p_match: room.matchId, p_index: room.index, p_answer: value,
+});
 export const rematchPvpRoom = (roomId: string, matchId: string) => call("pvp_rematch", { p_room: roomId, p_match: matchId });
 export const leavePvpRoom = (roomId: string) => call("pvp_leave_room", { p_room: roomId });

@@ -9,7 +9,7 @@ export type PvpTopic = typeof PVP_TOPICS[number]["id"];
 export type PvpSettings = { category: PvpTopic; count: 5 | 10; seconds: 15 | 30 };
 export type PvpPlayer = {
   id: string; name: string; ready: boolean; connected: boolean; left: boolean;
-  score: number; answered: boolean; answer: number | null;
+  score: number; answered: boolean; answer: number | null; selection?: number | null;
 };
 export type PvpQuestion = {
   id: string; version: string; prompt: string; categoryId: string; answers: string[];

@@ -13,7 +13,7 @@ const { evaluateAnswer, createQuizSession, submitQuizAnswer, advanceQuizSession,
       create table auth.users(id uuid primary key);
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
-    for (let repeat = 0; repeat < 2; repeat++) for (const file of ['202611120016_friends_pvp.sql', '202611120017_friends_pvp_bank.sql']) {
+    for (let repeat = 0; repeat < 2; repeat++) for (const file of ['202611120016_friends_pvp.sql', '202611120017_friends_pvp_bank.sql', '20261112235514_pvp_confirm_and_reveal.sql']) {
       await db.exec(fs.readFileSync(path.join(__dirname, '../supabase/migrations', file), 'utf8'));
     }
     const users = Array.from({ length: 7 }, (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`);
@@ -82,6 +82,16 @@ const { evaluateAnswer, createQuizSession, submitQuizAnswer, advanceQuizSession,
       await owner("update public.pvp_rooms set starts_at=clock_timestamp()-interval '1 second',deadline=clock_timestamp()+interval '30 seconds' where id=$1", [id]);
       await as(0);
       const q = deck[round], correct = q.content.correctIndex;
+      if (round === 0) {
+        for (let who = 0; who < 4; who++) { await as(who); room = await rpc('pvp_select_answer', [id, match, round, correct]); }
+        assert.equal(room.status, 'question', 'all selections must not end the question');
+        assert.ok(room.players.every(player => !player.answered && player.answer === null && player.score === 0));
+        assert.equal(room.players[3].selection, correct);
+        assert.equal(room.players[0].selection, null, 'opponent drafts stay private');
+        await as(0); room = await rpc('pvp_select_answer', [id, match, round, (correct + 1) % 4]);
+        assert.equal(room.players[0].selection, (correct + 1) % 4, 'selection remains changeable');
+      }
+      await as(0);
       for (let value = 0; value < 4; value++) assert.equal(evaluateAnswer(q, value).correct, value === correct);
       await assert.rejects(rpc('pvp_answer', [id, match, round, 8]), /pvp_invalid_answer/);
       await assert.rejects(rpc('pvp_answer', [id, users[6], round, correct]), /pvp_stale_round/);
@@ -105,10 +115,18 @@ const { evaluateAnswer, createQuizSession, submitQuizAnswer, advanceQuizSession,
         await as(3);
         room = await rpc('pvp_answer', [id, match, round, correct]);
         assert.equal(room.players.find(p => p.id === users[3]).answered, false, 'late submission cannot score');
+      } else if (round === 2) {
+        await as(3); await rpc('pvp_select_answer', [id, match, round, correct]);
+        await owner("update public.pvp_rooms set deadline=clock_timestamp()-interval '1 second' where id=$1", [id]);
+        await as(0); room = await rpc('pvp_get_room', [id]);
+        assert.equal(room.players[3].answered, true, 'deadline locks the saved selection without a client confirmation');
+        assert.equal(room.players[3].answer, correct);
       } else {
         await as(3); room = await rpc('pvp_answer', [id, match, round, correct]);
       }
       assert.equal(room.status, 'reveal');
+      const revealMs = Date.parse(room.revealUntil) - Date.parse(room.serverNow);
+      assert.ok(revealMs > 2500 && revealMs <= 3001, 'server reveal lasts three seconds');
       assert.equal(room.question.correctIndex, correct);
       assert.equal(room.question.explanation, q.explanation);
       assert.equal(room.players[0].score, round + 1);

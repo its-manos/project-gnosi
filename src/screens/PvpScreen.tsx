@@ -13,6 +13,7 @@ import { PvpBadge, PvpHero, PvpWorld } from "../components/PvpArtwork";
 import { usePvpIdentity } from "../hooks/usePvpIdentity";
 import { usePvpFeedback } from "../hooks/usePvpFeedback";
 import { validPlayerName } from "../state/PvpIdentity";
+import { usePvpPresentation } from "../hooks/usePvpPresentation";
 
 function Action({ label, onPress, disabled = false, secondary = false }: {
   label: string; onPress: () => void; disabled?: boolean; secondary?: boolean;
@@ -27,7 +28,9 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   userId: string | null; onHome: () => void; onAccount: () => void;
 }) {
   const game = usePvp(userId);
-  const { room, busy, loading, error, offset, lastSynced } = game;
+  const { busy, loading, error, offset, lastSynced } = game;
+  const { room, revealEndsAt } = usePvpPresentation(game.room);
+  const [draft, setDraft] = useState<{ token: string; value: number } | null>(null);
   const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const identity = usePvpIdentity(userId);
@@ -65,7 +68,9 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   const stale = Boolean(room && now - lastSynced > 6000);
   const disabled = busy || stale;
   const countdown = pvpSecondsLeft(room?.startsAt ?? null, now, offset);
-  const secondsLeft = pvpSecondsLeft(room?.status === "reveal" ? room.revealUntil : room?.deadline ?? null, now, offset);
+  const secondsLeft = room?.status === "reveal" ? Math.min(3, Math.max(0, Math.ceil((revealEndsAt - now) / 1000))) : pvpSecondsLeft(room?.deadline ?? null, now, offset);
+  const token = `${room?.id}:${room?.matchId}:${room?.index}`;
+  const selected = self?.answered ? self.answer : draft?.token === token ? draft.value : self?.selection ?? null;
   const question = room?.question;
   const reveal = room?.status === "reveal" || room?.status === "finished";
   const nameValid = identity.ready && Boolean(identity.name) && !editingName && !identity.saving;
@@ -179,20 +184,20 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
             <Text style={styles.eyebrow}>ΕΡΩΤΗΣΗ {room.index + 1} / {room.count}</Text>
             <Text style={styles.countdownNumber}>{countdown}</Text><Text style={styles.body}>Ξεκινάμε… Έτοιμη η παρέα;</Text>
           </ScreenEntrance> : question && playing ? <ScreenEntrance key={`${room.matchId}:${room.index}:question`} style={styles.questionCard}>
-            <View style={styles.row}><Text style={styles.eyebrow}>ΕΡΩΤΗΣΗ {room.index + 1} / {room.count}</Text>
-              <Text style={[styles.timer, !reveal && secondsLeft <= 5 && styles.urgentText]} accessibilityLabel={`${secondsLeft} δευτερόλεπτα`}>{secondsLeft}″</Text></View>
-            <View style={styles.track}><View style={[styles.fill, !reveal && secondsLeft <= 5 && styles.urgentFill, { width: `${Math.min(100, secondsLeft / (reveal ? 7 : room.seconds) * 100)}%` }]} /></View>
+            <View style={styles.row}><Text style={styles.eyebrow}>{reveal ? "ΑΠΟΤΕΛΕΣΜΑ" : "ΕΡΩΤΗΣΗ"} {room.index + 1} / {room.count}</Text>
+              <Text style={[styles.timer, !reveal && secondsLeft <= 5 && styles.urgentText]} accessibilityLabel={`${reveal ? "Επόμενο βήμα σε " : ""}${secondsLeft} δευτερόλεπτα`}>{secondsLeft}″</Text></View>
+            {!reveal ? <View style={styles.track}><View style={[styles.fill, secondsLeft <= 5 && styles.urgentFill, { width: `${Math.min(100, secondsLeft / room.seconds * 100)}%` }]} /></View> : null}
             <Text accessibilityRole="header" style={styles.question}>{question.prompt}</Text>
             {question.answers.map((answer, index) => <Pressable key={`${room.matchId}:${room.index}:${index}`} accessibilityRole="button"
               accessibilityLabel={`${answer}${reveal && index === question.correctIndex ? ", σωστή απάντηση" : ""}`}
-              accessibilityState={{ selected: self?.answer === index, disabled: disabled || reveal || Boolean(self?.answered) || secondsLeft === 0 }}
+              accessibilityState={{ selected: selected === index, disabled: disabled || reveal || Boolean(self?.answered) || secondsLeft === 0 }}
               disabled={disabled || reveal || Boolean(self?.answered) || secondsLeft === 0}
-              onPress={() => { void game.answer(index); }} style={[styles.answer,
-                self?.answer === index && styles.selectedChip, reveal && index === question.correctIndex && styles.correct,
+              onPress={() => { setDraft({ token, value: index }); void game.select(index, room); }} style={[styles.answer,
+                selected === index && styles.selectedChip, reveal && index === question.correctIndex && styles.correct,
                 reveal && self?.answer === index && index !== question.correctIndex && styles.incorrect]}>
               <View style={styles.letterBadge}><Text style={styles.answerLetter}>{reveal && index === question.correctIndex ? "✓" : reveal && self?.answer === index ? "×" : ["Α", "Β", "Γ", "Δ"][index]}</Text></View><Text style={styles.answerText}>{answer}</Text>
             </Pressable>)}
-            <View style={[styles.feedback, reveal && (self?.answer === question.correctIndex ? styles.correct : styles.incorrect)]}><Text accessibilityLiveRegion="polite" style={styles.body}>{reveal ? (self?.answer === question.correctIndex ? "Σωστά! +1 πόντος" : self?.answered ? "Η σωστή απάντηση φαίνεται με πράσινο." : "Δεν δόθηκε απάντηση εγκαίρως.") : self?.answered ? "Η απάντησή σου κλείδωσε. Περιμένουμε την παρέα…" : busy ? "Αποστολή απάντησης…" : "Διάλεξε μία απάντηση. Η επιλογή σου κλειδώνει."}</Text></View>
+            <View style={[styles.feedback, reveal && (self?.answer === question.correctIndex ? styles.correct : styles.incorrect)]}><Text accessibilityLiveRegion="polite" style={styles.body}>{reveal ? (self?.answer === question.correctIndex ? "Σωστά! +1 πόντος" : self?.answered ? "Η σωστή απάντηση φαίνεται με πράσινο." : "Δεν δόθηκε απάντηση εγκαίρως.") : self?.answered ? "Η απάντησή σου κλείδωσε. Περιμένουμε την παρέα…" : secondsLeft === 0 ? "Ο χρόνος έληξε. Κλειδώνει η αποθηκευμένη επιλογή σου…" : busy ? "Αποθήκευση επιλογής…" : selected !== null && self?.selection !== selected ? "Η επιλογή δεν έχει αποθηκευτεί ακόμη. Επιβεβαίωσε ή επίλεξέ την ξανά." : "Μπορείς να αλλάξεις επιλογή πριν επιβεβαιώσεις. Στη λήξη του χρόνου κλειδώνει η αποθηκευμένη επιλογή σου."}</Text></View>
             {reveal ? <><Text style={styles.body}>{question.explanation}</Text>
               {question.sources?.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή" }} />)}
               <Text style={styles.notice}>{room.index + 1 === room.count ? "Τα τελικά αποτελέσματα" : "Η επόμενη ερώτηση"} σε {secondsLeft}″</Text></> : null}
@@ -231,11 +236,16 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           <Action label="Αποχώρηση από το δωμάτιο" secondary disabled={busy} onPress={exit} />
         </>}
     </ScrollView>
+    {room?.status === "question" && countdown === 0 && !self?.answered ? <View testID="pvp-confirm-footer" style={[styles.confirmFooter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <Action label="Επιβεβαίωση απάντησης" disabled={disabled || selected === null || secondsLeft === 0}
+        onPress={() => { if (selected !== null) void game.answer(selected, room); }} />
+    </View> : null}
   </KeyboardAvoidingView>;
 }
 
 const panel = { backgroundColor: "#182133", borderRadius: 22, borderWidth: 1, borderColor: "#38435C", padding: 18, gap: 14 };
 const styles = StyleSheet.create({
+  confirmFooter: { paddingHorizontal: 18, paddingTop: 12, backgroundColor: "#111A2B", borderTopWidth: 1, borderTopColor: "#4A4265", width: "100%", maxWidth: 600, alignSelf: "center" },
   heroCard: { ...panel, backgroundColor: "#202239", borderColor: "#655A80", paddingTop: 6 },
   identityCard: { ...panel, padding: 14, backgroundColor: "#172333" },
   questionCard: { ...panel, backgroundColor: "#172033", borderColor: "#5C547C", padding: 18 },

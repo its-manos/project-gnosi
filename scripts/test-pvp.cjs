@@ -60,11 +60,13 @@ function hooks() {
   const appState = { currentState: 'active', addEventListener: (_name, callback) => { listeners.add(callback); return { remove: () => listeners.delete(callback) }; } };
   const snapshot = { id: 'room', code: 'ABC123', matchId: 'match', hostId: 'user', status: 'question', index: 0, serverNow: new Date().toISOString(), players: [] };
   let pollReply = snapshot, answerReply = snapshot;
+  let selectTransport = async () => snapshot;
   const api = {
     pvpAvailable: true,
     resumePvpRoom: async () => { calls.push('resume'); return snapshot; },
     getPvpRoom: async () => { calls.push('poll'); return pollReply; },
     answerPvpRoom: async (room, value) => { calls.push(['answer', room.index, room.matchId, value]); return answerReply; },
+    selectPvpRoom: (...args) => selectTransport(...args),
     leavePvpRoom: async () => null,
   };
   const harness = hooks();
@@ -84,6 +86,12 @@ function hooks() {
   assert.deepEqual(calls.find(c => Array.isArray(c)), ['answer', 0, 'match', 2], 'queued tap keeps its original round, even when the poll advances');
   assert.equal(game.room.index, 1);
   assert.equal(game.busy, false);
+  const selecting = deferred(), selectedCalls = [];
+  selectTransport = async (_room, value) => { selectedCalls.push(value); if (value === 0) await selecting.promise; return answerReply; };
+  const firstSelection = game.select(0), lastSelection = game.select(2);
+  await flush(); assert.deepEqual(selectedCalls, [0]);
+  selecting.resolve(); await firstSelection; await lastSelection;
+  assert.deepEqual(selectedCalls, [0, 2], 'rapid selections are saved in tap order rather than silently discarded');
   appState.currentState = 'background';
   const before = calls.length; for (const tick of timers) tick(); await flush();
   assert.equal(calls.length, before, 'no polling while backgrounded');
@@ -124,6 +132,25 @@ function hooks() {
   assert.deepEqual(heard, ['question-open', 'correct'], 'returning to a cached snapshot must not replay a result/completion sound');
   feedbackHarness.unmount(); assert.equal(feedbackListeners.size, 0);
 
+  const presentation = hooks(), scheduled = new Map(); let time = 1000;
+  class Clock extends Date { static now() { return time; } }
+  const { usePvpPresentation } = compile('src/hooks/usePvpPresentation.ts', { react: presentation.react }, {
+    Date: Clock, setTimeout: (fn, delay) => { scheduled.set(fn, delay); return fn; }, clearTimeout: fn => scheduled.delete(fn),
+  });
+  let incoming = { ...snapshot, status: 'question' };
+  const present = () => presentation.render(() => usePvpPresentation(incoming));
+  present(); incoming = { ...snapshot, status: 'reveal' }; present();
+  assert.equal(present().revealEndsAt, 4000);
+  time = 2000; incoming = { ...snapshot, status: 'question', index: 1 }; present();
+  assert.equal(present().room.status, 'reveal', 'early server advance cannot shorten the visible reveal');
+  assert.equal([...scheduled.values()][0], 2000);
+  time = 4000; for (const timer of [...scheduled.keys()]) timer();
+  assert.equal(present().room.index, 1);
+  time = 5000; incoming = { ...snapshot, status: 'reveal', index: 1 }; present(); present();
+  incoming = { ...incoming }; present(); assert.equal(present().revealEndsAt, 8000, 'repeat reveal snapshots do not reset its timer');
+  incoming = { ...incoming, status: 'closed' }; present(); assert.equal(present().room.status, 'closed');
+  presentation.unmount();
+
   // Exercise the actual native screen's interactions with a stubbed transport.
   const ui = hooks(), sent = [];
   let savedName = '';
@@ -142,6 +169,7 @@ function hooks() {
     '../components/AtlasContinueCard': { __esModule: true, default: 'Pressable' }, '../components/ScreenEntrance': { __esModule: true, default: 'Entrance' },
     '../components/PvpArtwork': { PvpBadge: 'Badge', PvpHero: 'Hero', PvpWorld: 'World' },
     '../hooks/usePvpIdentity': { usePvpIdentity: identity }, '../hooks/usePvpFeedback': { usePvpFeedback() {} },
+    '../hooks/usePvpPresentation': { usePvpPresentation: room => ({ room, revealEndsAt: Date.now() + 3000 }) },
     '../state/PvpIdentity': load('src/state/PvpIdentity.ts'),
     '../quiz/pvp': model, '../theme': { colors: {} },
   }, { setInterval: () => 1, clearInterval() {} }).default;
@@ -168,7 +196,18 @@ function hooks() {
   assert.deepEqual(sent[0], ['Μάνος', 'AB12CD']);
   state = { ...state, room: { ...snapshot, count: 5, seconds: 30, startsAt: new Date(Date.now() + 60000).toISOString(), deadline: new Date(Date.now() + 90000).toISOString(), question: { id: 'q', prompt: 'Secret prompt', answers: ['A', 'B', 'C', 'D'] } } };
   root = draw('user'); assert.match(text(root), /Ξεκινάμε/); assert.doesNotMatch(text(root), /Secret prompt/);
-  state.room = { ...state.room, startsAt: new Date(Date.now() - 1000).toISOString(), players: [{ id: 'user', name: 'Μάνος', score: 0, answer: 1, answered: true, connected: true }] };
+  state.room = { ...state.room, startsAt: new Date(Date.now() - 1000).toISOString(), players: [{ id: 'user', name: 'Μάνος', score: 0, answer: null, selection: null, answered: false, connected: true }] };
+  const selections = [], confirmations = [];
+  state.select = async value => { selections.push(value); state.room.players[0].selection = value; return true; };
+  state.answer = async value => { confirmations.push(value); return true; };
+  root = draw('user');
+  const confirmButton = () => nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Επιβεβαίωση απάντησης');
+  assert.equal(confirmButton().props.disabled, true);
+  nodes(root).find(node => node.props.accessibilityLabel === 'B').props.onPress(); root = draw('user');
+  nodes(root).find(node => node.props.accessibilityLabel === 'D').props.onPress(); root = draw('user');
+  assert.deepEqual(selections, [1, 3]); assert.deepEqual(confirmations, [], 'tapping selects without confirming');
+  confirmButton().props.onPress(); assert.deepEqual(confirmations, [3], 'confirmation uses the latest selected option');
+  state.room = { ...state.room, players: [{ ...state.room.players[0], answer: 1, answered: true }] };
   root = draw('user');
   const choices = nodes(root).filter(node => node.type === 'Pressable' && ['A', 'B', 'C', 'D'].includes(node.props.accessibilityLabel));
   assert.equal(choices.length, 4); assert.ok(choices.every(node => node.props.disabled));

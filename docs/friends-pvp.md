@@ -11,11 +11,22 @@ signed-in accounts. The host chooses a category, 5 or 10 questions (thematic gam
 have 5), and 15 or 30 seconds per question. Two to four players must all be ready.
 
 Every player gets the same question and option order. A correct answer earns one
-point; response speed does not affect points. The first accepted answer is final.
-Answers, explanations and updated scores appear after everyone answers or time
-expires. After seven seconds, the next question starts automatically when a client
+point; response speed does not affect points. Tapping saves a private, changeable
+selection; **Επιβεβαίωση απάντησης** makes it final. At the server deadline, the
+last saved selection automatically becomes final, including after a disconnect.
+An unsaved/offline selection cannot be guaranteed; the UI reports pending saves.
+Answers, explanations and updated scores appear after everyone confirms or time
+expires. After three seconds, the next question starts automatically when a client
 refreshes the room. Final standings support shared places on ties and a host-led
 rematch. These private points do not award learning XP or change saved progress.
+
+Every client keeps a received reveal visible for at least three seconds, even if
+a later poll has already advanced the server. The question bar disappears during
+reveal; its separate result countdown never refills the question timer. Drafts and
+confirmations carry the displayed match/question token so a delayed tap cannot
+answer the next question.
+The confirmation button stays in a safe-area-aware footer so it remains reachable
+while reading longer answers on small screens.
 
 ## Multiplayer presentation and sound
 
@@ -44,8 +55,9 @@ normal migration workflow or SQL editor:
 
 1. `supabase/migrations/202611120016_friends_pvp.sql`
 2. `supabase/migrations/202611120017_friends_pvp_bank.sql`
+3. `supabase/migrations/20261112235514_pvp_confirm_and_reveal.sql`
 
-Both are transactional and rerunnable. The second migration freezes the existing
+All are transactional and rerunnable. The second migration freezes the existing
 30 Quick Quiz questions, including authored revisions and sources, after validation
 with the shared quiz engine. Live rooms keep a private snapshot of their dealt
 questions, so a later bank update cannot change an ongoing answer's meaning.
@@ -60,7 +72,7 @@ Missing backend functions produce a friendly unavailable/retry message.
 
 ### Verified deployment — 13 November 2026
 
-Both migrations are installed in `project-gnosi` (`qrbwrtzmhyuogtvxivhs`). The
+The foundation and confirmation migrations are installed in `project-gnosi` (`qrbwrtzmhyuogtvxivhs`). The
 hosted migration service recorded these versions; they map to the tracked source
 files above and do not need to be applied again to this project:
 
@@ -68,13 +80,14 @@ files above and do not need to be applied again to this project:
 | --- | --- | --- |
 | `202611120016_friends_pvp.sql` | `20261112231544` | `friends_pvp` |
 | `202611120017_friends_pvp_bank.sql` | `20261112231559` | `friends_pvp_bank` |
+| `20261112235514_pvp_confirm_and_reveal.sql` | `20261112235915` | `pvp_confirm_and_reveal` |
 
 The existing application schema was present with no recorded migration history
 before this rollout. Baseline that history before adopting a CLI-driven workflow;
 do not blindly replay the older application migrations against this database.
 
 Live verification confirmed 30 questions, RLS on all five PvP tables, no raw table
-grants to `anon`/`authenticated`, nine intended authenticated RPCs, and no anonymous
+grants to `anon`/`authenticated`, ten intended authenticated RPCs, and no anonymous
 PvP RPC grants. An authenticated-role database smoke test used two existing account
 identities to check create/join, readiness, countdown, five shared rounds, hidden
 solutions, first-answer-only scoring, final standings, rematch, stale-match
@@ -88,11 +101,18 @@ replace a signed-in mobile end-to-end test.
 
 Security and performance advisors were reviewed. The
 [authenticated definer-function notices](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)
-describe the nine intentional, identity-checked RPC entry points. The
+describe the ten intentional, identity-checked RPC entry points. The
 [RLS-without-policy notices](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
 describe deliberately inaccessible tables: callers use RPCs rather than direct
 table policies. Internal helpers remain revoked. New foreign keys have supporting
 indexes; their initial unused-index notices are expected before gameplay traffic.
+
+The confirmation update also passed a live rollback test for mutable/private
+selections, all-selected-but-unconfirmed rounds staying open, immutable confirmed
+answers, deadline auto-lock/scoring, three-second reveal, stale-round rejection
+and anonymous denial. It used an isolated temporary room and left no test rows.
+Existing client `pvp_answer` requests remain compatible and confirm immediately;
+older stored answers default to confirmed.
 
 The backend is ready. Distribution of this client to an installed beta and the
 Android/iOS device acceptance checks below remain pending.
@@ -106,13 +126,14 @@ Android/iOS device acceptance checks below remain pending.
   seats in multiple rooms. Creation and repeat joins are safe to retry.
 - Players submit only their choice plus room, match and question identifiers.
   The server checks membership, phase, start time and deadline, evaluates the frozen
-  correct index, and stores only the first answer. Points match the shared engine's
+  correct index, and keeps confirmed answers immutable. Drafts are private and
+  unscored until confirmation or the deadline. Points match the shared engine's
   `correctCount`; clients cannot submit a score or another player's identity.
 - Snapshots contain only the current public question. Solutions, sources, other
   players' choices and current-round points remain concealed until reveal. The
   authored bank is shipped in the app for solo play, so this is casual friends
   competition, not a claim of tamper-proof tournament play.
-- The app polls every 1.5 seconds while foregrounded in a room; no polling runs
+- The app polls every 1.5 seconds while foregrounded in a room and refreshes at question/reveal deadlines; no polling runs
   in the background. Server timestamps provide the displayed countdown offset.
   A stale connection disables answers, requests time out after 10 seconds, and
   foregrounding immediately refreshes. A foreground action queues behind a poll
@@ -130,7 +151,7 @@ Android/iOS device acceptance checks below remain pending.
   Operators can delete expired `pvp_rooms` under their retention policy (child rows
   cascade) and old `pvp_join_limits` rows. No scheduled cleanup is provisioned.
 
-The seven-second reveal allows time to read the explanation and source links.
+The three-second reveal displays the explanation and source links.
 If everyone backgrounds the app, no autonomous timer job runs. The next refresh
 advances from the stored phase and starts the next question with its full duration.
 
