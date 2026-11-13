@@ -8,7 +8,7 @@ import ProfileSectionHeader from "../components/ProfileSectionHeader";
 import SourceLink from "../components/SourceLink";
 import { usePvpReview } from "../hooks/usePvpReview";
 import { usePvp } from "../hooks/usePvp";
-import { normalizeRoomCode, PVP_TOPICS, pvpSecondsLeft, pvpStandings, validRoomCode, type PvpSettings, type PvpRoom } from "../quiz/pvp";
+import { normalizeRoomCode, PVP_TOPICS, PVP_CATEGORY_IDS, pvpSelectedCategories, pvpCategoriesLabel, togglePvpCategory, pvpSecondsLeft, pvpStandings, validRoomCode, type PvpSettings, type PvpRoom } from "../quiz/pvp";
 import { colors } from "../theme";
 import AtlasContinueCard from "../components/AtlasContinueCard";
 import ScreenEntrance from "../components/ScreenEntrance";
@@ -31,15 +31,25 @@ function RoomSettings({ settings, onChange, busy, choosingTopic, setChoosingTopi
   settings: PvpSettings; onChange: (update: (current: PvpSettings) => PvpSettings) => void; busy: boolean;
   choosingTopic: boolean; setChoosingTopic: (value: boolean | ((current: boolean) => boolean)) => void; fontScale: number;
 }) {
+  const selected = pvpSelectedCategories(settings);
+  const all = selected.length === PVP_CATEGORY_IDS.length;
   return <>
-    <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή θέματος" accessibilityState={{ expanded: choosingTopic, disabled: busy }} disabled={busy}
+    <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή κατηγοριών" accessibilityState={{ expanded: choosingTopic, disabled: busy }} disabled={busy}
       onPress={() => setChoosingTopic(value => !value)} style={styles.topicPicker}>
-      <PvpWorld category={settings.category} size={30} /><View style={styles.playerCopy}><Text style={styles.playerMeta}>Θέμα</Text><Text style={styles.playerName}>{PVP_TOPICS.find(topic => topic.id === settings.category)?.label}</Text></View><Text style={styles.notice}>{choosingTopic ? "Κλείσιμο" : "Αλλαγή"}</Text>
+      <PvpWorld category={settings.category} size={30} /><View style={styles.playerCopy}><Text style={styles.playerMeta}>Κατηγορίες</Text><Text style={styles.playerName}>{pvpCategoriesLabel(settings)}</Text></View><Text style={styles.notice}>{choosingTopic ? "Κλείσιμο" : "Αλλαγή"}</Text>
     </Pressable>
-    {choosingTopic ? <View style={styles.chips}>{PVP_TOPICS.map(topic => <Pressable key={topic.id} accessibilityRole="button"
-      accessibilityState={{ selected: settings.category === topic.id, disabled: busy }} disabled={busy}
-      onPress={() => { onChange(current => ({ ...current, category: topic.id })); setChoosingTopic(false); }}
-      style={[styles.chip, styles.topicChip, settings.category === topic.id && styles.selectedChip]}><PvpWorld category={topic.id} size={24} /><Text style={styles.chipText}>{topic.label}</Text></Pressable>)}</View> : null}
+    {choosingTopic ? <>
+      <Text style={styles.playerMeta}>Μπορείς να επιλέξεις περισσότερες από μία κατηγορίες.</Text>
+      <View style={styles.chips}>{PVP_TOPICS.map(topic => {
+        const checked = topic.id === "all" ? all : !all && selected.includes(topic.id);
+        return <Pressable key={topic.id} testID={`pvp-category-${topic.id}`} accessibilityRole="checkbox"
+          accessibilityLabel={topic.label} accessibilityState={{ checked, disabled: busy }} disabled={busy}
+          onPress={() => onChange(current => togglePvpCategory(current, topic.id))}
+          style={[styles.chip, styles.topicChip, checked && styles.selectedChip]}>
+          <PvpWorld category={topic.id} size={24} /><Text style={styles.chipText}>{checked ? "✓ " : ""}{topic.label}</Text>
+        </Pressable>;
+      })}</View>
+    </> : null}
     <View style={[styles.settingsGrid, fontScale > 1.2 && styles.settingsStack]}><View style={styles.settingsGroup}>
     <Text style={styles.label}>Ερωτήσεις</Text>
     <View style={styles.chips}>{([5, 10] as const).map(count => <Pressable key={count} accessibilityRole="button"
@@ -73,7 +83,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   const { fontScale } = useWindowDimensions();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [code, setCode] = useState("");
-  const [settings, setSettings] = useState<PvpSettings>({ category: "all", count: 5, seconds: 30 });
+  const [settings, setSettings] = useState<PvpSettings>({ category: "all", categories: [...PVP_CATEGORY_IDS], count: 5, seconds: 30 });
   const [now, setNow] = useState(Date.now());
   const [shareError, setShareError] = useState(false);
   useEffect(() => {
@@ -214,9 +224,9 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
             <Text selectable style={styles.roomCode} accessibilityLabel={`Κωδικός ${room.code.split("").join(" ")}`}>{room.code}</Text>
             </View><Action label="Πρόσκληση" accessibilityLabel="Πρόσκληση φίλων" secondary onPress={() => { void invite(); }} /></View>
             <View style={styles.roomSettings}><PvpWorld category={room.category} size={28} /><View style={styles.playerCopy}>
-              <Text style={styles.playerName}>{PVP_TOPICS.find(topic => topic.id === room.category)?.label}</Text><Text style={styles.body}>{room.count} ερωτήσεις · {room.seconds}″ ανά ερώτηση</Text></View></View>
+              <Text style={styles.playerName}>{pvpCategoriesLabel(room)}</Text><Text style={styles.body}>{room.count} ερωτήσεις · {room.seconds}″ ανά ερώτηση</Text></View></View>
             {host && !lobbyEdit ? <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή ρυθμίσεων δωματίου" disabled={disabled} style={styles.editName}
-              onPress={() => { setChoosingTopic(false); setLobbyEdit({ room, settings: { category: room.category, count: room.count === 10 ? 10 : 5, seconds: room.seconds === 15 ? 15 : 30 } }); }}><Text style={styles.notice}>Αλλαγή ρυθμίσεων</Text></Pressable> : null}
+              onPress={() => { setChoosingTopic(false); setLobbyEdit({ room, settings: { category: room.category, categories: pvpSelectedCategories(room), count: room.count === 10 ? 10 : 5, seconds: room.seconds === 15 ? 15 : 30 } }); }}><Text style={styles.notice}>Αλλαγή ρυθμίσεων</Text></Pressable> : null}
             {host && lobbyEdit ? <>
               <RoomSettings choosingTopic={choosingTopic} setChoosingTopic={setChoosingTopic} fontScale={fontScale} settings={lobbyEdit.settings} busy={disabled} onChange={update => setLobbyEdit(current => current ? { ...current, settings: update(current.settings) } : null)} />
               <Text style={styles.playerMeta}>Με την αλλαγή, όλοι δηλώνετε ξανά έτοιμοι.</Text>

@@ -7,7 +7,33 @@ export const PVP_TOPICS = [
   { id: "sports", label: "Αθλητισμός" }, { id: "everyday", label: "Καθημερινές γνώσεις" },
 ] as const;
 export type PvpTopic = typeof PVP_TOPICS[number]["id"];
-export type PvpSettings = { category: PvpTopic; count: 5 | 10; seconds: 15 | 30 };
+export type PvpCategory = Exclude<PvpTopic, "all">;
+export const PVP_CATEGORY_IDS: readonly PvpCategory[] = PVP_TOPICS.flatMap(topic => topic.id === "all" ? [] : [topic.id]);
+type PvpCategorySelection = { category: PvpTopic; categories?: readonly PvpCategory[] };
+export type PvpSettings = PvpCategorySelection & { count: 5 | 10; seconds: 15 | 30 };
+
+/** Older room snapshots/settings use only category. An explicit list is authoritative. */
+export function pvpSelectedCategories(selection: PvpCategorySelection): PvpCategory[] {
+  return selection.categories !== undefined
+    ? PVP_CATEGORY_IDS.filter(id => selection.categories!.includes(id))
+    : selection.category === "all" ? [...PVP_CATEGORY_IDS] : [selection.category];
+}
+export function pvpCategoriesLabel(selection: PvpCategorySelection): string {
+  const selected = pvpSelectedCategories(selection);
+  if (selected.length === PVP_CATEGORY_IDS.length) return PVP_TOPICS[0].label;
+  return selected.map(id => PVP_TOPICS.find(topic => topic.id === id)!.label).join(", ") || "Επίλεξε κατηγορίες";
+}
+export function togglePvpCategory(settings: PvpSettings, topic: PvpTopic): PvpSettings {
+  const selected = pvpSelectedCategories(settings);
+  const all = selected.length === PVP_CATEGORY_IDS.length;
+  let categories: PvpCategory[];
+  if (topic === "all") categories = [...PVP_CATEGORY_IDS];
+  else if (all) categories = [topic];
+  else categories = PVP_CATEGORY_IDS.filter(id => id === topic ? !selected.includes(id) : selected.includes(id));
+  // Clearing the last filter restores the unrestricted game.
+  if (!categories.length) categories = [...PVP_CATEGORY_IDS];
+  return { ...settings, category: categories.length === 1 ? categories[0] : "all", categories };
+}
 export type PvpPlayer = {
   id: string; name: string; ready: boolean; connected: boolean; left: boolean;
   reconnectUntil?: string; score: number; answered: boolean; answer: number | null; selection?: number | null;
@@ -17,10 +43,10 @@ export type PvpQuestion = {
   correctIndex?: number; explanation?: string;
   sources?: { title: string; url: string; publisher?: string }[];
 };
-export type PvpRoom = {
+export type PvpRoom = PvpCategorySelection & {
   id: string; code: string; matchId: string; hostId: string;
   status: "lobby" | "question" | "reveal" | "finished" | "closed";
-  settingsVersion?: number; category: PvpTopic; count: number; seconds: number; index: number;
+  settingsVersion?: number; count: number; seconds: number; index: number;
   serverNow: string; startsAt: string | null; deadline: string | null;
   revealUntil: string | null; endedEarly: boolean;
   question: PvpQuestion | null; players: PvpPlayer[];

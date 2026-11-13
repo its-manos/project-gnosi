@@ -24,6 +24,8 @@ const plain = x => JSON.parse(JSON.stringify(x));
     const originalDeck = (await owner('select questions from public.pvp_rooms where id=$1', [room.id])).rows[0].questions;
     const migration = fs.readFileSync(path.join(dir, fs.readdirSync(dir).find(f => f.endsWith('_quiz_bank_v2.sql'))), 'utf8');
     await db.exec(migration); await db.exec(migration);
+    const multi = fs.readFileSync(path.join(dir, fs.readdirSync(dir).find(f => f.endsWith('_pvp_multi_category.sql'))), 'utf8');
+    await db.exec(multi); await db.exec(multi);
     assert.deepEqual((await db.query('select questions from public.pvp_rooms where id=$1', [room.id])).rows[0].questions, originalDeck, 'live deck survives bank update');
     const bank = (await db.query('select question from public.pvp_questions order by id')).rows.map(r => r.question);
     assert.deepEqual(bank, plain([...load('src/data/quickQuizQuestions.ts').quickQuizQuestions].sort((a, b) => a.id.localeCompare(b.id))));

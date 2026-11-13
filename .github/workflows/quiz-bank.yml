@@ -11,6 +11,7 @@ on:
       - "src/data/dailyChallengeTopics.ts"
       - "src/quiz/**"
       - "src/utils/sharedDaily*.ts"
+      - "src/lib/pvp.ts"
       - "src/screens/PvpScreen.tsx"
       - "src/components/PvpArtwork.tsx"
       - "scripts/generate-quiz-expansion.cjs"

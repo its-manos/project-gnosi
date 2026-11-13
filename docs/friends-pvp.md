@@ -1,3 +1,5 @@
+> Quiz bank v2 update: PvP now supports one, multiple or all eight categories and 5/10 questions at either timer. Apply the bank migration followed by `20261113152838_pvp_multi_category.sql` before distributing the new app. See [quiz-bank-v2.md](quiz-bank-v2.md) for the current selection rules, tests and compatibility details. Earlier implementation notes below describe the initial release.
+
 # Private quiz games with friends
 
 From Home → **Μίνι παιχνίδια → Με φίλους**, sign in and choose a display name.
