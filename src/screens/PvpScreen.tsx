@@ -4,8 +4,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AppBackground from "../components/AppBackground";
 import ProfileSectionHeader from "../components/ProfileSectionHeader";
 import SourceLink from "../components/SourceLink";
+import { usePvpReview } from "../hooks/usePvpReview";
 import { usePvp } from "../hooks/usePvp";
-import { normalizeRoomCode, PVP_TOPICS, pvpSecondsLeft, pvpStandings, validRoomCode, type PvpSettings } from "../quiz/pvp";
+import { normalizeRoomCode, PVP_TOPICS, pvpSecondsLeft, pvpStandings, validRoomCode, type PvpSettings, type PvpRoom } from "../quiz/pvp";
 import { colors } from "../theme";
 import AtlasContinueCard from "../components/AtlasContinueCard";
 import ScreenEntrance from "../components/ScreenEntrance";
@@ -24,6 +25,35 @@ function Action({ label, onPress, disabled = false, secondary = false, accessibi
   </AtlasContinueCard>;
 }
 
+function RoomSettings({ settings, onChange, busy, choosingTopic, setChoosingTopic, fontScale }: {
+  settings: PvpSettings; onChange: (update: (current: PvpSettings) => PvpSettings) => void; busy: boolean;
+  choosingTopic: boolean; setChoosingTopic: (value: boolean | ((current: boolean) => boolean)) => void; fontScale: number;
+}) {
+  return <>
+    <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή θέματος" accessibilityState={{ expanded: choosingTopic, disabled: busy }} disabled={busy}
+      onPress={() => setChoosingTopic(value => !value)} style={styles.topicPicker}>
+      <PvpWorld category={settings.category} size={30} /><View style={styles.playerCopy}><Text style={styles.playerMeta}>Θέμα</Text><Text style={styles.playerName}>{PVP_TOPICS.find(topic => topic.id === settings.category)?.label}</Text></View><Text style={styles.notice}>{choosingTopic ? "Κλείσιμο" : "Αλλαγή"}</Text>
+    </Pressable>
+    {choosingTopic ? <View style={styles.chips}>{PVP_TOPICS.map(topic => <Pressable key={topic.id} accessibilityRole="button"
+      accessibilityState={{ selected: settings.category === topic.id, disabled: busy }} disabled={busy}
+      onPress={() => { onChange(current => ({ ...current, category: topic.id, count: topic.id === "all" ? current.count : 5 })); setChoosingTopic(false); }}
+      style={[styles.chip, styles.topicChip, settings.category === topic.id && styles.selectedChip]}><PvpWorld category={topic.id} size={24} /><Text style={styles.chipText}>{topic.label}</Text></Pressable>)}</View> : null}
+    <View style={[styles.settingsGrid, fontScale > 1.2 && styles.settingsStack]}><View style={styles.settingsGroup}>
+    <Text style={styles.label}>Ερωτήσεις</Text>
+    <View style={styles.chips}>{([5, 10] as const).map(count => <Pressable key={count} accessibilityRole="button"
+      accessibilityLabel={`${count} ερωτήσεις`} accessibilityState={{ selected: settings.count === count, disabled: busy || (count === 10 && settings.category !== "all") }}
+      disabled={busy || (count === 10 && settings.category !== "all")} onPress={() => onChange(current => ({ ...current, count }))}
+      style={[styles.chip, settings.count === count && styles.selectedChip, count === 10 && settings.category !== "all" && styles.disabled]}><Text style={styles.chipText}>{count}</Text></Pressable>)}</View>
+    </View><View style={styles.settingsGroup}>
+    <Text style={styles.label}>Χρόνος ανά ερώτηση</Text>
+    <View style={styles.chips}>{([15, 30] as const).map(seconds => <Pressable key={seconds} accessibilityRole="button"
+      accessibilityLabel={`${seconds} δευτερόλεπτα ανά ερώτηση`} accessibilityState={{ selected: settings.seconds === seconds, disabled: busy }} disabled={busy}
+      onPress={() => onChange(current => ({ ...current, seconds }))} style={[styles.chip, settings.seconds === seconds && styles.selectedChip]}><Text style={styles.chipText}>{seconds}″</Text></Pressable>)}</View>
+    </View></View>
+    {settings.category !== "all" ? <Text style={styles.playerMeta}>Τα θεματικά παιχνίδια έχουν 5 ερωτήσεις.</Text> : null}
+  </>;
+}
+
 export default function PvpScreen({ userId, onHome, onAccount }: {
   userId: string | null; onHome: () => void; onAccount: () => void;
 }) {
@@ -35,8 +65,10 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   const [name, setName] = useState("");
   const identity = usePvpIdentity(userId);
   const [editingName, setEditingName] = useState(false);
-  const [mode, setMode] = useState<"create" | "join">("create");
   const [choosingTopic, setChoosingTopic] = useState(false);
+  const [mode, setMode] = useState<"create" | "join">("create");
+  const [lobbyEdit, setLobbyEdit] = useState<{ room: PvpRoom; settings: PvpSettings } | null>(null);
+  const review = usePvpReview();
   const { fontScale } = useWindowDimensions();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [code, setCode] = useState("");
@@ -51,6 +83,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   }, [room?.id, room?.status]);
 
   function exit() {
+    if (review.open) { review.close(); return; }
     if (busy) return;
     if (!room || room.status === "closed") { onHome(); return; }
     Alert.alert("Αποχώρηση από το δωμάτιο;", "Η θέση σου θα ελευθερωθεί. Αν παίζετε ήδη, οι υπόλοιποι θα συνεχίσουν.", [
@@ -61,12 +94,12 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   useEffect(() => {
     const listener = BackHandler.addEventListener("hardwareBackPress", () => { exit(); return true; });
     return () => listener.remove();
-  }, [room, busy]);
+  }, [room, busy, review.open]);
 
   const self = room?.players.find(player => player.id === userId);
   const host = room?.hostId === userId;
   const participants = room?.players.filter(player => !player.left) ?? [];
-  const allReady = participants.length >= 2 && participants.every(player => player.ready);
+  const allReady = participants.length >= 2 && participants.every(player => player.ready && player.connected);
   const stale = Boolean(room && now - lastSynced > 6000);
   const disabled = busy || stale;
   const countdown = pvpSecondsLeft(room?.startsAt ?? null, now, offset);
@@ -80,11 +113,13 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   const winners = standings.filter(player => player.rank === 1);
   const playing = room?.status === "question" || room?.status === "reveal";
   const pageKey = `${room?.matchId}:${room?.index}:${room?.status === "finished"}`;
-  useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [pageKey]);
+  useEffect(() => { if (!review.open) scroll.current?.scrollTo({ y: 0, animated: false }); }, [pageKey, review.open]);
+  useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [review.open]);
   useEffect(() => {
     if (identity.ready && !identity.name && self?.name) void identity.choose(self.name);
   }, [identity.ready, identity.name, self?.name, identity.choose]);
-  usePvpFeedback(room, userId, Boolean(room?.status === "question" && countdown === 0), !stale);
+  usePvpFeedback(room, userId, Boolean(room?.status === "question" && countdown === 0), !stale && !review.open);
+  useEffect(() => { setLobbyEdit(null); }, [room?.matchId, room?.status, room?.hostId]);
   async function saveName() {
     if (await identity.choose(name)) setEditingName(false);
   }
@@ -99,11 +134,29 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
 
   return <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <AppBackground />
-    <ProfileSectionHeader title="Παίξε με φίλους" actionLabel="Αρχική" actionAccessibilityLabel="Επιστροφή στην αρχική" onAction={exit} style={styles.header} />
+    <ProfileSectionHeader title="Παίξε με φίλους" actionLabel={review.open ? "Επιστροφή" : "Αρχική"} actionAccessibilityLabel={review.open ? "Επιστροφή στο δωμάτιο" : "Επιστροφή στην αρχική"} onAction={exit} style={styles.header} />
     <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 12) + 8 }]}>
       {error ? <View style={styles.error} accessibilityLiveRegion="polite"><Text style={styles.body}>{error}</Text>
         <Action label="Ανανέωση" secondary disabled={busy} onPress={() => { void game.refresh(); }} /></View> : null}
-      {loading || (userId && !identity.ready && !identity.error) ? <ActivityIndicator accessibilityLabel="Αναζήτηση ενεργού δωματίου" color={colors.accentLight} /> :
+      {review.open ? <>
+        <View style={styles.card}>
+          <Text style={styles.eyebrow}>Η ΑΝΑΣΚΟΠΗΣΗ ΣΟΥ</Text>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>Απαντήσεις & εξηγήσεις</Text>
+          {room?.matchId !== review.matchId ? <Text accessibilityLiveRegion="polite" style={styles.notice}>Η παρέα ετοιμάζει νέο παιχνίδι. Επέστρεψε στο δωμάτιο όταν τελειώσεις.</Text> : null}
+          <Action label="Επιστροφή στο δωμάτιο" secondary onPress={review.close} />
+          {review.error ? <><Text style={styles.body}>{review.error}</Text><Action label="Φόρτωση ξανά" secondary onPress={review.retry} /></> : !review.data ? <ActivityIndicator accessibilityLabel="Φόρτωση ανασκόπησης" color={colors.accentLight} /> :
+            <Text style={styles.body}>{review.data.items.filter(item => item.correct).length}/{review.data.items.length} σωστές απαντήσεις{review.data.endedEarly ? " · Το παιχνίδι τελείωσε νωρίτερα" : ""}</Text>}
+        </View>
+        {review.data?.items.map((item, index) => <View key={item.question.id} style={styles.questionCard}>
+          <Text style={styles.eyebrow}>ΕΡΩΤΗΣΗ {index + 1} · {item.correct ? "ΣΩΣΤΑ ✓" : item.answer === null ? "ΧΩΡΙΣ ΑΠΑΝΤΗΣΗ" : "ΛΑΘΟΣ"}</Text>
+          <Text accessibilityRole="header" style={styles.question}>{item.question.prompt}</Text>
+          {item.answer !== null && !item.correct ? <View style={[styles.feedback, styles.incorrect]}><Text style={styles.body}>Η απάντησή σου: {item.question.answers[item.answer]}</Text></View> : null}
+          <View style={[styles.feedback, styles.correct]}><Text style={styles.body}>Σωστή απάντηση: {item.question.answers[item.question.correctIndex ?? -1]}</Text></View>
+          <Text style={styles.body}>{item.question.explanation}</Text>
+          {item.question.sources?.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή" }} />)}
+        </View>)}
+        {review.data ? <Action label="Επιστροφή στην παρέα" secondary onPress={review.close} /> : null}
+      </> : loading || (userId && !identity.ready && !identity.error) ? <ActivityIndicator accessibilityLabel="Αναζήτηση ενεργού δωματίου" color={colors.accentLight} /> :
         !game.available || !userId ? <View style={styles.card}>
           <Text style={styles.eyebrow}>ΓΝΩΣΗ · 2–4 ΠΑΙΚΤΕΣ</Text>
           <Text accessibilityRole="header" style={styles.title}>Η γνώση γίνεται παρέα.</Text>
@@ -140,27 +193,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           </View>
           {mode === "create" ? <View style={styles.card}>
             <Text accessibilityRole="header" style={styles.sectionTitle}>Δημιούργησε δωμάτιο</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή θέματος" accessibilityState={{ expanded: choosingTopic, disabled: busy }} disabled={busy}
-              onPress={() => setChoosingTopic(value => !value)} style={styles.topicPicker}>
-              <PvpWorld category={settings.category} size={30} /><View style={styles.playerCopy}><Text style={styles.playerMeta}>Θέμα</Text><Text style={styles.playerName}>{PVP_TOPICS.find(topic => topic.id === settings.category)?.label}</Text></View><Text style={styles.notice}>{choosingTopic ? "Κλείσιμο" : "Αλλαγή"}</Text>
-            </Pressable>
-            {choosingTopic ? <View style={styles.chips}>{PVP_TOPICS.map(topic => <Pressable key={topic.id} accessibilityRole="button"
-              accessibilityState={{ selected: settings.category === topic.id, disabled: busy }} disabled={busy}
-              onPress={() => { setSettings(current => ({ ...current, category: topic.id, count: topic.id === "all" ? current.count : 5 })); setChoosingTopic(false); }}
-              style={[styles.chip, styles.topicChip, settings.category === topic.id && styles.selectedChip]}><PvpWorld category={topic.id} size={24} /><Text style={styles.chipText}>{topic.label}</Text></Pressable>)}</View> : null}
-            <View style={[styles.settingsGrid, fontScale > 1.2 && styles.settingsStack]}><View style={styles.settingsGroup}>
-            <Text style={styles.label}>Ερωτήσεις</Text>
-            <View style={styles.chips}>{([5, 10] as const).map(count => <Pressable key={count} accessibilityRole="button"
-              accessibilityLabel={`${count} ερωτήσεις`} accessibilityState={{ selected: settings.count === count, disabled: busy || (count === 10 && settings.category !== "all") }}
-              disabled={busy || (count === 10 && settings.category !== "all")} onPress={() => setSettings(current => ({ ...current, count }))}
-              style={[styles.chip, settings.count === count && styles.selectedChip, count === 10 && settings.category !== "all" && styles.disabled]}><Text style={styles.chipText}>{count}</Text></Pressable>)}</View>
-            </View><View style={styles.settingsGroup}>
-            <Text style={styles.label}>Χρόνος ανά ερώτηση</Text>
-            <View style={styles.chips}>{([15, 30] as const).map(seconds => <Pressable key={seconds} accessibilityRole="button"
-              accessibilityLabel={`${seconds} δευτερόλεπτα ανά ερώτηση`} accessibilityState={{ selected: settings.seconds === seconds, disabled: busy }} disabled={busy}
-              onPress={() => setSettings(current => ({ ...current, seconds }))} style={[styles.chip, settings.seconds === seconds && styles.selectedChip]}><Text style={styles.chipText}>{seconds}″</Text></Pressable>)}</View>
-            </View></View>
-            {settings.category !== "all" ? <Text style={styles.playerMeta}>Τα θεματικά παιχνίδια έχουν 5 ερωτήσεις.</Text> : null}
+            <RoomSettings choosingTopic={choosingTopic} setChoosingTopic={setChoosingTopic} fontScale={fontScale} settings={settings} onChange={setSettings} busy={busy} />
             <Action label={busy ? "Σύνδεση…" : "Δημιουργία δωματίου"} disabled={busy || !nameValid} onPress={() => { void game.create(identity.name, settings); }} />
           </View> : <View style={styles.card}>
             <Text accessibilityRole="header" style={styles.sectionTitle}>Έχεις κωδικό πρόσκλησης;</Text>
@@ -173,7 +206,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           <Text style={styles.title}>Το δωμάτιο έκλεισε</Text><Text style={styles.body}>Δημιούργησε ένα νέο δωμάτιο για να συνεχίσετε.</Text>
           <Action label="Νέο παιχνίδι" onPress={game.dismiss} />
         </View> : <>
-          {stale ? <Text accessibilityLiveRegion="polite" style={styles.notice}>Επανασύνδεση… Περιμένουμε ενημέρωση από το παιχνίδι.</Text> : null}
+          {stale ? <View style={styles.card}><Text accessibilityLiveRegion="polite" style={styles.notice}>Επανασύνδεση… Ο χρόνος συνεχίζει. Η τελευταία αποθηκευμένη επιλογή σου διατηρείται.</Text><Action label="Επανασύνδεση" secondary disabled={busy} onPress={() => { void game.refresh(); }} /></View> : null}
           {room.status === "lobby" ? <ScreenEntrance style={styles.card}>
             <View style={[styles.row, fontScale > 1.2 && styles.codeStack]}><View style={fontScale > 1.2 ? styles.codeCopy : styles.playerCopy}>
             <Text style={styles.eyebrow}>ΚΩΔΙΚΟΣ ΔΩΜΑΤΙΟΥ</Text>
@@ -181,6 +214,15 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
             </View><Action label="Πρόσκληση" accessibilityLabel="Πρόσκληση φίλων" secondary onPress={() => { void invite(); }} /></View>
             <View style={styles.roomSettings}><PvpWorld category={room.category} size={28} /><View style={styles.playerCopy}>
               <Text style={styles.playerName}>{PVP_TOPICS.find(topic => topic.id === room.category)?.label}</Text><Text style={styles.body}>{room.count} ερωτήσεις · {room.seconds}″ ανά ερώτηση</Text></View></View>
+            {host && !lobbyEdit ? <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή ρυθμίσεων δωματίου" disabled={disabled} style={styles.editName}
+              onPress={() => { setChoosingTopic(false); setLobbyEdit({ room, settings: { category: room.category, count: room.count === 10 ? 10 : 5, seconds: room.seconds === 15 ? 15 : 30 } }); }}><Text style={styles.notice}>Αλλαγή ρυθμίσεων</Text></Pressable> : null}
+            {host && lobbyEdit ? <>
+              <RoomSettings choosingTopic={choosingTopic} setChoosingTopic={setChoosingTopic} fontScale={fontScale} settings={lobbyEdit.settings} busy={disabled} onChange={update => setLobbyEdit(current => current ? { ...current, settings: update(current.settings) } : null)} />
+              <Text style={styles.playerMeta}>Με την αλλαγή, όλοι δηλώνετε ξανά έτοιμοι.</Text>
+              <Action label="Αποθήκευση ρυθμίσεων" disabled={disabled} onPress={() => { void game.configure(lobbyEdit.settings, lobbyEdit.room).then(ok => { if (ok) setLobbyEdit(null); }); }} />
+              <Action label="Ακύρωση" secondary disabled={busy} onPress={() => setLobbyEdit(null)} />
+            </> : null}
+            {!lobbyEdit && (room.settingsVersion ?? 0) > 0 ? <Text style={styles.playerMeta}>Οι ρυθμίσεις έχουν αλλάξει. Ελέγξτε τις πριν δηλώσετε έτοιμοι.</Text> : null}
             {shareError ? <Text style={styles.notice}>Δεν κοινοποιήθηκε η πρόσκληση. Μπορείς να στείλεις τον κωδικό που βλέπεις παραπάνω.</Text> : null}
           </ScreenEntrance> : null}
           {playing ? <View style={[styles.scoreStrip, fontScale > 1.2 && styles.scoreStripWrap]}>{standings.map((player, index) => <View key={player.id} accessible
@@ -219,6 +261,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
             {room.endedEarly ? <Text style={styles.body}>Έμειναν λιγότεροι από δύο ενεργοί παίκτες στο δωμάτιο.</Text> : null}
             <View style={styles.resultStats}><View style={styles.resultStat}><Text style={styles.resultValue}>{self?.score ?? 0}<Text style={styles.statDenominator}>/{room.count}</Text></Text><Text style={styles.playerMeta}>Σωστές απαντήσεις</Text></View>
               <View style={styles.resultStat}><Text style={styles.resultValue}>{standings.find(player => player.id === userId)?.rank ?? "—"}<Text style={styles.statDenominator}>η</Text></Text><Text style={styles.playerMeta}>Η θέση σου</Text></View></View>
+            <Action label="Απαντήσεις & εξηγήσεις" secondary onPress={() => review.show(room)} />
             {host ? <Action label="Παίξτε ξανά" disabled={disabled} onPress={() => { void game.rematch(); }} /> : <Text style={styles.notice}>Περίμενε τον οικοδεσπότη για νέο παιχνίδι.</Text>}
           </ScreenEntrance> : null}
           {!playing ? <View style={styles.card}>
@@ -227,7 +270,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
               {participants.map((player, index) => <View key={player.id} style={[styles.seatCard, fontScale > 1.2 && styles.fullSeat, player.id === userId && styles.self]}>
                 <View style={styles.row}><PvpBadge name={player.name} index={index} compact /><Text style={styles.seatStatus}>{player.ready ? "✓" : "…"}</Text></View>
                 <Text style={styles.playerName}>{player.name}{player.id === userId ? " (εσύ)" : ""}</Text>
-                <Text style={styles.playerMeta}>{!player.connected ? "Εκτός σύνδεσης" : player.id === room.hostId ? "Οικοδεσπότης" : player.ready ? "Έτοιμος" : "Αναμονή"}</Text>
+                <Text style={styles.playerMeta}>{!player.connected ? `Επιστρέφει…${player.reconnectUntil ? ` ${pvpSecondsLeft(player.reconnectUntil, now, offset)}″` : ""}` : player.id === room.hostId ? "Οικοδεσπότης" : player.ready ? "Έτοιμος" : "Αναμονή"}</Text>
               </View>)}
               {Array.from({ length: Math.max(0, 4 - participants.length) }, (_, index) => <View key={`empty:${index}`} style={[styles.seatCard, styles.emptySeat, fontScale > 1.2 && styles.fullSeat]}>
                 <Text accessible={false} style={styles.emptyPlus}>＋</Text><Text style={styles.playerMeta}>Ελεύθερη θέση</Text></View>)}
@@ -239,15 +282,15 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
             </View>)}
             {room.status === "lobby" ? <>
               <View style={[styles.settingsGrid, fontScale > 1.2 && styles.settingsStack]}>
-                <View style={styles.settingsGroup}><Action label={self?.ready ? "Έτοιμος ✓" : "Είμαι έτοιμος"} secondary disabled={disabled} onPress={() => { void game.ready(!self?.ready); }} /></View>
-                {host ? <View style={styles.settingsGroup}><Action label="Έναρξη" accessibilityLabel="Έναρξη παιχνιδιού" disabled={disabled || !allReady} onPress={() => { void game.start(); }} /></View> : null}
+                <View style={styles.settingsGroup}><Action label={self?.ready ? "Έτοιμος ✓" : "Είμαι έτοιμος"} secondary disabled={disabled || Boolean(lobbyEdit)} onPress={() => { void game.ready(!self?.ready, room); }} /></View>
+                {host ? <View style={styles.settingsGroup}><Action label="Έναρξη" accessibilityLabel="Έναρξη παιχνιδιού" disabled={disabled || !allReady || Boolean(lobbyEdit)} onPress={() => { void game.start(); }} /></View> : null}
               </View>
               {!allReady ? <Text style={styles.playerMeta}>{participants.length < 2 ? "Περιμένουμε ακόμη έναν παίκτη." : host ? "Περιμένουμε να είναι όλοι έτοιμοι." : "Ο οικοδεσπότης ξεκινά όταν είστε όλοι έτοιμοι."}</Text> : null}
             </> : null}
           </View> : null}
         </>}
     </ScrollView>
-    {room?.status === "question" && countdown === 0 && !self?.answered ? <View testID="pvp-confirm-footer" style={[styles.confirmFooter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+    {!review.open && room?.status === "question" && countdown === 0 && !self?.answered ? <View testID="pvp-confirm-footer" style={[styles.confirmFooter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       <Action label="Επιβεβαίωση απάντησης" disabled={disabled || selected === null || secondsLeft === 0}
         onPress={() => { if (selected !== null) void game.answer(selected, room); }} />
     </View> : null}

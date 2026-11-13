@@ -56,3 +56,18 @@ retain natural scrolling.
 Device acceptance should cover both platforms, four players, a 24-character name,
 the largest system text size, a short phone in landscape, and reading/confirming
 the longest questions. Scrollable content is expected when the text cannot fit.
+
+## Foundation controls (2026-11-13)
+
+Lobby rule editing stays behind **Αλλαγή ρυθμίσεων** and reuses the compact
+creation controls. Saving closes the editor; cancel preserves the current rules.
+The finished screen adds one review action. The personal review uses the same
+question typography, correct/incorrect colors and source links, with return
+controls above and below the list. A host rematch does not replace the open review
+or reset its scroll position.
+
+The browser adapter checks passed the existing 15 phase/viewport cases and 30
+four-player density cases, plus six combinations of 320/390/768px widths and
+normal/1.5× text for settings save/cancel, missed-answer review, host rematch while
+reading and return to the lobby. Actual native motion, sound and network transport
+remain outside these browser layout checks.

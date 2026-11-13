@@ -13,7 +13,7 @@ const { evaluateAnswer, createQuizSession, submitQuizAnswer, advanceQuizSession,
       create table auth.users(id uuid primary key);
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
-    for (let repeat = 0; repeat < 2; repeat++) for (const file of ['202611120016_friends_pvp.sql', '202611120017_friends_pvp_bank.sql', '20261112235514_pvp_confirm_and_reveal.sql']) {
+    for (let repeat = 0; repeat < 2; repeat++) for (const file of ['202611120016_friends_pvp.sql', '202611120017_friends_pvp_bank.sql', '20261112235514_pvp_confirm_and_reveal.sql', '20261113103027_pvp_foundations.sql']) {
       await db.exec(fs.readFileSync(path.join(__dirname, '../supabase/migrations', file), 'utf8'));
     }
     const users = Array.from({ length: 7 }, (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`);

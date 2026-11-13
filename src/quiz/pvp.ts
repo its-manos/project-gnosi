@@ -9,7 +9,7 @@ export type PvpTopic = typeof PVP_TOPICS[number]["id"];
 export type PvpSettings = { category: PvpTopic; count: 5 | 10; seconds: 15 | 30 };
 export type PvpPlayer = {
   id: string; name: string; ready: boolean; connected: boolean; left: boolean;
-  score: number; answered: boolean; answer: number | null; selection?: number | null;
+  reconnectUntil?: string; score: number; answered: boolean; answer: number | null; selection?: number | null;
 };
 export type PvpQuestion = {
   id: string; version: string; prompt: string; categoryId: string; answers: string[];
@@ -19,10 +19,15 @@ export type PvpQuestion = {
 export type PvpRoom = {
   id: string; code: string; matchId: string; hostId: string;
   status: "lobby" | "question" | "reveal" | "finished" | "closed";
-  category: PvpTopic; count: number; seconds: number; index: number;
+  settingsVersion?: number; category: PvpTopic; count: number; seconds: number; index: number;
   serverNow: string; startsAt: string | null; deadline: string | null;
   revealUntil: string | null; endedEarly: boolean;
   question: PvpQuestion | null; players: PvpPlayer[];
+};
+
+export type PvpReview = {
+  matchId: string; endedEarly: boolean; finishedAt: string;
+  items: { question: PvpQuestion; answer: number | null; correct: boolean }[];
 };
 
 export function normalizeRoomCode(value: string): string {
@@ -52,7 +57,9 @@ export function pvpErrorMessage(error: { message?: string; code?: string } | unk
     pvp_room_full: "Το δωμάτιο έχει ήδη 4 παίκτες.",
     pvp_already_started: "Το παιχνίδι έχει ξεκινήσει. Μπες στον επόμενο γύρο.",
     pvp_not_member: "Δεν βρίσκεσαι πλέον σε αυτό το δωμάτιο.",
-    pvp_host_only: "Μόνο ο οικοδεσπότης μπορεί να ξεκινήσει το παιχνίδι.",
+    pvp_host_only: "Αυτή η ενέργεια είναι διαθέσιμη μόνο στον οικοδεσπότη.",
+    pvp_stale_settings: "Οι ρυθμίσεις άλλαξαν. Πάτησε ανανέωση και δήλωσε ξανά έτοιμος.",
+    pvp_review_unavailable: "Η ανασκόπηση δεν είναι διαθέσιμη ή το δωμάτιο έχει λήξει.",
     pvp_not_ready: "Χρειάζονται τουλάχιστον 2 παίκτες και όλοι να είναι έτοιμοι.",
     pvp_stale_round: "Η ερώτηση έχει αλλάξει. Ανανεώνουμε το παιχνίδι…",
     pvp_invalid_answer: "Αυτή η απάντηση δεν είναι έγκυρη.",

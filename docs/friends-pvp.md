@@ -160,6 +160,39 @@ The three-second reveal displays the explanation and source links.
 If everyone backgrounds the app, no autonomous timer job runs. The next refresh
 advances from the stored phase and starts the next question with its full duration.
 
+## Rematches, lobby rules and reviews
+
+The foundations migration `20261113103027_pvp_foundations.sql` keeps a private,
+ordered question history per room. Deals prefer unseen eligible questions, then
+least recently dealt questions when that category is exhausted. History survives
+rematches and category changes until the room is deleted. It does not follow an
+account into a different room. The question bank is unchanged: a five-question
+theme necessarily repeats on a thematic rematch; mixed games rotate all 30.
+
+Hosts can expand **Αλλαγή ρυθμίσεων** in the lobby and save or cancel. A real
+change resets everyone's readiness, including the host's. New readiness requests
+carry the displayed match and settings revision; a stale device cannot acknowledge
+old rules. A no-op save preserves readiness. Older clients work in unchanged
+lobbies but must update before acknowledging modified rules.
+
+After 15 seconds without a heartbeat, a lobby player is shown as reconnecting and
+loses readiness. Their seat is held until the existing 90-second lobby timeout.
+Returning players ready up again. Match timers continue during a disconnect;
+the screen explains that the latest saved choice is retained and offers retry.
+
+**Απαντήσεις & εξηγήσεις** opens a personal review after completion. It shows each
+reached question, the player's confirmed choice (or no answer), the correct answer,
+explanation and original sources. An early finish excludes unreached questions
+and unconfirmed drafts. Reviews are archived privately with the original match
+participants and frozen question versions. They remain readable if the host
+rematches while someone is reviewing; room heartbeats continue. Back returns to
+the room without leaving it. Access ends at room expiry, and archives cascade when
+the room is deleted. The UI opens the just-finished game; no historical-game
+browser or permanent account history is added.
+
+Deploy this migration before publishing the updated client. Do not replay earlier
+app migrations to resolve unrelated migration-history differences.
+
 ## Verification
 
 `npm run test:pvp` checks the seed, client behavior and PostgreSQL rules using
@@ -167,7 +200,9 @@ PGlite. Client tests exercise the real hook and native screen with mocked React
 Native/transport. SQL tests execute real RPCs as authenticated users and verify
 permissions, room capacity, readiness, hidden answers, shared-engine scoring,
 countdown/deadline enforcement, immutable answers, stale requests, rematches,
-reconnect, host transfer and expiration. These tests use a local database with
+reconnect, host transfer and expiration. Foundation tests also run seven rematches
+to verify exhaustion and repeat rotation, settings revision guards, personal review
+privacy, review retention through rematches, early completion and deletion cascades. These tests use a local database with
 stubbed Supabase identities; they do not contact the production database.
 
 Before release, use actual Android/iOS devices and the intended Supabase instance:
@@ -187,3 +222,14 @@ Before release, use actual Android/iOS devices and the intended Supabase instanc
    request after losing its response. Old-match answers must never reach a new game.
 6. Verify room sharing, Android hardware Back, iOS keyboard/safe areas, explanation
    links, offline errors, and successful solo play without Supabase configuration.
+
+Additional device checks for the foundations:
+
+1. Edit lobby rules as host; verify every player must ready again. Cancel an edit
+   and verify rules/readiness stay unchanged. Try a stale second device.
+2. Disconnect a ready player for 16–30 seconds; verify reconnect status and
+   readiness reset, then resume and ready again.
+3. Play consecutive mixed-topic rematches; verify unseen questions are preferred.
+4. Open the review, inspect wrong/missed answers and source links, and have the
+   host rematch on another phone. Return to the new lobby with Android Back or
+   the visible return button. Repeat with large text and narrow screens.

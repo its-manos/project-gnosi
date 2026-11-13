@@ -114,6 +114,33 @@ function hooks() {
   rpcReply = { data: snapshot, error: null };
   assert.equal((await transport.getPvpRoom('room')).id, 'room');
 
+  await transport.readyPvpRoom({ ...snapshot, settingsVersion: 3 }, true);
+  assert.equal(lastRpc.name, 'pvp_ready_for_settings');
+  assert.deepEqual(plain(lastRpc.args), { p_room: 'room', p_match: 'match', p_version: 3, p_ready: true });
+  await transport.configurePvpRoom({ ...snapshot, settingsVersion: 3 }, { category: 'all', count: 10, seconds: 15 });
+  assert.equal(lastRpc.name, 'pvp_configure_room'); assert.equal(lastRpc.args.p_version, 3);
+  await transport.getPvpReview('room', 'old-match'); assert.equal(lastRpc.name, 'pvp_get_review'); assert.equal(lastRpc.args.p_match, 'old-match');
+
+  const reviewHooks = hooks(), reviewRequests = [];
+  const { usePvpReview } = compile('src/hooks/usePvpReview.ts', {
+    react: reviewHooks.react, '../quiz/pvp': model,
+    '../lib/pvp': { getPvpReview: (id, matchId) => { const request = deferred(); reviewRequests.push({ id, matchId, ...request }); return request.promise; } },
+  });
+  const drawReview = () => reviewHooks.render(() => usePvpReview());
+  let reviewState = drawReview();
+  reviewState.show(snapshot); reviewState = drawReview(); assert.equal(reviewState.open, false, 'active games cannot open review');
+  reviewState.show({ ...snapshot, status: 'finished' }); reviewState = drawReview();
+  assert.equal(reviewState.open, true); assert.equal(reviewRequests[0].matchId, 'match');
+  reviewState.close(); reviewState = drawReview();
+  reviewRequests[0].resolve({ matchId: 'match', items: [] }); await flush();
+  assert.equal(drawReview().data, null, 'closed review ignores delayed response');
+  reviewState = drawReview(); reviewState.show({ ...snapshot, matchId: 'next', status: 'finished' }); reviewState = drawReview();
+  reviewRequests[1].resolve(null); await flush(); reviewState = drawReview(); assert.ok(reviewState.error);
+  reviewState.retry(); drawReview(); reviewState = drawReview(); assert.equal(reviewState.error, null); assert.equal(reviewRequests.length, 3);
+  reviewRequests[2].resolve({ matchId: 'next', items: [] }); await flush();
+  reviewState = drawReview(); assert.equal(reviewState.data.matchId, 'next');
+  reviewHooks.unmount();
+
   const feedbackHarness = hooks(), heard = [], feedbackListeners = new Set();
   const { usePvpFeedback } = compile('src/hooks/usePvpFeedback.ts', {
     react: feedbackHarness.react,
@@ -154,6 +181,7 @@ function hooks() {
   // Exercise the actual native screen's interactions with a stubbed transport.
   const ui = hooks(), sent = [];
   let savedName = '';
+  let shownReview = { open: false };
   const identity = () => ({ name: savedName, ready: true, saving: false, error: null,
     choose: async value => { savedName = value.trim(); return true; }, retry() {} });
   let state = { room: null, busy: false, loading: false, available: true, error: null, offset: 0, lastSynced: Date.now(),
@@ -169,6 +197,7 @@ function hooks() {
     '../components/AtlasContinueCard': { __esModule: true, default: 'Pressable' }, '../components/ScreenEntrance': { __esModule: true, default: 'Entrance' },
     '../components/PvpArtwork': { PvpBadge: 'Badge', PvpHero: 'Hero', PvpWorld: 'World' },
     '../hooks/usePvpIdentity': { usePvpIdentity: identity }, '../hooks/usePvpFeedback': { usePvpFeedback() {} },
+    '../hooks/usePvpReview': { usePvpReview: () => shownReview },
     '../hooks/usePvpPresentation': { usePvpPresentation: room => ({ room, revealEndsAt: Date.now() + 3000 }) },
     '../state/PvpIdentity': load('src/state/PvpIdentity.ts'),
     '../quiz/pvp': model, '../theme': { colors: {} },
@@ -223,6 +252,21 @@ function hooks() {
   state.room = { ...state.room, status: 'reveal', question: { ...state.room.question, correctIndex: 2, explanation: 'Explanation' } };
   root = draw('user'); assert.match(text(root), /Explanation/);
   assert.ok(nodes(root).find(node => node.props.accessibilityLabel === 'C, σωστή απάντηση'));
+  state.room = { ...state.room, status: 'lobby', settingsVersion: 2, category: 'all', count: 5, seconds: 30,
+    players: [{ ...state.room.players[0], ready: true }, { id: 'friend', name: 'Friend', ready: true, connected: true }] };
+  let configured;
+  state.configure = async (settings, displayed) => { configured = { settings, displayed }; return true; };
+  root = draw('user'); root = draw('user');
+  nodes(root).find(node => node.props.accessibilityLabel === 'Αλλαγή ρυθμίσεων δωματίου').props.onPress(); root = draw('user');
+  assert.ok(nodes(root).find(node => node.props.accessibilityLabel === 'Έναρξη παιχνιδιού').props.disabled, 'cannot start with unsaved local settings');
+  nodes(root).find(node => node.props.accessibilityLabel === '15 δευτερόλεπτα ανά ερώτηση').props.onPress(); root = draw('user');
+  await nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Αποθήκευση ρυθμίσεων').props.onPress(); await flush();
+  assert.equal(configured.settings.seconds, 15); assert.equal(configured.displayed.settingsVersion, 2);
+  shownReview = { open: true, matchId: 'old-match', close() { shownReview = { open: false }; },
+    data: { items: [{ question: { id: 'q', prompt: 'Review prompt', answers: ['Right', 'Wrong'], correctIndex: 0, explanation: 'Why it is right' }, answer: 1, correct: false }] } };
+  root = draw('user'); assert.match(text(root), /Review prompt/); assert.match(text(root), /Why it is right/); assert.match(text(root), /Η παρέα ετοιμάζει/);
+  nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Επιστροφή στο δωμάτιο').props.onPress(); root = draw('user');
+  assert.doesNotMatch(text(root), /Review prompt/);
   ui.unmount();
   console.log('PvP client passed: codes, ties, server-clock offsets, safe errors, actual-hook request serialization/stale taps/background/reconnect/cleanup, and native-screen account/join/countdown/locked-answer/reveal flows.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
