@@ -24,7 +24,14 @@ assert.equal(normalizeGreek("άέήίόύώϊΐϋΰςσ"), "ΑΕΗΙΟΥΩΙΙΥ
 assert.equal(normalizeGreek("Μαΐου"), normalizeGreek("Μαι\u0308\u0301ου"));
 assert.equal(new Set(hangmanWords.map(w => w.id)).size, hangmanWords.length);
 assert.equal(new Set(hangmanWords.map(w => normalizeGreek(w.word))).size, hangmanWords.length);
-assert.equal(new Set(hangmanWords.map(w => w.category)).size, 7);
+assert.equal(hangmanWords.length, 180);
+const legacy = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/hangman-before-expansion.json'), 'utf8'));
+assert.equal(legacy.length, 28);
+assert.deepEqual(JSON.parse(JSON.stringify(hangmanWords.slice(0, 28))), legacy, 'published words and reward IDs stay unchanged');
+const categories = new Set(hangmanWords.map(w => w.category));
+assert.equal(categories.size, 9);
+for (const category of categories) assert.equal(hangmanWords.filter(w => w.category === category).length, 20, category);
+require('node:child_process').execFileSync(process.execPath, [path.join(__dirname, 'generate-hangman-bank.cjs'), '--check'], { stdio: 'inherit' });
 for (const entry of hangmanWords) {
   assert.match(normalizeGreek(entry.word), /^[Α-ΡΣ-Ω]+$/u, entry.id);
   assert.ok([...normalizeGreek(entry.word)].every(l => alphabet.includes(l)), entry.id);

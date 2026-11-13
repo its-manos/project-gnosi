@@ -26,10 +26,15 @@ const plain = x => JSON.parse(JSON.stringify(x));
     await db.exec(migration); await db.exec(migration);
     const multi = fs.readFileSync(path.join(dir, fs.readdirSync(dir).find(f => f.endsWith('_pvp_multi_category.sql'))), 'utf8');
     await db.exec(multi); await db.exec(multi);
+    const mixed = fs.readFileSync(path.join(dir, fs.readdirSync(dir).find(f => f.endsWith('_pvp_mixed_difficulty_order.sql'))), 'utf8');
+    await db.exec(mixed); await db.exec(mixed);
     assert.deepEqual((await db.query('select questions from public.pvp_rooms where id=$1', [room.id])).rows[0].questions, originalDeck, 'live deck survives bank update');
+    await as(0); await rpc('pvp_start_room', [room.id, room.matchId]);
+    assert.deepEqual((await owner('select questions from public.pvp_rooms where id=$1', [room.id])).rows[0].questions, originalDeck, 'retry after migration preserves an older active round');
     const bank = (await db.query('select question from public.pvp_questions order by id')).rows.map(r => r.question);
     assert.deepEqual(bank, plain([...load('src/data/quickQuizQuestions.ts').quickQuizQuestions].sort((a, b) => a.id.localeCompare(b.id))));
     await owner('delete from public.pvp_rooms');
+    const orders = new Map([[5, new Set()], [10, new Set()]]);
     for (const category of ['all', 'history', 'science', 'nature', 'technology', 'culture', 'geography', 'sports', 'everyday']) {
       await as(0); room = await rpc('pvp_create_room', ['Host', category, 5, 15]);
       await as(1); await rpc('pvp_join_room', ['Friend', room.code]);
@@ -42,6 +47,26 @@ const plain = x => JSON.parse(JSON.stringify(x));
         assert.ok(!('correctIndex' in room.question) && !('explanation' in room.question), 'unrevealed solutions stay private');
         const deck = (await owner('select questions from public.pvp_rooms where id=$1', [room.id])).rows[0].questions;
         assert.equal(deck.length, count); assert.equal(new Set(deck.map(q => q.id)).size, count);
+        assert.equal(deck[0].difficulty, 'easy');
+        orders.get(count).add(deck.map(q => q.difficulty).join(','));
+        const history = (await owner('select question_history from public.pvp_rooms where id=$1', [room.id])).rows[0].question_history;
+        assert.deepEqual(history.slice(-count), deck.map(q => q.id), 'history records the actual dealt order');
+        await as(0); await rpc('pvp_start_room', [room.id, room.matchId]);
+        assert.deepEqual((await owner('select questions from public.pvp_rooms where id=$1', [room.id])).rows[0].questions, deck, 'duplicate start cannot reshuffle');
+        if ((game === 0 || game === games - 1) && category === 'all') {
+          for (let index = 0; index < count; index++) {
+            // Expire only the test countdown, then exercise both players through a full match.
+            await owner("update public.pvp_rooms set starts_at=clock_timestamp()-interval '1 second',deadline=clock_timestamp()+interval '1 minute' where id=$1", [room.id]);
+            for (const n of [0, 1]) {
+              await as(n); const snapshot = await rpc('pvp_get_room', [room.id]);
+              assert.equal(snapshot.question.id, deck[index].id, 'both players see the saved question order');
+              assert.deepEqual(snapshot.question.answers, deck[index].content.answers, 'both players see the same options');
+              await rpc('pvp_answer', [room.id, room.matchId, index, deck[index].content.correctIndex]);
+            }
+            await owner("update public.pvp_rooms set reveal_until=clock_timestamp()-interval '1 second' where id=$1", [room.id]);
+            await as(0); await rpc('pvp_get_room', [room.id]);
+          }
+        }
         for (const [level, n] of [['easy', 2], ['medium', 2], ['hard', 1]]) assert.equal(deck.filter(q => q.difficulty === level).length, n * (count / 5));
         if (category !== 'all') assert.ok(deck.every(q => q.categoryId === category));
         if (game < games - 1) for (const q of deck) { assert.ok(!seen.has(q.id), `${category}: repeat before inventory exhausted`); seen.add(q.id); }
@@ -52,9 +77,11 @@ const plain = x => JSON.parse(JSON.stringify(x));
       assert.equal(seen.size, category === 'all' ? 240 : 30);
       await owner('delete from public.pvp_rooms where id=$1', [room.id]);
     }
+    assert.ok(orders.get(5).size >= 8, 'five-question difficulty order varies between matches');
+    assert.ok(orders.get(10).size >= 2, 'ten-question difficulty order varies between matches');
     await as(0); await assert.rejects(db.query("select public.pvp_has_question_capacity('all',5)"), /permission denied/);
     await assert.rejects(db.query('select * from public.pvp_questions'), /permission denied/);
     await as(null); await assert.rejects(rpc('pvp_create_room', ['Guest', 'all', 5, 30]), /permission denied/);
-    console.log('PvP v2 passed: idempotent migration, 240 client/server questions, live-deck preservation, eight categories plus mixed, 5/10 questions, 15/30 seconds, 2/2/1 and 4/4/2 quotas, full inventory rotations, repeat exhaustion and private solutions.');
+    console.log('PvP v2 passed: idempotent migrations, 240 questions, preserved active decks, easy opener and varied order, shared player/option order, retry guards, eight categories, 5/10 questions, quotas, inventory rotation and private solutions.');
   } finally { await db.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

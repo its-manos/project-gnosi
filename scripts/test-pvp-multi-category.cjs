@@ -41,6 +41,7 @@ assert.deepEqual(plain(model.pvpSelectedCategories({ ...base, categories: [] }))
   const sorted = x => [...x].sort();
   function check(deck,categories,count) {
     assert.equal(deck.length,count); assert.equal(new Set(deck.map(q=>q.id)).size,count);
+    assert.equal(deck[0].difficulty,'easy');
     assert.ok(deck.every(q=>categories.includes(q.categoryId)),'no question outside selected categories');
     for (const [difficulty,n] of [['easy',2],['medium',2],['hard',1]]) assert.equal(deck.filter(q=>q.difficulty===difficulty).length,n*count/5);
   }
@@ -52,6 +53,8 @@ assert.deepEqual(plain(model.pvpSelectedCategories({ ...base, categories: [] }))
   await db.exec('reset role');
   const migration = fs.readFileSync(path.join(dir,fs.readdirSync(dir).find(f=>f.endsWith('_pvp_multi_category.sql'))),'utf8');
   await db.exec(migration); await db.exec(migration);
+  const mixed = fs.readFileSync(path.join(dir,fs.readdirSync(dir).find(f=>f.endsWith('_pvp_mixed_difficulty_order.sql'))),'utf8');
+  await db.exec(mixed); await db.exec(mixed);
   assert.deepEqual(await deck(room),activeDeck,'migration preserves active deck and answer order');
   let backfill = await owner('select id,category_ids from public.pvp_rooms');
   assert.deepEqual(backfill.rows.find(r=>r.id===room.id).category_ids,['science']);

@@ -116,6 +116,11 @@ export function startQuickQuiz(
   });
   const seen = { ...progress.seen };
   for (const question of questions) seen[question.id] = roundNumber;
+  // Keep an easy opener, then vary the pace without changing the selected mix.
+  for (let index = questions.length - 1; index > 1; index--) {
+    const swap = 1 + Math.floor(random() * index);
+    [questions[index], questions[swap]] = [questions[swap], questions[index]];
+  }
   // Save the order in the round snapshot so a resumed answer keeps its meaning.
   const dealt = questions.map(question => shuffleChoices(question, random));
   return { ...progress, seen, round: createQuizSession(`quick:${roundNumber}`, "challenge", dealt) };

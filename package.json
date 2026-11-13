@@ -56,6 +56,8 @@
     "images:commons:status": "node scripts/bundle-commons-images.cjs --dry-run",
     "images:commons:bundle": "node scripts/bundle-commons-images.cjs --apply",
     "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify",
+    "hangman:generate": "node scripts/generate-hangman-bank.cjs",
+    "hangman:check": "node scripts/generate-hangman-bank.cjs --check",
     "test:hangman": "node scripts/test-hangman.cjs && node scripts/test-hangman-ui.cjs",
     "test:pvp": "node scripts/generate-pvp-bank.cjs --check && node scripts/test-pvp.cjs && node scripts/test-pvp-polish.cjs && node scripts/test-pvp-feedback.cjs && node scripts/test-pvp-sql.cjs && node scripts/test-pvp-foundations.cjs && node scripts/test-pvp-bank-v2.cjs && node scripts/test-pvp-multi-category.cjs",
     "quiz:generate": "node scripts/generate-quiz-expansion.cjs && node scripts/generate-pvp-bank.cjs",
