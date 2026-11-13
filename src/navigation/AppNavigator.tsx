@@ -28,6 +28,7 @@ import { useDailySnapshot, useLearningSession } from "../state/LearningSession";
 import { ONBOARDING_INTRO_LESSON_ID, previousWelcomePhase, type WelcomePhase } from "../utils/firstRun";
 import HangmanScreen from "../screens/HangmanScreen";
 import QuickQuizScreen from "../screens/QuickQuizScreen";
+import PvpScreen from "../screens/PvpScreen";
 import { useQuickQuiz } from "../hooks/useQuickQuiz";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
@@ -394,6 +395,7 @@ export default function AppNavigator() {
         <HomeScreen
           onOpenHangman={() => app.setScreen("hangman")}
           onOpenQuickQuiz={() => app.setScreen("quick-quiz")}
+          onOpenPvp={() => app.setScreen("pvp")}
           quickQuizInProgress={Boolean(quickQuiz.progress?.round && !quickQuiz.progress.round.completed)}
           onOpenProfile={() => openProfile("home")}
           categories={categories}
@@ -410,6 +412,11 @@ export default function AppNavigator() {
           onStartDailyChallenge={() => setIsDailyChallengeOpen(true)}
         />
       );
+      break;
+
+    case "pvp":
+      screenContent = <PvpScreen key={daily.userId ?? "guest"} userId={daily.userId}
+        onHome={() => app.setScreen("home")} onAccount={() => openAccount("home")} />;
       break;
 
     case "hangman":
@@ -616,7 +623,7 @@ export default function AppNavigator() {
         {!welcome.visible && app.screen === "home" && !isDailyChallengeOpen && !isDailyPreferencesOpen ? <SyncStatus quiet /> : null}
         {screenContent}
       </SafeAreaView>
-      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app.screen !== "quiz" && app.screen !== "quick-quiz" && app.screen !== "hangman" ? <BottomNavigation
+      {!welcome.visible && !isDailyChallengeOpen && !isDevQuizPreviewOpen && !isDevDailyIntroPreviewOpen && app.screen !== "quiz" && app.screen !== "quick-quiz" && app.screen !== "hangman" && app.screen !== "pvp" ? <BottomNavigation
         currentScreen={isDailyChallengeOpen ? "home" : app.screen === "account" ? accountOrigin : app.screen === "knowledge-review" ? knowledgeOrigin : app.screen}
         onNavigate={(destination) => {
           setIsDailyPreferencesOpen(false);

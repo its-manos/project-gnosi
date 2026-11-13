@@ -14,13 +14,18 @@ Gnosi uses quiet browsing, silent reading, clear answer feedback and brief miles
 | Finish a lesson, quiz or review / win a word | 560 ms D/F-sharp/A resolution | Accepted completion actions only; Hangman replaces the final letter cue with completion |
 | Master an item | 430 ms A/high-D variant | Existing mastery event |
 | Level up | 740 ms D/F-sharp/A/high-D resolution | Existing earned-XP level crossing |
+| Friend joins / leaves a private lobby | 220 / 190 ms rising / falling plucks | New roster changes only; simultaneous changes coalesce |
+| Player becomes ready | 180 ms F-sharp/A acknowledgement | Private lobby; all-ready also gets one cue |
+| Pre-question countdown | 90 ms tick at 3, 2 and 1 when shown | Private games; server timing, no catch-up sequence |
+| Confirmed answer is locked | 140 ms D/A acknowledgement | Private games while others are still answering; final confirmation uses the reveal cue |
+| Five seconds remain | 230 ms low double pluck | Once per private-game question, only if the player has not confirmed |
 | Read, scroll, select an unconfirmed quiz choice, change tabs, go back, hydrate or open saved results | Silent | Visual feedback stays available |
 
 Hangman treats a submitted letter as an answer; repeated/disabled letters do not make a sound. Losing uses the ordinary incorrect cue, not a separate failure fanfare. No background music, startup jingle, per-XP tick or sound on automatic map positioning is introduced.
 
 ## Playback policy
 
-- `FeedbackAudio` is the only native effects player. All modes use the same named assets and volume hierarchy. Learning plucks are original deterministic syntheses from `scripts/generate-learning-feedback.cjs`; navigation assets come from `scripts/generate-lesson-whooshes.cjs` (a historical filename; these are now tonal cues). Both generators use `scripts/helpers/synthesize-feedback.cjs` to keep the timbre and notes consistent. No external samples are used. Incorrect-answer output is checked against correct-answer RMS after the player volumes are applied, so it cannot silently become much quieter.
+- `FeedbackAudio` is the only native effects player. All modes use the same named assets and volume hierarchy. Learning plucks are original deterministic syntheses from `scripts/generate-learning-feedback.cjs`; navigation assets come from `scripts/generate-lesson-whooshes.cjs` (a historical filename; these are now tonal cues). PvP assets come from `scripts/generate-pvp-feedback.cjs`. All generators use `scripts/helpers/synthesize-feedback.cjs` to keep the timbre and notes consistent. No external samples are used. Incorrect-answer output is checked against correct-answer RMS after the player volumes are applied, so it cannot silently become much quieter.
 - `playsInSilentMode: false` respects iOS silent mode and Android silent/vibrate mode in the installed Expo SDK. `interruptionMode: "mixWithOthers"` avoids pausing or ducking other apps' music. Playback stays foreground-only, with no microphone use or lock-screen session.
 - The existing device-local sound preference controls every cue, including the settings preview. A sound toggle does not affect motion or learning data. Settings explain that system silence still takes precedence.
 - `SoundFeedbackQueue` selects the strongest cue emitted during one microtask: level-up > mastery > completion > answer > opening/navigation. It never queues a backlog of old sounds. Lower-priority transitions do not truncate a brief celebration; a new confirmed answer still gets feedback.
@@ -52,3 +57,32 @@ On Android and iPhone:
 7. Background the app during playback and while opening a question. No stale cue should resume later. Test the first cold opening as well as repeated playback.
 
 Android command regression checks cover one first-play command, retained playback intent after completion, delayed native status, shared in-flight rewinds, superseded requests, deadlines and cancellation. Navigation tests measure the audible PCM duration independently of the padded container.
+
+## Private-game feedback
+
+Lobby notices name arriving/departing/ready players, summarize simultaneous
+changes and announce when everyone is ready. They replace the waiting line for
+four seconds, then return to the ready count and names still waiting. Initial
+rosters, repeated polls, stale snapshots, account changes and foreground recovery
+do not replay lobby events. A later unready → ready action can sound again.
+
+Countdown ticks are derived from the same server-offset clock as the displayed
+number, with a per-match/question/number guard against duplicates and clock
+corrections. The initial countdown is three seconds; subsequent rounds retain
+the existing two-second lead-in. Skipped numbers are not replayed. The ordinary
+question-opening cue marks the end of the countdown. Reveals take priority over
+lock and warning cues, and reviewing a completed game suppresses live game audio.
+
+Small native-driver pulses animate countdown numbers, ready/connection changes,
+score gains and the result illustration. Choices reuse the shared answer-motion
+component for selection and reveal. There are no infinite animations or moving
+answer targets; transforms preserve layout, and reduced motion shows static
+content and cancels running pulses. All six new WAVs use the existing Android
+container padding and add approximately 285 KiB without native dependencies.
+
+On two to four phones, verify joins and simultaneous ready actions, listen to the
+first 3/2/1 and later 2/1 countdowns, confirm before another player, and wait past
+five seconds remaining. Check that the last confirmation plays the result cue
+without extra lock/warning sounds. Repeat with app sound disabled, device silent
+mode, reduced motion, background/foreground and a brief network interruption.
+The new assets and native animation timing still require this device review.

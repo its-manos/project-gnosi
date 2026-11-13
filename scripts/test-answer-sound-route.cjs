@@ -10,7 +10,7 @@ const {FeedbackAudio}=load('src/play/audio.ts',{'./soundStatus':status,'expo-aud
  let listener;const p={isLoaded:true,currentTime:0,source,intent:false,addListener(_event,fn){listener=fn;return{remove(){listener=null;}};},
  play(){assert.equal(this.isLoaded,true,'rewind must restore a completed Android player before play');assert.ok(this.volume>0);heard.push(this.source);this.intent=true;this.currentTime=.23;this.isLoaded=false;listener?.({didJustFinish:true,isLoaded:false});},
  pause(){this.intent=false;},remove(){},async seekTo(){assert.equal(this.intent,false,'pause clears retained Android playback intent before rewind');this.currentTime=0;this.isLoaded=true;listener?.({isLoaded:true});}};players.push(p);return p;
-}},...Object.fromEntries(['correct','incorrect','complete','mastered','level-up','question-open','lesson-preview','lesson-open','world-open','island-open'].map(k=>['../../assets/sounds/'+k+'.wav',k]))});
+}},...Object.fromEntries(['correct','incorrect','complete','mastered','level-up','question-open','lesson-preview','lesson-open','world-open','island-open','pvp-join','pvp-leave','pvp-ready','pvp-countdown','pvp-lock','pvp-warning'].map(k=>['../../assets/sounds/'+k+'.wav',k]))});
 let slots=[],cursor=0,effects=[];
 const react={useState:init=>{const i=cursor++;if(!(i in slots))slots[i]=typeof init==='function'?init():init;return[slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef:init=>{const i=cursor++;return slots[i]??={current:init};},useEffect:(fn,deps)=>{const i=cursor++;if(!slots[i]||deps.some((d,j)=>d!==slots[i].deps[j]))effects.push(()=>{slots[i]?.cleanup?.();slots[i]={deps,cleanup:fn()};});}};
 const native={View:'View',Text:'Text',StyleSheet:{create:x=>x},Animated:{Value:class{setValue(){} interpolate(){return 0;}}},AppState:{currentState:'active',addEventListener:()=>({remove(){}})},AccessibilityInfo:{isReduceMotionEnabled:async()=>false,addEventListener:()=>({remove(){}})}};
@@ -35,11 +35,11 @@ const native={View:'View',Text:'Text',StyleSheet:{create:x=>x},Animated:{Value:c
  const expected=[];while(!dailyStore.getSnapshot().doc.days[date].record.completed){const day=dailyStore.getSnapshot().doc.days[date],record=day.record,session=dailyRecordSession(record,questions),token=questionToken(session);
  if(record.answers[record.currentIndex]===undefined){const q=questions.find(q=>'daily:'+q.id===token.id),right=record.currentIndex%2===0;expected.push(right?'correct':'incorrect');dailyStore.commitRecord(updateDailyRecord(record,submitQuizAnswer(session,token,right?q.correctIndex:(q.correctIndex+1)%q.answers.length).session),day);await flush();render();}
  else{dailyStore.commitRecord(updateDailyRecord(record,advanceQuizSession(session,token).session),day);await flush();render();}}
- assert.deepEqual(heard.slice(n,n+7),expected,'every accepted daily answer reaches the real provider and audio service');assert.equal(players.length,10,'normal playback and preview share cached players');
+ assert.deepEqual(heard.slice(n,n+7),expected,'every accepted daily answer reaches the real provider and audio service');assert.equal(players.length,16,'normal playback and preview share cached players');
  assert.equal(heard.at(-1),'complete');
  status.requestPracticeCue('world-open');await flush();assert.equal(heard.at(-1),'complete','An immediate transition does not truncate completion');
  await new Promise(resolve=>setTimeout(resolve,610));
- for(const kind of ['lesson-preview','lesson-open','world-open','island-open']) {
+ for(const kind of ['lesson-preview','lesson-open','world-open','island-open','pvp-join','pvp-leave','pvp-ready','pvp-countdown','pvp-lock','pvp-warning']) {
   status.requestPracticeCue(kind);await flush();assert.equal(heard.at(-1),kind,'navigation whoosh reaches Android shared player');
   status.requestPracticeCue(kind);await flush();assert.deepEqual(heard.slice(-2),[kind,kind],'reopened lessons replay the cue');
  }

@@ -35,7 +35,7 @@ const common={'../components/ScreenEntrance':{__esModule:true,default:'ScreenEnt
  let welcomeVisible=false,welcomePhase='welcome';
  hook.enabled=true;events.length=0;const nav=harness(),data=load('src/data/lessons.ts');
  const lesson=data.lessons[0],app={screen:'home',activeCategoryId:lesson.categoryId,activeSubcategoryId:lesson.subcategoryId,activeLessonId:lesson.id,checkpointAnswers:{},completedLessonIds:[],completionEvents:{},inProgressLessonIds:[],inProgressLessonCount:0,lessonAttempts:{},progressLoaded:true,resultMode:'finished',setScreen:s=>{app.screen=s;}};
- const screens=['Hangman','Home','Category','Subcategory','Lesson','Quiz','Results','ReviewMistakes','WeeklyReview','KnowledgeReview','Profile','PlayerStats','Account','SavedLessons','Search','DailyChallenge','DailyChallengePreferences','Progress','Welcome'];
+ const screens=['Pvp','Hangman','Home','Category','Subcategory','Lesson','Quiz','Results','ReviewMistakes','WeeklyReview','KnowledgeReview','Profile','PlayerStats','Account','SavedLessons','Search','DailyChallenge','DailyChallengePreferences','Progress','Welcome'];
  const imports={...common,react:nav.react,'react-native-safe-area-context':{SafeAreaView:'SafeArea'},'../hooks/useLearningApp':{useLearningApp:()=>app},'../hooks/useQuickQuiz':{useQuickQuiz:()=>({progress:null})},'../hooks/useAthensDate':{useAthensDate:()=> '2026-10-31'},'../hooks/useSavedLessons':{useSavedLessons:()=>({savedLessonIds:[]})},'../hooks/useDailyChallengePreferences':{useDailyChallengePreferences:()=>({preferences:prefs,savePreferences:async()=>true})},'../hooks/useWelcome':{useWelcome:()=>({visible:welcomeVisible,loading:false,replay:true,phase:welcomePhase,isCurrent:()=>true,complete:async()=>true,skip:async()=>true})},'../state/LearningSession':{useLearningSession:()=>({dailyStore:{savePreferences:async()=>true}}),useDailySnapshot:()=>({doc:{days:{},preferences:null},userId:null})},'../components/BottomNavigation':{__esModule:true,default:'Tabs'},'../components/SyncStatus':{__esModule:true,default:'SyncStatus'},...Object.fromEntries([...screens,'QuickQuiz','LearningInsights'].map(n=>['../screens/'+n+'Screen',{__esModule:true,default:n}]))};
  const navigationAnalytics = load('src/navigation/useNavigationAnalytics.ts', imports);
  const Navigator=load('src/navigation/AppNavigator.tsx',{...imports,'./useNavigationAnalytics':navigationAnalytics}).default;
@@ -48,6 +48,13 @@ const common={'../components/ScreenEntrance':{__esModule:true,default:'ScreenEnt
  app.screen='hangman';events.length=0;tree=render();
  assert.ok(nodes(tree).some(n=>n.type==='Hangman'));
  assert.ok(!events.some(e=>e[0]==='view'),'Hangman does not send an unpublished screen name');
+ app.screen='home';tree=render();events.length=0;
+ nodes(tree).find(n=>n.type==='Home').props.onOpenPvp();tree=render();
+ assert.equal(app.screen,'pvp');
+ assert.ok(nodes(tree).some(n=>n.type==='Pvp'));
+ assert.ok(!nodes(tree).some(n=>n.type==='Tabs'),'PvP owns its leave confirmation');
+ assert.ok(!events.some(e=>e[0]==='view'),'PvP does not send an unpublished analytics screen');
+ nodes(tree).find(n=>n.type==='Pvp').props.onHome();assert.equal(app.screen,'home');
  // Review routes retain their launcher origin and use the existing analytics enum.
  app.screen='home';tree=render();nodes(tree).find(n=>n.type==='Home').props.onStartDailyChallenge();tree=render();nodes(tree).find(n=>n.type==='DailyChallenge').props.onWeeklyReview();assert.equal(app.screen,'knowledge-review');tree=render();assert.ok(events.some(e=>e[0]==='view'&&e[1]==='review'));nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'home');
  app.screen='progress';tree=render();nodes(tree).find(n=>n.type==='Progress').props.onKnowledgeReview();tree=render();nodes(tree).find(n=>n.type==='KnowledgeReview').props.onBack();assert.equal(app.screen,'progress');

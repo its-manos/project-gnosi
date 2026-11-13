@@ -189,7 +189,7 @@ const press=(t,label)=>{const n=nodes(t).find(n=>n.type==='Pressable'&&n.props.a
  app.openCategory=id=>{app.activeCategoryId=id;app.screen='category';};
  app.openSubcategory=(id,categoryId)=>{app.activeSubcategoryId=id;app.activeCategoryId=categoryId;app.screen='subcategory';};
  app.openLesson=id=>{const l=data.lessons.find(x=>x.id===id);app.activeLessonId=id;app.activeCategoryId=l.categoryId;app.activeSubcategoryId=l.subcategoryId;app.screen='lesson';};
- const screens=['HangmanScreen','HomeScreen','QuickQuizScreen','CategoryScreen','SubcategoryScreen','LessonScreen','QuizScreen','ResultsScreen','ReviewMistakesScreen','WeeklyReviewScreen','KnowledgeReviewScreen','ProfileScreen','PlayerStatsScreen','AccountScreen','SavedLessonsScreen','SearchScreen','DailyChallengeScreen','DailyChallengePreferencesScreen','ProgressScreen','LearningInsightsScreen','WelcomeScreen'];
+ const screens=['PvpScreen','HangmanScreen','HomeScreen','QuickQuizScreen','CategoryScreen','SubcategoryScreen','LessonScreen','QuizScreen','ResultsScreen','ReviewMistakesScreen','WeeklyReviewScreen','KnowledgeReviewScreen','ProfileScreen','PlayerStatsScreen','AccountScreen','SavedLessonsScreen','SearchScreen','DailyChallengeScreen','DailyChallengePreferencesScreen','ProgressScreen','LearningInsightsScreen','WelcomeScreen'];
  const screenImports=Object.fromEntries(screens.map(name=>['../screens/'+name,{__esModule:true,default:name}]));
  const navigationAnalytics = load('src/navigation/useNavigationAnalytics.ts', { react: nav.react });
  const navigationCues=[];

@@ -34,6 +34,7 @@ type Props = {
   onStartDailyChallenge: () => void;
   onOpenQuickQuiz: () => void;
   onOpenHangman: () => void;
+  onOpenPvp: () => void;
   quickQuizInProgress?: boolean;
   onOpenProfile?: () => void;
 };
@@ -54,7 +55,7 @@ export default function HomeScreen({
   categories, subcategories, featuredLesson, progressLoaded,
   inProgressLesson, inProgressAnsweredCount, inProgressQuestionCount,
   onResumeLesson, onOpenCategory, onOpenLesson, onStartDailyChallenge,
-  onOpenQuickQuiz, onOpenHangman, quickQuizInProgress, onOpenProfile,
+  onOpenQuickQuiz, onOpenHangman, onOpenPvp, quickQuizInProgress, onOpenProfile,
 }: Props) {
   const { profile, ready: profileReady } = useKnowledgeProfile();
   const daily = useDailySnapshot();
@@ -277,16 +278,22 @@ export default function HomeScreen({
           <Text accessibilityRole="header" style={[styles.sectionTitle, tight && styles.tightSectionTitle]}>Μίνι παιχνίδια</Text>
           <View accessible={false} pointerEvents="none" style={styles.sectionRule} />
         </View>
-        <MotionPressable entranceDelay={290} testID="home-hangman" style={[styles.hangmanCard, fitDashboard && styles.fittedHangman]}
+        <View style={styles.miniGamesRow}>
+        <MotionPressable entranceDelay={290} testID="home-hangman" style={[styles.hangmanCard, styles.miniGameTile, fitDashboard && styles.fittedHangman]}
         onPress={onOpenHangman} accessibilityRole="button" accessibilityLabel="Παίξε Κρεμάλα">
         <MotionCardGlint tone="lesson" delayMs={4200} />
         <View accessible={false} style={styles.hangmanIcon}><Text style={styles.hangmanGlyph}>Α_Ω</Text></View>
         <View style={styles.hangmanCopy}>
           <Text style={styles.hangmanTitle}>Κρεμάλα</Text>
-          <Text style={styles.hangmanMeta}>Μια λέξη, μια μικρή ανακάλυψη</Text>
+          <Text style={styles.hangmanMeta}>Βρες τη λέξη</Text>
         </View>
-        <MotionCtaArrow><Text accessible={false} style={styles.hangmanArrow}>→</Text></MotionCtaArrow>
         </MotionPressable>
+        <MotionPressable entranceDelay={320} testID="home-pvp" style={[styles.hangmanCard, styles.miniGameTile, fitDashboard && styles.fittedHangman]}
+          onPress={onOpenPvp} accessibilityRole="button" accessibilityLabel="Παίξε κουίζ με φίλους, 2 έως 4 παίκτες">
+          <View accessible={false} style={styles.friendsIcon}><Text style={styles.friendsGlyph}>2–4</Text></View>
+          <View style={styles.hangmanCopy}><Text style={styles.hangmanTitle}>Με φίλους</Text><Text style={styles.hangmanMeta}>Ιδιωτικό κουίζ</Text></View>
+        </MotionPressable>
+        </View>
       </View>
       </ScrollView>
     </View>
@@ -294,6 +301,10 @@ export default function HomeScreen({
 }
 
 const styles = StyleSheet.create({
+  miniGamesRow: { flexDirection: "row", gap: 10 },
+  miniGameTile: { flex: 1, minWidth: 0, paddingHorizontal: 10, gap: 8 },
+  friendsIcon: { minWidth: 35, minHeight: 38, borderRadius: 11, backgroundColor: "#353052", alignItems: "center", justifyContent: "center" },
+  friendsGlyph: { color: colors.accentLight, fontSize: 14, fontWeight: "800" },
   screen: { flex: 1, overflow: "hidden", backgroundColor: "#101827" },
   viewport: { flex: 1 },
   // Cards keep bounded natural minimums; spare screen height is never
