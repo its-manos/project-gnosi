@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#102236"/>
+  <g font-family="DejaVu Sans, sans-serif" fill="#f6eedf">
+    <text x="60" y="85" font-size="44" font-weight="bold">Τρεις ερωτήσεις για τη μνήμη</text>
+    <rect x="50" y="170" width="325" height="245" rx="12" fill="#29495b"/>
+    <rect x="438" y="170" width="325" height="245" rx="12" fill="#39465c"/>
+    <rect x="825" y="170" width="325" height="245" rx="12" fill="#475066"/>
+    <g text-anchor="middle">
+      <g font-size="33" font-weight="bold">
+        <text x="212" y="235">Κωδικοποίηση</text><text x="600" y="235">Αποθήκευση</text><text x="987" y="235">Ανάκτηση</text>
+      </g>
+      <g font-size="31">
+        <text x="212" y="307">Πώς το</text><text x="212" y="352">έμαθα;</text>
+        <text x="600" y="307">Διατηρήθηκε</text><text x="600" y="352">στον χρόνο;</text>
+        <text x="987" y="307">Μπορώ να το</text><text x="987" y="352">θυμηθώ τώρα;</text>
+      </g>
+    </g>
+    <g fill="none" stroke="#c7af7a" stroke-width="6">
+      <path d="M385 290H425M410 276L425 290L410 304 M773 290H813M798 276L813 290L798 304"/>
+    </g>
+    <rect x="155" y="475" width="890" height="100" rx="12" fill="#243b50"/>
+    <text x="600" y="537" font-size="34" text-anchor="middle">Το «δεν θυμάμαι» δεν ξεχωρίζει την αιτία.</text>
+    <text x="60" y="645" font-size="27" fill="#b9c7cb">Οι λειτουργίες αλληλεπιδρούν.</text>
+    <text x="60" y="687" font-size="27" fill="#b9c7cb">Απλουστευτικό σχήμα · Δεν είναι ανατομικός χάρτης του εγκεφάλου.</text>
+  </g>
+</svg>

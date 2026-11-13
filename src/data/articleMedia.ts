@@ -28,6 +28,27 @@ function commonsPageUrl(filename: string): string {
 }
 
 export const inlineArticleMedia: Record<string, InlineArticleImage[]> = {
+  "psychology-explaining-behaviour": [{
+    afterParagraphId: "psych-explanation-experiment",
+    url: "https://raw.githubusercontent.com/its-manos/project-gnosi/content/psychology-foundations-pilot/assets/lesson-images/psychology-evidence.png",
+    caption: "Η παρατήρηση αφήνει ανοιχτές περισσότερες εξηγήσεις. Το υποθετικό διάγραμμα δεν δίνει αποτέλεσμα για τη μουσική· οργανώνει τις εναλλακτικές που χρειάζονται έλεγχο.",
+    credit: "ΓΝΩΣΗ · πρωτότυπο διάγραμμα · CC BY 4.0",
+    creditUrl: "https://github.com/its-manos/project-gnosi/blob/content/psychology-foundations-pilot/assets/lesson-images/psychology-evidence.svg", resizeMode: "contain",
+  }],
+  "psychology-selective-attention": [{
+    afterParagraphId: "psych-attention-selection",
+    url: "https://raw.githubusercontent.com/its-manos/project-gnosi/content/psychology-foundations-pilot/assets/lesson-images/psychology-attention.png",
+    caption: "Τα ίδια σύμβολα με διαφορετικό στόχο αναζήτησης. Οι επισημάνσεις βοηθούν να καταλάβεις το σχήμα· δεν μετρούν την προσοχή σου και δεν αναπαράγουν το πείραμα με τις πάσες.",
+    credit: "ΓΝΩΣΗ · πρωτότυπο διάγραμμα · CC BY 4.0",
+    creditUrl: "https://github.com/its-manos/project-gnosi/blob/content/psychology-foundations-pilot/assets/lesson-images/psychology-attention.svg", resizeMode: "contain",
+  }],
+  "psychology-memory-processes": [{
+    afterParagraphId: "psych-memory-processes",
+    url: "https://raw.githubusercontent.com/its-manos/project-gnosi/content/psychology-foundations-pilot/assets/lesson-images/psychology-memory.png",
+    caption: "Κωδικοποίηση, αποθήκευση και ανάκτηση: τρεις λειτουργικές ερωτήσεις για τη μνήμη. Αλληλεπιδρούν και δεν αντιστοιχούν σε ανεξάρτητα κουτιά του εγκεφάλου. Άγγιξε για μεγέθυνση.",
+    credit: "ΓΝΩΣΗ · πρωτότυπο διάγραμμα · CC BY 4.0",
+    creditUrl: "https://github.com/its-manos/project-gnosi/blob/content/psychology-foundations-pilot/assets/lesson-images/psychology-memory.svg", resizeMode: "contain",
+  }],
   ...architectureArticleMedia,
   ...astronomyArticleMedia,
   ...worldHistoryArticleMedia,

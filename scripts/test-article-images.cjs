@@ -8,7 +8,24 @@ const {inlineArticleMedia}=load('src/data/articleMedia.ts',{'./architectureMedia
 const Figure=load('src/components/ArticleFigure.tsx',{'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':{View:'View',Text:'Text',Pressable:'Pressable',StyleSheet:{create:x=>x},Linking:{openURL:async()=>{}}},'./ZoomableLessonImage':{__esModule:true,default:'ZoomableLessonImage'},'./ExpandableImageCaption':{__esModule:true,default:'ExpandableImageCaption'},'./ResolvedCommonsImage':{__esModule:true,default:'NativeImage'},'../theme':{colors:{},reading:{surface:'#182235',border:'#394358',accent:'#C9BEFF'}}}).default;
 const nodes=t=>t&&typeof t==='object'?[t,...[t.props?.children].flat(Infinity).flatMap(nodes)]:[];
 let count=0,diagrams=0;
-for(const [lessonId,figures] of Object.entries(inlineArticleMedia))for(const figure of figures){count++;const url=new URL(figure.url);if((lessonId in supplementaryArticleMedia)&&url.hash.startsWith('#gnosi-supplementary-')){assert.equal(url.hash,'#gnosi-supplementary-'+lessonId);assert.equal(figure.resizeMode,'contain');assert.ok(figure.caption.includes('Πρωτότυπο'));}else if(lessonId in worldHistoryArticleMedia){assert.equal(url.hash,'#gnosi-diagram-'+lessonId);assert.equal(figure.resizeMode,'contain');assert.ok(figure.caption.includes('Πρωτότυπο'));}else{assert.equal(url.hostname,'commons.wikimedia.org');assert.ok(url.searchParams.has('width'),'external illustrations retain raster thumbnail requests');}const tree=Figure({figure}),image=nodes(tree).find(n=>n.type==='NativeImage');assert.ok(image);assert.equal(image.props.uri,figure.url);assert.equal(image.props.accessibilityLabel,figure.caption);assert.ok(nodes(tree).some(n=>n.type==='ExpandableImageCaption'&&n.props.caption===figure.caption),'caption remains available as expandable description');
+const psychologyAssets={
+ 'psychology-explaining-behaviour':'evidence',
+ 'psychology-selective-attention':'attention',
+ 'psychology-memory-processes':'memory',
+};
+const bundleFile=fs.readFileSync(path.join(__dirname,'../src/data/bundledLessonImages.ts'),'utf8');
+const bundleImports=Object.fromEntries([...bundleFile.matchAll(/require\("([^"]+)"\)/g)].map(m=>[m[1],m[1]]));
+const {bundledLessonImages}=load('src/data/bundledLessonImages.ts',bundleImports);
+for(const [lessonId,figures] of Object.entries(inlineArticleMedia))for(const figure of figures){count++;const url=new URL(figure.url);if((lessonId in supplementaryArticleMedia)&&url.hash.startsWith('#gnosi-supplementary-')){assert.equal(url.hash,'#gnosi-supplementary-'+lessonId);assert.equal(figure.resizeMode,'contain');assert.ok(figure.caption.includes('Πρωτότυπο'));}else if(lessonId in worldHistoryArticleMedia){assert.equal(url.hash,'#gnosi-diagram-'+lessonId);assert.equal(figure.resizeMode,'contain');assert.ok(figure.caption.includes('Πρωτότυπο'));}else if(Object.hasOwn(psychologyAssets,lessonId)){
+ const stem='psychology-'+psychologyAssets[lessonId];
+ assert.equal(figure.url,'https://raw.githubusercontent.com/its-manos/project-gnosi/content/psychology-foundations-pilot/assets/lesson-images/'+stem+'.png');
+ assert.equal(bundledLessonImages[figure.url],'../../assets/lesson-images/'+stem+'.png','original diagrams must resolve offline through the actual static mapping');
+ assert.ok(fs.existsSync(path.join(__dirname,'../assets/lesson-images/'+stem+'.png')));
+ assert.ok(fs.existsSync(path.join(__dirname,'../assets/lesson-images/'+stem+'.svg')));
+ assert.equal(figure.creditUrl,'https://github.com/its-manos/project-gnosi/blob/content/psychology-foundations-pilot/assets/lesson-images/'+stem+'.svg');
+ assert.ok(figure.credit.includes('CC BY 4.0'));
+ assert.equal(figure.resizeMode,'contain');
+}else{assert.equal(url.hostname,'commons.wikimedia.org');assert.ok(url.searchParams.has('width'),'external illustrations retain raster thumbnail requests');}const tree=Figure({figure}),image=nodes(tree).find(n=>n.type==='NativeImage');assert.ok(image);assert.equal(image.props.uri,figure.url);assert.equal(image.props.accessibilityLabel,figure.caption);assert.ok(nodes(tree).some(n=>n.type==='ExpandableImageCaption'&&n.props.caption===figure.caption),'caption remains available as expandable description');
  if(/\.svg(?:$|\?)/i.test(figure.url)) diagrams++;
  assert.equal(image.props.resizeMode,'contain','inline photos and diagrams cannot be cropped in the reader');
  assert.equal(image.props.style.aspectRatio,4/3,'responsive figure frame reserves a stable ratio');

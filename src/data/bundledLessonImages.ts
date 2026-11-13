@@ -5,6 +5,10 @@ import type { ImageSourcePropType } from "react-native";
  * Use literal require paths so Metro includes every asset in release builds.
  */
 export const bundledLessonImages: Record<string, ImageSourcePropType> = {
+  // Original psychology teaching diagrams; licences and SVG sources are adjacent.
+  "https://raw.githubusercontent.com/its-manos/project-gnosi/content/psychology-foundations-pilot/assets/lesson-images/psychology-evidence.png": require("../../assets/lesson-images/psychology-evidence.png"),
+  "https://raw.githubusercontent.com/its-manos/project-gnosi/content/psychology-foundations-pilot/assets/lesson-images/psychology-attention.png": require("../../assets/lesson-images/psychology-attention.png"),
+  "https://raw.githubusercontent.com/its-manos/project-gnosi/content/psychology-foundations-pilot/assets/lesson-images/psychology-memory.png": require("../../assets/lesson-images/psychology-memory.png"),
   // Photographic and archival covers for the world-history path.
   "https://commons.wikimedia.org/wiki/Special:FilePath/The%20Earth%20seen%20from%20Apollo%2017.jpg?width=1200": require("../../assets/lesson-images/world-universe-earth-photo.jpg"),
   "https://commons.wikimedia.org/wiki/Special:FilePath/Living%20stromatolites%2C%20Shark%20Bay%2C%20Western%20Australia.png?width=1200": require("../../assets/lesson-images/world-life-photo.jpg"),
