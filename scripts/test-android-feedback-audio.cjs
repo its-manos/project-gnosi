@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { load } = require('./helpers/load-typescript.cjs');
 const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
-const kinds = ['correct', 'incorrect', 'complete', 'mastered', 'level-up', 'question-open', 'lesson-preview', 'lesson-open', 'world-open', 'island-open'];
+const kinds = ['correct', 'incorrect', 'complete', 'mastered', 'level-up', 'question-open', 'lesson-preview', 'lesson-open', 'world-open', 'island-open', 'pvp-join','pvp-leave','pvp-ready','pvp-countdown','pvp-lock','pvp-warning'];
 function fixture({ loaded = true } = {}) {
   const players = [], seeks = [];
   const { FeedbackAudio } = load('src/play/audio.ts', {

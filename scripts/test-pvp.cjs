@@ -157,6 +157,11 @@ function hooks() {
   for (const listener of feedbackListeners) listener('active');
   feedback(); audibleRoom = { ...audibleRoom, status: 'finished' }; feedback();
   assert.deepEqual(heard, ['question-open', 'correct'], 'returning to a cached snapshot must not replay a result/completion sound');
+  audibleRoom = { ...snapshot, status: 'lobby', players: [{ id: 'user', name: 'Μάνος', ready: false, connected: true }] }; feedback();
+  audibleRoom = { ...audibleRoom, players: [...audibleRoom.players, { id: 'friend', name: 'Άννα', ready: false, connected: true }] };
+  feedback(); assert.match(feedback(), /Άννα μπήκε/); assert.equal(heard.at(-1), 'pvp-join');
+  audibleRoom = { ...audibleRoom, players: audibleRoom.players.map(player => ({ ...player, ready: true })) };
+  feedback(); assert.match(feedback(), /Όλοι έτοιμοι/); assert.equal(heard.at(-1), 'pvp-ready');
   feedbackHarness.unmount(); assert.equal(feedbackListeners.size, 0);
 
   const presentation = hooks(), scheduled = new Map(); let time = 1000;
@@ -192,6 +197,8 @@ function hooks() {
   const Screen = compile('src/screens/PvpScreen.tsx', {
     react: ui.react, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ bottom: 0 }) },
+    '../components/PvpPulse': { __esModule: true, default: ({ children }) => children },
+    '../play/motion': { AnswerMotion: ({ children }) => children },
     '../components/AppBackground': { default: 'Background' }, '../components/ProfileSectionHeader': { default: 'Header' },
     '../components/SourceLink': { default: 'Source' }, '../hooks/usePvp': { usePvp: () => state },
     '../components/AtlasContinueCard': { __esModule: true, default: 'Pressable' }, '../components/ScreenEntrance': { __esModule: true, default: 'Entrance' },

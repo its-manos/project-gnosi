@@ -12,9 +12,16 @@ const sources = {
   "lesson-open": require("../../assets/sounds/lesson-open.wav"),
   "world-open": require("../../assets/sounds/world-open.wav"),
   "island-open": require("../../assets/sounds/island-open.wav"),
+  "pvp-join": require("../../assets/sounds/pvp-join.wav"),
+  "pvp-leave": require("../../assets/sounds/pvp-leave.wav"),
+  "pvp-ready": require("../../assets/sounds/pvp-ready.wav"),
+  "pvp-countdown": require("../../assets/sounds/pvp-countdown.wav"),
+  "pvp-lock": require("../../assets/sounds/pvp-lock.wav"),
+  "pvp-warning": require("../../assets/sounds/pvp-warning.wav"),
 };
 // One loudness hierarchy for every learning mode; browsing remains quiet.
 const volumes: Record<FeedbackKind, number> = {
+  "pvp-join": .32, "pvp-leave": .25, "pvp-ready": .30, "pvp-countdown": .32, "pvp-lock": .28, "pvp-warning": .32,
   "world-open": .22, "island-open": .24, "lesson-preview": .36, "lesson-open": .36,
   "question-open": .32, correct: .46, incorrect: .44, complete: .52, mastered: .54, "level-up": .58,
 };

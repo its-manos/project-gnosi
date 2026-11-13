@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import { ActivityIndicator, Alert, BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import PvpPulse from "../components/PvpPulse";
+import { AnswerMotion } from "../play/motion";
 import AppBackground from "../components/AppBackground";
 import ProfileSectionHeader from "../components/ProfileSectionHeader";
 import SourceLink from "../components/SourceLink";
@@ -118,7 +120,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   useEffect(() => {
     if (identity.ready && !identity.name && self?.name) void identity.choose(self.name);
   }, [identity.ready, identity.name, self?.name, identity.choose]);
-  usePvpFeedback(room, userId, Boolean(room?.status === "question" && countdown === 0), !stale && !review.open);
+  const lobbyNotice = usePvpFeedback(room, userId, Boolean(room?.status === "question" && countdown === 0), !stale && !review.open, countdown, secondsLeft);
   useEffect(() => { setLobbyEdit(null); }, [room?.matchId, room?.status, room?.hostId]);
   async function saveName() {
     if (await identity.choose(name)) setEditingName(false);
@@ -229,18 +231,18 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
             accessibilityLabel={`${player.name}, ${player.score} πόντοι, ${player.left ? "αποχώρησε" : !player.connected ? "εκτός σύνδεσης" : player.answered ? "απάντησε" : "σκέφτεται"}`}
             style={[styles.scoreChip, fontScale > 1.2 && styles.wideScoreChip, player.id === userId && styles.self]}>
             <Text numberOfLines={1} style={styles.scoreName}>{player.name}</Text>
-            <View style={styles.row}><Text style={styles.scoreSmall}>{player.score}</Text><Text accessible={false} style={styles.playerMeta}>{player.left ? "Έφυγε" : !player.connected ? "Εκτός" : player.answered ? "✓" : "…"}</Text></View>
+            <View style={styles.row}><PvpPulse pulseKey={player.score}><Text style={styles.scoreSmall}>{player.score}</Text></PvpPulse><Text accessible={false} style={styles.playerMeta}>{player.left ? "Έφυγε" : !player.connected ? "Εκτός" : player.answered ? "✓" : "…"}</Text></View>
           </View>)}</View> : null}
           {room.status === "question" && countdown > 0 ? <ScreenEntrance key={`${room.matchId}:${room.index}:countdown`} style={styles.countdownCard}>
             <PvpWorld category={room.category} size={72} />
             <Text style={styles.eyebrow}>ΕΡΩΤΗΣΗ {room.index + 1} / {room.count}</Text>
-            <Text style={styles.countdownNumber}>{countdown}</Text><Text style={styles.body}>Ξεκινάμε… Έτοιμη η παρέα;</Text>
+            <PvpPulse pulseKey={countdown} animateOnMount><Text accessibilityLiveRegion="polite" style={styles.countdownNumber}>{countdown}</Text></PvpPulse><Text style={styles.body}>Ξεκινάμε… Έτοιμη η παρέα;</Text>
           </ScreenEntrance> : question && playing ? <ScreenEntrance key={`${room.matchId}:${room.index}:question`} style={styles.questionCard}>
             <View style={styles.row}><Text style={styles.eyebrow}>{reveal ? "ΑΠΟΤΕΛΕΣΜΑ" : "ΕΡΩΤΗΣΗ"} {room.index + 1} / {room.count}</Text>
               <Text style={[styles.timer, !reveal && secondsLeft <= 5 && styles.urgentText]} accessibilityLabel={`${reveal ? "Επόμενο βήμα σε " : ""}${secondsLeft} δευτερόλεπτα`}>{secondsLeft}″</Text></View>
             {!reveal ? <View style={styles.track}><View style={[styles.fill, secondsLeft <= 5 && styles.urgentFill, { width: `${Math.min(100, secondsLeft / room.seconds * 100)}%` }]} /></View> : null}
             <Text accessibilityRole="header" style={styles.question}>{question.prompt}</Text>
-            {question.answers.map((answer, index) => reveal && index !== question.correctIndex && index !== self?.answer ? null : <Pressable key={`${room.matchId}:${room.index}:${index}`} accessibilityRole="button"
+            {question.answers.map((answer, index) => reveal && index !== question.correctIndex && index !== self?.answer ? null : <AnswerMotion key={`${room.matchId}:${room.index}:${index}`} active={selected === index} pulseKey={reveal ? `${token}:reveal` : undefined}><Pressable accessibilityRole="button"
               accessibilityLabel={`${answer}${reveal && index === question.correctIndex ? ", σωστή απάντηση" : ""}`}
               accessibilityState={{ selected: selected === index, disabled: disabled || reveal || Boolean(self?.answered) || secondsLeft === 0 }}
               disabled={disabled || reveal || Boolean(self?.answered) || secondsLeft === 0}
@@ -248,14 +250,14 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
                 selected === index && styles.selectedChip, reveal && index === question.correctIndex && styles.correct,
                 reveal && self?.answer === index && index !== question.correctIndex && styles.incorrect]}>
               <View style={styles.letterBadge}><Text style={styles.answerLetter}>{reveal && index === question.correctIndex ? "✓" : reveal && self?.answer === index ? "×" : ["Α", "Β", "Γ", "Δ"][index]}</Text></View><Text style={styles.answerText}>{answer}</Text>
-            </Pressable>)}
+            </Pressable></AnswerMotion>)}
             <View style={[styles.feedback, reveal && (self?.answer === question.correctIndex ? styles.correct : styles.incorrect)]}><Text accessibilityLiveRegion="polite" style={styles.body}>{reveal ? (self?.answer === question.correctIndex ? "Σωστά! +1 πόντος" : self?.answered ? "Η σωστή απάντηση φαίνεται με πράσινο." : "Δεν δόθηκε απάντηση εγκαίρως.") : self?.answered ? "Η απάντησή σου κλείδωσε. Περιμένουμε την παρέα…" : secondsLeft === 0 ? "Ο χρόνος έληξε. Κλειδώνει η αποθηκευμένη επιλογή σου…" : busy ? "Αποθήκευση επιλογής…" : selected !== null && self?.selection !== selected ? "Η επιλογή δεν έχει αποθηκευτεί ακόμη. Επιβεβαίωσε ή επίλεξέ την ξανά." : "Επίλεξε και επιβεβαίωσε. Στη λήξη κλειδώνει η επιλογή σου."}</Text></View>
             {reveal ? <><Text style={styles.body}>{question.explanation}</Text>
               {question.sources?.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή" }} />)}
               <Text style={styles.notice}>{room.index + 1 === room.count ? "Τα τελικά αποτελέσματα" : "Η επόμενη ερώτηση"} σε {secondsLeft}″</Text></> : null}
           </ScreenEntrance> : null}
           {room.status === "finished" ? <ScreenEntrance style={styles.resultCard}>
-            <PvpHero result compact />
+            <PvpPulse pulseKey={room.matchId} animateOnMount><PvpHero result compact /></PvpPulse>
             <Text style={styles.eyebrow}>ΤΕΛΙΚΑ ΑΠΟΤΕΛΕΣΜΑΤΑ</Text>
             <Text accessibilityRole="header" style={styles.title}>{room.endedEarly ? "Το παιχνίδι ολοκληρώθηκε νωρίτερα" : winners.length > 1 ? "Ισοπαλία στην κορυφή!" : `Στην κορυφή: ${winners[0]?.name ?? "η παρέα"}!`}</Text>
             {room.endedEarly ? <Text style={styles.body}>Έμειναν λιγότεροι από δύο ενεργοί παίκτες στο δωμάτιο.</Text> : null}
@@ -267,11 +269,11 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           {!playing ? <View style={styles.card}>
             <Text accessibilityRole="header" style={styles.sectionTitle}>{room.status === "lobby" ? `Η παρέα · ${participants.length}/4` : "Βαθμολογία"}</Text>
             {room.status === "lobby" ? <View style={styles.seatGrid}>
-              {participants.map((player, index) => <View key={player.id} style={[styles.seatCard, fontScale > 1.2 && styles.fullSeat, player.id === userId && styles.self]}>
+              {participants.map((player, index) => <PvpPulse key={player.id} pulseKey={`${player.ready}:${player.connected}`} style={[styles.seatCard, fontScale > 1.2 && styles.fullSeat, player.id === userId && styles.self]}>
                 <View style={styles.row}><PvpBadge name={player.name} index={index} compact /><Text style={styles.seatStatus}>{player.ready ? "✓" : "…"}</Text></View>
                 <Text style={styles.playerName}>{player.name}{player.id === userId ? " (εσύ)" : ""}</Text>
                 <Text style={styles.playerMeta}>{!player.connected ? `Επιστρέφει…${player.reconnectUntil ? ` ${pvpSecondsLeft(player.reconnectUntil, now, offset)}″` : ""}` : player.id === room.hostId ? "Οικοδεσπότης" : player.ready ? "Έτοιμος" : "Αναμονή"}</Text>
-              </View>)}
+              </PvpPulse>)}
               {Array.from({ length: Math.max(0, 4 - participants.length) }, (_, index) => <View key={`empty:${index}`} style={[styles.seatCard, styles.emptySeat, fontScale > 1.2 && styles.fullSeat]}>
                 <Text accessible={false} style={styles.emptyPlus}>＋</Text><Text style={styles.playerMeta}>Ελεύθερη θέση</Text></View>)}
             </View> : standings.map((player, index) => <View key={player.id} style={[styles.player, player.id === userId && styles.self, player.rank === 1 && styles.winningPlayer]}>
@@ -285,7 +287,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
                 <View style={styles.settingsGroup}><Action label={self?.ready ? "Έτοιμος ✓" : "Είμαι έτοιμος"} secondary disabled={disabled || Boolean(lobbyEdit)} onPress={() => { void game.ready(!self?.ready, room); }} /></View>
                 {host ? <View style={styles.settingsGroup}><Action label="Έναρξη" accessibilityLabel="Έναρξη παιχνιδιού" disabled={disabled || !allReady || Boolean(lobbyEdit)} onPress={() => { void game.start(); }} /></View> : null}
               </View>
-              {!allReady ? <Text style={styles.playerMeta}>{participants.length < 2 ? "Περιμένουμε ακόμη έναν παίκτη." : host ? "Περιμένουμε να είναι όλοι έτοιμοι." : "Ο οικοδεσπότης ξεκινά όταν είστε όλοι έτοιμοι."}</Text> : null}
+              <Text accessibilityLiveRegion="polite" style={styles.playerMeta}>{lobbyNotice ?? (participants.length < 2 ? "Στείλε τον κωδικό για να μπει η παρέα σου." : allReady ? host ? "Όλοι έτοιμοι! Ξεκίνα όποτε θέλεις." : "Όλοι έτοιμοι! Περιμένουμε τον οικοδεσπότη." : `Έτοιμοι ${participants.filter(player => player.ready && player.connected).length}/${participants.length} · Αναμονή: ${participants.filter(player => !player.ready || !player.connected).map(player => player.id === userId ? "εσύ" : player.name).join(", ")}`)}</Text>
             </> : null}
           </View> : null}
         </>}

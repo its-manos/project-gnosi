@@ -1,4 +1,5 @@
-export type FeedbackKind = "correct" | "incorrect" | "complete" | "mastered" | "level-up" | "question-open" | "lesson-preview" | "lesson-open" | "world-open" | "island-open";
+export type PvpCueKind = "pvp-join" | "pvp-leave" | "pvp-ready" | "pvp-countdown" | "pvp-lock" | "pvp-warning";
+export type FeedbackKind = PvpCueKind | "correct" | "incorrect" | "complete" | "mastered" | "level-up" | "question-open" | "lesson-preview" | "lesson-open" | "world-open" | "island-open";
 export type FeedbackEvent = { id: string; scope: string; kind: FeedbackKind; xp?: number; answerXP?: number; pendingXP?: boolean; label?: string; level?: number };
 const listeners = new Set<(event: FeedbackEvent) => void>();
 /** Only accepted local actions publish here. Hydration, imports and sync never do.
@@ -9,7 +10,7 @@ export function emitPlayFeedback(event: FeedbackEvent) {
 export function subscribePlayFeedback(listener: (event: FeedbackEvent) => void) {
   listeners.add(listener); return () => { listeners.delete(listener); };
 }
-export const feedbackPriority: Record<FeedbackKind, number> = { correct: 1, incorrect: 1, complete: 2, mastered: 3, "level-up": 4, "question-open": 0, "lesson-preview": 0, "lesson-open": 0, "world-open": 0, "island-open": 0 };
+export const feedbackPriority: Record<FeedbackKind, number> = { correct: 1, incorrect: 1, complete: 2, mastered: 3, "level-up": 4, "question-open": 0, "lesson-preview": 0, "lesson-open": 0, "world-open": 0, "island-open": 0, "pvp-join": 0, "pvp-leave": 0, "pvp-ready": 0, "pvp-countdown": 0, "pvp-lock": 0, "pvp-warning": 0 };
 export class FeedbackGate {
   private seen = new Set<string>();
   private last: { kind: FeedbackKind; at: number } | null = null;

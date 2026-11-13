@@ -57,7 +57,7 @@
     "images:commons:bundle": "node scripts/bundle-commons-images.cjs --apply",
     "images:commons:verify": "node scripts/bundle-commons-images.cjs --verify",
     "test:hangman": "node scripts/test-hangman.cjs && node scripts/test-hangman-ui.cjs",
-    "test:pvp": "node scripts/generate-pvp-bank.cjs --check && node scripts/test-pvp.cjs && node scripts/test-pvp-polish.cjs && node scripts/test-pvp-sql.cjs && node scripts/test-pvp-foundations.cjs"
+    "test:pvp": "node scripts/generate-pvp-bank.cjs --check && node scripts/test-pvp.cjs && node scripts/test-pvp-polish.cjs && node scripts/test-pvp-feedback.cjs && node scripts/test-pvp-sql.cjs && node scripts/test-pvp-foundations.cjs"
   },
   "private": true
 }

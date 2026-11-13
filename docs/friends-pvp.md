@@ -233,3 +233,10 @@ Additional device checks for the foundations:
 4. Open the review, inspect wrong/missed answers and source links, and have the
    host rematch on another phone. Return to the new lobby with Android Back or
    the visible return button. Repeat with large text and narrow screens.
+
+Lobby feedback uses short join/leave/ready cues and a four-second announcement in
+the waiting line. Ready counts and waiting names remain visible after it clears.
+Countdown ticks follow the displayed server clock; answer locks and one low-time
+warning have distinct cues, while reveals keep their existing result sounds.
+Countdown, seat, score and result pulses respect reduced motion. See
+[sound feedback](sound-feedback.md#private-game-feedback) for timing and device QA.
