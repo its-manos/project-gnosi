@@ -1,4 +1,11 @@
 # ΓΝΩΣΗ — Content Curriculum v1.0
+
+**Next content priority (13 November 2026):** [Psychology: mind and behaviour](psychology-curriculum.md)
+for curious Greek-speaking young adults. The new additive pilot contains three connected
+lessons (evidence → attention → memory), with [claim/question evidence](psychology-pilot-research.md).
+This supersedes the earlier pilot priority below; the rest of this document remains
+historical roadmap/baseline, not evidence that its counts or approval states are current.
+
 Status: Ancient Greece 30/30 research-first Integrated on content/curriculum-v1 · 2026-11-02 · not device-validated or Approved
 
 ## 1. Editorial philosophy
