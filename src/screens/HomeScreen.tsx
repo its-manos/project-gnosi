@@ -215,7 +215,7 @@ export default function HomeScreen({
       </MotionPressable>
 
       <MotionView entranceDelay={130} style={{ ...styles.actions, minHeight: layout.quizHeight }}>
-        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
+        <MotionPressable testID="home-daily-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, daily.ready && todayCompleted && styles.completedQuizCard, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={daily.ready
             ? "Καθημερινό quiz, " + dailyAnsweredCount + " από " + DAILY_CHALLENGE_SIZE + " απαντημένες ερωτήσεις"
@@ -232,10 +232,10 @@ export default function HomeScreen({
             <View style={styles.dailySegments} pointerEvents="none" accessible={false}>
               {dailySegments.map((filled, index) => <View key={index}
                 testID={filled ? "home-daily-segment-filled" : "home-daily-segment-empty"}
-                style={[styles.dailySegment, filled && styles.dailySegmentFilled]} />)}
+                style={[styles.dailySegment, filled && styles.dailySegmentFilled, filled && todayCompleted && styles.completedDailySegment]} />)}
             </View>
             <MotionCounter progressKey={today + "-" + dailyProgress} testID="home-daily-answered"
-              style={[styles.quizAnswered, { fontSize: scaled(18, quizScale), lineHeight: scaled(26, quizScale) }]}
+              style={[styles.quizAnswered, { fontSize: scaled(18, quizScale), lineHeight: scaled(26, quizScale) }, daily.ready && todayCompleted && styles.completedQuizText]}
               accessible={false} numberOfLines={1} adjustsFontSizeToFit>{dailyProgress}</MotionCounter>
           </View>
           <View style={[styles.actionLabels, tight && styles.tightActionLabels]}>
@@ -243,14 +243,14 @@ export default function HomeScreen({
             <Text testID="home-daily-status" style={[styles.actionMeta, { fontSize: scaled(11, quizScale), lineHeight: scaled(15, quizScale) }, daily.ready && todayCompleted && styles.completedQuizText]}>{!daily.ready ? "Φόρτωση…" : todayCompleted ? "Δες αποτελέσματα →" : dailyAnsweredCount > 0 ? "Συνέχισε σήμερα" : "Ξεκίνα σήμερα"}</Text>
           </View>
         </MotionPressable>
-        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
+        <MotionPressable testID="home-quick-quiz" style={({ pressed }) => [styles.actionCard, styles.quickQuizCard, compact && styles.compactActionCard, tight && styles.tightActionCard, { gap: scaled(tight ? 2 : compact ? 4 : 10, quizScale) }, pressed && styles.pressed]}
           accessibilityRole="button" accessibilityLabel={quickQuizInProgress ? "Συνέχισε το γρήγορο κουίζ" : "Γρήγορο κουίζ, 5 ερωτήσεις"}
           onPress={onOpenQuickQuiz}>
-          <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quizHalo]} />
+          <View pointerEvents="none" accessible={false} style={[styles.actionHalo, styles.quickQuizHalo]} />
           <MotionCardGlint tone="quick" delayMs={5700} />
           <View style={styles.quizTop}>
             <MotionQuizGlyph delayMs={2500}>
-              <Text style={[styles.actionIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>ϟ</Text>
+              <Text style={[styles.actionIcon, styles.quickQuizIcon, { fontSize: scaled(23, quizScale), lineHeight: scaled(26, quizScale) }]}>ϟ</Text>
             </MotionQuizGlyph>
             <Text accessible={false} style={[styles.quickQuizCue, { fontSize: scaled(19, quizScale), lineHeight: scaled(26, quizScale) }]}>{quickQuizInProgress ? "→" : "▸"}</Text>
           </View>
@@ -377,17 +377,22 @@ const styles = StyleSheet.create({
   actionLabels: { gap: 4 },
   tightActionLabels: { gap: 2 },
   quizCard: { backgroundColor: "#201D30", borderColor: "#514463" },
+  completedQuizCard: { backgroundColor: "#192B2A", borderColor: "#395D54" },
   completedQuizText: { color: "#89DABB" },
+  completedDailySegment: { backgroundColor: "#89DABB" },
   actionHalo: { position: "absolute", width: 88, height: 88, borderRadius: 44, right: -37, top: -44 },
   quizHalo: { backgroundColor: "rgba(177,165,255,0.07)" },
+  quickQuizHalo: { backgroundColor: "rgba(108,224,182,0.06)" },
   dailySegments: { flex: 1, flexDirection: "row", gap: 2, marginHorizontal: 7, maxWidth: 58 },
   dailySegment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: "#4A405D" },
   dailySegmentFilled: { backgroundColor: colors.accentLight },
   quizTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   quizAnswered: { color: colors.accentLight, fontSize: 18, lineHeight: 26,
     fontWeight: "900", letterSpacing: -0.6, fontVariant: ["tabular-nums"] },
+  quickQuizCard: { backgroundColor: "#192B2A", borderColor: "#395D54" },
   actionIcon: { color: colors.accentLight, fontSize: 23, lineHeight: 26 },
-  quickQuizCue: { color: colors.accentLight, fontSize: 19, lineHeight: 26, fontWeight: "700" },
+  quickQuizCue: { color: "#6CE0B6", fontSize: 19, lineHeight: 26, fontWeight: "700" },
+  quickQuizIcon: { color: "#6CE0B6" },
   actionTitle: { color: colors.text, fontSize: 14, lineHeight: 19, fontWeight: "800" },
   actionMeta: { color: colors.textMuted, fontSize: 11, lineHeight: 15 },
   worlds: { gap: 4, paddingTop: 0 },

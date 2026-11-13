@@ -172,7 +172,7 @@ export function MotionCardGlint({ tone, delayMs = 0 }: { tone: "lesson" | "daily
     return () => cancelAnimation(glow);
   }, [delayMs, reduced, glow]);
   return <Animated.View testID={`home-${tone}-glint`} pointerEvents="none"
-    accessible={false} style={[styles.cardGlint, tone === "lesson" && styles.glint_lesson, animatedStyle]} />;
+    accessible={false} style={[styles.cardGlint, styles[`glint_${tone}`], animatedStyle]} />;
 }
 
 /** A tiny idle lift inside quiz cards, with no touch or Yoga movement. */
@@ -271,6 +271,8 @@ const styles = StyleSheet.create({
   cardGlint: { position: "absolute", top: -1, left: 18, width: 68, height: 2,
     borderRadius: 2, backgroundColor: "#B1A5FF" },
   glint_lesson: { width: 102, backgroundColor: "#C6BAFF" },
+  glint_daily: { backgroundColor: "#B1A5FF" },
+  glint_quick: { backgroundColor: "#7DDCB8" },
   shimmer: { position: "absolute", top: -8, bottom: -8, left: 0,
     width: 35, backgroundColor: "#FFFFFF", opacity: 0.12, transform: [{ skewX: "-16deg" }] },
   heroRim: { ...StyleSheet.absoluteFill, borderRadius: 18,
