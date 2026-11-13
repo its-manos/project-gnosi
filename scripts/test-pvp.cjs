@@ -232,6 +232,16 @@ function hooks() {
   assert.equal(topicPicker().props.accessibilityState.expanded, false, 'topic picker collapses after selection');
   nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Δημιουργία δωματίου').props.onPress();
   assert.equal(sent.pop()[1].category, 'history');
+  const ten = nodes(root).find(node => node.props.accessibilityLabel === '10 ερωτήσεις');
+  assert.equal(ten.props.disabled, false, 'ten questions are available in a single category');
+  ten.props.onPress(); root = draw('user');
+  topicPicker().props.onPress(); root = draw('user');
+  assert.ok(nodes(root).some(node => node.type === 'Pressable' && text(node) === 'Καθημερινές γνώσεις'));
+  nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Αθλητισμός').props.onPress(); root = draw('user');
+  nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Δημιουργία δωματίου').props.onPress();
+  const expandedSettings = sent.pop()[1];
+  assert.equal(expandedSettings.category, 'sports');
+  assert.equal(expandedSettings.count, 10, 'changing topic preserves the selected question count');
   nodes(root).find(node => node.props.accessibilityRole === 'tab' && text(node) === 'Έχω κωδικό').props.onPress();
   root = draw('user');
   nodes(root).find(node => node.props.testID === 'pvp-code').props.onChangeText('ab12cd');

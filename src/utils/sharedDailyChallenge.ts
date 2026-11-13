@@ -1,3 +1,5 @@
+import { SHARED_DAILY_V2_START, SHARED_DAILY_V2_VERSION } from "../data/sharedDailyPoolV2";
+import { selectDailyRotation } from "./sharedDailyRotation";
 import { questions, DAILY_CHALLENGE_SIZE, type GeneralKnowledgeQuestion } from "../data/questions";
 import { SHARED_DAILY_POOL_VERSION, SHARED_DAILY_QUESTION_IDS, SHARED_DAILY_QUESTION_VERSIONS } from "../data/sharedDailyPool";
 import { adaptDailyQuestion } from "../quiz/adapters";
@@ -8,6 +10,7 @@ const hash = (s: string) => { let n=2166136261; for(let i=0;i<s.length;i++) n=Ma
 /** Frozen ID manifest + independent per-ID ranks: array order/additions do not change v1. */
 export function selectSharedDailyQuestions(date: string, bank: readonly GeneralKnowledgeQuestion[] = questions): GeneralKnowledgeQuestion[] {
   if (!validDate(date)) return [];
+  if (date >= SHARED_DAILY_V2_START) return selectDailyRotation(date, bank);
   const allowed = new Set(SHARED_DAILY_QUESTION_IDS), seen = new Set<string>();
   const pool = bank.filter(q => {if(!allowed.has(q.id)||seen.has(q.id))return false;seen.add(q.id);return true;});
   if(pool.length!==SHARED_DAILY_QUESTION_IDS.length || pool.length<DAILY_CHALLENGE_SIZE || pool.some(q=>adaptDailyQuestion(q).version!==SHARED_DAILY_QUESTION_VERSIONS[q.id])) return [];
@@ -33,7 +36,7 @@ export function selectSharedDailyQuestions(date: string, bank: readonly GeneralK
 }
 export function createSharedDailyRecord(date: string, bank: readonly GeneralKnowledgeQuestion[] = questions): DailyChallengeRecord | null {
   const selected = selectSharedDailyQuestions(date,bank);
-  return selected.length===DAILY_CHALLENGE_SIZE ? { dateKey:date, questionIds:selected.map(q=>q.id), questionVersions:selected.map(q=>adaptDailyQuestion(q).version), selectionVersion:SHARED_DAILY_POOL_VERSION, currentIndex:0, answers:{}, started:true, completed:false } : null;
+  return selected.length===DAILY_CHALLENGE_SIZE ? { dateKey:date, questionIds:selected.map(q=>q.id), questionVersions:selected.map(q=>adaptDailyQuestion(q).version), selectionVersion:date >= SHARED_DAILY_V2_START ? SHARED_DAILY_V2_VERSION : SHARED_DAILY_POOL_VERSION, currentIndex:0, answers:{}, started:true, completed:false } : null;
 }
 export function readDailyMetadata(raw: Record<string,unknown>): DailyRecordMetadata {
   const result: DailyRecordMetadata = {};

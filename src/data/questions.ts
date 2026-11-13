@@ -1,4 +1,5 @@
 import type { QuestionMetadata } from "../quiz/types";
+import { dailyExpansionQuestions } from "./generatedQuizExpansion";
 /**
  * Reviewed question bank for the daily general-knowledge challenge.
  * Each question has four choices, one correct answer, a short explanation,
@@ -1692,4 +1693,5 @@ export const questions: GeneralKnowledgeQuestion[] = [
     "sourceTitle": "OpenStax — University Physics Volume 2, Mechanisms of Heat Transfer",
     "sourceUrl": "https://openstax.org/books/university-physics-volume-2/pages/1-6-mechanisms-of-heat-transfer"
   },
+  ...dailyExpansionQuestions,
 ];

@@ -3,7 +3,8 @@ export const PVP_TOPICS = [
   { id: "all", label: "Όλες οι κατηγορίες" },
   { id: "history", label: "Ιστορία" }, { id: "science", label: "Επιστήμη" },
   { id: "nature", label: "Φύση" }, { id: "technology", label: "Τεχνολογία" },
-  { id: "culture", label: "Τέχνες" }, { id: "geography", label: "Γεωγραφία" },
+  { id: "culture", label: "Πολιτισμός" }, { id: "geography", label: "Γεωγραφία" },
+  { id: "sports", label: "Αθλητισμός" }, { id: "everyday", label: "Καθημερινές γνώσεις" },
 ] as const;
 export type PvpTopic = typeof PVP_TOPICS[number]["id"];
 export type PvpSettings = { category: PvpTopic; count: 5 | 10; seconds: 15 | 30 };

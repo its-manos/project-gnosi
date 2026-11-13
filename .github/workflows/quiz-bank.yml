@@ -1,0 +1,50 @@
+name: Quiz bank checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "content/quiz/**"
+      - "src/data/*Quiz*.ts"
+      - "src/data/questions.ts"
+      - "src/data/sharedDaily*.ts"
+      - "src/data/dailyChallengeTopics.ts"
+      - "src/quiz/**"
+      - "src/utils/sharedDaily*.ts"
+      - "src/screens/PvpScreen.tsx"
+      - "src/components/PvpArtwork.tsx"
+      - "scripts/generate-quiz-expansion.cjs"
+      - "scripts/generate-pvp-bank.cjs"
+      - "scripts/test-quiz-expansion-v2.cjs"
+      - "scripts/test-pvp*.cjs"
+      - "scripts/fixtures/play-banks-before-v2.json"
+      - "supabase/migrations/*pvp*.sql"
+      - "supabase/migrations/*quiz_bank*.sql"
+      - "package*.json"
+      - ".github/workflows/quiz-bank.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quiz-bank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run validate:content
+      - run: npm run test:quiz-expansion
+      - run: node scripts/test-pvp.cjs
+      - run: node scripts/test-pvp-sql.cjs
+      - run: node scripts/test-pvp-foundations.cjs
+      - run: node scripts/test-quick-quiz.cjs
+      - run: node scripts/test-daily-phase3.cjs
+      - run: node scripts/test-content-reports.cjs
+      - run: git diff --exit-code

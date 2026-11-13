@@ -38,21 +38,20 @@ function RoomSettings({ settings, onChange, busy, choosingTopic, setChoosingTopi
     </Pressable>
     {choosingTopic ? <View style={styles.chips}>{PVP_TOPICS.map(topic => <Pressable key={topic.id} accessibilityRole="button"
       accessibilityState={{ selected: settings.category === topic.id, disabled: busy }} disabled={busy}
-      onPress={() => { onChange(current => ({ ...current, category: topic.id, count: topic.id === "all" ? current.count : 5 })); setChoosingTopic(false); }}
+      onPress={() => { onChange(current => ({ ...current, category: topic.id })); setChoosingTopic(false); }}
       style={[styles.chip, styles.topicChip, settings.category === topic.id && styles.selectedChip]}><PvpWorld category={topic.id} size={24} /><Text style={styles.chipText}>{topic.label}</Text></Pressable>)}</View> : null}
     <View style={[styles.settingsGrid, fontScale > 1.2 && styles.settingsStack]}><View style={styles.settingsGroup}>
     <Text style={styles.label}>Ερωτήσεις</Text>
     <View style={styles.chips}>{([5, 10] as const).map(count => <Pressable key={count} accessibilityRole="button"
-      accessibilityLabel={`${count} ερωτήσεις`} accessibilityState={{ selected: settings.count === count, disabled: busy || (count === 10 && settings.category !== "all") }}
-      disabled={busy || (count === 10 && settings.category !== "all")} onPress={() => onChange(current => ({ ...current, count }))}
-      style={[styles.chip, settings.count === count && styles.selectedChip, count === 10 && settings.category !== "all" && styles.disabled]}><Text style={styles.chipText}>{count}</Text></Pressable>)}</View>
+      accessibilityLabel={`${count} ερωτήσεις`} accessibilityState={{ selected: settings.count === count, disabled: busy }}
+      disabled={busy} onPress={() => onChange(current => ({ ...current, count }))}
+      style={[styles.chip, settings.count === count && styles.selectedChip]}><Text style={styles.chipText}>{count}</Text></Pressable>)}</View>
     </View><View style={styles.settingsGroup}>
     <Text style={styles.label}>Χρόνος ανά ερώτηση</Text>
     <View style={styles.chips}>{([15, 30] as const).map(seconds => <Pressable key={seconds} accessibilityRole="button"
       accessibilityLabel={`${seconds} δευτερόλεπτα ανά ερώτηση`} accessibilityState={{ selected: settings.seconds === seconds, disabled: busy }} disabled={busy}
       onPress={() => onChange(current => ({ ...current, seconds }))} style={[styles.chip, settings.seconds === seconds && styles.selectedChip]}><Text style={styles.chipText}>{seconds}″</Text></Pressable>)}</View>
     </View></View>
-    {settings.category !== "all" ? <Text style={styles.playerMeta}>Τα θεματικά παιχνίδια έχουν 5 ερωτήσεις.</Text> : null}
   </>;
 }
 

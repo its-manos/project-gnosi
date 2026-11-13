@@ -25,7 +25,7 @@ const restore = progress => readQuickQuiz(JSON.stringify({ version: 1, ...progre
 const dailyIds = new Set(daily.map(question => question.id));
 const dailyPrompts = new Set(daily.map(question => question.question));
 const bankById = new Map(quickQuizQuestions.map(question => [question.id, question]));
-assert.equal(quickQuizQuestions.length, 30);
+assert.equal(quickQuizQuestions.length, 240);
 assert.equal(new Set(quickQuizQuestions.map(question => question.id)).size, quickQuizQuestions.length);
 for (const question of quickQuizQuestions) {
   assert.ok(!dailyIds.has(question.id) && !dailyPrompts.has(question.prompt));
@@ -67,7 +67,7 @@ assert.equal(quickQuizStreaks(resumed.round).current, 1);
 const recentlyDealt = [];
 const allDealt = new Set();
 let firstMiss;
-for (let number = 1; number <= 15; number++) {
+for (let number = 1; number <= 65; number++) {
   const seenBefore = progress.seen;
   progress = startQuickQuiz(progress, () => 0.5);
   const { id, questions } = progress.round;

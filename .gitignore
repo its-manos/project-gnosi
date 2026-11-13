@@ -39,3 +39,6 @@ yarn-error.*
 *.orig.*
 .DS_Store
 .idea/
+
+# Local Supabase CLI state
+supabase/.temp/
