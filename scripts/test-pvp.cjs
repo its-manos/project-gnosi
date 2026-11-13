@@ -159,7 +159,7 @@ function hooks() {
   let state = { room: null, busy: false, loading: false, available: true, error: null, offset: 0, lastSynced: Date.now(),
     join: (...args) => sent.push(args), create: (...args) => sent.push(args), refresh() {}, ready() {}, start() {}, answer() {}, rematch() {}, dismiss() {} };
   const jsx = (type, props, key) => ({ type, props, key });
-  const native = { StyleSheet: { create: value => value }, Platform: { OS: 'android' }, BackHandler: { addEventListener: () => ({ remove() {} }) } };
+  const native = { useWindowDimensions: () => ({ width: 390, height: 740, fontScale: 1 }), StyleSheet: { create: value => value }, Platform: { OS: 'android' }, BackHandler: { addEventListener: () => ({ remove() {} }) } };
   for (const name of ['ActivityIndicator', 'KeyboardAvoidingView', 'Pressable', 'ScrollView', 'Text', 'TextInput', 'View']) native[name] = name;
   const Screen = compile('src/screens/PvpScreen.tsx', {
     react: ui.react, 'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' }, 'react-native': native,
@@ -188,6 +188,14 @@ function hooks() {
   await nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Αποθήκευση ονόματος').props.onPress(); await flush();
   root = draw('user');
   assert.ok(!nodes(root).some(node => node.props.testID === 'pvp-name'), 'saved identity replaces the entry form');
+  const topicPicker = () => nodes(root).find(node => node.props.accessibilityLabel === 'Αλλαγή θέματος');
+  assert.equal(topicPicker().props.accessibilityState.expanded, false);
+  topicPicker().props.onPress(); root = draw('user');
+  assert.equal(topicPicker().props.accessibilityState.expanded, true);
+  nodes(root).find(node => node.type === 'Pressable' && node.props.accessibilityState?.selected === false && text(node) === 'Ιστορία').props.onPress(); root = draw('user');
+  assert.equal(topicPicker().props.accessibilityState.expanded, false, 'topic picker collapses after selection');
+  nodes(root).find(node => node.type === 'Pressable' && text(node) === 'Δημιουργία δωματίου').props.onPress();
+  assert.equal(sent.pop()[1].category, 'history');
   nodes(root).find(node => node.props.accessibilityRole === 'tab' && text(node) === 'Έχω κωδικό').props.onPress();
   root = draw('user');
   nodes(root).find(node => node.props.testID === 'pvp-code').props.onChangeText('ab12cd');

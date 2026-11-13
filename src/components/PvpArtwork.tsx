@@ -8,20 +8,27 @@ export function PvpWorld({ category, size = 32 }: { category: string; size?: num
   const Icon = getCategoryWorldIcon(category === "all" ? "geography" : category);
   return Icon ? <Icon size={size} /> : null;
 }
-export const PvpHero = memo(function PvpHero({ result = false }: { result?: boolean }) {
-  return <View accessible={false} pointerEvents="none" style={styles.scene}>
-    <View style={styles.orbit} />
-    <View style={[styles.platform, styles.left]}><PlayerCharacter level={1} size={100} variant="male" /></View>
-    <View style={styles.medallion}><Text style={styles.glyph}>{result ? "✦" : "VS"}</Text></View>
-    <View style={[styles.platform, styles.right]}><PlayerCharacter level={1} size={100} variant="female" /></View>
+export const PvpHero = memo(function PvpHero({ result = false, compact = false }: { result?: boolean; compact?: boolean }) {
+  return <View accessible={false} pointerEvents="none" style={[styles.scene, compact && styles.compactScene]}>
+    <View style={[styles.orbit, compact && styles.compactOrbit]} />
+    <View style={[styles.platform, styles.left, compact && styles.compactPlatform]}><PlayerCharacter level={1} size={compact ? 64 : 100} variant="male" /></View>
+    <View style={[styles.medallion, compact && styles.compactMedallion]}><Text style={[styles.glyph, compact && styles.compactGlyph]}>{result ? "✦" : "VS"}</Text></View>
+    <View style={[styles.platform, styles.right, compact && styles.compactPlatform]}><PlayerCharacter level={1} size={compact ? 64 : 100} variant="female" /></View>
   </View>;
 });
-export function PvpBadge({ name, index, winner = false }: { name: string; index: number; winner?: boolean }) {
-  return <View accessible={false} style={[styles.badge, index % 2 === 1 && styles.teal, winner && styles.winner]}>
-    <Text style={[styles.initial, winner && styles.goldText]}>{name.trim().slice(0, 1).toLocaleUpperCase("el")}</Text>
+export function PvpBadge({ name, index, winner = false, compact = false }: { name: string; index: number; winner?: boolean; compact?: boolean }) {
+  return <View accessible={false} style={[styles.badge, compact && styles.compactBadge, index % 2 === 1 && styles.teal, winner && styles.winner]}>
+    <Text style={[styles.initial, compact && styles.compactInitial, winner && styles.goldText]}>{name.trim().slice(0, 1).toLocaleUpperCase("el")}</Text>
   </View>;
 }
 const styles = StyleSheet.create({
+  compactScene: { height: 84, maxWidth: 200 },
+  compactOrbit: { width: 144, height: 64 },
+  compactPlatform: { width: 68, height: 72, borderRadius: 20 },
+  compactMedallion: { width: 34, height: 34, borderRadius: 11 },
+  compactGlyph: { fontSize: 14 },
+  compactBadge: { width: 32, height: 34, borderRadius: 10 },
+  compactInitial: { fontSize: 16 },
   scene: { height: 132, alignSelf: "center", width: "100%", maxWidth: 300, flexDirection: "row", alignItems: "center", justifyContent: "center" },
   orbit: { position: "absolute", width: 210, height: 92, borderWidth: 1, borderColor: "#514665", borderRadius: 70, transform: [{ rotate: "-12deg" }] },
   platform: { width: 105, height: 114, alignItems: "center", justifyContent: "center", borderBottomWidth: 2, borderBottomColor: "#8570AD" },

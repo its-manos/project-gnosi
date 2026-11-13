@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentRef } from "react";
-import { ActivityIndicator, Alert, BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AppBackground from "../components/AppBackground";
 import ProfileSectionHeader from "../components/ProfileSectionHeader";
@@ -15,10 +15,10 @@ import { usePvpFeedback } from "../hooks/usePvpFeedback";
 import { validPlayerName } from "../state/PvpIdentity";
 import { usePvpPresentation } from "../hooks/usePvpPresentation";
 
-function Action({ label, onPress, disabled = false, secondary = false }: {
-  label: string; onPress: () => void; disabled?: boolean; secondary?: boolean;
+function Action({ label, onPress, disabled = false, secondary = false, accessibilityLabel }: {
+  label: string; onPress: () => void; disabled?: boolean; secondary?: boolean; accessibilityLabel?: string;
 }) {
-  return <AtlasContinueCard accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
+  return <AtlasContinueCard accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
     style={({ pressed }) => [styles.button, secondary && styles.secondary, disabled && styles.disabled, pressed && styles.pressed]}>
     <Text style={[styles.buttonText, secondary && styles.secondaryText]}>{label}</Text>
   </AtlasContinueCard>;
@@ -36,6 +36,8 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   const identity = usePvpIdentity(userId);
   const [editingName, setEditingName] = useState(false);
   const [mode, setMode] = useState<"create" | "join">("create");
+  const [choosingTopic, setChoosingTopic] = useState(false);
+  const { fontScale } = useWindowDimensions();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [code, setCode] = useState("");
   const [settings, setSettings] = useState<PvpSettings>({ category: "all", count: 5, seconds: 30 });
@@ -98,7 +100,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   return <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <AppBackground />
     <ProfileSectionHeader title="Παίξε με φίλους" actionLabel="Αρχική" actionAccessibilityLabel="Επιστροφή στην αρχική" onAction={exit} style={styles.header} />
-    <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 18) + 18 }]}>
+    <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 12) + 8 }]}>
       {error ? <View style={styles.error} accessibilityLiveRegion="polite"><Text style={styles.body}>{error}</Text>
         <Action label="Ανανέωση" secondary disabled={busy} onPress={() => { void game.refresh(); }} /></View> : null}
       {loading || (userId && !identity.ready && !identity.error) ? <ActivityIndicator accessibilityLabel="Αναζήτηση ενεργού δωματίου" color={colors.accentLight} /> :
@@ -108,15 +110,15 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           <Text style={styles.body}>{game.available ? "Συνδέσου στον λογαριασμό σου για να δημιουργήσεις ένα ιδιωτικό δωμάτιο ή να μπεις στην παρέα σου." : "Το παιχνίδι με φίλους δεν είναι ακόμη διαθέσιμο. Μπορείς να συνεχίσεις με τα ατομικά παιχνίδια."}</Text>
           {game.available ? <Action label="Σύνδεση / Δημιουργία λογαριασμού" onPress={onAccount} /> : null}
         </View> : !room ? <>
-          <ScreenEntrance style={styles.heroCard}>
-            <PvpHero />
+          {!identity.name ? <ScreenEntrance style={styles.heroCard}>
+            <PvpHero compact />
             <Text style={styles.eyebrow}>ΙΔΙΩΤΙΚΟ ΚΟΥΙΖ · 2–4 ΠΑΙΚΤΕΣ</Text>
             <Text accessibilityRole="header" style={styles.title}>Ποιος ξέρει περισσότερα;</Text>
-            <Text style={styles.body}>Μάζεψε την παρέα σου. Ίδιες ερωτήσεις, κοινός χρόνος και μια μικρή μάχη γνώσεων.</Text>
-          </ScreenEntrance>
+            <Text style={styles.body}>Ένα ιδιωτικό κουίζ με την παρέα σου.</Text>
+          </ScreenEntrance> : null}
           <View style={styles.identityCard}>
           {identity.name && !editingName ? <View style={styles.row}>
-            <PvpBadge name={identity.name} index={0} /><View style={styles.playerCopy}>
+            <PvpBadge name={identity.name} index={0} compact /><View style={styles.playerCopy}>
               <Text style={styles.eyebrow}>ΠΑΙΖΕΙΣ ΩΣ</Text><Text style={styles.playerName}>{identity.name}</Text></View>
             <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή ονόματος παίκτη" disabled={busy}
               style={styles.editName} onPress={() => { setName(identity.name); setEditingName(true); }}><Text style={styles.notice}>Αλλαγή</Text></Pressable>
@@ -138,21 +140,27 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           </View>
           {mode === "create" ? <View style={styles.card}>
             <Text accessibilityRole="header" style={styles.sectionTitle}>Δημιούργησε δωμάτιο</Text>
-            <Text style={styles.label}>Θέμα</Text>
-            <View style={styles.chips}>{PVP_TOPICS.map(topic => <Pressable key={topic.id} accessibilityRole="button"
+            <Pressable accessibilityRole="button" accessibilityLabel="Αλλαγή θέματος" accessibilityState={{ expanded: choosingTopic, disabled: busy }} disabled={busy}
+              onPress={() => setChoosingTopic(value => !value)} style={styles.topicPicker}>
+              <PvpWorld category={settings.category} size={30} /><View style={styles.playerCopy}><Text style={styles.playerMeta}>Θέμα</Text><Text style={styles.playerName}>{PVP_TOPICS.find(topic => topic.id === settings.category)?.label}</Text></View><Text style={styles.notice}>{choosingTopic ? "Κλείσιμο" : "Αλλαγή"}</Text>
+            </Pressable>
+            {choosingTopic ? <View style={styles.chips}>{PVP_TOPICS.map(topic => <Pressable key={topic.id} accessibilityRole="button"
               accessibilityState={{ selected: settings.category === topic.id, disabled: busy }} disabled={busy}
-              onPress={() => setSettings(current => ({ ...current, category: topic.id, count: topic.id === "all" ? current.count : 5 }))}
-              style={[styles.chip, styles.topicChip, settings.category === topic.id && styles.selectedChip]}><PvpWorld category={topic.id} size={30} /><Text style={styles.chipText}>{topic.label}</Text></Pressable>)}</View>
+              onPress={() => { setSettings(current => ({ ...current, category: topic.id, count: topic.id === "all" ? current.count : 5 })); setChoosingTopic(false); }}
+              style={[styles.chip, styles.topicChip, settings.category === topic.id && styles.selectedChip]}><PvpWorld category={topic.id} size={24} /><Text style={styles.chipText}>{topic.label}</Text></Pressable>)}</View> : null}
+            <View style={[styles.settingsGrid, fontScale > 1.2 && styles.settingsStack]}><View style={styles.settingsGroup}>
             <Text style={styles.label}>Ερωτήσεις</Text>
             <View style={styles.chips}>{([5, 10] as const).map(count => <Pressable key={count} accessibilityRole="button"
               accessibilityLabel={`${count} ερωτήσεις`} accessibilityState={{ selected: settings.count === count, disabled: busy || (count === 10 && settings.category !== "all") }}
               disabled={busy || (count === 10 && settings.category !== "all")} onPress={() => setSettings(current => ({ ...current, count }))}
               style={[styles.chip, settings.count === count && styles.selectedChip, count === 10 && settings.category !== "all" && styles.disabled]}><Text style={styles.chipText}>{count}</Text></Pressable>)}</View>
-            {settings.category !== "all" ? <Text style={styles.notice}>Τα θεματικά παιχνίδια έχουν 5 ερωτήσεις.</Text> : null}
+            </View><View style={styles.settingsGroup}>
             <Text style={styles.label}>Χρόνος ανά ερώτηση</Text>
             <View style={styles.chips}>{([15, 30] as const).map(seconds => <Pressable key={seconds} accessibilityRole="button"
-              accessibilityState={{ selected: settings.seconds === seconds, disabled: busy }} disabled={busy}
-              onPress={() => setSettings(current => ({ ...current, seconds }))} style={[styles.chip, settings.seconds === seconds && styles.selectedChip]}><Text style={styles.chipText}>{seconds} δευτερόλεπτα</Text></Pressable>)}</View>
+              accessibilityLabel={`${seconds} δευτερόλεπτα ανά ερώτηση`} accessibilityState={{ selected: settings.seconds === seconds, disabled: busy }} disabled={busy}
+              onPress={() => setSettings(current => ({ ...current, seconds }))} style={[styles.chip, settings.seconds === seconds && styles.selectedChip]}><Text style={styles.chipText}>{seconds}″</Text></Pressable>)}</View>
+            </View></View>
+            {settings.category !== "all" ? <Text style={styles.playerMeta}>Τα θεματικά παιχνίδια έχουν 5 ερωτήσεις.</Text> : null}
             <Action label={busy ? "Σύνδεση…" : "Δημιουργία δωματίου"} disabled={busy || !nameValid} onPress={() => { void game.create(identity.name, settings); }} />
           </View> : <View style={styles.card}>
             <Text accessibilityRole="header" style={styles.sectionTitle}>Έχεις κωδικό πρόσκλησης;</Text>
@@ -166,18 +174,20 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           <Action label="Νέο παιχνίδι" onPress={game.dismiss} />
         </View> : <>
           {stale ? <Text accessibilityLiveRegion="polite" style={styles.notice}>Επανασύνδεση… Περιμένουμε ενημέρωση από το παιχνίδι.</Text> : null}
-          {room.status === "lobby" ? <ScreenEntrance style={styles.heroCard}>
+          {room.status === "lobby" ? <ScreenEntrance style={styles.card}>
+            <View style={[styles.row, fontScale > 1.2 && styles.codeStack]}><View style={fontScale > 1.2 ? styles.codeCopy : styles.playerCopy}>
             <Text style={styles.eyebrow}>ΚΩΔΙΚΟΣ ΔΩΜΑΤΙΟΥ</Text>
             <Text selectable style={styles.roomCode} accessibilityLabel={`Κωδικός ${room.code.split("").join(" ")}`}>{room.code}</Text>
-            <View style={styles.roomSettings}><PvpWorld category={room.category} size={42} /><View style={styles.playerCopy}>
+            </View><Action label="Πρόσκληση" accessibilityLabel="Πρόσκληση φίλων" secondary onPress={() => { void invite(); }} /></View>
+            <View style={styles.roomSettings}><PvpWorld category={room.category} size={28} /><View style={styles.playerCopy}>
               <Text style={styles.playerName}>{PVP_TOPICS.find(topic => topic.id === room.category)?.label}</Text><Text style={styles.body}>{room.count} ερωτήσεις · {room.seconds}″ ανά ερώτηση</Text></View></View>
-            <Action label="Πρόσκληση φίλων" secondary onPress={() => { void invite(); }} />
             {shareError ? <Text style={styles.notice}>Δεν κοινοποιήθηκε η πρόσκληση. Μπορείς να στείλεις τον κωδικό που βλέπεις παραπάνω.</Text> : null}
-            <Text style={styles.body}>Μοιράσου τον κωδικό και περιμένετε να είναι όλοι έτοιμοι.</Text>
           </ScreenEntrance> : null}
-          {playing ? <View style={styles.scoreStrip}>{standings.map((player, index) => <View key={player.id} style={[styles.scoreChip, player.id === userId && styles.self]}>
-            <View style={styles.row}><Text numberOfLines={1} style={styles.scoreName}>{player.name}</Text><Text style={styles.scoreSmall}>{player.score}</Text></View>
-            <Text style={styles.playerMeta}>{player.left ? "Αποχώρησε" : !player.connected ? "Εκτός σύνδεσης" : player.answered ? "Απάντησε ✓" : "Σκέφτεται…"}</Text>
+          {playing ? <View style={[styles.scoreStrip, fontScale > 1.2 && styles.scoreStripWrap]}>{standings.map((player, index) => <View key={player.id} accessible
+            accessibilityLabel={`${player.name}, ${player.score} πόντοι, ${player.left ? "αποχώρησε" : !player.connected ? "εκτός σύνδεσης" : player.answered ? "απάντησε" : "σκέφτεται"}`}
+            style={[styles.scoreChip, fontScale > 1.2 && styles.wideScoreChip, player.id === userId && styles.self]}>
+            <Text numberOfLines={1} style={styles.scoreName}>{player.name}</Text>
+            <View style={styles.row}><Text style={styles.scoreSmall}>{player.score}</Text><Text accessible={false} style={styles.playerMeta}>{player.left ? "Έφυγε" : !player.connected ? "Εκτός" : player.answered ? "✓" : "…"}</Text></View>
           </View>)}</View> : null}
           {room.status === "question" && countdown > 0 ? <ScreenEntrance key={`${room.matchId}:${room.index}:countdown`} style={styles.countdownCard}>
             <PvpWorld category={room.category} size={72} />
@@ -188,7 +198,7 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
               <Text style={[styles.timer, !reveal && secondsLeft <= 5 && styles.urgentText]} accessibilityLabel={`${reveal ? "Επόμενο βήμα σε " : ""}${secondsLeft} δευτερόλεπτα`}>{secondsLeft}″</Text></View>
             {!reveal ? <View style={styles.track}><View style={[styles.fill, secondsLeft <= 5 && styles.urgentFill, { width: `${Math.min(100, secondsLeft / room.seconds * 100)}%` }]} /></View> : null}
             <Text accessibilityRole="header" style={styles.question}>{question.prompt}</Text>
-            {question.answers.map((answer, index) => <Pressable key={`${room.matchId}:${room.index}:${index}`} accessibilityRole="button"
+            {question.answers.map((answer, index) => reveal && index !== question.correctIndex && index !== self?.answer ? null : <Pressable key={`${room.matchId}:${room.index}:${index}`} accessibilityRole="button"
               accessibilityLabel={`${answer}${reveal && index === question.correctIndex ? ", σωστή απάντηση" : ""}`}
               accessibilityState={{ selected: selected === index, disabled: disabled || reveal || Boolean(self?.answered) || secondsLeft === 0 }}
               disabled={disabled || reveal || Boolean(self?.answered) || secondsLeft === 0}
@@ -197,16 +207,16 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
                 reveal && self?.answer === index && index !== question.correctIndex && styles.incorrect]}>
               <View style={styles.letterBadge}><Text style={styles.answerLetter}>{reveal && index === question.correctIndex ? "✓" : reveal && self?.answer === index ? "×" : ["Α", "Β", "Γ", "Δ"][index]}</Text></View><Text style={styles.answerText}>{answer}</Text>
             </Pressable>)}
-            <View style={[styles.feedback, reveal && (self?.answer === question.correctIndex ? styles.correct : styles.incorrect)]}><Text accessibilityLiveRegion="polite" style={styles.body}>{reveal ? (self?.answer === question.correctIndex ? "Σωστά! +1 πόντος" : self?.answered ? "Η σωστή απάντηση φαίνεται με πράσινο." : "Δεν δόθηκε απάντηση εγκαίρως.") : self?.answered ? "Η απάντησή σου κλείδωσε. Περιμένουμε την παρέα…" : secondsLeft === 0 ? "Ο χρόνος έληξε. Κλειδώνει η αποθηκευμένη επιλογή σου…" : busy ? "Αποθήκευση επιλογής…" : selected !== null && self?.selection !== selected ? "Η επιλογή δεν έχει αποθηκευτεί ακόμη. Επιβεβαίωσε ή επίλεξέ την ξανά." : "Μπορείς να αλλάξεις επιλογή πριν επιβεβαιώσεις. Στη λήξη του χρόνου κλειδώνει η αποθηκευμένη επιλογή σου."}</Text></View>
+            <View style={[styles.feedback, reveal && (self?.answer === question.correctIndex ? styles.correct : styles.incorrect)]}><Text accessibilityLiveRegion="polite" style={styles.body}>{reveal ? (self?.answer === question.correctIndex ? "Σωστά! +1 πόντος" : self?.answered ? "Η σωστή απάντηση φαίνεται με πράσινο." : "Δεν δόθηκε απάντηση εγκαίρως.") : self?.answered ? "Η απάντησή σου κλείδωσε. Περιμένουμε την παρέα…" : secondsLeft === 0 ? "Ο χρόνος έληξε. Κλειδώνει η αποθηκευμένη επιλογή σου…" : busy ? "Αποθήκευση επιλογής…" : selected !== null && self?.selection !== selected ? "Η επιλογή δεν έχει αποθηκευτεί ακόμη. Επιβεβαίωσε ή επίλεξέ την ξανά." : "Επίλεξε και επιβεβαίωσε. Στη λήξη κλειδώνει η επιλογή σου."}</Text></View>
             {reveal ? <><Text style={styles.body}>{question.explanation}</Text>
               {question.sources?.map(source => <SourceLink key={source.url} source={{ ...source, publisher: source.publisher ?? "Πηγή" }} />)}
               <Text style={styles.notice}>{room.index + 1 === room.count ? "Τα τελικά αποτελέσματα" : "Η επόμενη ερώτηση"} σε {secondsLeft}″</Text></> : null}
           </ScreenEntrance> : null}
           {room.status === "finished" ? <ScreenEntrance style={styles.resultCard}>
-            <PvpHero result />
+            <PvpHero result compact />
             <Text style={styles.eyebrow}>ΤΕΛΙΚΑ ΑΠΟΤΕΛΕΣΜΑΤΑ</Text>
             <Text accessibilityRole="header" style={styles.title}>{room.endedEarly ? "Το παιχνίδι ολοκληρώθηκε νωρίτερα" : winners.length > 1 ? "Ισοπαλία στην κορυφή!" : `Στην κορυφή: ${winners[0]?.name ?? "η παρέα"}!`}</Text>
-            <Text style={styles.body}>{room.endedEarly ? "Έμειναν λιγότεροι από δύο ενεργοί παίκτες στο δωμάτιο." : "Κάθε σωστή απάντηση μετράει για έναν πόντο. Οι ισοπαλίες μοιράζονται την ίδια θέση."}</Text>
+            {room.endedEarly ? <Text style={styles.body}>Έμειναν λιγότεροι από δύο ενεργοί παίκτες στο δωμάτιο.</Text> : null}
             <View style={styles.resultStats}><View style={styles.resultStat}><Text style={styles.resultValue}>{self?.score ?? 0}<Text style={styles.statDenominator}>/{room.count}</Text></Text><Text style={styles.playerMeta}>Σωστές απαντήσεις</Text></View>
               <View style={styles.resultStat}><Text style={styles.resultValue}>{standings.find(player => player.id === userId)?.rank ?? "—"}<Text style={styles.statDenominator}>η</Text></Text><Text style={styles.playerMeta}>Η θέση σου</Text></View></View>
             {host ? <Action label="Παίξτε ξανά" disabled={disabled} onPress={() => { void game.rematch(); }} /> : <Text style={styles.notice}>Περίμενε τον οικοδεσπότη για νέο παιχνίδι.</Text>}
@@ -214,26 +224,27 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
           {!playing ? <View style={styles.card}>
             <Text accessibilityRole="header" style={styles.sectionTitle}>{room.status === "lobby" ? `Η παρέα · ${participants.length}/4` : "Βαθμολογία"}</Text>
             {room.status === "lobby" ? <View style={styles.seatGrid}>
-              {participants.map((player, index) => <View key={player.id} style={[styles.seatCard, player.id === userId && styles.self]}>
-                <View style={styles.row}><PvpBadge name={player.name} index={index} /><Text style={styles.score}>{player.ready ? "✓" : "…"}</Text></View>
+              {participants.map((player, index) => <View key={player.id} style={[styles.seatCard, fontScale > 1.2 && styles.fullSeat, player.id === userId && styles.self]}>
+                <View style={styles.row}><PvpBadge name={player.name} index={index} compact /><Text style={styles.seatStatus}>{player.ready ? "✓" : "…"}</Text></View>
                 <Text style={styles.playerName}>{player.name}{player.id === userId ? " (εσύ)" : ""}</Text>
-                <Text style={styles.playerMeta}>{!player.connected ? "Εκτός σύνδεσης" : player.ready ? "Έτοιμος" : "Δεν είναι έτοιμος"}{player.id === room.hostId ? " · Οικοδεσπότης" : ""}</Text>
+                <Text style={styles.playerMeta}>{!player.connected ? "Εκτός σύνδεσης" : player.id === room.hostId ? "Οικοδεσπότης" : player.ready ? "Έτοιμος" : "Αναμονή"}</Text>
               </View>)}
-              {Array.from({ length: Math.max(0, 4 - participants.length) }, (_, index) => <View key={`empty:${index}`} style={[styles.seatCard, styles.emptySeat]}>
-                <Text accessible={false} style={styles.emptyPlus}>＋</Text><Text style={styles.playerMeta}>Μια θέση για την παρέα σου</Text></View>)}
+              {Array.from({ length: Math.max(0, 4 - participants.length) }, (_, index) => <View key={`empty:${index}`} style={[styles.seatCard, styles.emptySeat, fontScale > 1.2 && styles.fullSeat]}>
+                <Text accessible={false} style={styles.emptyPlus}>＋</Text><Text style={styles.playerMeta}>Ελεύθερη θέση</Text></View>)}
             </View> : standings.map((player, index) => <View key={player.id} style={[styles.player, player.id === userId && styles.self, player.rank === 1 && styles.winningPlayer]}>
-              <PvpBadge name={player.name} index={index} winner={room.status === "finished" && player.rank === 1} />
+              <PvpBadge name={player.name} index={index} winner={room.status === "finished" && player.rank === 1} compact />
               <View style={styles.playerCopy}><Text style={styles.playerName}>{room.status !== "lobby" ? `${player.rank}. ` : ""}{player.name}{player.id === userId ? " (εσύ)" : ""}</Text>
                 <Text style={styles.playerMeta}>{player.id === room.hostId ? "Οικοδεσπότης · " : ""}{player.left ? "Αποχώρησε" : !player.connected ? "Εκτός σύνδεσης" : room.status === "lobby" ? player.ready ? "Έτοιμος" : "Περιμένουμε ετοιμότητα" : player.answered ? "Απάντησε" : "Στο παιχνίδι"}</Text></View>
               <Text style={styles.score}>{room.status === "lobby" ? player.ready ? "✓" : "…" : player.score}</Text>
             </View>)}
+            {room.status === "lobby" ? <>
+              <View style={[styles.settingsGrid, fontScale > 1.2 && styles.settingsStack]}>
+                <View style={styles.settingsGroup}><Action label={self?.ready ? "Έτοιμος ✓" : "Είμαι έτοιμος"} secondary disabled={disabled} onPress={() => { void game.ready(!self?.ready); }} /></View>
+                {host ? <View style={styles.settingsGroup}><Action label="Έναρξη" accessibilityLabel="Έναρξη παιχνιδιού" disabled={disabled || !allReady} onPress={() => { void game.start(); }} /></View> : null}
+              </View>
+              {!allReady ? <Text style={styles.playerMeta}>{participants.length < 2 ? "Περιμένουμε ακόμη έναν παίκτη." : host ? "Περιμένουμε να είναι όλοι έτοιμοι." : "Ο οικοδεσπότης ξεκινά όταν είστε όλοι έτοιμοι."}</Text> : null}
+            </> : null}
           </View> : null}
-          {room.status === "lobby" ? <View style={styles.card}>
-            <Action label={self?.ready ? "Είμαι έτοιμος ✓" : "Είμαι έτοιμος"} secondary disabled={disabled} onPress={() => { void game.ready(!self?.ready); }} />
-            {host ? <Action label="Έναρξη παιχνιδιού" disabled={disabled || !allReady} onPress={() => { void game.start(); }} /> : <Text style={styles.notice}>Ο οικοδεσπότης ξεκινά όταν είστε όλοι έτοιμοι.</Text>}
-            <Text style={styles.body}>Χρειάζονται 2–4 παίκτες. Τα παιχνίδια με φίλους έχουν ξεχωριστή βαθμολογία και δεν δίνουν XP.</Text>
-          </View> : null}
-          <Action label="Αποχώρηση από το δωμάτιο" secondary disabled={busy} onPress={exit} />
         </>}
     </ScrollView>
     {room?.status === "question" && countdown === 0 && !self?.answered ? <View testID="pvp-confirm-footer" style={[styles.confirmFooter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
@@ -243,41 +254,51 @@ export default function PvpScreen({ userId, onHome, onAccount }: {
   </KeyboardAvoidingView>;
 }
 
-const panel = { backgroundColor: "#182133", borderRadius: 22, borderWidth: 1, borderColor: "#38435C", padding: 18, gap: 14 };
+const panel = { backgroundColor: "#182133", borderRadius: 18, borderWidth: 1, borderColor: "#38435C", padding: 14, gap: 10 };
 const styles = StyleSheet.create({
-  confirmFooter: { paddingHorizontal: 18, paddingTop: 12, backgroundColor: "#111A2B", borderTopWidth: 1, borderTopColor: "#4A4265", width: "100%", maxWidth: 600, alignSelf: "center" },
+  topicPicker: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, padding: 10, borderRadius: 12, backgroundColor: "#111B2C", borderWidth: 1, borderColor: "#47516A" },
+  settingsGrid: { flexDirection: "row", gap: 12 },
+  settingsStack: { flexDirection: "column" },
+  settingsGroup: { flex: 1, gap: 8, minWidth: 0 },
+  codeStack: { flexDirection: "column", alignItems: "stretch" },
+  codeCopy: { width: "100%", gap: 4 },
+  fullSeat: { flexBasis: "100%", flexGrow: 0 },
+  seatStatus: { color: colors.accentLight, fontSize: 18, fontWeight: "800" },
+  confirmFooter: { paddingHorizontal: 16, paddingTop: 8, backgroundColor: "#111A2B", borderTopWidth: 1, borderTopColor: "#4A4265", width: "100%", maxWidth: 600, alignSelf: "center" },
   heroCard: { ...panel, backgroundColor: "#202239", borderColor: "#655A80", paddingTop: 6 },
-  identityCard: { ...panel, padding: 14, backgroundColor: "#172333" },
-  questionCard: { ...panel, backgroundColor: "#172033", borderColor: "#5C547C", padding: 18 },
-  countdownCard: { ...panel, alignItems: "center", paddingVertical: 28 },
-  countdownNumber: { color: "#E7D5AF", fontSize: 76, lineHeight: 88, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  identityCard: { ...panel, paddingVertical: 8, backgroundColor: "#172333" },
+  questionCard: { ...panel, backgroundColor: "#172033", borderColor: "#5C547C" },
+  countdownCard: { ...panel, alignItems: "center", paddingVertical: 18 },
+  countdownNumber: { color: "#E7D5AF", fontSize: 60, lineHeight: 70, fontWeight: "900", fontVariant: ["tabular-nums"] },
   resultCard: { ...panel, borderColor: "#A08A64", backgroundColor: "#242433", paddingTop: 6 },
   resultStats: { flexDirection: "row", gap: 10 },
-  resultStat: { flex: 1, alignItems: "center", gap: 8, padding: 16, backgroundColor: "#172032", borderRadius: 16 },
-  resultValue: { color: "#E8D1A8", fontSize: 36, fontWeight: "900" },
+  resultStat: { flex: 1, alignItems: "center", gap: 4, padding: 10, backgroundColor: "#172032", borderRadius: 12 },
+  resultValue: { color: "#E8D1A8", fontSize: 28, fontWeight: "900" },
   statDenominator: { color: colors.textMuted, fontSize: 18, fontWeight: "600" },
   winningPlayer: { borderWidth: 1, borderColor: "#A08A64", backgroundColor: "#302D30" },
   editName: { minHeight: 44, justifyContent: "center", paddingHorizontal: 10 },
-  modeTabs: { flexDirection: "row", gap: 6, padding: 5, backgroundColor: "#111B2C", borderRadius: 17, borderWidth: 1, borderColor: "#354059" },
-  modeTab: { flex: 1, alignItems: "center", justifyContent: "center", padding: 12, minHeight: 46, borderRadius: 12 },
+  modeTabs: { flexDirection: "row", gap: 4, padding: 4, backgroundColor: "#111B2C", borderRadius: 15, borderWidth: 1, borderColor: "#354059" },
+  modeTab: { flex: 1, alignItems: "center", justifyContent: "center", padding: 10, minHeight: 44, borderRadius: 11 },
   modeTabSelected: { backgroundColor: "#39334F", borderColor: "#80709E", borderWidth: 1 },
-  roomSettings: { flexDirection: "row", alignItems: "center", gap: 12, padding: 12, backgroundColor: "#151E30", borderRadius: 14 },
+  roomSettings: { flexDirection: "row", alignItems: "center", gap: 10 },
   topicChip: { flexDirection: "row", alignItems: "center", gap: 8, maxWidth: "100%" },
-  scoreStrip: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  scoreChip: { flexGrow: 1, flexBasis: "45%", minWidth: 0, padding: 10, gap: 5, borderRadius: 13, backgroundColor: "#192338", borderWidth: 1, borderColor: "#364059" },
+  scoreStrip: { flexDirection: "row", gap: 6 },
+  scoreStripWrap: { flexWrap: "wrap" },
+  wideScoreChip: { flexBasis: "45%", flexGrow: 1 },
+  scoreChip: { flex: 1, minWidth: 0, paddingHorizontal: 8, paddingVertical: 5, gap: 0, borderRadius: 11, backgroundColor: "#192338", borderWidth: 1, borderColor: "#364059" },
   scoreName: { flex: 1, color: colors.textBody, fontSize: 13, fontWeight: "700" },
-  scoreSmall: { color: "#E8D1A8", fontSize: 20, fontWeight: "800", fontVariant: ["tabular-nums"] },
+  scoreSmall: { color: "#E8D1A8", fontSize: 16, fontWeight: "800", fontVariant: ["tabular-nums"] },
   urgentText: { color: colors.error },
   urgentFill: { backgroundColor: colors.error },
-  letterBadge: { width: 32, height: 32, borderRadius: 10, backgroundColor: "rgba(168,155,255,0.1)", alignItems: "center", justifyContent: "center" },
-  feedback: { padding: 13, borderRadius: 13, backgroundColor: "#222B40", borderWidth: 1, borderColor: "#45506B" },
-  seatGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  seatCard: { flexBasis: "45%", flexGrow: 1, minWidth: 0, padding: 12, gap: 8, borderWidth: 1, borderColor: "#354058", borderRadius: 15, backgroundColor: "#111B2C" },
+  letterBadge: { width: 26, height: 26, borderRadius: 8, backgroundColor: "rgba(168,155,255,0.1)", alignItems: "center", justifyContent: "center" },
+  feedback: { paddingVertical: 8, paddingHorizontal: 10, borderRadius: 11, backgroundColor: "#222B40", borderWidth: 1, borderColor: "#45506B" },
+  seatGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  seatCard: { flexBasis: "45%", flexGrow: 1, minWidth: 0, minHeight: 76, padding: 10, gap: 4, borderWidth: 1, borderColor: "#354058", borderRadius: 12, backgroundColor: "#111B2C" },
   emptySeat: { alignItems: "center", justifyContent: "center", borderStyle: "dashed", borderColor: "#404B63", backgroundColor: "transparent" },
   emptyPlus: { color: "#8D88AC", fontSize: 24, minWidth: 40, textAlign: "center" },
   screen: { flex: 1, backgroundColor: colors.background },
-  header: { marginHorizontal: 18, marginTop: 8, marginBottom: 10 },
-  content: { paddingHorizontal: 18, gap: 14, width: "100%", maxWidth: 600, alignSelf: "center" },
+  header: { marginHorizontal: 16, marginTop: 6, marginBottom: 8 },
+  content: { paddingHorizontal: 16, gap: 10, width: "100%", maxWidth: 600, alignSelf: "center" },
   card: panel,
   eyebrow: { color: colors.accentLight, fontSize: 11, fontWeight: "800", letterSpacing: 1 },
   title: { color: colors.text, fontSize: 25, lineHeight: 33, fontWeight: "900" },
@@ -288,28 +309,28 @@ const styles = StyleSheet.create({
   input: { backgroundColor: "#0F1726", borderColor: "#4A5670", borderWidth: 1, borderRadius: 12, minHeight: 50, paddingHorizontal: 14, color: colors.text, fontSize: 17 },
   codeInput: { letterSpacing: 5, fontWeight: "800" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { borderRadius: 12, borderWidth: 1, borderColor: "#47516A", backgroundColor: "#1D293E", minHeight: 44, justifyContent: "center", paddingHorizontal: 13, paddingVertical: 10 },
+  chip: { borderRadius: 10, borderWidth: 1, borderColor: "#47516A", backgroundColor: "#1D293E", minHeight: 44, minWidth: 44, alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 8 },
   selectedChip: { borderColor: colors.accentLight, backgroundColor: "#353052" },
   chipText: { color: colors.text, fontSize: 14, fontWeight: "600", flexShrink: 1 },
-  button: { minHeight: 52, padding: 14, borderRadius: 16, backgroundColor: "#39314F", borderColor: "#9A85BC", justifyContent: "center", alignItems: "center" },
+  button: { minHeight: 48, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 10, borderRadius: 13, backgroundColor: "#39314F", borderColor: "#9A85BC", justifyContent: "center", alignItems: "center" },
   secondary: { backgroundColor: "#26324A", borderWidth: 1, borderColor: "#526080" },
   buttonText: { color: colors.text, fontSize: 15, fontWeight: "800", textAlign: "center" },
   secondaryText: { color: colors.text },
   disabled: { opacity: 0.45 },
   pressed: { opacity: 0.8 },
   error: { padding: 14, gap: 10, backgroundColor: colors.errorSurface, borderRadius: 12 },
-  roomCode: { color: colors.text, fontSize: 38, letterSpacing: 6, fontWeight: "900", textAlign: "center" },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 },
+  roomCode: { color: colors.text, fontSize: 30, letterSpacing: 3, fontWeight: "900" },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
   timer: { fontSize: 23, color: colors.accentLight, fontWeight: "800", fontVariant: ["tabular-nums"] },
   track: { height: 5, borderRadius: 4, backgroundColor: "#344159", overflow: "hidden" },
   fill: { height: 5, backgroundColor: colors.accentLight },
   question: { color: colors.text, fontSize: 21, lineHeight: 30, fontWeight: "800" },
-  answer: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, minHeight: 56, borderRadius: 13, borderWidth: 1, borderColor: "#4A5670", backgroundColor: "#1B293E" },
+  answer: { flexDirection: "row", alignItems: "center", gap: 10, padding: 10, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: "#4A5670", backgroundColor: "#1B293E" },
   answerLetter: { fontSize: 15, fontWeight: "800", color: colors.accentLight },
   answerText: { flex: 1, color: colors.text, fontSize: 16, lineHeight: 23 },
   correct: { borderColor: colors.success, backgroundColor: colors.successSurface },
   incorrect: { borderColor: colors.error, backgroundColor: colors.errorSurface },
-  player: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 12, backgroundColor: "#111B2C" },
+  player: { flexDirection: "row", alignItems: "center", gap: 10, padding: 10, borderRadius: 12, backgroundColor: "#111B2C" },
   self: { borderWidth: 1, borderColor: "#7E70BA" },
   playerCopy: { flex: 1, gap: 4 },
   playerName: { color: colors.text, fontSize: 16, fontWeight: "700" },

@@ -37,6 +37,11 @@ score strip, countdown, clear answer states and a low-time warning. Results
 highlight shared winners and the player's score/place. Each new question resets
 the scroll position so an explanation cannot leave the next prompt offscreen.
 
+The [screen-space audit](pvp-layout-audit.md) records the compact layouts and
+before/after measurements: saved-identity-first setup, on-demand topic choices,
+inline settings, smaller lobby/score cards, focused reveals and accessible
+large-text stacking.
+
 Question-open, correct/incorrect reveal and match-complete cues use the existing
 practice sound pipeline, including its mute/background preferences. Correctness
 is sounded only after the server reveals it. A phase tracker suppresses duplicate
