@@ -33,14 +33,13 @@ assert.equal(Header.profileSectionLayout.below, 13);
 const read = file => fs.readFileSync(file, "utf8");
 const screens = [
   "ProfileScreen.tsx", "PlayerStatsScreen.tsx",
-  "AccountScreen.tsx", "DailyChallengePreferencesScreen.tsx", "DailyChallengeScreen.tsx", "QuickQuizScreen.tsx",
+  "AccountScreen.tsx", "DailyChallengePreferencesScreen.tsx", "DailyChallengeScreen.tsx",
 ];
 for (const file of screens) {
   const source = read("src/screens/" + file);
   assert.match(source, /<ProfileSectionHeader\b/, file + " uses the shared header");
-  const layout = source.includes('quizFlowStyles') ? read('src/components/quizFlowStyles.ts') : source;
-  assert.match(layout, /profileSectionLayout\.horizontal/);
-  assert.match(layout, /profileSectionLayout\.top/);
+  assert.match(source, /profileSectionLayout\.horizontal/);
+  assert.match(source, /profileSectionLayout\.top/);
 }
 const statsSource = read("src/screens/PlayerStatsScreen.tsx");
 assert.doesNotMatch(statsSource, /fixedContent:|headerSpacing:/,

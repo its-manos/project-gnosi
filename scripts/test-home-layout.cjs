@@ -423,8 +423,7 @@ for (const streak of [1, 2, null]) {
 const loadingStreak = HomeStreakBadge({ streak: null });
 assert.match(loadingStreak.props.accessibilityLabel, /Φόρτωση/);
 assert.equal(nodes(loadingStreak).find(node => node.props?.testID === "home-streak-count").props.children, "—");
-assert.equal(textById("home-daily-status").props.children, "Δες αποτελέσματα →");
-assert.match(textById("home-daily-quiz").props.accessibilityLabel, /Ολοκληρώθηκε/);
+assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
 // The counter is the number of submitted answers, not the current index,
 // correct answers, or a streak. It is scoped to today's Athens daily record.
 daily = { ready: true, doc: { days: { "2026-11-03": {
@@ -450,9 +449,6 @@ assert.equal(filledSegments(), 0, "loading state must not claim completed segmen
 assert.equal(textById("home-daily-answered").props.children, "—/7",
   "unknown loading progress must not appear as zero");
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /φόρτωση προόδου/);
-assert.equal(textById("home-daily-status").props.children, "Φόρτωση…");
-assert.equal(textById("home-daily-quiz").props.disabled, true,
-  "the daily action waits for account-scoped progress before becoming available");
 daily = { ready: true, doc: { days: { "2026-11-03": {
   record: { completed: true, started: true, currentIndex: 6, answers: completeDailyAnswers },
 } } } };

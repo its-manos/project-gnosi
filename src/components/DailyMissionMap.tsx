@@ -4,27 +4,24 @@ import { colors } from "../theme";
 
 // The shared daily selection is intentionally 2 easy, 3 medium, 2 hard.
 // This illustration is static native UI, not an animated SVG or an interactive map.
-const dailyStations = ["easy", "easy", "medium", "medium", "medium", "hard", "hard"] as const;
-const quickStations = ["easy", "easy", "medium", "medium", "hard"] as const;
+const stations = ["easy", "easy", "medium", "medium", "medium", "hard", "hard"] as const;
 
-function DailyMissionMap({ compact = false, variant = "daily" }: { compact?: boolean; variant?: "daily" | "quick" }) {
-  const quick = variant === "quick";
-  const stations = quick ? quickStations : dailyStations;
-  return <View testID={`${variant}-mission-map`} style={[styles.card,compact&&styles.cardCompact]}>
+function DailyMissionMap({ compact = false }: { compact?: boolean }) {
+  return <View testID="daily-mission-map" style={[styles.card,compact&&styles.cardCompact]}>
     <View pointerEvents="none" style={styles.rim}/>
     <View style={styles.topRow}>
       <View style={styles.captionRow}>
         <Text style={styles.tinyStar}>✦</Text>
-        <Text style={styles.heading}>{quick ? "Ο ΧΑΡΤΗΣ ΤΟΥ ΓΥΡΟΥ" : "Ο ΧΑΡΤΗΣ ΤΗΣ ΗΜΕΡΑΣ"}</Text>
+        <Text style={styles.heading}>Ο ΧΑΡΤΗΣ ΤΗΣ ΗΜΕΡΑΣ</Text>
       </View>
       <View style={styles.countPill}>
-        <Text style={styles.countText}>{String(stations.length).padStart(2, "0")} ΣΤΑΣΕΙΣ</Text>
+        <Text style={styles.countText}>07 ΣΤΑΣΕΙΣ</Text>
       </View>
     </View>
 
     <View style={[styles.route,compact&&styles.routeCompact]} accessible={false} pointerEvents="none">
       <View style={styles.rail}/>
-      {stations.map((tier,index)=><View key={index} testID={`${variant}-route-station-${index+1}`} style={styles.stationSlot}>
+      {stations.map((tier,index)=><View key={index} testID={`daily-route-station-${index+1}`} style={styles.stationSlot}>
         <View style={[styles.stationHalo,tier==="easy"&&styles.easyHalo,
           tier==="medium"&&styles.mediumHalo,tier==="hard"&&styles.hardHalo]}>
           <Text style={[styles.stationStar,tier==="easy"&&styles.easyStar,
@@ -42,18 +39,18 @@ function DailyMissionMap({ compact = false, variant = "daily" }: { compact?: boo
       </View>
       <View style={styles.tier}>
         <View style={[styles.tierDot,styles.mediumDot]}/>
-        <Text style={styles.tierText}>{quick ? "2 μεσαίες" : "3 μεσαίες"}</Text>
+        <Text style={styles.tierText}>3 μεσαίες</Text>
       </View>
       <View style={styles.tier}>
         <View style={[styles.tierDot,styles.hardDot]}/>
-        <Text style={styles.tierText}>{quick ? "1 δύσκολη" : "2 δύσκολες"}</Text>
+        <Text style={styles.tierText}>2 δύσκολες</Text>
       </View>
     </View>
 
     <View style={styles.footer}>
       <View style={styles.footerItem}>
         <Text style={styles.footerIcon}>✦</Text>
-        <Text style={styles.footerHighlight}>{quick ? "Χωρίς χρονόμετρο" : "100 πόντοι / σωστή"}</Text>
+        <Text style={styles.footerHighlight}>100 πόντοι / σωστή</Text>
       </View>
       <Text style={styles.footerMuted}>Συνέχισε όποτε θέλεις</Text>
     </View>

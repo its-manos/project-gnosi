@@ -15,8 +15,6 @@ const details=results.createDailyResultDetails(record,questions),frozen=JSON.str
 let challenge={record,resultDetails:details,isLoading:false,currentQuestion:null,selectedAnswer:null,correctCount:5,rewardXP:143,questionsCompatible:true,rewardSummary:{combo:2,highestCombo:2,rows:[]},nextQuestion:async()=>{next++;},answerQuestion:async()=>{},startChallenge:async()=>{}};
 const Screen=load('src/screens/DailyChallengeScreen.tsx',{react,'react/jsx-runtime':{jsx,jsxs:jsx},'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:0})},
   ...stubs,
-  '../components/quizFlowStyles':load('src/components/quizFlowStyles.ts',{'react-native':native,
-    './ProfileSectionHeader':{profileSectionLayout:{horizontal:18,top:8,below:13}}}),
   '../components/ProfileSectionHeader':{__esModule:true,default:'ProfileSectionHeader',profileSectionLayout:{horizontal:18,top:8,below:13}},
   '../hooks/useAdaptiveQuestionScroll':{useAdaptiveQuestionScroll:()=>({scrollEnabled:false,onLayout:()=>{},onContentSizeChange:()=>{}})},
   '../hooks/useQuestionStageAction':{useQuestionStageAction:()=>({action:null,onActionChange:()=>{}})},

@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButton from "../components/ActionButton";
-import { quizFlowStyles as styles } from "../components/quizFlowStyles";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
-import ProfileSectionHeader from "../components/ProfileSectionHeader";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import DailyMissionMap from "../components/DailyMissionMap";
 import DailyJourneyTrack from "../components/DailyJourneyTrack";
 import DailyMistakeReview from "../components/DailyMistakeReview";
@@ -83,7 +82,7 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
         actionAccessibilityLabel={previewIntro?"Πίσω στα εργαλεία δοκιμών":reviewing?"Πίσω στο αποτέλεσμα":"Επιστροφή στην αρχική"}
         onAction={reviewing?closeReview:onHome} style={styles.pageHeader}/>
     </View>
-    <ScrollView testID="daily-quiz-viewport" ref={scrollRef} style={styles.viewport}
+    <ScrollView ref={scrollRef} style={styles.viewport}
       contentContainerStyle={[styles.content,activeQuiz&&styles.activeContent,!activeQuiz&&styles.pageContent]}
       onLayout={quizViewport.onLayout} onContentSizeChange={quizViewport.onContentSizeChange}
       scrollEnabled={quizViewport.scrollEnabled}
@@ -229,3 +228,99 @@ export default function DailyChallengeScreen({onHome,onOpenPreferences,preferenc
     } : stageAction.action} /> : null}
   </View>;
 }
+const styles=StyleSheet.create({
+  root:{flex:1,backgroundColor:colors.background},
+  viewport:{flex:1},
+  pageChrome:{paddingHorizontal:profileSectionLayout.horizontal,paddingTop:profileSectionLayout.top},
+  pageHeader:{marginBottom:7},
+  content:{width:'100%',maxWidth:720,alignSelf:'center',paddingHorizontal:profileSectionLayout.horizontal,paddingTop:6,paddingBottom:22},
+  pageContent:{flexGrow:1},
+  activeContent:{flexGrow:1,justifyContent:'center',paddingHorizontal:16,paddingTop:8,paddingBottom:14},
+  centerState:{alignItems:'center',justifyContent:'center',paddingTop:60,gap:16},
+  eyebrow:{color:colors.accentLight,fontSize:10,lineHeight:16,fontWeight:'900',letterSpacing:1.05},
+  title:{color:colors.text,fontSize:26,lineHeight:33,fontWeight:'900'},
+  note:{color:colors.textMuted,fontSize:11,lineHeight:16},
+  introContainer:{flexGrow:1,justifyContent:'center',paddingTop:10,paddingBottom:76},
+  introDense:{paddingTop:0,paddingBottom:12},
+  introBody:{gap:18},
+  introBodyCompact:{gap:13},
+  introLead:{flexDirection:'row',alignItems:'center',gap:10,minHeight:124},
+  introCopy:{flex:1,minWidth:0,gap:7},
+  introTitle:{color:colors.text,fontWeight:'900',fontSize:30,lineHeight:37,maxWidth:350},
+  introTitleDense:{fontSize:25,lineHeight:32},
+  introSubtitle:{color:'#D2D2DE',fontSize:14,lineHeight:21},
+  heroMark:{width:124,height:124,alignItems:'center',justifyContent:'center',flexShrink:0},
+  heroMarkDense:{transform:[{scale:.83}],marginHorizontal:-9},
+  heroOrbitOuter:{position:'absolute',width:112,height:112,borderRadius:56,borderWidth:1,borderColor:'#565C82'},
+  heroOrbitInner:{position:'absolute',width:88,height:88,borderRadius:44,borderWidth:1,borderColor:'#726A9B',transform:[{rotate:'24deg'}]},
+  heroCore:{width:61,height:61,borderRadius:19,backgroundColor:'#383455',borderWidth:1,borderColor:'#8B7DC0',
+    alignItems:'center',justifyContent:'center'},
+  heroGlyph:{color:'#E0D4FF',fontSize:34,fontWeight:'800'},
+  heroSatellite:{position:'absolute',right:9,top:19,width:10,height:10,borderRadius:5,backgroundColor:'#87C7C5',
+    borderWidth:2,borderColor:'#192137'},
+  heroSmallStar:{position:'absolute',left:3,bottom:13,color:'#D0B68F',fontSize:18},
+  sharedNote:{color:colors.textBody,fontSize:13,lineHeight:20},
+  introActions:{gap:1,marginTop:1},
+  interestsLink:{minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:12},
+  interestsPressed:{backgroundColor:'#272D44'},
+  interestsText:{color:'#C5B7FF',fontSize:13,lineHeight:19,fontWeight:'800'},
+  introNote:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center',paddingHorizontal:4},
+  actionPrimary:{marginTop:0},
+  actionSecondary:{marginTop:0},
+  cardRim:{position:'absolute',top:0,left:20,right:20,height:2,backgroundColor:'#8376B9'},
+  resultContainer:{gap:11,paddingTop:7,paddingBottom:6},
+  resultContainerCompact:{gap:9,paddingTop:3},
+  resultHero:{flexDirection:'row',alignItems:'center',gap:12,paddingVertical:4,minHeight:82},
+  resultHeroCompact:{minHeight:68,paddingVertical:0},
+  resultHeroCopy:{flex:1,minWidth:0,gap:6},
+  resultTitleCompact:{fontSize:23,lineHeight:29},
+  resultSeal:{width:64,height:64,alignItems:'center',justifyContent:'center',borderRadius:21,
+    backgroundColor:'#302B4A',borderWidth:1,borderColor:'#796AAB',marginRight:4},
+  resultSealCompact:{width:56,height:56,borderRadius:19,marginRight:2},
+  resultSealOrbit:{position:'absolute',width:'116%',height:'116%',borderRadius:60,
+    borderWidth:1,borderColor:'#54527D'},
+  resultStar:{color:'#DCD0FF',fontSize:30},
+  scoreCard:{alignItems:'stretch',padding:16,paddingTop:18,gap:4,borderRadius:21,overflow:'hidden',
+    backgroundColor:'#1A2032',borderColor:'#444361',borderWidth:1},
+  scoreCardCompact:{padding:13,paddingTop:16},
+  resultScoreRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:8},
+  resultScoreCopy:{flex:1,minWidth:0,gap:4},
+  scoreLabel:{color:'#C0B3F2',fontSize:10,lineHeight:15,fontWeight:'900',letterSpacing:1.0},
+  scoreHint:{color:colors.textBody,fontSize:12,lineHeight:18},
+  bigScore:{color:colors.text,fontSize:45,lineHeight:54,fontWeight:'900'},
+  bigScoreCompact:{fontSize:42,lineHeight:50},
+  scoreDenominator:{color:colors.textMuted,fontSize:19,fontWeight:'700'},
+  resultRoute:{alignSelf:'stretch',marginTop:4,paddingHorizontal:2},
+  metrics:{flexDirection:'row',alignItems:'center',alignSelf:'stretch',marginTop:5,paddingTop:10,
+    borderTopWidth:1,borderTopColor:'#373C54'},
+  metric:{flex:1,alignItems:'center',gap:1},
+  metricDivider:{width:1,height:28,backgroundColor:'#3A4059'},
+  metricValue:{color:colors.accentLight,fontSize:20,lineHeight:26,fontWeight:'900'},
+  metricLabel:{color:colors.textMuted,fontSize:10,lineHeight:15,textAlign:'center'},
+  legacyNote:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center',paddingTop:6},
+  highlightRow:{backgroundColor:'#1A2030',borderRadius:16,borderWidth:1,borderColor:'#363C55',
+    padding:10,flexDirection:'row',alignItems:'center',gap:10},
+  highlightMark:{width:30,height:30,borderRadius:10,alignItems:'center',justifyContent:'center',backgroundColor:'#302B4A'},
+  highlightStar:{color:colors.accentLight,fontSize:17},
+  highlightCopy:{flex:1,gap:3},
+  highlightTitle:{color:colors.text,fontSize:14,lineHeight:20,fontWeight:'800'},
+  highlightDetail:{color:colors.textMuted,fontSize:12,lineHeight:18},
+  actionGroup:{gap:3},
+  mistakeAction:{minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:12},
+  linkPressed:{backgroundColor:'#262B40'},
+  mistakeActionText:{color:'#C6B7FF',fontSize:13,lineHeight:20,fontWeight:'800'},
+  recommendCard:{minHeight:73,paddingHorizontal:13,paddingVertical:11,
+    flexDirection:'row',alignItems:'center',gap:9,borderRadius:17,
+    backgroundColor:'#191F30',borderWidth:1,borderColor:'#40435D'},
+  recommendPressed:{backgroundColor:'#252A42'},
+  recommendCopy:{flex:1,minWidth:0,gap:4},
+  cardTitle:{color:colors.text,fontSize:15,lineHeight:21,fontWeight:'800'},
+  recommendArrow:{width:31,height:31,borderRadius:11,backgroundColor:'#343050',
+    borderWidth:1,borderColor:'#5F5587',alignItems:'center',justifyContent:'center'},
+  recommendArrowText:{color:'#D0C4FF',fontSize:25,lineHeight:28,fontWeight:'800'},
+  tomorrow:{color:colors.textMuted,fontSize:11,lineHeight:17,textAlign:'center'},
+  combo:{color:colors.accentLight,fontSize:13,lineHeight:21,fontWeight:'800'},
+  sourceLink:{paddingVertical:10},
+  sourceLinkText:{color:colors.accentLight,fontSize:12,lineHeight:19,textDecorationLine:'underline'},
+  errorText:{color:colors.error,fontSize:13,lineHeight:21,textAlign:'center'},
+});

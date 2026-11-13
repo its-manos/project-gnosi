@@ -2,36 +2,35 @@ import { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme";
 
+const TOTAL_STATIONS = 7;
+const route = Array.from({ length: TOTAL_STATIONS }, (_, index) => index);
 type Props =
-  | { mode: "question"; answeredCount: number; currentIndex: number; shared?: boolean; variant?: "daily" | "quick" }
-  | { mode: "result"; correctMask: readonly (boolean | null)[]; shared?: boolean; variant?: "daily" | "quick" };
+  | { mode: "question"; answeredCount: number; currentIndex: number; shared?: boolean }
+  | { mode: "result"; correctMask: readonly (boolean | null)[]; shared?: boolean };
 
 function DailyJourneyTrack(props: Props) {
-  const variant = props.variant ?? "daily";
-  const total = variant === "quick" ? 5 : 7;
-  const route = Array.from({ length: total }, (_, index) => index);
   const isResult = props.mode === "result";
-  const count = isResult ? total : Math.min(total, Math.max(0, props.answeredCount));
-  const activeIndex = isResult ? -1 : Math.min(total - 1, Math.max(0, props.currentIndex));
+  const count = isResult ? TOTAL_STATIONS : Math.min(TOTAL_STATIONS, Math.max(0, props.answeredCount));
+  const activeIndex = isResult ? -1 : Math.min(TOTAL_STATIONS - 1, Math.max(0, props.currentIndex));
   const label = isResult ? "Η ΔΙΑΔΡΟΜΗ ΣΟΥ" : "ΠΡΟΟΔΟΣ ΑΠΟΣΤΟΛΗΣ";
-  const value = `${String(isResult ? total : activeIndex + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
-  const resultsKnown = isResult && props.correctMask.length === total &&
+  const value = isResult ? "07 / 07" : `${String(activeIndex + 1).padStart(2, "0")} / 07`;
+  const resultsKnown = isResult && props.correctMask.length === TOTAL_STATIONS &&
     props.correctMask.every(value => typeof value === "boolean");
   const correctTotal = isResult ? props.correctMask.filter(value => value === true).length : 0;
   const routeAnnouncement = isResult
     ? resultsKnown
-      ? `Αποτελέσματα: ${correctTotal} σωστές, ${total - correctTotal} λανθασμένες απαντήσεις.`
+      ? `Αποτελέσματα: ${correctTotal} σωστές, ${TOTAL_STATIONS - correctTotal} λανθασμένες απαντήσεις.`
       : "Η διαδρομή ολοκληρώθηκε. Δεν υπάρχουν αναλυτικά αποτελέσματα για κάθε ερώτηση."
-    : `Απαντημένες: ${count} από ${total} ερωτήσεις.`;
+    : `Απαντημένες: ${count} από ${TOTAL_STATIONS} ερωτήσεις.`;
 
-  return <View testID={`${variant}-${isResult ? "result" : "question"}-route`} style={styles.wrap}>
+  return <View testID={isResult ? "daily-result-route" : "daily-question-route"} style={styles.wrap}>
     <View style={styles.heading}>
       <Text style={styles.eyebrow}>{label}</Text>
       <Text style={styles.counter}>{value}</Text>
     </View>
     <View style={styles.route} accessible accessibilityRole="progressbar"
       accessibilityLabel={routeAnnouncement}
-      accessibilityValue={{ min: 0, max: total, now: count }}>
+      accessibilityValue={{ min: 0, max: TOTAL_STATIONS, now: count }}>
       <View pointerEvents="none" style={styles.rail}/>
       {route.map(index => {
         const completed = index < count;
@@ -39,8 +38,8 @@ function DailyJourneyTrack(props: Props) {
         const correctness = isResult ? props.correctMask[index] : null;
         // For legacy daily attempts, do not imply the new 2/3/2 tier order.
         const tier = props.shared === false ? "neutral"
-          : index < 2 ? "easy" : index < (variant === "quick" ? 4 : 5) ? "medium" : "hard";
-        return <View testID={`${variant}-journey-stop-${index + 1}`} key={index} style={styles.stopSlot}>
+          : index < 2 ? "easy" : index < 5 ? "medium" : "hard";
+        return <View testID={`daily-journey-stop-${index + 1}`} key={index} style={styles.stopSlot}>
           <View style={[styles.stop,completed&&styles.completed,current&&styles.current,
             isResult&&correctness===true&&styles.correct,
             isResult&&correctness===false&&styles.incorrect,

@@ -1,19 +1,12 @@
 import GameXpStatus from "../components/GameXpStatus";
 import { useEffect, useRef, useState, type ComponentRef } from "react";
-import { ActivityIndicator, BackHandler, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ActionButton from "../components/ActionButton";
-import ProfileSectionHeader from "../components/ProfileSectionHeader";
+import AtlasContinueCard, { atlasContinueStyles } from "../components/AtlasContinueCard";
+import ProfileSectionHeader, { profileSectionLayout } from "../components/ProfileSectionHeader";
 import AppBackground from "../components/AppBackground";
-import DailyMissionMap from "../components/DailyMissionMap";
-import DailyJourneyTrack from "../components/DailyJourneyTrack";
-import QuizReveal from "../components/QuizReveal";
-import QuestionStageFooter from "../components/QuestionStageFooter";
 import SingleChoiceQuestionCard from "../components/SingleChoiceQuestionCard";
 import SourceLink from "../components/SourceLink";
-import { quizFlowStyles as styles } from "../components/quizFlowStyles";
-import { useAdaptiveQuestionScroll } from "../hooks/useAdaptiveQuestionScroll";
-import { useQuestionStageAction } from "../hooks/useQuestionStageAction";
 import type { useQuickQuiz } from "../hooks/useQuickQuiz";
 import { emitPlayFeedback } from "../play/events";
 import { requestPracticeCue } from "../play/soundStatus";
@@ -33,46 +26,50 @@ const categoryLabels: Record<string, string> = {
   history: "Ιστορία", science: "Επιστήμη", nature: "Φύση",
   technology: "Τεχνολογία", culture: "Τέχνες", geography: "Γεωγραφία",
 };
-const difficultyLabels = { easy: "Εύκολο", medium: "Μεσαίο", hard: "Δύσκολο" };
+
+function NextButton({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
+  return <AtlasContinueCard accessibilityRole="button" disabled={disabled}
+    accessibilityState={{ disabled }} onPress={onPress} style={styles.next}>
+    <Text style={atlasContinueStyles.title}>{label}</Text>
+    <Text accessible={false} style={styles.arrow}>→</Text>
+  </AtlasContinueCard>;
+}
 
 function QuestionSources({ question }: { question: ChoiceQuestion }) {
   return <>{question.sources.map(source => <SourceLink key={source.url}
     source={{ ...source, publisher: source.publisher ?? "Πηγή" }} />)}</>;
 }
 
+function ResultStat({ value, label }: { value: string | number; label: string }) {
+  return <View style={styles.stat} accessible accessibilityLabel={`${label}, ${value}`}>
+    <Text style={styles.statValue}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>;
+}
+
 export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], onHome }: Props) {
   const insets = useSafeAreaInsets();
-  const { height, fontScale } = useWindowDimensions();
-  const compactIntro = height < 900 || fontScale >= 1.2;
-  const denseIntro = height < 740 || fontScale >= 1.4;
-  const quizViewport = useAdaptiveQuestionScroll();
+  const entered = useRef(false);
+  const openingResult = useRef<string | null>(null);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
-  const [entry, setEntry] = useState<"loading" | "intro" | "play">("loading");
   const [review, setReview] = useState(false);
   const { progress, busy, error, update, retryLoad } = game;
   const round = progress?.round;
   const question = round?.questions[round.currentIndex] as ChoiceQuestion | undefined;
   const answer = question && round ? round.answers[question.id]?.value as number | undefined : undefined;
-  const stageAction = useQuestionStageAction(`${round?.id}:${question?.id}`);
-  const activeQuiz = entry === "play" && Boolean(round && !round.completed && question);
 
   function newRound() {
-    void update(current => startQuickQuiz(current, Math.random, preferredTopicIds))
-      .then(saved => {
-        if (saved) {
-          setEntry("play");
-          setReview(false);
-        }
-      }).catch(() => {});
+    void update(current => startQuickQuiz(current, Math.random, preferredTopicIds)).then(saved => { if (saved) setReview(false); }).catch(() => {});
   }
 
   useEffect(() => {
-    if (entry !== "loading" || !progress) return;
-    // Resume saved questions directly. A fresh round starts only from the intro CTA.
-    setEntry(progress.round && !progress.round.completed ? "play" : "intro");
-  }, [progress, entry]);
+    if (entered.current || !progress) return;
+    entered.current = true;
+    if (progress.round?.completed) openingResult.current = progress.round.id;
+    if (!progress.round || progress.round.completed) void update(current => startQuickQuiz(current, Math.random, preferredTopicIds)).catch(() => {});
+  }, [progress, update]);
 
-  const liveQuestionId = entry === "play" && round && !round.completed && question && answer === undefined
+  const liveQuestionId = round && !round.completed && question && answer === undefined
     ? `${round.id}:${question.id}` : null;
   useEffect(() => {
     if (liveQuestionId) requestPracticeCue("question-open");
@@ -87,7 +84,7 @@ export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], o
     return () => subscription.remove();
   }, [review]);
 
-  const pageKey = `${entry}:${round?.id}:${round?.currentIndex}:${round?.completed}:${review}`;
+  const pageKey = `${round?.id}:${round?.currentIndex}:${round?.completed}:${review}`;
   useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [pageKey]);
 
   async function confirm(value: number) {
@@ -110,56 +107,26 @@ export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], o
 
   const results = round?.completed ? calculateQuizResults(round) : null;
   const streaks = round ? quickQuizStreaks(round) : null;
-  const showResults = entry === "play" && progress && round?.completed && results;
-  const showIntro = entry === "intro" && progress;
   const perfect = results?.correctCount === QUICK_QUIZ_SIZE;
-  const resultMask = round && results
-    ? round.questions.map(item => !results.incorrectQuestionIds.includes(item.id)) : [];
-
-  return <View testID="quick-quiz-screen" style={styles.root}>
+  // Opening from Home normally deals a new round. If saving that round fails,
+  // the previous result stays available with the same retry action.
+  const showResults = progress && round?.completed && results && entered.current &&
+    (openingResult.current !== round.id || error === "save");
+  return <View testID="quick-quiz-screen" style={styles.screen}>
     <AppBackground />
-    <View style={styles.pageChrome}>
-      <ProfileSectionHeader title={review ? "Ανασκόπηση" : showResults ? "Αποτέλεσμα" : "Γρήγορο Κουίζ"}
-        actionLabel={review ? "‹ Αποτέλεσμα" : "‹ Αρχική"}
-        actionAccessibilityLabel={review ? "Επιστροφή στο αποτέλεσμα" : "Επιστροφή στην αρχική"}
-        onAction={review ? () => setReview(false) : onHome} style={styles.pageHeader} />
-    </View>
-    <ScrollView testID="quick-quiz-viewport" ref={scroll} style={styles.viewport}
-      contentContainerStyle={[styles.content, activeQuiz ? styles.activeContent : styles.pageContent,
-        !activeQuiz && { paddingBottom: insets.bottom + 22 }]}
-      onLayout={quizViewport.onLayout} onContentSizeChange={quizViewport.onContentSizeChange}
-      scrollEnabled={quizViewport.scrollEnabled} bounces={quizViewport.scrollEnabled}
+    <ProfileSectionHeader title={review ? "Τα λάθη σου" : "Γρήγορο Κουίζ"}
+      actionLabel={review ? "‹ Αποτελέσματα" : "‹ Αρχική"}
+      actionAccessibilityLabel={review ? "Επιστροφή στα αποτελέσματα" : "Επιστροφή στην αρχική"}
+      onAction={review ? () => setReview(false) : onHome} style={styles.header} />
+    <ScrollView ref={scroll} contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}
       showsVerticalScrollIndicator={false}>
-      {error ? <Text style={styles.errorText} accessibilityLiveRegion="polite">
+      {error ? <Text style={styles.error} accessibilityLiveRegion="polite">
         {error === "load" ? "Δεν φορτώθηκε η πρόοδος του κουίζ." : "Η αλλαγή δεν αποθηκεύτηκε. Δοκίμασε ξανά."}
       </Text> : null}
-      {entry === "loading" ? <View style={styles.centerState}>
-        {error === "load" ? <ActionButton label="Δοκίμασε ξανά" onPress={retryLoad} />
-          : <><ActivityIndicator accessibilityLabel="Φόρτωση γύρου" color={colors.accentLight} />
-            <Text style={styles.note}>Φόρτωση του Γρήγορου Κουίζ…</Text></>}
-      </View> : null}
-      {showIntro ? <View testID="quick-quiz-intro" style={[styles.introContainer, denseIntro && styles.introDense]}>
-        <QuizReveal><View style={[styles.introBody, compactIntro && styles.introBodyCompact]}>
-          <View style={styles.introLead}>
-            <View style={styles.introCopy}>
-              <Text style={styles.eyebrow}>Η ΕΠΟΜΕΝΗ ΣΟΥ ΕΞΕΡΕΥΝΗΣΗ</Text>
-              <Text style={[styles.introTitle, denseIntro && styles.introTitleDense]}>{QUICK_QUIZ_SIZE} στάσεις γνώσης.</Text>
-              <Text style={styles.introSubtitle}>Ένας μικρός γύρος, όποτε θέλεις.</Text>
-            </View>
-            <View style={[styles.heroMark, denseIntro && styles.heroMarkDense]} accessible={false}>
-              <View style={styles.heroOrbitOuter} /><View style={styles.heroOrbitInner} />
-              <View style={styles.heroCore}><Text style={styles.heroGlyph}>ϟ</Text></View>
-              <View style={styles.heroSatellite} /><Text style={styles.heroSmallStar}>✧</Text>
-            </View>
-          </View>
-          <Text style={styles.sharedNote}>Ερωτήσεις από διαφορετικούς κόσμους, με βάση τα ενδιαφέροντά σου.</Text>
-          <DailyMissionMap variant="quick" compact={compactIntro} />
-          <View style={styles.introActions}>
-            <ActionButton label="Ξεκίνα τον γύρο →" onPress={newRound} disabled={busy} style={styles.actionPrimary} />
-            <Text style={styles.introNote}>Η πρόοδός σου αποθηκεύεται. Μπορείς να συνεχίσεις τον γύρο αργότερα.</Text>
-            <GameXpStatus game="quick" />
-          </View>
-        </View></QuizReveal>
+      {!round || (round.completed && !showResults) ? <View style={styles.center}>
+        {error === "load" ? <NextButton label="Δοκίμασε ξανά" onPress={retryLoad} />
+          : error === "save" ? <NextButton label="Ξεκίνα γύρο" onPress={newRound} disabled={busy} />
+          : <ActivityIndicator accessibilityLabel="Φόρτωση γύρου" color={colors.accentLight} />}
       </View> : null}
       {showResults ? review ? round.questions.filter(item => results.incorrectQuestionIds.includes(item.id)).map(item => {
         const missed = item as ChoiceQuestion;
@@ -168,67 +135,89 @@ export default function QuickQuizScreen({ game, scope, preferredTopicIds = [], o
           correctIndex={missed.content.correctIndex} explanation={missed.explanation}
           answer={round.answers[missed.id].value as number} onConfirm={() => {}}
           badgeLabel={categoryLabels[missed.categoryId]} compactAnswered feedbackExtra={<QuestionSources question={missed} />} />;
-      }) : <QuizReveal><View style={[styles.resultContainer, compactIntro && styles.resultContainerCompact]} testID="quick-quiz-results">
-        <View style={[styles.resultHero, compactIntro && styles.resultHeroCompact]}>
-          <View style={styles.resultHeroCopy}>
-            <Text style={styles.eyebrow}>Ο ΓΥΡΟΣ ΟΛΟΚΛΗΡΩΘΗΚΕ</Text>
-            <Text accessibilityRole="header" style={[styles.title, compactIntro && styles.resultTitleCompact]}>
-              {perfect ? "Τα πέτυχες όλα!" : results.correctCount >= 4 ? "Πολύ καλός γύρος!" : "Κάθε απάντηση είναι μια νέα γνώση."}
-            </Text>
+      }) : <View style={styles.results} testID="quick-quiz-results">
+        <View style={[styles.scoreCard, perfect && styles.perfectScoreCard]}>
+          <Text accessibilityRole="header" style={[styles.eyebrow, perfect && styles.perfectLabel]}>
+            {perfect ? "ΤΕΛΕΙΟΣ ΓΥΡΟΣ" : "Ο ΓΥΡΟΣ ΣΟΥ"}
+          </Text>
+          <Text style={styles.score} accessibilityLabel={`${results.correctCount} στις ${results.total} σωστές`}>
+            {results.correctCount}<Text style={styles.scoreTotal}> / {results.total}</Text>
+          </Text>
+          <View style={styles.scoreMarks} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            {round.questions.map(item => {
+              const missed = results.incorrectQuestionIds.includes(item.id);
+              return <View key={item.id} style={[styles.scoreMark, missed && styles.missedMark]}>
+                <Text style={[styles.scoreMarkText, missed && styles.missedMarkText]}>{missed ? "×" : "✓"}</Text>
+              </View>;
+            })}
           </View>
-          <View style={[styles.resultSeal, compactIntro && styles.resultSealCompact]} accessible={false}>
-            <View style={styles.resultSealOrbit} /><Text style={styles.resultStar}>ϟ</Text>
-          </View>
-        </View>
-        <View style={[styles.scoreCard, compactIntro && styles.scoreCardCompact]}>
-          <View pointerEvents="none" style={styles.cardRim} />
-          <View style={styles.resultScoreRow}>
-            <View style={styles.resultScoreCopy}>
-              <Text style={styles.scoreLabel}>Η ΕΠΙΔΟΣΗ ΤΟΥ ΓΥΡΟΥ</Text>
-              <Text style={styles.scoreHint}>Σωστές απαντήσεις</Text>
-            </View>
-            <Text style={[styles.bigScore, compactIntro && styles.bigScoreCompact]}
-              accessibilityLabel={`${results.correctCount} στις ${results.total} σωστές`}>
-              {results.correctCount}<Text style={styles.scoreDenominator}> / {results.total}</Text>
-            </Text>
-          </View>
-          <View style={styles.resultRoute}><DailyJourneyTrack variant="quick" mode="result" correctMask={resultMask} /></View>
-          <View style={styles.metrics}>
-            <View style={styles.metric}><Text style={styles.metricValue}>{Math.round(results.correctCount / results.total * 100)}%</Text><Text style={styles.metricLabel}>Ακρίβεια</Text></View>
-            <View style={styles.metricDivider} />
-            <View style={styles.metric}><Text style={styles.metricValue}>{streaks?.best}</Text><Text style={styles.metricLabel}>Καλύτερο σερί</Text></View>
-            <View style={styles.metricDivider} />
-            <View style={styles.metric}><Text style={styles.metricValue}>{progress.roundsCompleted}</Text><Text style={styles.metricLabel}>Γύροι</Text></View>
-          </View>
+          <Text style={styles.body}>Καλύτερο σερί γύρου · {streaks?.best}</Text>
           <GameXpStatus game="quick" />
         </View>
-        <View style={styles.actionGroup}>
-          <ActionButton label="Νέος γύρος →" onPress={newRound} disabled={busy} style={styles.actionPrimary} />
-          {results.incorrectQuestionIds.length ? <Pressable accessibilityRole="button" style={styles.mistakeAction}
-            onPress={() => setReview(true)}><Text style={styles.mistakeActionText}>Δες τα λάθη σου ({results.incorrectQuestionIds.length}) ›</Text></Pressable> : null}
+        <NextButton label="Νέος γύρος" onPress={newRound} disabled={busy} />
+        {results.incorrectQuestionIds.length ? <Pressable accessibilityRole="button" style={styles.review}
+          onPress={() => setReview(true)}><Text style={styles.reviewText}>Δες τα λάθη σου</Text></Pressable> : null}
+        <View style={styles.stats}>
+          <ResultStat label="Ρεκόρ σκορ" value={`${progress.bestScore}/${QUICK_QUIZ_SIZE}`} />
+          <ResultStat label="Ρεκόρ σερί" value={progress.bestStreak} />
+          <ResultStat label="Γύροι" value={progress.roundsCompleted} />
         </View>
-        <View style={styles.highlightRow}>
-          <View style={styles.highlightMark}><Text style={styles.highlightStar}>✦</Text></View>
-          <View style={styles.highlightCopy}>
-            <Text style={styles.eyebrow}>ΤΑ ΡΕΚΟΡ ΣΟΥ</Text>
-            <Text style={styles.highlightTitle}>Σκορ {progress.bestScore}/{QUICK_QUIZ_SIZE} · Σερί {progress.bestStreak}</Text>
+      </View> : null}
+      {round && !round.completed && question ? <>
+        <View style={styles.progress}>
+          <Text style={styles.eyebrow} accessibilityLabel={`Ερώτηση ${round.currentIndex + 1} από ${QUICK_QUIZ_SIZE}`}>
+            {round.currentIndex + 1} / {QUICK_QUIZ_SIZE}
+          </Text>
+          <View style={styles.track} accessible={false}>
+            {round.questions.map((item, i) => <View key={item.id}
+              style={[styles.segment, i < round.currentIndex && styles.segmentDone, i === round.currentIndex && styles.segmentCurrent]} />)}
           </View>
         </View>
-        <Text style={styles.tomorrow}>Ένας νέος γύρος σε περιμένει όποτε θέλεις.</Text>
-      </View></QuizReveal> : null}
-      {activeQuiz && round && question ? <QuizReveal key={`${round.id}:${question.id}`}><View>
-        <DailyJourneyTrack variant="quick" mode="question" answeredCount={Object.keys(round.answers).length} currentIndex={round.currentIndex} />
         <SingleChoiceQuestionCard key={`${round.id}:${question.id}`} id={question.id} question={question.prompt}
           answers={question.content.answers} correctIndex={question.content.correctIndex}
           explanation={question.explanation} questionNumber={round.currentIndex + 1} answer={answer}
-          onConfirm={confirm} onActionChange={stageAction.onActionChange}
-          badgeLabel={`${categoryLabels[question.categoryId]} · ${difficultyLabels[question.difficulty]}`}
-          compactAnswered combo={streaks?.current} feedbackExtra={<QuestionSources question={question} />} />
-      </View></QuizReveal> : null}
+          onConfirm={confirm} badgeLabel={categoryLabels[question.categoryId]} compactAnswered combo={streaks?.current}
+          feedbackExtra={<QuestionSources question={question} />} />
+        {answer !== undefined ? <NextButton
+          label={round.currentIndex + 1 === QUICK_QUIZ_SIZE ? "Αποτελέσματα" : "Επόμενη ερώτηση"}
+          onPress={advance} disabled={busy} /> : null}
+      </> : null}
     </ScrollView>
-    {activeQuiz ? <QuestionStageFooter bottomInset={insets.bottom} action={answer !== undefined ? {
-      label: round!.currentIndex + 1 === QUICK_QUIZ_SIZE ? "Δες το αποτέλεσμα →" : "Επόμενη ερώτηση →",
-      onPress: advance, disabled: busy,
-    } : stageAction.action ? { ...stageAction.action, disabled: busy || stageAction.action.disabled } : null} /> : null}
   </View>;
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
+  header: { marginHorizontal: profileSectionLayout.horizontal, marginTop: profileSectionLayout.top },
+  content: { flexGrow: 1, paddingHorizontal: profileSectionLayout.horizontal, paddingTop: profileSectionLayout.below, gap: 12 },
+  center: { flex: 1, justifyContent: "center" },
+  error: { color: colors.error, fontWeight: "700" },
+  progress: { flexDirection: "row", alignItems: "center", gap: 12 },
+  track: { flex: 1, flexDirection: "row", gap: 5 },
+  segment: { flex: 1, height: 5, borderRadius: 3, backgroundColor: "#292C40" },
+  segmentDone: { backgroundColor: "#6E60A4" },
+  segmentCurrent: { backgroundColor: colors.accentLight },
+  eyebrow: { color: colors.accentLight, fontSize: 11, fontWeight: "900", letterSpacing: 1 },
+  results: { flex: 1, justifyContent: "center", gap: 12 },
+  scoreCard: { backgroundColor: "#1B2034", borderColor: "#6A618C", borderWidth: 1, borderRadius: 20,
+    padding: 16, alignItems: "center", gap: 8 },
+  perfectScoreCard: { borderColor: "#B38A53", backgroundColor: "#292335" },
+  perfectLabel: { color: "#F3CB89" },
+  score: { color: colors.text, fontSize: 52, fontWeight: "900" },
+  scoreTotal: { color: colors.accentLight, fontSize: 24 },
+  scoreMarks: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6 },
+  scoreMark: { backgroundColor: colors.successSurface, borderRadius: 8, alignItems: "center",
+    minWidth: 30, paddingVertical: 4, paddingHorizontal: 6 },
+  scoreMarkText: { color: colors.success, fontWeight: "900" },
+  missedMark: { backgroundColor: colors.errorSurface },
+  missedMarkText: { color: colors.error },
+  stats: { backgroundColor: colors.surface, borderRadius: 16, padding: 10, flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  stat: { flexGrow: 1, alignItems: "center", gap: 3 },
+  statValue: { color: colors.text, fontSize: 17, fontWeight: "900" },
+  statLabel: { color: colors.textMuted, fontSize: 12, fontWeight: "700", textAlign: "center" },
+  body: { color: colors.textBody, fontSize: 14, fontWeight: "700" },
+  next: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48 },
+  arrow: { color: colors.accentLight, fontSize: 20, fontWeight: "800" },
+  review: { minHeight: 44, justifyContent: "center", alignItems: "center" },
+  reviewText: { color: colors.accentLight, fontSize: 14, fontWeight: "800" },
+});
