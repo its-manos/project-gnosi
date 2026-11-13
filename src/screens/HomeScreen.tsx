@@ -99,6 +99,7 @@ export default function HomeScreen({
     ? String(dailyAnsweredCount) + "/" + String(DAILY_CHALLENGE_SIZE)
     : "—/" + String(DAILY_CHALLENGE_SIZE);
   const fraction = profileReady ? Math.max(0, Math.min(1, profile.earned / Math.max(1, profile.required))) : 0;
+  const nextLevelXP = profileReady ? Math.max(0, profile.required - profile.earned) : null;
   const ringLength = 2 * Math.PI * 21;
   const hero = inProgressLesson ?? (progressLoaded ? featuredLesson : null);
   const heroIsResume = Boolean(inProgressLesson);
@@ -134,7 +135,12 @@ export default function HomeScreen({
         setContentHeight(previous => Math.abs(previous - nextHeight) < 1 ? previous : nextHeight);
       }}>
       <MotionView entranceDelay={0} style={styles.topBar}>
-        <Text style={styles.logo}>ΓΝΩΣΗ</Text>
+        <View style={styles.brand}>
+          <Text style={styles.logo}>ΓΝΩΣΗ</Text>
+          <Text testID="home-next-level" style={styles.nextLevel}>
+            {nextLevelXP === null ? "Φόρτωση προόδου…" : nextLevelXP + " XP ως το επίπεδο " + (profile.level + 1)}
+          </Text>
+        </View>
         <View style={styles.headerStats}>
           <HomeStreakBadge streak={daily.ready ? quizStreak : null} />
           {onOpenProfile ? <MotionPressable entranceDelay={0} testID="home-level-profile" style={styles.levelBadge}
@@ -161,21 +167,27 @@ export default function HomeScreen({
       <MotionPressable entranceDelay={60} testID="home-primary-action" style={({ pressed }) => [styles.hero, compact && styles.compactHero, tight && styles.tightHero, { gap: scaled(tight ? 4 : compact ? 8 : 10, heroScale) }, { minHeight: layout.heroHeight }, pressed && styles.pressed]}
         onPress={startHero} disabled={!progressLoaded}
         accessibilityRole="button"
+        accessibilityState={{ disabled: !progressLoaded }}
         accessibilityLabel={hero
           ? (heroIsResume ? "Συνέχισε το μάθημα " : "Ξεκίνα το μάθημα ") + hero.title
             + (heroLocation ? ". " + heroLocation : "")
+            + (heroIsResume && inProgressQuestionCount > 0
+              ? ". " + inProgressAnsweredCount + " από " + inProgressQuestionCount + " ερωτήσεις" : "")
           : "Εξερεύνησε τους κόσμους γνώσης"}>
-        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} scale={fitDashboard && compact ? 0.8 : heroScale} />
+        <HomeLessonBackdrop subcategoryId={heroSubcategory?.id} categoryId={hero?.categoryId} scale={fitDashboard && compact ? 0.8 : heroScale} />
         <MotionCardGlint tone="lesson" delayMs={0} />
         <View style={[styles.heroCopy, compact && styles.compactHeroGroup, tight && styles.tightHeroGroup,
           { gap: scaled(tight ? 4 : compact ? 8 : 12, heroScale) }]}>
           <View style={[styles.heroIntro, { paddingRight: scaled(fitDashboard ? 88 : 112, heroScale) }]}>
-            <Text style={[styles.eyebrow, { fontSize: scaled(11, heroScale), lineHeight: scaled(15, heroScale) }]}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
+            <View style={styles.heroStatus}>
+              <Text style={[styles.eyebrow, { fontSize: scaled(11, heroScale), lineHeight: scaled(15, heroScale) }]}>{heroIsResume ? "ΣΥΝΕΧΙΣΕ" : "ΕΠΟΜΕΝΟ ΜΑΘΗΜΑ"}</Text>
+              {heroIsResume && inProgressQuestionCount > 0 ? <Text testID="home-lesson-progress"
+                style={styles.heroCount}>
+                {inProgressAnsweredCount + "/" + inProgressQuestionCount + " ερωτήσεις"}
+              </Text> : null}
+            </View>
             {heroLocation ? <Text testID="home-hero-location" numberOfLines={fitDashboard ? 1 : undefined} style={[styles.heroLocation, { fontSize: scaled(12, heroScale), lineHeight: scaled(17, heroScale) }]}>
               {heroLocation}</Text> : null}
-            {heroIsResume && !fitDashboard ? <Text style={[styles.heroCount, { fontSize: scaled(11, heroScale), lineHeight: scaled(16, heroScale) }]}>
-              {String(inProgressAnsweredCount) + " / " + String(inProgressQuestionCount) + " ερωτήσεις"}
-            </Text> : null}
           </View>
           <Text numberOfLines={fitDashboard ? 2 : undefined} adjustsFontSizeToFit={fitDashboard} minimumFontScale={0.85}
             style={[styles.heroTitle, tight && styles.tightHeroTitle,
@@ -194,7 +206,7 @@ export default function HomeScreen({
             : null}
           <View style={[styles.heroButton, { minHeight: scaled(44, heroScale) }]}>
             <MotionShimmer />
-            <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>{heroIsResume ? "Συνέχισε" : hero ? "Ξεκίνα" : "Εξερεύνησε"}</Text>
+            <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>{heroIsResume ? "Συνέχισε το μάθημα" : hero ? "Ξεκίνα το μάθημα" : "Εξερεύνησε"}</Text>
             <MotionCtaArrow>
               <Text style={[styles.heroButtonLabel, { fontSize: scaled(14, heroScale) }]}>→</Text>
             </MotionCtaArrow>
@@ -255,17 +267,19 @@ export default function HomeScreen({
         <View style={[styles.categoryGrid]}>
           {categories.map(category => {
             const WorldIllustration = getCategoryWorldIcon(category.id);
+            const isCurrentWorld = heroIsResume && category.id === hero?.categoryId;
             return (
               <MotionPressable key={category.id} testID={"home-category-" + category.id}
                 accessibilityRole="button" accessibilityLabel={"Άνοιξε τη θεματική " + category.title}
+                accessibilityHint={isCurrentWorld ? "Εδώ βρίσκεται το μάθημα που συνεχίζεις" : undefined}
                 onPress={() => onOpenCategory(category.id)}
-                style={({ pressed }) => [styles.category, pressed && styles.pressed]}>
+                style={({ pressed }) => [styles.category, isCurrentWorld && styles.currentCategory, pressed && styles.pressed]}>
                 <View style={[styles.categoryPlatform, { width: worldPlatformSize, height: worldPlatformSize }]} accessible={false} pointerEvents="none">
                   {WorldIllustration
                     ? <WorldIllustration size={worldIconSize} displayScale={1.18} />
                     : <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
                 </View>
-                <Text style={[styles.categoryLabel]} numberOfLines={2} adjustsFontSizeToFit>
+                <Text style={[styles.categoryLabel, isCurrentWorld && styles.currentCategoryLabel]} numberOfLines={layout.naturalText ? undefined : 2} adjustsFontSizeToFit={!layout.naturalText}>
                   {shortLabels[category.id] ?? category.title}
                 </Text>
               </MotionPressable>
@@ -328,7 +342,9 @@ const styles = StyleSheet.create({
   // surrounding padding/gap so both icon rows fit without losing artwork.
   tightSectionTitle: { fontSize: 16, lineHeight: 20 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 },
+  brand: { flex: 1, minWidth: 0, gap: 1, paddingRight: 10 },
   logo: { color: colors.accentLight, fontSize: 19, lineHeight: 25, fontWeight: "900", letterSpacing: 2.4 },
+  nextLevel: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   headerStats: { flexDirection: "row", alignItems: "center", gap: 8 },
   levelBadge: { width: 50, height: 50 },
   levelRing: { position: "absolute", top: 0, left: 0 },
@@ -340,6 +356,7 @@ const styles = StyleSheet.create({
     overflow: "hidden", backgroundColor: "#1B2434", gap: 10,
     justifyContent: "center" },
   heroIntro: { paddingRight: 112, gap: 3 },
+  heroStatus: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 8, rowGap: 2 },
   eyebrow: { color: colors.accentLight, fontSize: 11, lineHeight: 15, fontWeight: "900", letterSpacing: 0.7 },
   heroCount: { color: colors.textMuted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
   heroTitle: { color: colors.text, fontSize: 21, lineHeight: 28, fontWeight: "700" },
@@ -382,6 +399,8 @@ const styles = StyleSheet.create({
     alignContent: "flex-start", columnGap: 8, rowGap: 4 },
   category: { width: "22.7%", minHeight: 44, borderRadius: 14,
     alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 3, paddingVertical: 3, gap: 3 },
+  currentCategory: { backgroundColor: "rgba(177,165,255,0.10)" },
+  currentCategoryLabel: { color: "#D4C8FF" },
   // Transparent artwork floats over the Atlas; only its frame scales with
   // the viewport, while the category's full-width tap target stays intact.
   categoryPlatform: { width: 62, height: 62,

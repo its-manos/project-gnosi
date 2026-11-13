@@ -2,6 +2,7 @@
 import { StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { getCategoryWorldIcon } from "./worldIcons/categoryIconMap";
 
 const landmarks: Record<string, number> = {
   "ancient-greece": require("../../assets/atlas-export-preview/island-icons/ancient-greece.webp"),
@@ -9,8 +10,9 @@ const landmarks: Record<string, number> = {
   mythology: require("../../assets/atlas-export-preview/island-icons/mythology.webp"),
 };
 
-export default function HomeLessonBackdrop({ subcategoryId, scale = 1 }: { subcategoryId?: string; scale?: number }) {
+export default function HomeLessonBackdrop({ subcategoryId, categoryId, scale = 1 }: { subcategoryId?: string; categoryId?: string; scale?: number }) {
   const landmark = subcategoryId ? landmarks[subcategoryId] : undefined;
+  const WorldIllustration = categoryId ? getCategoryWorldIcon(categoryId) : undefined;
   return <View pointerEvents="none" accessible={false} accessibilityElementsHidden
     importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
     <Svg width="100%" height="100%" accessible={false}>
@@ -24,10 +26,15 @@ export default function HomeLessonBackdrop({ subcategoryId, scale = 1 }: { subca
       <Rect width="100%" height="100%" fill="url(#home-lesson-surface)" />
     </Svg>
     {landmark ? <Image testID="home-lesson-landmark" source={landmark}
-      contentFit="contain" style={[styles.landmark, { width: 104 * scale, height: 84 * scale }]} accessible={false} /> : null}
+      contentFit="contain" style={[styles.landmark, { width: 104 * scale, height: 84 * scale }]} accessible={false} />
+      : WorldIllustration ? <View testID="home-lesson-world-art" style={[styles.worldArt,
+        { width: 104 * scale, height: 84 * scale }]}>
+        <WorldIllustration size={80 * scale} />
+      </View> : null}
   </View>;
 }
 
 const styles = StyleSheet.create({
   landmark: { position: "absolute", right: 12, top: 12, width: 104, height: 84, opacity: 0.54 },
+  worldArt: { position: "absolute", right: 12, top: 12, alignItems: "center", justifyContent: "center", opacity: 0.72 },
 });
