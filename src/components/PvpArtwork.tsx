@@ -6,7 +6,8 @@ import { colors } from "../theme";
 
 export function PvpWorld({ category, size = 32 }: { category: string; size?: number }) {
   const Icon = getCategoryWorldIcon(category === "all" ? "geography" : category);
-  return Icon ? <Icon size={size} /> : null;
+  const emoji = category === "sports" ? "🏅" : category === "everyday" ? "🧠" : null;
+  return Icon ? <Icon size={size} /> : emoji ? <Text accessible={false} style={{ fontSize: size * 0.75 }}>{emoji}</Text> : null;
 }
 export const PvpHero = memo(function PvpHero({ result = false, compact = false }: { result?: boolean; compact?: boolean }) {
   return <View accessible={false} pointerEvents="none" style={[styles.scene, compact && styles.compactScene]}>

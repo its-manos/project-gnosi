@@ -25,7 +25,11 @@ const restore = progress => readQuickQuiz(JSON.stringify({ version: 1, ...progre
 const dailyIds = new Set(daily.map(question => question.id));
 const dailyPrompts = new Set(daily.map(question => question.question));
 const bankById = new Map(quickQuizQuestions.map(question => [question.id, question]));
-assert.equal(quickQuizQuestions.length, 30);
+function checkDifficultyMix(questions) {
+  assert.equal(questions[0].difficulty, 'easy', 'round starts with an easy warm-up');
+  assert.deepEqual(questions.map(q => q.difficulty).sort(), ['easy', 'easy', 'hard', 'medium', 'medium']);
+}
+assert.equal(quickQuizQuestions.length, 240);
 assert.equal(new Set(quickQuizQuestions.map(question => question.id)).size, quickQuizQuestions.length);
 for (const question of quickQuizQuestions) {
   assert.ok(!dailyIds.has(question.id) && !dailyPrompts.has(question.prompt));
@@ -41,12 +45,24 @@ assert.equal(personalized.round.questions.length, 5);
 assert.ok(personalized.round.questions.filter(q => ["history", "science", "nature"].includes(q.categoryId)).length >= 3,
   "selected interests are favored when the bank supports them");
 assert.ok(new Set(personalized.round.questions.map(q => q.categoryId)).size >= 3);
-assert.deepEqual(personalized.round.questions.map(q => q.difficulty), ["easy", "easy", "medium", "medium", "hard"]);
+checkDifficultyMix(personalized.round.questions);
 const sparseInterests = startQuickQuiz(emptyQuickQuiz(), () => 0.5, ["history", "sports", "everyday"]);
 assert.ok(new Set(sparseInterests.round.questions.map(q => q.categoryId)).size >= 3,
   "unsupported interests fall back to available subjects without losing variety");
 assert.equal(startQuickQuiz(personalized, () => 0.5, ["geography"]), personalized,
   "changing preferences cannot replace an unfinished round");
+const orders = new Set();
+for (let seed = 1; seed <= 100; seed++) {
+  let state = seed;
+  const random = () => ((state = (Math.imul(state, 1664525) + 1013904223) >>> 0) / 2 ** 32);
+  const deal = startQuickQuiz(emptyQuickQuiz(), random);
+  checkDifficultyMix(deal.round.questions);
+  orders.add(deal.round.questions.map(q => q.difficulty).join(','));
+  const saved = restore(deal);
+  assert.equal(startQuickQuiz(saved, () => { throw new Error('resume must not consume randomness'); }), saved);
+  assert.deepEqual(saved.round.questions, deal.round.questions, 'resume preserves question and answer order');
+}
+assert.ok(orders.size >= 8, `tail order varies across deals (${orders.size} patterns)`);
 const shuffled = startQuickQuiz(progress, () => 0.5);
 for (const question of shuffled.round.questions) {
   const authored = bankById.get(question.id).content;
@@ -67,13 +83,13 @@ assert.equal(quickQuizStreaks(resumed.round).current, 1);
 const recentlyDealt = [];
 const allDealt = new Set();
 let firstMiss;
-for (let number = 1; number <= 15; number++) {
+for (let number = 1; number <= 65; number++) {
   const seenBefore = progress.seen;
   progress = startQuickQuiz(progress, () => 0.5);
   const { id, questions } = progress.round;
   const ids = questions.map(question => question.id);
   assert.equal(new Set(ids).size, 5);
-  assert.deepEqual(questions.map(question => question.difficulty), ["easy", "easy", "medium", "medium", "hard"]);
+  checkDifficultyMix(questions);
   assert.ok(new Set(questions.map(question => question.categoryId)).size >= 3);
   assert.ok(ids.every(id => !recentlyDealt.flat().includes(id)), "do not deal questions from the previous two rounds");
   recentlyDealt.push(ids);

@@ -1,0 +1,742 @@
+{
+  "history-egypt": [
+    "Ancient Egypt",
+    "https://www.worldhistory.org/egypt/",
+    "World History Encyclopedia"
+  ],
+  "history-rome": [
+    "Roman Empire",
+    "https://www.worldhistory.org/Roman_Empire/",
+    "World History Encyclopedia"
+  ],
+  "history-silk": [
+    "Silk Road",
+    "https://www.worldhistory.org/Silk_Road/",
+    "World History Encyclopedia"
+  ],
+  "history-renaissance": [
+    "Renaissance",
+    "https://www.worldhistory.org/Renaissance/",
+    "World History Encyclopedia"
+  ],
+  "history-byzantium": [
+    "Byzantine Empire",
+    "https://www.worldhistory.org/Byzantine_Empire/",
+    "World History Encyclopedia"
+  ],
+  "history-indus": [
+    "Indus Valley Civilization",
+    "https://www.worldhistory.org/Indus_Valley_Civilization/",
+    "World History Encyclopedia"
+  ],
+  "history-writing": [
+    "Writing",
+    "https://www.worldhistory.org/writing/",
+    "World History Encyclopedia"
+  ],
+  "history-revolution": [
+    "Industrial Revolution",
+    "https://www.worldhistory.org/Industrial_Revolution/",
+    "World History Encyclopedia"
+  ],
+  "history-mali": [
+    "Mali Empire",
+    "https://www.worldhistory.org/Mali_Empire/",
+    "World History Encyclopedia"
+  ],
+  "history-japan": [
+    "Meiji Restoration",
+    "https://www.britannica.com/event/Meiji-Restoration",
+    "Encyclopaedia Britannica"
+  ],
+  "biology": [
+    "Biology 2e",
+    "https://openstax.org/books/biology-2e/pages/1-introduction",
+    "OpenStax"
+  ],
+  "cells": [
+    "Eukaryotic Cells",
+    "https://openstax.org/books/biology-2e/pages/4-3-eukaryotic-cells",
+    "OpenStax"
+  ],
+  "genetics": [
+    "DNA Structure and Sequencing",
+    "https://openstax.org/books/biology-2e/pages/14-2-dna-structure-and-sequencing",
+    "OpenStax"
+  ],
+  "chemistry": [
+    "Atoms, Molecules, and Ions",
+    "https://openstax.org/books/chemistry-2e/pages/2-key-terms",
+    "OpenStax"
+  ],
+  "chemistry-ph": [
+    "pH and pOH",
+    "https://openstax.org/books/chemistry-2e/pages/14-2-ph-and-poh",
+    "OpenStax"
+  ],
+  "blood": [
+    "Components of the Blood",
+    "https://openstax.org/books/biology-2e/pages/40-2-components-of-the-blood",
+    "OpenStax"
+  ],
+  "waves": [
+    "Characteristics of Sound",
+    "https://openstax.org/books/physics/pages/14-1-speed-of-sound-frequency-and-wavelength",
+    "OpenStax"
+  ],
+  "optics": [
+    "Refraction of Light",
+    "https://openstax.org/books/physics/pages/16-2-refraction",
+    "OpenStax"
+  ],
+  "evolution": [
+    "Understanding Evolution",
+    "https://openstax.org/books/biology-2e/pages/18-1-understanding-evolution",
+    "OpenStax"
+  ],
+  "ecology": [
+    "Community Ecology",
+    "https://openstax.org/books/biology-2e/pages/45-6-community-ecology",
+    "OpenStax"
+  ],
+  "foodweb": [
+    "Energy Flow through Ecosystems",
+    "https://openstax.org/books/biology-2e/pages/46-2-energy-flow-through-ecosystems",
+    "OpenStax"
+  ],
+  "plants": [
+    "Plant Structure and Growth",
+    "https://openstax.org/books/biology-2e/pages/30-1-the-plant-body",
+    "OpenStax"
+  ],
+  "plant-water": [
+    "Transport of Water and Solutes in Plants",
+    "https://openstax.org/books/biology-2e/pages/30-5-transport-of-water-and-solutes-in-plants",
+    "OpenStax"
+  ],
+  "animals": [
+    "Features Used to Classify Animals",
+    "https://openstax.org/books/biology-2e/pages/27-2-features-used-to-classify-animals",
+    "OpenStax"
+  ],
+  "birds": [
+    "Birds",
+    "https://openstax.org/books/biology-2e/pages/29-5-birds",
+    "OpenStax"
+  ],
+  "mammals": [
+    "Mammals",
+    "https://openstax.org/books/biology-2e/pages/29-6-mammals",
+    "OpenStax"
+  ],
+  "earthquake": [
+    "Earthquake Hazards: The Science of Earthquakes",
+    "https://www.usgs.gov/programs/earthquake-hazards/science-earthquakes",
+    "USGS"
+  ],
+  "water-cycle": [
+    "The Water Cycle",
+    "https://www.usgs.gov/special-topics/water-science-school/science/water-cycle",
+    "USGS"
+  ],
+  "glaciers": [
+    "Glaciers and Icecaps",
+    "https://www.usgs.gov/water-science-school/science/glaciers-and-icecaps",
+    "USGS"
+  ],
+  "latitude": [
+    "Latitude and Longitude",
+    "https://education.nationalgeographic.org/resource/latitude/",
+    "National Geographic"
+  ],
+  "maps": [
+    "Map",
+    "https://education.nationalgeographic.org/resource/map/",
+    "National Geographic"
+  ],
+  "ocean": [
+    "Why is the ocean salty?",
+    "https://oceanservice.noaa.gov/facts/whysalty.html",
+    "NOAA"
+  ],
+  "rivers": [
+    "River",
+    "https://education.nationalgeographic.org/resource/river/",
+    "National Geographic"
+  ],
+  "html": [
+    "HTML basics",
+    "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Your_first_website/Creating_the_content",
+    "MDN"
+  ],
+  "css": [
+    "CSS: Cascading Style Sheets",
+    "https://developer.mozilla.org/en-US/docs/Web/CSS",
+    "MDN"
+  ],
+  "http": [
+    "Overview of HTTP",
+    "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+    "MDN"
+  ],
+  "security": [
+    "Digital Identity Guidelines: Authentication and Authenticator Management",
+    "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "NIST"
+  ],
+  "passwords": [
+    "Digital Identity Guidelines: Authentication and Authenticator Management",
+    "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "NIST"
+  ],
+  "phishing": [
+    "Digital Identity Guidelines: Authentication and Authenticator Management",
+    "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "NIST"
+  ],
+  "mfa": [
+    "Digital Identity Guidelines: Authentication and Authenticator Management",
+    "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "NIST"
+  ],
+  "accessibility": [
+    "Accessibility principles",
+    "https://www.w3.org/WAI/fundamentals/accessibility-principles/",
+    "W3C WAI"
+  ],
+  "unicode": [
+    "Unicode Standard: Basic Questions",
+    "https://www.unicode.org/faq/basic_q.html",
+    "Unicode Consortium"
+  ],
+  "hardware": [
+    "Computer: Basic Components",
+    "https://www.britannica.com/technology/computer/Basic-components-of-a-computer",
+    "Encyclopaedia Britannica"
+  ],
+  "compression": [
+    "Lossy compression",
+    "https://developer.mozilla.org/en-US/docs/Glossary/Lossy_compression",
+    "MDN"
+  ],
+  "ml": [
+    "Machine Learning: Introduction",
+    "https://developers.google.com/machine-learning/intro-to-ml",
+    "Google"
+  ],
+  "music": [
+    "Instruments",
+    "https://philharmonia.co.uk/resources/instruments/",
+    "Philharmonia Orchestra"
+  ],
+  "strings": [
+    "Violin",
+    "https://philharmonia.co.uk/resources/instruments/violin/",
+    "Philharmonia Orchestra"
+  ],
+  "brass": [
+    "Trumpet",
+    "https://philharmonia.co.uk/resources/instruments/trumpet/",
+    "Philharmonia Orchestra"
+  ],
+  "mosaic": [
+    "Mosaic",
+    "https://www.britannica.com/art/mosaic-art",
+    "Encyclopaedia Britannica"
+  ],
+  "cinema": [
+    "Animation",
+    "https://www.britannica.com/art/animation",
+    "Encyclopaedia Britannica"
+  ],
+  "film": [
+    "Film editing",
+    "https://www.britannica.com/art/film-editing",
+    "Encyclopaedia Britannica"
+  ],
+  "theatre": [
+    "Theatre",
+    "https://www.britannica.com/art/theatre-art",
+    "Encyclopaedia Britannica"
+  ],
+  "architecture": [
+    "Arch",
+    "https://www.britannica.com/technology/arch-architecture",
+    "Encyclopaedia Britannica"
+  ],
+  "football": [
+    "The Players",
+    "https://www.theifab.com/laws/latest/the-players/",
+    "IFAB"
+  ],
+  "basketball": [
+    "Official Basketball Rules 2026",
+    "https://assets.fiba.basketball/image/upload/documents-corporate-fiba-official-rules-2026-v1-1.pdf",
+    "FIBA"
+  ],
+  "volleyball": [
+    "Official Volleyball Rules 2025–2028",
+    "https://www.fivb.com/wp-content/uploads/2025/01/FIVB-Volleyball_Rules2025_2028-EN.pdf",
+    "FIVB"
+  ],
+  "athletics": [
+    "Discipline: Athletics",
+    "https://worldathletics.org/disciplines",
+    "World Athletics"
+  ],
+  "badminton": [
+    "Laws of Badminton",
+    "https://corporate.bwfbadminton.com/statutes/",
+    "BWF"
+  ],
+  "tabletennis": [
+    "ITTF Statutes 2025",
+    "https://documents.ittf.sport/sites/default/files/public/2025-02/2025_ITTF_Statutes_clean_version.pdf",
+    "ITTF"
+  ],
+  "tennis": [
+    "Rules of Tennis 2026",
+    "https://www.itftennis.com/media/7221/2026-rules-of-tennis-english.pdf",
+    "ITF"
+  ],
+  "chess": [
+    "FIDE Laws of Chess",
+    "https://handbook.fide.com/chapter/E012023",
+    "FIDE"
+  ],
+  "rugby": [
+    "Laws of the Game",
+    "https://www.world.rugby/the-game/laws/law/8",
+    "World Rugby"
+  ],
+  "handball": [
+    "Rules of the Game",
+    "https://www.ihf.info/regulations-documents/361",
+    "IHF"
+  ],
+  "statistics": [
+    "Descriptive Statistics",
+    "https://openstax.org/books/introductory-statistics-2e/pages/2-key-terms",
+    "OpenStax"
+  ],
+  "probability": [
+    "Probability Topics",
+    "https://openstax.org/books/introductory-statistics-2e/pages/3-key-terms",
+    "OpenStax"
+  ],
+  "interest": [
+    "Compound Interest",
+    "https://www.investor.gov/financial-tools-calculators/calculators/compound-interest-calculator",
+    "US SEC Investor.gov"
+  ],
+  "food": [
+    "Four Steps to Food Safety",
+    "https://www.cdc.gov/food-safety/prevention/index.html",
+    "CDC"
+  ],
+  "units": [
+    "SI Units",
+    "https://www.nist.gov/pml/owm/metric-si/si-units",
+    "NIST"
+  ],
+  "heat": [
+    "Heat Transfer",
+    "https://openstax.org/books/physics/pages/11-2-heat-specific-heat-and-heat-transfer",
+    "OpenStax"
+  ],
+  "logic": [
+    "2 2 statements and quantifiers",
+    "https://openstax.org/books/contemporary-mathematics/pages/2-1-statements-and-quantifiers",
+    "OpenStax"
+  ],
+  "economics": [
+    "Demand, Supply, and Equilibrium",
+    "https://openstax.org/books/principles-economics-3e/pages/3-1-demand-supply-and-equilibrium-in-markets-for-goods-and-services",
+    "OpenStax"
+  ],
+  "sampling": [
+    "Data, Sampling, and Variation",
+    "https://openstax.org/books/introductory-statistics-2e/pages/1-2-data-sampling-and-variation-in-data-and-sampling",
+    "OpenStax"
+  ],
+  "geography-canada": [
+    "Canada",
+    "https://www.britannica.com/place/Canada",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-brazil": [
+    "Brazil",
+    "https://www.britannica.com/place/Brazil",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-india": [
+    "India",
+    "https://www.britannica.com/place/India",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-japan": [
+    "Japan",
+    "https://www.britannica.com/place/Japan",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-nile": [
+    "Nile River",
+    "https://www.britannica.com/place/Nile-River",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-amazon": [
+    "Amazon River",
+    "https://www.britannica.com/place/Amazon-River",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-himalaya": [
+    "Himalayas",
+    "https://www.britannica.com/place/Himalayas",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-mediterranean": [
+    "Mediterranean Sea",
+    "https://www.britannica.com/place/Mediterranean-Sea",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-tropic": [
+    "Tropic of Cancer",
+    "https://www.britannica.com/place/Tropic-of-Cancer",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-panama": [
+    "Isthmus of Panama",
+    "https://www.britannica.com/place/Isthmus-of-Panama",
+    "Encyclopaedia Britannica"
+  ],
+  "geography-suez": [
+    "Suez Canal",
+    "https://www.britannica.com/place/Suez-Canal",
+    "Encyclopaedia Britannica"
+  ],
+  "membranes": [
+    "5 2 passive transport",
+    "https://openstax.org/books/biology-2e/pages/5-2-passive-transport",
+    "OpenStax"
+  ],
+  "enzymes": [
+    "6 5 enzymes",
+    "https://openstax.org/books/biology-2e/pages/6-5-enzymes",
+    "OpenStax"
+  ],
+  "human-systems": [
+    "1 2 structural organization of the human body",
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/1-2-structural-organization-of-the-human-body",
+    "OpenStax"
+  ],
+  "heart": [
+    "19 1 heart anatomy",
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy",
+    "OpenStax"
+  ],
+  "vessels": [
+    "20 1 structure and function of blood vessels",
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/20-1-structure-and-function-of-blood-vessels",
+    "OpenStax"
+  ],
+  "lungs": [
+    "22 4 gas exchange",
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange",
+    "OpenStax"
+  ],
+  "kidneys": [
+    "25 3 gross anatomy of the kidney",
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/25-3-gross-anatomy-of-the-kidney",
+    "OpenStax"
+  ],
+  "arthropods": [
+    "28 4 superphylum ecdysozoa arthropods",
+    "https://openstax.org/books/biology-2e/pages/28-6-superphylum-ecdysozoa-arthropods",
+    "OpenStax"
+  ],
+  "reptiles": [
+    "29 4 reptiles",
+    "https://openstax.org/books/biology-2e/pages/29-4-reptiles",
+    "OpenStax"
+  ],
+  "vertebrates": [
+    "29 1 chordates",
+    "https://openstax.org/books/biology-2e/pages/29-1-chordates",
+    "OpenStax"
+  ],
+  "plant-groups": [
+    "26 3 angiosperms",
+    "https://openstax.org/books/biology-2e/pages/26-3-angiosperms",
+    "OpenStax"
+  ],
+  "cycles": [
+    "46 3 biogeochemical cycles",
+    "https://openstax.org/books/biology-2e/pages/46-3-biogeochemical-cycles",
+    "OpenStax"
+  ],
+  "ecology-basics": [
+    "44 1 the scope of ecology",
+    "https://openstax.org/books/biology-2e/pages/44-1-the-scope-of-ecology",
+    "OpenStax"
+  ],
+  "population": [
+    "45 1 population demography",
+    "https://openstax.org/books/biology-2e/pages/45-1-population-demography",
+    "OpenStax"
+  ],
+  "reflection": [
+    "16 1 reflection",
+    "https://openstax.org/books/physics/pages/16-1-reflection",
+    "OpenStax"
+  ],
+  "lenses": [
+    "16 3 lenses",
+    "https://openstax.org/books/physics/pages/16-3-lenses",
+    "OpenStax"
+  ],
+  "regression": [
+    "12 2 the regression equation",
+    "https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation",
+    "OpenStax"
+  ],
+  "backup": [
+    "Backup",
+    "https://en.wikipedia.org/wiki/Backup",
+    "Wikipedia"
+  ],
+  "authorization": [
+    "Authorization Cheat Sheet",
+    "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+    "OWASP"
+  ],
+  "domains": [
+    "What is a domain name?",
+    "https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_domain_name",
+    "MDN"
+  ],
+  "crypto": [
+    "Encryption",
+    "https://developer.mozilla.org/en-US/docs/Glossary/Encryption",
+    "MDN"
+  ],
+  "cookies": [
+    "Using HTTP cookies",
+    "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+    "MDN"
+  ],
+  "status": [
+    "HTTP response status codes",
+    "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status",
+    "MDN"
+  ],
+  "html-headings": [
+    "HTML headings",
+    "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/Heading_Elements",
+    "MDN"
+  ],
+  "ram": [
+    "ram",
+    "https://www.britannica.com/technology/RAM-computing",
+    "Encyclopaedia Britannica"
+  ],
+  "ssd": [
+    "Solid-state drive",
+    "https://en.wikipedia.org/wiki/Solid-state_drive",
+    "Wikipedia"
+  ],
+  "wifi": [
+    "wifi",
+    "https://www.britannica.com/technology/Wi-Fi",
+    "Encyclopaedia Britannica"
+  ],
+  "usb": [
+    "usb",
+    "https://www.britannica.com/technology/USB",
+    "Encyclopaedia Britannica"
+  ],
+  "cloud": [
+    "cloud",
+    "https://www.britannica.com/technology/cloud-computing",
+    "Encyclopaedia Britannica"
+  ],
+  "tempo": [
+    "Tempo",
+    "https://en.wikipedia.org/wiki/Tempo",
+    "Wikipedia"
+  ],
+  "dynamics": [
+    "Dynamics (music)",
+    "https://en.wikipedia.org/wiki/Dynamics_(music)",
+    "Wikipedia"
+  ],
+  "duet": [
+    "duet",
+    "https://www.britannica.com/art/duet",
+    "Encyclopaedia Britannica"
+  ],
+  "quartet": [
+    "String quartet",
+    "https://en.wikipedia.org/wiki/String_quartet",
+    "Wikipedia"
+  ],
+  "screenplay": [
+    "scenario",
+    "https://www.britannica.com/art/scenario",
+    "Encyclopaedia Britannica"
+  ],
+  "director": [
+    "directing",
+    "https://www.britannica.com/art/directing",
+    "Encyclopaedia Britannica"
+  ],
+  "diegetic": [
+    "Diegesis",
+    "https://en.wikipedia.org/wiki/Diegesis",
+    "Wikipedia"
+  ],
+  "narrator": [
+    "narrator",
+    "https://www.britannica.com/art/narrator",
+    "Encyclopaedia Britannica"
+  ],
+  "autobiography": [
+    "Autobiography",
+    "https://en.wikipedia.org/wiki/Autobiography",
+    "Wikipedia"
+  ],
+  "irony": [
+    "dramatic-irony",
+    "https://www.britannica.com/art/dramatic-irony",
+    "Encyclopaedia Britannica"
+  ],
+  "stage": [
+    "Scenic design",
+    "https://en.wikipedia.org/wiki/Scenic_design",
+    "Wikipedia"
+  ],
+  "sculpture": [
+    "sculpture",
+    "https://www.britannica.com/art/sculpture",
+    "Encyclopaedia Britannica"
+  ],
+  "poetry-sonnet": [
+    "sonnet",
+    "https://www.poetryfoundation.org/education/glossary/sonnet",
+    "Poetry Foundation"
+  ],
+  "poetry-stanza": [
+    "stanza",
+    "https://www.poetryfoundation.org/education/glossary/stanza",
+    "Poetry Foundation"
+  ],
+  "poetry-metaphor": [
+    "metaphor",
+    "https://www.poetryfoundation.org/education/glossary/metaphor",
+    "Poetry Foundation"
+  ],
+  "poetry-simile": [
+    "simile",
+    "https://www.poetryfoundation.org/education/glossary/simile",
+    "Poetry Foundation"
+  ],
+  "poetry-rhyme": [
+    "rhyme",
+    "https://www.poetryfoundation.org/education/glossary/rhyme",
+    "Poetry Foundation"
+  ],
+  "poetry-alliteration": [
+    "alliteration",
+    "https://www.poetryfoundation.org/education/glossary/alliteration",
+    "Poetry Foundation"
+  ],
+  "poetry-personification": [
+    "personification",
+    "https://www.poetryfoundation.org/education/glossary/personification",
+    "Poetry Foundation"
+  ],
+  "poetry-haiku": [
+    "haiku",
+    "https://www.poetryfoundation.org/education/glossary/haiku-or-hokku",
+    "Poetry Foundation"
+  ],
+  "poetry-line": [
+    "line",
+    "https://www.poetryfoundation.org/education/glossary/line",
+    "Poetry Foundation"
+  ],
+  "art-portrait": [
+    "Portrait",
+    "https://en.wikipedia.org/wiki/Portrait",
+    "Wikipedia"
+  ],
+  "art-still-life": [
+    "still-life",
+    "https://www.nationalgallery.org.uk/paintings/glossary/still-life",
+    "National Gallery"
+  ],
+  "art-relief": [
+    "relief",
+    "https://www.nationalgallery.org.uk/paintings/glossary/relief",
+    "National Gallery"
+  ],
+  "art-chiaroscuro": [
+    "chiaroscuro",
+    "https://www.nationalgallery.org.uk/paintings/glossary/chiaroscuro",
+    "National Gallery"
+  ],
+  "art-triptych": [
+    "triptych",
+    "https://www.nationalgallery.org.uk/paintings/glossary/triptych",
+    "National Gallery"
+  ],
+  "art-landscape": [
+    "Landscape painting",
+    "https://en.wikipedia.org/wiki/Landscape_painting",
+    "Wikipedia"
+  ],
+  "football-the-field-of-play": [
+    "the field of play",
+    "https://www.theifab.com/laws/latest/the-field-of-play/",
+    "IFAB"
+  ],
+  "football-the-ball-in-and-out-of-play": [
+    "the ball in and out of play",
+    "https://www.theifab.com/laws/latest/the-ball-in-and-out-of-play/",
+    "IFAB"
+  ],
+  "football-offside": [
+    "offside",
+    "https://www.theifab.com/laws/latest/offside/",
+    "IFAB"
+  ],
+  "football-fouls-and-misconduct": [
+    "fouls and misconduct",
+    "https://www.theifab.com/laws/latest/fouls-and-misconduct/",
+    "IFAB"
+  ],
+  "football-free-kicks": [
+    "free kicks",
+    "https://www.theifab.com/laws/latest/free-kicks/",
+    "IFAB"
+  ],
+  "football-the-goal-kick": [
+    "the goal kick",
+    "https://www.theifab.com/laws/latest/the-goal-kick/",
+    "IFAB"
+  ],
+  "football-the-corner-kick": [
+    "the corner kick",
+    "https://www.theifab.com/laws/latest/the-corner-kick/",
+    "IFAB"
+  ],
+  "latitude-weather": [
+    "Climate",
+    "https://en.wikipedia.org/wiki/Climate",
+    "Wikipedia"
+  ],
+  "longitude": [
+    "Longitude",
+    "https://education.nationalgeographic.org/resource/longitude/",
+    "National Geographic"
+  ]
+}

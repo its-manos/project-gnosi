@@ -1,0 +1,1334 @@
+{
+  "history-egypt": {
+    "url": "https://www.worldhistory.org/egypt/",
+    "finalUrl": "https://www.worldhistory.org/egypt/",
+    "status": 200,
+    "sha256": "9b2a6966595bd9721c729f3fac100d36a966dadeebc8e1d538de42312b4a80c7",
+    "characters": 48852,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-rome": {
+    "url": "https://www.worldhistory.org/Roman_Empire/",
+    "finalUrl": "https://www.worldhistory.org/Roman_Empire/",
+    "status": 200,
+    "sha256": "37a1ff047dd084f76d2d90d8884d7863af961b43eefd6c91b91de2b68d523eeb",
+    "characters": 44037,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-silk": {
+    "url": "https://www.worldhistory.org/Silk_Road/",
+    "finalUrl": "https://www.worldhistory.org/Silk_Road/",
+    "status": 200,
+    "sha256": "c59259e9ef5522380cf2ded711ce5daf3e7a56028f6cee15be9a53cfdb5d5680",
+    "characters": 22356,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-renaissance": {
+    "url": "https://www.worldhistory.org/Renaissance/",
+    "finalUrl": "https://www.worldhistory.org/disambiguation/renaissance/",
+    "status": 200,
+    "sha256": "330e9fc3bb7f4dacb42161957bc7c71309f61f8a960e89ac276ac726babcb108",
+    "characters": 6397,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-byzantium": {
+    "url": "https://www.worldhistory.org/Byzantine_Empire/",
+    "finalUrl": "https://www.worldhistory.org/Byzantine_Empire/",
+    "status": 200,
+    "sha256": "416cab43bc6b2befe29f4a2f29082aff2cf96c1b03953848e15c756c88c4944d",
+    "characters": 60640,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-indus": {
+    "url": "https://www.worldhistory.org/Indus_Valley_Civilization/",
+    "finalUrl": "https://www.worldhistory.org/Indus_Valley_Civilization/",
+    "status": 200,
+    "sha256": "452ccfec0de116ea9c57abdd05e4e1b060e74f5cecbc2bd0c0335c98659de08b",
+    "characters": 34082,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-writing": {
+    "url": "https://www.worldhistory.org/writing/",
+    "finalUrl": "https://www.worldhistory.org/writing/",
+    "status": 200,
+    "sha256": "6b041ca8a77854f0fff68d10cb6d1db1db76db73401cef134c430f4f83295ad0",
+    "characters": 25178,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-revolution": {
+    "url": "https://www.worldhistory.org/Industrial_Revolution/",
+    "finalUrl": "https://www.worldhistory.org/disambiguation/Industrial_Revolution/",
+    "status": 200,
+    "sha256": "da74cdb23ad7eb0b29dac988b52bc975c285b80518acfcc2aefaa8589a631191",
+    "characters": 6423,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-mali": {
+    "url": "https://www.worldhistory.org/Mali_Empire/",
+    "finalUrl": "https://www.worldhistory.org/Mali_Empire/",
+    "status": 200,
+    "sha256": "52ac78016eb9102321a97cc47252ae45bb3981f23d504a413952a6f02f697fbe",
+    "characters": 26907,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "history-japan": {
+    "url": "https://www.britannica.com/event/Meiji-Restoration",
+    "finalUrl": "https://www.britannica.com/event/Meiji-Restoration",
+    "status": 200,
+    "sha256": "3362f33fd727508a6bd0999d38d5b514ba67a97b3708a39fb56b120d4648090a",
+    "characters": 16771,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "biology": {
+    "url": "https://openstax.org/books/biology-2e/pages/1-introduction",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/1-introduction",
+    "status": 200,
+    "sha256": "e5f5f52cda9abf2a36b2d3c85d3b68fa5864efb43811d099631af2dd07e36580",
+    "characters": 4785,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "cells": {
+    "url": "https://openstax.org/books/biology-2e/pages/4-3-eukaryotic-cells",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/4-3-eukaryotic-cells",
+    "status": 200,
+    "sha256": "706499a351a4f016687bbc4aa4bd7a9a7bff8f44b85ba8fc17445e4b18179ab7",
+    "characters": 23271,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "genetics": {
+    "url": "https://openstax.org/books/biology-2e/pages/14-2-dna-structure-and-sequencing",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/14-2-dna-structure-and-sequencing",
+    "status": 200,
+    "sha256": "b4d87868daaf5eda02180ebaddcdd0665d2f259e6b55226dea525bfa21fccf03",
+    "characters": 18696,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "chemistry": {
+    "url": "https://openstax.org/books/chemistry-2e/pages/2-key-terms",
+    "finalUrl": "https://openstax.org/books/chemistry-2e/pages/2-key-terms",
+    "status": 200,
+    "sha256": "7f2370252635086cda27a625dba3825a45fe175fe183f91bd6a95849047e7a01",
+    "characters": 9581,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "chemistry-ph": {
+    "url": "https://openstax.org/books/chemistry-2e/pages/14-2-ph-and-poh",
+    "finalUrl": "https://openstax.org/books/chemistry-2e/pages/14-2-ph-and-poh",
+    "status": 200,
+    "sha256": "9b26a1a532c31fae800f642326bbe9e8e17e5b735ce7a6e23f196aaf8cf0ac94",
+    "characters": 14892,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "blood": {
+    "url": "https://openstax.org/books/biology-2e/pages/40-2-components-of-the-blood",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/40-2-components-of-the-blood",
+    "status": 200,
+    "sha256": "1e1a7cdb6ee7441cac2f1433154c7762ed4fd20e443d9f5dc7c7696d3220cbdf",
+    "characters": 19171,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "waves": {
+    "url": "https://openstax.org/books/physics/pages/14-1-speed-of-sound-frequency-and-wavelength",
+    "finalUrl": "https://openstax.org/books/physics/pages/14-1-speed-of-sound-frequency-and-wavelength",
+    "status": 200,
+    "sha256": "d9eb3d47c201faab1e5addede143467e8e56ae7dda77b60c478c640eb2d2ebc3",
+    "characters": 23362,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "optics": {
+    "url": "https://openstax.org/books/physics/pages/16-2-refraction",
+    "finalUrl": "https://openstax.org/books/physics/pages/16-2-refraction",
+    "status": 200,
+    "sha256": "7d8871d0f7a81bd37c1328718fb5bad4c2ca0632cab1c7a9fb616e28187f95a2",
+    "characters": 32758,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "evolution": {
+    "url": "https://openstax.org/books/biology-2e/pages/18-1-understanding-evolution",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/18-1-understanding-evolution",
+    "status": 200,
+    "sha256": "0c551e1c322e697b8eb531bb363a3854365051f72c9efe44a1ddb16d153b1c49",
+    "characters": 31530,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "ecology": {
+    "url": "https://openstax.org/books/biology-2e/pages/45-6-community-ecology",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/45-6-community-ecology",
+    "status": 200,
+    "sha256": "6ed57cc0bf009469907ffd4fe4557c6f948675e3accf684cf5b2241eee4df3cf",
+    "characters": 30472,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "foodweb": {
+    "url": "https://openstax.org/books/biology-2e/pages/46-2-energy-flow-through-ecosystems",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/46-2-energy-flow-through-ecosystems",
+    "status": 200,
+    "sha256": "fa4acdd2886e9a7ee07bb0feb74306482240eb23fb6a64c46c1a264825502f4d",
+    "characters": 21100,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "plants": {
+    "url": "https://openstax.org/books/biology-2e/pages/30-1-the-plant-body",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/30-1-the-plant-body",
+    "status": 200,
+    "sha256": "83d5644dc08cf31d16a7aa2a9ca9ab4294afc91c6e26d3f64261d047150b1610",
+    "characters": 9337,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "plant-water": {
+    "url": "https://openstax.org/books/biology-2e/pages/30-5-transport-of-water-and-solutes-in-plants",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/30-5-transport-of-water-and-solutes-in-plants",
+    "status": 200,
+    "sha256": "ed1693073e2dba29d2901720744df0a33d2ce6b535d92083e79a86533089c6ed",
+    "characters": 25543,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "animals": {
+    "url": "https://openstax.org/books/biology-2e/pages/27-2-features-used-to-classify-animals",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/27-2-features-used-to-classify-animals",
+    "status": 200,
+    "sha256": "c6c4f4dc7d8beadba0840f10ab4153fdf8726690e1605b6a33099d60630f7cd3",
+    "characters": 23386,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "birds": {
+    "url": "https://openstax.org/books/biology-2e/pages/29-5-birds",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/29-5-birds",
+    "status": 200,
+    "sha256": "bb6857b82c50f0fc8633187edd8cd27858ef442a04115782a7e3ed3c30cd5d44",
+    "characters": 24031,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "mammals": {
+    "url": "https://openstax.org/books/biology-2e/pages/29-6-mammals",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/29-6-mammals",
+    "status": 200,
+    "sha256": "cf0c5600d31270fb6e85c6df1cdef1ca81b89bb63f6031c73b05a4458861c86d",
+    "characters": 19287,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "earthquake": {
+    "url": "https://www.usgs.gov/programs/earthquake-hazards/science-earthquakes",
+    "finalUrl": "https://www.usgs.gov/programs/earthquake-hazards/science-earthquakes",
+    "status": 200,
+    "sha256": "e686c294422366ec53fd805177a9d846d6ac55a180ee6f7d0491c0ecdc3c979b",
+    "characters": 12548,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "water-cycle": {
+    "url": "https://www.usgs.gov/special-topics/water-science-school/science/water-cycle",
+    "finalUrl": "https://www.usgs.gov/water-science-school/water-cycle",
+    "status": 200,
+    "sha256": "0b138b265ee5520649237f9848dba200fc65ea61e19c781e63377a906ef02ccb",
+    "characters": 10316,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "glaciers": {
+    "url": "https://www.usgs.gov/water-science-school/science/glaciers-and-icecaps",
+    "finalUrl": "https://www.usgs.gov/water-science-school/science/glaciers-and-icecaps",
+    "status": 200,
+    "sha256": "98ef3c4254636161dff663684ca7762c1f5550c4b3349937e99d7653fec039c7",
+    "characters": 32630,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "latitude": {
+    "url": "https://education.nationalgeographic.org/resource/latitude/",
+    "finalUrl": "https://education.nationalgeographic.org/resource/latitude/",
+    "status": 200,
+    "sha256": "c63cd2c095f90ad133299794f65d783dbf45e1038e67f990616c7f2223201b2b",
+    "characters": 5693,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "maps": {
+    "url": "https://education.nationalgeographic.org/resource/map/",
+    "finalUrl": "https://education.nationalgeographic.org/resource/map/",
+    "status": 200,
+    "sha256": "8f925221ddb1887b3644e38e804a9bbfbd8a3bce8a1f5287c85ccaaa026b56b4",
+    "characters": 14130,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "ocean": {
+    "url": "https://oceanservice.noaa.gov/facts/whysalty.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/whysalty.html",
+    "status": 200,
+    "sha256": "09f01c44e1ecfc33a717ca483bd083f7c4ac974790b6961fa623a2dc6bbdb9ea",
+    "characters": 4904,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "rivers": {
+    "url": "https://education.nationalgeographic.org/resource/river/",
+    "finalUrl": "https://education.nationalgeographic.org/resource/river/",
+    "status": 200,
+    "sha256": "15ccd0e3d2be608595e9dab08d5d7bcbb0413f39eb1f60b645c8698809ce0f52",
+    "characters": 6358,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "html": {
+    "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Your_first_website/Creating_the_content",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Your_first_website/Creating_the_content",
+    "status": 200,
+    "sha256": "a1711d51d9c8baff000ff7600c29cc3bf8d93a80d78a8ea5d039745a34800cb6",
+    "characters": 20776,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "css": {
+    "url": "https://developer.mozilla.org/en-US/docs/Web/CSS",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/CSS",
+    "status": 200,
+    "sha256": "8b3836dfcb1f05ed28b1e909b5be2d4f746d4de820997a8975b52b58f5acb3aa",
+    "characters": 28527,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "http": {
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+    "status": 200,
+    "sha256": "d63166e91972104f456308b9e553cbc2de9932bee20d046ac4bdb32948d15d3f",
+    "characters": 23964,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "security": {
+    "url": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "finalUrl": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "status": 200,
+    "sha256": "09865f6ffa83f78f3c30dd9f51b8a65c4e9c6d16ca9df916701c6d7761a451fb",
+    "characters": 76646,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "passwords": {
+    "url": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "finalUrl": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "status": 200,
+    "sha256": "09865f6ffa83f78f3c30dd9f51b8a65c4e9c6d16ca9df916701c6d7761a451fb",
+    "characters": 76646,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "phishing": {
+    "url": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "finalUrl": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "status": 200,
+    "sha256": "09865f6ffa83f78f3c30dd9f51b8a65c4e9c6d16ca9df916701c6d7761a451fb",
+    "characters": 76646,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "mfa": {
+    "url": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "finalUrl": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/",
+    "status": 200,
+    "sha256": "09865f6ffa83f78f3c30dd9f51b8a65c4e9c6d16ca9df916701c6d7761a451fb",
+    "characters": 76646,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "accessibility": {
+    "url": "https://www.w3.org/WAI/fundamentals/accessibility-principles/",
+    "finalUrl": "https://www.w3.org/WAI/fundamentals/accessibility-principles/",
+    "status": 200,
+    "sha256": "94af817aacc3ea63a3247e8dcd0ae5eb0e4174f5e28ecc9ce63426fb01c30859",
+    "characters": 28507,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "unicode": {
+    "url": "https://www.unicode.org/faq/basic_q.html",
+    "finalUrl": "https://www.unicode.org/faq/basic_q.html",
+    "status": 200,
+    "sha256": "6667090e0aed05480354d0fd36973f89c1f230844899a79ed427a85911cac520",
+    "characters": 13006,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "hardware": {
+    "url": "https://www.britannica.com/technology/computer/Basic-components-of-a-computer",
+    "finalUrl": "https://www.britannica.com/technology/computer",
+    "status": 200,
+    "sha256": "9000e357db663224334d344c9a3e27674d6a0c136075c9d196f99db45fb11b46",
+    "characters": 17856,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "compression": {
+    "url": "https://developer.mozilla.org/en-US/docs/Glossary/Lossy_compression",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Glossary/Lossy_compression",
+    "status": 200,
+    "sha256": "6567ebb28949d12ac64342716fbe2b19ca6cb097a7d0ee7dd65c920e2aa14dbd",
+    "characters": 11734,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "ml": {
+    "url": "https://developers.google.com/machine-learning/intro-to-ml",
+    "finalUrl": "https://developers.google.com/machine-learning/intro-to-ml",
+    "status": 200,
+    "sha256": "4ae107df888200334afcfe3f09dc17fdab78afb158c0686c602b381eb7b11f99",
+    "characters": 2935,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "music": {
+    "url": "https://philharmonia.co.uk/resources/instruments/",
+    "finalUrl": "https://philharmonia.co.uk/resources/instruments/",
+    "status": 200,
+    "sha256": "7ebe2dc65df9b40892df886d43879231f72726eecf50500ff89e38f1c84c70c0",
+    "characters": 4671,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "strings": {
+    "url": "https://philharmonia.co.uk/resources/instruments/violin/",
+    "finalUrl": "https://philharmonia.co.uk/resources/instruments/violin/",
+    "status": 200,
+    "sha256": "1d941f6e327090a957f3a7284c3b763d4081071231eafe060604cde60d2734ce",
+    "characters": 9380,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "brass": {
+    "url": "https://philharmonia.co.uk/resources/instruments/trumpet/",
+    "finalUrl": "https://philharmonia.co.uk/resources/instruments/trumpet/",
+    "status": 200,
+    "sha256": "0ecd4b781355d8b0c9035fe2c0de890f4ef5a47006968d354474d4d944a9b626",
+    "characters": 6557,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "mosaic": {
+    "url": "https://www.britannica.com/art/mosaic-art",
+    "finalUrl": "https://www.britannica.com/art/mosaic-art",
+    "status": 200,
+    "sha256": "ce538076b40b680ccc4de6c8d7ea416f5dcecf71ae0595fcb753d706a2ceef07",
+    "characters": 20775,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "cinema": {
+    "url": "https://www.britannica.com/art/animation",
+    "finalUrl": "https://www.britannica.com/art/animation",
+    "status": 200,
+    "sha256": "fd2d15c65b552093dded740f46b39083f47c2291a348b18c9ca639d46dd581f3",
+    "characters": 17718,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "film": {
+    "url": "https://www.britannica.com/art/film-editing",
+    "finalUrl": "https://www.britannica.com/art/film-editing",
+    "status": 200,
+    "sha256": "4b8965046ccf3edb9aaf8d7bf2b4fc6f0465fa3726ce52ee74fd88838368d1c2",
+    "characters": 5568,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "theatre": {
+    "url": "https://www.britannica.com/art/theatre-art",
+    "finalUrl": "https://www.britannica.com/art/theatre-art",
+    "status": 200,
+    "sha256": "081901cd1fd1cd92b81d20e7b1b054ef4168ed3788213d1937ed6e75cb300269",
+    "characters": 16609,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "architecture": {
+    "url": "https://www.britannica.com/technology/arch-architecture",
+    "finalUrl": "https://www.britannica.com/technology/arch-architecture",
+    "status": 200,
+    "sha256": "bbe5a7b35a27dabc24e855e2de84d311827385db41988a8ec1f79d081bd13b81",
+    "characters": 12354,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football": {
+    "url": "https://www.theifab.com/laws/latest/the-players/",
+    "finalUrl": "https://www.theifab.com/laws/latest/the-players/",
+    "status": 200,
+    "sha256": "e05607937f680cf958b863b58761fd241cf426253891e5b5f5bbef0f0bb557e9",
+    "characters": 40629,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "basketball": {
+    "url": "https://assets.fiba.basketball/image/upload/documents-corporate-fiba-official-rules-2026-v1-1.pdf",
+    "finalUrl": "https://assets.fiba.basketball/image/upload/documents-corporate-fiba-official-rules-2026-v1-1.pdf",
+    "status": 200,
+    "sha256": "c033fa5b4efdcda4b830c64819c620d09c806309f11cfb44279eaf0ce167d9c6",
+    "characters": 318784,
+    "checkedAt": "2026-11-13",
+    "format": "pdf"
+  },
+  "volleyball": {
+    "url": "https://www.fivb.com/wp-content/uploads/2025/01/FIVB-Volleyball_Rules2025_2028-EN.pdf",
+    "finalUrl": "https://www.fivb.com/wp-content/uploads/2025/01/FIVB-Volleyball_Rules2025_2028-EN.pdf",
+    "status": 200,
+    "sha256": "e0fbc1edddc1d2e31b31138cf222aec68995bb92c6647d571f8b9eeb8799822c",
+    "characters": 216815,
+    "checkedAt": "2026-11-13",
+    "format": "pdf"
+  },
+  "athletics": {
+    "url": "https://worldathletics.org/disciplines",
+    "finalUrl": "https://worldathletics.org/our-sport",
+    "status": 200,
+    "sha256": "2f77e258c41119dd1117508e8250b401e8c81916ee44762e5c390b7141effcce",
+    "characters": 1384,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "badminton": {
+    "url": "https://corporate.bwfbadminton.com/statutes/",
+    "finalUrl": "https://corporate.bwfbadminton.com/statutes/",
+    "status": 200,
+    "sha256": "4deb1b97773c926cab85b88ea710298fdd40afaf5aa5071c54a905f18aac4258",
+    "characters": 17677,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "tabletennis": {
+    "url": "https://documents.ittf.sport/sites/default/files/public/2025-02/2025_ITTF_Statutes_clean_version.pdf",
+    "finalUrl": "https://documents.ittf.sport/sites/default/files/public/2025-02/2025_ITTF_Statutes_clean_version.pdf",
+    "status": 200,
+    "sha256": "57f8258e10b5ee93ad5bf70cd6eda079767e128b1a47f1a3837adfa4445c1247",
+    "characters": 852400,
+    "checkedAt": "2026-11-13",
+    "format": "pdf"
+  },
+  "tennis": {
+    "url": "https://www.itftennis.com/media/7221/2026-rules-of-tennis-english.pdf",
+    "finalUrl": "https://www.world.tennis/media/7221/2026-rules-of-tennis-english.pdf",
+    "status": 200,
+    "sha256": "4c344003eb17a0119a1699ee4603c8750e04f900cac364811f5e3a47a9851592",
+    "characters": 94735,
+    "checkedAt": "2026-11-13",
+    "format": "pdf"
+  },
+  "chess": {
+    "url": "https://handbook.fide.com/chapter/E012023",
+    "finalUrl": "https://handbook.fide.com/chapter/E012023",
+    "status": 200,
+    "sha256": "c5b1692a0614d4bd93fe9238287b9ab7d1f47320934d5df3be113523906c476f",
+    "characters": 84339,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "rugby": {
+    "url": "https://www.world.rugby/the-game/laws/law/8",
+    "finalUrl": "https://passport.world.rugby/laws-of-the-game/laws-by-number/",
+    "status": 200,
+    "sha256": "cfa390555b4fe740101039819e60a832fe0cf868fa54cfd73d5c785aea6e40b6",
+    "characters": 3083,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "handball": {
+    "url": "https://www.ihf.info/regulations-documents/361",
+    "finalUrl": "https://www.ihf.info/regulations-documents/361",
+    "status": 200,
+    "sha256": "f3847d03316e7a231ffc29b12fef6833f23b3d5894ed75fe7be9b9a619c44c71",
+    "characters": 4519,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "statistics": {
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/2-key-terms",
+    "finalUrl": "https://openstax.org/books/introductory-statistics-2e/pages/2-key-terms",
+    "status": 200,
+    "sha256": "b60fcdac93d1351d3461b6edd4314858716e4449ffedcadf78fbb9bb91271371",
+    "characters": 7958,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "probability": {
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/3-key-terms",
+    "finalUrl": "https://openstax.org/books/introductory-statistics-2e/pages/3-key-terms",
+    "status": 200,
+    "sha256": "51e8d801c4b656b5f8d3a93fd40abccaf37ef358a9911280acb0753beace7c53",
+    "characters": 6837,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "interest": {
+    "url": "https://www.investor.gov/financial-tools-calculators/calculators/compound-interest-calculator",
+    "finalUrl": "https://www.investor.gov/financial-tools-calculators/calculators/compound-interest-calculator",
+    "status": 200,
+    "sha256": "da44b9184daa834edd47285d0f4aa4409c72caee539d11d0e2537af5381c8eea",
+    "characters": 4301,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "food": {
+    "url": "https://www.cdc.gov/food-safety/prevention/index.html",
+    "finalUrl": "https://www.cdc.gov/food-safety/prevention/index.html",
+    "status": 200,
+    "sha256": "17e054c6b4d4c9aa79977d3d9acd75faa17d5feac7a85afcf1b2769088919105",
+    "characters": 8818,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "units": {
+    "url": "https://www.nist.gov/pml/owm/metric-si/si-units",
+    "finalUrl": "https://www.nist.gov/pml/owm/metric-si/si-units",
+    "status": 200,
+    "sha256": "69e6ee98c8dc7e260f60fb711c264a6ad5f35c011ea920002689c2ac63c9efd0",
+    "characters": 13061,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "heat": {
+    "url": "https://openstax.org/books/physics/pages/11-2-heat-specific-heat-and-heat-transfer",
+    "finalUrl": "https://openstax.org/books/physics/pages/11-2-heat-specific-heat-and-heat-transfer",
+    "status": 200,
+    "sha256": "e156e46ee87a461f65dc665637d310e0a7d99a487be49f6353813ef86ed8c95b",
+    "characters": 29753,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "logic": {
+    "url": "https://openstax.org/books/contemporary-mathematics/pages/2-1-statements-and-quantifiers",
+    "finalUrl": "https://openstax.org/books/contemporary-mathematics/pages/2-1-statements-and-quantifiers",
+    "status": 200,
+    "sha256": "2ade4e63c6101d8ee0078cbc7be1c90d88704a74fdfff19a7481bfe04ee4fc0f",
+    "characters": 30203,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "economics": {
+    "url": "https://openstax.org/books/principles-economics-3e/pages/3-1-demand-supply-and-equilibrium-in-markets-for-goods-and-services",
+    "finalUrl": "https://openstax.org/books/principles-economics-3e/pages/3-1-demand-supply-and-equilibrium-in-markets-for-goods-and-services",
+    "status": 200,
+    "sha256": "8353b360b446a7f34f5369805d9b2845e02c605c6d2d04fb3e7dbbe4b4a4cbc1",
+    "characters": 18091,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "sampling": {
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/1-2-data-sampling-and-variation-in-data-and-sampling",
+    "finalUrl": "https://openstax.org/books/introductory-statistics-2e/pages/1-2-data-sampling-and-variation-in-data-and-sampling",
+    "status": 200,
+    "sha256": "01b7ec620eb47130fc8ede0b260693a32e15c59564cd67a076f458fa09b60c96",
+    "characters": 38918,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-canada": {
+    "url": "https://www.britannica.com/place/Canada",
+    "finalUrl": "https://www.britannica.com/place/Canada",
+    "status": 200,
+    "sha256": "7364caefc3b40eb886b13be2e1dfde0bed90eb6d87ea1d2f02f1a8f062e2afeb",
+    "characters": 26228,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-brazil": {
+    "url": "https://www.britannica.com/place/Brazil",
+    "finalUrl": "https://www.britannica.com/place/Brazil",
+    "status": 200,
+    "sha256": "25b1912048bbaa60e5610de5cc350d479e430ed6385ab8d22eb58abb6c00366d",
+    "characters": 25644,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-india": {
+    "url": "https://www.britannica.com/place/India",
+    "finalUrl": "https://www.britannica.com/place/India",
+    "status": 200,
+    "sha256": "71749d4d5569a6181a7891bd8bbbbe942d7263658d264fa6d5debdb6544eb007",
+    "characters": 30101,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-japan": {
+    "url": "https://www.britannica.com/place/Japan",
+    "finalUrl": "https://www.britannica.com/place/Japan",
+    "status": 200,
+    "sha256": "9e473205cd81fc13742a95f375d824967ae0e954d4ab7d4dec6694659fa7b66e",
+    "characters": 22811,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-nile": {
+    "url": "https://www.britannica.com/place/Nile-River",
+    "finalUrl": "https://www.britannica.com/place/Nile-River",
+    "status": 200,
+    "sha256": "b26e72d9bb0973560f729438b925ee519d2758c45db393bffaa2cc9b2f406319",
+    "characters": 12684,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-amazon": {
+    "url": "https://www.britannica.com/place/Amazon-River",
+    "finalUrl": "https://www.britannica.com/place/Amazon-River",
+    "status": 200,
+    "sha256": "a630c6b19755ca408f65d2448d865cbe788223b5e64c4be0b7cd6bc255c2dc8c",
+    "characters": 11632,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-himalaya": {
+    "url": "https://www.britannica.com/place/Himalayas",
+    "finalUrl": "https://www.britannica.com/place/Himalayas",
+    "status": 200,
+    "sha256": "a6f5f6d404deba39dacbfc9b18792282514e67ea51407eaa2272d55847892e99",
+    "characters": 9531,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-mediterranean": {
+    "url": "https://www.britannica.com/place/Mediterranean-Sea",
+    "finalUrl": "https://www.britannica.com/place/Mediterranean-Sea",
+    "status": 200,
+    "sha256": "02d3f669748c8e9fc226195e3c42b39b436af9e3aa43b8e1b54ec09ce2e03a23",
+    "characters": 14757,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-tropic": {
+    "url": "https://www.britannica.com/place/Tropic-of-Cancer",
+    "finalUrl": "https://www.britannica.com/place/Tropic-of-Cancer",
+    "status": 200,
+    "sha256": "34534f541c36b53447da624102d75d01c800ecc04f391b63a6510a875af37706",
+    "characters": 4199,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-panama": {
+    "url": "https://www.britannica.com/place/Isthmus-of-Panama",
+    "finalUrl": "https://www.britannica.com/place/Isthmus-of-Panama",
+    "status": 200,
+    "sha256": "169867651f960679c95ba4ea85eae8b6a293de42dc10558a5574d7b05408d1ac",
+    "characters": 4621,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "geography-suez": {
+    "url": "https://www.britannica.com/place/Suez-Canal",
+    "finalUrl": "https://www.britannica.com/topic/Suez-Canal",
+    "status": 200,
+    "sha256": "1bb80a58d5b0cc8ea0b651641968636004066131f6c9a3b08b169597ab5bbf36",
+    "characters": 14832,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "membranes": {
+    "url": "https://openstax.org/books/biology-2e/pages/5-2-passive-transport",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/5-2-passive-transport",
+    "status": 200,
+    "sha256": "629c2f2cb22f8b540b1e0e15cc4240b5a16212d7c0fa286395334df308d3a0c3",
+    "characters": 29271,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "enzymes": {
+    "url": "https://openstax.org/books/biology-2e/pages/6-5-enzymes",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/6-5-enzymes",
+    "status": 200,
+    "sha256": "51820c5d058abd6ffd7c7b8da012f1743055f085d1efa280db699e03c776ac30",
+    "characters": 22015,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "human-systems": {
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/1-2-structural-organization-of-the-human-body",
+    "finalUrl": "https://openstax.org/books/anatomy-and-physiology-2e/pages/1-2-structural-organization-of-the-human-body",
+    "status": 200,
+    "sha256": "1a2583047e2d4515a7ba63ff5eacc6c17428b37b7e8e85cf4e137a73fada39b9",
+    "characters": 8547,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "heart": {
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy",
+    "finalUrl": "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy",
+    "status": 200,
+    "sha256": "b6d4a127473ba5e19f25ca9e6d03c706481d7cdad6c336e41c7dbfb2f6bbc88a",
+    "characters": 61094,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "vessels": {
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/20-1-structure-and-function-of-blood-vessels",
+    "finalUrl": "https://openstax.org/books/anatomy-and-physiology-2e/pages/20-1-structure-and-function-of-blood-vessels",
+    "status": 200,
+    "sha256": "af2000be5f36d39ff7522ae0c5cb1b127b16edde7cebede3646ab5ededc0a9d3",
+    "characters": 35264,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "lungs": {
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange",
+    "finalUrl": "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange",
+    "status": 200,
+    "sha256": "a1c750f0e66d4cbf35763f20d0611f2130e464c8ee6c8e3a94ffed2532154c0d",
+    "characters": 19785,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "kidneys": {
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/25-3-gross-anatomy-of-the-kidney",
+    "finalUrl": "https://openstax.org/books/anatomy-and-physiology-2e/pages/25-3-gross-anatomy-of-the-kidney",
+    "status": 200,
+    "sha256": "095bdf15fec36791ab4add34b735bae57e7886c862c1ae142a11adfeee363980",
+    "characters": 10827,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "arthropods": {
+    "url": "https://openstax.org/books/biology-2e/pages/28-6-superphylum-ecdysozoa-arthropods",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/28-6-superphylum-ecdysozoa-arthropods",
+    "status": 200,
+    "sha256": "3817d56e63e40d4e2e8327a2bf8981294fa68b80359a67bca344aa02c342eab2",
+    "characters": 27221,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "reptiles": {
+    "url": "https://openstax.org/books/biology-2e/pages/29-4-reptiles",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/29-4-reptiles",
+    "status": 200,
+    "sha256": "2efe6894949e6a781f91e187b18e5b88ddec151f6a669b713f45d1e13a27a3d6",
+    "characters": 32101,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "vertebrates": {
+    "url": "https://openstax.org/books/biology-2e/pages/29-1-chordates",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/29-1-chordates",
+    "status": 200,
+    "sha256": "cb973947376cfa7b7184165c1c8dba73f46f514ef45b23b908171cb5e460a343",
+    "characters": 20255,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "plant-groups": {
+    "url": "https://openstax.org/books/biology-2e/pages/26-3-angiosperms",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/26-3-angiosperms",
+    "status": 200,
+    "sha256": "d86728ababd2cbae8489c85d6ad5de4f315b20604000030f95662cfce246a05f",
+    "characters": 20745,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "cycles": {
+    "url": "https://openstax.org/books/biology-2e/pages/46-3-biogeochemical-cycles",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/46-3-biogeochemical-cycles",
+    "status": 200,
+    "sha256": "096fe5dbcfefbf08be13ee48c6e616c50c98c7afd88813f64c7b788b26096fb9",
+    "characters": 30293,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "ecology-basics": {
+    "url": "https://openstax.org/books/biology-2e/pages/44-1-the-scope-of-ecology",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/44-1-the-scope-of-ecology",
+    "status": 200,
+    "sha256": "6203cff8ae52d9f26dcd846042f4295c8f91d46bfbf3957004cebbcbca09bdc8",
+    "characters": 14421,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "population": {
+    "url": "https://openstax.org/books/biology-2e/pages/45-1-population-demography",
+    "finalUrl": "https://openstax.org/books/biology-2e/pages/45-1-population-demography",
+    "status": 200,
+    "sha256": "60514a5aae35a8aac240942b1539d685f44736a77e1e5532e4f77a0ac46b3d52",
+    "characters": 19951,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "reflection": {
+    "url": "https://openstax.org/books/physics/pages/16-1-reflection",
+    "finalUrl": "https://openstax.org/books/physics/pages/16-1-reflection",
+    "status": 200,
+    "sha256": "96bd36b8465c477abc1b6aeb0b0f7f60da9490acb1aebdee742801c7caf95633",
+    "characters": 30173,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "lenses": {
+    "url": "https://openstax.org/books/physics/pages/16-3-lenses",
+    "finalUrl": "https://openstax.org/books/physics/pages/16-3-lenses",
+    "status": 200,
+    "sha256": "355549bb768b7ec3bce034731ee648e94b31c7b3bbd3156defbf42ef4da89ffa",
+    "characters": 41220,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "regression": {
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation",
+    "finalUrl": "https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation",
+    "status": 200,
+    "sha256": "82022f475f4ded0a9103190b950921f1d02213456c02711886a338fee04f9dbe",
+    "characters": 19972,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "backup": {
+    "url": "https://en.wikipedia.org/wiki/Backup",
+    "finalUrl": "https://en.wikipedia.org/wiki/Backup",
+    "status": 200,
+    "sha256": "6b6556b66fdf250b556b941c8b3628303c4d389570f05455215ccffe43d0e8d3",
+    "characters": 48383,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "authorization": {
+    "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+    "finalUrl": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+    "status": 200,
+    "sha256": "593082aafdba33bf87c33b8b695d7c7a48c9617f9757cd2a464dd905ced170a5",
+    "characters": 32469,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "domains": {
+    "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_domain_name",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_domain_name",
+    "status": 200,
+    "sha256": "319596fab0cad024ab6a8c59fcf400b7c79b24a10b089a46ae157932e63abcd1",
+    "characters": 11256,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "crypto": {
+    "url": "https://developer.mozilla.org/en-US/docs/Glossary/Encryption",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Glossary/Encryption",
+    "status": 200,
+    "sha256": "d746237b8887efd7b154287f5f7c59e3ef9b798e91c39ffc4adf6cbf17e0b4ee",
+    "characters": 11348,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "cookies": {
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+    "status": 200,
+    "sha256": "98a76ffd9c6f8bd22f180b04e3b587d4fcf394ea88111f1e0c131b1a1743cae9",
+    "characters": 30116,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "status": {
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status",
+    "status": 200,
+    "sha256": "a42aa94814e70b92f99f8f39570313d01bcf9cacc2da26180a0abaf74f05f326",
+    "characters": 23822,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "html-headings": {
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/Heading_Elements",
+    "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/Heading_Elements",
+    "status": 200,
+    "sha256": "332f2062d29483f62399a8be22645c72a438044d4590aac0e0fe2dad5a14f71d",
+    "characters": 14922,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "ram": {
+    "url": "https://www.britannica.com/technology/RAM-computing",
+    "finalUrl": "https://www.britannica.com/technology/RAM-computing",
+    "status": 200,
+    "sha256": "d2a232178a7bc3c20828e052c3c37b0aca5ce4979ad8e3de8e370695ce2ab670",
+    "characters": 12875,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "ssd": {
+    "url": "https://en.wikipedia.org/wiki/Solid-state_drive",
+    "finalUrl": "https://en.wikipedia.org/wiki/Solid-state_drive",
+    "status": 200,
+    "sha256": "d8bcb9eed1cd6d213ea02b27e4b1fb08c934c17903c8813e0c5cf91d953d17af",
+    "characters": 92413,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "wifi": {
+    "url": "https://www.britannica.com/technology/Wi-Fi",
+    "finalUrl": "https://www.britannica.com/technology/Wi-Fi",
+    "status": 200,
+    "sha256": "8366f635742d451bad1950bfa3193dc39ca547c76fcfb40306e5d6357bd2a728",
+    "characters": 8293,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "usb": {
+    "url": "https://www.britannica.com/technology/USB",
+    "finalUrl": "https://www.britannica.com/technology/USB",
+    "status": 200,
+    "sha256": "0d383b496334f792fa1453c604282d5c9c7334f6d9312e3b7c7ddca033989add",
+    "characters": 5383,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "cloud": {
+    "url": "https://www.britannica.com/technology/cloud-computing",
+    "finalUrl": "https://www.britannica.com/technology/cloud-computing",
+    "status": 200,
+    "sha256": "14db664824a7e492d71461ca5e41e89485b285ac82ce14a600dcabbea29e01d6",
+    "characters": 14892,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "tempo": {
+    "url": "https://en.wikipedia.org/wiki/Tempo",
+    "finalUrl": "https://en.wikipedia.org/wiki/Tempo",
+    "status": 200,
+    "sha256": "e1198201fe89b8a0aa5fcff80d75e08e60adf845795df7e9741eb900044c9bd5",
+    "characters": 40120,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "dynamics": {
+    "url": "https://en.wikipedia.org/wiki/Dynamics_(music)",
+    "finalUrl": "https://en.wikipedia.org/wiki/Dynamics_(music)",
+    "status": 200,
+    "sha256": "3255e9b0ccfebdecbdfc4e2548e212706fd3dbee0c5ebc98fca6bab5d657d932",
+    "characters": 31896,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "duet": {
+    "url": "https://www.britannica.com/art/duet",
+    "finalUrl": "https://www.britannica.com/topic/Duet",
+    "status": 200,
+    "sha256": "b6fbfdd3d329d75563f4640db5c1931ee7ad2f61ffa58b1ff455a922e155d198",
+    "characters": 2193,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "quartet": {
+    "url": "https://en.wikipedia.org/wiki/String_quartet",
+    "finalUrl": "https://en.wikipedia.org/wiki/String_quartet",
+    "status": 200,
+    "sha256": "8444021999338067c346c00267cf93cea94268ad04b0a90b421a67b320d08f7b",
+    "characters": 44715,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "screenplay": {
+    "url": "https://www.britannica.com/art/scenario",
+    "finalUrl": "https://www.britannica.com/art/scenario",
+    "status": 200,
+    "sha256": "497377499c923617cd81fe75fa5c187e6b4206db0d4ffffed98952637e4af7c2",
+    "characters": 4087,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "director": {
+    "url": "https://www.britannica.com/art/directing",
+    "finalUrl": "https://www.britannica.com/art/directing",
+    "status": 200,
+    "sha256": "85457452eb75236472a681878dedc3796132f6560ab62fe29f49c893f470babe",
+    "characters": 18437,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "diegetic": {
+    "url": "https://en.wikipedia.org/wiki/Diegesis",
+    "finalUrl": "https://en.wikipedia.org/wiki/Diegesis",
+    "status": 200,
+    "sha256": "0678e07f2a526c4b372c538a61f29acbc325991cdb0d22468af45ef6d744b791",
+    "characters": 17120,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "narrator": {
+    "url": "https://www.britannica.com/art/narrator",
+    "finalUrl": "https://www.britannica.com/art/narrator",
+    "status": 200,
+    "sha256": "539a71b903298cf52a3a96135aa0bf032b3212b5dbad225c60f8d489d1ac7c6b",
+    "characters": 4748,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "autobiography": {
+    "url": "https://en.wikipedia.org/wiki/Autobiography",
+    "finalUrl": "https://en.wikipedia.org/wiki/Autobiography",
+    "status": 200,
+    "sha256": "168787128fdc02373327b7b38c5dfc752054a47bebcd6248f2e08854b9b9570a",
+    "characters": 21428,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "irony": {
+    "url": "https://www.britannica.com/art/dramatic-irony",
+    "finalUrl": "https://www.britannica.com/art/dramatic-irony",
+    "status": 200,
+    "sha256": "7616de025d7f483b6d8b47d0e1e93b51e08154fc468d3802161e1bc8e2d0ebc1",
+    "characters": 5387,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "stage": {
+    "url": "https://en.wikipedia.org/wiki/Scenic_design",
+    "finalUrl": "https://en.wikipedia.org/wiki/Scenic_design",
+    "status": 200,
+    "sha256": "4216d80160d4ce2667f5ec5d51bf66e93146b50b8d631bc705c4e2860a08fb3a",
+    "characters": 24637,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "sculpture": {
+    "url": "https://www.britannica.com/art/sculpture",
+    "finalUrl": "https://www.britannica.com/art/sculpture",
+    "status": 200,
+    "sha256": "0e7ac3f0a56e56e7dd7456f1fe6602bf7f425df70b26c5af1983098da2a7c5f6",
+    "characters": 22789,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-sonnet": {
+    "url": "https://www.poetryfoundation.org/education/glossary/sonnet",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/sonnet",
+    "status": 200,
+    "sha256": "95c5ae413d388273d2c672e7acccb631ace99f01f415cb21bb67d65b173cc969",
+    "characters": 5655,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-stanza": {
+    "url": "https://www.poetryfoundation.org/education/glossary/stanza",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/stanza",
+    "status": 200,
+    "sha256": "65103e94e1293937a7096e6947341308eb071b11ec0008e6186714fe1a1b9570",
+    "characters": 1676,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-metaphor": {
+    "url": "https://www.poetryfoundation.org/education/glossary/metaphor",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/metaphor",
+    "status": 200,
+    "sha256": "d5d5e71e9996a4f5c9bfc1ebf0651a32e861f0200eef8c403c14918884ec1cb1",
+    "characters": 2264,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-simile": {
+    "url": "https://www.poetryfoundation.org/education/glossary/simile",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/simile",
+    "status": 200,
+    "sha256": "f4e2fef244476cfcda33c30090f19cb59e0acc78d2f3899fc3eae8c90fd8e2b4",
+    "characters": 2351,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-rhyme": {
+    "url": "https://www.poetryfoundation.org/education/glossary/rhyme",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/rhyme",
+    "status": 200,
+    "sha256": "cd9253d0a3e87623923a8468bb098d67ae5b0ea22d159c1c32177cfe58dd0501",
+    "characters": 3740,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-alliteration": {
+    "url": "https://www.poetryfoundation.org/education/glossary/alliteration",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/alliteration",
+    "status": 200,
+    "sha256": "5b25908ffd0dc988a9c3e23cd3b6d6fbefa37fc8f457306543f67b532cc5aeeb",
+    "characters": 2183,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-personification": {
+    "url": "https://www.poetryfoundation.org/education/glossary/personification",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/personification",
+    "status": 200,
+    "sha256": "3851186c10433e99d6f180e82d58e1eb0daa42937c73386249059fabb0a5826b",
+    "characters": 2285,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-haiku": {
+    "url": "https://www.poetryfoundation.org/education/glossary/haiku-or-hokku",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/haiku-or-hokku",
+    "status": 200,
+    "sha256": "363c84125486ae8caf20323301fe364d5fb95275069e1b45fcca383a29d8ad88",
+    "characters": 5361,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "poetry-line": {
+    "url": "https://www.poetryfoundation.org/education/glossary/line",
+    "finalUrl": "https://www.poetryfoundation.org/education/glossary/line",
+    "status": 200,
+    "sha256": "6225eb36f194aca1a8f0efd69c1c5ddbd2754059164ebb255ec8bd0b2281e46d",
+    "characters": 2008,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "art-portrait": {
+    "url": "https://en.wikipedia.org/wiki/Portrait",
+    "finalUrl": "https://en.wikipedia.org/wiki/Portrait",
+    "status": 200,
+    "sha256": "9a87f277897f1d96a93bdc6b40c45fd2a485e0d2b8900bd8822a82575b6a7536",
+    "characters": 19190,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "art-still-life": {
+    "url": "https://www.nationalgallery.org.uk/paintings/glossary/still-life",
+    "finalUrl": "https://www.nationalgallery.org.uk/paintings/glossary/still-lives",
+    "status": 200,
+    "sha256": "d0d94044beed2016b9343c6cda4ec7e55ed9ef88c20454591dd7f60ea3886092",
+    "characters": 3332,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "art-relief": {
+    "url": "https://www.nationalgallery.org.uk/paintings/glossary/relief",
+    "finalUrl": "https://www.nationalgallery.org.uk/paintings/glossary/relief",
+    "status": 200,
+    "sha256": "d5c3cca255c5b59214e9f725aa5f13c84c7aad8761fcaeb643104819e13ad28e",
+    "characters": 3008,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "art-chiaroscuro": {
+    "url": "https://www.nationalgallery.org.uk/paintings/glossary/chiaroscuro",
+    "finalUrl": "https://www.nationalgallery.org.uk/paintings/glossary/chiaroscuro",
+    "status": 200,
+    "sha256": "6eaf302a4ff67df8329906664a7db1b6d4996b235358bd5d163c046ff7e1129b",
+    "characters": 3496,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "art-triptych": {
+    "url": "https://www.nationalgallery.org.uk/paintings/glossary/triptych",
+    "finalUrl": "https://www.nationalgallery.org.uk/paintings/glossary/triptychs",
+    "status": 200,
+    "sha256": "56a32647d5ba120f48ceeabc2967185ab8412e319d11f2c5761568c479f8595e",
+    "characters": 3281,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "art-landscape": {
+    "url": "https://en.wikipedia.org/wiki/Landscape_painting",
+    "finalUrl": "https://en.wikipedia.org/wiki/Landscape_painting",
+    "status": 200,
+    "sha256": "fa89065f48c5db4d40ded6a90a0c00a48bef075c63cbe6ca0fa5c0f3a787ddc2",
+    "characters": 58360,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football-the-field-of-play": {
+    "url": "https://www.theifab.com/laws/latest/the-field-of-play/",
+    "finalUrl": "https://www.theifab.com/laws/latest/the-field-of-play/",
+    "status": 200,
+    "sha256": "17a1b1a776d2aeff8b7fd154a4f9919b03c686b9b409b906bf968be6eda99c2b",
+    "characters": 17516,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football-the-ball-in-and-out-of-play": {
+    "url": "https://www.theifab.com/laws/latest/the-ball-in-and-out-of-play/",
+    "finalUrl": "https://www.theifab.com/laws/latest/the-ball-in-and-out-of-play/",
+    "status": 200,
+    "sha256": "e1aa1ff11cb7d3575519d3aa67576af0a8f28132c56bbe62a396713b090036f2",
+    "characters": 15838,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football-offside": {
+    "url": "https://www.theifab.com/laws/latest/offside/",
+    "finalUrl": "https://www.theifab.com/laws/latest/offside/",
+    "status": 200,
+    "sha256": "2a378103e19124b3e4e88f3fd1f3151e2b4f0d70c597934c5dbaf7b541e3d3c1",
+    "characters": 47533,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football-fouls-and-misconduct": {
+    "url": "https://www.theifab.com/laws/latest/fouls-and-misconduct/",
+    "finalUrl": "https://www.theifab.com/laws/latest/fouls-and-misconduct/",
+    "status": 200,
+    "sha256": "bd581ecbc1945566fab73b8fe45d20f443cc115f9c8280c2ea380750e78d06ad",
+    "characters": 180654,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football-free-kicks": {
+    "url": "https://www.theifab.com/laws/latest/free-kicks/",
+    "finalUrl": "https://www.theifab.com/laws/latest/free-kicks/",
+    "status": 200,
+    "sha256": "167891b82f6e6cabf0cc0936e6c1cc73ab9b93344a7e9d88a1e0cda92fb6ef44",
+    "characters": 25917,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football-the-goal-kick": {
+    "url": "https://www.theifab.com/laws/latest/the-goal-kick/",
+    "finalUrl": "https://www.theifab.com/laws/latest/the-goal-kick/",
+    "status": 200,
+    "sha256": "880b296919d672773d80a405ebe68d615f31edec4c64c0de9ab9738bc1f099a4",
+    "characters": 16031,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "football-the-corner-kick": {
+    "url": "https://www.theifab.com/laws/latest/the-corner-kick/",
+    "finalUrl": "https://www.theifab.com/laws/latest/the-corner-kick/",
+    "status": 200,
+    "sha256": "a8b475363b0c5dbc0656687e5b5a4ecbe94444c71c65f4e7837fa38439019789",
+    "characters": 11449,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "latitude-weather": {
+    "url": "https://en.wikipedia.org/wiki/Climate",
+    "finalUrl": "https://en.wikipedia.org/wiki/Climate",
+    "status": 200,
+    "sha256": "9792339ff769df112d7e8db9477ff63b2dac221ae56ded7812aa71d3c821d8db",
+    "characters": 49196,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  },
+  "longitude": {
+    "url": "https://education.nationalgeographic.org/resource/longitude/",
+    "finalUrl": "https://education.nationalgeographic.org/resource/longitude/",
+    "status": 200,
+    "sha256": "fef43c2a71c2d0ffefdc60a37424f701e39e26a95503852a675f2aeba4d4a7d5",
+    "characters": 5838,
+    "checkedAt": "2026-11-13",
+    "format": "html"
+  }
+}

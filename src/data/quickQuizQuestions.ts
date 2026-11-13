@@ -1,3 +1,4 @@
+import { quickExpansionQuestions } from "./generatedQuizExpansion";
 import { contentVersion } from "../quiz/engine";
 import type { ChoiceQuestion, QuestionDifficulty } from "../quiz/types";
 
@@ -144,14 +145,14 @@ const bank: Record<Category, readonly Entry[]> = {
   ],
 };
 
-export const quickQuizQuestions: readonly ChoiceQuestion[] = Object.entries(bank).flatMap(([categoryId, entries]) =>
+export const quickQuizQuestions: readonly ChoiceQuestion[] = [...Object.entries(bank).flatMap(([categoryId, entries]) =>
   entries.map(([slug, difficulty, prompt, answers, correctIndex, explanation, title, url, publisher]) => {
     const id = `quick:${slug}`;
     const content = { answers, correctIndex };
     return {
-      id, type: "multiple-choice", version: contentVersion(prompt, content), categoryId,
-      subcategoryId: "quick-quiz", conceptIds: [id], difficulty, difficultyOrigin: "editorial",
+      id, type: "multiple-choice" as const, version: contentVersion(prompt, content), categoryId,
+      subcategoryId: "quick-quiz", conceptIds: [id], difficulty, difficultyOrigin: "editorial" as const,
       prompt, explanation, sources: [{ title, url, publisher }], content,
     };
   }),
-);
+), ...quickExpansionQuestions];

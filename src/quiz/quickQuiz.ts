@@ -101,7 +101,10 @@ export function startQuickQuiz(
       Number(usedCategories.has(a.question.categoryId)) - Number(usedCategories.has(b.question.categoryId));
     const interest = (a: typeof candidates[number], b: typeof candidates[number]) =>
       Number(!preferred.has(a.question.categoryId)) - Number(!preferred.has(b.question.categoryId));
-    eligible.sort((a, b) => priority(a) - priority(b) ||
+    eligible.sort((a, b) =>
+      Number(priority(a) === 3) - Number(priority(b) === 3) ||
+      (usedCategories.size < 3 ? variety(a, b) : 0) ||
+      priority(a) - priority(b) ||
       (diversityFirst ? variety(a, b) : 0) ||
       interest(a, b) ||
       (diversityFirst ? 0 : variety(a, b)) ||
@@ -113,6 +116,11 @@ export function startQuickQuiz(
   });
   const seen = { ...progress.seen };
   for (const question of questions) seen[question.id] = roundNumber;
+  // Keep an easy opener, then vary the pace without changing the selected mix.
+  for (let index = questions.length - 1; index > 1; index--) {
+    const swap = 1 + Math.floor(random() * index);
+    [questions[index], questions[swap]] = [questions[swap], questions[index]];
+  }
   // Save the order in the round snapshot so a resumed answer keeps its meaning.
   const dealt = questions.map(question => shuffleChoices(question, random));
   return { ...progress, seen, round: createQuizSession(`quick:${roundNumber}`, "challenge", dealt) };

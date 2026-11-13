@@ -33,7 +33,9 @@ function loadTypeScriptModule(relativePath, mockedImports = {}) {
   return module.exports;
 }
 
-const questionBank = loadTypeScriptModule('src/data/questions.ts');
+const questionBank = loadTypeScriptModule('src/data/questions.ts', {
+  './generatedQuizExpansion': loadTypeScriptModule('src/data/generatedQuizExpansion.ts'),
+});
 const historyModule = loadTypeScriptModule('src/utils/dailyChallengeHistory.ts', {
   '../quiz/engine': loadTypeScriptModule('src/quiz/engine.ts'),
   '../data/questions': questionBank,

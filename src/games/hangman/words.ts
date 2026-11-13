@@ -1,9 +1,13 @@
+import { extraHangmanWords } from "./extraWords";
+
 export type HangmanWord = {
   id: string;
   word: string;
   category: string;
   clue: string;
   fact: string;
+  /** Editorial estimate for new words; legacy entries keep their original shape. */
+  difficulty?: "easy" | "medium" | "hard";
 };
 
 // Authored separately from lessons and quizzes: no content IDs or progress change.
@@ -36,4 +40,5 @@ export const hangmanWords: readonly HangmanWord[] = [
   { id: "propaganda", word: "Προπαγάνδα", category: "Δύσκολη ιστορία", clue: "Συστηματική διάδοση μηνυμάτων για τον επηρεασμό της κοινής γνώμης.", fact: "Η προπαγάνδα συχνά χρησιμοποιεί επιλεκτικές πληροφορίες και συναισθηματική γλώσσα." },
   { id: "colonialism", word: "Αποικιοκρατία", category: "Δύσκολη ιστορία", clue: "Η επιβολή ελέγχου μιας δύναμης σε ξένα εδάφη και πληθυσμούς.", fact: "Η αποικιοκρατία συνδέθηκε με πολιτική κυριαρχία και οικονομική εκμετάλλευση." },
   { id: "apartheid", word: "Απαρτχάιντ", category: "Δύσκολη ιστορία", clue: "Το καθεστώς θεσμοθετημένου φυλετικού διαχωρισμού στη Νότια Αφρική.", fact: "Οι πρώτες πολυφυλετικές εθνικές εκλογές στη Νότια Αφρική έγιναν το 1994." },
+  ...extraHangmanWords,
 ];

@@ -18,7 +18,8 @@ function load(relative, imports = {}) {
   }, module, module.exports);
   return module.exports;
 }
-const data = load('src/data/questions.ts');
+const full = require('./helpers/load-typescript.cjs').load('src/data/questions.ts');
+const data = { ...full, questions: JSON.parse(JSON.stringify(full.questions.slice(0, 109))) }; // Freeze this historical 2026-10-31 regression.
 const topics = load('src/data/dailyChallengeTopics.ts');
 const imports = { './sharedDailyChallenge': require('./helpers/load-typescript.cjs').load('src/utils/sharedDailyChallenge.ts'), '../quiz/engine': load('src/quiz/engine.ts'), '../data/questions': data, '../data/dailyChallengeTopics': topics };
 const daily = load('src/utils/dailyChallenge.ts', imports);
