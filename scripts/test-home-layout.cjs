@@ -143,6 +143,7 @@ const landmarkImports = Object.fromEntries(["ancient-greece", "world-history", "
   ["../../assets/atlas-export-preview/island-icons/" + id + ".webp", id]));
 const backdrop = compile("src/components/HomeLessonBackdrop.tsx", {
   "expo-image": { Image: "Image" }, ...landmarkImports,
+  "./worldIcons/categoryIconMap": categoryIconModule,
 });
 for (const id of ["ancient-greece", "world-history", "mythology", "space", undefined]) {
   const decoration = backdrop({ subcategoryId: id });
@@ -160,6 +161,17 @@ for (const id of ["ancient-greece", "world-history", "mythology", "space", undef
     assert.ok(fs.existsSync(path.join(root, "assets/atlas-export-preview/island-icons/" + id + ".webp")));
   } else assert.equal(artwork, undefined, "unknown destinations never show an unrelated landmark");
 }
+for (const category of categories) {
+  const decoration = backdrop({ subcategoryId: "no-landmark", categoryId: category.id, scale: 0.8 });
+  const art = nodes(decoration).find(node => node.type === worldArtwork[category.id]);
+  assert.ok(art, "lessons outside the landmark set still show matching art: " + category.id);
+  assert.equal(art.props.size, 64, "fallback art follows the compact hero scale");
+  assert.equal(decoration.props.pointerEvents, "none", "fallback illustration never intercepts a lesson tap");
+}
+assert.ok(!nodes(backdrop({ categoryId: "unknown" })).some(node => node.props?.testID === "home-lesson-world-art"),
+  "unknown subjects never borrow another category's art");
+assert.ok(!nodes(backdrop({ subcategoryId: "ancient-greece", categoryId: "history" }))
+  .some(node => node.props?.testID === "home-lesson-world-art"), "known landmarks take precedence over category art");
 const dashboardLayout = compile("src/utils/homeDashboardLayout.ts", {}, true);
 const home = compile("src/screens/HomeScreen.tsx", {
   "../utils/homeDashboardLayout": dashboardLayout,
@@ -281,6 +293,16 @@ assert.equal(nodes(tree).filter(node => node.props?.testID?.startsWith("home-cat
 press("home-category-history");
 assert.equal(actions.at(-1), "category:history");
 const textById = (id, t = tree) => nodes(t).find(node => node.props?.testID === id);
+assert.equal(textById("home-next-level").props.children, "450 XP ως το επίπεδο 4",
+  "Home explains how much XP remains to reach the next level");
+profile = { ...profile, ready: false };
+assert.equal(textById("home-next-level", home(props)).props.children, "Φόρτωση προόδου…",
+  "pending profile data never appears as earned progress");
+profile = { ...profile, ready: true };
+assert.equal(textById("home-lesson-progress").props.children, "1/3 ερωτήσεις");
+assert.match(textById("home-primary-action").props.accessibilityLabel, /1 από 3 ερωτήσεις/);
+assert.match(textById("home-category-history").props.accessibilityHint, /μάθημα που συνεχίζεις/);
+assert.equal(textById("home-category-science").props.accessibilityHint, undefined);
 assert.equal(textById("home-hero-location").props.children, "Ιστορία · Αρχαία Ελλάδα",
   "continue card shows real category and subcategory titles");
 assert.match(textById("home-primary-action").props.accessibilityLabel, /Ιστορία · Αρχαία Ελλάδα/);
@@ -291,6 +313,12 @@ const longTitleTree = home({ ...props, inProgressLesson: { ...lessons[0], title:
 assert.equal(nodes(longTitleTree).find(node => node.props?.children === longLessonTitle)
   .props.numberOfLines, undefined, "long lesson titles wrap instead of losing their ending");
 const nextLessonTree = home({ ...props, inProgressLesson: null, completedCount: 39 });
+assert.equal(textById("home-lesson-progress", nextLessonTree), undefined,
+  "a recommended lesson does not inherit progress from the resumed lesson");
+assert.equal(textById("home-category-history", nextLessonTree).props.accessibilityHint, undefined,
+  "world highlights refer only to the lesson actually being resumed");
+assert.equal(nodes(textById("home-primary-action", nextLessonTree))
+  .find(node => node.type === "HomeLessonBackdrop").props.categoryId, "science");
 assert.ok(!nodes(nextLessonTree).some(node => typeof node.props?.children === "string"
   && node.props.children.includes("39 ολοκληρωμένα")), "unrelated completion totals are absent");
 assert.equal(nodes(textById("home-primary-action")).filter(node => node.type === "HeroAccent").length, 0,
@@ -395,7 +423,8 @@ for (const streak of [1, 2, null]) {
 const loadingStreak = HomeStreakBadge({ streak: null });
 assert.match(loadingStreak.props.accessibilityLabel, /Φόρτωση/);
 assert.equal(nodes(loadingStreak).find(node => node.props?.testID === "home-streak-count").props.children, "—");
-assert.ok(nodes(tree).some(node => node.props?.children === "Ολοκληρώθηκε ✓"));
+assert.equal(textById("home-daily-status").props.children, "Δες αποτελέσματα →");
+assert.match(textById("home-daily-quiz").props.accessibilityLabel, /Ολοκληρώθηκε/);
 // The counter is the number of submitted answers, not the current index,
 // correct answers, or a streak. It is scoped to today's Athens daily record.
 daily = { ready: true, doc: { days: { "2026-11-03": {
@@ -421,6 +450,9 @@ assert.equal(filledSegments(), 0, "loading state must not claim completed segmen
 assert.equal(textById("home-daily-answered").props.children, "—/7",
   "unknown loading progress must not appear as zero");
 assert.match(textById("home-daily-quiz").props.accessibilityLabel, /φόρτωση προόδου/);
+assert.equal(textById("home-daily-status").props.children, "Φόρτωση…");
+assert.equal(textById("home-daily-quiz").props.disabled, true,
+  "the daily action waits for account-scoped progress before becoming available");
 daily = { ready: true, doc: { days: { "2026-11-03": {
   record: { completed: true, started: true, currentIndex: 6, answers: completeDailyAnswers },
 } } } };
